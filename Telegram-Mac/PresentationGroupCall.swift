@@ -456,11 +456,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 
     private let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     
-    private var videoCapturer: OngoingCallVideoCapturer?
+    private var videoCapturer: OngoingCallVideoCapturer? {
+        didSet {
+            outgoingStreamExists.set(videoCapturer != nil)
+        }
+    }
     private let incomingVideoSourcePromise = Promise<[PeerId: UInt32]>([:])
     public var incomingVideoSources: Signal<[PeerId: UInt32], NoError> {
         return self.incomingVideoSourcePromise.get()
     }
+    
+    private let outgoingStreamExists:ValuePromise<Bool> = ValuePromise(false)
     
     private var missingSsrcs = Set<UInt32>()
     private var processedMissingSsrcs = Set<UInt32>()
@@ -486,7 +492,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.initialCall = initialCall
         self.peerChannelMemberCategoriesContextsManager = peerChannelMemberCategoriesContextsManager
         self.devicesContext = sharedContext.devicesContext
-        self.videoCapturer = OngoingCallVideoCapturer()
+       // self.videoCapturer = OngoingCallVideoCapturer()
 
         self.groupCallParticipantUpdatesDisposable = (self.account.stateManager.groupCallParticipantUpdates
         |> deliverOnMainQueue).start(next: { [weak self] updates in
@@ -614,9 +620,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         strongSelf.maybeRequestParticipants(ssrcs: ssrcs)
                     }
                 })
-                self.incomingVideoSourcePromise.set(callContext.videoSources
+                self.incomingVideoSourcePromise.set(combineLatest(outgoingStreamExists.get(), callContext.videoSources)
                 |> deliverOnMainQueue
-                |> map { [weak self] sources -> [PeerId: UInt32] in
+                |> map { [weak self] hasOutgoing, sources -> [PeerId: UInt32] in
                     guard let strongSelf = self else {
                         return [:]
                     }
@@ -625,6 +631,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         if let peerId = strongSelf.ssrcMapping[source] {
                             result[peerId] = source
                         }
+                    }
+                    if hasOutgoing {
+                        result[strongSelf.account.peerId] = 0
                     }
                     return result
                 })
@@ -817,7 +826,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                    guard let strongSelf = self else {
                        return
                    }
-                   //id    Postbox.PeerId.Id    557531797
                     var topParticipants: [GroupCallParticipantsContext.Participant] = []
 
                     var reportSpeakingParticipants: [PeerId: UInt32] = [:]
@@ -864,6 +872,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                    members.loadMoreToken = state.nextParticipantsFetchOffset
                    
                    strongSelf.membersValue = members
+                
+                    
                    
                    strongSelf.stateValue.adminIds = adminIds
                    strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.account.peerId)
@@ -1283,8 +1293,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         videoCapturer?.switchVideoInput(deviceId)
     }
     
-    func makeIncomingVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void) {
-        self.callContext?.makeIncomingVideoView(source: source, completion: { view in
+    func makeOutgoingVideoView(completion: @escaping (PresentationCallVideoView?) -> Void) {
+        videoCapturer?.makeOutgoingVideoView(completion: { view in
             if let view = view {
                 let setOnFirstFrameReceived = view.setOnFirstFrameReceived
                 let setOnOrientationUpdated = view.setOnOrientationUpdated
@@ -1346,6 +1356,75 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 completion(nil)
             }
         })
+    }
+    
+    func makeVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void) {
+        if source == 0 {
+            self.makeOutgoingVideoView(completion: completion)
+        } else {
+            self.callContext?.makeIncomingVideoView(source: source, completion: { view in
+                if let view = view {
+                    let setOnFirstFrameReceived = view.setOnFirstFrameReceived
+                    let setOnOrientationUpdated = view.setOnOrientationUpdated
+                    let setOnIsMirroredUpdated = view.setOnIsMirroredUpdated
+                    completion(PresentationCallVideoView(
+                        holder: view,
+                        view: view.view,
+                        setOnFirstFrameReceived: { f in
+                            setOnFirstFrameReceived(f)
+                        },
+                        getOrientation: { [weak view] in
+                            if let view = view {
+                                let mappedValue: PresentationCallVideoView.Orientation
+                                switch view.getOrientation() {
+                                case .rotation0:
+                                    mappedValue = .rotation0
+                                case .rotation90:
+                                    mappedValue = .rotation90
+                                case .rotation180:
+                                    mappedValue = .rotation180
+                                case .rotation270:
+                                    mappedValue = .rotation270
+                                }
+                                return mappedValue
+                            } else {
+                                return .rotation0
+                            }
+                        },
+                        getAspect: { [weak view] in
+                            if let view = view {
+                                return view.getAspect()
+                            } else {
+                                return 0.0
+                            }
+                        },
+                        setOnOrientationUpdated: { f in
+                            setOnOrientationUpdated { value, aspect in
+                                let mappedValue: PresentationCallVideoView.Orientation
+                                switch value {
+                                case .rotation0:
+                                    mappedValue = .rotation0
+                                case .rotation90:
+                                    mappedValue = .rotation90
+                                case .rotation180:
+                                    mappedValue = .rotation180
+                                case .rotation270:
+                                    mappedValue = .rotation270
+                                }
+                                f?(mappedValue, aspect)
+                            }
+                        },
+                        setOnIsMirroredUpdated: { f in
+                            setOnIsMirroredUpdated { value in
+                                f?(value)
+                            }
+                        }
+                    ))
+                } else {
+                    completion(nil)
+                }
+            })
+        }
     }
     
     func setFullSizeVideo(peerId: PeerId?) {

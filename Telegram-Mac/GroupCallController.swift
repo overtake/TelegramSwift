@@ -62,7 +62,7 @@ private final class GroupCallUIArguments {
 
 private final class GroupCallControlsView : View {
     private let speak: GroupCallSpeakButton = GroupCallSpeakButton(frame: NSMakeRect(0, 0, 144, 144))
-    private let settings: CallControl = CallControl(frame: .zero)
+    private let videoStream: CallControl = CallControl(frame: .zero)
     private let end: CallControl = CallControl(frame: .zero)
     private var speakText: TextView?
     fileprivate var arguments: GroupCallUIArguments?
@@ -76,7 +76,7 @@ private final class GroupCallControlsView : View {
 
         addSubview(backgroundView)
 
-        addSubview(settings)
+        addSubview(videoStream)
         addSubview(end)
 
         addSubview(speak)
@@ -88,7 +88,7 @@ private final class GroupCallControlsView : View {
             self?.arguments?.leave()
         }, for: .Click)
         
-        settings.set(handler: { [weak self] _ in
+        videoStream.set(handler: { [weak self] _ in
             self?.arguments?.shareSource()
         }, for: .Click)
         
@@ -140,7 +140,7 @@ private final class GroupCallControlsView : View {
         if state != preiousState {
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
-            settings.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+            videoStream.updateWithData(CallControlData(text: L10n.voiceChatVideoStream, isVisualEffect: false, icon: GroupCallTheme.video_on, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
         }
         let statusText: String
         var secondary: String? = nil
@@ -243,7 +243,7 @@ private final class GroupCallControlsView : View {
         super.layout()
         speak.center()
 
-        settings.centerY(x: 30)
+        videoStream.centerY(x: 30)
         end.centerY(x: frame.width - end.frame.width - 30)
         if let speakText = speakText {
             speakText.centerX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 33))
@@ -351,7 +351,7 @@ private final class MainVideoContainerView: View {
         }
         self.currentPeer = peer
         if let (peerId, source) = peer {
-            self.call.makeIncomingVideoView(source: source, completion: { [weak self] videoView in
+            self.call.makeVideoView(source: source, completion: { [weak self] videoView in
                 Queue.mainQueue().async {
                     guard let strongSelf = self, let videoView = videoView else {
                         return
@@ -725,6 +725,9 @@ private func makeState(previousActive: [GroupCallUIState.RecentActive], previous
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
         memberDatas.append(PeerGroupCallData(peer: accountPeer, presence: TelegramUserPresence(status: .present(until: Int32.max), lastActivity: 0), state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow, unsyncVolume: unsyncVolumes[accountPeer.id], isRecentActive: false, activeIndex: nil, isPinned: currentDominantSpeakerWithVideo?.0 == accountPeer.id))
+    } else {
+        var bp:Int = 0
+        bp += 1
     }
 
 
@@ -867,7 +870,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             }, invite: arguments.invite, contextMenu: {
                 var items: [ContextMenuItem] = []
 
-                if data.state != nil {
+                if let state = data.state {
                     
                     if data.peer.id != account.peerId {
                         let volume: ContextMenuItem = .init("Volume", handler: {
@@ -888,6 +891,20 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         items.append(volume)
                         items.append(ContextSeparatorItem())
                     }
+                    if data.peer.id != account.peerId {
+                        if arguments.takeVideo(data.peer.id) != nil {
+                            if !arguments.isPinnedVideo(data.peer.id) {
+                                items.append(ContextMenuItem(L10n.voiceChatPinVideo, handler: {
+                                    arguments.pinVideo(data.peer.id, state.ssrc)
+                                }))
+                            } else {
+                                items.append(ContextMenuItem(L10n.voiceChatUnpinVideo, handler: {
+                                    arguments.unpinVideo()
+                                }))
+                            }
+                        }
+                    }
+                    
                     
                     if !tuple.canManageCall, data.peer.id != account.peerId {
                         if let muteState = data.state?.muteState {
@@ -941,6 +958,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                             items.append(ContextSeparatorItem())
                         }
                     }
+                    
                     if data.peer.id != account.peerId {
                         items.append(.init(L10n.voiceChatOpenProfile, handler: {
                             arguments.openInfo(data.peer.id)
@@ -1106,7 +1124,7 @@ final class GroupCallUIController : ViewController {
                         validSources.insert(source)
                         if !strongSelf.requestedVideoSources.contains(source) {
                             strongSelf.requestedVideoSources.insert(source)
-                            strongSelf.data.call.makeIncomingVideoView(source: source, completion: { videoView in
+                            strongSelf.data.call.makeVideoView(source: source, completion: { videoView in
                                 Queue.mainQueue().async {
                                     guard let strongSelf = self, let videoView = videoView else {
                                         return
@@ -1120,7 +1138,6 @@ final class GroupCallUIController : ViewController {
                                 }
                             })
                         }
-                            
                     }
 
                     for i in (0 ..< strongSelf.videoViews.count).reversed() {
@@ -1237,8 +1254,7 @@ final class GroupCallUIController : ViewController {
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call
-                                    , animated: animated.swap(true))
+            strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call, animated: animated.swap(true))
             strongSelf.readyOnce()
         })
         

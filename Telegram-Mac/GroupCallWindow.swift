@@ -73,6 +73,9 @@ struct GroupCallTheme {
     static let status_unmuted_accent = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.blueStatusColor)
     static let status_unmuted_green = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
 
+
+    static let video_on = NSImage(named: "Icon_GroupCall_VideoOn")!.precomposed(.white)
+    static let video_off = NSImage(named: "Icon_GroupCall_VideoOff")!.precomposed(.white)
     
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
     
