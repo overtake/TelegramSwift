@@ -430,7 +430,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                     statusImageView.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak statusImageView] _ in
                         statusImageView?.removeFromSuperview()
                     })
-                    statusImageView.layer?.animatePosition(from: statusImageView.frame.origin, to: NSMakePoint(statusImageView.frame.minX - statusImageView.frame.width, statusImageView.frame.minY))
                 } else {
                     statusImageView.removeFromSuperview()
                 }

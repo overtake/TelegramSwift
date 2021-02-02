@@ -11,7 +11,7 @@
 
 
 @implementation DesktopCaptureSourceData
--(id)initWithSize:(CGSize)size fps:(int)fps captureMouse:(bool)captureMouse {
+-(id)initWithSize:(CGSize)size fps:(double)fps captureMouse:(bool)captureMouse {
     if (self = [super init]) {
         self.aspectSize = size;
         self.fps = fps;
@@ -21,7 +21,7 @@
 }
 
 -(NSString *)cachedKey {
-    return [[NSString alloc] initWithFormat:@"%@:%d:%d", NSStringFromSize(self.aspectSize), self.fps, self.captureMouse];
+    return [[NSString alloc] initWithFormat:@"%@:%f:%d", NSStringFromSize(self.aspectSize), self.fps, self.captureMouse];
 }
 @end
 
@@ -45,7 +45,7 @@
     if (_isWindow)
         return [[NSString alloc] initWithCString:_source.title.c_str() encoding:NSUTF8StringEncoding];
     else
-        return [[NSString alloc] initWithFormat:@"Screen %ld", self.uniqueId];
+        return [[NSString alloc] initWithFormat:@"Screen"];
 }
 
 -(long)uniqueId {

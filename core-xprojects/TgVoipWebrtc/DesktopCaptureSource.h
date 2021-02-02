@@ -20,9 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DesktopCaptureSourceData : NSObject
 @property CGSize aspectSize;
-@property int fps;
+@property double fps;
 @property bool captureMouse;
--(id)initWithSize:(CGSize)size fps:(int)fps captureMouse:(bool)captureMouse;
+-(id)initWithSize:(CGSize)size fps:(double)fps captureMouse:(bool)captureMouse;
 
 -(NSString *)cachedKey;
 @end

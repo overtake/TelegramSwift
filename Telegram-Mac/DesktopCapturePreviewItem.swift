@@ -16,10 +16,12 @@ final class DesktopCapturePreviewItem : GeneralRowItem {
     fileprivate let selected: Bool
     fileprivate let select: (DesktopCaptureSource, DesktopCaptureSourceManager)->Void
     fileprivate private(set) weak var manager: DesktopCaptureSourceManager?
-    init(_ initialSize: NSSize, stableId: AnyHashable, source: DesktopCaptureSource, isSelected: Bool, manager: DesktopCaptureSourceManager?, select: @escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void) {
+    fileprivate let isAvailable: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, source: DesktopCaptureSource, isAvailable: Bool, isSelected: Bool, manager: DesktopCaptureSourceManager?, select: @escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void) {
         self.manager = manager
-        self.scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: CGSize(width: 135, height: 90).multipliedByScreenScale(), fps: 1, captureMouse: false))
+        self.scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: CGSize(width: 135, height: 90).multipliedByScreenScale(), fps: 0.5, captureMouse: false))
         self.select = select
+        self.isAvailable = isAvailable
         self.selected = isSelected
         super.init(initialSize, stableId: stableId)
     }
@@ -41,11 +43,12 @@ class DesktopCameraCapturerRowItem: GeneralRowItem {
     fileprivate let source: CameraCaptureDevice
     fileprivate let selected: Bool
     fileprivate let select:(CameraCaptureDevice)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, device: CameraCaptureDevice, isSelected: Bool, select:@escaping(CameraCaptureDevice)->Void) {
+    fileprivate let isAvailable: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, device: CameraCaptureDevice, isAvailable: Bool, isSelected: Bool, select:@escaping(CameraCaptureDevice)->Void) {
         self.source = device
         self.selected = isSelected
         self.select = select
-        
+        self.isAvailable = isAvailable
         super.init(initialSize, stableId: stableId)
 
     }
@@ -232,6 +235,7 @@ final class DesktopCapturePreviewView : HorizontalRowView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         updateListeners()
+        update()
     }
     
     deinit {
@@ -247,8 +251,8 @@ final class DesktopCapturePreviewView : HorizontalRowView {
     @objc private func update() {
         if let item = item as? DesktopCapturePreviewItem {
             if let manager = item.manager {
-                if visibleRect != .zero {
-                    disposable.set(delaySignal(0.07).start(completed: { [weak manager, weak item] in
+                if visibleRect != .zero, item.isAvailable, window != nil {
+                    disposable.set(delaySignal(0.1).start(completed: { [weak manager, weak item] in
                         if let item = item {
                             manager?.start(item.scope)
                         }
@@ -260,21 +264,22 @@ final class DesktopCapturePreviewView : HorizontalRowView {
             }
         }
         if let item = item as? DesktopCameraCapturerRowItem {
-            if let session = (contentView.viewFor(item.source)?.layer as? AVCaptureVideoPreviewLayer)?.session {
-                if visibleRect != .zero {
-                    disposable.set(delaySignal(0.07).start(completed: { [weak session] in
+            if item.isAvailable {
+                if let session = (contentView.viewFor(item.source)?.layer as? AVCaptureVideoPreviewLayer)?.session {
+                    if visibleRect != .zero {
+                        disposable.set(delaySignal(0.07).start(completed: { [weak session] in
+                            DispatchQueue.global().async { [weak session] in
+                                session?.startRunning()
+                            }
+                        }))
+                    } else {
+                        disposable.set(nil)
                         DispatchQueue.global().async { [weak session] in
-                            session?.startRunning()
+                            session?.stopRunning()
                         }
-                    }))
-                } else {
-                    disposable.set(nil)
-                    DispatchQueue.global().async { [weak session] in
-                        session?.stopRunning()
                     }
                 }
             }
-            
         }
         
     }
@@ -307,7 +312,12 @@ final class DesktopCapturePreviewView : HorizontalRowView {
         
         if let item = item as? DesktopCapturePreviewItem {
             if let manager = item.manager {
-                let view = contentView.viewFor(item.scope.source) ?? manager.create(for: item.scope)
+                let view: NSView
+                if item.isAvailable {
+                    view = contentView.viewFor(item.scope.source) ?? manager.create(for: item.scope)
+                } else {
+                    view = View()
+                }
                 contentView.update(view: view, source: item.scope.source, selected: item.selected, animated: animated, callback: { [weak item] in
                     if let item = item, let manager = item.manager {
                         item.select(item.scope.source, manager)
@@ -317,24 +327,31 @@ final class DesktopCapturePreviewView : HorizontalRowView {
         }
         
         if let item = item as? DesktopCameraCapturerRowItem {
-            
-            let view: View
-            if let exist = contentView.viewFor(item.source) as? View  {
-                view = exist
-            } else {
-                let session: AVCaptureSession = AVCaptureSession()
-                let input = try? AVCaptureDeviceInput(device: item.source.device)
-                if let input = input {
-                    session.addInput(input)
-                }
-                let captureLayer = AVCaptureVideoPreviewLayer()
-                captureLayer.session = session
-                captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
-                captureLayer.connection?.isVideoMirrored = true
-                captureLayer.videoGravity = .resizeAspectFill
-                view = View()
-                view.layer = captureLayer
+            if item.isAvailable {
+
             }
+            let view: View
+            if item.isAvailable {
+                if let exist = contentView.viewFor(item.source) as? View  {
+                    view = exist
+                } else {
+                    let session: AVCaptureSession = AVCaptureSession()
+                    let input = try? AVCaptureDeviceInput(device: item.source.device)
+                    if let input = input {
+                        session.addInput(input)
+                    }
+                    let captureLayer = AVCaptureVideoPreviewLayer()
+                    captureLayer.session = session
+                    captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
+                    captureLayer.connection?.isVideoMirrored = true
+                    captureLayer.videoGravity = .resizeAspectFill
+                    view = View()
+                    view.layer = captureLayer
+                }
+            } else {
+                view = View()
+            }
+
             
             contentView.update(view: view, source: item.source, selected: item.selected, animated: animated, callback: { [weak item] in
                 if let item = item {

@@ -29,6 +29,8 @@ private final class GroupCallUIArguments {
     let pinVideo:(PeerId, UInt32)->Void
     let unpinVideo:()->Void
     let isPinnedVideo:(PeerId)->Bool
+    let getAccountPeerId: ()->PeerId?
+    let cancelSharing: ()->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -42,7 +44,9 @@ private final class GroupCallUIArguments {
     pinVideo:@escaping(PeerId, UInt32)->Void,
     unpinVideo:@escaping()->Void,
     isPinnedVideo:@escaping(PeerId)->Bool,
-    setVolume: @escaping(PeerId, Double, Bool)->Void) {
+    setVolume: @escaping(PeerId, Double, Bool)->Void,
+    getAccountPeerId: @escaping()->PeerId?,
+    cancelSharing: @escaping()->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -57,6 +61,8 @@ private final class GroupCallUIArguments {
         self.unpinVideo = unpinVideo
         self.isPinnedVideo = isPinnedVideo
         self.setVolume = setVolume
+        self.getAccountPeerId = getAccountPeerId
+        self.cancelSharing = cancelSharing
     }
 }
 
@@ -88,9 +94,7 @@ private final class GroupCallControlsView : View {
             self?.arguments?.leave()
         }, for: .Click)
         
-        videoStream.set(handler: { [weak self] _ in
-            self?.arguments?.shareSource()
-        }, for: .Click)
+
         
         speak.set(handler: { [weak self] _ in
             if let muteState = self?.preiousState?.muteState, !muteState.canUnmute {
@@ -105,12 +109,31 @@ private final class GroupCallControlsView : View {
     
     private var preiousState: PresentationGroupCallState?
     
-    
+    private var clickToken:UInt32?
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
-        
+
+
+
         let state = callState.state
         speak.update(with: state, isMuted: callState.isMuted, audioLevel: audioLevel, animated: animated)
 
+        let isStreaming: Bool
+        if let arguments = arguments, let peerId = arguments.getAccountPeerId() {
+            isStreaming = callState.activeVideoSources[peerId] != nil
+        } else {
+            isStreaming = false
+        }
+
+        if let clickToken = clickToken {
+            videoStream.removeHandler(clickToken)
+        }
+        clickToken = videoStream.set(handler: { [weak self] _ in
+            if !isStreaming {
+                self?.arguments?.shareSource()
+            } else {
+                self?.arguments?.cancelSharing()
+            }
+        }, for: .Click)
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State
         
@@ -137,11 +160,11 @@ private final class GroupCallControlsView : View {
 
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
 
-        if state != preiousState {
+      //  if state != preiousState {
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
 
-            videoStream.updateWithData(CallControlData(text: L10n.voiceChatVideoStream, isVisualEffect: false, icon: GroupCallTheme.video_on, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
-        }
+            videoStream.updateWithData(CallControlData(text: L10n.voiceChatVideoStream, isVisualEffect: false, icon: isStreaming ? GroupCallTheme.video_off : GroupCallTheme.video_on, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+      //  }
         let statusText: String
         var secondary: String? = nil
         switch state.networkState {
@@ -648,7 +671,8 @@ private final class GroupCallUIState : Equatable {
     let currentDominantSpeakerWithVideo: (PeerId, UInt32)?
     let lastActivity: [RecentActive]
     let activeIndexes: [PeerId : Int]
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool, lastActivity: [RecentActive], activeIndexes: [PeerId : Int], currentDominantSpeakerWithVideo: (PeerId, UInt32)?) {
+    let activeVideoSources: [PeerId: UInt32]
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool, lastActivity: [RecentActive], activeIndexes: [PeerId : Int], currentDominantSpeakerWithVideo: (PeerId, UInt32)?, activeVideoSources: [PeerId: UInt32]) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -661,6 +685,7 @@ private final class GroupCallUIState : Equatable {
         self.currentDominantSpeakerWithVideo = currentDominantSpeakerWithVideo
         self.lastActivity = lastActivity
         self.activeIndexes = activeIndexes
+        self.activeVideoSources = activeVideoSources
     }
     
     static func == (lhs: GroupCallUIState, rhs: GroupCallUIState) -> Bool {
@@ -701,11 +726,14 @@ private final class GroupCallUIState : Equatable {
         if lhs.activeIndexes != rhs.activeIndexes {
             return false
         }
+        if lhs.activeVideoSources != rhs.activeVideoSources {
+            return false
+        }
         return true
     }
 }
 
-private func makeState(previousActive: [GroupCallUIState.RecentActive], previousActiveIndexes: [PeerId : Int], peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, audioLevels: [PeerId : PeerGroupCallData.AudioLevel], summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool, accountPeer: Peer, unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: (PeerId, UInt32)?) -> GroupCallUIState {
+private func makeState(previousActive: [GroupCallUIState.RecentActive], previousActiveIndexes: [PeerId : Int], peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, audioLevels: [PeerId : PeerGroupCallData.AudioLevel], summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool, accountPeer: Peer, unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: (PeerId, UInt32)?, activeVideoSources: [PeerId: UInt32]) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -785,7 +813,7 @@ private func makeState(previousActive: [GroupCallUIState.RecentActive], previous
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isKeyWindow: isKeyWindow, lastActivity: lastActivity, activeIndexes: activeIndexes, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: >), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: audioLevels[accountPeerId]?.value ?? 0, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isKeyWindow: isKeyWindow, lastActivity: lastActivity, activeIndexes: activeIndexes, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideoSources: activeVideoSources)
 }
 
 
@@ -891,11 +919,15 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         items.append(volume)
                         items.append(ContextSeparatorItem())
                     }
-                    if data.peer.id != account.peerId {
+                   // if data.peer.id != account.peerId {
                         if arguments.takeVideo(data.peer.id) != nil {
                             if !arguments.isPinnedVideo(data.peer.id) {
                                 items.append(ContextMenuItem(L10n.voiceChatPinVideo, handler: {
-                                    arguments.pinVideo(data.peer.id, state.ssrc)
+                                    if data.peer.id != account.peerId {
+                                        arguments.pinVideo(data.peer.id, state.ssrc)
+                                    } else {
+                                        arguments.pinVideo(data.peer.id, 0)
+                                    }
                                 }))
                             } else {
                                 items.append(ContextMenuItem(L10n.voiceChatUnpinVideo, handler: {
@@ -903,7 +935,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                                 }))
                             }
                         }
-                    }
+                  //  }
                     
                     
                     if !tuple.canManageCall, data.peer.id != account.peerId {
@@ -1110,6 +1142,10 @@ final class GroupCallUIController : ViewController {
             } else {
                 unsyncVolumes.set([peerId : value])
             }
+        }, getAccountPeerId:{ [weak self] in
+            return self?.data.call.account.peerId
+        }, cancelSharing: { [weak self] in
+            self?.data.call.disableVideo()
         })
         
         genericView.arguments = arguments
@@ -1210,7 +1246,7 @@ final class GroupCallUIController : ViewController {
         let queue = Queue(name: "voicechat.ui")
 
         
-        let some = combineLatest(queue: queue, self.data.call.isMuted, animate, account.postbox.loadedPeerWithId(account.peerId), unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get())
+        let some = combineLatest(queue: queue, self.data.call.isMuted, animate, account.postbox.loadedPeerWithId(account.peerId), unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), self.data.call.incomingVideoSources)
 
         let previousActive: Atomic<[GroupCallUIState.RecentActive]> = Atomic(value: [])
         let previousActiveIndexes:Atomic<[PeerId: Int]> = Atomic(value: [:])
@@ -1230,7 +1266,8 @@ final class GroupCallUIController : ViewController {
                                 isKeyWindow: values.7.1,
                                 accountPeer: values.7.2,
                                 unsyncVolumes: values.7.3,
-                                currentDominantSpeakerWithVideo: values.7.4)
+                                currentDominantSpeakerWithVideo: values.7.4,
+                                activeVideoSources: values.7.5)
 
             _ = previousActive.swap(state.lastActivity)
             _ = previousActiveIndexes.swap(state.activeIndexes)

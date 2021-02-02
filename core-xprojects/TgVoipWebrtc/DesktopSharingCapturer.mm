@@ -96,7 +96,7 @@ private:
         }));
         
         if (source != nil) {
-            renderer = [[DesktopCaptureSourceHelper alloc] initWithWindow:source data:[[DesktopCaptureSourceData alloc] initWithSize:CGSizeMake(1280, 720) fps:30 captureMouse: YES]];
+            renderer = [[DesktopCaptureSourceHelper alloc] initWithWindow:source data:[[DesktopCaptureSourceData alloc] initWithSize:CGSizeMake(1280, 720) fps:24 captureMouse: YES]];
             [renderer setOutput:_sink];
         }
         

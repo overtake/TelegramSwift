@@ -2820,6 +2820,14 @@ func screenCaptureAvailable() -> Bool {
     return result
 }
 
+func requestScreenCaptureAccess() -> Bool {
+    if #available(OSX 10.15, *) {
+        return CGRequestScreenCaptureAccess()
+    } else {
+        return screenCaptureAvailable()
+    }
+}
+
 
 func requestMediaPermission(_ type: AVFoundation.AVMediaType) -> Signal<Bool, NoError> {
     if #available(OSX 10.14, *) {
