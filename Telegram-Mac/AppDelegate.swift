@@ -20,7 +20,7 @@ import AppCenterCrashes
 
 
 
-let enableBetaFeatures = false
+let enableBetaFeatures = true
 
 private(set) var appDelegate: AppDelegate?
 

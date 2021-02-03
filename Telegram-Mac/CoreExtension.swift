@@ -3206,3 +3206,15 @@ func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<Exp
         }
     }
 }
+
+
+extension CachedPeerAutoremoveTimeout {
+    var timeout: Int32? {
+        switch self {
+        case let .known(timeout):
+            return timeout
+        case .unknown:
+            return nil
+        }
+    }
+}

@@ -1821,7 +1821,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let editMessage:(ChatEditState, Date?)->Void = { [weak self] state, atDate in
             guard let `self` = self else {return}
             let presentation = self.chatInteraction.presentation
+
             let inputState = state.inputState.subInputState(from: NSMakeRange(0, state.inputState.inputText.length))
+
+            let text = inputState.inputText.trimmed
+            if text.length > presentation.maxInputCharacters {
+                alert(for: context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(presentation.maxInputCharacters)))
+                return
+            }
+
             self.urlPreviewQueryState?.1.dispose()
             
             
@@ -2978,9 +2986,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.setSecretChatMessageAutoremoveTimeout = { [weak self] seconds in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
-                _ = setSecretChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: strongSelf.chatInteraction.peerId, timeout:seconds).start()
+        chatInteraction.setChatMessageAutoremoveTimeout = { [weak self] seconds in
+            guard let strongSelf = self else {
+                return
+            }
+            if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+                if peer.isSecretChat {
+                    _ = setSecretChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peer.id, timeout:seconds).start()
+                } else {
+                    _ = setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peer.id, timeout: seconds).start()
+                }
             }
             scrollAfterSend()
         }
@@ -3762,7 +3777,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return peerView.peers[peerView.peerId]
                                 }
                                 return nil
-                                }.updatedMainPeer(peerViewMainPeer(peerView))
+                            }.updatedMainPeer(peerViewMainPeer(peerView))
                             
                             var discussionGroupId:CachedChannelData.LinkedDiscussionPeerId = .unknown
                             if let cachedData = peerView.cachedData as? CachedChannelData {
@@ -3775,6 +3790,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     case .group:
                                         discussionGroupId = cachedData.linkedDiscussionPeerId
                                     }
+                                }
+                            }
+
+                            if let peer = peerViewMainPeer(peerView) {
+                                if let peer = peer as? TelegramSecretChat {
+                                    present = present.withUpdatedMessageSecretTimeout(peer.messageAutoremoveTimeout)
+                                }
+                                if let cachedData = peerView.cachedData as? CachedChannelData {
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout.timeout)
+                                }
+                                if let cachedData = peerView.cachedData as? CachedGroupData {
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout.timeout)
+                                }
+                                if let cachedData = peerView.cachedData as? CachedUserData {
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout.timeout)
                                 }
                             }
                             

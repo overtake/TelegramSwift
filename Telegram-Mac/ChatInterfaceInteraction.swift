@@ -107,7 +107,7 @@ final class ChatInteraction : InterfaceObserver  {
     var setNavigationAction:(NavigationModalAction)->Void = {_ in}
     var switchInlinePeer:(PeerId, ChatInitialAction)->Void = {_,_  in}
     var showPreviewSender:([URL], Bool, NSAttributedString?)->Void = {_,_,_  in}
-    var setSecretChatMessageAutoremoveTimeout:(Int32?)->Void = {_ in}
+    var setChatMessageAutoremoveTimeout:(Int32?)->Void = {_ in}
     var toggleNotifications:(Bool?)->Void = { _ in }
     var removeAndCloseChat:()->Void = {}
     var joinChannel:()->Void = {}
@@ -169,7 +169,29 @@ final class ChatInteraction : InterfaceObserver  {
     let loadingMessage: Promise<Bool> = Promise()
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
-    
+    var hasSetDestructiveTimer: Bool {
+        if self.peerId.namespace == Namespaces.Peer.SecretChat {
+            return true
+        }
+        if let peer = presentation.peer {
+            if peer.isUser && !peer.isBot {
+                return true
+            }
+            if let peer = peer as? TelegramChannel, peer.isSupergroup {
+                return peer.groupAccess.canEditGroupInfo
+            }
+            if let peer = peer as? TelegramGroup {
+                switch peer.role {
+                case .admin, .creator:
+                    return true
+                default:
+                    break
+                }
+            }
+        }
+
+        return false
+    }
     
     
     func disableProxy() {
