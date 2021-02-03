@@ -629,6 +629,13 @@ func initialize() -> [String] {
     array.append("editor_crop")
 
     array.append("fast_copy_link")
+
+    array.append("profile_channel_sign")
+    array.append("profile_channel_type")
+    array.append("profile_group_type")
+    array.append("profile_group_destruct")
+    array.append("profile_group_discussion")
+
     
     return array
 }
