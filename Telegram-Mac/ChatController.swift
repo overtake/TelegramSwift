@@ -610,7 +610,7 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     func applySearchResponder() {
-        (header.currentView as? ChatSearchHeader)?.applySearchResponder(true)
+        header.applySearchResponder()
     }
 
     
