@@ -65,6 +65,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
     case publicLinkStatus(sectionId:Int32, String, AddressNameValidationStatus, GeneralViewType)
     
     case manageLinks(sectionId:Int32, GeneralViewType)
+    case manageLinksDesc(sectionId:Int32, GeneralViewType)
 
     case existingLinksInfo(sectionId:Int32, String, GeneralViewType)
     case existingLinkPeerItem(sectionId:Int32, Int32, Peer, ShortPeerDeleting?, Bool, GeneralViewType)
@@ -99,6 +100,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return .index(11)
         case .manageLinks:
             return .index(12)
+        case .manageLinksDesc:
+            return .index(13)
         case let .existingLinkPeerItem(_,_, peer, _, _, _):
             return .peer(peer.id)
         case let .section(sectionId: sectionId):
@@ -194,6 +197,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
+        case let .manageLinksDesc(sectionId, viewType):
+            if case .manageLinksDesc(sectionId, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
         case let .section(sectionId):
             if case .section(sectionId) = rhs {
                 return true
@@ -231,6 +240,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + 11
         case let .manageLinks(sectionId: sectionId, _):
             return (sectionId * 1000) + 12
+        case let .manageLinksDesc(sectionId: sectionId, _):
+            return (sectionId * 1000) + 13
         case let .existingLinkPeerItem(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + index + 20
         case let .section(sectionId: sectionId):
@@ -335,9 +346,9 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelVisibiltiyManageLinks, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
-                arguments.manageLinks()
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelVisibiltiyManageLinks, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.manageLinks)
+        case let .manageLinksDesc(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.manageLinksEmptyDesc, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -495,6 +506,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                 entries.append(.section(sectionId: sectionId))
                 sectionId += 1
                 entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+                entries.append(.manageLinksDesc(sectionId: sectionId, .textBottomItem))
             }
         }
     } else if let peer = view.peers[view.peerId] as? TelegramGroup {

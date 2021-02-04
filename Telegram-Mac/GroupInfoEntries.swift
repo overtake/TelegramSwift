@@ -1431,7 +1431,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             }
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .groupStickerset(_, name, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, type: .nextContext(name), viewType: viewType, action: arguments.setGroupStickerset)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, icon: theme.icons.settingsStickers, type: .nextContext(name), viewType: viewType, action: arguments.setGroupStickerset)
         case let .permissions(section: _, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .nextContext(count), viewType: viewType, action: arguments.blacklist)
         case let .administrators(section: _, count, viewType):
@@ -1560,10 +1560,15 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     if case .creator = group.role {
                         actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
                     }
-                    if case .creator = group.role {
-                        if inviteLinksCount > 1 && enableBetaFeatures {
+                    switch group.role {
+                    case .admin:
+                        actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
+                    case .creator:
+                        if inviteLinksCount > 1 {
                             actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
                         }
+                    default:
+                        break
                     }
                     if case .creator = group.role {
                         actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .singleItem))
@@ -1596,12 +1601,12 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if access.isCreator {
                     actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
                 }
-                if access.isCreator || channel.adminRights != nil {
-
-
-                    if inviteLinksCount > 1 && enableBetaFeatures {
+                if access.isCreator {
+                    if inviteLinksCount > 1 {
                         actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
                     }
+                } else if access.canCreateInviteLink {
+                    actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
                 }
 
                 if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId.peerId, let peer = view.peers[linkedDiscussionPeerId] {

@@ -32,10 +32,10 @@ private func generate(_ color: NSColor) -> CGImage {
 }
 
 private var menuIcon: CGImage {
-    return generate(theme.colors.grayForeground.darker())
+    return generate(theme.colors.grayIcon.darker())
 }
 private var menuIconActive: CGImage {
-    return generate(theme.colors.grayForeground.darker().highlighted)
+    return generate(theme.colors.grayIcon.darker().highlighted)
 }
 
 class ExportedInvitationRowItem: GeneralRowItem {
@@ -72,20 +72,20 @@ class ExportedInvitationRowItem: GeneralRowItem {
             text = exportedLink.link.replacingOccurrences(of: "https://", with: "")
             color = theme.colors.text
             if let count = exportedLink.count {
-                usageText = L10n.inviteLinkPeopleJoinedCountable(Int(count))
+                usageText = L10n.inviteLinkJoinedCountable(Int(count))
                 if count > 0 {
                     usageColor = theme.colors.link
                 } else {
                     usageColor = theme.colors.grayText
                 }
             } else {
-                usageText = L10n.inviteLinkPeopleJoinedZero
+                usageText = L10n.inviteLinkJoinedZero
                 usageColor = theme.colors.grayText
             }
         } else {
             text = L10n.channelVisibilityLoading
             color = theme.colors.grayText
-            usageText = L10n.inviteLinkPeopleJoinedZero
+            usageText = L10n.inviteLinkJoinedZero
             usageColor = theme.colors.grayText
         }
         
