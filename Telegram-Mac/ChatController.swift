@@ -2999,6 +2999,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             scrollAfterSend()
         }
+
+        chatInteraction.showDeleterSetup = { [weak self] control in
+            guard let strongSelf = self else {
+                return
+            }
+            if let peer = strongSelf.chatInteraction.peer {
+                if !peer.canManageDestructTimer {
+                    if let timeout = strongSelf.chatInteraction.presentation.messageSecretTimeout?.timeout {
+                        switch timeout {
+                        case .secondsInDay:
+                            tooltip(for: control, text: L10n.chatInputAutoDelete1Day)
+                        case .secondsInWeek:
+                            tooltip(for: control, text: L10n.chatInputAutoDelete7Days)
+                        default:
+                            break
+                        }
+                    }
+                } else {
+                    showModal(with: AutoremoveMessagesController(context: context, peerId: peerId), for: context.window)
+                }
+            }
+        }
         
         chatInteraction.toggleNotifications = { [weak self] isMuted in
             if let strongSelf = self {
@@ -3579,8 +3601,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                         })
                     case .history, .preview:
-                        self.chatInteraction.update(animated:false,{ present in
+                        self.chatInteraction.update(animated:false, { present in
                             var present = present
+
+                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
+                                present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            }
+                            if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
+                                present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            }
+                            if let cachedData = combinedInitialData.cachedData as? CachedUserData {
+                                present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            }
+                            
                             if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                                 present = present.updatedGroupCall({ currentValue in
                                     if let call = cachedData.activeCall {
@@ -3795,16 +3828,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                             if let peer = peerViewMainPeer(peerView) {
                                 if let peer = peer as? TelegramSecretChat {
-                                    present = present.withUpdatedMessageSecretTimeout(peer.messageAutoremoveTimeout)
+                                    present = present.withUpdatedMessageSecretTimeout(.known(peer.messageAutoremoveTimeout))
                                 }
                                 if let cachedData = peerView.cachedData as? CachedChannelData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout.timeout)
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                                 }
                                 if let cachedData = peerView.cachedData as? CachedGroupData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout.timeout)
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                                 }
                                 if let cachedData = peerView.cachedData as? CachedUserData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout.timeout)
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                                 }
                             }
                             
@@ -4655,8 +4688,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                                 if peer.isGroup || peer.isUser || (peer.isSupergroup && peer.addressName == nil) {
                                     if let peer = peer as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
-                                        items.append(SPopoverItem(L10n.chatContextClearHistory, { [weak self] in
-                                            
+                                        items.append(SPopoverItem(L10n.chatContextClearHistory, {
                                             var thridTitle: String? = nil
                                             
                                             var canRemoveGlobally: Bool = false
@@ -4672,19 +4704,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             
                                             modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
                                                 
-                                                
                                                 context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
-//
-//                                                self?.addUndoAction(ChatUndoAction(peerId: peerId, type: .clearHistory, action: { status in
-//                                                    switch status {
-//                                                    case .success:
-//                                                        break
-//                                                    default:
-//                                                        break
-//                                                    }
-//                                                }))
                                             })
                                         }, theme.icons.chatActionClearHistory))
+                                    }
+                                    if peer.canManageDestructTimer {
+                                        items.append(SPopoverItem(L10n.chatContextAutoDelete, {
+                                            showModal(with: AutoremoveMessagesController(context: context, peerId: peerId), for: context.window)
+                                        }))
                                     }
                                 }
                                 

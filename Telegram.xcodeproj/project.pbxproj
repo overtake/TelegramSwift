@@ -215,6 +215,7 @@
 		A71DC8352386D512000EEDE2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BB2DAF1F8BDF6700520255 /* Config.swift */; };
 		A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D7AE823C471A7005BAC59 /* PollResultController.swift */; };
 		A731924B25CAE9DC00218E0E /* AutoremoMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */; };
+		A731924F25CD5F2300218E0E /* destructor.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A731924E25CD5F2200218E0E /* destructor.tgs */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A7388432257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */; };
 		A73884352580E501002E8424 /* CGChatListIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73884342580E501002E8424 /* CGChatListIndicator.swift */; };
@@ -1224,6 +1225,7 @@
 		A71DC82E2386AADF000EEDE2 /* Signature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Signature.swift; sourceTree = "<group>"; };
 		A72D7AE823C471A7005BAC59 /* PollResultController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultController.swift; sourceTree = "<group>"; };
 		A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoremoMessagesController.swift; sourceTree = "<group>"; };
+		A731924E25CD5F2200218E0E /* destructor.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = destructor.tgs; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallNavigationHeaderView.swift; sourceTree = "<group>"; };
@@ -4263,6 +4265,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				A731924E25CD5F2200218E0E /* destructor.tgs */,
 				2744AE7125B58E6C00E8849F /* invitations.tgs */,
 				D0D1391A2521F652005FCF35 /* discussion.tgs */,
 				D0A75F2B2449B67D001F84A0 /* dart_idle.tgs */,
@@ -4700,6 +4703,7 @@
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				27E969E12589172D00CB9F64 /* call down.mp3 in Resources */,
+				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
 				27A9904E257A8047009044DB /* Pop.wav in Resources */,

@@ -128,7 +128,7 @@ class ChatInputActionsView: View, Notifable {
         _ = inlineCancel.sizeToFit()
         
         
-        if let messageSecretTimeout = chatInteraction.presentation.messageSecretTimeout {
+        if let messageSecretTimeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
             secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: messageSecretTimeout)), for: .Normal)
         } else {
             secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
@@ -277,11 +277,37 @@ class ChatInputActionsView: View, Notifable {
                 if chatInteraction.hasSetDestructiveTimer {
                     size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
                 }
+
+                if chatInteraction.hasSetDestructiveTimer {
+                    if secretTimer == nil {
+                        secretTimer = ImageButton()
+                        secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
+                        _ = secretTimer?.sizeToFit()
+                        addSubview(secretTimer!)
+
+                        secretTimer?.set(handler: { [weak self] control in
+                            if let strongSelf = self {
+                                if let peer = strongSelf.chatInteraction.peer {
+                                    if peer.isSecretChat {
+                                        showPopover(for: control, with: SPopoverViewController(items:strongSelf.secretTimerItems(), visibility: 6), edge: .maxX, inset:NSMakePoint(120, 10))
+                                    }  else if let control = strongSelf.secretTimer {
+                                        strongSelf.chatInteraction.showDeleterSetup(control)
+                                    }
+                                }
+                            }
+                        }, for: .Click)
+                    }
+                } else {
+                    secretTimer?.removeFromSuperview()
+                    secretTimer = nil
+                }
+
+
                 send.animates = false
                 send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
                 send.animates = true
                 
-                if let messageSecretTimeout = value.messageSecretTimeout {
+                if let messageSecretTimeout = value.messageSecretTimeout?.timeout {
                     secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: messageSecretTimeout)), for: .Normal)
                 } else if value.messageSecretTimeout == nil {
                     secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
@@ -520,18 +546,7 @@ class ChatInputActionsView: View, Notifable {
         
         chatInteraction.add(observer: self)
         
-        if chatInteraction.hasSetDestructiveTimer {
-            secretTimer = ImageButton()
-            secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
-            _ = secretTimer?.sizeToFit()
-            addSubview(secretTimer!)
-            
-            secretTimer?.set(handler: { [weak self] control in
-                if let strongSelf = self {
-                    showPopover(for: control, with: SPopoverViewController(items:strongSelf.secretTimerItems(), visibility: 6), edge: .maxX, inset:NSMakePoint(120, 10))
-                }
-            }, for: .Click)
-        }
+
         
         notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)
     }
@@ -572,24 +587,6 @@ class ChatInputActionsView: View, Notifable {
 
             items.append(SPopoverItem(L10n.timerHoursCountable(1), { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60)
-            }))
-
-            items.append(SPopoverItem(L10n.timerDaysCountable(1), { [weak self] in
-                self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24)
-            }))
-
-            items.append(SPopoverItem(L10n.timerWeeksCountable(1), { [weak self] in
-                self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24 * 7)
-            }))
-        } else {
-            items.append(SPopoverItem(L10n.timerSecondsCountable(5), { [weak self] in
-                self?.chatInteraction.setChatMessageAutoremoveTimeout(5)
-            }))
-            items.append(SPopoverItem(L10n.timerMinutesCountable(1), { [weak self] in
-                self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 1)
-            }))
-            items.append(SPopoverItem(L10n.timerMinutesCountable(5), { [weak self] in
-                self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 5)
             }))
 
             items.append(SPopoverItem(L10n.timerDaysCountable(1), { [weak self] in

@@ -211,7 +211,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
 
     func autoremoveController() {
-        pushViewController(AutoremoveMessagesController(context: context, peerId: peerId))
+        //pushViewController(AutoremoveMessagesController(context: context, peerId: peerId))
     }
     
     func openInviteLinks() {
@@ -1421,7 +1421,7 @@ enum GroupInfoEntry: PeerInfoEntry {
 
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupAutoDeleteMessages, icon: theme.icons.profile_group_destruct, type: .nextContext(text), viewType: viewType, action: arguments.autoremoveController)
         case let .inviteLinks(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoInviteLinks, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
         case let .linkedChannel(_, channel, _, viewType):
             let title: String
             if let address = channel.addressName {
@@ -1573,7 +1573,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     if case .creator = group.role {
                         actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .singleItem))
                     }
-                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: (view.cachedData as? CachedGroupData)?.autoremoveTimeout, viewType: .singleItem))
+//                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: (view.cachedData as? CachedGroupData)?.autoremoveTimeout, viewType: .singleItem))
                     applyBlock(actionBlock)
                 default:
                     break
@@ -1620,9 +1620,9 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if cachedChannelData.flags.contains(.canSetStickerSet) && access.canEditGroupInfo {
                     actionBlock.append(.groupStickerset(section: GroupInfoSection.type.rawValue, packName: cachedChannelData.stickerPack?.title ?? "", viewType: .singleItem))
                 }
-                if access.canEditGroupInfo {
-                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: cachedChannelData.autoremoveTimeout, viewType: .singleItem))
-                }
+//                if access.canEditGroupInfo {
+//                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: cachedChannelData.autoremoveTimeout, viewType: .singleItem))
+//                }
                 applyBlock(actionBlock)
                 
                 var canViewAdminsAndBanned = false

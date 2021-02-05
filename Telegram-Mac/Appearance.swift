@@ -2384,7 +2384,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_channel_type: {NSImage(named: "Icon_Profile_ChannelType")!.precomposed(flipVertical: true)},
                                                profile_group_type: {NSImage(named: "Icon_Profile_GroupType")!.precomposed(flipVertical: true)},
                                                profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
-                                               profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)}
+                                               profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
+                                               profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
+                                               profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)}
 
     )
 

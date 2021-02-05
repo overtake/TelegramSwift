@@ -832,11 +832,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.report()
             })
         case let .members(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, icon: theme.icons.peerInfoMembers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
         case let .admins(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
         case let .blocked(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, icon: theme.icons.profile_removed, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
         case let .link(_, addressName: addressName, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, icon: theme.icons.profile_channel_type, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), viewType: viewType, action: arguments.visibilitySetup)
         case let .discussion(_, group, _, viewType):
@@ -977,24 +977,23 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             }
             
             applyBlock(aboutBlock)
-            
-            
-            if channel.flags.contains(.isCreator) || (channel.adminRights != nil && !channel.adminRights!.isEmpty) {
-                var membersCount:Int32? = nil
-                var adminsCount:Int32? = nil
-                var blockedCount:Int32? = nil
-                
-                if let cachedData = view.cachedData as? CachedChannelData {
-                    membersCount = cachedData.participantsSummary.memberCount
-                    adminsCount = cachedData.participantsSummary.adminCount
-                    blockedCount = cachedData.participantsSummary.kickedCount
-                }
-                entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
-                entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
-              
-                entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
-                
+
+        }
+
+        if channel.flags.contains(.isCreator) || (channel.adminRights != nil && !channel.adminRights!.isEmpty) {
+            var membersCount:Int32? = nil
+            var adminsCount:Int32? = nil
+            var blockedCount:Int32? = nil
+
+            if let cachedData = view.cachedData as? CachedChannelData {
+                membersCount = cachedData.participantsSummary.memberCount
+                adminsCount = cachedData.participantsSummary.adminCount
+                blockedCount = cachedData.participantsSummary.kickedCount
             }
+            entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
+            entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
+            entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
+
         }
     }
     
