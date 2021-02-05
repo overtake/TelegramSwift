@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_invitelinks.png",
+      "filename" : "ic_removed.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_invitelinks@2x.png",
+      "filename" : "ic_removed@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

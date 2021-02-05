@@ -156,6 +156,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var joinGroupCall:(CachedChannelData.ActiveCall, Bool)->Void = { _, _ in }
 
+    var showDeleterSetup:(Control)->Void = { _ in }
+
     func chatLocationInput() -> ChatLocationInput {
         return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
     }
@@ -173,25 +175,54 @@ final class ChatInteraction : InterfaceObserver  {
         if self.peerId.namespace == Namespaces.Peer.SecretChat {
             return true
         }
-        if let peer = presentation.peer {
-            if peer.isUser && !peer.isBot {
-                return true
-            }
-            if let peer = peer as? TelegramChannel, peer.isSupergroup {
-                return peer.groupAccess.canEditGroupInfo
-            }
-            if let peer = peer as? TelegramGroup {
-                switch peer.role {
-                case .admin, .creator:
+        if let value = self.presentation.messageSecretTimeout {
+            switch value {
+            case let .known(value):
+                if value != nil {
                     return true
-                default:
-                    break
                 }
+            default:
+                return false
             }
         }
 
         return false
     }
+
+    /*
+     var hasSetDestructiveTimer: Bool {
+         if self.peerId.namespace == Namespaces.Peer.SecretChat {
+             return true
+         }
+         if let peer = presentation.peer {
+             if let peer = peer as? TelegramChannel, peer.isSupergroup {
+                 return peer.groupAccess.canEditGroupInfo
+             }
+             if let value = self.presentation.messageSecretTimeout {
+                 switch value {
+                 case let .known(value):
+                     if value != nil {
+                         return true
+                     }
+                 default:
+                     return false
+                 }
+             }
+             if let peer = peer as? TelegramGroup {
+                 switch peer.role {
+                 case .admin, .creator:
+                     return true
+                 default:
+                     break
+                 }
+             }
+         }
+
+         return false
+     }
+
+
+     */
     
     
     func disableProxy() {

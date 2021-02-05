@@ -2538,3 +2538,13 @@ struct DateSelectorUtil {
         return timeFormatter.string(from: date)
     }
 }
+
+
+extension Int32 {
+    static var secondsInDay: Int32 {
+        return 60 * 60 * 24
+    }
+    static var secondsInWeek: Int32 {
+        return secondsInDay * 7
+    }
+}

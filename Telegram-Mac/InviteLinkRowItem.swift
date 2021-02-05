@@ -98,7 +98,7 @@ private final class ProgressView : View {
 
     func update(link: ExportedInvitation) {
         self.imageView.image = linkIcon
-        self.imageView.setFrameSize(NSMakeSize(20, 20))
+        self.imageView.sizeToFit()
 
         let color:(NSColor, NSColor, CGFloat) -> NSColor = { from, to, progress in
             let newRed = (1.0 - progress) * from.redComponent + progress * to.redComponent
@@ -235,8 +235,8 @@ private final class InviteLinkTokenView : Control {
                 
         self.action = action
 
-        actions.set(image: generate(theme.colors.grayIcon), for: .Normal)
-        actions.style = ControlStyle(highlightColor: theme.colors.grayIcon.highlighted)
+        actions.set(image: generate(theme.colors.grayForeground), for: .Normal)
+        actions.style = ControlStyle(highlightColor: theme.colors.grayForeground.highlighted)
         actions.sizeToFit()
 
 

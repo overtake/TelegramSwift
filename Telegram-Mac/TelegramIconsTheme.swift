@@ -7505,6 +7505,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var profile_removed: CGImage {
+      if let image = cached.with({ $0["profile_removed"] }) {
+          return image
+      } else {
+          let image = _profile_removed()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_removed"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var profile_links: CGImage {
+      if let image = cached.with({ $0["profile_links"] }) {
+          return image
+      } else {
+          let image = _profile_links()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_links"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8083,6 +8109,8 @@ final class TelegramIconsTheme {
   private let _profile_group_type: ()->CGImage
   private let _profile_group_destruct: ()->CGImage
   private let _profile_group_discussion: ()->CGImage
+  private let _profile_removed: ()->CGImage
+  private let _profile_links: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8661,7 +8689,9 @@ final class TelegramIconsTheme {
       profile_channel_type: @escaping()->CGImage,
       profile_group_type: @escaping()->CGImage,
       profile_group_destruct: @escaping()->CGImage,
-      profile_group_discussion: @escaping()->CGImage
+      profile_group_discussion: @escaping()->CGImage,
+      profile_removed: @escaping()->CGImage,
+      profile_links: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9240,5 +9270,7 @@ final class TelegramIconsTheme {
       self._profile_group_type = profile_group_type
       self._profile_group_destruct = profile_group_destruct
       self._profile_group_discussion = profile_group_discussion
+      self._profile_removed = profile_removed
+      self._profile_links = profile_links
   }
 }

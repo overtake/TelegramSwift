@@ -41,7 +41,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: nil, item: { initialSize, stableId in
-        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: "", color: theme.colors.listGrayText, font: .normal(.text)))
+        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .initialize(string: "", color: theme.colors.listGrayText, font: .normal(.text)))
     }))
     index += 1
 
@@ -76,11 +76,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> InputDataController {
+func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
     let initialState = State()
+
+    var close:(()->Void)? = nil
 
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -89,7 +91,11 @@ func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> In
     }
 
     let arguments = Arguments(context: context, setTimeout: { timeout in
-        actionsDisposable.add(setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: timeout).start())
+        updateState { current in
+            var current = current
+            current.autoremoveTimeout = .known(timeout)
+            return current
+        }
     })
 
 
@@ -122,8 +128,29 @@ func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> In
         }
     }))
 
+    controller.validateData = { _ in
+        _ = setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: stateValue.with { $0.autoremoveTimeout?.timeout }).start()
+        return .success(.custom({
+            close?()
+        }))
+    }
 
-    return controller
+    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSave, accept: { [weak controller] in
+        _ = controller?.returnKeyAction()
+    }, drawBorder: true, height: 50, singleButton: true)
+
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+        modalController?.close()
+    })
+
+    close = { [weak modalController] in
+        modalController?.modal?.close()
+    }
+
+
+    return modalController
 
 }
 

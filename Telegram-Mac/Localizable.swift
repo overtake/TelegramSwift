@@ -1557,6 +1557,8 @@ internal final class L10n {
   internal static var chatContextAddFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.AddFavoriteSticker") }
   /// Archive
   internal static var chatContextArchive: String  { return L10n.tr("Localizable", "Chat.Context.Archive") }
+  /// Auto-Delete Messages
+  internal static var chatContextAutoDelete: String  { return L10n.tr("Localizable", "Chat.Context.AutoDelete") }
   /// Block Group
   internal static var chatContextBlockGroup: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup") }
   /// Block User
@@ -1753,6 +1755,10 @@ internal final class L10n {
   internal static var chatInputUnmute: String  { return L10n.tr("Localizable", "Chat.Input.Unmute") }
   /// Edit Message
   internal static var chatInputAccessoryEditMessage: String  { return L10n.tr("Localizable", "Chat.Input.Accessory.EditMessage") }
+  /// Messages in this chat are automatically deleted 24 hours after they have been sent.
+  internal static var chatInputAutoDelete1Day: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.1Day") }
+  /// Messages in this chat are automatically deleted 7 days after they have been sent.
+  internal static var chatInputAutoDelete7Days: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.7Days") }
   /// %d
   internal static func chatInputErrorMessageTooLongCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_countable", p1)
@@ -4379,7 +4385,7 @@ internal final class L10n {
   internal static var manageLinksRevokedLinks: String  { return L10n.tr("Localizable", "ManageLinks.RevokedLinks") }
   /// Invite Links
   internal static var manageLinksTitleNew: String  { return L10n.tr("Localizable", "ManageLinks.TitleNew") }
-  /// %1$@ can see this link and use it to invite new members to %2$@
+  /// **%1$@** can see this link and use it to invite new members to **%2$@** 
   internal static func manageLinksAdminPermanentDesc(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ManageLinks.Admin.Permanent.Desc", p1, p2)
   }
@@ -4643,6 +4649,8 @@ internal final class L10n {
   internal static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
   /// OK
   internal static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
+  /// Save
+  internal static var modalSave: String  { return L10n.tr("Localizable", "Modal.Save") }
   /// Send
   internal static var modalSend: String  { return L10n.tr("Localizable", "Modal.Send") }
   /// Set

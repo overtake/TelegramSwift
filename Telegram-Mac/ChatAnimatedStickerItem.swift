@@ -16,7 +16,7 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
     var playPolicy: LottiePlayPolicy?
     var alwaysAccept: Bool?
     var cache: ASCachePurpose?
-    var hidePlayer: Bool
+    var hidePlayer: Bool?
     var colors: [LottieColor]
     init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, colors: [LottieColor] = []) {
         self.playPolicy = playPolicy
