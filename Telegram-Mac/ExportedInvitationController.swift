@@ -54,7 +54,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
             return .single([ContextMenuItem(L10n.exportedInvitationContextCopy, handler: {
                 arguments.copyLink(invitation.link)
             })])
-        }, share: arguments.shareLink)
+        }, share: arguments.shareLink, copyLink: arguments.copyLink)
     }))
     
     let dateFormatter = DateFormatter()

@@ -1149,6 +1149,26 @@ extension Peer {
     var isGroup:Bool {
         return self is TelegramGroup
     }
+    var canManageDestructTimer: Bool {
+        if self is TelegramSecretChat {
+            return true
+        }
+        if self.isUser && !self.isBot {
+            return true
+        }
+        if let peer = self as? TelegramChannel, self.isSupergroup {
+            return peer.groupAccess.canEditGroupInfo
+        }
+        if let peer = self as? TelegramGroup {
+            switch peer.role {
+            case .admin, .creator:
+                return true
+            default:
+                break
+            }
+        }
+        return false
+    }
     
     func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
         if let peer = self as? TelegramChannel {
@@ -3203,6 +3223,18 @@ func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<Exp
             return revokePersistentPeerExportedInvitation(account: account, peerId: peerId)
         } else {
             return .single(invitation)
+        }
+    }
+}
+
+
+extension CachedPeerAutoremoveTimeout {
+    var timeout: Int32? {
+        switch self {
+        case let .known(timeout):
+            return timeout
+        case .unknown:
+            return nil
         }
     }
 }

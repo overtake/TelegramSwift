@@ -272,6 +272,10 @@ class ChatHeaderController {
 
         }
     }
+
+    func applySearchResponder() {
+         (primaryView as? ChatSearchHeader)?.applySearchResponder(true)
+    }
     
     private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, animated: Bool, p_v: View?, s_v: View?) -> (primary: View?, secondary: View?) {
         let primary:View?
@@ -1157,7 +1161,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         if searchView.state == .Focus && window?.firstResponder != searchView.input {
             _ = window?.makeFirstResponder(searchView.input)
         }
-        searchView.change(state: .Focus, false)
+        searchView.change(state: .Focus, animated)
     }
     
     private var calendarAbility: Bool {

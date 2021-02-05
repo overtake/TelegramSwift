@@ -1048,11 +1048,22 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     }
                 }
-                
+
                 if let openInfo = openInfo {
+
+
+
                     if username == "iv" || username.isEmpty {
                         return .external(link: url as String, username.isEmpty)
                     } else if let context = context {
+
+                        let joinKeys:[String] = ["+", "%20"]
+
+                        for joinKey in joinKeys {
+                            if username.hasPrefix(joinKey), username.length > joinKey.length {
+                                return .joinchat(link: url as String, username.nsstring.substring(from: joinKey.length), context: context, callback: openInfo)
+                            }
+                        }
                         return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
                     }
                 }
