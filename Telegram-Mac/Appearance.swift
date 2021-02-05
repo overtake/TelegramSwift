@@ -2379,7 +2379,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                editor_draw: { NSImage(named: "Icon_Editor_Paint")!.precomposed(.white) },
                                                editor_delete: { NSImage(named: "Icon_Editor_Delete")!.precomposed(.white) },
                                                editor_crop: { NSImage(named: "Icon_Editor_Crop")!.precomposed(.white) },
-                                               fast_copy_link: { NSImage(named: "Icon_FastCopyLink")!.precomposed(palette.accent)}
+                                               fast_copy_link: { NSImage(named: "Icon_FastCopyLink")!.precomposed(palette.accent) },
+                                               profile_channel_sign: {NSImage(named: "Icon_Profile_ChannelSign")!.precomposed(flipVertical: true)},
+                                               profile_channel_type: {NSImage(named: "Icon_Profile_ChannelType")!.precomposed(flipVertical: true)},
+                                               profile_group_type: {NSImage(named: "Icon_Profile_GroupType")!.precomposed(flipVertical: true)},
+                                               profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
+                                               profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
+                                               profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
+                                               profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)}
 
     )
 

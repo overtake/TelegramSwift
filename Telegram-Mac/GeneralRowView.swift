@@ -61,8 +61,14 @@ class GeneralContainableRowView : TableRowView {
         
         self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), item.inset.top, blockWidth, frame.height - item.inset.bottom - item.inset.top)
         self.containerView.setCorners(item.viewType.corners)
-        
-        borderView.frame = NSMakeRect(item.viewType.innerInset.left, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, .borderSize)
+
+
+
+        borderView.frame = NSMakeRect(item.viewType.innerInset.left + additionBorderInset, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - additionBorderInset, .borderSize)
+    }
+
+    var additionBorderInset: CGFloat {
+        return 0
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

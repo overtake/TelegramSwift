@@ -439,6 +439,18 @@ internal final class L10n {
   internal static var autoNightSettingsSunriseDescNA: String  { return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc.NA") }
   /// Can't determine your location. Please check your system settings and try again.
   internal static var autoNightSettingsUpdateLocationError: String  { return L10n.tr("Localizable", "AutoNight.Settings.UpdateLocation.Error") }
+  /// After 1 Day
+  internal static var autoremoveMessagesDay: String  { return L10n.tr("Localizable", "AutoremoveMessages.Day") }
+  /// AUTO-DELETE MESSAGES
+  internal static var autoremoveMessagesHeader: String  { return L10n.tr("Localizable", "AutoremoveMessages.Header") }
+  /// Never
+  internal static var autoremoveMessagesNever: String  { return L10n.tr("Localizable", "AutoremoveMessages.Never") }
+  /// Auto-Delete Messages
+  internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
+  /// After 1 Week
+  internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
+  /// Turning on this setting will make auto-delete messages from this group after the selected period.
+  internal static var autoremoveMessagesGroupDesc: String  { return L10n.tr("Localizable", "AutoremoveMessages.Group.Desc") }
   /// Preferences…
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -1545,6 +1557,8 @@ internal final class L10n {
   internal static var chatContextAddFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.AddFavoriteSticker") }
   /// Archive
   internal static var chatContextArchive: String  { return L10n.tr("Localizable", "Chat.Context.Archive") }
+  /// Auto-Delete Messages
+  internal static var chatContextAutoDelete: String  { return L10n.tr("Localizable", "Chat.Context.AutoDelete") }
   /// Block Group
   internal static var chatContextBlockGroup: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup") }
   /// Block User
@@ -1741,6 +1755,10 @@ internal final class L10n {
   internal static var chatInputUnmute: String  { return L10n.tr("Localizable", "Chat.Input.Unmute") }
   /// Edit Message
   internal static var chatInputAccessoryEditMessage: String  { return L10n.tr("Localizable", "Chat.Input.Accessory.EditMessage") }
+  /// Messages in this chat are automatically deleted 24 hours after they have been sent.
+  internal static var chatInputAutoDelete1Day: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.1Day") }
+  /// Messages in this chat are automatically deleted 7 days after they have been sent.
+  internal static var chatInputAutoDelete7Days: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.7Days") }
   /// %d
   internal static func chatInputErrorMessageTooLongCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_countable", p1)
@@ -4084,31 +4102,59 @@ internal final class L10n {
   /// Sorry, the target user is a member of too many groups and channels. Please ask them to leave some first.
   internal static var inviteChannelsTooMuch: String  { return L10n.tr("Localizable", "Invite.ChannelsTooMuch") }
   /// %d
-  internal static func inviteLinkPeopleJoinedCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.PeopleJoined_countable", p1)
+  internal static func inviteLinkJoinedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Joined_countable", p1)
   }
-  /// %d people joined
-  internal static func inviteLinkPeopleJoinedFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.PeopleJoined_few", p1)
+  /// %d joined
+  internal static func inviteLinkJoinedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Joined_few", p1)
   }
-  /// %d people joined
-  internal static func inviteLinkPeopleJoinedMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.PeopleJoined_many", p1)
+  /// %d joined
+  internal static func inviteLinkJoinedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Joined_many", p1)
   }
-  /// %d people joined
-  internal static func inviteLinkPeopleJoinedOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.PeopleJoined_one", p1)
+  /// %d joined
+  internal static func inviteLinkJoinedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Joined_one", p1)
   }
-  /// %d people joined
-  internal static func inviteLinkPeopleJoinedOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.PeopleJoined_other", p1)
+  /// %d joined
+  internal static func inviteLinkJoinedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Joined_other", p1)
   }
-  /// %d people joined
-  internal static func inviteLinkPeopleJoinedTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.PeopleJoined_two", p1)
+  /// %d joined
+  internal static func inviteLinkJoinedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Joined_two", p1)
   }
   /// no one joined yet
-  internal static var inviteLinkPeopleJoinedZero: String  { return L10n.tr("Localizable", "InviteLink.PeopleJoined_zero") }
+  internal static var inviteLinkJoinedZero: String  { return L10n.tr("Localizable", "InviteLink.Joined_zero") }
+  /// %d
+  internal static func inviteLinkRemainingCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_countable", p1)
+  }
+  /// • %d remaining
+  internal static func inviteLinkRemainingFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_few", p1)
+  }
+  /// • %d remaining
+  internal static func inviteLinkRemainingMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_many", p1)
+  }
+  /// • %d remaining
+  internal static func inviteLinkRemainingOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_one", p1)
+  }
+  /// • %d remaining
+  internal static func inviteLinkRemainingOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_other", p1)
+  }
+  /// • %d remaining
+  internal static func inviteLinkRemainingTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_two", p1)
+  }
+  /// • %d remaining
+  internal static func inviteLinkRemainingZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Remaining_zero", p1)
+  }
   /// Share Link
   internal static var inviteLinkShareLink: String  { return L10n.tr("Localizable", "InviteLink.ShareLink") }
   ///  • expired
@@ -4117,6 +4163,10 @@ internal final class L10n {
   internal static var inviteLinkStickerLimit: String  { return L10n.tr("Localizable", "InviteLink.Sticker.Limit") }
   /// • revoked
   internal static var inviteLinkStickerRevoked: String  { return L10n.tr("Localizable", "InviteLink.Sticker.Revoked") }
+  /// %@ left
+  internal static func inviteLinkStickerTimeLeft(_ p1: String) -> String {
+    return L10n.tr("Localizable", "InviteLink.Sticker.TimeLeft", p1)
+  }
   /// Sorry, you are a member of too many groups and channels. Please leave some before joining one.
   internal static var joinChannelsTooMuch: String  { return L10n.tr("Localizable", "Join.ChannelsTooMuch") }
   /// Inactive Chats
@@ -4325,12 +4375,20 @@ internal final class L10n {
   internal static var manageLinksDelete: String  { return L10n.tr("Localizable", "ManageLinks.Delete") }
   /// Delete All
   internal static var manageLinksDeleteAll: String  { return L10n.tr("Localizable", "ManageLinks.DeleteAll") }
+  /// You can create addition invite links that have limited time or numbers of usage.
+  internal static var manageLinksEmptyDesc: String  { return L10n.tr("Localizable", "ManageLinks.EmptyDesc") }
+  /// INVITE LINKS CREATED BY OTHER ADMINS
+  internal static var manageLinksOtherAdmins: String  { return L10n.tr("Localizable", "ManageLinks.OtherAdmins") }
   /// PERMANENT LINK
   internal static var manageLinksPermanent: String  { return L10n.tr("Localizable", "ManageLinks.Permanent") }
   /// REVOKED LINKS
   internal static var manageLinksRevokedLinks: String  { return L10n.tr("Localizable", "ManageLinks.RevokedLinks") }
-  /// Title
-  internal static var manageLinksTitle: String  { return L10n.tr("Localizable", "ManageLinks.Title") }
+  /// Invite Links
+  internal static var manageLinksTitleNew: String  { return L10n.tr("Localizable", "ManageLinks.TitleNew") }
+  /// **%1$@** can see this link and use it to invite new members to **%2$@** 
+  internal static func manageLinksAdminPermanentDesc(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ManageLinks.Admin.Permanent.Desc", p1, p2)
+  }
   /// Copy
   internal static var manageLinksContextCopy: String  { return L10n.tr("Localizable", "ManageLinks.Context.Copy") }
   /// Edit
@@ -4591,6 +4649,8 @@ internal final class L10n {
   internal static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
   /// OK
   internal static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
+  /// Save
+  internal static var modalSave: String  { return L10n.tr("Localizable", "Modal.Save") }
   /// Send
   internal static var modalSend: String  { return L10n.tr("Localizable", "Modal.Send") }
   /// Set
@@ -5499,12 +5559,16 @@ internal final class L10n {
   internal static var peerInfoDiscussionDesc: String  { return L10n.tr("Localizable", "PeerInfo.Discussion.Desc") }
   /// First Name
   internal static var peerInfoFirstNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.FirstName.Placeholder") }
+  /// Auto-Delete Messages
+  internal static var peerInfoGroupAutoDeleteMessages: String  { return L10n.tr("Localizable", "PeerInfo.Group.AutoDeleteMessages") }
   /// Delete
   internal static var peerInfoGroupMenuDelete: String  { return L10n.tr("Localizable", "PeerInfo.Group.Menu.Delete") }
   /// Promote
   internal static var peerInfoGroupMenuPromote: String  { return L10n.tr("Localizable", "PeerInfo.Group.Menu.Promote") }
   /// Restrict
   internal static var peerInfoGroupMenuRestrict: String  { return L10n.tr("Localizable", "PeerInfo.Group.Menu.Restrict") }
+  /// Never
+  internal static var peerInfoGroupTimerNever: String  { return L10n.tr("Localizable", "PeerInfo.Group.Timer.Never") }
   /// Group Name
   internal static var peerInfoGroupNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.GroupName.Placeholder") }
   /// Group Name
@@ -8401,7 +8465,7 @@ internal final class L10n {
   internal static var voiceChatUnmuteForMe: String  { return L10n.tr("Localizable", "VoiceChat.UnmuteForMe") }
   /// Allow To Speak
   internal static var voiceChatUnmutePeer: String  { return L10n.tr("Localizable", "VoiceChat.UnmutePeer") }
-  /// Pin Video
+  /// Unpin Video
   internal static var voiceChatUnpinVideo: String  { return L10n.tr("Localizable", "VoiceChat.UnpinVideo") }
   /// You invited **%@** to the voice chat
   internal static func voiceChatUserInvited(_ p1: String) -> String {

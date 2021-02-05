@@ -312,7 +312,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 self.playerView.isHidden = true
                 self.thumbView.isHidden = false
                 if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
-                    if !parameters.hidePlayer {
+                    if let hidePlayer = parameters.hidePlayer, !hidePlayer {
                         self.playerView.isHidden = false
                         self.thumbView.isHidden = true
                     }

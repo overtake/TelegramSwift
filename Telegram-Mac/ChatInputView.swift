@@ -518,7 +518,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             let text = textView.string().trimmed
             if text.length > chatInteraction.presentation.maxInputCharacters {
                 alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.presentation.maxInputCharacters)))
-                return false
+                return true
             }
             if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage(false, nil)
