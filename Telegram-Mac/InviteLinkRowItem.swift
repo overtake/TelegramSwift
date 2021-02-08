@@ -45,7 +45,7 @@ class InviteLinkRowItem: GeneralRowItem {
         self._menuItems = menuItems
         self.link = link
         self._action = action
-        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType)
+        super.init(initialSize, height: 54, stableId: stableId, viewType: viewType)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -68,7 +68,7 @@ class InviteLinkRowItem: GeneralRowItem {
 }
 private final class ProgressView : View {
 
-    private let circle: View = View(frame: NSMakeRect(0, 0, 28, 28))
+    private let circle: View = View(frame: NSMakeRect(0, 0, 35, 35))
     private let progressView: FireTimerControl = FireTimerControl(frame: NSMakeRect(0, 0, 50, 50))
     private let imageView = ImageView()
 
@@ -216,10 +216,10 @@ private final class InviteLinkTokenView : Control {
         return NSMakePoint(7, focus(progressView.frame.size).minY)
     }
     private var titlePoint: NSPoint {
-        return NSMakePoint(58, 7)
+        return NSMakePoint(65, 8)
     }
     private var countPoint: NSPoint {
-        return NSMakePoint(58, frame.height - 7 - countView.frame.height)
+        return NSMakePoint(65, frame.height - 8 - countView.frame.height)
     }
 
     

@@ -247,7 +247,7 @@ class GeneralRowItem: TableRowItem {
         
         init(backgroundColor: NSColor = presentation.colors.background,
              grayBackground: NSColor = presentation.colors.grayBackground,
-             highlightColor: NSColor  = presentation.colors.accentSelect,
+             highlightColor: NSColor = presentation.colors.grayForeground,
              borderColor: NSColor = presentation.colors.border,
              accentColor: NSColor = presentation.colors.accent,
              secondaryColor: NSColor = presentation.colors.grayUI,

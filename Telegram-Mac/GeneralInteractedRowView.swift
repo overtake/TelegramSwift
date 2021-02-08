@@ -229,7 +229,7 @@ class GeneralInteractedRowView: GeneralRowView {
                     ctx.draw(icon, in: NSMakeRect(item.inset.left, f.minY, f.width, f.height))
                 }
                 
-                if item.drawCustomSeparator, !isSelect && !self.isResorting {
+                if item.drawCustomSeparator, !isSelect && !self.isResorting && containerView.controlState != .Highlight {
                     ctx.setFillColor(borderColor.cgColor)
                     ctx.fill(NSMakeRect(textXAdditional + item.inset.left, frame.height - .borderSize, frame.width - (item.inset.left + item.inset.right + textXAdditional), .borderSize))
                 }

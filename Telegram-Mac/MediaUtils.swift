@@ -980,7 +980,7 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
             
             var fullSizeImage: CGImage?
             if let fullSizeData = data.fullSizeData, data.fullSizeComplete {
-                if let image = NSImage(data: fullSizeData)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                if let image = NSImage(data: fullSizeData)?._cgImage {
                     fullSizeImage = image
                 }
             }

@@ -135,8 +135,8 @@ class FireTimerControl: Control {
             self.currentContentState = contentState
             let image: CGImage?
             
-            let diameter: CGFloat = 35
-            let inset: CGFloat = 15
+            let diameter: CGFloat = 42
+            let inset: CGFloat = 7
             let lineWidth: CGFloat = 2
             
             switch contentState {

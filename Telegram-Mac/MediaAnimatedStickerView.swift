@@ -297,29 +297,31 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 }
                 self?.removePlaceholder(animated: false)
             })
-            self.thumbView.set(arguments: arguments)
         }
+        self.thumbView.set(arguments: arguments)
+        self.playerView.removeFromSuperview()
+        addSubview(self.thumbView)
+
         
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
         stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
             guard let `self` = self else { return }
             switch state {
             case .playing:
-                self.playerView.isHidden = false
-                self.thumbView.isHidden = true
+                self.addSubview(self.playerView)
+                self.thumbView.removeFromSuperview()
                 self.removePlaceholder(animated: false)
             case .stoped:
-                self.playerView.isHidden = true
-                self.thumbView.isHidden = false
-                if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
-                    if let hidePlayer = parameters.hidePlayer, !hidePlayer {
-                        self.playerView.isHidden = false
-                        self.thumbView.isHidden = true
-                    }
-                }
+                self.playerView.removeFromSuperview()
+                self.addSubview(self.thumbView)
+//                if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
+//                    if let hidePlayer = parameters.hidePlayer, !hidePlayer {
+//                        self.addSubview(self.playerView)
+//                        self.thumbView.removeFromSuperview()
+//                    }
+//                }
             default:
-                self.playerView.isHidden = false
-                self.thumbView.isHidden = false
+                break
             }
 
             

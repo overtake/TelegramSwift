@@ -291,7 +291,7 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func invation() {
-        pushViewController(LinkInvationController(context, peerId: peerId))
+        pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     
     func stats(_ datacenterId: Int32) {
@@ -1560,16 +1560,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     if case .creator = group.role {
                         actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
                     }
-                    switch group.role {
-                    case .admin:
-                        actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
-                    case .creator:
-                        if inviteLinksCount > 1 {
-                            actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
-                        }
-                    default:
-                        break
-                    }
+                   
                     if case .creator = group.role {
                         actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .singleItem))
                     }
@@ -1590,8 +1581,10 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         }
                         activePermissionCount = count
                     }
+                    
+                    entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .firstItem))
 
-                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .firstItem))
+                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .innerItem))
                     entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: "", viewType: .lastItem))
                 }
             } else if let channel = view.peers[view.peerId] as? TelegramChannel, let cachedChannelData = view.cachedData as? CachedChannelData {
@@ -1601,13 +1594,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if access.isCreator {
                     actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
                 }
-                if access.isCreator {
-                    if inviteLinksCount > 1 {
-                        actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
-                    }
-                } else if access.canCreateInviteLink {
-                    actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .singleItem))
-                }
+                
 
                 if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId.peerId, let peer = view.peers[linkedDiscussionPeerId] {
                     actionBlock.append(.linkedChannel(section: GroupInfoSection.type.rawValue, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount, viewType: .singleItem))
@@ -1646,8 +1633,14 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         activePermissionCount = count
                     }
                     
+                    var nextViewType: GeneralViewType = .firstItem
+                    
+                    if access.isCreator || access.canCreateInviteLink {
+                        entries.append(.inviteLinks(section: GroupInfoSection.admin.rawValue, count: inviteLinksCount, viewType: nextViewType))
+                        nextViewType = .innerItem
+                    }
 
-                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .firstItem))
+                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: nextViewType))
                     entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.adminCount.flatMap { "\($0)" } ?? "", viewType: .lastItem))
                     
                 }
