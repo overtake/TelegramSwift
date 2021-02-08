@@ -128,8 +128,8 @@ class ChatInputActionsView: View, Notifable {
         _ = inlineCancel.sizeToFit()
         
         
-        if let messageSecretTimeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
-            secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: messageSecretTimeout)), for: .Normal)
+        if let timeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
+            secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: timeout.effectiveValue)), for: .Normal)
         } else {
             secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
         }
@@ -307,8 +307,8 @@ class ChatInputActionsView: View, Notifable {
                 send.set(image: value.state == .editing ? theme.icons.chatSaveEditedMessage : theme.icons.chatSendMessage, for: .Normal)
                 send.animates = true
                 
-                if let messageSecretTimeout = value.messageSecretTimeout?.timeout {
-                    secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: messageSecretTimeout)), for: .Normal)
+                if let timeout = value.messageSecretTimeout?.timeout {
+                    secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: timeout.effectiveValue)), for: .Normal)
                 } else if value.messageSecretTimeout == nil {
                     secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
                 }

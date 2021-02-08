@@ -2991,11 +2991,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return
             }
             if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
-                if peer.isSecretChat {
-                    _ = setSecretChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peer.id, timeout:seconds).start()
-                } else {
-                    _ = setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peer.id, timeout: seconds).start()
-                }
+                _ = setSecretChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peer.id, timeout:seconds).start()
             }
             scrollAfterSend()
         }
@@ -3006,18 +3002,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if let peer = strongSelf.chatInteraction.peer {
                 if !peer.canManageDestructTimer {
-                    if let timeout = strongSelf.chatInteraction.presentation.messageSecretTimeout?.timeout {
-                        switch timeout {
-                        case .secondsInDay:
-                            tooltip(for: control, text: L10n.chatInputAutoDelete1Day)
-                        case .secondsInWeek:
-                            tooltip(for: control, text: L10n.chatInputAutoDelete7Days)
-                        default:
-                            break
-                        }
-                    }
+//                    if let timeout = strongSelf.chatInteraction.presentation.messageSecretTimeout?.timeout {
+//                        switch timeout {
+//                        case .secondsInDay:
+//                            tooltip(for: control, text: L10n.chatInputAutoDelete1Day)
+//                        case .secondsInWeek:
+//                            tooltip(for: control, text: L10n.chatInputAutoDelete7Days)
+//                        default:
+//                            break
+//                        }
+//                    }
                 } else {
-                    showModal(with: AutoremoveMessagesController(context: context, peerId: peerId), for: context.window)
+                    showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
                 }
             }
         }
@@ -3827,8 +3823,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
 
                             if let peer = peerViewMainPeer(peerView) {
-                                if let peer = peer as? TelegramSecretChat {
-                                    present = present.withUpdatedMessageSecretTimeout(.known(peer.messageAutoremoveTimeout))
+                                if let peer = peer as? TelegramSecretChat, let value = peer.messageAutoremoveTimeout {
+                                    present = present.withUpdatedMessageSecretTimeout(.known(.init(myValue: value, peerValue: value, isGlobal: true)))
+                                } else {
+                                    present = present.withUpdatedMessageSecretTimeout(.known(nil))
                                 }
                                 if let cachedData = peerView.cachedData as? CachedChannelData {
                                     present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
@@ -4686,33 +4684,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }, theme.icons.scheduledInputAction))
                                 }
                                 
-                                if peer.isGroup || peer.isUser || (peer.isSupergroup && peer.addressName == nil) {
-                                    if let peer = peer as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
-                                        items.append(SPopoverItem(L10n.chatContextClearHistory, {
-                                            var thridTitle: String? = nil
-                                            
-                                            var canRemoveGlobally: Bool = false
-                                            if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
-                                                if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                                                    canRemoveGlobally = true
-                                                }
-                                            }
-                                            
-                                            if canRemoveGlobally {
-                                                thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
-                                            }
-                                            
-                                            modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-                                                
-                                                context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
-                                            })
-                                        }, theme.icons.chatActionClearHistory))
-                                    }
-                                    if peer.canManageDestructTimer {
-                                        items.append(SPopoverItem(L10n.chatContextAutoDelete, {
-                                            showModal(with: AutoremoveMessagesController(context: context, peerId: peerId), for: context.window)
-                                        }))
-                                    }
+                                if peer.canClearHistory || peer.canManageDestructTimer {
+                                    items.append(SPopoverItem(L10n.chatContextClearHistory, {
+                                        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
+                                    }, theme.icons.chatActionClearHistory))
                                 }
                                 
                                 let deleteChat = { [weak self] in

@@ -639,6 +639,7 @@ func initialize() -> [String] {
     array.append("profile_removed")
     array.append("profile_links")
 
+    array.append("destruct_clear_history")
     
     return array
 }

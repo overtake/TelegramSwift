@@ -439,18 +439,22 @@ internal final class L10n {
   internal static var autoNightSettingsSunriseDescNA: String  { return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc.NA") }
   /// Can't determine your location. Please check your system settings and try again.
   internal static var autoNightSettingsUpdateLocationError: String  { return L10n.tr("Localizable", "AutoNight.Settings.UpdateLocation.Error") }
-  /// After 1 Day
+  /// Also auto-delete for %@
+  internal static func autoremoveMessagesAlsoFor(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AutoremoveMessages.AlsoFor", p1)
+  }
+  /// After 24 Hours
   internal static var autoremoveMessagesDay: String  { return L10n.tr("Localizable", "AutoremoveMessages.Day") }
+  /// Automatically delete messages sent in this chat after a certain period of time.
+  internal static var autoremoveMessagesDesc: String  { return L10n.tr("Localizable", "AutoremoveMessages.Desc") }
   /// AUTO-DELETE MESSAGES
   internal static var autoremoveMessagesHeader: String  { return L10n.tr("Localizable", "AutoremoveMessages.Header") }
   /// Never
   internal static var autoremoveMessagesNever: String  { return L10n.tr("Localizable", "AutoremoveMessages.Never") }
-  /// Auto-Delete Messages
+  /// Clear Chat History
   internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
-  /// After 1 Week
+  /// After 7 Days
   internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
-  /// Turning on this setting will make auto-delete messages from this group after the selected period.
-  internal static var autoremoveMessagesGroupDesc: String  { return L10n.tr("Localizable", "AutoremoveMessages.Group.Desc") }
   /// Preferences…
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -4647,6 +4651,8 @@ internal final class L10n {
   internal static var modalCancel: String  { return L10n.tr("Localizable", "Modal.Cancel") }
   /// Copy Link
   internal static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
+  /// Done
+  internal static var modalDone: String  { return L10n.tr("Localizable", "Modal.Done") }
   /// OK
   internal static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
   /// Save

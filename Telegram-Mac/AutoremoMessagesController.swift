@@ -15,15 +15,22 @@ import SyncCore
 
 private final class Arguments {
     let context: AccountContext
-    let setTimeout:(Int32?)->Void
-    init(context: AccountContext, setTimeout:@escaping(Int32?)->Void) {
+    let setTimeout:(Int32)->Void
+    let clearHistory: ()->Void
+    let toggleGlobal:()->Void
+    init(context: AccountContext, setTimeout:@escaping(Int32)->Void, clearHistory: @escaping()->Void, toggleGlobal: @escaping()->Void) {
         self.context = context
         self.setTimeout = setTimeout
+        self.clearHistory = clearHistory
+        self.toggleGlobal = toggleGlobal
     }
 }
 
 private struct State : Equatable {
     var autoremoveTimeout: CachedPeerAutoremoveTimeout?
+    var isGlobal: Bool
+    var timeout: Int32
+    let peer: PeerEquatable
 }
 
 
@@ -31,6 +38,8 @@ private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_never = InputDataIdentifier("_id_never")
 private let _id_day = InputDataIdentifier("_id_day")
 private let _id_week = InputDataIdentifier("_id_week")
+private let _id_clear = InputDataIdentifier("_id_clear")
+private let _id_global = InputDataIdentifier("_id_global")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
 
@@ -40,47 +49,61 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: nil, item: { initialSize, stableId in
-        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .initialize(string: "", color: theme.colors.listGrayText, font: .normal(.text)))
-    }))
-    index += 1
+    if state.peer.peer.canClearHistory {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: L10n.chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
+        index += 1
 
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
+
+
+    if state.peer.peer.canManageDestructTimer {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), item: { [weak arguments] initialSize, stableId in
+            let values:[Int32] = [.secondsInDay, .secondsInWeek, 0]
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesDay, L10n.autoremoveMessagesWeek, L10n.autoremoveMessagesNever], viewType: .singleItem, selectAction: { index in
+                arguments?.setTimeout(values[index])
+            })
+        }))
+        index += 1
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+
+        if state.peer.peer.isUser {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+
+
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_global, data: .init(name: L10n.autoremoveMessagesAlsoFor(state.peer.peer.compactDisplayTitle), color: theme.colors.text, type: .switchable(state.isGlobal), viewType: .singleItem, enabled: true, action: arguments.toggleGlobal)))
+            index += 1
+
+        }
+
+        
+    }
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_never, data: .init(name: L10n.autoremoveMessagesNever, color: theme.colors.text, type: .selectable(state.autoremoveTimeout == nil || state.autoremoveTimeout == .unknown || state.autoremoveTimeout == .known(nil)), viewType: .firstItem, enabled: true, action: { [weak arguments] in
-        arguments?.setTimeout(nil)
-    })))
-    index += 1
-
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_day, data: .init(name: L10n.autoremoveMessagesDay, color: theme.colors.text, type: .selectable(state.autoremoveTimeout == .known(60 * 60 * 24 * 1)), viewType: .innerItem, enabled: true, action: { [weak arguments] in
-        arguments?.setTimeout(60 * 60 * 24 * 1)
-    })))
-    index += 1
-
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_week, data: .init(name: L10n.autoremoveMessagesWeek, color: theme.colors.text, type: .selectable(state.autoremoveTimeout == .known(60 * 60 * 24 * 7)), viewType: .lastItem, enabled: true, action: { [weak arguments] in
-        arguments?.setTimeout(60 * 60 * 24 * 7)
-    })))
-    index += 1
-
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesGroupDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-
-
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
 
     return entries
 }
 
-func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
+/*
+
+ */
+
+func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputDataModalController {
+
+
+    let peerId = peer.id
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let initialState = State(autoremoveTimeout: nil, isGlobal: false, timeout: 0, peer: PeerEquatable(peer))
 
     var close:(()->Void)? = nil
 
@@ -93,8 +116,31 @@ func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> In
     let arguments = Arguments(context: context, setTimeout: { timeout in
         updateState { current in
             var current = current
-            current.autoremoveTimeout = .known(timeout)
+            current.timeout = timeout
             return current
+        }
+    }, clearHistory: {
+        var thridTitle: String? = nil
+        var canRemoveGlobally: Bool = false
+        if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
+            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+                canRemoveGlobally = true
+            }
+        }
+        if canRemoveGlobally {
+            thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        }
+        modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+
+            context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
+            close?()
+        })
+    }, toggleGlobal: {
+
+        updateState { state in
+            var state = state
+            state.isGlobal.toggle()
+            return state
         }
     })
 
@@ -110,7 +156,7 @@ func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> In
         actionsDisposable.dispose()
     }
 
-    actionsDisposable.add(context.account.viewTracker.peerView(peerId).start(next: { peerView in
+    actionsDisposable.add(context.account.viewTracker.peerView(peer.id).start(next: { peerView in
         let autoremoveTimeout: CachedPeerAutoremoveTimeout?
         if let cachedData = peerView.cachedData as? CachedGroupData {
             autoremoveTimeout = cachedData.autoremoveTimeout
@@ -121,21 +167,37 @@ func AutoremoveMessagesController(context: AccountContext, peerId: PeerId) -> In
         } else {
             autoremoveTimeout = nil
         }
+        var isGlobal: Bool = false
+        if let autoremoveTimeout = autoremoveTimeout {
+            switch autoremoveTimeout {
+            case let .known(timeout):
+                if let timeout = timeout {
+                    isGlobal = timeout.isGlobal
+                }
+            default:
+                break
+            }
+        }
         updateState { current in
             var current = current
             current.autoremoveTimeout = autoremoveTimeout
+            current.isGlobal = isGlobal
+            current.timeout = autoremoveTimeout?.timeout?.myValue ?? 0
             return current
         }
     }))
 
     controller.validateData = { _ in
-        _ = setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: stateValue.with { $0.autoremoveTimeout?.timeout }).start()
-        return .success(.custom({
-            close?()
+        return .fail(.doSomething(next: { f in
+            _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: stateValue.with { $0.timeout == 0 ? nil : $0.timeout }, isGlobal: stateValue.with { $0.isGlobal }), for: context.window).start(completed: {
+                f(.success(.custom({
+                    close?()
+                })))
+            })
         }))
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSave, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
 
