@@ -77,8 +77,10 @@ final class InviteLinkPeerManager {
     deinit {
         listDisposable.dispose()
         loadCreatorsDisposable.dispose()
+        updateAdminsDisposable.dispose()
     }
     
+    private let updateAdminsDisposable = MetaDisposable()
     init(context: AccountContext, peerId: PeerId, adminId: PeerId? = nil) {
         self.context = context
         self.peerId = peerId
@@ -87,7 +89,12 @@ final class InviteLinkPeerManager {
         self.loadNext(true)
         if adminId == nil {
             self.loadCreators()
+            let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { [weak self] _ in
+                self?.loadCreators()
+            })
+            updateAdminsDisposable.set(disposable)
         }
+        
     }
     
     func createPeerExportedInvitation(expireDate: Int32?, usageLimit: Int32?) -> Signal<NoValue, NoError> {
@@ -390,8 +397,15 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
     let viewType: GeneralViewType = state.list == nil || !state.list!.isEmpty ? .firstItem : .singleItem
     if !state.isAdmin {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: L10n.manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink)))
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: nil, item: { initialSize, stableId in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.manageLinksCreateNew, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.newLink, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 43, thumbInset: 0))
+        }))
         index += 1
+
+        
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: L10n.manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink)))
+//        index += 1
     }
     if let list = state.list {
         if !list.isEmpty {
