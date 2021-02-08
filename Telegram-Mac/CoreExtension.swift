@@ -1169,6 +1169,15 @@ extension Peer {
         }
         return false
     }
+
+    var canClearHistory: Bool {
+        if self.isGroup || self.isUser || (self.isSupergroup && self.addressName == nil) {
+            if let peer = self as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
+                return true
+            }
+        }
+        return false
+    }
     
     func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
         if let peer = self as? TelegramChannel {
@@ -3228,13 +3237,26 @@ func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<Exp
 }
 
 
+
+
 extension CachedPeerAutoremoveTimeout {
-    var timeout: Int32? {
+    var timeout: CachedPeerAutoremoveTimeout.Value? {
         switch self {
         case let .known(timeout):
             return timeout
         case .unknown:
             return nil
+        }
+    }
+
+}
+
+extension CachedPeerAutoremoveTimeout.Value {
+    var effectiveValue: Int32 {
+        if isGlobal {
+            return min(self.myValue, self.peerValue)
+        } else {
+            return self.myValue
         }
     }
 }

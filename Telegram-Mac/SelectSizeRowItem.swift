@@ -171,7 +171,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 
                 if let titles = item.titles, titles.count == item.sizes.count {
                     let title = titles[i]
-                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                     titleNode.1.draw(NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
@@ -179,7 +179,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             if let titles = item.titles, titles.count == 1, let title = titles.first {
                 let perSize = NSMakeSize(10, 10)
                 let perF = _focus(perSize)
-                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                 titleNode.1.draw(NSMakeRect(_focus(titleNode.0.size).minX, perF.minY - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             
@@ -256,7 +256,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 
                 if let titles = item.titles, titles.count == item.sizes.count {
                     let title = titles[i]
-                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                    let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                     
                     var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
                     
@@ -269,7 +269,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             }
             
             if let titles = item.titles, titles.count == 1, let title = titles.first {
-                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.text)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+                let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.text, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                 titleNode.1.draw(NSMakeRect(_focus(titleNode.0.size).minX, insets.top , titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
             

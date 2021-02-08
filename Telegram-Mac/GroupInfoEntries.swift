@@ -1408,7 +1408,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 switch timer {
                 case let .known(timer):
                     if let timer = timer {
-                        text = autoremoveLocalized(Int(timer))
+                        text = autoremoveLocalized(Int(timer.effectiveValue))
                     } else {
                         text = L10n.peerInfoGroupTimerNever
                     }
