@@ -1157,7 +1157,12 @@ extension Peer {
             return true
         }
         if let peer = self as? TelegramChannel, self.isSupergroup {
-            return peer.groupAccess.canEditGroupInfo
+            if let adminRights = peer.adminRights, adminRights.flags.contains(.canDeleteMessages) {
+                return true
+            } else if peer.groupAccess.isCreator {
+                return true
+            }
+            return false
         }
         if let peer = self as? TelegramGroup {
             switch peer.role {
@@ -3258,5 +3263,26 @@ extension CachedPeerAutoremoveTimeout.Value {
         } else {
             return self.myValue
         }
+    }
+}
+
+
+func clearHistory(context: AccountContext, peer: Peer) {
+    if peer.canClearHistory && peer.canManageDestructTimer {
+        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
+    } else if peer.canClearHistory {
+        var thridTitle: String? = nil
+        var canRemoveGlobally: Bool = false
+        if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
+            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+                canRemoveGlobally = true
+            }
+        }
+        if canRemoveGlobally {
+            thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        }
+        modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+            context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
+        })
     }
 }

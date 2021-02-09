@@ -2393,6 +2393,8 @@ internal final class L10n {
   internal static var chatTitleScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Title.ScheduledMessages") }
   /// Your cloud storage
   internal static var chatTitleSelf: String  { return L10n.tr("Localizable", "Chat.Title.self") }
+  /// Telegram moderators will study your report. Thank You.
+  internal static var chatToastReportSuccess: String  { return L10n.tr("Localizable", "Chat.Toast.ReportSuccess") }
   /// The account was hidden by the user
   internal static var chatTooltipHiddenForwardName: String  { return L10n.tr("Localizable", "Chat.Tooltip.HiddenForwardName") }
   /// %d
@@ -4387,6 +4389,34 @@ internal final class L10n {
   internal static var manageLinksPermanent: String  { return L10n.tr("Localizable", "ManageLinks.Permanent") }
   /// REVOKED LINKS
   internal static var manageLinksRevokedLinks: String  { return L10n.tr("Localizable", "ManageLinks.RevokedLinks") }
+  /// %d
+  internal static func manageLinksTitleCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_countable", p1)
+  }
+  /// %d invite links
+  internal static func manageLinksTitleCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_few", p1)
+  }
+  /// %d invite links
+  internal static func manageLinksTitleCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_many", p1)
+  }
+  /// %d invite link
+  internal static func manageLinksTitleCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_one", p1)
+  }
+  /// %d invite links
+  internal static func manageLinksTitleCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_other", p1)
+  }
+  /// %d invite links
+  internal static func manageLinksTitleCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_two", p1)
+  }
+  /// %d invite links
+  internal static func manageLinksTitleCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ManageLinks.TitleCount_zero", p1)
+  }
   /// Invite Links
   internal static var manageLinksTitleNew: String  { return L10n.tr("Localizable", "ManageLinks.TitleNew") }
   /// **%1$@** can see this link and use it to invite new members to **%2$@** 
@@ -4655,6 +4685,8 @@ internal final class L10n {
   internal static var modalDone: String  { return L10n.tr("Localizable", "Modal.Done") }
   /// OK
   internal static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
+  /// Report
+  internal static var modalReport: String  { return L10n.tr("Localizable", "Modal.Report") }
   /// Save
   internal static var modalSave: String  { return L10n.tr("Localizable", "Modal.Save") }
   /// Send

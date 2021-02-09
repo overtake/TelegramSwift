@@ -54,6 +54,12 @@ final class InviteLinkPeerManager {
         var nextRevoked: ExportedInvitation?
         var totalRevokedCount: Int32
         var revokedLoaded: Bool
+        var effectiveCount: Int32 {
+            return totalCount + (self.creators?.reduce(0, { current, value in
+                return current + value.count
+            }) ?? 0)
+        }
+
         static var `default`: State {
             return State(list: nil, next: nil, creators: nil, totalCount: 0, activeLoaded: false, revokedList: nil, nextRevoked: nil, totalRevokedCount: 0, revokedLoaded: false)
         }
@@ -145,22 +151,38 @@ final class InviteLinkPeerManager {
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
             
-            let signal: Signal<ExportedInvitation?, RevokePeerExportedInvitationError>
-            if !link.isPermanent {
+            let signal: Signal<RevokeExportedInvitationResult?, RevokePeerExportedInvitationError>
+            if !link.isPermanent || self?.adminId != nil {
                 signal = TelegramCore.revokePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
             } else {
-                signal = revokePersistentPeerExportedInvitation(account: account, peerId: peerId) |> mapError { _ in .generic }
+                signal = revokePersistentPeerExportedInvitation(account: account, peerId: peerId) |> map { value in
+                    if let value = value {
+                        return .update(value)
+                    } else {
+                        return nil
+                    }
+                } |> mapError { _ in .generic }
             }
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
                     state.list = state.list ?? []
-                    if let _ = value {
-                        state.revokedList = state.revokedList ?? []
-                        state.list!.removeAll(where: { $0.link == link.link})
-                        state.revokedList?.append(link.withUpdatedIsRevoked(true))
-                        state.revokedList?.sort(by: { $0.date < $1.date })
-                        state.totalCount -= 1
+                    if let value = value {
+                        switch value {
+                        case let .update(link):
+                            state.revokedList = state.revokedList ?? []
+                            state.list!.removeAll(where: { $0.link == link.link})
+                            state.revokedList?.append(link)
+                            state.revokedList?.sort(by: { $0.date < $1.date })
+                            state.totalCount -= 1
+                        case let .replace(link, new):
+                            state.revokedList = state.revokedList ?? []
+                            state.list!.removeAll(where: { $0.link == link.link})
+                            state.list!.insert(new, at: 0)
+                            state.revokedList?.append(link)
+                            state.revokedList?.sort(by: { $0.date < $1.date })
+                        }
+
                     }
                     
                     return state
@@ -309,7 +331,7 @@ private struct InviteLinksState : Equatable {
     var revokedList: [ExportedInvitation]?
     var creators:[ExportedInvitationCreator]?
     var isAdmin: Bool
-
+    var totalCount: Int
     var peer: PeerEquatable?
     var adminPeer: PeerEquatable?
 }
@@ -534,7 +556,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 func InviteLinksController(context: AccountContext, peerId: PeerId, manager: InviteLinkPeerManager?) -> InputDataController {
 
     
-    let initialState = InviteLinksState(permanent: nil, permanentImporterState: nil, list: nil, creators: nil, isAdmin: manager?.adminId != nil)
+    let initialState = InviteLinksState(permanent: nil, permanentImporterState: nil, list: nil, creators: nil, isAdmin: manager?.adminId != nil, totalCount: 0)
     
     let statePromise = ValuePromise<InviteLinksState>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -588,17 +610,13 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         let manager = InviteLinkPeerManager(context: context, peerId: peerId, adminId: creator.peer.peerId)
         getController?()?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: manager))
     })
-    
-    let peerView = context.account.viewTracker.peerView(peerId)
-
-    let permanentLink = peerView |> map {
-        ($0.cachedData as? CachedChannelData)?.exportedInvitation ?? ($0.cachedData as? CachedGroupData)?.exportedInvitation
-    }
-    
+        
     let actionsDisposable = DisposableSet()
-    
-    context.account.viewTracker.forceUpdateCachedPeerData(peerId: peerId)
-    
+
+    let permanentLink = manager.state |> map {
+        $0.list?.first(where: { $0.isPermanent })
+    } |> distinctUntilChanged
+
     let importers: Signal<PeerInvitationImportersState?, NoError> = permanentLink |> deliverOnMainQueue |> mapToSignal { [weak manager] permanent in
         if let permanent = permanent {
             if let state = manager?.importer(for: permanent).state {
@@ -629,6 +647,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             current.revokedList = state.revokedList
             current.creators = state.creators
             current.peer = peers.first
+            current.totalCount = Int(state.totalCount)
             if peers.count == 2 {
                 current.adminPeer = peers.last
             } 
@@ -645,7 +664,24 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
-    
+
+
+    controller.getTitle = {
+        let peer = stateValue.with { $0.adminPeer?.peer }
+        if let peer = peer {
+            return peer.displayTitle
+        } else {
+            return L10n.manageLinksTitleNew
+        }
+    }
+    controller.getStatus = {
+        let isAdmin = stateValue.with { $0.isAdmin }
+        if isAdmin {
+            return L10n.manageLinksTitleCountCountable(stateValue.with { $0.totalCount })
+        } else {
+            return nil
+        }
+    }
     
     controller.didLoaded = { [weak manager] controller, _ in
         controller.tableView.setScrollHandler { position in
@@ -657,7 +693,11 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             }
         }
     }
-    
+
+    controller.afterTransaction = { controller in
+        controller.requestUpdateCenterBar()
+    }
+
     controller.contextOject = manager
     
     

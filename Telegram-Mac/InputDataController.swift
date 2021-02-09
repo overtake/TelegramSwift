@@ -368,6 +368,9 @@ class InputDataController: GenericViewController<InputDataView> {
     var contextOject: Any?
     
     var _abolishWhenNavigationSame: Bool = false
+
+    var getTitle:(()->String)? = nil
+    var getStatus:(()->String?)? = nil
     
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
         self.title = title
@@ -405,11 +408,12 @@ class InputDataController: GenericViewController<InputDataView> {
         super.requestUpdateRightBar()
         self.updateRightBarView?(self.rightBarView)
     }
-    
-    
-    
+
     override var defaultBarTitle: String {
-        return title
+        return getTitle?() ?? title
+    }
+    override var defaultBarStatus: String? {
+        return getStatus?()
     }
     
     override func getRightBarViewOnce() -> BarView {

@@ -525,6 +525,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 
                 chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: chatInteraction.peerId, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
+            } else if text.isEmpty {
+                chatInteraction.scrollToLatest(true)
             }
             
             return true

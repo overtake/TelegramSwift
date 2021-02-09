@@ -333,13 +333,13 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private var rootRepliesCount: Int = 0 {
         didSet {
-            updateTitle()
+            updateTitle(presentation: chatInteraction.presentation)
         }
     }
    
     var postboxView:PostboxView? {
         didSet {
-           updateStatus(true)
+           updateStatus(true, presentation: chatInteraction.presentation)
             switch chatInteraction.mode {
             case let .replyThread(data, _):
                 let answersCount = chatInteraction.context.account.postbox.messageView(data.messageId)
@@ -363,7 +363,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     var onlineMemberCount:Int32? = nil {
         didSet {
-            updateStatus()
+            updateStatus(presentation: chatInteraction.presentation)
         }
     }
     
@@ -437,7 +437,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         addSubview(searchButton)
         self.presenceManager = PeerPresenceStatusManager(update: { [weak self] in
-            self?.updateStatus()
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.updateStatus(presentation: strongSelf.chatInteraction.presentation)
         })
         
         callButton.set(handler: { [weak self] _ in
@@ -622,7 +625,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if isSingleLayout {
             if point.x > 20 {
                 if chatInteraction.mode == .history {
-                    if chatInteraction.peerId == repliesPeerId {
+                    if chatInteraction.presentation.reportMode != nil {
+
+                    } else if chatInteraction.peerId == repliesPeerId {
                         
                     } else if chatInteraction.peerId == chatInteraction.context.peerId {
                         chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
@@ -640,7 +645,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 chatInteraction.context.sharedContext.bindings.rootNavigation().back()
             }
         } else {
-            if chatInteraction.peerId == repliesPeerId {
+            if chatInteraction.presentation.reportMode != nil {
+
+            } else if chatInteraction.peerId == repliesPeerId {
                 
             } else if chatInteraction.peerId == chatInteraction.context.peerId {
                 chatInteraction.context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: chatInteraction.context, peerId: chatInteraction.peerId))
@@ -731,7 +738,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
 
 
-    func updateStatus(_ force:Bool = false) {
+    func updateStatus(_ force:Bool = false, presentation: ChatPresentationInterfaceState) {
+
+
         if let peerView = self.postboxView as? PeerView {
             
             checkPhoto(peerViewMainPeer(peerView))
@@ -740,9 +749,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             case .history:
                 if let peer = peerViewMainPeer(peerView) {
                     if peer.isGroup || peer.isSupergroup {
-                        if let groupCall = chatInteraction.presentation.groupCall {
+                        if let groupCall = presentation.groupCall {
                             if let data = groupCall.data, data.participantCount == 0 {
-                                callButton.isHidden = false
+                                callButton.isHidden = presentation.reportMode != nil
                             } else {
                                 callButton.isHidden = true
                             }
@@ -750,7 +759,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                             callButton.isHidden = true
                         }
                     } else {
-                        callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId
+                        callButton.isHidden = !peer.canCall || chatInteraction.peerId == chatInteraction.context.peerId || presentation.reportMode != nil
                     }
                 } else {
                     callButton.isHidden = true
@@ -759,6 +768,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             default:
                 callButton.isHidden = true
             }
+
             
             
             if let peer = peerViewMainPeer(peerView) {
@@ -802,17 +812,17 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
             callButton.sizeToFit()
 
-            updateTitle(force)
+            updateTitle(force, presentation: chatInteraction.presentation)
         } 
     }
     
-    private func updateTitle(_ force: Bool = false) {
+    private func updateTitle(_ force: Bool = false, presentation: ChatPresentationInterfaceState) {
         var shouldUpdateLayout = false
         if let peerView = self.postboxView as? PeerView {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
             if chatInteraction.mode == .pinned {
-                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessagesCountable(chatInteraction.presentation.pinnedMessageId?.totalCount ?? 0))
+                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0))
                 status = nil
             } else if chatInteraction.context.peerId == peerView.peerId  {
                 if chatInteraction.mode == .scheduled {
@@ -867,6 +877,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
         
-        updateStatus(true)
+        updateStatus(true, presentation: chatInteraction.presentation)
     }
 }

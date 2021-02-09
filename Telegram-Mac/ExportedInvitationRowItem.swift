@@ -219,7 +219,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
                 return
             }
             if let link = item.exportedLink {
-                item.shareLink(link.link)
+                item.copyLink(link.link)
             }
         }, for: .Click)
         
@@ -355,7 +355,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         }
                 
         share.set(font: .medium(.text), for: .Normal)
-        share.set(text: L10n.inviteLinkShareLink, for: .Normal)
+        share.set(text: L10n.exportedInvitationContextCopy, for: .Normal)
         if let link = item.exportedLink {
             share.userInteractionEnabled = !link.isExpired && !link.isRevoked
         } else {

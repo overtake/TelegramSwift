@@ -436,6 +436,7 @@ open class ViewController : NSObject {
     
     open func requestUpdateCenterBar() {
         setCenterTitle(defaultBarTitle)
+        setCenterStatus(defaultBarStatus)
     }
     
     open func dismiss() {
@@ -503,6 +504,10 @@ open class ViewController : NSObject {
     open var defaultBarTitle:String {
         return localizedString(self.className)
     }
+    open var defaultBarStatus:String? {
+        return nil
+    }
+
     
     open func getCenterBarViewOnce() -> TitledBarView {
         return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
@@ -511,7 +516,13 @@ open class ViewController : NSObject {
     public func setCenterTitle(_ text:String) {
         self.centerBarView.text = .initialize(string: text, color: presentation.colors.text, font: .medium(.title))
     }
-    
+    public func setCenterStatus(_ text: String?) {
+        if let text = text {
+            self.centerBarView.status = .initialize(string: text, color: presentation.colors.grayText, font: .normal(.text))
+        } else {
+            self.centerBarView.status = nil
+        }
+    }
     open func getRightBarViewOnce() -> BarView {
         return BarView(controller: self)
     }

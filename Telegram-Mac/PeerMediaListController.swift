@@ -497,12 +497,14 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         
         location.set(.Initial(count: requestCount))
      
-        genericView.setScrollHandler { scroll in
+        genericView.setScrollHandler { [weak self] scroll in
             switch scroll.direction {
             case .bottom:
-                _ = animated.swap(false)
-                requestCount += perPageCount() * 3
-                location.set(.Initial(count: requestCount))
+                if self?.isSearch == false {
+                    _ = animated.swap(false)
+                    requestCount += perPageCount() * 3
+                    location.set(.Initial(count: requestCount))
+                }
             default:
                 break
             }
