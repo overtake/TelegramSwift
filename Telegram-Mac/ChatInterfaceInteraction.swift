@@ -83,6 +83,7 @@ final class ChatInteraction : InterfaceObserver  {
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([MessageId]) -> Void = {_ in}
+    var reportMessages:(ReportReason, [MessageId]) -> Void = { _, _ in }
     var sendMessage: (Bool, Date?) -> Void = { _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
 
@@ -415,6 +416,10 @@ final class ChatInteraction : InterfaceObserver  {
                 break
             case let .closeAfter(peek):
                break
+            case let .selectToReport(reason):
+                update(animated: animated, {
+                    $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
+                })
             }
            
         }

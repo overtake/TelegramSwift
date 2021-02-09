@@ -115,7 +115,7 @@ private final class ProgressView : View {
             }
             let backgroundColor: NSColor
             if link.isRevoked {
-                backgroundColor = theme.colors.grayForeground.darker()
+                backgroundColor = theme.colors.grayIcon
             } else if let expireDate = link.expireDate {
 
                 let timeout = expireDate - (link.startDate ?? link.date)
@@ -235,8 +235,8 @@ private final class InviteLinkTokenView : Control {
                 
         self.action = action
 
-        actions.set(image: generate(theme.colors.grayForeground), for: .Normal)
-        actions.style = ControlStyle(highlightColor: theme.colors.grayForeground.highlighted)
+        actions.set(image: generate(theme.colors.grayIcon), for: .Normal)
+        actions.style = ControlStyle(highlightColor: theme.colors.grayIcon.highlighted)
         actions.sizeToFit()
 
 

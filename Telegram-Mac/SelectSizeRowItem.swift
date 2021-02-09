@@ -251,7 +251,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 ctx.setFillColor(theme.colors.background.cgColor)
                 ctx.fill(NSMakeRect(point.x, point.y, perSize.width, perSize.height))
                 
-                ctx.setFillColor(item.sizes[i] <= item.current ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
+                ctx.setFillColor(i <= (item.sizes.firstIndex(of: item.current) ?? 0) ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
                 ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
                 
                 if let titles = item.titles, titles.count == item.sizes.count {

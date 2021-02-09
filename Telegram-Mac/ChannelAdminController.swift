@@ -449,9 +449,11 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     descId += 1
                 }
                 if channel.flags.contains(.isCreator), !admin.isBot && currentRightsFlags.contains(TelegramChatAdminRightsFlags.all)  {
-                    entries.append(.section(sectionId))
-                    sectionId += 1
-                    entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
+                    if admin.id != accountPeerId {
+                        entries.append(.section(sectionId))
+                        sectionId += 1
+                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
+                    }
                 }
             }
 
@@ -572,10 +574,11 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             
             if case .creator = group.role, !admin.isBot {
                 if currentRightsFlags.contains(maskRightsFlags) {
-                    entries.append(.section(sectionId))
-                    sectionId += 1
-                    entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup, .singleItem))
-                    descId += 1
+                    if admin.id != accountPeerId {
+                        entries.append(.section(sectionId))
+                        sectionId += 1
+                        entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup, .singleItem))
+                    }
                 }
             }
         }

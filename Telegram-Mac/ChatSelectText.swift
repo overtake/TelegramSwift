@@ -304,11 +304,11 @@ class ChatSelectText : NSObject {
                 
                 
                 if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
-                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame(item))) {
+                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(event.locationInWindow, from: nil), view.bubbleFrame(item))) {
                         if self?.startMessageId == nil {
                             self?.startMessageId = item.message?.id
                         }
-                        self?.deselect = !view.isSelectInGroup(window.mouseLocationOutsideOfEventStream)
+                        self?.deselect = !view.isSelectInGroup(event.locationInWindow)
                     }
                 }
                 
@@ -354,17 +354,21 @@ class ChatSelectText : NSObject {
                             _ = window.makeFirstResponder(view.selectableTextViews.first)
                         }
                     }
-                    
-                    if view.canDropSelection(in: event.locationInWindow) {
+
+                    if chatInteraction.presentation.reportMode == nil {
+                        if view.canDropSelection(in: event.locationInWindow) {
+                            if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
+                                self?.startMessageId = nil
+                                chatInteraction.update({$0.withoutSelectionState()})
+                            }
+                        }
+                    }
+                } else {
+                    if chatInteraction.presentation.reportMode == nil {
                         if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
                             self?.startMessageId = nil
                             chatInteraction.update({$0.withoutSelectionState()})
                         }
-                    }
-                } else {
-                    if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
-                        self?.startMessageId = nil
-                        chatInteraction.update({$0.withoutSelectionState()})
                     }
                 }
                 if cleanStartId {

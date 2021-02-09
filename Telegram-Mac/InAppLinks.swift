@@ -81,6 +81,16 @@ enum ChatInitialAction : Equatable {
     case ad(PromoChatListItem.Kind)
     case source(MessageId)
     case closeAfter(Int32)
+    case selectToReport(reason: ReportReason)
+
+    var selectionNeeded: Bool {
+        switch self {
+        case .selectToReport:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 
