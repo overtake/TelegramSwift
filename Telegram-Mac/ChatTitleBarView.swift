@@ -501,7 +501,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     func updateSearchButton(hidden: Bool, animated: Bool) {
-        (animated ? searchButton.animator() : searchButton).isHidden = hidden
+        searchButton.isHidden = hidden
+        needsLayout = true
     }
     
     

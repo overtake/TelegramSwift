@@ -448,8 +448,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let highlighted = item.isSelected && item.context.sharedContext.layout != .single
                 
                 
-                if item.ctxBadgeNode == nil && (item.isPinned || item.isLastPinned) {
-                    ctx.draw(highlighted ? theme.icons.pinnedImageSelected : theme.icons.pinnedImage, in: NSMakeRect(frame.width - theme.icons.pinnedImage.backingSize.width - item.margin, frame.height - theme.icons.pinnedImage.backingSize.height - (item.margin + 1), theme.icons.pinnedImage.backingSize.width, theme.icons.pinnedImage.backingSize.height))
+                if item.ctxBadgeNode == nil && item.mentionsCount == nil && (item.isPinned || item.isLastPinned) {
+                    ctx.draw(highlighted ? theme.icons.pinnedImageSelected : theme.icons.pinnedImage, in: NSMakeRect(frame.width - theme.icons.pinnedImage.backingSize.width - item.margin - 1, frame.height - theme.icons.pinnedImage.backingSize.height - (item.margin + 1), theme.icons.pinnedImage.backingSize.width, theme.icons.pinnedImage.backingSize.height))
                 }
                 
                 if let displayLayout = item.ctxDisplayLayout {

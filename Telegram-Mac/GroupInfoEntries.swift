@@ -266,7 +266,7 @@ final class GroupInfoArguments : PeerInfoArguments {
 
 //showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: reason), for: context.window)
 
-        let report = reportReasonSelector(context: context) |> map { reason -> ChatController in
+        let report = reportReasonSelector(context: context, buttonText: L10n.peerInfoReportSelectMessages) |> map { reason -> ChatController in
             return ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: reason))
         } |> deliverOnMainQueue
 

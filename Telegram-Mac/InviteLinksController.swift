@@ -157,7 +157,7 @@ final class InviteLinkPeerManager {
             } else {
                 signal = revokePersistentPeerExportedInvitation(account: account, peerId: peerId) |> map { value in
                     if let value = value {
-                        return .update(value)
+                        return .replace(link.withUpdatedIsRevoked(true), value)
                     } else {
                         return nil
                     }
@@ -176,6 +176,7 @@ final class InviteLinkPeerManager {
                             state.revokedList?.sort(by: { $0.date < $1.date })
                             state.totalCount -= 1
                         case let .replace(link, new):
+                            let link = link.withUpdatedIsRevoked(true)
                             state.revokedList = state.revokedList ?? []
                             state.list!.removeAll(where: { $0.link == link.link})
                             state.list!.insert(new, at: 0)
