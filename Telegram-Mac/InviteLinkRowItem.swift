@@ -115,7 +115,7 @@ private final class ProgressView : View {
             }
             let backgroundColor: NSColor
             if link.isRevoked {
-                backgroundColor = theme.colors.grayIcon
+                backgroundColor = theme.colors.grayIcon.darker()
             } else if let expireDate = link.expireDate {
 
                 let timeout = expireDate - (link.startDate ?? link.date)

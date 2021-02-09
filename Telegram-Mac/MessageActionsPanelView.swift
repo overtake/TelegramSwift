@@ -96,6 +96,9 @@ class MessageActionsPanelView: Control, Notifable {
         } else {
             forwardButton.removeImage(for: .Normal)
         }
+        
+        deleteButton.scaleOnClick = true
+        forwardButton.scaleOnClick = true
 
         deleteButton.set(color: !deleteButton.userInteractionEnabled ? theme.colors.grayIcon : leftColor, for: .Normal)
         forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayIcon : rightColor, for: .Normal)
@@ -110,7 +113,7 @@ class MessageActionsPanelView: Control, Notifable {
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let selectionState = value.selectionState {
             if value.reportMode != nil {
-                updateUI(true, true, selectionState.selectedIds.count)
+                updateUI(true, selectionState.selectedIds.count > 0, selectionState.selectedIds.count)
             } else {
                 updateUI(value.canInvokeBasicActions.delete, value.canInvokeBasicActions.forward, selectionState.selectedIds.count)
             }

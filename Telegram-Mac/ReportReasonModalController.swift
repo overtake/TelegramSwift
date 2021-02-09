@@ -14,11 +14,11 @@ import TelegramCore
 import SyncCore
 
 
-func reportReasonSelector(context: AccountContext) -> Signal<ReportReason, NoError> {
+func reportReasonSelector(context: AccountContext, buttonText: String = L10n.reportReasonReport) -> Signal<ReportReason, NoError> {
     let promise: ValuePromise<ReportReason> = ValuePromise()
     let controller = ReportReasonController(callback: { reason in
         promise.set(reason)
-    })
+    }, buttonText: buttonText)
     showModal(with: controller, for: context.window)
     
     return promise.get() |> take(1)
@@ -169,7 +169,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     return entries
 }
 
-func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDataModalController {
+func ReportReasonController(callback: @escaping(ReportReason)->Void, buttonText: String = L10n.reportReasonReport) -> InputDataModalController {
     let initialState = ReportReasonState(reason: .spam)
     let state: ValuePromise<ReportReasonState> = ValuePromise(initialState)
     let stateValue: Atomic<ReportReasonState> = Atomic(value: initialState)
@@ -216,7 +216,7 @@ func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDat
     }
     
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.reportReasonReport, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: buttonText, accept: { [weak controller] in
           controller?.validateInputValues()
     }, drawBorder: true, singleButton: true)
     

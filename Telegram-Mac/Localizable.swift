@@ -5623,6 +5623,8 @@ internal final class L10n {
   internal static var peerInfoPreHistoryHidden: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Hidden") }
   /// Visible
   internal static var peerInfoPreHistoryVisible: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Visible") }
+  /// Select Messages
+  internal static var peerInfoReportSelectMessages: String  { return L10n.tr("Localizable", "PeerInfo.Report.SelectMessages") }
   /// Append names of the admins to the messages they post.
   internal static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
   /// Audio

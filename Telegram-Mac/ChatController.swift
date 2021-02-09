@@ -2124,7 +2124,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         chatInteraction.reportMessages = { [weak self] reason, ids in
             _ = showModalProgress(signal: reportPeerMessages(account: context.account, messageIds: ids, reason: reason), for: context.window).start(completed: { [weak self] in
-                self?.show(toaster: ControllerToaster(text: L10n.chatToastReportSuccess))
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                self?.show(toaster: ControllerToaster(text: L10n.chatToastReportSuccess), for: 5.0)
                 self?.changeState()
             })
         }
@@ -4475,8 +4476,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
     }
     
-    var searchAvailable: Bool {
-        if chatInteraction.presentation.reportMode != nil {
+    func isSearchAvailable(_ presentation: ChatPresentationInterfaceState) -> Bool {
+        if presentation.reportMode != nil {
             return false
         }
         var isEmpty: Bool = genericView.tableView.isEmpty
@@ -4488,6 +4489,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             return true
         }
+    }
+    
+    var searchAvailable: Bool {
+        isSearchAvailable(chatInteraction.presentation)
     }
     
     private var firstLoad: Bool = true
@@ -5630,7 +5635,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
 
             if value.reportMode != oldValue.reportMode {
-                (self.centerBarView as? ChatTitleBarView)?.updateSearchButton(hidden: !searchAvailable, animated: animated)
+                (self.centerBarView as? ChatTitleBarView)?.updateSearchButton(hidden: !isSearchAvailable(value), animated: animated)
             }
 
             if value.peer != nil && oldValue.peer == nil {
