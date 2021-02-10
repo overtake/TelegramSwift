@@ -300,8 +300,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         
         
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
-        
-        
+
         updateListeners()
         
         if let media = media as? TelegramMediaFile {
@@ -320,11 +319,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 
                 player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: mediaUpdated)
-                if player.hasImage {
-                    var bp:Int = 0
-                    bp += 1
-                }
-               
+
                 player.setSignal(chatMessageVideo(postbox: context.account.postbox, fileReference: parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media), scale: backingScaleFactor), cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)

@@ -3257,9 +3257,19 @@ extension CachedPeerAutoremoveTimeout {
 }
 
 extension CachedPeerAutoremoveTimeout.Value {
-    var effectiveValue: Int32 {
+    var effectiveValue: Int32? {
         if isGlobal {
-            return min(self.myValue, self.peerValue)
+            if let myValue = myValue, let peerValue = peerValue {
+                return min(myValue, peerValue)
+            } else {
+                if let peerValue = peerValue {
+                    return peerValue
+                } else if let myValue = myValue {
+                    return myValue
+                } else {
+                    return nil
+                }
+            }
         } else {
             return self.myValue
         }

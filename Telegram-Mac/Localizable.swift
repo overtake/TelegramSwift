@@ -455,6 +455,14 @@ internal final class L10n {
   internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
   /// After 7 Days
   internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
+  /// %@ has set messages to auto-delete in 24 hours. You can't cancel it or make this interval longer.
+  internal static func autoremoveMessagesGlobalDay(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AutoremoveMessages.Global.Day", p1)
+  }
+  /// %@ has set messages to auto-delete in 1 week. You can't cancel it or make this interval longer.
+  internal static func autoremoveMessagesGlobalWeek(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AutoremoveMessages.Global.Week", p1)
+  }
   /// Preferences…
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco

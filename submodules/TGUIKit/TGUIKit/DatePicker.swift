@@ -99,6 +99,7 @@ public class DatePicker<T>: Control where T: Equatable {
             self.borderView.change(opacity: 1, animated: animated)
             self.activeBorderView.change(opacity: 0, animated: animated)
         }
+        needsLayout = true
     }
     
     
