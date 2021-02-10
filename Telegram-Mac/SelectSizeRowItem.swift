@@ -19,9 +19,11 @@ class SelectSizeRowItem: GeneralRowItem {
     fileprivate let initialCurrent: Int32
     fileprivate let selectAction:(Int)->Void
     fileprivate let hasMarkers: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, viewType: GeneralViewType = .legacy, selectAction: @escaping(Int)->Void) {
+    fileprivate let dottedIndexes: [Int]
+    init(_ initialSize: NSSize, stableId: AnyHashable, current: Int32, sizes: [Int32], hasMarkers: Bool, titles:[String]? = nil, dottedIndexes:[Int] = [], viewType: GeneralViewType = .legacy, selectAction: @escaping(Int)->Void) {
         self.sizes = sizes
         self.titles = titles
+        self.dottedIndexes = dottedIndexes
         self.initialCurrent = current
         self.hasMarkers = hasMarkers
         self.current = current
@@ -78,7 +80,7 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
         if item.sizes.count == availableRects.count {
             let point = containerView.convert(event.locationInWindow, from: nil)
             for i in 0 ..< availableRects.count {
-                if NSPointInRect(point, availableRects[i]), item.current != i {
+                if NSPointInRect(point, availableRects[i]), item.sizes.firstIndex(of: item.current) != i {
                     item.selectAction(i)
                     return
                 }
@@ -241,8 +243,11 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
             
             ctx.setFillColor(theme.colors.grayText.cgColor)
             let unMinX = selectPoint.x + selectSize.width / 2
+
+
+
             ctx.fill(NSMakeRect(unMinX, lc.minY, lc.maxX - unMinX, lc.height))
-            
+
             
             for i in 0 ..< item.sizes.count {
                 let perSize = NSMakeSize(10, 10)
@@ -253,33 +258,55 @@ private class SelectSizeRowView : TableRowView, ViewDisplayDelegate {
                 
                 ctx.setFillColor(i <= (item.sizes.firstIndex(of: item.current) ?? 0) ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
                 ctx.fillEllipse(in: NSMakeRect(point.x + perSize.width/2 - 2, point.y + 3, 4, 4))
-                
+
+
+                if item.dottedIndexes.contains(i), i > 0 {
+                    let prevPoint = NSMakePoint(minX + per * CGFloat(i - 1) + (i == 1 ? perSize.width : perSize.width / 2), lc.minY)
+                    let rect = NSMakeRect(prevPoint.x, lc.minY, point.x - prevPoint.x, lc.height)
+                    ctx.clear(rect)
+                    let w: CGFloat = 16
+
+
+                    let count = Int(floor(rect.width / w))
+                    let total = CGFloat(count) * w
+
+                    let inset: CGFloat = ceil((rect.width - total) / 2)
+
+                    for j in 0 ..< count {
+                        let rect = NSMakeRect(rect.minX + CGFloat(j) * w, rect.minY, w, rect.height)
+                        ctx.saveGState()
+                        ctx.setFillColor(i <= (item.sizes.firstIndex(of: item.current) ?? 0) ? theme.colors.accent.cgColor : theme.colors.grayText.cgColor)
+                        ctx.fill(NSMakeRect(rect.minX + inset + 2, rect.minY, w - 4, rect.height))
+                        ctx.restoreGState()
+                    }
+                }
+
                 if let titles = item.titles, titles.count == item.sizes.count {
                     let title = titles[i]
                     let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
-                    
+
                     var rect = NSMakeRect(min(max(point.x - titleNode.0.size.width / 2 + 3, minX), frame.width - titleNode.0.size.width - minX), point.y - 15 - titleNode.0.size.height, titleNode.0.size.width, titleNode.0.size.height)
-                    
+
                     if i == titles.count - 1 {
                         rect.origin.x = min(rect.minX, (point.x + 5) - titleNode.0.size.width)
                     }
-                    
+
                     titleNode.1.draw(rect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
             }
-            
+
             if let titles = item.titles, titles.count == 1, let title = titles.first {
                 let titleNode = TextNode.layoutText(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), backdorColor, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
                 titleNode.1.draw(NSMakeRect(_focus(titleNode.0.size).minX, insets.top , titleNode.0.size.width, titleNode.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
             }
-            
-            
+
+
             ctx.setFillColor(theme.colors.border.cgColor)
             ctx.fillEllipse(in: NSMakeRect(selectPoint.x, selectPoint.y, selectSize.width, selectSize.height))
-            
+
             ctx.setFillColor(.white)
             ctx.fillEllipse(in: NSMakeRect(selectPoint.x + 1, selectPoint.y + 1, selectSize.width - 2, selectSize.height - 2))
-            
+
             resetCursorRects()
             availableRects.removeAll()
             

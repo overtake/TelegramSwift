@@ -173,6 +173,9 @@ final class ChatInteraction : InterfaceObserver  {
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     var hasSetDestructiveTimer: Bool {
+        if !self.presentation.interfaceState.inputState.inputText.isEmpty {
+            return false
+        }
         if self.peerId.namespace == Namespaces.Peer.SecretChat {
             return true
         }

@@ -264,17 +264,23 @@ final class GroupInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
 
-//showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: reason), for: context.window)
-
-        let report = reportReasonSelector(context: context, buttonText: L10n.peerInfoReportSelectMessages) |> map { reason -> ChatController in
-            return ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: reason))
+        let report = reportReasonSelector(context: context) |> map { reason -> ChatController? in
+            switch reason {
+            case .fake:
+                return nil
+            default:
+                return ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: reason))
+            }
         } |> deliverOnMainQueue
 
         reportPeerDisposable.set(report.start(next: { [weak self] controller in
-
-            self?.pullNavigation()?.push(controller)
-
-          //  self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.peerInfoChannelReported))
+            if let controller = controller {
+                self?.pullNavigation()?.push(controller)
+            } else {
+                _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: .fake), for: context.window).start(completed: { [weak self] in
+                    self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.peerInfoChannelReported))
+                })
+            }
         }))
     }
     
@@ -1412,8 +1418,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             if let timer = timer {
                 switch timer {
                 case let .known(timer):
-                    if let timer = timer {
-                        text = autoremoveLocalized(Int(timer.effectiveValue))
+                    if let timer = timer?.effectiveValue {
+                        text = autoremoveLocalized(Int(timer))
                     } else {
                         text = L10n.peerInfoGroupTimerNever
                     }

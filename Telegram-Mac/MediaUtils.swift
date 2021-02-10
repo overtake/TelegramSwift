@@ -1602,8 +1602,6 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
                 loadedData = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
-                
-                
                 let decodedThumbnailData = fileReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail)
                 let fetchedThumbnail: Signal<FetchResourceSourceType, NoError>
                 if let smallestRepresentation = smallestImageRepresentation(fileReference.media.previewRepresentations) {
@@ -1611,8 +1609,6 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
                 } else {
                     fetchedThumbnail = .complete()
                 }
-                
-                
                 
                 let mainThumbnail = Signal<ImageRenderData, NoError> { subscriber in
                     if let decodedThumbnailData = decodedThumbnailData {

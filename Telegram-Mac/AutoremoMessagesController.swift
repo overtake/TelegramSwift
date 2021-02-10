@@ -40,6 +40,7 @@ private let _id_day = InputDataIdentifier("_id_day")
 private let _id_week = InputDataIdentifier("_id_week")
 private let _id_clear = InputDataIdentifier("_id_clear")
 private let _id_global = InputDataIdentifier("_id_global")
+private let _id_clear_both = InputDataIdentifier("_id_clear_both")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
 
@@ -50,11 +51,34 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     if state.peer.peer.canClearHistory {
+//        var thridTitle: String? = nil
+//        if state.peer.peer.id.namespace == Namespaces.Peer.CloudUser && state.peer.peer.id != arguments.context.account.peerId && !state.peer.peer.isBot {
+//            if arguments.context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+//                thridTitle = L10n.chatMessageDeleteForMeAndPerson(state.peer.peer.displayTitle)
+//            }
+//        }
+//
+//        let peer = state.peer.peer
+//        let context = arguments.context
+//
+//        let header = peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : thridTitle != nil || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup
+//
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(header), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+//        index += 1
+
+
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: L10n.chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
         index += 1
 
+//
+//        if let thridTitle = thridTitle {
+//            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_both, data: .init(name: thridTitle, color: theme.colors.text, type: .switchable(false), viewType: .lastItem, enabled: true, action: arguments.clearHistory)))
+//            index += 1
+//        }
+
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+
     }
 
 
@@ -64,14 +88,43 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), item: { [weak arguments] initialSize, stableId in
             let values:[Int32] = [.secondsInDay, .secondsInWeek, 0]
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesDay, L10n.autoremoveMessagesWeek, L10n.autoremoveMessagesNever], viewType: .singleItem, selectAction: { index in
+
+            var dotted: [Int] = []
+            if let autoremoveTimeout = state.autoremoveTimeout, let peerValue = autoremoveTimeout.timeout?.peerValue {
+                switch peerValue {
+                case .secondsInDay:
+                    dotted = [1, 2]
+                case .secondsInWeek:
+                    dotted = [2]
+                default:
+                    break
+                }
+            }
+
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesDay, L10n.autoremoveMessagesWeek, L10n.autoremoveMessagesNever], dottedIndexes: dotted, viewType: .singleItem, selectAction: { index in
                 arguments?.setTimeout(values[index])
             })
         }))
         index += 1
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-        index += 1
+        if let peerValue = state.autoremoveTimeout?.timeout?.peerValue {
+
+            let text: String
+            switch peerValue {
+            case .secondsInWeek:
+                text = L10n.autoremoveMessagesGlobalWeek(state.peer.peer.displayTitle)
+            case .secondsInDay:
+                text = L10n.autoremoveMessagesGlobalDay(state.peer.peer.displayTitle)
+            default:
+                text = ""
+            }
+
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(text), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+        } else {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+        }
 
         if state.peer.peer.isUser {
             entries.append(.sectionId(sectionId, type: .normal))
