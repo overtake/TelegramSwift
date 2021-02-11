@@ -242,8 +242,19 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
 
     controller.validateData = { _ in
         return .fail(.doSomething(next: { f in
-            _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: stateValue.with { $0.timeout == 0 ? nil : $0.timeout }, isGlobal: stateValue.with { $0.isGlobal }), for: context.window).start(completed: {
+
+            let state = stateValue.with { $0 }
+
+            if let timeout = state.autoremoveTimeout {
+                if timeout.timeout?.myValue == state.timeout && timeout.timeout?.isGlobal == state.isGlobal {
+                    close?()
+                    return
+                }
+            }
+
+            _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout, isGlobal: state.isGlobal), for: context.window).start(completed: {
                 f(.success(.custom({
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                     close?()
                 })))
             })

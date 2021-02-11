@@ -210,8 +210,8 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     let week: Int32 = 60 * 60 * 24 * 1 * 7
     switch mode {
     case .new:
-        initialState.date = week
-        initialState.count = 50
+        initialState.date = .max
+        initialState.count = .max
     case let .edit(invitation):
         initialState.date = invitation.isExpired ? week : Int32(TimeInterval(invitation.expireDate!) - Date().timeIntervalSince1970)
         initialState.tempDate = initialState.date
@@ -220,9 +220,9 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         } else if let usageLimit = invitation.usageLimit {
             initialState.count = usageLimit
         } else {
-            initialState.count = 50
+            initialState.count = .max
         }
-        if initialState.count != 50 {
+        if initialState.count != .max {
             initialState.tempCount = initialState.count
         }
     }

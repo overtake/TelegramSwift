@@ -152,17 +152,7 @@ final class InviteLinkPeerManager {
         return Signal { [weak self] subscriber in
             
             let signal: Signal<RevokeExportedInvitationResult?, RevokePeerExportedInvitationError>
-            if !link.isPermanent || self?.adminId != nil {
-                signal = TelegramCore.revokePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
-            } else {
-                signal = revokePersistentPeerExportedInvitation(account: account, peerId: peerId) |> map { value in
-                    if let value = value {
-                        return .replace(link.withUpdatedIsRevoked(true), value)
-                    } else {
-                        return nil
-                    }
-                } |> mapError { _ in .generic }
-            }
+            signal = TelegramCore.revokePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -180,8 +170,8 @@ final class InviteLinkPeerManager {
                             state.revokedList = state.revokedList ?? []
                             state.list!.removeAll(where: { $0.link == link.link})
                             state.list!.insert(new, at: 0)
-                            state.revokedList?.append(link)
-                            state.revokedList?.sort(by: { $0.date < $1.date })
+                            state.revokedList?.insert(link, at: 0)
+                            state.revokedList?.sort(by: { $0.date > $1.date })
                         }
 
                     }
@@ -221,7 +211,7 @@ final class InviteLinkPeerManager {
         let account = self.context.account
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = TelegramCore.deleteAllRevokedPeerExportedInvitations(account: account, peerId: peerId)
+            let signal = TelegramCore.deleteAllRevokedPeerExportedInvitations(account: account, peerId: peerId, adminId: self?.adminId ?? account.peerId)
             let disposable = signal.start(completed: {
                 self?.updateState { state in
                     var state = state
@@ -485,16 +475,16 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
-            if !state.isAdmin {
+          // if !state.isAdmin {
                 entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: L10n.manageLinksDeleteAll, color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll)))
                 index += 1
-            }
+         //   }
 
             
             for (i, link) in list.enumerated() {
                 
                 var viewType: GeneralViewType = bestGeneralViewType(list, for: i)
-                if i == 0, !state.isAdmin {
+                if i == 0 {
                     if list.count == 1 {
                         viewType = .lastItem
                     } else {
@@ -614,19 +604,16 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         
     let actionsDisposable = DisposableSet()
 
-    let permanentLink = manager.state |> map {
-        $0.list?.first(where: { $0.isPermanent })
-    } |> distinctUntilChanged
 
-    let importers: Signal<PeerInvitationImportersState?, NoError> = permanentLink |> deliverOnMainQueue |> mapToSignal { [weak manager] permanent in
-        if let permanent = permanent {
-            if let state = manager?.importer(for: permanent).state {
-                return state |> map(Optional.init)
+    let importers: Signal<(PeerInvitationImportersState?, InviteLinkPeerManager.State), NoError> = manager.state |> deliverOnMainQueue |> mapToSignal { [weak manager] state in
+        if let permanent = state.list?.first(where: { $0.isPermanent }) {
+            if let importer = manager?.importer(for: permanent).state {
+                return importer |> map(Optional.init) |> map { ($0, state) }
             } else {
-                return .single(nil)
+                return .single((nil, state))
             }
         } else {
-            return .single(nil)
+            return .single((nil, state))
         }
     }
 
@@ -636,15 +623,14 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
 
     if let adminId = manager.adminId {
         peers.append(context.account.postbox.loadedPeerWithId(adminId) |> map { PeerEquatable($0) })
-
     }
 
-    actionsDisposable.add(combineLatest(permanentLink, manager.state, importers, combineLatest(peers)).start(next: { permanent, state, permanentImporterState, peers in
+    actionsDisposable.add(combineLatest(manager.state, importers, combineLatest(peers)).start(next: { state, permanentImporterState, peers in
         updateState { current in
             var current = current
-            current.permanent = permanent
-            current.permanentImporterState = permanentImporterState
-            current.list = state.list?.filter({ $0.link != permanent?.link })
+            current.permanent = state.list?.first(where: { $0.isPermanent })
+            current.permanentImporterState = permanentImporterState.0
+            current.list = state.list?.filter({ $0.link != current.permanent?.link })
             current.revokedList = state.revokedList
             current.creators = state.creators
             current.peer = peers.first

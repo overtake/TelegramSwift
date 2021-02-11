@@ -424,6 +424,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }
                     close?()
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                 }))
             }
             })
