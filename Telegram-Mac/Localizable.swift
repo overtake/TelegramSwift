@@ -4116,6 +4116,62 @@ internal final class L10n {
   /// Sorry, the target user is a member of too many groups and channels. Please ask them to leave some first.
   internal static var inviteChannelsTooMuch: String  { return L10n.tr("Localizable", "Invite.ChannelsTooMuch") }
   /// %d
+  internal static func inviteLinkCanJoinCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_countable", p1)
+  }
+  /// %d can join
+  internal static func inviteLinkCanJoinFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_few", p1)
+  }
+  /// %d can join
+  internal static func inviteLinkCanJoinMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_many", p1)
+  }
+  /// %d can join
+  internal static func inviteLinkCanJoinOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_one", p1)
+  }
+  /// %d can join
+  internal static func inviteLinkCanJoinOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_other", p1)
+  }
+  /// %d can join
+  internal static func inviteLinkCanJoinTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_two", p1)
+  }
+  /// %d can join
+  internal static func inviteLinkCanJoinZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.CanJoin_zero", p1)
+  }
+  /// %d
+  internal static func inviteLinkEmptyJoinDescCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_countable", p1)
+  }
+  /// %d people can join via this link
+  internal static func inviteLinkEmptyJoinDescFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_few", p1)
+  }
+  /// %d people can join via this link
+  internal static func inviteLinkEmptyJoinDescMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_many", p1)
+  }
+  /// %d people can join via this link
+  internal static func inviteLinkEmptyJoinDescOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_one", p1)
+  }
+  /// %d people can join via this link
+  internal static func inviteLinkEmptyJoinDescOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_other", p1)
+  }
+  /// %d people can join via this link
+  internal static func inviteLinkEmptyJoinDescTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_two", p1)
+  }
+  /// %d people can join via this link
+  internal static func inviteLinkEmptyJoinDescZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_zero", p1)
+  }
+  /// %d
   internal static func inviteLinkJoinedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.Joined_countable", p1)
   }
@@ -4141,6 +4197,8 @@ internal final class L10n {
   }
   /// no one joined yet
   internal static var inviteLinkJoinedZero: String  { return L10n.tr("Localizable", "InviteLink.Joined_zero") }
+  /// no one joined
+  internal static var inviteLinkJoinedRevoked: String  { return L10n.tr("Localizable", "InviteLink.JoinedRevoked") }
   /// %d
   internal static func inviteLinkRemainingCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.Remaining_countable", p1)
@@ -4177,7 +4235,7 @@ internal final class L10n {
   internal static var inviteLinkStickerLimit: String  { return L10n.tr("Localizable", "InviteLink.Sticker.Limit") }
   /// • revoked
   internal static var inviteLinkStickerRevoked: String  { return L10n.tr("Localizable", "InviteLink.Sticker.Revoked") }
-  /// %@ left
+  /// expires in %@
   internal static func inviteLinkStickerTimeLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "InviteLink.Sticker.TimeLeft", p1)
   }

@@ -108,7 +108,15 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
             }))
         }
     }
-    
+
+    if state.count == 0, !invitation.isExpired, !invitation.isRevoked, let usageCount = invitation.usageLimit, invitation.count == nil {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_join_count"), equatable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.inviteLinkEmptyJoinDescCountable(Int(usageCount)), font: .normal(.text))
+        }))
+    }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -149,21 +157,36 @@ func ExportedInvitationController(invitation: ExportedInvitation, accountContext
     dateFormatter.locale = appAppearance.locale
     dateFormatter.dateStyle = .short
     dateFormatter.timeStyle = .short
-    
-    var subtitle: String? = nil
-    if invitation.isRevoked {
-        subtitle = L10n.exportedInvitationStatusRevoked
-    } else {
-        if let expireDate = invitation.expireDate {
-            if expireDate > Int32(Date().timeIntervalSince1970) {
-                subtitle = L10n.exportedInvitationStatusExpiresIn(dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(expireDate))))
-            } else {
-                subtitle = L10n.exportedInvitationStatusExpired
+
+
+    let getSubtitle:()->String? = {
+        var subtitle: String? = nil
+        if invitation.isRevoked {
+            subtitle = L10n.exportedInvitationStatusRevoked
+        } else {
+            if let expireDate = invitation.expireDate {
+                if expireDate > Int32(Date().timeIntervalSince1970) {
+                    let left = Int(expireDate) - Int(Date().timeIntervalSince1970)
+                    if left <= Int(Int32.secondsInDay) {
+                        let minutes = left / 60 % 60
+                        let seconds = left % 60
+                        let hours = left / 60 / 60
+                        let string = String(format: "%@:%@:%@", hours < 10 ? "0\(hours)" : "\(hours)", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
+                        subtitle = L10n.inviteLinkStickerTimeLeft(string)
+                    } else {
+                        subtitle = L10n.inviteLinkStickerTimeLeft(autoremoveLocalized(left))
+                    }
+                } else {
+                    subtitle = L10n.exportedInvitationStatusExpired
+                }
             }
         }
+        return subtitle
     }
+
+
    
-    controller.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: subtitle)
+    controller.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: getSubtitle())
     
     getController = { [weak controller] in
         return controller
@@ -203,7 +226,17 @@ func ExportedInvitationController(invitation: ExportedInvitation, accountContext
             }
         }
     }
-    
+
+    let timer = SwiftSignalKit.Timer.init(timeout: 1, repeat: true, completion: { [weak modalController, weak controller] in
+        if let modalController = modalController {
+            controller?.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: getSubtitle())
+            modalController.updateLocalizationAndTheme(theme: theme)
+        }
+    }, queue: .mainQueue())
+
+    timer.start()
+
+    controller.contextOject = timer
     
     return modalController
 }

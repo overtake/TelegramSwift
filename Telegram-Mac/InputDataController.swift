@@ -63,6 +63,7 @@ public class InputDataModalController : ModalViewController {
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        modal?.updateLocalizationAndTheme(theme: theme)
     }
     
     public override var containerBackground: NSColor {
@@ -397,7 +398,7 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        
+
         self.genericView.updateLocalizationAndTheme(theme: theme)
         requestUpdateBackBar()
         requestUpdateCenterBar()

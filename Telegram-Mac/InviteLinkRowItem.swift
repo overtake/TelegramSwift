@@ -145,7 +145,6 @@ private final class ProgressView : View {
                     }
                 }
                 if let from = from {
-
                     backgroundColor = color(from, to, progress)
                 } else {
                     backgroundColor = to
@@ -189,6 +188,7 @@ private final class InviteLinkTokenView : Control {
     private let countView = TextView()
     private let progressView = ProgressView(frame: NSMakeRect(0, 0, 50, 50))
     private var action:(()->Void)?
+    private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(actions)
@@ -245,51 +245,86 @@ private final class InviteLinkTokenView : Control {
         
         progressView.update(link: link)
         
-        let titleText = link.link.replacingOccurrences(of: "https://", with: "")
-        
-        let titleAttr = NSMutableAttributedString()
-        _ = titleAttr.append(string: titleText, color: theme.colors.text, font: .medium(.text))
-        let titleLayout = TextViewLayout(titleAttr, maximumNumberOfLines: 2)
-        titleLayout.measure(width: frame.width - 20)
-        
-        titleView.update(titleLayout)
 
-        var text: String = ""
-        if let count = link.count {
-            text = L10n.inviteLinkJoinedCountable(Int(count))
-            text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
-        } else {
-            text = L10n.inviteLinkJoinedZero
-        }
-        var countText = text
-        
-        if link.isRevoked {
-            countText += " " + L10n.inviteLinkStickerRevoked
-        } else {
-            if let usageLink = link.usageLimit, let count = link.count {
-                if !link.isLimitReached {
-                    countText += " " + L10n.inviteLinkRemainingFew(Int(usageLink - count))
-                } else if link.isLimitReached {
-                    countText += " " + L10n.inviteLinkRemainingFew(Int(usageLink - count))
+        let updateText:()->Void = { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            let titleText = link.link.replacingOccurrences(of: "https://", with: "")
+
+            let titleAttr = NSMutableAttributedString()
+            _ = titleAttr.append(string: titleText, color: theme.colors.text, font: .medium(.text))
+            let titleLayout = TextViewLayout(titleAttr, maximumNumberOfLines: 2)
+            titleLayout.measure(width: frame.width - 20)
+
+            self.titleView.update(titleLayout)
+
+
+            var text: String = ""
+            if link.isRevoked, link.count == nil || link.count == 0 {
+                text = L10n.inviteLinkJoinedRevoked
+            } else {
+                if let count = link.count {
+                    text = L10n.inviteLinkJoinedCountable(Int(count))
+                    text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
+                } else if let usageLimit = link.usageLimit {
+                    if link.isExpired {
+                        text = L10n.inviteLinkJoinedRevoked
+                    } else {
+                        text = L10n.inviteLinkCanJoinCountable(Int(usageLimit))
+                    }
+                } else {
+                    text = L10n.inviteLinkJoinedZero
                 }
             }
 
-            if link.isExpired {
-                countText += " " + L10n.inviteLinkStickerExpired
-            } else if let expireDate = link.expireDate {
-                countText += " • " + L10n.inviteLinkStickerTimeLeft(autoremoveLocalized(Int(expireDate) - Int(Date().timeIntervalSince1970)))
-            }
-        }
-        
-        let countLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 2)
-        countLayout.measure(width: frame.width - 20)
-        
-        countView.update(countLayout)
-        
-        titleView.change(pos: titlePoint, animated: animated)
-        countView.change(pos: countPoint, animated: animated)
+            var countText = text
 
-        
+            if link.isRevoked {
+                countText += " " + L10n.inviteLinkStickerRevoked
+            } else {
+                if let usageLink = link.usageLimit, let count = link.count {
+                    if !link.isLimitReached {
+                        countText += " " + L10n.inviteLinkRemainingFew(Int(usageLink - count))
+                    } else if link.isLimitReached {
+                        countText += " " + L10n.inviteLinkRemainingFew(Int(usageLink - count))
+                    }
+                }
+
+                if link.isExpired {
+                    countText += " " + L10n.inviteLinkStickerExpired
+                } else if let expireDate = link.expireDate {
+                    let left = Int(expireDate) - Int(Date().timeIntervalSince1970)
+                    if left <= Int(Int32.secondsInDay) {
+                        let minutes = left / 60 % 60
+                        let seconds = left % 60
+                        let hours = left / 60 / 60
+                        let string = String(format: "%@:%@:%@", hours < 10 ? "0\(hours)" : "\(hours)", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
+                        countText += " • " + L10n.inviteLinkStickerTimeLeft(string)
+                    } else {
+                        countText += " • " + L10n.inviteLinkStickerTimeLeft(autoremoveLocalized(left))
+                    }
+                }
+            }
+
+            let countLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 2)
+            countLayout.measure(width: frame.width - 20)
+
+            self.countView.update(countLayout)
+
+            self.titleView.change(pos: self.titlePoint, animated: animated)
+            self.countView.change(pos: self.countPoint, animated: animated)
+        }
+
+        if !link.isRevoked && !link.isExpired {
+            self.timer = SwiftSignalKit.Timer.init(timeout: 1.0, repeat: true, completion: updateText, queue: .mainQueue())
+            self.timer?.start()
+        } else {
+            self.timer?.invalidate()
+            self.timer = nil
+        }
+
+        updateText()
         
         actions.removeAllHandlers()
         actions.set(handler: { _ in

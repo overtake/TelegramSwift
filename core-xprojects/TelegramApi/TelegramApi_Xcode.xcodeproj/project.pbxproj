@@ -19,12 +19,14 @@
 		A701F943236C21AE002ABF81 /* Api1.swift in Sources */ = {isa = PBXBuildFile; fileRef = D035733222B5C29900F0920D /* Api1.swift */; };
 		A701F944236C21AE002ABF81 /* Api2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D035733122B5C29900F0920D /* Api2.swift */; };
 		A701F945236C21AE002ABF81 /* Api3.swift in Sources */ = {isa = PBXBuildFile; fileRef = D035733322B5C29900F0920D /* Api3.swift */; };
+		A731925225D516C900218E0E /* Api4.swift in Sources */ = {isa = PBXBuildFile; fileRef = A731925125D516C900218E0E /* Api4.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		09E9601A22C2BE4900B13673 /* SecretApiLayer101.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecretApiLayer101.swift; sourceTree = "<group>"; };
 		A701F937236C1FFB002ABF81 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A701F939236C210C002ABF81 /* TelegramApi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TelegramApi.h; sourceTree = "<group>"; };
+		A731925125D516C900218E0E /* Api4.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Api4.swift; sourceTree = "<group>"; };
 		D035733022B5C29900F0920D /* Api0.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Api0.swift; sourceTree = "<group>"; };
 		D035733122B5C29900F0920D /* Api2.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Api2.swift; sourceTree = "<group>"; };
 		D035733222B5C29900F0920D /* Api1.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Api1.swift; sourceTree = "<group>"; };
@@ -90,6 +92,7 @@
 				D035733222B5C29900F0920D /* Api1.swift */,
 				D035733122B5C29900F0920D /* Api2.swift */,
 				D035733322B5C29900F0920D /* Api3.swift */,
+				A731925125D516C900218E0E /* Api4.swift */,
 			);
 			name = Sources;
 			path = "../../submodules/telegram-ios/submodules/TelegramApi/Sources";
@@ -172,6 +175,7 @@
 				A701F93B236C21AE002ABF81 /* SecretApiLayer8.swift in Sources */,
 				A701F93C236C21AE002ABF81 /* SecretApiLayer46.swift in Sources */,
 				A701F93D236C21AE002ABF81 /* SecretApiLayer73.swift in Sources */,
+				A731925225D516C900218E0E /* Api4.swift in Sources */,
 				A701F93E236C21AE002ABF81 /* SecretApiLayer101.swift in Sources */,
 				A701F93F236C21AE002ABF81 /* DeserializeFunctionResponse.swift in Sources */,
 				A701F940236C21AE002ABF81 /* TelegramApiLogger.swift in Sources */,
