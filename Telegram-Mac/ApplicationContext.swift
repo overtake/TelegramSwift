@@ -527,11 +527,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { _ -> KeyHandlerResult in
-                        
-            
-            _ = presentDesktopCapturerWindow(select: { _ in
-                
-            }, devices: context.sharedContext.devicesContext)
+
+            showModalText(for: context.window, text: "qkwjeh fkqwejfh qkwef hqwkef hqwkef hqwkef hqwkef hqwekf qwhflkj")
+
+//
+//            _ = presentDesktopCapturerWindow(select: { _ in
+//
+//            }, devices: context.sharedContext.devicesContext)
             
 //            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
 //                if let first = values?.first {

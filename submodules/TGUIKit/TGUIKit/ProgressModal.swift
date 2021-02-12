@@ -260,3 +260,163 @@ public func showModalSuccess(for window: Window, icon: CGImage, text: TextViewLa
         return EmptyDisposable
     }))
 }
+
+
+private final class TextAndLabelModalView : View {
+    private let textView: TextView = TextView()
+    private var titleView: TextView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.backgroundColor = NSColor.black.withAlphaComponent(0.9)
+        self.textView.disableBackgroundDrawing = true
+        self.textView.isSelectable = false
+        self.textView.userInteractionEnabled = false
+        addSubview(self.textView)
+        layer?.cornerRadius = .cornerRadius
+    }
+
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func update(text: String, title: String?, maxSize: NSSize) -> NSSize {
+
+        if let title = title {
+            self.titleView = TextView()
+            addSubview(self.titleView!)
+
+            self.titleView?.disableBackgroundDrawing = true
+            self.titleView?.isSelectable = false
+            self.titleView?.userInteractionEnabled = false
+            let titleLayout = TextViewLayout(.initialize(string: title, color: .white, font: .medium(.title)), maximumNumberOfLines: 1)
+            titleLayout.measure(width: maxSize.width - 80)
+            self.titleView?.update(titleLayout)
+        }
+        let textLayout = TextViewLayout(.initialize(string: text, color: .white, font: .normal(.text)))
+        textLayout.measure(width: maxSize.width - 80)
+        self.textView.update(textLayout)
+
+
+
+        var size: NSSize = .zero
+
+        if let titleView = self.titleView {
+            size.width = max(textView.frame.width, titleView.frame.width) + 20
+            size.height = textView.frame.height + titleView.frame.height + 5 + 20
+        } else {
+            size.width = textView.frame.width + 20
+            size.height = textView.frame.height + 20
+        }
+
+        return size
+    }
+
+    override func layout() {
+        super.layout()
+
+        if let titleView = titleView {
+            titleView.setFrameOrigin(NSMakePoint(10, 10))
+            textView.setFrameOrigin(NSMakePoint(10, titleView.frame.maxY + 5))
+        } else {
+            textView.center()
+        }
+    }
+    
+}
+
+class TextAndLabelModalController: ModalViewController {
+
+    override var background: NSColor {
+        return .clear
+    }
+
+    override var redirectMouseAfterClosing: Bool {
+        return true
+    }
+
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+
+    override var contentBelowBackground: Bool {
+        return true
+    }
+
+
+    override var containerBackground: NSColor {
+        return .clear
+    }
+
+    override func viewClass() -> AnyClass {
+        return TextAndLabelModalView.self
+    }
+
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+    }
+
+    private var genericView: TextAndLabelModalView {
+        return self.view as! TextAndLabelModalView
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let size = self.genericView.update(text: text, title: title, maxSize: windowSize)
+        self.modal?.resize(with: size, animated: false)
+
+        readyOnce()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+
+    deinit {
+    }
+
+    private let text: String
+    private let title: String?
+    private let windowSize: NSSize
+    init(text: String, title: String?, windowSize: NSSize) {
+        self.text = text
+        self.windowSize = windowSize
+        self.title = title
+        super.init(frame:NSMakeRect(0, 0, 80, 80))
+        self.bar = .init(height: 0)
+    }
+
+
+}
+
+public func showModalText(for window: Window, text: String, title: String? = nil) {
+    let modal = TextAndLabelModalController(text: text, title: title, windowSize: window.frame.size)
+
+    showModal(with: modal, for: window, animationType: .scaleCenter)
+
+    let words = (text + " " + (title ?? "")).trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+
+    let msPerChar: TimeInterval = 60 / 180 / 6
+
+    let showTime = max(min(msPerChar * TimeInterval(words.length), 10), 3.5)
+
+
+    let signal = Signal<Void, NoError>({ [weak modal] _ -> Disposable in
+        return ActionDisposable {
+            modal?.close()
+        }
+    }) |> timeout(showTime, queue: Queue.mainQueue(), alternate: Signal<Void, NoError>({ [weak modal] _ -> Disposable in
+        modal?.close()
+        return EmptyDisposable
+    }))
+
+    _ = signal.start()
+}

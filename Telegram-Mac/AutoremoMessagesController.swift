@@ -131,7 +131,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             sectionId += 1
 
 
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_global, data: .init(name: L10n.autoremoveMessagesAlsoFor(state.peer.peer.compactDisplayTitle), color: theme.colors.text, type: .switchable(state.isGlobal), viewType: .singleItem, enabled: true, action: arguments.toggleGlobal)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_global, data: .init(name: L10n.autoremoveMessagesAlsoFor(state.peer.peer.compactDisplayTitle), color: theme.colors.text, type: .switchable(state.isGlobal), viewType: .singleItem, enabled: state.timeout != 0, action: arguments.toggleGlobal)))
             index += 1
 
         }
@@ -252,9 +252,44 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
                 }
             }
 
+            var text: String? = nil
+            var title: String? = nil
+            if let peerValue = state.autoremoveTimeout?.timeout?.peerValue, peerValue < state.timeout {
+                switch peerValue {
+                case .secondsInWeek:
+                    text = L10n.autoremoveMessagesGlobalWeek(state.peer.peer.displayTitle)
+                case .secondsInDay:
+                    text = L10n.autoremoveMessagesGlobalDay(state.peer.peer.displayTitle)
+                default:
+                    text = ""
+                }
+
+                switch state.timeout {
+                case .secondsInDay:
+                    title = L10n.tipAutoDeleteTimerSetForDayTitle
+                case .secondsInWeek:
+                    title = L10n.tipAutoDeleteTimerSetForWeekTitle
+                default:
+                    break
+                }
+
+            } else if state.timeout != 0 {
+                switch state.timeout {
+                case .secondsInDay:
+                    text = L10n.tipAutoDeleteTimerSetForDay
+                case .secondsInWeek:
+                    text = L10n.tipAutoDeleteTimerSetForWeek
+                default:
+                    break
+                }
+            } 
+
             _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout, isGlobal: state.isGlobal), for: context.window).start(completed: {
                 f(.success(.custom({
-                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+
+                    if let text = text {
+                        showModalText(for: context.window, text: text, title: title)
+                    }
                     close?()
                 })))
             })

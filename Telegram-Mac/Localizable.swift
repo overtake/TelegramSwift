@@ -443,7 +443,7 @@ internal final class L10n {
   internal static func autoremoveMessagesAlsoFor(_ p1: String) -> String {
     return L10n.tr("Localizable", "AutoremoveMessages.AlsoFor", p1)
   }
-  /// After 24 Hours
+  /// After 1 Day
   internal static var autoremoveMessagesDay: String  { return L10n.tr("Localizable", "AutoremoveMessages.Day") }
   /// Automatically delete messages sent in this chat after a certain period of time.
   internal static var autoremoveMessagesDesc: String  { return L10n.tr("Localizable", "AutoremoveMessages.Desc") }
@@ -453,9 +453,9 @@ internal final class L10n {
   internal static var autoremoveMessagesNever: String  { return L10n.tr("Localizable", "AutoremoveMessages.Never") }
   /// Clear Chat History
   internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
-  /// After 7 Days
+  /// After 1 Week
   internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
-  /// %@ has set messages to auto-delete in 24 hours. You can't cancel it or make this interval longer.
+  /// %@ has set messages to auto-delete in 1 day. You can't cancel it or make this interval longer.
   internal static func autoremoveMessagesGlobalDay(_ p1: String) -> String {
     return L10n.tr("Localizable", "AutoremoveMessages.Global.Day", p1)
   }
@@ -1767,9 +1767,9 @@ internal final class L10n {
   internal static var chatInputUnmute: String  { return L10n.tr("Localizable", "Chat.Input.Unmute") }
   /// Edit Message
   internal static var chatInputAccessoryEditMessage: String  { return L10n.tr("Localizable", "Chat.Input.Accessory.EditMessage") }
-  /// Messages in this chat are automatically deleted 24 hours after they have been sent.
+  /// Messages in this chat are automatically deleted 1 day after they have been sent.
   internal static var chatInputAutoDelete1Day: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.1Day") }
-  /// Messages in this chat are automatically deleted 7 days after they have been sent.
+  /// Messages in this chat are automatically deleted 1 week after they have been sent.
   internal static var chatInputAutoDelete7Days: String  { return L10n.tr("Localizable", "Chat.Input.AutoDelete.7Days") }
   /// %d
   internal static func chatInputErrorMessageTooLongCountable(_ p1: Int) -> String {
@@ -8339,6 +8339,14 @@ internal final class L10n {
   internal static func timerYearsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Timer.Years_zero", p1)
   }
+  /// Auto-delete timer set to 1 day.
+  internal static var tipAutoDeleteTimerSetForDay: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForDay") }
+  /// Auto-delete timer set to 1 week.
+  internal static var tipAutoDeleteTimerSetForWeek: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForWeek") }
+  /// Auto-Delete On — 1 Week
+  internal static var tipAutoDeleteTimerSetForDayTitle: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForDay.Title") }
+  /// Auto-Delete On — 1 Day
+  internal static var tipAutoDeleteTimerSetForWeekTitle: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForWeek.Title") }
   /// Muted
   internal static var toastMuted: String  { return L10n.tr("Localizable", "Toast.Muted") }
   /// Unmuted

@@ -539,7 +539,7 @@ public class Modal: NSObject {
             
             isDown = false
 
-        }, for: .Click)
+        }, for: .Up)
         
         if controller.dynamicSize {
             background.customHandler.size = { [weak self] (size) in
@@ -650,13 +650,17 @@ public class Modal: NSObject {
             background = self.background
         }
         if let controller = controller, controller.contentBelowBackground {
-            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { [weak self] _ in
+            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { [weak self, weak background] _ in
+                background?.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
+                self?.controller?.view.removeFromSuperview()
+                self?.controller?.viewDidDisappear(true)
+                self?.controller?.modal = nil
+                self?.controller = nil
             })
-        }
-        
-        if animateBackground {
-            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: {[weak self, weak background] complete in
+
+        } else if animateBackground {
+            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: {[weak self, weak background] complete in
                 if let stongSelf = self {
                     background?.removeFromSuperview()
                     stongSelf.controller?.view.removeFromSuperview()

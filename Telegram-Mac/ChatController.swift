@@ -2122,8 +2122,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
 
-        chatInteraction.reportMessages = { [weak self] reason, ids in
-            _ = showModalProgress(signal: reportPeerMessages(account: context.account, messageIds: ids, reason: reason), for: context.window).start(completed: { [weak self] in
+        chatInteraction.reportMessages = { [weak self] value, ids in
+            _ = showModalProgress(signal: reportPeerMessages(account: context.account, messageIds: ids, reason: value.reason, message: value.comment), for: context.window).start(completed: { [weak self] in
                 _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                 self?.show(toaster: ControllerToaster(text: L10n.chatToastReportSuccess), for: 5.0)
                 self?.changeState()
