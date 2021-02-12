@@ -155,7 +155,6 @@ final class VoiceChatActionButtonBackgroundView: View {
                 strongSelf.updateGlowScale(strongSelf.isActive ? scale : nil)
             }
         }
-        isEventLess = true
     }
 
     required init?(coder: NSCoder) {

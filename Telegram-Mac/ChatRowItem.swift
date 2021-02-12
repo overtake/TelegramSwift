@@ -2444,7 +2444,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 case .thrid:
                     let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: author.id) |> `catch` { _ in return .complete() }
                     
-                    _ = showModalProgress(signal: combineLatest(reportPeerMessages(account: account, messageIds: [message.id], reason: .spam), block), for: context.window).start()
+                    _ = showModalProgress(signal: combineLatest(reportPeerMessages(account: account, messageIds: [message.id], reason: .spam, message: ""), block), for: context.window).start()
                 case .basic:
                     _ = showModalProgress(signal: context.blockedPeersContext.add(peerId: author.id), for: context.window).start()
                 }
@@ -2780,8 +2780,8 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         var items = items
         if canReportMessage(message, account), chatInteraction.mode != .pinned {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
-                _ = reportReasonSelector(context: context).start(next: { reason in
-                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start(completed: {
+                _ = reportReasonSelector(context: context).start(next: { value in
+                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: value.reason, message: value.comment), for: context.window).start(completed: {
                         alert(for: context.window, info: L10n.messageContextReportAlertOK)
                     })
                 })

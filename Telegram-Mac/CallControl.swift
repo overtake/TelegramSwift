@@ -29,6 +29,8 @@ final class CallControl : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
+        textView.isEventLess = true
+        self.imageView.isEventLess = true
         textView.isSelectable = false
         textView.userInteractionEnabled = false
     }
@@ -125,7 +127,8 @@ final class CallControl : Control {
         } else {
             if self.imageBackgroundView is NSVisualEffectView || self.imageBackgroundView == nil {
                 self.imageBackgroundView?.removeFromSuperview()
-                self.imageBackgroundView = View(frame: NSMakeRect(0, 0, data.iconSize.width, data.iconSize.height))
+                self.imageBackgroundView = NSView(frame: NSMakeRect(0, 0, data.iconSize.width, data.iconSize.height))
+                self.imageBackgroundView?.wantsLayer = true
                 self.addSubview(self.imageBackgroundView!)
             }
             self.imageBackgroundView?.background = data.backgroundColor
@@ -138,7 +141,7 @@ final class CallControl : Control {
         
         imageView.animates = animated
         imageView.image = data.icon
-        imageView.sizeToFit()
+        imageView.setFrameSize(data.iconSize)
         
         change(size: NSMakeSize(max(data.iconSize.width, textView.frame.width), data.iconSize.height + 5 + layout.layoutSize.height), animated: animated)
         
@@ -160,6 +163,10 @@ final class CallControl : Control {
             textView.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (frame.width - textView.frame.width) / 2), imageBackgroundView.frame.height + 5))
         }
         
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return self
     }
     
     required init?(coder: NSCoder) {

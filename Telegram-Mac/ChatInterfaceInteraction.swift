@@ -83,7 +83,7 @@ final class ChatInteraction : InterfaceObserver  {
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([MessageId]) -> Void = {_ in}
-    var reportMessages:(ReportReason, [MessageId]) -> Void = { _, _ in }
+    var reportMessages:(ReportReasonValue, [MessageId]) -> Void = { _, _ in }
     var sendMessage: (Bool, Date?) -> Void = { _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
 

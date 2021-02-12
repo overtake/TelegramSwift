@@ -419,20 +419,20 @@ class ChannelInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
 
-        let report = reportReasonSelector(context: context) |> map { reason -> ChatController? in
-            switch reason {
+        let report = reportReasonSelector(context: context) |> map { value -> (ChatController?, ReportReasonValue) in
+            switch value.reason {
             case .fake:
-                return nil
+                return (nil, value)
             default:
-                return ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: reason))
+                return (ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: value)), value)
             }
         } |> deliverOnMainQueue
-        
-        reportPeerDisposable.set(report.start(next: { [weak self] controller in
+
+        reportPeerDisposable.set(report.start(next: { [weak self] controller, value in
             if let controller = controller {
                 self?.pullNavigation()?.push(controller)
             } else {
-                _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: .fake), for: context.window).start(completed: { [weak self] in
+                _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: { [weak self] in
                     self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.peerInfoChannelReported))
                 })
             }

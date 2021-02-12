@@ -1180,7 +1180,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         var peer:Peer?
         var peerId:PeerId?
         var messageId:MessageId?
-        
+        var isGlobal = false
         let context = self.context
         
         if let item = item as? ChatListMessageRowItem {
@@ -1190,7 +1190,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         } else if let item = item as? ShortPeerRowItem {
             if let stableId = item.stableId.base as? ChatListSearchEntryStableId {
                 switch stableId {
-                case let .localPeerId(pId), let .recentSearchPeerId(pId), let .secretChat(pId), let .globalPeerId(pId):
+                case let .localPeerId(pId), let .recentSearchPeerId(pId), let .secretChat(pId):
+                    peerId = pId
+                case let .globalPeerId(pId):
+                    isGlobal = true
                     peerId = pId
                 case .savedMessages:
                     peerId = context.peerId
@@ -1278,7 +1281,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         marked = true
         
         if let peerId = peerId {
-            self.open(peerId, messageId, self.closeNext || messageId == nil)
+            self.open(peerId, messageId, self.closeNext || (messageId == nil && !isGlobal))
         }
         
     }

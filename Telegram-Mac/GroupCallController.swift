@@ -81,12 +81,12 @@ private final class GroupCallControlsView : View {
         super.init(frame: frameRect)
 
         addSubview(backgroundView)
+        addSubview(speak)
 
         addSubview(videoStream)
         addSubview(end)
 
-        addSubview(speak)
-        
+
         self.isEventLess = true
 
 
@@ -128,11 +128,12 @@ private final class GroupCallControlsView : View {
             videoStream.removeHandler(clickToken)
         }
         clickToken = videoStream.set(handler: { [weak self] _ in
-            if !isStreaming {
-                self?.arguments?.shareSource()
-            } else {
-                self?.arguments?.cancelSharing()
-            }
+            self?.arguments?.settings()
+//            if !isStreaming {
+//                self?.arguments?.shareSource()
+//            } else {
+//                self?.arguments?.cancelSharing()
+//            }
         }, for: .Click)
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State
@@ -162,8 +163,8 @@ private final class GroupCallControlsView : View {
 
       //  if state != preiousState {
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
-
-            videoStream.updateWithData(CallControlData(text: L10n.voiceChatVideoStream, isVisualEffect: false, icon: isStreaming ? GroupCallTheme.video_off : GroupCallTheme.video_on, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+        //isStreaming ? GroupCallTheme.video_off : GroupCallTheme.video_on
+        videoStream.updateWithData(CallControlData(text: L10n.voiceChatVideoStream, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
       //  }
         let statusText: String
         var secondary: String? = nil

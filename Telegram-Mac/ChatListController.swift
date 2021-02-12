@@ -256,19 +256,24 @@ struct FilterData : Equatable {
     let filter: ChatListFilter?
     let tabs: [ChatListFilter]
     let sidebar: Bool
-    init(filter: ChatListFilter?, tabs: [ChatListFilter], sidebar: Bool) {
+    let request: ChatListIndexRequest
+    init(filter: ChatListFilter?, tabs: [ChatListFilter], sidebar: Bool, request: ChatListIndexRequest) {
         self.filter = filter
         self.tabs = tabs
         self.sidebar = sidebar
+        self.request = request
     }
     func withUpdatedFilter(_ filter: ChatListFilter?) -> FilterData {
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request)
     }
     func withUpdatedTabs(_ tabs:  [ChatListFilter]) -> FilterData {
-        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar)
+        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, request: self.request)
     }
     func withUpdatedSidebar(_ sidebar: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: self.request)
+    }
+    func withUpdatedRequest(_ request: ChatListIndexRequest) -> FilterData {
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: request)
     }
 }
 
@@ -280,7 +285,7 @@ private struct HiddenItems : Equatable {
 class ChatListController : PeersListController {
     
     private let filter = ValuePromise<FilterData>(ignoreRepeated: true)
-    private let _filterValue = Atomic<FilterData>(value: FilterData(filter: nil, tabs: [], sidebar: false))
+    private let _filterValue = Atomic<FilterData>(value: FilterData(filter: nil, tabs: [], sidebar: false, request: .Initial(50, nil)))
     private var filterValue: FilterData? {
         return _filterValue.with { $0 }
     }
@@ -290,20 +295,17 @@ class ChatListController : PeersListController {
     }
     
     func updateFilter(_ f:(FilterData)->FilterData) {
-        let previous = filterValue
-        let current = _filterValue.modify(f)
+        filter.set(_filterValue.modify { previous in
+            var current = f(previous)
+            if previous.filter?.id != current.filter?.id {
+                current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil))
+            }
+            return current
+        })
         self.genericView.searchView.change(state: .None,  true)
-        if previous?.filter?.id != current.filter?.id {
-            scrollup(force: true)
-            _  = first.swap(true)
-            _  = animated.swap(false)
-            self.request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil)))
-        }
-        filter.set(current)
         setCenterTitle(self.defaultBarTitle)
     }
     
-    private let request = Promise<ChatListIndexRequest>()
     private let previousChatList:Atomic<ChatListView?> = Atomic(value: nil)
     private let first = Atomic(value:true)
     private let animated = Atomic(value: false)
@@ -474,32 +476,16 @@ class ChatListController : PeersListController {
         }))
 
         
-        let foldersSignal = filter.get() |> distinctUntilChanged(isEqual: { lhs, rhs in
-            return lhs.filter == rhs.filter
-        })
-        
-        let foldersTopBarUpdate = filter.get() |> distinctUntilChanged(isEqual: { lhs, rhs in
-            if lhs.tabs != rhs.tabs {
-                return false
-            }
-            if lhs.sidebar != rhs.sidebar {
-                return false
-            }
-            if lhs.filter != rhs.filter {
-                return false
-            }
-            return true
-        })
-        
-        let signal = combineLatest(request.get() |> distinctUntilChanged, foldersSignal)
-        
+        let signal = filter.get() 
+
         let previousfilter = Atomic<FilterData?>(value: self.filterValue)
-        
-        let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool, FilterData, Bool), NoError> = signal |> mapToSignal { location, data -> Signal<(ChatListView, ViewUpdateType, Bool, FilterData, Bool), NoError> in
+        var firstSwitch: Bool = false
+
+        let chatHistoryView: Signal<(ChatListView, ViewUpdateType, Bool, FilterData, Bool), NoError> = signal |> mapToSignal { data -> Signal<(ChatListView, ViewUpdateType, Bool, FilterData, Bool), NoError> in
             
             var signal:Signal<(ChatListView,ViewUpdateType), NoError>
             var removeNextAnimation: Bool = false
-            switch location {
+            switch data.request {
             case let .Initial(count, st):
                 signal = context.account.viewTracker.tailChatListView(groupId: groupId, filterPredicate: chatListFilterPredicate(for: data.filter), count: count)
                 scroll = st
@@ -508,7 +494,8 @@ class ChatListController : PeersListController {
                 scroll = st
                 removeNextAnimation = st != nil
             }
-            return signal |> map { ($0.0, $0.1, removeNextAnimation, data, previousfilter.swap(data)?.filter?.id != data.filter?.id)}
+            firstSwitch = previousfilter.swap(data)?.filter?.id != data.filter?.id
+            return signal |> map { ($0.0, $0.1, removeNextAnimation, data, firstSwitch) }
         }
         
         let setupFilter:(ChatListFilter?)->Void = { [weak self] filter in
@@ -643,9 +630,10 @@ class ChatListController : PeersListController {
             
             var animated = animated.swap(true)
             
-            if value.4 {
+            if value.4 && firstSwitch {
                 animated = false
                 scroll = .up(true)
+                firstSwitch = false
             }
             
             let layoutUpdated = previousLayout.swap(context.sharedContext.layout) != context.sharedContext.layout
@@ -669,7 +657,6 @@ class ChatListController : PeersListController {
         disposable.set(appliedTransition.start())
       
         
-        request.set(.single(.Initial(max(Int(context.window.frame.height / 70) + 3, 13), nil)))
         
         var pinnedCount: Int = 0
         self.genericView.tableView.enumerateItems { item -> Bool in
@@ -721,7 +708,9 @@ class ChatListController : PeersListController {
                 }
                 if let messageIndex = messageIndex {
                     _ = animated.swap(false)
-                    strongSelf.request.set(.single(.Index(messageIndex, nil)))
+                    strongSelf.updateFilter {
+                        $0.withUpdatedRequest(.Index(messageIndex, nil))
+                    }
                 }
             }
             
@@ -984,7 +973,9 @@ class ChatListController : PeersListController {
             let view = self.previousChatList.modify({$0})
             if view?.laterIndex != nil {
                 _ = self.first.swap(true)
-                self.request.set(.single(.Initial(50, .up(true))))
+                self.updateFilter {
+                    $0.withUpdatedRequest(.Initial(50, .up(true)))
+                }
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
                     if self.filterValue?.filter != nil {
