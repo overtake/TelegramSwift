@@ -424,18 +424,10 @@ final class ChatUndoManager  {
     }
     
     func clearHistoryInteractively(postbox: Postbox, peerId: PeerId, type: InteractiveHistoryClearingType = .forLocalPeer) {
-        _ = TelegramCore.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start(completed: { [weak context] in
-            queue.async {
-              context?.finishAction(for: peerId, type: .clearHistory)
-            }
-        })
+        _ = TelegramCore.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start()
     }
     func removePeerChat(account: Account, peerId: PeerId, type: ChatUndoActionType, reportChatSpam: Bool, deleteGloballyIfPossible: Bool = false) {
-        _ = TelegramCore.removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start(completed: { [weak context] in
-            queue.async {
-                context?.finishAction(for: peerId, type: type)
-            }
-        })
+        _ = TelegramCore.removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start()
     }
     
     func invokeNow(for peerId: PeerId, type: ChatUndoActionType) {
@@ -453,6 +445,5 @@ final class ChatUndoManager  {
 
 
 func enqueueMessages(context: AccountContext, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
-    context.chatUndoManager.invokeNow(for: peerId, type: .clearHistory)
     return TelegramCore.enqueueMessages(account: context.account, peerId: peerId, messages: messages)
 }

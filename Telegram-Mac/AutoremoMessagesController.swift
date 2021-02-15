@@ -17,18 +17,15 @@ private final class Arguments {
     let context: AccountContext
     let setTimeout:(Int32)->Void
     let clearHistory: ()->Void
-    let toggleGlobal:()->Void
-    init(context: AccountContext, setTimeout:@escaping(Int32)->Void, clearHistory: @escaping()->Void, toggleGlobal: @escaping()->Void) {
+    init(context: AccountContext, setTimeout:@escaping(Int32)->Void, clearHistory: @escaping()->Void) {
         self.context = context
         self.setTimeout = setTimeout
         self.clearHistory = clearHistory
-        self.toggleGlobal = toggleGlobal
     }
 }
 
 private struct State : Equatable {
     var autoremoveTimeout: CachedPeerAutoremoveTimeout?
-    var isGlobal: Bool
     var timeout: Int32
     let peer: PeerEquatable
 }
@@ -87,56 +84,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         index += 1
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), item: { [weak arguments] initialSize, stableId in
-            let values:[Int32] = [.secondsInDay, .secondsInWeek, 0]
+            let values:[Int32] = [0, .secondsInDay, .secondsInWeek]
 
-            var dotted: [Int] = []
-            if let autoremoveTimeout = state.autoremoveTimeout, let peerValue = autoremoveTimeout.timeout?.peerValue {
-                switch peerValue {
-                case .secondsInDay:
-                    dotted = [1, 2]
-                case .secondsInWeek:
-                    dotted = [2]
-                default:
-                    break
-                }
-            }
 
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesDay, L10n.autoremoveMessagesWeek, L10n.autoremoveMessagesNever], dottedIndexes: dotted, viewType: .singleItem, selectAction: { index in
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesNever, L10n.autoremoveMessagesDay, L10n.autoremoveMessagesWeek], viewType: .singleItem, selectAction: { index in
                 arguments?.setTimeout(values[index])
             })
         }))
         index += 1
 
-        if let peerValue = state.autoremoveTimeout?.timeout?.peerValue {
-
-            let text: String
-            switch peerValue {
-            case .secondsInWeek:
-                text = L10n.autoremoveMessagesGlobalWeek(state.peer.peer.displayTitle)
-            case .secondsInDay:
-                text = L10n.autoremoveMessagesGlobalDay(state.peer.peer.displayTitle)
-            default:
-                text = ""
-            }
-
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(text), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        if let _ = state.autoremoveTimeout?.timeout?.peerValue {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
         } else {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
         }
 
-        if state.peer.peer.isUser {
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-
-
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_global, data: .init(name: L10n.autoremoveMessagesAlsoFor(state.peer.peer.compactDisplayTitle), color: theme.colors.text, type: .switchable(state.isGlobal), viewType: .singleItem, enabled: state.timeout != 0, action: arguments.toggleGlobal)))
-            index += 1
-
-        }
-
-        
     }
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -145,9 +109,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-/*
-
- */
 
 func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputDataModalController {
 
@@ -156,7 +117,7 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(autoremoveTimeout: nil, isGlobal: false, timeout: 0, peer: PeerEquatable(peer))
+    let initialState = State(autoremoveTimeout: nil, timeout: 0, peer: PeerEquatable(peer))
 
     var close:(()->Void)? = nil
 
@@ -188,13 +149,6 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
             context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
             close?()
         })
-    }, toggleGlobal: {
-
-        updateState { state in
-            var state = state
-            state.isGlobal.toggle()
-            return state
-        }
     })
 
 
@@ -220,22 +174,10 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
         } else {
             autoremoveTimeout = nil
         }
-        var isGlobal: Bool = false
-        if let autoremoveTimeout = autoremoveTimeout {
-            switch autoremoveTimeout {
-            case let .known(timeout):
-                if let timeout = timeout {
-                    isGlobal = timeout.isGlobal
-                }
-            default:
-                break
-            }
-        }
         updateState { current in
             var current = current
             current.autoremoveTimeout = autoremoveTimeout
-            current.isGlobal = isGlobal
-            current.timeout = autoremoveTimeout?.timeout?.myValue ?? 0
+            current.timeout = autoremoveTimeout?.timeout?.peerValue ?? 0
             return current
         }
     }))
@@ -245,35 +187,15 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
 
             let state = stateValue.with { $0 }
 
-            if let timeout = state.autoremoveTimeout {
-                if timeout.timeout?.myValue == state.timeout && timeout.timeout?.isGlobal == state.isGlobal {
+            if let timeout = state.autoremoveTimeout?.timeout?.peerValue {
+                if timeout == state.timeout {
                     close?()
                     return
                 }
             }
 
             var text: String? = nil
-            var title: String? = nil
-            if let peerValue = state.autoremoveTimeout?.timeout?.peerValue, peerValue < state.timeout {
-                switch peerValue {
-                case .secondsInWeek:
-                    text = L10n.autoremoveMessagesGlobalWeek(state.peer.peer.displayTitle)
-                case .secondsInDay:
-                    text = L10n.autoremoveMessagesGlobalDay(state.peer.peer.displayTitle)
-                default:
-                    text = ""
-                }
-
-                switch state.timeout {
-                case .secondsInDay:
-                    title = L10n.tipAutoDeleteTimerSetForDayTitle
-                case .secondsInWeek:
-                    title = L10n.tipAutoDeleteTimerSetForWeekTitle
-                default:
-                    break
-                }
-
-            } else if state.timeout != 0 {
+            if state.timeout != 0 {
                 switch state.timeout {
                 case .secondsInDay:
                     text = L10n.tipAutoDeleteTimerSetForDay
@@ -282,13 +204,12 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
                 default:
                     break
                 }
-            } 
+            }
 
-            _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout, isGlobal: state.isGlobal), for: context.window).start(completed: {
+            _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout), for: context.window).start(completed: {
                 f(.success(.custom({
-
                     if let text = text {
-                        showModalText(for: context.window, text: text, title: title)
+                        showModalText(for: context.window, text: text)
                     }
                     close?()
                 })))
