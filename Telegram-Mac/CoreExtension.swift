@@ -2313,7 +2313,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         }
 
         
-        return combineLatest(modernConfirmSignal(for: mainWindow, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get()) |> mapToSignal { result, location -> Signal<Bool, NoError> in
+        return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> mapToSignal { result, location -> Signal<Bool, NoError> in
             
             context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
             if peer.isBot && result == .thrid {
@@ -3256,21 +3256,6 @@ extension CachedPeerAutoremoveTimeout {
 
 }
 
-extension CachedPeerAutoremoveTimeout.Value {
-    var effectiveValue: Int32? {
-        if let myValue = myValue, let peerValue = peerValue {
-            return min(myValue, peerValue)
-        } else {
-            if let peerValue = peerValue {
-                return peerValue
-            } else if let myValue = myValue {
-                return myValue
-            } else {
-                return nil
-            }
-        }
-    }
-}
 
 
 func clearHistory(context: AccountContext, peer: Peer) {

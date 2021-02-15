@@ -514,7 +514,7 @@ class ChatListController : PeersListController {
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.sharedContext.layout)
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), context.chatUndoManager.allStatuses(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, undoStatuses, hiddenItems, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, hiddenItems, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
             let filterData = value.3
             
@@ -599,20 +599,7 @@ class ChatListController : PeersListController {
                     case .HoleEntry:
                         return nil
                     case let .MessageEntry(values):
-                        if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.deleteChat, .leftChat, .leftChannel, .deleteChannel]) {
-                            return nil
-                        } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.clearHistory]) {
-                            let entry: ChatListEntry = ChatListEntry.MessageEntry(index: values.0, messages: [], readState: values.2, isRemovedFromTotalUnreadCount: values.3, embeddedInterfaceState: values.4, renderedPeer: values.5, presence: values.6, summaryInfo: values.7, hasFailed: values.8, isContact: values.9)
-                            return AppearanceWrapperEntry(entry: .chat(entry, activities, additionItem, filter: filter), appearance: appearance)
-                        } else if undoStatuses.isActive(peerId: inner.index.messageIndex.id.peerId, types: [.archiveChat]) {
-                            if groupId == .root {
-                                return nil
-                            } else {
-                                return AppearanceWrapperEntry(entry: entry, appearance: appearance)
-                            }
-                        } else {
-                            return AppearanceWrapperEntry(entry: entry, appearance: appearance)
-                        }
+                        return AppearanceWrapperEntry(entry: entry, appearance: appearance)
                     }
                 case .group:
                     return AppearanceWrapperEntry(entry: entry, appearance: appearance)
@@ -802,7 +789,6 @@ class ChatListController : PeersListController {
     
     func addUndoAction(_ action:ChatUndoAction) {
         let context = self.context
-        context.chatUndoManager.add(action: action)
         guard self.context.sharedContext.layout != .minimisize else { return }
         self.undoTooltipControl.add(controller: self)
     }

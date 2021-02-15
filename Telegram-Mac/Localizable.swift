@@ -439,10 +439,6 @@ internal final class L10n {
   internal static var autoNightSettingsSunriseDescNA: String  { return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc.NA") }
   /// Can't determine your location. Please check your system settings and try again.
   internal static var autoNightSettingsUpdateLocationError: String  { return L10n.tr("Localizable", "AutoNight.Settings.UpdateLocation.Error") }
-  /// Also auto-delete for %@
-  internal static func autoremoveMessagesAlsoFor(_ p1: String) -> String {
-    return L10n.tr("Localizable", "AutoremoveMessages.AlsoFor", p1)
-  }
   /// After 1 Day
   internal static var autoremoveMessagesDay: String  { return L10n.tr("Localizable", "AutoremoveMessages.Day") }
   /// Automatically delete messages sent in this chat after a certain period of time.
@@ -455,14 +451,6 @@ internal final class L10n {
   internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
   /// After 1 Week
   internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
-  /// %@ has set messages to auto-delete in 1 day. You can't cancel it or make this interval longer.
-  internal static func autoremoveMessagesGlobalDay(_ p1: String) -> String {
-    return L10n.tr("Localizable", "AutoremoveMessages.Global.Day", p1)
-  }
-  /// %@ has set messages to auto-delete in 1 week. You can't cancel it or make this interval longer.
-  internal static func autoremoveMessagesGlobalWeek(_ p1: String) -> String {
-    return L10n.tr("Localizable", "AutoremoveMessages.Global.Week", p1)
-  }
   /// Preferences…
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -515,6 +503,34 @@ internal final class L10n {
   internal static var botTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Desc") }
   /// Two-Step Verification
   internal static var botTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Title") }
+  /// Leave as regular group
+  internal static var broadcastGroupsCancel: String  { return L10n.tr("Localizable", "BroadcastGroups.Cancel") }
+  /// Convert to Broadcast Group
+  internal static var broadcastGroupsConvert: String  { return L10n.tr("Localizable", "BroadcastGroups.Convert") }
+  /// • No limit on the number of members.\n\n• Only admins can post.\n\n• Can't be turned back into a regular group.
+  internal static var broadcastGroupsIntroText: String  { return L10n.tr("Localizable", "BroadcastGroups.IntroText") }
+  /// Broadcast Groups
+  internal static var broadcastGroupsIntroTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.IntroTitle") }
+  /// Your group can now have more than %@ members.
+  internal static func broadcastGroupsSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BroadcastGroups.Success", p1)
+  }
+  /// Convert
+  internal static var broadcastGroupsConfirmationAlertConvert: String  { return L10n.tr("Localizable", "BroadcastGroups.ConfirmationAlert.Convert") }
+  /// Regular members of the group (non-admins) will irrevocably lose their right to post messages in the group.\n\nThis action **cannot** be undone.
+  internal static var broadcastGroupsConfirmationAlertText: String  { return L10n.tr("Localizable", "BroadcastGroups.ConfirmationAlert.Text") }
+  /// Are you sure?
+  internal static var broadcastGroupsConfirmationAlertTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.ConfirmationAlert.Title") }
+  /// Learn More
+  internal static var broadcastGroupsLimitAlertLearnMore: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.LearnMore") }
+  /// If you change your mind, go to the settings of your group.
+  internal static var broadcastGroupsLimitAlertSettingsTip: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.SettingsTip") }
+  /// Your group has reached a limit of **%@** members.\n\nYou can increase this limit by converting the group to a **broadcast group** where only admins can post. Interested?
+  internal static func broadcastGroupsLimitAlertText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.Text", p1)
+  }
+  /// Limit Reached
+  internal static var broadcastGroupsLimitAlertTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.Title") }
   /// Hide Telegram
   internal static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
   /// Accept
@@ -871,11 +887,37 @@ internal final class L10n {
   internal static func channelAdminLogAllowedNewMembersToSpeak(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.AllowedNewMembersToSpeak", p1)
   }
+  /// Invite Users via Link
+  internal static var channelAdminLogCanInviteUsersViaLink: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanInviteUsersViaLink") }
   /// Manage Voice Chats
   internal static var channelAdminLogCanManageCalls: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanManageCalls") }
+  /// %1$@ created invite link %2$@
+  internal static func channelAdminLogCreatedInviteLink(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.CreatedInviteLink", p1, p2)
+  }
+  /// %1$@ deleted invite link %2$@
+  internal static func channelAdminLogDeletedInviteLink(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.DeletedInviteLink", p1, p2)
+  }
+  /// %1$@ edited invite link %2$@
+  internal static func channelAdminLogEditedInviteLink(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.EditedInviteLink", p1, p2)
+  }
   /// %1$@ ended voice chat
   internal static func channelAdminLogEndedVoiceChat(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.EndedVoiceChat", p1)
+  }
+  /// %1$@ joined via invite link %2$@
+  internal static func channelAdminLogJoinedViaInviteLink(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.JoinedViaInviteLink", p1, p2)
+  }
+  /// %1$@ disabled auto-remove timer
+  internal static func channelAdminLogMessageChangedAutoremoveTimeoutRemove(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.MessageChangedAutoremoveTimeoutRemove", p1)
+  }
+  /// %1$@ set auto-remove timer to %2$@
+  internal static func channelAdminLogMessageChangedAutoremoveTimeoutSet(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.MessageChangedAutoremoveTimeoutSet", p1, p2)
   }
   /// %1$@ muted new members
   internal static func channelAdminLogMutedNewMembers(_ p1: String) -> String {
@@ -885,6 +927,10 @@ internal final class L10n {
   internal static func channelAdminLogMutedParticipant(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.MutedParticipant", p1, p2)
   }
+  /// %1$@ revoked invite link %2$@
+  internal static func channelAdminLogRevokedInviteLink(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.RevokedInviteLink", p1, p2)
+  }
   /// %1$@ started voice chat
   internal static func channelAdminLogStartedVoiceChat(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.StartedVoiceChat", p1)
@@ -892,6 +938,10 @@ internal final class L10n {
   /// %1$@ unmuted %2$@
   internal static func channelAdminLogUnmutedMutedParticipant(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.UnmutedMutedParticipant", p1, p2)
+  }
+  /// %1$@ changed %2$@ volume to %3$@
+  internal static func channelAdminLogUpdatedParticipantVolume(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.UpdatedParticipantVolume", p1, p2, p3)
   }
   /// Sorry, you're not allowed to promote this user to become an admin.
   internal static var channelAdminsAddAdminError: String  { return L10n.tr("Localizable", "Channel.Admins.AddAdminError") }
@@ -3871,6 +3921,14 @@ internal final class L10n {
   internal static var groupInfoAdministratorsTitle: String  { return L10n.tr("Localizable", "GroupInfo.Administrators.Title") }
   /// Add Exception
   internal static var groupInfoPermissionsAddException: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.AddException") }
+  /// Convert to Broadcast Group
+  internal static var groupInfoPermissionsBroadcastConvert: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.BroadcastConvert") }
+  /// Broadcast groups can have over %@ members, but only admins can send messages in them.
+  internal static func groupInfoPermissionsBroadcastConvertInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GroupInfo.Permissions.BroadcastConvertInfo", p1)
+  }
+  /// Broadcast Group
+  internal static var groupInfoPermissionsBroadcastTitle: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.BroadcastTitle") }
   /// EXCEPTIONS
   internal static var groupInfoPermissionsExceptions: String  { return L10n.tr("Localizable", "GroupInfo.Permissions.Exceptions") }
   /// Removed Users
