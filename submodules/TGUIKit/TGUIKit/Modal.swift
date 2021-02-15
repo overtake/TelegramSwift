@@ -627,7 +627,16 @@ public class Modal: NSObject {
        return NSZeroRect
     }
     
+    private var markedAsClosed: Bool = false
+    
     public func close(_ callAcceptInteraction:Bool = false, animationType: ModalAnimationCloseBehaviour = .common) ->Void {
+        
+        if markedAsClosed {
+            return
+        }
+        
+        markedAsClosed = true
+        
         window.removeAllHandlers(for: self)
         controller?.viewWillDisappear(true)
         
@@ -650,7 +659,7 @@ public class Modal: NSObject {
             background = self.background
         }
         if let controller = controller, controller.contentBelowBackground {
-            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { [weak self, weak background] _ in
+            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.3, timingFunction: .spring, completion: { [weak self, weak background] _ in
                 background?.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()

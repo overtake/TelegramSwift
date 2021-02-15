@@ -249,14 +249,14 @@ public func showModalProgress<T, E>(signal:Signal<T,E>, for window:Window, dispo
 public func showModalSuccess(for window: Window, icon: CGImage, text: TextViewLayout? = nil, background: NSColor = presentation.colors.background, delay _delay: Double) -> Signal<Void, NoError> {
     
     let modal = SuccessModalController(icon, text: text, background: background)
-    
-    return Signal<Void, NoError>({ _ -> Disposable in
-        showModal(with: modal, for: window, animationType: .scaleCenter)
+    showModal(with: modal, for: window, animationType: .scaleCenter)
+
+    return Signal<Void, NoError>({ [weak modal] _ -> Disposable in
         return ActionDisposable {
-            modal.close()
+            modal?.close()
         }
-    }) |> timeout(_delay, queue: Queue.mainQueue(), alternate: Signal<Void, NoError>({ _ -> Disposable in
-        modal.close()
+    }) |> timeout(_delay, queue: Queue.mainQueue(), alternate: Signal<Void, NoError>({ [weak modal] _ -> Disposable in
+        modal?.close()
         return EmptyDisposable
     }))
 }
@@ -265,14 +265,23 @@ public func showModalSuccess(for window: Window, icon: CGImage, text: TextViewLa
 private final class TextAndLabelModalView : View {
     private let textView: TextView = TextView()
     private var titleView: TextView?
+    private let visualEffectView = NSVisualEffectView(frame: NSZeroRect)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.backgroundColor = NSColor.black.withAlphaComponent(0.9)
+        
+        self.visualEffectView.material = .ultraDark
+        self.visualEffectView.blendingMode = .withinWindow
+        self.visualEffectView.state = .active
+        self.visualEffectView.wantsLayer = true
+        addSubview(self.visualEffectView)
+
+        //self.backgroundColor = NSColor.black.withAlphaComponent(0.9)
         self.textView.disableBackgroundDrawing = true
         self.textView.isSelectable = false
         self.textView.userInteractionEnabled = false
         addSubview(self.textView)
         layer?.cornerRadius = .cornerRadius
+        
     }
 
     required public init?(coder: NSCoder) {
@@ -289,11 +298,11 @@ private final class TextAndLabelModalView : View {
             self.titleView?.isSelectable = false
             self.titleView?.userInteractionEnabled = false
             let titleLayout = TextViewLayout(.initialize(string: title, color: .white, font: .medium(.title)), maximumNumberOfLines: 1)
-            titleLayout.measure(width: maxSize.width - 80)
+            titleLayout.measure(width: min(400, maxSize.width - 80))
             self.titleView?.update(titleLayout)
         }
         let textLayout = TextViewLayout(.initialize(string: text, color: .white, font: .normal(.text)))
-        textLayout.measure(width: maxSize.width - 80)
+        textLayout.measure(width: min(400, maxSize.width - 80))
         self.textView.update(textLayout)
 
 
@@ -313,6 +322,8 @@ private final class TextAndLabelModalView : View {
 
     override func layout() {
         super.layout()
+        
+        visualEffectView.frame = bounds
 
         if let titleView = titleView {
             titleView.setFrameOrigin(NSMakePoint(10, 10))
@@ -409,9 +420,9 @@ public func showModalText(for window: Window, text: String, title: String? = nil
     let showTime = max(min(msPerChar * TimeInterval(words.length), 10), 3.5)
 
 
-    let signal = Signal<Void, NoError>({ [weak modal] _ -> Disposable in
+    let signal = Signal<Void, NoError>({ _ -> Disposable in
         return ActionDisposable {
-            modal?.close()
+           
         }
     }) |> timeout(showTime, queue: Queue.mainQueue(), alternate: Signal<Void, NoError>({ [weak modal] _ -> Disposable in
         modal?.close()
