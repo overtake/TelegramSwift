@@ -164,7 +164,7 @@ private final class GroupCallControlsView : View {
       //  if state != preiousState {
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
         //isStreaming ? GroupCallTheme.video_off : GroupCallTheme.video_on
-        videoStream.updateWithData(CallControlData(text: L10n.voiceChatVideoStream, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+        videoStream.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
       //  }
         let statusText: String
         var secondary: String? = nil

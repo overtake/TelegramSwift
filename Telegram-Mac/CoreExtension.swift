@@ -3290,5 +3290,7 @@ func clearHistory(context: AccountContext, peer: Peer) {
         modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
             context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
         })
+    } else {
+        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     }
 }
