@@ -37,7 +37,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, item: { initialSize, stableId in
-        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .invitations, text: .init())
+        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .gigagroup, text: .init())
     }))
     index += 1
 
@@ -92,7 +92,7 @@ func GigagroupLandingController(context: AccountContext, peerId: PeerId) -> Inpu
                     alert(for: context.window, info: L10n.unknownError)
                 }
             }, completed: {
-                showModalText(for: context.window, text: L10n.modalDone)
+                showModalText(for: context.window, text: L10n.broadcastGroupsSuccess)
                 close?()
             })
 

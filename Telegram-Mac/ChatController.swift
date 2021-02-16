@@ -1053,7 +1053,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let peekDisposable = MetaDisposable()
     private let loadThreadDisposable = MetaDisposable()
     private let recordActivityDisposable = MetaDisposable()
-
+    private let suggestionsDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1100,6 +1100,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         _ = _locationValue.swap(location)
         self.location.set(.single(location))
     }
+
+    private let chatHistoryLocationPromise = ValuePromise<ChatHistoryLocationInput>()
+    private var nextHistoryLocationId: Int32 = 1
+    private func takeNextHistoryLocationId() -> Int32 {
+        let id = self.nextHistoryLocationId
+        self.nextHistoryLocationId += 5
+        return id
+    }
+
     
     private let maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
     private let readHistoryDisposable = MetaDisposable()
@@ -4922,6 +4931,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         pollChannelDiscussionDisposable.dispose()
         loadThreadDisposable.dispose()
         recordActivityDisposable.dispose()
+        suggestionsDisposable.dispose()
         peekDisposable.dispose()
         _ = previousView.swap(nil)
         
@@ -4931,7 +4941,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
+
+        suggestionsDisposable.set(nil)
+
         sentMessageEventsDisposable.set(nil)
         peekDisposable.set(nil)
         
@@ -5303,6 +5315,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                afterSentSound?.play()
            }
        }))
+
+        let suggestions = getPeerSpecificServerProvidedSuggestions(postbox: context.account.postbox, peerId: self.chatLocation.peerId) |> deliverOnMainQueue
+        let peerId = self.chatLocation.peerId
+
+        suggestionsDisposable.set(suggestions.start(next: { suggestions in
+            for suggestion in suggestions {
+                switch suggestion {
+                case .convertToGigagroup:
+                    confirm(for: context.window, header: L10n.broadcastGroupsLimitAlertTitle, information: L10n.broadcastGroupsLimitAlertText(Formatter.withSeparator.string(from: NSNumber(value: context.limitConfiguration.maxSupergroupMemberCount))!), okTitle: L10n.broadcastGroupsLimitAlertLearnMore, successHandler: { _ in
+                        showModal(with: GigagroupLandingController(context: context, peerId: peerId), for: context.window)
+                    }, cancelHandler: {
+                        showModalText(for: context.window, text: L10n.broadcastGroupsLimitAlertSettingsTip)
+                    })
+                    _ = dismissPeerSpecificServerProvidedSuggestion(account: context.account, peerId: peerId, suggestion: suggestion).start()
+                }
+            }
+        }))
+
         
     }
     

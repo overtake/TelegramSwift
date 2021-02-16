@@ -145,7 +145,7 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
             items.append(.chatForwardMessages)
             items.append(.flexibleSpace)
 
-        case let .action(text, _):
+        case let .action(text, _, _):
             if !(presentation.peer is TelegramSecretChat) {
                 items.append(.flexibleSpace)
                 items.append(.chatInputAction(text))
@@ -262,7 +262,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     @objc private func invokeInputAction(_ sender: Any?) {
         if let chatInteraction = self.chatInteraction {
             switch chatInteraction.presentation.state {
-            case .action(_, let action):
+            case .action(_, let action, _):
                 action(chatInteraction)
             case let .channelWithDiscussion(_, leftAction, rightAction):
                 if let sender = sender as? NSButton {

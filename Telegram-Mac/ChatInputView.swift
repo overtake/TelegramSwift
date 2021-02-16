@@ -46,6 +46,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var messageActionsPanelView:MessageActionsPanelView?
     private var recordingPanelView:ChatInputRecordingView?
     private var blockedActionView:TitleButton?
+    private var additionBlockedActionView: ImageButton?
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
     
@@ -55,7 +56,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var actionsView:ChatInputActionsView!
     private(set) var attachView:ChatInputAttachView!
     
-    
+
     
     
     private let slowModeUntilDisposable = MetaDisposable()
@@ -281,6 +282,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         recordingPanelView = nil
         blockedActionView?.removeFromSuperview()
         blockedActionView = nil
+        additionBlockedActionView?.removeFromSuperview()
+        additionBlockedActionView = nil
         chatDiscussionView?.removeFromSuperview()
         chatDiscussionView = nil
         restrictedView?.removeFromSuperview()
@@ -309,8 +312,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             break
         case .block(_):
             break
-        case let .action(text,action):
+        case let .action(text, action, addition):
             self.messageActionsPanelView?.removeFromSuperview()
+            self.blockedActionView?.removeFromSuperview()
             self.blockedActionView = TitleButton(frame: bounds)
             self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.accent)
             self.blockedActionView?.set(text: text, for: .Normal)
@@ -321,8 +325,25 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.blockedActionView?.set(handler: {_ in
                 action(chatInteraction)
             }, for:.Click)
-            
+
+
+
             self.addSubview(self.blockedActionView!, positioned: .below, relativeTo: _ts)
+
+            if let addition = addition {
+                additionBlockedActionView = ImageButton()
+                additionBlockedActionView?.set(image: addition.icon, for: .Normal)
+                additionBlockedActionView?.sizeToFit()
+                addSubview(additionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
+
+                additionBlockedActionView?.set(handler: { control in
+                    addition.action(control)
+                }, for: .Click)
+            } else {
+                additionBlockedActionView?.removeFromSuperview()
+                additionBlockedActionView = nil
+            }
+
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
             self.accessoryView.change(opacity: 0.0, animated: animated)
@@ -451,7 +472,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         actionsView.setFrameOrigin(frame.width - actionsView.frame.width, 0)
         attachView.setFrameOrigin(0, 0)
         _ts.setFrameOrigin(0, frame.height - .borderSize)
-        
+        if let additionBlockedActionView = additionBlockedActionView {
+            additionBlockedActionView.centerY(x: frame.width - additionBlockedActionView.frame.width - 23)
+        }
+
     }
     
     override func setFrameOrigin(_ newOrigin: NSPoint) {

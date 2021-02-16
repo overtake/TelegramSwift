@@ -117,7 +117,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
-        linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 120)
+        linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 30)
         usageTextLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
         return result
     }
@@ -242,7 +242,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         let innerBlockSize = item.blockWidth - item.viewType.innerInset.left - item.viewType.innerInset.right
         
         linkContainer.frame = NSMakeRect(item.viewType.innerInset.left, item.viewType.innerInset.top, innerBlockSize, 40)
-        linkView.center()
+        linkView.centerY(x: item.viewType.innerInset.left)
         
         
         share.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize, 40)

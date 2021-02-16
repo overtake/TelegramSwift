@@ -752,7 +752,9 @@ class APController : NSResponder {
         player.play()
 
         player.actionAtEnd = .action({ [weak self] in
-             self?.audioPlayerDidFinishPlaying()
+            Queue.mainQueue().async {
+                self?.audioPlayerDidFinishPlaying()
+            }
         })
         
         self.mediaPlayer = player
@@ -839,24 +841,22 @@ class APController : NSResponder {
     }
 
     func audioPlayerDidFinishPlaying() {
-        Queue.mainQueue().async {
-            self.stop()
-            
-            if self.needRepeat {
-                self.dequeueCurrent()
-            } else if self.needNext && self.nextEnabled {
-                if self.isLatest {
-                    if self.needLoop {
-                        self.next()
-                    } else {
-                        self.complete()
-                    }
-                } else {
+        self.stop()
+
+        if self.needRepeat {
+            self.dequeueCurrent()
+        } else if self.needNext && self.nextEnabled {
+            if self.isLatest {
+                if self.needLoop {
                     self.next()
+                } else {
+                    self.complete()
                 }
             } else {
-                self.complete()
+                self.next()
             }
+        } else {
+            self.complete()
         }
     }
 
@@ -1028,7 +1028,7 @@ class APChatController : APController {
 
             if isFirst {
                 if let index = index {
-                    let list:[APItem] = items.modify({$0})
+                    let list:[APItem] = items.with { $0 }
                     for i in 0 ..< list.count {
                         if list[i].entry.index == index {
                             self?.current = i
@@ -1039,6 +1039,10 @@ class APChatController : APController {
 
                 self?.dequeueCurrent()
                 self?.ready.set(.single(true))
+            }
+            let list = items.with({ $0 })
+            if let song = self?.song, !list.contains(song) {
+                self?.audioPlayerDidFinishPlaying()
             }
 
         }))

@@ -640,6 +640,8 @@ func initialize() -> [String] {
     array.append("profile_links")
 
     array.append("destruct_clear_history")
+
+    array.append("chat_gigagroup_info")
     
     return array
 }

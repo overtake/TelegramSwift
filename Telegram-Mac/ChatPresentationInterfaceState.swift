@@ -307,10 +307,16 @@ final class ChatRecordingAudioState : ChatRecordingState {
 
 
 enum ChatState : Equatable {
+
+    struct AdditionAction {
+        let icon: CGImage
+        let action: (NSView)->Void
+    }
+
     case normal
     case selecting
     case block(String)
-    case action(String, (ChatInteraction)->Void)
+    case action(String, (ChatInteraction)->Void, AdditionAction?)
     case channelWithDiscussion(discussionGroupId: PeerId?, leftAction: String, rightAction: String)
     case editing
     case recording(ChatRecordingState)
@@ -355,8 +361,8 @@ func ==(lhs:ChatState, rhs:ChatState) -> Bool {
         } else {
             return false
         }
-    case let .action(lhsAction,_):
-        if case let .action(rhsAction,_) = rhs {
+    case let .action(lhsAction,_, _):
+        if case let .action(rhsAction, _, _) = rhs {
             return lhsAction == rhsAction
         } else {
             return false
@@ -489,7 +495,7 @@ struct ChatPresentationInterfaceState: Equatable {
             if let initialAction = initialAction, case .start = initialAction  {
                 return .action(L10n.chatInputStartBot, { chatInteraction in
                     chatInteraction.invokeInitialAction()
-                })
+                }, nil)
             }
             
             if let recordingState = recordingState {
@@ -510,12 +516,12 @@ struct ChatPresentationInterfaceState: Equatable {
                     return .action(L10n.chatPinnedUnpinAllCountable(pinnedMessageId?.totalCount ?? 0), { chatInteraction in
                         let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
-                    })
+                    }, nil)
                 } else {
                     return .action(L10n.chatPinnedDontShow, { chatInteraction in
                         let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
-                    })
+                    }, nil)
                 }
                 
             default:
@@ -540,11 +546,15 @@ struct ChatPresentationInterfaceState: Equatable {
                         if let notificationSettings = notificationSettings {
                             return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)
-                            })
+                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { control in
+                                tooltip(for: control, text: L10n.chatGigagroupHelp)
+                            }))
                         } else {
                             return .action(L10n.chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)
-                            })
+                            }, .init(icon: theme.icons.chat_gigagroup_info, action: { control in
+
+                            }))
                         }
                     }
 
@@ -570,27 +580,27 @@ struct ChatPresentationInterfaceState: Equatable {
                 if peer.participationStatus == .left {
                     return .action(L10n.chatInputJoin, { chatInteraction in
                         chatInteraction.joinChannel()
-                    })
+                    }, nil)
                 } else if peer.participationStatus == .kicked {
                     return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
-                    })
+                    }, nil)
                 } else if let permissionText = permissionText(from: peer, for: .banSendMessages) {
                     return .restricted(permissionText)
                 } else if !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings {
                     return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                         chatInteraction.toggleNotifications(nil)
-                    })
+                    }, nil)
                 }
             } else if let peer = peer as? TelegramGroup {
                 if  peer.membership == .Left {
                     return .action(L10n.chatInputReturn,{ chatInteraction in
                         chatInteraction.returnGroup()
-                    })
+                    }, nil)
                 } else if peer.membership == .Removed {
                     return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
-                    })
+                    }, nil)
                 }
             } else if let peer = peer as? TelegramSecretChat, let mainPeer = mainPeer {
                 
@@ -598,7 +608,7 @@ struct ChatPresentationInterfaceState: Equatable {
                 case .terminated:
                     return .action(L10n.chatInputDelete, { chatInteraction in
                         chatInteraction.removeAndCloseChat()
-                    })
+                    }, nil)
                 case .handshake:
                     return .restricted(L10n.chatInputSecretChatWaitingToUserOnline(mainPeer.compactDisplayTitle))
                 default:
@@ -609,7 +619,7 @@ struct ChatPresentationInterfaceState: Equatable {
             if let peer = peer, !peer.canSendMessage(chatMode.isThreadMode), let notificationSettings = notificationSettings {
                 return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                     chatInteraction.toggleNotifications(nil)
-                })
+                }, nil)
             }
             
             if let blocked = isBlocked, blocked {
@@ -618,12 +628,12 @@ struct ChatPresentationInterfaceState: Equatable {
                     return .action(L10n.chatInputRestart, { chatInteraction in
                         chatInteraction.unblock()
                         chatInteraction.startBot()
-                    })
+                    }, nil)
                 }
                 
                 return .action(tr(L10n.chatInputUnblock), { chatInteraction in
                     chatInteraction.unblock()
-                })
+                }, nil)
             }
             
             if let peer = peer, let permissionText = permissionText(from: peer, for: .banSendMessages) {
@@ -639,7 +649,7 @@ struct ChatPresentationInterfaceState: Equatable {
                 if peer.botInfo != nil, let historyCount = historyCount, historyCount == 0 {
                     return .action(tr(L10n.chatInputStartBot), { chatInteraction in
                         chatInteraction.startBot()
-                    })
+                    }, nil)
                 }
             }
            
