@@ -502,6 +502,7 @@ struct ChatPresentationInterfaceState: Equatable {
             if self.chatMode == .preview {
                 return .block("")
             }
+
             
             switch chatMode {
             case .pinned:
@@ -533,6 +534,21 @@ struct ChatPresentationInterfaceState: Equatable {
                     }
                 }
                 #endif
+
+                if peer.flags.contains(.isGigagroup) {
+                    if peer.adminRights == nil && !peer.groupAccess.isCreator {
+                        if let notificationSettings = notificationSettings {
+                            return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
+                                chatInteraction.toggleNotifications(nil)
+                            })
+                        } else {
+                            return .action(L10n.chatInputMute, { chatInteraction in
+                                chatInteraction.toggleNotifications(nil)
+                            })
+                        }
+                    }
+
+                }
                 
                 switch chatMode {
                 case .replyThread:

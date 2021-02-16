@@ -65,9 +65,6 @@ import SyncCore
     private func hideCurrentIfNeeded(animated: Bool = true) {
         if let current = self.current {
             self.current = nil
-            if !current.cancelled {
-                context.chatUndoManager.invokeAll()
-            }
             let view = current.view
             if animated {
                 view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, view.frame.maxY), duration: 0.25, timingFunction: .spring, removeOnCompletion: false)

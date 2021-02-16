@@ -3844,7 +3844,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                             if let peer = peerViewMainPeer(peerView) {
                                 if let peer = peer as? TelegramSecretChat, let value = peer.messageAutoremoveTimeout {
-                                    present = present.withUpdatedMessageSecretTimeout(.known(.init(myValue: value, peerValue: value, isGlobal: true)))
+                                    present = present.withUpdatedMessageSecretTimeout(.known(.init(peerValue: value)))
                                 } else {
                                     present = present.withUpdatedMessageSecretTimeout(.known(nil))
                                 }
@@ -4342,18 +4342,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             break
         }
         
-        
-        let undoSignals = combineLatest(queue: .mainQueue(), context.chatUndoManager.status(for: chatInteraction.peerId, type: .deleteChat), context.chatUndoManager.status(for: chatInteraction.peerId, type: .leftChat), context.chatUndoManager.status(for: chatInteraction.peerId, type: .leftChannel), context.chatUndoManager.status(for: chatInteraction.peerId, type: .deleteChannel))
-        
-        chatUndoDisposable.set(undoSignals.start(next: { [weak self] statuses in
-            let result: [ChatUndoActionStatus?] = [statuses.0, statuses.1, statuses.2, statuses.3]
-            for status in result {
-                if let status = status, status != .cancelled {
-                    self?.navigationController?.close()
-                    break
-                }
-            }
-        }))
+    
         
         let discussion: Signal<Void, NoError> = peerView.get()
             |> map { view -> CachedChannelData? in
@@ -5172,15 +5161,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
     
-        
+//        #if DEBUG
 //        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
 //            guard let `self` = self else {return .rejected}
-//            if let editState = self.chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia as? TelegramMediaImage {
-//                self.chatInteraction.editEditingMessagePhoto(media)
-//            }
+//            showModal(with: GigagroupLandingController(context: context, peerId: self.chatLocation.peerId), for: context.window)
 //            return .invoked
 //        }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
-        
+//        #endif
       
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeBold()

@@ -45,7 +45,7 @@ class ShareViewController: NSViewController {
         
         
         let rootPath = containerUrl.path
-        let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
+        let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false)
 
         let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
         logger.logToConsole = false
