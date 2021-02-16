@@ -639,6 +639,26 @@ class ServiceEventLogItem: TableRowItem {
                     text = L10n.channelAdminLogAllowedNewMembersToSpeak(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .deleteExportedInvitation(invite):
+                let text = L10n.channelAdminLogDeletedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .editExportedInvitation(_, invite):
+                let text = L10n.channelAdminLogEditedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .revokeExportedInvitation(invite):
+                let text = L10n.channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .participantJoinedViaInvite(invite):
+                let text = L10n.channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .changeHistoryTTL(_, updatedValue):
+                let text: String
+                if let updatedValue = updatedValue {
+                    text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutSet(peer.displayTitle, timeIntervalString(Int(updatedValue)))
+                } else {
+                    text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutRemove(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }

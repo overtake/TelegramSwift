@@ -216,6 +216,7 @@
 		A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72D7AE823C471A7005BAC59 /* PollResultController.swift */; };
 		A731924B25CAE9DC00218E0E /* AutoremoMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */; };
 		A731924F25CD5F2300218E0E /* destructor.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A731924E25CD5F2200218E0E /* destructor.tgs */; };
+		A731925525DA7AA400218E0E /* GigagroupLanding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A731925425DA7AA300218E0E /* GigagroupLanding.swift */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A7388432257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */; };
 		A73884352580E501002E8424 /* CGChatListIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73884342580E501002E8424 /* CGChatListIndicator.swift */; };
@@ -1226,6 +1227,7 @@
 		A72D7AE823C471A7005BAC59 /* PollResultController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollResultController.swift; sourceTree = "<group>"; };
 		A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoremoMessagesController.swift; sourceTree = "<group>"; };
 		A731924E25CD5F2200218E0E /* destructor.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = destructor.tgs; sourceTree = "<group>"; };
+		A731925425DA7AA300218E0E /* GigagroupLanding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigagroupLanding.swift; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallNavigationHeaderView.swift; sourceTree = "<group>"; };
@@ -2314,6 +2316,7 @@
 				9FC4DA9721DD0B86003E2A62 /* ChannelMemberCategoryListContext.swift */,
 				9FC4DA9921DD0BE6003E2A62 /* CachedChannelAdmins.swift */,
 				9FC4DAA721DE0626003E2A62 /* ChannelPermissionsController.swift */,
+				A731925425DA7AA300218E0E /* GigagroupLanding.swift */,
 			);
 			name = "channel-members";
 			sourceTree = "<group>";
@@ -4986,6 +4989,7 @@
 				9F0F8E82226DCD1C00A97F6A /* OpmizeDatabaseView.swift in Sources */,
 				D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */,
 				9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */,
+				A731925525DA7AA400218E0E /* GigagroupLanding.swift in Sources */,
 				D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */,
 				9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */,
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,

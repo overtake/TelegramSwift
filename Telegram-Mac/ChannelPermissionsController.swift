@@ -27,7 +27,8 @@ private final class ChannelPermissionsControllerArguments {
     let openKicked: () -> Void
     let presentRestrictedPublicGroupPermissionsAlert: () -> Void
     let updateSlowMode:(Int32)->Void
-    init(context: AccountContext, updatePermission: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, setPeerIdWithRevealedOptions: @escaping (PeerId?, PeerId?) -> Void, addPeer: @escaping  () -> Void, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping (ChannelParticipant) -> Void, openPeerInfo: @escaping (Peer) -> Void, openKicked: @escaping () -> Void, presentRestrictedPublicGroupPermissionsAlert: @escaping() -> Void, updateSlowMode:@escaping(Int32)->Void) {
+    let convert:()->Void
+    init(context: AccountContext, updatePermission: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, setPeerIdWithRevealedOptions: @escaping (PeerId?, PeerId?) -> Void, addPeer: @escaping  () -> Void, removePeer: @escaping (PeerId) -> Void, openPeer: @escaping (ChannelParticipant) -> Void, openPeerInfo: @escaping (Peer) -> Void, openKicked: @escaping () -> Void, presentRestrictedPublicGroupPermissionsAlert: @escaping() -> Void, updateSlowMode:@escaping(Int32)->Void, convert: @escaping()->Void) {
         self.context = context
         self.updatePermission = updatePermission
         self.addPeer = addPeer
@@ -38,6 +39,7 @@ private final class ChannelPermissionsControllerArguments {
         self.openKicked = openKicked
         self.presentRestrictedPublicGroupPermissionsAlert = presentRestrictedPublicGroupPermissionsAlert
         self.updateSlowMode = updateSlowMode
+        self.convert = convert
     }
 }
 
@@ -58,6 +60,9 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
     case section(Int32)
     case permissionsHeader(Int32, Int32, String, GeneralViewType)
     case permission(Int32, Int32, String, Bool, TelegramChatBannedRightsFlags, Bool?, GeneralViewType)
+    case convertHeader(Int32, Int32, GeneralViewType)
+    case convert(Int32, Int32, GeneralViewType)
+    case convertDesc(Int32, Int32, GeneralViewType)
     case kicked(Int32, Int32, String, String, GeneralViewType)
     case exceptionsHeader(Int32, Int32, String, GeneralViewType)
     case add(Int32, Int32, String, GeneralViewType)
@@ -71,18 +76,24 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
             return .index(0)
         case let .permission(_, index, _, _, _, _, _):
             return .permission(1 + index)
-        case .kicked:
+        case .convertHeader:
             return .index(1000)
-        case .slowModeHeader:
+        case .convert:
             return .index(1001)
-        case .slowMode:
+        case .convertDesc:
+            return .index(1002)
+        case .kicked:
             return .index(1003)
-        case .slowDesc:
+        case .slowModeHeader:
             return .index(1004)
-        case .exceptionsHeader:
+        case .slowMode:
             return .index(1005)
-        case .add:
+        case .slowDesc:
             return .index(1006)
+        case .exceptionsHeader:
+            return .index(1007)
+        case .add:
+            return .index(1008)
         case let .section(section):
             return .section(section)
         case let .peerItem( _, _, participant, _, _, _, _, _):
@@ -98,12 +109,18 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
              return (section * 1000) + index
         case let .kicked(section, index, _, _, _):
              return (section * 1000) + index
+        case let .convertHeader(section, index, _):
+             return (section * 1000) + index
+        case let .convert(section, index, _):
+             return (section * 1000) + index
+        case let .convertDesc(section, index, _):
+             return (section * 1000) + index
         case let .slowMode(section, _, _):
-            return (section * 1000) + 0
+            return (section * 1000) + 1
         case let .slowModeHeader(section, _):
-            return (section * 1000) + 1
+            return (section * 1000) + 2
         case let .slowDesc(section, _, _):
-            return (section * 1000) + 1
+            return (section * 1000) + 3
         case let .exceptionsHeader(section, index, _, _):
             return (section * 1000) + index
         case let .add(section, index, _, _):
@@ -137,9 +154,14 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .nextContext(value), viewType: viewType, action: {
                 arguments.openKicked()
             })
-//            return ItemListDisclosureItem(theme: theme, title: text, label: value, sectionId: self.section, style: .blocks, action: {
-//                arguments.openKicked()
-//            })
+        case let .convertHeader(_, _, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.groupInfoPermissionsBroadcastTitle.uppercased(), viewType: viewType)
+        case let .convert(_, _, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.groupInfoPermissionsBroadcastConvert, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+                arguments.convert()
+            })
+        case let .convertDesc(_, _, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.groupInfoPermissionsBroadcastConvertInfo(Formatter.withSeparator.string(from: .init(value: arguments.context.limitConfiguration.maxSupergroupMemberCount))!), viewType: viewType)
         case let .exceptionsHeader(_, _, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .add(_, _, text, viewType):
@@ -306,7 +328,7 @@ private func completeRights(_ flags: TelegramChatBannedRightsFlags) -> TelegramC
     return result
 }
 
-private func channelPermissionsControllerEntries(view: PeerView, state: ChannelPermissionsControllerState, participants: [RenderedChannelParticipant]?) -> [ChannelPermissionsEntry] {
+private func channelPermissionsControllerEntries(view: PeerView, state: ChannelPermissionsControllerState, participants: [RenderedChannelParticipant]?, limits: LimitsConfiguration) -> [ChannelPermissionsEntry] {
     var entries: [ChannelPermissionsEntry] = []
     
     var sectionId: Int32 = 0
@@ -340,7 +362,20 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
         
         entries.append(.section(sectionId))
         sectionId += 1
-        
+
+        if let members = cachedData.participantsSummary.memberCount, limits.maxSupergroupMemberCount - members < 1000 {
+            if channel.groupAccess.isCreator && !channel.flags.contains(.isGigagroup) {
+                entries.append(.convertHeader(sectionId, index, .textTopItem))
+                index += 1
+                entries.append(.convert(sectionId, index, .singleItem))
+                index += 1
+                entries.append(.convertDesc(sectionId, index, .textBottomItem))
+                index += 1
+
+                entries.append(.section(sectionId))
+                sectionId += 1
+            }
+        }
         
         entries.append(.slowModeHeader(sectionId, .textTopItem))
         entries.append(.slowMode(sectionId, cachedData.slowModeTimeout, .singleItem))
@@ -706,6 +741,8 @@ final class ChannelPermissionsController : TableViewController {
                 }
             })
             
+        }, convert: {
+            showModal(with: GigagroupLandingController(context: context, peerId: peerId), for: context.window)
         })
         
         let previous = Atomic<[AppearanceWrapperEntry<ChannelPermissionsEntry>]>(value: [])
@@ -714,7 +751,7 @@ final class ChannelPermissionsController : TableViewController {
         let signal = combineLatest(queue: .mainQueue(), appearanceSignal, statePromise.get(), peerView.get(), peersPromise.get())
         |> deliverOnMainQueue
         |> map { appearance, state, view, participants -> TableUpdateTransition in
-            let entries = channelPermissionsControllerEntries(view: view, state: state, participants: participants).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            let entries = channelPermissionsControllerEntries(view: view, state: state, participants: participants, limits: context.limitConfiguration).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()
