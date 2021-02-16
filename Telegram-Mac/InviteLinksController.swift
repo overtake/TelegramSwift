@@ -399,10 +399,12 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
+
+    if !state.isAdmin {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+    }
+
     struct Tuple : Equatable {
         let link:ExportedInvitation
         let viewType: GeneralViewType
@@ -462,8 +464,10 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                 index += 1
             }
         } else {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksEmptyDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-            index += 1
+            if !state.isAdmin {
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksEmptyDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                index += 1
+            }
         }
 
         
@@ -510,7 +514,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, item: { initialSize, stableId in
-            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: !state.isAdmin ? .lastItem : .firstItem)
         }))
         index += 1
     }

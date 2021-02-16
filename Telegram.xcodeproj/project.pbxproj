@@ -217,6 +217,7 @@
 		A731924B25CAE9DC00218E0E /* AutoremoMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */; };
 		A731924F25CD5F2300218E0E /* destructor.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A731924E25CD5F2200218E0E /* destructor.tgs */; };
 		A731925525DA7AA400218E0E /* GigagroupLanding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A731925425DA7AA300218E0E /* GigagroupLanding.swift */; };
+		A731925925DBA60000218E0E /* gigagroup.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A731925825DBA60000218E0E /* gigagroup.tgs */; };
 		A7377E1B23ACC79100AD3ADD /* ChatNavigateFailed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */; };
 		A7388432257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */; };
 		A73884352580E501002E8424 /* CGChatListIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A73884342580E501002E8424 /* CGChatListIndicator.swift */; };
@@ -1228,6 +1229,7 @@
 		A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoremoMessagesController.swift; sourceTree = "<group>"; };
 		A731924E25CD5F2200218E0E /* destructor.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = destructor.tgs; sourceTree = "<group>"; };
 		A731925425DA7AA300218E0E /* GigagroupLanding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GigagroupLanding.swift; sourceTree = "<group>"; };
+		A731925825DBA60000218E0E /* gigagroup.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = gigagroup.tgs; sourceTree = "<group>"; };
 		A7377E1A23ACC79100AD3ADD /* ChatNavigateFailed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatNavigateFailed.swift; sourceTree = "<group>"; };
 		A7377E5B23B5E99500AD3ADD /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallNavigationHeaderView.swift; sourceTree = "<group>"; };
@@ -4268,6 +4270,7 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				A731925825DBA60000218E0E /* gigagroup.tgs */,
 				A731924E25CD5F2200218E0E /* destructor.tgs */,
 				2744AE7125B58E6C00E8849F /* invitations.tgs */,
 				D0D1391A2521F652005FCF35 /* discussion.tgs */,
@@ -4753,6 +4756,7 @@
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
 				A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */,
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
+				A731925925DBA60000218E0E /* gigagroup.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
 				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,

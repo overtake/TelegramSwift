@@ -511,21 +511,19 @@ internal final class L10n {
   internal static var broadcastGroupsIntroText: String  { return L10n.tr("Localizable", "BroadcastGroups.IntroText") }
   /// Broadcast Groups
   internal static var broadcastGroupsIntroTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.IntroTitle") }
-  /// Your group can now have more than %@ members.
-  internal static func broadcastGroupsSuccess(_ p1: String) -> String {
-    return L10n.tr("Localizable", "BroadcastGroups.Success", p1)
-  }
+  /// Success! Now your group have not limits.
+  internal static var broadcastGroupsSuccess: String  { return L10n.tr("Localizable", "BroadcastGroups.Success") }
   /// Convert
   internal static var broadcastGroupsConfirmationAlertConvert: String  { return L10n.tr("Localizable", "BroadcastGroups.ConfirmationAlert.Convert") }
-  /// Regular members of the group (non-admins) will irrevocably lose their right to post messages in the group.\n\nThis action **cannot** be undone.
+  /// Regular members of the group (non-admins) will irrevocably lose their right to post messages in the group.\n\nThis action cannot be undone.
   internal static var broadcastGroupsConfirmationAlertText: String  { return L10n.tr("Localizable", "BroadcastGroups.ConfirmationAlert.Text") }
   /// Are you sure?
   internal static var broadcastGroupsConfirmationAlertTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.ConfirmationAlert.Title") }
   /// Learn More
   internal static var broadcastGroupsLimitAlertLearnMore: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.LearnMore") }
-  /// If you change your mind, go to the settings of your group.
+  /// If you change your mind, go to the permission settings of your group.
   internal static var broadcastGroupsLimitAlertSettingsTip: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.SettingsTip") }
-  /// Your group has reached a limit of **%@** members.\n\nYou can increase this limit by converting the group to a **broadcast group** where only admins can post. Interested?
+  /// Your group has reached a limit of %@ members.\n\nYou can increase this limit by converting the group to a broadcast group where only admins can post. Interested?
   internal static func broadcastGroupsLimitAlertText(_ p1: String) -> String {
     return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.Text", p1)
   }
@@ -1725,6 +1723,8 @@ internal final class L10n {
   internal static var chatEmptyReplies: String  { return L10n.tr("Localizable", "Chat.Empty.Replies") }
   /// Previewing this file can potentially expose your IP address to its sender.
   internal static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
+  /// Only admins can send messages in this group.
+  internal static var chatGigagroupHelp: String  { return L10n.tr("Localizable", "Chat.Gigagroup.Help") }
   /// Sorry, this group is not accessible.
   internal static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
   /// JOIN

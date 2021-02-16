@@ -7544,6 +7544,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_gigagroup_info: CGImage {
+      if let image = cached.with({ $0["chat_gigagroup_info"] }) {
+          return image
+      } else {
+          let image = _chat_gigagroup_info()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_gigagroup_info"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8125,6 +8138,7 @@ final class TelegramIconsTheme {
   private let _profile_removed: ()->CGImage
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
+  private let _chat_gigagroup_info: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8706,7 +8720,8 @@ final class TelegramIconsTheme {
       profile_group_discussion: @escaping()->CGImage,
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
-      destruct_clear_history: @escaping()->CGImage
+      destruct_clear_history: @escaping()->CGImage,
+      chat_gigagroup_info: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9288,5 +9303,6 @@ final class TelegramIconsTheme {
       self._profile_removed = profile_removed
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history
+      self._chat_gigagroup_info = chat_gigagroup_info
   }
 }

@@ -19,6 +19,17 @@ enum ChatHistoryInitialSearchLocation {
     case id(MessageId)
 }
 
+
+struct ChatHistoryLocationInput: Equatable {
+    var content: ChatHistoryLocation
+    var id: Int32
+
+    init(content: ChatHistoryLocation, id: Int32) {
+        self.content = content
+        self.id = id
+    }
+}
+
 enum ChatHistoryLocation: Equatable {
     case Initial(count: Int)
     case InitialSearch(location: ChatHistoryInitialSearchLocation, count: Int)

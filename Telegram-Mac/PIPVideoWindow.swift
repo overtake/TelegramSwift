@@ -250,7 +250,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     fileprivate var eventLocalMonitor: Any?
     fileprivate var eventGlobalMonitor: Any?
     private var hideAnimated: Bool = true
-    
+    private let lookAtMessageDisposable = MetaDisposable()
     init(_ control: PictureInPictureControl, item: MGalleryItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
         self.viewer = viewer
         self._delegate = delegate
@@ -329,12 +329,17 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             self._window.sendEvent(event)
             return event
         })
-        
-        eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
-            guard let `self` = self else {return}
-            self._window.sendEvent(event)
-        })
-        
+
+
+        if let message = item.entry.message {
+            let messageView = item.context.account.postbox.messageView(message.id) |> deliverOnMainQueue
+            lookAtMessageDisposable.set(messageView.start(next: { [weak self] view in
+                if view.message == nil {
+                    self?.hideAnimated = true
+                    self?.hide()
+                }
+            }))
+        }
     }
     
     
@@ -376,6 +381,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             control.pause()
         }
         NotificationCenter.default.removeObserver(self)
+        lookAtMessageDisposable.dispose()
     }
 
     override func animationResizeTime(_ newFrame: NSRect) -> TimeInterval {

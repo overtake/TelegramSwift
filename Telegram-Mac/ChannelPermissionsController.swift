@@ -348,15 +348,20 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
             effectiveRightsFlags = defaultBannedRights.flags
         }
 
+        var permissionList = allGroupPermissionList
+        if channel.flags.contains(.isGigagroup) {
+            permissionList = [.banAddMembers]
+        }
+
         
         entries.append(.permissionsHeader(sectionId, index, L10n.groupInfoPermissionsSectionTitle, .textTopItem))
         index += 1
-        for (i, rights) in allGroupPermissionList.enumerated() {
+        for (i, rights) in permissionList.enumerated() {
             var enabled: Bool? = true
             if channel.addressName != nil && publicGroupRestrictedPermissions.contains(rights) {
                 enabled = nil
             }
-            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights), !effectiveRightsFlags.contains(rights), rights, enabled, bestGeneralViewType(allGroupPermissionList, for: i)))
+            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights), !effectiveRightsFlags.contains(rights), rights, enabled, bestGeneralViewType(permissionList, for: i)))
             index += 1
         }
         
@@ -376,33 +381,38 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
                 sectionId += 1
             }
         }
+
+        if !channel.flags.contains(.isGigagroup) {
+            entries.append(.slowModeHeader(sectionId, .textTopItem))
+            entries.append(.slowMode(sectionId, cachedData.slowModeTimeout, .singleItem))
+            entries.append(.slowDesc(sectionId, cachedData.slowModeTimeout, .textBottomItem))
+
+            entries.append(.section(sectionId))
+            sectionId += 1
+        }
         
-        entries.append(.slowModeHeader(sectionId, .textTopItem))
-        entries.append(.slowMode(sectionId, cachedData.slowModeTimeout, .singleItem))
-        entries.append(.slowDesc(sectionId, cachedData.slowModeTimeout, .textBottomItem))
-        
-        entries.append(.section(sectionId))
-        sectionId += 1
+
         
         entries.append(.kicked(sectionId, index, L10n.groupInfoPermissionsRemoved, cachedData.participantsSummary.kickedCount.flatMap({ "\($0 > 0 ? "\($0)" : "")" }) ?? "", .singleItem))
         index += 1
-        
-        entries.append(.section(sectionId))
-        sectionId += 1
-        
-        entries.append(.exceptionsHeader(sectionId, index, L10n.groupInfoPermissionsExceptions, .textTopItem))
-        index += 1
-        
-        
-        
-        
-        
-        entries.append(.add(sectionId, index, L10n.groupInfoPermissionsAddException, participants.isEmpty ? .singleItem : .firstItem))
-        index += 1
-        for (i, participant) in participants.enumerated() {
-            entries.append(.peerItem(sectionId, index, participant, ShortPeerDeleting(editable: true), state.removingPeerId != participant.peer.id, true, effectiveRightsFlags, i == 0 ? .innerItem : bestGeneralViewType(participants, for: i)))
+
+
+        if !channel.flags.contains(.isGigagroup) {
+            entries.append(.section(sectionId))
+            sectionId += 1
+
+
+            entries.append(.exceptionsHeader(sectionId, index, L10n.groupInfoPermissionsExceptions, .textTopItem))
             index += 1
-        }
+
+            entries.append(.add(sectionId, index, L10n.groupInfoPermissionsAddException, participants.isEmpty ? .singleItem : .firstItem))
+            index += 1
+            for (i, participant) in participants.enumerated() {
+                entries.append(.peerItem(sectionId, index, participant, ShortPeerDeleting(editable: true), state.removingPeerId != participant.peer.id, true, effectiveRightsFlags, i == 0 ? .innerItem : bestGeneralViewType(participants, for: i)))
+                index += 1
+            }
+        }        
+
     } else if let group = view.peers[view.peerId] as? TelegramGroup, let _ = view.cachedData as? CachedGroupData, let defaultBannedRights = group.defaultBannedRights {
         let effectiveRightsFlags: TelegramChatBannedRightsFlags
         if let modifiedRightsFlags = state.modifiedRightsFlags {
