@@ -497,6 +497,14 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                 }
                 entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelUsernameAboutGroup : L10n.channelUsernameAboutChannel, .textBottomItem))
             }
+
+
+            if peer.addressName != nil {
+                entries.append(.section(sectionId: sectionId))
+                sectionId += 1
+                entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+            }
+
         case .privateChannel:
             entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, .singleItem))
@@ -591,6 +599,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                 }
                 entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelUsernameAboutGroup, .textBottomItem))
             }
+            
         case .privateChannel:
             entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation, importers, .singleItem))
@@ -826,7 +835,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: self?.linksManager))
         }, open: { [weak self] invitation in
             if let manager = self?.linksManager {
-                showModal(with: ExportedInvitationController(invitation: invitation, accountContext: context, context: manager.importer(for: invitation)), for: context.window)
+                showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
             }
         })
         

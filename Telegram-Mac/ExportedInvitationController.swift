@@ -19,12 +19,16 @@ private final class ExportInvitationArguments {
     let copyLink: (String)->Void
     let shareLink: (String)->Void
     let openProfile:(PeerId)->Void
-    init(context: PeerInvitationImportersContext, accountContext: AccountContext, copyLink: @escaping(String)->Void, shareLink: @escaping(String)->Void, openProfile:@escaping(PeerId)->Void) {
+    let revokeLink: (ExportedInvitation)->Void
+    let editLink:(ExportedInvitation)->Void
+    init(context: PeerInvitationImportersContext, accountContext: AccountContext, copyLink: @escaping(String)->Void, shareLink: @escaping(String)->Void, openProfile:@escaping(PeerId)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink: @escaping(ExportedInvitation)->Void) {
         self.context = context
         self.accountContext = accountContext
         self.copyLink = copyLink
         self.shareLink = shareLink
         self.openProfile = openProfile
+        self.revokeLink = revokeLink
+        self.editLink = editLink
     }
 }
 
@@ -51,9 +55,28 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link, equatable: InputDataEquatable(invitation), item: { initialSize, stableId in
         return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.accountContext, exportedLink: invitation, lastPeers: [], viewType: .singleItem, mode: .short, menuItems: {
-            return .single([ContextMenuItem(L10n.exportedInvitationContextCopy, handler: {
+
+            var items:[ContextMenuItem] = []
+
+            items.append(ContextMenuItem(L10n.exportedInvitationContextCopy, handler: {
                 arguments.copyLink(invitation.link)
-            })])
+            }))
+
+            if !invitation.isRevoked {
+                if !invitation.isExpired {
+                    items.append(ContextMenuItem(L10n.manageLinksContextShare, handler: {
+                        arguments.shareLink(invitation.link)
+                    }))
+                }
+
+                items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
+                    arguments.editLink(invitation)
+                }))
+                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                    arguments.revokeLink(invitation)
+                }))
+            }
+            return .single(items)
         }, share: arguments.shareLink, copyLink: arguments.copyLink)
     }))
     
@@ -72,9 +95,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
 
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_admin(admin.id), equatable: InputDataEquatable(PeerEquatable(admin)), item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: admin, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(invitation.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem, action: { [weak arguments] in
-                arguments?.openProfile(admin.id)
-            })
+            return ShortPeerRowItem(initialSize, peer: admin, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(invitation.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem)
         }))
     }
     
@@ -124,7 +145,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
     return entries
 }
 
-func ExportedInvitationController(invitation: ExportedInvitation, accountContext: AccountContext, context: PeerInvitationImportersContext) -> InputDataModalController {
+func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: PeerInvitationImportersContext) -> InputDataModalController {
     
     
     var getController:(()->InputDataController?)? = nil
@@ -138,6 +159,21 @@ func ExportedInvitationController(invitation: ExportedInvitation, accountContext
     }, openProfile: { peerId in
         getModalController?()?.close()
         accountContext.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: accountContext, peerId: peerId))
+    }, revokeLink: { [weak manager] link in
+        confirm(for: accountContext.window, header: L10n.channelRevokeLinkConfirmHeader, information: L10n.channelRevokeLinkConfirmText, okTitle: L10n.channelRevokeLinkConfirmOK, cancelTitle: L10n.modalCancel, successHandler: { _ in
+            if let manager = manager {
+                _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: accountContext.window).start()
+                getModalController?()?.close()
+            }
+        })
+    }, editLink: { [weak manager] link in
+        getModalController?()?.close()
+        showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
+            let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? nil : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? nil : updated.count)
+            if let signal = signal {
+                _ = showModalProgress(signal: signal, for: accountContext.window).start()
+            }
+        }), for: accountContext.window)
     })
     
     let dataSignal = combineLatest(queue: prepareQueue, context.state, accountContext.account.postbox.transaction { $0.getPeer(invitation.adminId) }) |> deliverOnPrepareQueue |> map { state, admin in

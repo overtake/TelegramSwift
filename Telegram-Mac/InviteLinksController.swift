@@ -368,7 +368,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     }
 
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksPermanent), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
@@ -400,7 +400,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     sectionId += 1
     
 
-    if !state.isAdmin {
+    if !state.isAdmin || (state.list != nil && !state.list!.isEmpty) {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
     }
@@ -413,7 +413,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     let viewType: GeneralViewType = state.list == nil || !state.list!.isEmpty ? .firstItem : .singleItem
     if !state.isAdmin {
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: InputDataEquatable(viewType), item: { initialSize, stableId in
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.manageLinksCreateNew, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.newLink, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 43, thumbInset: 0))
         }))
         index += 1
@@ -440,7 +440,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                     return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
 
                         var items:[ContextMenuItem] = []
-                        items.append(ContextMenuItem.init(L10n.manageLinksContextCopy, handler: {
+                        items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
                             arguments.copyLink(link.link)
                         }))
                         if !link.isRevoked {
@@ -450,7 +450,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                                 }))
                             }
 
-                            items.append(ContextMenuItem.init(L10n.manageLinksContextEdit, handler: {
+                            items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
                                 arguments.editLink(link)
                             }))
                             items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
@@ -514,7 +514,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, item: { initialSize, stableId in
-            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: !state.isAdmin ? .lastItem : .firstItem)
+            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: !state.isAdmin ? .lastItem : .singleItem)
         }))
         index += 1
     }
@@ -599,7 +599,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         
     }, open: { [weak manager] invitation in
         if let manager = manager {
-            showModal(with: ExportedInvitationController(invitation: invitation, accountContext: context, context: manager.importer(for: invitation)), for: context.window)
+            showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
         }
     }, openAdminLinks: { creator in
         let manager = InviteLinkPeerManager(context: context, peerId: peerId, adminId: creator.peer.peerId)

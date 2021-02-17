@@ -100,13 +100,19 @@ class ExportedInvitationRowItem: GeneralRowItem {
     override var height: CGFloat {
         var height: CGFloat = viewType.innerInset.top + 40 + viewType.innerInset.top
         
-        if let link = exportedLink, !link.isExpired && !link.isRevoked {
-            height += 40 + viewType.innerInset.top
-        }
+
         
         switch mode {
         case .normal:
-            height += 30 + viewType.innerInset.bottom * 2
+            if let link = exportedLink, !link.isExpired && !link.isRevoked {
+                height += 40 + viewType.innerInset.top
+            } else if exportedLink == nil {
+                height += 40
+            }
+            height += 30 + viewType.innerInset.bottom
+            if exportedLink == nil {
+                height += viewType.innerInset.bottom
+            }
         case .short:
             break
         }
@@ -160,6 +166,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
     private let linkContainer: Control = Control()
     private let linkView: TextView = TextView()
     private let share: TitleButton = TitleButton()
+    private let copy: TitleButton = TitleButton()
     private let actions: ImageButton = ImageButton()
     private let usageTextView = TextView()
     private let usageContainer = Control()
@@ -178,6 +185,11 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         addSubview(share)
         share.layer?.cornerRadius = 10
         share._thatFit = true
+
+        addSubview(copy)
+        copy.layer?.cornerRadius = 10
+        copy._thatFit = true
+
         linkView.userInteractionEnabled = false
         linkView.isSelectable = false
         
@@ -219,6 +231,15 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
                 return
             }
             if let link = item.exportedLink {
+                item.shareLink(link.link)
+            }
+        }, for: .Click)
+
+        copy.set(handler: { [weak self] _ in
+            guard let item = self?.item as? ExportedInvitationRowItem else {
+                return
+            }
+            if let link = item.exportedLink {
                 item.copyLink(link.link)
             }
         }, for: .Click)
@@ -244,8 +265,9 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         linkContainer.frame = NSMakeRect(item.viewType.innerInset.left, item.viewType.innerInset.top, innerBlockSize, 40)
         linkView.centerY(x: item.viewType.innerInset.left)
         
-        
-        share.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize, 40)
+        copy.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 10, 40)
+        share.frame = NSMakeRect(copy.frame.maxX + 20, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 10, 40)
+
         actions.centerY(x: linkContainer.frame.width - actions.frame.width - item.viewType.innerInset.right)
         
         usageContainer.frame = NSMakeRect(item.viewType.innerInset.left, share.frame.maxY + item.viewType.innerInset.top, innerBlockSize, 30)
@@ -273,6 +295,9 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         share.set(background: theme.colors.accent, for: .Normal)
         share.set(background: theme.colors.accent.highlighted, for: .Highlight)
         share.set(color: theme.colors.underSelectedColor, for: .Normal)
+        copy.set(background: theme.colors.accent, for: .Normal)
+        copy.set(background: theme.colors.accent.highlighted, for: .Highlight)
+        copy.set(color: theme.colors.underSelectedColor, for: .Normal)
         actions.set(image: menuIcon, for: .Normal)
         actions.set(image: menuIconActive, for: .Highlight)
         actions.sizeToFit()
@@ -355,12 +380,22 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         }
                 
         share.set(font: .medium(.text), for: .Normal)
-        share.set(text: L10n.exportedInvitationContextCopy, for: .Normal)
+        share.set(text: L10n.manageLinksContextShare, for: .Normal)
         if let link = item.exportedLink {
             share.userInteractionEnabled = !link.isExpired && !link.isRevoked
         } else {
             share.userInteractionEnabled = item.exportedLink != nil
         }
+
+
+        copy.set(font: .medium(.text), for: .Normal)
+        copy.set(text: L10n.manageLinksContextCopy, for: .Normal)
+        if let link = item.exportedLink {
+            copy.userInteractionEnabled = !link.isExpired && !link.isRevoked
+        } else {
+            copy.userInteractionEnabled = item.exportedLink != nil
+        }
+
         linkView.update(item.linkTextLayout)
      
         usageTextView.update(item.usageTextLayout)

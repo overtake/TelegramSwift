@@ -4511,6 +4511,8 @@ internal final class L10n {
   internal static var manageLinksDeleteAll: String  { return L10n.tr("Localizable", "ManageLinks.DeleteAll") }
   /// You can create addition invite links that have limited time or numbers of usage.
   internal static var manageLinksEmptyDesc: String  { return L10n.tr("Localizable", "ManageLinks.EmptyDesc") }
+  /// INVITE LINK
+  internal static var manageLinksInviteLink: String  { return L10n.tr("Localizable", "ManageLinks.InviteLink") }
   /// INVITE LINKS CREATED BY OTHER ADMINS
   internal static var manageLinksOtherAdmins: String  { return L10n.tr("Localizable", "ManageLinks.OtherAdmins") }
   /// PERMANENT LINK
@@ -4551,13 +4553,13 @@ internal final class L10n {
   internal static func manageLinksAdminPermanentDesc(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "ManageLinks.Admin.Permanent.Desc", p1, p2)
   }
-  /// Copy
+  /// Copy Link
   internal static var manageLinksContextCopy: String  { return L10n.tr("Localizable", "ManageLinks.Context.Copy") }
-  /// Edit
+  /// Edit Link
   internal static var manageLinksContextEdit: String  { return L10n.tr("Localizable", "ManageLinks.Context.Edit") }
-  /// Revoke
+  /// Revoke Link
   internal static var manageLinksContextRevoke: String  { return L10n.tr("Localizable", "ManageLinks.Context.Revoke") }
-  /// Share
+  /// Share Link
   internal static var manageLinksContextShare: String  { return L10n.tr("Localizable", "ManageLinks.Context.Share") }
   /// Are you sure you want to delete all revoked links?
   internal static var manageLinksDeleteAllConfirm: String  { return L10n.tr("Localizable", "ManageLinks.DeleteAll.Confirm") }
@@ -8405,7 +8407,7 @@ internal final class L10n {
   internal static var tipAutoDeleteTimerSetForDay: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForDay") }
   /// Auto-delete timer set to 1 week.
   internal static var tipAutoDeleteTimerSetForWeek: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForWeek") }
-  /// Auto-delete timer is now off.
+  /// Auto-delete timer is now disabled.
   internal static var tipAutoDeleteTimerSetOff: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetOff") }
   /// Muted
   internal static var toastMuted: String  { return L10n.tr("Localizable", "Toast.Muted") }
