@@ -615,7 +615,7 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
     return PeerStatusStringResult(NSAttributedString(), NSAttributedString())
 }
 
- func autoremoveLocalized(_ ttl: Int) -> String {
+func autoremoveLocalized(_ ttl: Int, roundToCeil: Bool = false) -> String {
     var localized: String = ""
      if ttl <= 59 {
         localized = L10n.timerSecondsCountable(ttl)
@@ -623,10 +623,18 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
         localized = L10n.timerMinutesCountable(ttl / 60)
     } else if ttl <= 86399 {
         localized = L10n.timerHoursCountable(ttl / 60 / 60)
-    } else if ttl <= 604799 {
-        localized = L10n.timerDaysCountable(ttl / 60 / 60 / 24)
+    } else if ttl <= 604800 {
+        if roundToCeil {
+            localized = L10n.timerDaysCountable(Int(ceil(Float(ttl) / 60 / 60 / 24)))
+        } else {
+            localized = L10n.timerDaysCountable(ttl / 60 / 60 / 24)
+        }
     } else {
-        localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
+        if roundToCeil {
+            localized = L10n.timerWeeksCountable(Int(ceil(Float(ttl) / 60 / 60 / 24 / 7)))
+        } else {
+            localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
+        }
     }
     return localized
 }

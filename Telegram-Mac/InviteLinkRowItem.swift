@@ -243,13 +243,15 @@ private final class InviteLinkTokenView : Control {
         actions.change(pos: actionsPoint, animated: animated)
         progressView.change(pos: progressPoint, animated: animated)
         
-        progressView.update(link: link)
-        
+
 
         let updateText:()->Void = { [weak self] in
             guard let `self` = self else {
                 return
             }
+
+            self.progressView.update(link: link)
+
             let titleText = link.link.replacingOccurrences(of: "https://", with: "")
 
             let titleAttr = NSMutableAttributedString()
@@ -302,7 +304,8 @@ private final class InviteLinkTokenView : Control {
                         let string = String(format: "%@:%@:%@", hours < 10 ? "0\(hours)" : "\(hours)", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
                         countText += " • " + L10n.inviteLinkStickerTimeLeft(string)
                     } else {
-                        countText += " • " + L10n.inviteLinkStickerTimeLeft(autoremoveLocalized(left))
+                        
+                        countText += " • " + L10n.inviteLinkStickerTimeLeft(autoremoveLocalized(left, roundToCeil: true))
                     }
                 }
             }
@@ -317,7 +320,7 @@ private final class InviteLinkTokenView : Control {
         }
 
         if !link.isRevoked && !link.isExpired {
-            self.timer = SwiftSignalKit.Timer.init(timeout: 1.0, repeat: true, completion: updateText, queue: .mainQueue())
+            self.timer = SwiftSignalKit.Timer.init(timeout: 0.5, repeat: true, completion: updateText, queue: .mainQueue())
             self.timer?.start()
         } else {
             self.timer?.invalidate()

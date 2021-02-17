@@ -332,6 +332,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
 
             if let addition = addition {
                 additionBlockedActionView = ImageButton()
+                additionBlockedActionView?.animates = false
                 additionBlockedActionView?.set(image: addition.icon, for: .Normal)
                 additionBlockedActionView?.sizeToFit()
                 addSubview(additionBlockedActionView!, positioned: .above, relativeTo: self.blockedActionView)
