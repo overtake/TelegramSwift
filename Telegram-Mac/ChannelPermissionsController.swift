@@ -760,9 +760,9 @@ final class ChannelPermissionsController : TableViewController {
         
         let signal = combineLatest(queue: .mainQueue(), appearanceSignal, statePromise.get(), peerView.get(), peersPromise.get())
         |> deliverOnMainQueue
-        |> map { appearance, state, view, participants -> TableUpdateTransition in
+        |> map { appearance, state, view, participants -> (TableUpdateTransition, Peer?) in
             let entries = channelPermissionsControllerEntries(view: view, state: state, participants: participants, limits: context.limitConfiguration).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
-            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments)
+            return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments), peerViewMainPeer(view))
         } |> afterDisposed {
             actionsDisposable.dispose()
         }
@@ -805,10 +805,15 @@ final class ChannelPermissionsController : TableViewController {
             
         }
         
-        self.disposable.set(signal.start(next: { [weak self] transition in
+        self.disposable.set(signal.start(next: { [weak self] (transition, peer) in
             guard let `self` = self, !stopMerging else { return }
-            self.genericView.merge(with: transition)
-            self.readyOnce()
+            
+            if let peer = peer as? TelegramChannel, peer.flags.contains(.isGigagroup) {
+                self.navigationController?.back()
+            } else {
+                self.genericView.merge(with: transition)
+                self.readyOnce()
+            }
         }))
         
     }

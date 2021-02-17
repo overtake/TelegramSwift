@@ -544,7 +544,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             case let .peek(peerId, peek):
                  interaction(peerId, true, nil, .closeAfter(peek))
             case .invalidHash:
-                alert(for: context.window, info: tr(L10n.groupUnavailable))
+                alert(for: context.window, info: L10n.linkExpired)
             }
         })
         afterComplete(true)

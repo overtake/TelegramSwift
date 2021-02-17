@@ -473,7 +473,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         attachView.setFrameOrigin(0, 0)
         _ts.setFrameOrigin(0, frame.height - .borderSize)
         if let additionBlockedActionView = additionBlockedActionView {
-            additionBlockedActionView.centerY(x: frame.width - additionBlockedActionView.frame.width - 23)
+            additionBlockedActionView.centerY(x: frame.width - additionBlockedActionView.frame.width - 22)
         }
 
     }

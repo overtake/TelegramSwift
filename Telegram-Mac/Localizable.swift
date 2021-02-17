@@ -1311,8 +1311,6 @@ internal final class L10n {
   internal static var channelBlacklistEmptyDescrpition: String  { return L10n.tr("Localizable", "ChannelBlacklist.EmptyDescrpition") }
   /// RESTRICTED
   internal static var channelBlacklistRestricted: String  { return L10n.tr("Localizable", "ChannelBlacklist.Restricted") }
-  /// Calls
-  internal static var channelEventFilterCalls: String  { return L10n.tr("Localizable", "ChannelEventFilter.Calls") }
   /// Channel Info
   internal static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -1321,6 +1319,8 @@ internal final class L10n {
   internal static var channelEventFilterEditedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.EditedMessages") }
   /// Group Info
   internal static var channelEventFilterGroupInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.GroupInfo") }
+  /// Invite Links
+  internal static var channelEventFilterInvites: String  { return L10n.tr("Localizable", "ChannelEventFilter.Invites") }
   /// Members Removed
   internal static var channelEventFilterLeavingMembers: String  { return L10n.tr("Localizable", "ChannelEventFilter.LeavingMembers") }
   /// New Admins
@@ -1331,6 +1331,8 @@ internal final class L10n {
   internal static var channelEventFilterNewRestrictions: String  { return L10n.tr("Localizable", "ChannelEventFilter.NewRestrictions") }
   /// Pinned Messages
   internal static var channelEventFilterPinnedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.PinnedMessages") }
+  /// Voice Chats
+  internal static var channelEventFilterVoiceChats: String  { return L10n.tr("Localizable", "ChannelEventFilter.VoiceChats") }
   /// Sorry, if a person left a channel, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
   internal static var channelInfoAddUserLeftError: String  { return L10n.tr("Localizable", "ChannelInfo.AddUserLeftError") }
   /// ⚠️ Warning: Many users reported that this channel impersonates a famous person or organization.
@@ -2345,19 +2347,19 @@ internal final class L10n {
   internal static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
   }
-  /// %@ disabled the self-destruct timer
-  internal static func chatServiceSecretChatDisabledTimer(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.SecretChat.DisabledTimer", p1)
+  /// %@ disabled the auto-delete timer
+  internal static func chatServiceSecretChatDisabledTimer1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SecretChat.DisabledTimer1", p1)
   }
-  /// %@ set the self-destruct timer to %@
-  internal static func chatServiceSecretChatSetTimer(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.SecretChat.SetTimer", p1, p2)
+  /// %@ set the messages to automatically delete after %@
+  internal static func chatServiceSecretChatSetTimer1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SecretChat.SetTimer1", p1, p2)
   }
-  /// You disabled the self-destruct timer
-  internal static var chatServiceSecretChatDisabledTimerSelf: String  { return L10n.tr("Localizable", "Chat.Service.SecretChat.DisabledTimer.Self") }
-  /// You set the self-destruct timer to %@
-  internal static func chatServiceSecretChatSetTimerSelf(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.SecretChat.SetTimer.Self", p1)
+  /// You disabled the auto-delete timer
+  internal static var chatServiceSecretChatDisabledTimerSelf1: String  { return L10n.tr("Localizable", "Chat.Service.SecretChat.DisabledTimer.Self1") }
+  /// You set messages to automatically delete after %@
+  internal static func chatServiceSecretChatSetTimerSelf1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SecretChat.SetTimer.Self1", p1)
   }
   /// %@ received the following documents: %@
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
@@ -4345,6 +4347,8 @@ internal final class L10n {
   internal static var legacyIntroDescription2: String  { return L10n.tr("Localizable", "Legacy.Intro.Description2") }
   /// Start Messaging
   internal static var legacyIntroNext: String  { return L10n.tr("Localizable", "Legacy.Intro.Next") }
+  /// Sorry, this link has expired.
+  internal static var linkExpired: String  { return L10n.tr("Localizable", "Link.Expired") }
   /// Are you sure you want to revoke this link? Once you do, no one will be able to join the channel using it.
   internal static var linkInvationChannelConfirmRevoke: String  { return L10n.tr("Localizable", "LinkInvation.Channel.Confirm.Revoke") }
   /// Revoke
@@ -4503,7 +4507,7 @@ internal final class L10n {
   internal static var manageLinksCreateNew: String  { return L10n.tr("Localizable", "ManageLinks.CreateNew") }
   /// Delete
   internal static var manageLinksDelete: String  { return L10n.tr("Localizable", "ManageLinks.Delete") }
-  /// Delete All
+  /// Delete All Revoked Links
   internal static var manageLinksDeleteAll: String  { return L10n.tr("Localizable", "ManageLinks.DeleteAll") }
   /// You can create addition invite links that have limited time or numbers of usage.
   internal static var manageLinksEmptyDesc: String  { return L10n.tr("Localizable", "ManageLinks.EmptyDesc") }
@@ -8401,10 +8405,8 @@ internal final class L10n {
   internal static var tipAutoDeleteTimerSetForDay: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForDay") }
   /// Auto-delete timer set to 1 week.
   internal static var tipAutoDeleteTimerSetForWeek: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForWeek") }
-  /// Auto-Delete On — 1 Week
-  internal static var tipAutoDeleteTimerSetForDayTitle: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForDay.Title") }
-  /// Auto-Delete On — 1 Day
-  internal static var tipAutoDeleteTimerSetForWeekTitle: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetForWeek.Title") }
+  /// Auto-delete timer is now off.
+  internal static var tipAutoDeleteTimerSetOff: String  { return L10n.tr("Localizable", "Tip.AutoDelete.TimerSetOff") }
   /// Muted
   internal static var toastMuted: String  { return L10n.tr("Localizable", "Toast.Muted") }
   /// Unmuted

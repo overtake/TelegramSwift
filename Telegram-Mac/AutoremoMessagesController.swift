@@ -204,6 +204,8 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
                 default:
                     break
                 }
+            } else {
+                text = L10n.tipAutoDeleteTimerSetOff
             }
 
             _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout), for: context.window).start(completed: {

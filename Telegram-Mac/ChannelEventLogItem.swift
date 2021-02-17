@@ -653,7 +653,7 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .changeHistoryTTL(_, updatedValue):
                 let text: String
-                if let updatedValue = updatedValue {
+                if let updatedValue = updatedValue, updatedValue > 0 {
                     text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutSet(peer.displayTitle, timeIntervalString(Int(updatedValue)))
                 } else {
                     text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutRemove(peer.displayTitle)

@@ -202,15 +202,15 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         if authorId == context.peerId {
                             if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimerSelf(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimerSelf1(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             } else {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf1), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                         } else {
                             if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             } else {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer1(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                             let range = attributedString.string.nsstring.range(of: authorName)
                             attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
