@@ -106,7 +106,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
         
         switch mode {
         case .normal:
-            height += 30 + viewType.innerInset.bottom
+            height += 30 + viewType.innerInset.bottom * 2
         case .short:
             break
         }

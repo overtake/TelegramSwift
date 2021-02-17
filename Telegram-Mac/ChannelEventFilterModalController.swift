@@ -230,7 +230,7 @@ private enum FilterEvents {
     case voiceChats
     case pinnedMessages
     case leavingMembers
-    
+    case invites
     var flags:AdminLogEventsFlags {
         switch self {
         case .newMembers:
@@ -251,6 +251,8 @@ private enum FilterEvents {
             return [.deleteMessages]
         case .voiceChats:
             return [.calls]
+        case .invites:
+            return [.invites]
         }
     }
     
@@ -273,7 +275,9 @@ private enum FilterEvents {
         case .deletedMessages:
             return tr(L10n.channelEventFilterDeletedMessages)
         case .voiceChats:
-            return tr(L10n.channelEventFilterCalls)
+            return tr(L10n.channelEventFilterVoiceChats)
+        case .invites:
+            return tr(L10n.channelEventFilterInvites)
         }
     }
 }
@@ -282,7 +286,7 @@ private func eventFilters(_ channel: Bool) -> [FilterEvents] {
     if channel {
         return [.newMembers, .newAdmins, .groupInfo, .deletedMessages, .editedMessages, .leavingMembers]
     } else {
-        return [.restrictions, .newMembers, .newAdmins, .groupInfo, .deletedMessages, .editedMessages, .voiceChats, .pinnedMessages, .leavingMembers]
+        return [.restrictions, .newMembers, .newAdmins, .groupInfo, .invites, .deletedMessages, .editedMessages, .voiceChats, .pinnedMessages, .leavingMembers]
     }
 }
 

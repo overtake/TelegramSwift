@@ -315,9 +315,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .messageAutoremoveTimeoutUpdated(seconds):
             if seconds > 0 {
-                return L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))
+                return L10n.chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))
             } else {
-                return L10n.chatServiceSecretChatDisabledTimer(authorName)
+                return L10n.chatServiceSecretChatDisabledTimer1(authorName)
             }
         case let .photoUpdated(image: image):
             if let image = image {

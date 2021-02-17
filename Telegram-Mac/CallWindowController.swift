@@ -1265,6 +1265,11 @@ class PhoneCallWindowController {
                 self?.session.setToRemovableState()
                 return true
             }
+        case .waiting, .ringing:
+            self.window.closeInterceptor = { [weak self] in
+                self?.session.setToRemovableState()
+                return true
+            }
         default:
             self.window.styleMask.remove(.closable)
         }

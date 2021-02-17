@@ -986,7 +986,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             }
         }))
         
-        exportedLinkDisposable.set(context.account.viewTracker.peerView(peerId).start())
+        exportedLinkDisposable.set(context.account.viewTracker.peerView(peerId, updateData: true).start())
 
     }
     
