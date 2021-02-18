@@ -221,7 +221,7 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
                     self.interactions.changeYear(i, self.month.month)
                 }))
             }
-            if !items.isEmpty {
+            if !items.isEmpty && !self.onlyFuture {
                 showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(30, -50))
             }
             

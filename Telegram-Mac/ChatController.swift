@@ -3042,7 +3042,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                 } else {
-                    showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
+                    
+                    showModal(with: AutoremoveMessagesController(context: context, peer: peer, onlyDelete: true), for: context.window)
                 }
             }
         }

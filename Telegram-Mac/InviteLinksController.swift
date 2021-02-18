@@ -367,37 +367,43 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         sectionId += 1
     }
 
-
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
-    var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
-    peers = Array(peers.prefix(3))
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, lastPeers: peers, viewType: .singleItem, menuItems: {
-            
-            var items:[ContextMenuItem] = []
-            if let permanent = state.permanent {
-                items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
-                    arguments.copyLink(permanent.link)
-                }))
-                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
-                    arguments.revokeLink(permanent)
-                }))
-            }
-            
-            return .single(items)
-        }, share: arguments.shareLink, open: arguments.open, copyLink: arguments.copyLink)
-    }))
-
-    if state.isAdmin, let peer = state.peer, let adminPeer = state.adminPeer {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdminPermanentDesc(adminPeer.peer.displayTitle, peer.peer.displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    if !state.isAdmin || state.peer?.peer.addressName == nil {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+
+        var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
+        peers = Array(peers.prefix(3))
+
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, publicAddress: state.peer?.peer.addressName, lastPeers: peers, viewType: .singleItem, menuItems: {
+
+                var items:[ContextMenuItem] = []
+                if let permanent = state.permanent {
+                    items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                        arguments.copyLink(permanent.link)
+                    }))
+                    items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                        arguments.revokeLink(permanent)
+                    }))
+                } else if let addressName = state.peer?.peer.addressName {
+                    items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                        arguments.copyLink(addressName)
+                    }))
+                }
+
+                return .single(items)
+            }, share: arguments.shareLink, open: arguments.open, copyLink: arguments.copyLink)
+        }))
+
+        if state.isAdmin, let peer = state.peer, let adminPeer = state.adminPeer {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdminPermanentDesc(adminPeer.peer.displayTitle, peer.peer.displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+        }
+
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
     }
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+
     
 
     if !state.isAdmin || (state.list != nil && !state.list!.isEmpty) {
@@ -632,16 +638,23 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
     actionsDisposable.add(combineLatest(manager.state, importers, combineLatest(peers)).start(next: { state, permanentImporterState, peers in
         updateState { current in
             var current = current
-            current.permanent = state.list?.first(where: { $0.isPermanent })
+            current.peer = peers.first
+            if peers.count == 2 {
+                current.adminPeer = peers.last
+            }
+            if current.peer?.peer.addressName != nil {
+                current.permanent = nil
+            } else {
+                current.permanent = state.list?.first(where: { $0.isPermanent })
+            }
             current.permanentImporterState = permanentImporterState.0
             current.list = state.list?.filter({ $0.link != current.permanent?.link })
             current.revokedList = state.revokedList
             current.creators = state.creators
-            current.peer = peers.first
             current.totalCount = Int(state.totalCount)
-            if peers.count == 2 {
-                current.adminPeer = peers.last
-            } 
+
+
+
             return current
         }
     }))

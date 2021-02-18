@@ -30,7 +30,7 @@ private struct State : Equatable {
     let peer: PeerEquatable
 }
 
-
+private let _id_sticker = InputDataIdentifier("_id_sticker")
 private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_never = InputDataIdentifier("_id_never")
 private let _id_day = InputDataIdentifier("_id_day")
@@ -38,7 +38,7 @@ private let _id_week = InputDataIdentifier("_id_week")
 private let _id_clear = InputDataIdentifier("_id_clear")
 private let _id_global = InputDataIdentifier("_id_global")
 private let _id_clear_both = InputDataIdentifier("_id_clear_both")
-private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
 
     var sectionId:Int32 = 0
@@ -47,35 +47,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    if state.peer.peer.canClearHistory {
-//        var thridTitle: String? = nil
-//        if state.peer.peer.id.namespace == Namespaces.Peer.CloudUser && state.peer.peer.id != arguments.context.account.peerId && !state.peer.peer.isBot {
-//            if arguments.context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-//                thridTitle = L10n.chatMessageDeleteForMeAndPerson(state.peer.peer.displayTitle)
-//            }
-//        }
-//
-//        let peer = state.peer.peer
-//        let context = arguments.context
-//
-//        let header = peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : thridTitle != nil || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup
-//
-//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(header), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-//        index += 1
-
-
+    if state.peer.peer.canClearHistory, !onlyDelete {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: L10n.chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
         index += 1
-
-//
-//        if let thridTitle = thridTitle {
-//            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear_both, data: .init(name: thridTitle, color: theme.colors.text, type: .switchable(false), viewType: .lastItem, enabled: true, action: arguments.clearHistory)))
-//            index += 1
-//        }
 
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
+    } else {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_sticker, equatable: nil, item: { initialSize, stableId in
+            return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .init())
+        }))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
     }
 
 
@@ -110,7 +96,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 }
 
 
-func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputDataModalController {
+func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelete: Bool = false) -> InputDataModalController {
 
 
     let peerId = peer.id
@@ -153,10 +139,10 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
 
 
     let signal = statePromise.get() |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        return InputDataSignalValue(entries: entries(state, arguments: arguments, onlyDelete: onlyDelete))
     }
 
-    let controller = InputDataController(dataSignal: signal, title: L10n.autoremoveMessagesTitle, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: onlyDelete ? L10n.autoremoveMessagesTitleDeleteOnly : L10n.autoremoveMessagesTitle, hasDone: false)
 
 
     controller.onDeinit = {
@@ -194,25 +180,25 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer) -> InputD
                 }
             }
 
-            var text: String? = nil
-            if state.timeout != 0 {
-                switch state.timeout {
-                case .secondsInDay:
-                    text = L10n.tipAutoDeleteTimerSetForDay
-                case .secondsInWeek:
-                    text = L10n.tipAutoDeleteTimerSetForWeek
-                default:
-                    break
-                }
-            } else {
-                text = L10n.tipAutoDeleteTimerSetOff
-            }
+//            var text: String? = nil
+//            if state.timeout != 0 {
+//                switch state.timeout {
+//                case .secondsInDay:
+//                    text = L10n.tipAutoDeleteTimerSetForDay
+//                case .secondsInWeek:
+//                    text = L10n.tipAutoDeleteTimerSetForWeek
+//                default:
+//                    break
+//                }
+//            } else {
+//                text = L10n.tipAutoDeleteTimerSetOff
+//            }
 
             _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout), for: context.window).start(completed: {
                 f(.success(.custom({
-                    if let text = text {
-                        showModalText(for: context.window, text: text)
-                    }
+                   // if let text = text {
+                     //   showModalText(for: context.window, text: text)
+                   // }
                     close?()
                 })))
             })

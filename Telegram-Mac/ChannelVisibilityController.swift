@@ -58,7 +58,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
     
     case publicLinkAvailability(sectionId:Int32, Bool, GeneralViewType)
     case privateLinkHeader(sectionId:Int32, String, GeneralViewType)
-    case privateLink(sectionId:Int32, ExportedInvitation?, PeerInvitationImportersState?, GeneralViewType)
+    case privateLink(sectionId:Int32, ExportedInvitation?, PeerInvitationImportersState?, Bool, GeneralViewType)
     case editablePublicLink(sectionId:Int32, String?, String, AddressNameValidationStatus?, GeneralViewType)
     case privateLinkInfo(sectionId:Int32, String, GeneralViewType)
     case publicLinkInfo(sectionId:Int32, String, GeneralViewType)
@@ -146,8 +146,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .privateLink(sectionId, link, importers, viewType):
-            if case .privateLink(sectionId, link, importers, viewType) = rhs {
+        case let .privateLink(sectionId, link, importers, isNew, viewType):
+            if case .privateLink(sectionId, link, importers, isNew, viewType) = rhs {
                 return true
             } else {
                 return false
@@ -226,7 +226,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + 4
         case let .privateLinkHeader(sectionId: sectionId, _, _):
             return (sectionId * 1000) + 5
-        case let .privateLink(sectionId: sectionId, _, _, _):
+        case let .privateLink(sectionId: sectionId, _, _, _, _):
             return (sectionId * 1000) + 6
         case let .editablePublicLink(sectionId: sectionId, _, _, _, _):
             return (sectionId * 1000) + 7
@@ -280,12 +280,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
         case let .privateLinkHeader(_, title, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: title, viewType: viewType)
-        case let .privateLink(_, link, importers, viewType):
+        case let .privateLink(_, link, importers, isNew, viewType):
             
             var peers = importers?.importers.map { $0.peer } ?? []
             peers = Array(peers.prefix(3))
             
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal, menuItems: {
                 
                 var items:[ContextMenuItem] = []
                 if let link = link {
@@ -405,7 +405,7 @@ private struct ChannelVisibilityControllerState: Equatable {
     }
 }
 
-private func channelVisibilityControllerEntries(view: PeerView, publicChannelsToRevoke: [Peer]?, state: ChannelVisibilityControllerState, onlyUsername: Bool, importers: PeerInvitationImportersState?) -> [ChannelVisibilityEntry] {
+private func channelVisibilityControllerEntries(view: PeerView, publicChannelsToRevoke: [Peer]?, state: ChannelVisibilityControllerState, onlyUsername: Bool, importers: PeerInvitationImportersState?, isNew: Bool) -> [ChannelVisibilityEntry] {
     var entries: [ChannelVisibilityEntry] = []
     
     var sectionId:Int32 = 0
@@ -507,7 +507,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
 
         case .privateChannel:
             entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
-            entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, .singleItem))
+            entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, isNew, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel, .textBottomItem))
 
             if isGroup {
@@ -602,7 +602,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             
         case .privateChannel:
             entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
-            entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation, importers, .singleItem))
+            entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation, importers, isNew, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelExportLinkAboutGroup, .textBottomItem))
             
             entries.append(.section(sectionId: sectionId))
@@ -700,11 +700,12 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     let onlyUsername:Bool
     let isChannel: Bool
     let linksManager: InviteLinkPeerManager?
-    init(_ context: AccountContext, peerId:PeerId, isChannel: Bool, onlyUsername: Bool = false, linksManager: InviteLinkPeerManager? = nil) {
+    let isNew: Bool
+    init(_ context: AccountContext, peerId:PeerId, isChannel: Bool, onlyUsername: Bool = false, isNew: Bool = false, linksManager: InviteLinkPeerManager? = nil) {
         self.peerId = peerId
         self.onlyUsername = onlyUsername
         self.isChannel = isChannel
-        
+        self.isNew = isNew
         self.linksManager = linksManager
         
         super.init(context)
@@ -850,6 +851,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         }
         
         let manager = self.linksManager
+        let isNew = self.isNew
         
         let importers: Signal<PeerInvitationImportersState?, NoError> = permanentLink |> deliverOnMainQueue |> mapToSignal { [weak manager] permanent in
             if let permanent = permanent {
@@ -893,7 +895,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                     }
                 }
                 
-                let entries = channelVisibilityControllerEntries(view: view, publicChannelsToRevoke: publicChannelsToRevoke, state: state, onlyUsername: onlyUsername, importers: importers).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = channelVisibilityControllerEntries(view: view, publicChannelsToRevoke: publicChannelsToRevoke, state: state, onlyUsername: onlyUsername, importers: importers, isNew: isNew).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 
                 return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments), peer, doneEnabled)
             } |> deliverOnMainQueue

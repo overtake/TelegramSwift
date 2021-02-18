@@ -99,7 +99,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     dateFormatter.timeStyle = .short
     let dateString = state.date == .max ? L10n.editInvitationNever : dateFormatter.string(from: Date(timeIntervalSinceNow: TimeInterval(state.date)))
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_period_precise, data: .init(name: L10n.editInvitationExpiryDate, color: theme.colors.text, type: .context(dateString), viewType: .lastItem, action: {
-        showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
+        showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date == .max ? Int32.secondsInWeek : state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
             arguments.limitDate(Int32(date.timeIntervalSinceNow))
             arguments.tempDate(Int32(date.timeIntervalSinceNow))
             
@@ -213,7 +213,11 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         initialState.date = .max
         initialState.count = .max
     case let .edit(invitation):
-        initialState.date = invitation.isExpired ? week : Int32(TimeInterval(invitation.expireDate!) - Date().timeIntervalSince1970)
+        if let expireDate = invitation.expireDate {
+            initialState.date = invitation.isExpired ? week : Int32(TimeInterval(expireDate) - Date().timeIntervalSince1970)
+        } else {
+            initialState.date = week
+        }
         initialState.tempDate = initialState.date
         if let alreadyCount = invitation.count, let usageLimit = invitation.usageLimit {
             initialState.count = usageLimit - alreadyCount

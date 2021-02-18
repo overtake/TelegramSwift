@@ -935,7 +935,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             applyBlock(infoBlock)
             entries.append(.aboutDesc(sectionId: .header, viewType: .textBottomItem))
 
-            if channel.adminRights?.flags.contains(.canChangeInfo) == true || channel.flags.contains(.isCreator) {
+            if channel.adminRights?.rights.contains(.canChangeInfo) == true || channel.flags.contains(.isCreator) {
                 if channel.flags.contains(.isCreator) {
                     entries.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .firstItem))
                 }
@@ -991,7 +991,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
 
         }
 
-        if channel.flags.contains(.isCreator) || (channel.adminRights != nil && !channel.adminRights!.isEmpty) {
+        if channel.flags.contains(.isCreator) || channel.adminRights != nil {
             var membersCount:Int32? = nil
             var adminsCount:Int32? = nil
             var blockedCount:Int32? = nil

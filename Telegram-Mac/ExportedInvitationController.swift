@@ -169,7 +169,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
     }, editLink: { [weak manager] link in
         getModalController?()?.close()
         showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
-            let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? nil : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? nil : updated.count)
+            let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? 0 : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? 0 : updated.count)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: accountContext.window).start()
             }

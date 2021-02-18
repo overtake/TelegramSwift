@@ -536,7 +536,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
             }
             
             
-            context.withContext(isHighQuality: data.fullSizeData != nil, { c in
+            context.withContext(isHighQuality: data.fullSizeComplete, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
                     switch arguments.resizeMode {

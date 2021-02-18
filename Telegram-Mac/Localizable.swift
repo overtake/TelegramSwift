@@ -451,6 +451,8 @@ internal final class L10n {
   internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
   /// After 1 Week
   internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
+  /// Auto-Deletion
+  internal static var autoremoveMessagesTitleDeleteOnly: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title.DeleteOnly") }
   /// Preferences…
   internal static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -2287,8 +2289,14 @@ internal final class L10n {
   internal static var chatServiceCallCancelled: String  { return L10n.tr("Localizable", "Chat.Service.Call.Cancelled") }
   /// Missed
   internal static var chatServiceCallMissed: String  { return L10n.tr("Localizable", "Chat.Service.Call.Missed") }
+  /// a group admin disabled the auto-delete timer
+  internal static var chatServiceChannelDisabledTimer: String  { return L10n.tr("Localizable", "Chat.Service.Channel.DisabledTimer") }
   /// channel photo removed
   internal static var chatServiceChannelRemovedPhoto: String  { return L10n.tr("Localizable", "Chat.Service.Channel.RemovedPhoto") }
+  /// a group admin set the messages to automatically delete after %@
+  internal static func chatServiceChannelSetTimer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Channel.SetTimer", p1)
+  }
   /// channel photo updated
   internal static var chatServiceChannelUpdatedPhoto: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedPhoto") }
   /// channel renamed to "%@"
@@ -2309,6 +2317,8 @@ internal final class L10n {
   internal static func chatServiceGroupCreated1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.Created1", p1, p2)
   }
+  /// a group admin disabled the auto-delete timer
+  internal static var chatServiceGroupDisabledTimer: String  { return L10n.tr("Localizable", "Chat.Service.Group.DisabledTimer") }
   /// %@ joined group via invite link
   internal static func chatServiceGroupJoinedByLink(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.JoinedByLink", p1)
@@ -2326,6 +2336,10 @@ internal final class L10n {
   /// %@ left the group
   internal static func chatServiceGroupRemovedSelf(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.RemovedSelf", p1)
+  }
+  /// a group admin set the messages to automatically delete after %@
+  internal static func chatServiceGroupSetTimer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.SetTimer", p1)
   }
   /// %@ took a screenshot
   internal static func chatServiceGroupTookScreenshot(_ p1: String) -> String {
@@ -3333,7 +3347,7 @@ internal final class L10n {
   internal static var editInvitationLimitedByCount: String  { return L10n.tr("Localizable", "EditInvitation.LimitedByCount") }
   /// LIMITED BY PERIOD
   internal static var editInvitationLimitedByPeriod: String  { return L10n.tr("Localizable", "EditInvitation.LimitedByPeriod") }
-  /// NEVER
+  /// Never
   internal static var editInvitationNever: String  { return L10n.tr("Localizable", "EditInvitation.Never") }
   /// New Link
   internal static var editInvitationNewTitle: String  { return L10n.tr("Localizable", "EditInvitation.NewTitle") }

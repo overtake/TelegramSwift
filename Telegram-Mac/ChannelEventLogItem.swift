@@ -332,11 +332,11 @@ class ServiceEventLogItem: TableRowItem {
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                    
-                            var addedRights = newAdminInfo?.rights.flags ?? []
+                            var addedRights = newAdminInfo?.rights.rights ?? []
                             var removedRights:TelegramChatAdminRightsFlags = []
                             if let prevAdminInfo = prevAdminInfo {
-                                addedRights = addedRights.subtracting(prevAdminInfo.rights.flags)
-                                removedRights = prevAdminInfo.rights.flags.subtracting(newAdminInfo?.rights.flags ?? [])
+                                addedRights = addedRights.subtracting(prevAdminInfo.rights.rights)
+                                removedRights = prevAdminInfo.rights.rights.subtracting(newAdminInfo?.rights.rights ?? [])
                             }
                             
                             var justRankUpdated: Bool = false
@@ -405,11 +405,11 @@ class ServiceEventLogItem: TableRowItem {
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                             
-                            var addedRights = newAdminInfo?.rights.flags ?? []
+                            var addedRights = newAdminInfo?.rights.rights ?? []
                             var removedRights:TelegramChatAdminRightsFlags = []
                             if let prevAdminInfo = prevAdminInfo {
-                                addedRights = addedRights.subtracting(prevAdminInfo.rights.flags)
-                                removedRights = prevAdminInfo.rights.flags.subtracting(newAdminInfo?.rights.flags ?? [])
+                                addedRights = addedRights.subtracting(prevAdminInfo.rights.rights)
+                                removedRights = prevAdminInfo.rights.rights.subtracting(newAdminInfo?.rights.rights ?? [])
                             }
                             
                             var justRankUpdated: Bool = false

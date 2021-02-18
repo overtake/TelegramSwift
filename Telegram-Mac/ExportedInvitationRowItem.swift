@@ -55,11 +55,13 @@ class ExportedInvitationRowItem: GeneralRowItem {
     fileprivate let mode: Mode
     fileprivate let open:(ExportedInvitation)->Void
     fileprivate let copyLink:(String)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
+    fileprivate let publicAddress: String?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, publicAddress: String? = nil, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
         self.context = context
         self.exportedLink = exportedLink
         self._menuItems = menuItems
         self.lastPeers = lastPeers
+        self.publicAddress = publicAddress
         self.shareLink = share
         self.open = open
         self.mode = enableBetaFeatures ? mode : .short
@@ -82,6 +84,11 @@ class ExportedInvitationRowItem: GeneralRowItem {
                 usageText = L10n.inviteLinkJoinedZero
                 usageColor = theme.colors.grayText
             }
+        } else if let publicAddress = publicAddress {
+            text = "t.me/\(publicAddress)"
+            color = theme.colors.text
+            usageText = L10n.inviteLinkJoinedZero
+            usageColor = theme.colors.grayText
         } else {
             text = L10n.channelVisibilityLoading
             color = theme.colors.grayText
@@ -89,7 +96,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
             usageColor = theme.colors.grayText
         }
         
-        linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), alignment: .center)
+        linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), truncationType: .start, alignment: .center)
         
 
         usageTextLayout = TextViewLayout(.initialize(string: usageText, color: usageColor, font: .normal(.text)))
@@ -99,14 +106,12 @@ class ExportedInvitationRowItem: GeneralRowItem {
     
     override var height: CGFloat {
         var height: CGFloat = viewType.innerInset.top + 40 + viewType.innerInset.top
-        
-
-        
+                
         switch mode {
         case .normal:
             if let link = exportedLink, !link.isExpired && !link.isRevoked {
                 height += 40 + viewType.innerInset.top
-            } else if exportedLink == nil {
+            } else if exportedLink == nil && publicAddress == nil {
                 height += 40
             }
             height += 30 + viewType.innerInset.bottom
@@ -119,11 +124,25 @@ class ExportedInvitationRowItem: GeneralRowItem {
         
         return height
     }
+
+    var copyItem: String? {
+        if let exportedLink = exportedLink {
+            if !exportedLink.isExpired && !exportedLink.isRevoked {
+                return exportedLink.link
+            } else {
+                return nil
+            }
+        } else if let publicAddress = publicAddress {
+            return publicAddress
+        } else {
+            return nil
+        }
+    }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
-        linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 30)
+        linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 50)
         usageTextLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
         return result
     }
@@ -230,8 +249,8 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
             guard let item = self?.item as? ExportedInvitationRowItem else {
                 return
             }
-            if let link = item.exportedLink {
-                item.shareLink(link.link)
+            if let link = item.copyItem {
+                item.shareLink(link)
             }
         }, for: .Click)
 
@@ -239,8 +258,8 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
             guard let item = self?.item as? ExportedInvitationRowItem else {
                 return
             }
-            if let link = item.exportedLink {
-                item.copyLink(link.link)
+            if let link = item.copyItem {
+                item.copyLink(link)
             }
         }, for: .Click)
         
@@ -381,20 +400,13 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
                 
         share.set(font: .medium(.text), for: .Normal)
         share.set(text: L10n.manageLinksContextShare, for: .Normal)
-        if let link = item.exportedLink {
-            share.userInteractionEnabled = !link.isExpired && !link.isRevoked
-        } else {
-            share.userInteractionEnabled = item.exportedLink != nil
-        }
+        share.userInteractionEnabled = item.copyItem != nil
+
 
 
         copy.set(font: .medium(.text), for: .Normal)
         copy.set(text: L10n.manageLinksContextCopy, for: .Normal)
-        if let link = item.exportedLink {
-            copy.userInteractionEnabled = !link.isExpired && !link.isRevoked
-        } else {
-            copy.userInteractionEnabled = item.exportedLink != nil
-        }
+        copy.userInteractionEnabled = item.copyItem != nil
 
         linkView.update(item.linkTextLayout)
      
