@@ -207,14 +207,31 @@ class ChatServiceItem: ChatRowItem {
                                 let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf1), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                         } else {
-                            if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                            } else {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer1(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            if let peer = messageMainPeer(message) {
+                                if peer.isGroup || peer.isSupergroup {
+                                    if seconds > 0 {
+                                        let _ =  attributedString.append(string: L10n.chatServiceGroupSetTimer(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                    } else {
+                                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupDisabledTimer), color: grayTextColor, font: .normal(theme.fontSize))
+                                    }
+                                } else if peer.isChannel {
+                                    if seconds > 0 {
+                                        let _ =  attributedString.append(string: L10n.chatServiceChannelSetTimer(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                    } else {
+                                        let _ =  attributedString.append(string: L10n.chatServiceChannelDisabledTimer, color: grayTextColor, font: .normal(theme.fontSize))
+                                    }
+                                } else {
+                                    if seconds > 0 {
+                                        let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: .normal(theme.fontSize))
+                                    } else {
+                                        let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer1(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                                    }
+                                }
+                                let range = attributedString.string.nsstring.range(of: authorName)
+                                attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                                attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             }
-                            let range = attributedString.string.nsstring.range(of: authorName)
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+
                         }
                     }
                 case .historyScreenshot:
@@ -505,6 +522,24 @@ class ChatServiceRowView: TableRowView {
         super.init(frame: frameRect)
         //layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(textView)
+
+
+        textView.set(handler: { [weak self] control in
+            if let item = self?.item as? ChatServiceItem {
+                if let message = item.message, let action = message.media.first as? TelegramMediaAction {
+                    switch action.action {
+                    case let .messageAutoremoveTimeoutUpdated(timeout):
+                        if let peer = item.chatInteraction.peer {
+                            if peer.canManageDestructTimer, timeout > 0 {
+                                item.chatInteraction.showDeleterSetup(control)
+                            }
+                        }
+                    default:
+                        break
+                    }
+                }
+            }
+        }, for: .Click)
     }
     
     override var backdorColor: NSColor {
@@ -617,9 +652,26 @@ class ChatServiceRowView: TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         textView.disableBackgroundDrawing = true
-        
+
+
+        var interactiveTextView: Bool = false
+
+        if let item = item as? ChatServiceItem, let message = item.message, let action = message.media.first as? TelegramMediaAction {
+            switch action.action {
+            case let .messageAutoremoveTimeoutUpdated(timeout):
+                if let peer = item.chatInteraction.peer {
+                    interactiveTextView = peer.canManageDestructTimer && timeout > 0
+                }
+            default:
+                break
+            }
+        }
+        textView.scaleOnClick = interactiveTextView
+
+
         if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
-            
+
+
             if let image = item.image {
                 if imageView == nil {
                     self.imageView = TransformImageView()

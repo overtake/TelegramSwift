@@ -296,7 +296,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
 
-        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata", isTemporary: false)
+        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
 
         if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
@@ -343,7 +343,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     subscriber.putCompletion()
                     DispatchQueue.main.async {
                         let appEncryption = AppEncryptionParameters(path: rootPath)
-                        let accountManager = AccountManager(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false)
+                        let accountManager = AccountManager(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
                         if let params = appEncryption.decrypt() {
                             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
                             self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
