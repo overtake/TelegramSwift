@@ -13,6 +13,34 @@ import TelegramCore
 import SyncCore
 import SwiftSignalKit
 import AVFoundation
+
+
+private final class SelectMessagesPlaceholderView: View {
+    private let textView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        background = theme.colors.background
+        let layout = TextViewLayout(.initialize(string: "Report Messages", color: theme.colors.text, font: .medium(.header)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.centerY(x: 0)
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+}
+
 private class ConnectionStatusView : View {
     private var textViewLayout:TextViewLayout?
     private var disableProxyButton: TitleButton?
@@ -286,6 +314,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }, for: .Click)
         }
     }
+    private var reportPlaceholder: SelectMessagesPlaceholderView?
     private var connectionStatusView:ConnectionStatusView? = nil
     private let activities:ChatActivitiesModel
     private let searchButton:ImageButton = ImageButton()
@@ -692,6 +721,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         closeButton.centerY()
         
+        reportPlaceholder?.frame = bounds
+        
     }
     
     
@@ -741,6 +772,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
     func updateStatus(_ force:Bool = false, presentation: ChatPresentationInterfaceState) {
 
+        if presentation.reportMode != nil {
+            if self.reportPlaceholder == nil {
+                self.reportPlaceholder = SelectMessagesPlaceholderView(frame: bounds)
+                addSubview(self.reportPlaceholder!)
+            }
+        } else {
+            self.reportPlaceholder?.removeFromSuperview()
+            self.reportPlaceholder = nil
+        }
+        
 
         if let peerView = self.postboxView as? PeerView {
             

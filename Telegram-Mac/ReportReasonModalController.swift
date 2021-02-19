@@ -33,9 +33,9 @@ func reportReasonSelector(context: AccountContext, buttonText: String = L10n.rep
 
 
 private final class ReportReasonArguments {
-    let toggleReason:(ReportReason)->Void
-    init(toggleReason:@escaping(ReportReason)->Void) {
-        self.toggleReason = toggleReason
+    let selectReason:(ReportReason)->Void
+    init(selectReason:@escaping(ReportReason)->Void) {
+        self.selectReason = selectReason
     }
 }
 
@@ -147,11 +147,11 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .custom]
+    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright]
     
     for (i, reason) in reasons.enumerated() {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .selectable(state.value.reason.isEqual(to: reason)), viewType: bestGeneralViewType(reasons, for: i), action: {
-            arguments.toggleReason(reason)
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .none, viewType: bestGeneralViewType(reasons, for: i), action: {
+            arguments.selectReason(reason)
         })))
         index += 1
     }
@@ -159,11 +159,11 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
+//    index += 1
+//
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
     
     return entries
 }
@@ -177,10 +177,11 @@ func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, button
         state.set(stateValue.modify(f))
     }
     
-    let arguments = ReportReasonArguments(toggleReason: { reason in
-        updateState { current in
-            return current.withUpdatedReason(.init(reason: reason, comment: current.value.comment))
-        }
+    var getModalController:(()->InputDataModalController?)? = nil
+    
+    let arguments = ReportReasonArguments(selectReason: { reason in
+        callback(.init(reason: reason, comment: ""))
+        getModalController?()?.close()
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in
@@ -189,7 +190,6 @@ func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, button
         return InputDataSignalValue(entries: entries)
     }
     
-    var getModalController:(()->InputDataModalController?)? = nil
 
     
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.peerInfoReport)

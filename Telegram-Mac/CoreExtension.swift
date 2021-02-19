@@ -486,6 +486,35 @@ public extension Message {
         }
         return false
     }
+    var itHasRestrictedContent: Bool {
+        #if APP_STORE || DEBUG
+        for attr in attributes {
+            if let attr = attr as? RestrictedContentMessageAttribute {
+                for rule in attr.rules {
+                    if rule.platform == "ios" || rule.platform == "macos" {
+                        return true
+                    }
+                }
+            }
+        }
+        #endif
+       
+        return false
+    }
+    var restrictedText: String? {
+        #if APP_STORE || DEBUG
+        for attr in attributes {
+            if let attr = attr as? RestrictedContentMessageAttribute {
+                for rule in attr.rules {
+                    if rule.platform == "ios" || rule.platform == "macos" {
+                        return rule.text
+                    }
+                }
+            }
+        }
+        #endif
+        return nil
+    }
     
     var textEntities: TextEntitiesMessageAttribute? {
         for attr in attributes {
