@@ -140,10 +140,12 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
             }
 
         case .selecting:
-            items.append(.flexibleSpace)
-            items.append(.chatDeleteMessages)
-            items.append(.chatForwardMessages)
-            items.append(.flexibleSpace)
+            if presentation.reportMode == nil {
+                items.append(.flexibleSpace)
+                items.append(.chatDeleteMessages)
+                items.append(.chatForwardMessages)
+                items.append(.flexibleSpace)
+            }
 
         case let .action(text, _, _):
             if !(presentation.peer is TelegramSecretChat) {

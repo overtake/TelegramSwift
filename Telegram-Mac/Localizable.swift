@@ -6605,6 +6605,12 @@ internal final class L10n {
   internal static var recentSessionsConfirmTerminateOthers: String  { return L10n.tr("Localizable", "RecentSessions.Confirm.TerminateOthers") }
   /// For security reasons, you can't terminate older sessions from a device that you've just connected. Please use an earlier connection or wait for a few hours.
   internal static var recentSessionsErrorFreshReset: String  { return L10n.tr("Localizable", "RecentSessions.Error.FreshReset") }
+  /// Please enter any additional details relevant for your report.
+  internal static var reportAdditionText: String  { return L10n.tr("Localizable", "Report.AdditionText") }
+  /// Report
+  internal static var reportAdditionTextButton: String  { return L10n.tr("Localizable", "Report.AdditionText.Button") }
+  /// Additional details...
+  internal static var reportAdditionTextPlaceholder: String  { return L10n.tr("Localizable", "Report.AdditionText.Placeholder") }
   /// Child Abuse
   internal static var reportReasonChildAbuse: String  { return L10n.tr("Localizable", "ReportReason.ChildAbuse") }
   /// Copyright

@@ -277,9 +277,12 @@ final class GroupInfoArguments : PeerInfoArguments {
             if let controller = controller {
                 self?.pullNavigation()?.push(controller)
             } else {
-                _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
-                    showModalText(for: context.window, text: L10n.peerInfoChannelReported)
-                })
+                showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
+                    _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
+                        showModalText(for: context.window, text: L10n.peerInfoChannelReported)
+                    })
+                }), for: context.window)
+               
             }
         }))
     }

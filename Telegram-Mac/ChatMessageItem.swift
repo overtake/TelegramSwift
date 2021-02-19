@@ -285,8 +285,11 @@ class ChatMessageItem: ChatRowItem {
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)
             }
-           
-            self.messageText = copy
+            if let text = message.restrictedText {
+                self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
+            } else {
+                self.messageText = copy
+            }
            
            
             

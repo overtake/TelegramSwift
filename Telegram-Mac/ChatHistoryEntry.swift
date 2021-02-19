@@ -543,6 +543,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         var itemType:ChatItemType = .Full(rank: rank)
         var fwdType:ForwardItemType? = nil
         
+        if message.itHasRestrictedContent {
+            message = message.withUpdatedMedia([]).withUpdatedText(" ")
+        }
         
         if renderType == .list {
             if let prev = prev {

@@ -39,6 +39,7 @@ enum LocalAnimatedSticker {
     case invitations
     case destructor
     case gigagroup
+    case police
     var file: TelegramMediaFile {
         let resource:LocalBundleResource
         switch self {
@@ -96,6 +97,8 @@ enum LocalAnimatedSticker {
             resource = LocalBundleResource(name: "destructor", ext: "tgs")
         case .gigagroup:
             resource = LocalBundleResource(name: "gigagroup", ext: "tgs")
+        case .police:
+            resource = LocalBundleResource(name: "police", ext: "tgs")
         }
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
     }
@@ -165,6 +168,9 @@ enum LocalAnimatedSticker {
             playPolicy = .loop
             hidePlayer = false
         case .gigagroup:
+            playPolicy = .loop
+            hidePlayer = false
+        case .police:
             playPolicy = .loop
             hidePlayer = false
         }

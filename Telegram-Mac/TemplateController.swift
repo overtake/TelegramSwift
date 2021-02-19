@@ -1,10 +1,3 @@
-//
-//  AudioAnimatedSticker.swift
-//  Telegram
-//
-//  Created by Mikhail Filimonov on 06.12.2019.
-//  Copyright © 2019 Telegram. All rights reserved.
-//
 
 import Cocoa
 import TGUIKit
