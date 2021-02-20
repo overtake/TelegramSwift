@@ -30,6 +30,9 @@ class ChatRightView: View {
     func set(item:ChatRowItem, animated:Bool) {
         self.item = item
         self.toolTip = item.fullDate
+        item.updateTooltip = { [weak self] value in
+            self?.toolTip = value
+        }
         if !item.isIncoming || item.isUnsent || item.isFailed
             && !item.chatInteraction.isLogInteraction {
             if item.isUnsent {
