@@ -1689,6 +1689,10 @@ internal final class L10n {
   internal static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
   internal static var chatContextScheduledSendNow: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.SendNow") }
+  /// Auto-Delete in %@
+  internal static func chatContextMenuAutoDelete(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.ContextMenu.AutoDelete", p1)
+  }
   /// Copy Link to Proxy
   internal static var chatCopyProxyConfiguration: String  { return L10n.tr("Localizable", "Chat.Copy.ProxyConfiguration") }
   /// Scheduled for %@

@@ -76,6 +76,8 @@ class ChatRowItem: TableRowItem {
     private(set) var entry:ChatHistoryEntry
     private(set) var message:Message?
     
+    private var updateCountDownTimer: SwiftSignalKit.Timer?
+    var updateTooltip:((String)->Void)? = nil
     var firstMessage: Message? {
         return messages.first
     }
@@ -1841,6 +1843,21 @@ class ChatRowItem: TableRowItem {
               
             }
 
+            if let attr = message.autoremoveAttribute, let begin = attr.countdownBeginTime {
+                self.updateCountDownTimer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
+                    let left = Int(begin + attr.timeout - context.timestamp)
+                    if left >= 0 {
+                        let leftText = "\n\n" + L10n.chatContextMenuAutoDelete(smartTimeleftText(left))
+                        self?.fullDate = fullDate + leftText
+                        self?.updateTooltip?(fullDate + leftText)
+                    } else {
+                        self?.updateCountDownTimer = nil
+                    }
+                }, queue: .mainQueue())
+                self.updateCountDownTimer?.start()
+            } else {
+                updateCountDownTimer = nil
+            }
             
             self.fullDate = fullDate
         }
