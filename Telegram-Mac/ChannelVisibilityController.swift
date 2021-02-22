@@ -510,12 +510,10 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, isNew, .singleItem))
             entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel, .textBottomItem))
 
-            if isGroup {
-                entries.append(.section(sectionId: sectionId))
-                sectionId += 1
-                entries.append(.manageLinks(sectionId: sectionId, .singleItem))
-                entries.append(.manageLinksDesc(sectionId: sectionId, .textBottomItem))
-            }
+            entries.append(.section(sectionId: sectionId))
+            sectionId += 1
+            entries.append(.manageLinks(sectionId: sectionId, .singleItem))
+            entries.append(.manageLinksDesc(sectionId: sectionId, .textBottomItem))
 
         }
     } else if let peer = view.peers[view.peerId] as? TelegramGroup {

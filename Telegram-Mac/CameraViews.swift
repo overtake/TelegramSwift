@@ -130,6 +130,7 @@ final class OutgoingVideoView : Control {
     private var disabledView: NSVisualEffectView?
     private var notAvailableView: TextView?
     
+    private var animation:DisplayLinkAnimator? = nil
     
     private let maskLayer = CAShapeLayer()
     
@@ -197,28 +198,40 @@ final class OutgoingVideoView : Control {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
     }
+    private(set) var savedFrame: NSRect? = nil
     
     func updateFrame(_ frame: NSRect, animated: Bool) {
-        if self.frame != frame {
-            let duration: Double = 0.18
+        if self.savedFrame != frame && animation == nil {
+            let duration: Double = 0.15
             
-            self.videoView?.0?.view.subviews.first?._change(size: frame.size, animated: animated, duration: duration)
-            self.videoView?.0?.view._change(size: frame.size, animated: animated, duration: duration)
-            self.overlay._change(size: frame.size, animated: animated, duration: duration)
-            self.progressIndicator?.change(pos: frame.focus(NSMakeSize(40, 40)).origin, animated: animated, duration: duration)
-            
-            self.disabledView?._change(size: frame.size, animated: animated, duration: duration)
-            
-            if let textView = notAvailableView, let layout = textView.layout {
-                layout.measure(width: frame.width - 40)
-                textView.update(layout)
-                textView.change(pos: frame.focus(layout.layoutSize).origin, animated: animated, duration: duration)
+            if animated {
+                                
+                let fromFrame = self.frame
+                let toFrame = frame
+                
+                let animation = DisplayLinkAnimator(duration: duration, from: 0.0, to: 1.0, update: { [weak self] value in
+                    let x = fromFrame.minX - (fromFrame.minX - toFrame.minX) * value
+                    let y = fromFrame.minY - (fromFrame.minY - toFrame.minY) * value
+                    let w = fromFrame.width - (fromFrame.width - toFrame.width) * value
+                    let h = fromFrame.height - (fromFrame.height - toFrame.height) * value
+                    let updated = NSMakeRect(x, y, w, h)
+                    self?.frame = updated
+                }, completion: { [weak self] in
+                    guard let `self` = self else {
+                        return
+                    }
+                    self.animation = nil
+                    self.frame = frame
+                    self.savedFrame = frame
+                })
+                self.animation = animation
+            } else {
+                self.frame = frame
+                self.animation = nil
             }
-            self.change(size: frame.size, animated: animated)
-            self.change(pos: frame.origin, animated: animated, duration: duration)
         }
-        self.frame = frame
         updateCursorRects()
+        savedFrame = frame
     }
     
     private func updateCursorRects() {
