@@ -141,8 +141,9 @@ private class PhoneCallWindowView : View {
         
         addSubview(backgroundView)
         
-        
+        backgroundView.forceMouseDownCanMoveWindow = true
         addSubview(outgoingVideoView)
+        
         
         
         controls.isEventLess = true
@@ -532,6 +533,7 @@ private class PhoneCallWindowView : View {
                     if let view = view, let `self` = self {
                         self.incomingVideoView.videoView = view
                         self.incomingVideoView.updateAspectRatio = self.updateIncomingAspectRatio
+                        self.incomingVideoView.videoView?.setVideoContentMode(.resizeAspectFill)
                         self.incomingVideoView.firstFrameHandler = { [weak self] in
                             self?.incomingVideoView.unhideView(animated: animated)
                         }
@@ -558,6 +560,7 @@ private class PhoneCallWindowView : View {
                         self.outgoingVideoView.firstFrameHandler = { [weak self] in
                             self?.outgoingVideoView.unhideView(animated: animated)
                         }
+                        view.setVideoContentMode(.resizeAspectFill)
                     }
                 })
             }
@@ -720,10 +723,7 @@ private class PhoneCallWindowView : View {
             }
         }
         
-        if let peer = peer {
-            updatePeerUI(peer, session: session)
-            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
-        }
+        
         
         var point = outgoingVideoView.frame.origin
         var size = outgoingVideoView.frame.size
@@ -747,6 +747,11 @@ private class PhoneCallWindowView : View {
         let videoFrame = CGRect(origin: point, size: size)
         if !outgoingVideoView.isViewHidden {
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
+        }
+        
+        if let peer = peer {
+            updatePeerUI(peer, session: session)
+            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
         }
         
         if videoFrame == bounds {
@@ -869,7 +874,7 @@ private class PhoneCallWindowView : View {
         
         self.tooltips = sorted
         
-        if !outgoingVideoView.isMoved && outgoingVideoView.frame != bounds {
+        if !outgoingVideoView.isMoved && outgoingVideoView.savedFrame != bounds {
             let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
             let size = self.outgoingVideoView.frame.size
             let point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
@@ -1089,7 +1094,7 @@ class PhoneCallWindowController {
             if let session = self?.session {
                 session.toggleMute()
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         view.declineControl.set(handler: { [weak self] _ in

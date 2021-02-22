@@ -4582,7 +4582,9 @@ internal final class L10n {
   /// Are you sure you want to delete all revoked links?
   internal static var manageLinksDeleteAllConfirm: String  { return L10n.tr("Localizable", "ManageLinks.DeleteAll.Confirm") }
   /// Anyone who has Telegram installed will be able to join your group by following this group
-  internal static var manageLinksHeaderDesc: String  { return L10n.tr("Localizable", "ManageLinks.Header.Desc") }
+  internal static var manageLinksHeaderChannelDesc: String  { return L10n.tr("Localizable", "ManageLinks.Header.Channel.Desc") }
+  /// Anyone who has Telegram installed will be able to join your group by following this group
+  internal static var manageLinksHeaderGroupDesc: String  { return L10n.tr("Localizable", "ManageLinks.Header.Group.Desc") }
   /// FAKE
   internal static var markFake: String  { return L10n.tr("Localizable", "Mark.Fake") }
   /// SCAM

@@ -399,6 +399,10 @@ class PeerInfoController: EditableViewController<TableView> {
                 inviteLinksCount = arguments.linksManager.state |> map {
                     $0.effectiveCount
                 }
+            } else if let arguments = arguments as? ChannelInfoArguments {
+                inviteLinksCount = arguments.linksManager.state |> map {
+                    $0.effectiveCount
+                }
             } else {
                 inviteLinksCount = .single(0)
             }

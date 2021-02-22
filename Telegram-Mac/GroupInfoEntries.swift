@@ -1668,7 +1668,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     
                     var nextViewType: GeneralViewType = .firstItem
                     
-                    if (access.isCreator || access.canCreateInviteLink) && channel.addressName == nil {
+                    if (access.isCreator || access.canCreateInviteLink) {
                         entries.append(.inviteLinks(section: GroupInfoSection.admin.rawValue, count: inviteLinksCount, viewType: nextViewType))
                         nextViewType = .innerItem
                     }
