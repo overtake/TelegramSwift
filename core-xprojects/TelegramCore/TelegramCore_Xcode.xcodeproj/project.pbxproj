@@ -197,7 +197,6 @@
 		D05A32E81E6F0B5C002760B4 /* RecentAccountSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05A32E61E6F0B5C002760B4 /* RecentAccountSession.swift */; };
 		D05D8B382192F8AF0064586F /* LocalizationListState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D05D8B362192F8AF0064586F /* LocalizationListState.swift */; };
 		D05FDC3922CA45070060BFE3 /* AppUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09EC0DE822C6825D00E7185B /* AppUpdate.swift */; };
-		D0613FCB1E60440600202CDB /* InvitationLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0613FC91E60440600202CDB /* InvitationLinks.swift */; };
 		D0613FD01E60520700202CDB /* ChannelMembers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0613FCE1E60520700202CDB /* ChannelMembers.swift */; };
 		D0613FD81E606B3B00202CDB /* ConvertGroupToSupergroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0613FD61E606B3B00202CDB /* ConvertGroupToSupergroup.swift */; };
 		D0633CD32253A528003DD95F /* ChatOnlineMembers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0633CD12253A528003DD95F /* ChatOnlineMembers.swift */; };
@@ -1850,7 +1849,6 @@
 				D054649B20738760002ECC1E /* SecureIdRentalAgreementValue.swift in Sources */,
 				D0561DEB1E5754FA00E6B9E9 /* ChannelAdmins.swift in Sources */,
 				D0AD02E41FFFA14800C1DCFF /* PeerLiveLocationsContext.swift in Sources */,
-				D0613FCB1E60440600202CDB /* InvitationLinks.swift in Sources */,
 				D0633CD32253A528003DD95F /* ChatOnlineMembers.swift in Sources */,
 				D0B844471DAB91FD005F29E1 /* ManagedServiceViews.swift in Sources */,
 				D0F3A8A91E82CD7D00B4C64C /* UpdatePeerChatInterfaceState.swift in Sources */,
