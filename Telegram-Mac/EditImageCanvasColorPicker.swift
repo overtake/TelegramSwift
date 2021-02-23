@@ -284,7 +284,8 @@ private final class PaintColorPickerKnob: View {
         
         
         backgroundView.color = NSColor(0xffffff)
-        
+        backgroundView.isEventLess = true
+        colorView.isEventLess = true
         colorView.color = NSColor.blue
         colorView.strokesLowContrastColors = true
         addSubview(backgroundView)
@@ -326,6 +327,7 @@ final class EditImageColorPicker: View {
         addSubview(backgroundView)
         addSubview(knobView)
         knobView.isEventLess = true
+        knobView.userInteractionEnabled = false
         
         backgroundView.set(handler: { [weak self] _ in
             self?.updateLocation(animated: false)

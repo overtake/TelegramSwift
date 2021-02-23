@@ -1143,7 +1143,7 @@ class PhoneCallWindowController {
         
         
         window.onToggleFullScreen = { [weak self] value in
-            self?.view.incomingVideoView.videoView?.setVideoContentMode(value ? .resizeAspect : .resizeAspectFill)
+            self?.view.incomingVideoView.videoView?.setVideoContentMode(.resizeAspect)
         }
         
         

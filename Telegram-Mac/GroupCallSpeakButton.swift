@@ -152,6 +152,32 @@ final class VoiceChatBlobLayer: CALayer {
             strongSelf.bigBlob.level = strongSelf.presentationAudioLevel
         }
     }
+    
+    override init(layer: Any) {
+        let mediumBlobRange:BlobRange = (0.69, 0.87)
+        let bigBlobRange:BlobRange = (0.71, 1.0)
+        self.maxLevel = 1.5
+
+        self.mediumBlob = BlobLayer(
+            pointsCount: 8,
+            minRandomness: 1,
+            maxRandomness: 1,
+            minSpeed: 0.9,
+            maxSpeed: 4.0,
+            minScale: mediumBlobRange.min,
+            maxScale: mediumBlobRange.max
+        )
+        self.bigBlob = BlobLayer(
+            pointsCount: 8,
+            minRandomness: 1,
+            maxRandomness: 1,
+            minSpeed: 1.0,
+            maxSpeed: 4.4,
+            minScale: bigBlobRange.min,
+            maxScale: bigBlobRange.max
+        )
+        super.init(layer: layer)
+    }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

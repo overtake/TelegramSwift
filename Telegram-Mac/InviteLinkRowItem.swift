@@ -256,8 +256,8 @@ private final class InviteLinkTokenView : Control {
 
             let titleAttr = NSMutableAttributedString()
             _ = titleAttr.append(string: titleText, color: theme.colors.text, font: .medium(.text))
-            let titleLayout = TextViewLayout(titleAttr, maximumNumberOfLines: 2)
-            titleLayout.measure(width: frame.width - 20)
+            let titleLayout = TextViewLayout(titleAttr, maximumNumberOfLines: 1)
+            titleLayout.measure(width: frame.width - 110)
 
             self.titleView.update(titleLayout)
 
