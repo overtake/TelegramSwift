@@ -1979,6 +1979,8 @@ internal final class L10n {
   internal static func chatMessageImported(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Message.Imported", p1)
   }
+  /// imported
+  internal static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
   /// %d
   internal static func chatMessageUnsendMessagesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.UnsendMessages_countable", p1)
@@ -3069,6 +3071,8 @@ internal final class L10n {
   internal static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// channel created
   internal static var chatServiceChannelCreated: String  { return L10n.tr("Localizable", "ChatService.ChannelCreated") }
+  /// Report Messages
+  internal static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default
   internal static var chatWallpaperEmpty: String  { return L10n.tr("Localizable", "ChatWallpaper.Empty") }
   /// Create
@@ -3869,6 +3873,8 @@ internal final class L10n {
   internal static var groupNewGroup: String  { return L10n.tr("Localizable", "Group.NewGroup") }
   /// Sorry, this group doesn't seem to exist.
   internal static var groupUnavailable: String  { return L10n.tr("Localizable", "Group.Unavailable") }
+  /// Sorry, this group is full. You cannot add any more members here.
+  internal static var groupUsersTooMuchError: String  { return L10n.tr("Localizable", "Group.UsersTooMuchError") }
   /// Change Group Info
   internal static var groupEditAdminPermissionChangeInfo: String  { return L10n.tr("Localizable", "Group.EditAdmin.Permission.ChangeInfo") }
   /// **No events here yet**\n\nThere were no service actions taken by the group's members and admins for the last 48 hours.
@@ -4581,7 +4587,7 @@ internal final class L10n {
   internal static var manageLinksContextShare: String  { return L10n.tr("Localizable", "ManageLinks.Context.Share") }
   /// Are you sure you want to delete all revoked links?
   internal static var manageLinksDeleteAllConfirm: String  { return L10n.tr("Localizable", "ManageLinks.DeleteAll.Confirm") }
-  /// Anyone who has Telegram installed will be able to join your group by following this group
+  /// Anyone who has Telegram installed will be able to join your channel by following this group
   internal static var manageLinksHeaderChannelDesc: String  { return L10n.tr("Localizable", "ManageLinks.Header.Channel.Desc") }
   /// Anyone who has Telegram installed will be able to join your group by following this group
   internal static var manageLinksHeaderGroupDesc: String  { return L10n.tr("Localizable", "ManageLinks.Header.Group.Desc") }

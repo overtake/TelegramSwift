@@ -176,6 +176,8 @@ class JoinLinkPreviewModalController: ModalViewController {
                     case .tooMuchJoined:
                         showInactiveChannels(context: context, source: .join)
                         return
+                    case .tooMuchUsers:
+                        text = L10n.groupUsersTooMuchError
                     }
                     alert(for: context.window, info: text)
                 })

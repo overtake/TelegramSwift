@@ -1755,7 +1755,12 @@ class ChatRowItem: TableRowItem {
                 formatter.timeStyle = .short
                 formatter.timeZone = NSTimeZone.local
                 formatter.doesRelativeDateFormatting = true
-                let text = L10n.chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                let text: String
+                if forwardInfo.date == message.timestamp {
+                    text = L10n.chatMessageImportedShort
+                } else {
+                   text  = L10n.chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                }
                 editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 
                 fullDate = L10n.chatMessageImportedText + "\n\n" + fullDate
