@@ -67,7 +67,7 @@ extension Peer {
             if channel.hasPermission(.banMembers) {
                 canEditMembers = true
             }
-            if channel.hasPermission(.inviteMembers) {
+            if channel.hasPermission(.inviteMembers) || isCreator || channel.adminRights != nil {
                 canAddMembers = true
             }
         }

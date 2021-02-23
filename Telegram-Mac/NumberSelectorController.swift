@@ -76,7 +76,7 @@ func NumberSelectorController(base: Int?, title: String, placeholder: String, ok
                     .replacingOccurrences(of: ",", with: "")
                     .replacingOccurrences(of: ".", with: "")
                 if let intValue = Int(value) {
-                    current.value = intValue
+                    current.value = max(1, intValue)
                 } else {
                     current.value = nil
                 }

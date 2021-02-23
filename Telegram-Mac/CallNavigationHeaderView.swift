@@ -542,7 +542,7 @@ class CallHeaderBasicView : NavigationHeaderView {
             }
             statusText = durationString
         }
-        let dynamicResult = DynamicCounterTextView.make(for: statusText, count: statusText.trimmingCharacters(in: CharacterSet.decimalDigits.inverted), font: .normal(.text), textColor: .white, width: 120)
+        let dynamicResult = DynamicCounterTextView.make(for: statusText, count: statusText.trimmingCharacters(in: CharacterSet.decimalDigits.inverted), font: .normal(.text), textColor: .white, width: 120, onlyFade: true)
         self.statusTextView.update(dynamicResult.values, animated: animated)
         self.statusTextView.change(size: dynamicResult.size, animated: animated)
 

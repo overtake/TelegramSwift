@@ -15,7 +15,7 @@ public final class DynamicCounterTextView : View {
         public let size: NSSize
     }
     
-    public static func make(for text: String, count: String, font: NSFont, textColor: NSColor, width: CGFloat) -> Value {
+    public static func make(for text: String, count: String, font: NSFont, textColor: NSColor, width: CGFloat, onlyFade: Bool = false) -> Value {
         var title: [(String, DynamicCounterTextView.Text.Animation, Int)] = []
         if count.isEmpty {
             title = [(text, .crossFade, 0)]
@@ -29,7 +29,7 @@ public final class DynamicCounterTextView : View {
                     let symbol = text.nsstring.substring(with: NSMakeRange(range.location + index, 1))
                     let animation: Text.Animation
                     if Int(symbol) != nil {
-                        animation = .numeric
+                        animation = onlyFade ? .crossFade : .numeric
                     } else {
                         animation = .crossFade
                     }
