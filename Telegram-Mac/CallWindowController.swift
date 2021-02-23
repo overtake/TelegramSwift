@@ -533,7 +533,6 @@ private class PhoneCallWindowView : View {
                     if let view = view, let `self` = self {
                         self.incomingVideoView.videoView = view
                         self.incomingVideoView.updateAspectRatio = self.updateIncomingAspectRatio
-                        self.incomingVideoView.videoView?.setVideoContentMode(.resizeAspectFill)
                         self.incomingVideoView.firstFrameHandler = { [weak self] in
                             self?.incomingVideoView.unhideView(animated: animated)
                         }
@@ -560,7 +559,6 @@ private class PhoneCallWindowView : View {
                         self.outgoingVideoView.firstFrameHandler = { [weak self] in
                             self?.outgoingVideoView.unhideView(animated: animated)
                         }
-                        view.setVideoContentMode(.resizeAspectFill)
                     }
                 })
             }
