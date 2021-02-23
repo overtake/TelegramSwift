@@ -399,18 +399,12 @@ public extension NSView {
     func _mouseInside() -> Bool {
         if let window = self.window {
        
-            
-            let windowLocation = window.mouseLocationOutsideOfEventStream
-            var location:NSPoint = windowLocation
+            var location:NSPoint = window.mouseLocationOutsideOfEventStream
+
             location = self.convert(location, from: nil)
             
             
-            if self is ImageButton {
-                var bp:Int = 0
-                bp += 1
-            }
-            
-            if let view = window.contentView!.hitTest(windowLocation) {
+            if let view = window.contentView!.hitTest(window.mouseLocationOutsideOfEventStream) {
                 if let view = view as? View {
                     if view.isEventLess {
                         return NSPointInRect(location, self.bounds)
@@ -423,12 +417,12 @@ public extension NSView {
                 } else {
                     var s = view.superview
                     if let view = view as? NSTableView {
-                        let somePoint = view.convert(windowLocation, from: nil)
+                        let somePoint = view.convert(window.mouseLocationOutsideOfEventStream, from: nil)
                         let row = view.row(at: somePoint)
                         if row >= 0 {
                             let someView = view.rowView(atRow: row, makeIfNecessary: false)
                             if let someView = someView {
-                                let hit = someView.hitTest(someView.convert(windowLocation, from: nil))
+                                let hit = someView.hitTest(someView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
                                 return hit == self
                             }
                         }

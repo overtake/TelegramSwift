@@ -542,7 +542,11 @@ struct ChatPresentationInterfaceState: Equatable {
                 #endif
 
                 if peer.flags.contains(.isGigagroup) {
-                    if peer.adminRights == nil && !peer.groupAccess.isCreator {
+                    if peer.participationStatus == .left {
+                        return .action(L10n.chatInputJoin, { chatInteraction in
+                            chatInteraction.joinChannel()
+                        }, nil)
+                    } else if peer.adminRights == nil && !peer.groupAccess.isCreator {
                         if let notificationSettings = notificationSettings {
                             return .action(notificationSettings.isMuted ? L10n.chatInputUnmute : L10n.chatInputMute, { chatInteraction in
                                 chatInteraction.toggleNotifications(nil)

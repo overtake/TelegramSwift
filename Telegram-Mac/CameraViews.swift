@@ -111,7 +111,7 @@ final class OutgoingVideoView : Control {
     
     override var isEventLess: Bool {
         didSet {
-            overlay.isEventLess = isEventLess
+            //overlay.isEventLess = isEventLess
         }
     }
     
@@ -131,14 +131,15 @@ final class OutgoingVideoView : Control {
     private var notAvailableView: TextView?
     
     private var animation:DisplayLinkAnimator? = nil
-    
-    private let maskLayer = CAShapeLayer()
-    
+        
     
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(overlay)
+        self.userInteractionEnabled = false
+        self.overlay.forceMouseDownCanMoveWindow = true
+        
         self.layer?.cornerRadius = .cornerRadius
         self.layer?.masksToBounds = true
     }
@@ -265,7 +266,7 @@ final class OutgoingVideoView : Control {
     }
     
     override var mouseDownCanMoveWindow: Bool {
-        return isEventLess
+        return true
     }
 }
 

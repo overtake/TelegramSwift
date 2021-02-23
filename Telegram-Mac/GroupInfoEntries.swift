@@ -1647,7 +1647,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 
                 var canViewAdminsAndBanned = false
                 if let channel = view.peers[view.peerId] as? TelegramChannel {
-                    if let adminRights = channel.adminRights {
+                    if let _ = channel.adminRights {
                         canViewAdminsAndBanned = true
                     } else if channel.flags.contains(.isCreator) {
                         canViewAdminsAndBanned = true
@@ -1655,6 +1655,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
                 
                 if canViewAdminsAndBanned {
+                    var block: [GroupInfoEntry] = []
                     var activePermissionCount: Int?
                     if let defaultBannedRights = channel.defaultBannedRights {
                         var count = 0
@@ -1665,20 +1666,21 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         }
                         activePermissionCount = count
                     }
-                    
-                    var nextViewType: GeneralViewType = .firstItem
-                    
+                                        
                     if (access.isCreator || access.canCreateInviteLink) {
-                        entries.append(.inviteLinks(section: GroupInfoSection.admin.rawValue, count: inviteLinksCount, viewType: nextViewType))
-                        nextViewType = .innerItem
+                        block.append(.inviteLinks(section: GroupInfoSection.admin.rawValue, count: inviteLinksCount, viewType: .singleItem))
                     }
 
                     if !channel.flags.contains(.isGigagroup) {
-                        entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: nextViewType))
+                        if access.canEditMembers {
+                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .singleItem))
+                        }
                     } else {
-                        entries.append(GroupInfoEntry.blocked(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.kickedCount, viewType: nextViewType))
+                        block.append(.blocked(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.kickedCount, viewType: .singleItem))
                     }
-                    entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.adminCount.flatMap { "\($0)" } ?? "", viewType: .lastItem))
+                    block.append(.administrators(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.adminCount.flatMap { "\($0)" } ?? "", viewType: .lastItem))
+                    
+                    applyBlock(block)
                     
                 }
             }
