@@ -288,8 +288,8 @@ final class IncomingVideoView : Control {
             _cameraInitialized.set(.initializing)
             
             if let videoView = videoView {
-                videoView.setVideoContentMode(.resizeAspect)
-                
+                videoView.setVideoContentMode(.resizeAspectFill)
+
                 addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
                 videoView.view.background = .clear
                 

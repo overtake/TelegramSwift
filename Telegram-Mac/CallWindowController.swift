@@ -982,10 +982,12 @@ class PhoneCallWindowController {
             }
         }))
         
-        //        view.updateIncomingAspectRatio = { [weak self] aspectRatio in
-        //            self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
-        //            self?.updateOutgoingAspectRatio(max(0.7, aspectRatio))
-        //        }
+        let signal = session.canBeRemoved |> deliverOnMainQueue
+        closeDisposable.set(signal.start(next: { value in
+            if value {
+                closeCall()
+            }
+        }))
     }
     private var state:CallState? = nil
     private let disposable:MetaDisposable = MetaDisposable()
@@ -1141,7 +1143,7 @@ class PhoneCallWindowController {
         
         
         window.onToggleFullScreen = { [weak self] value in
-            self?.view.incomingVideoView.videoView?.setVideoContentMode(.resizeAspect)
+            self?.view.incomingVideoView.videoView?.setVideoContentMode(value ? .resizeAspect : .resizeAspectFill)
         }
         
         
@@ -1354,7 +1356,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 func showCallWindow(_ session:PCallSession) {
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
-            controller?.session.hangUpCurrentCall().start()
+            _ = controller?.session.hangUpCurrentCall().start()
             if let controller = controller {
                 controller.session = session
                 return controller
@@ -1366,12 +1368,6 @@ func showCallWindow(_ session:PCallSession) {
     }
     controller.with { $0?.show() }
     
-    let signal = session.canBeRemoved |> deliverOnMainQueue
-    closeDisposable.set(signal.start(next: { value in
-        if value {
-            closeCall()
-        }
-    }))
 }
 
 func closeCall(minimisize: Bool = false) {
