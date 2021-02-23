@@ -367,7 +367,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         sectionId += 1
     }
 
-    if !state.isAdmin || state.peer?.peer.addressName == nil {
+   // if !state.isAdmin || state.peer?.peer.addressName == nil {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
@@ -375,7 +375,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         peers = Array(peers.prefix(3))
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, publicAddress: state.peer?.peer.addressName, lastPeers: peers, viewType: .singleItem, menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, publicAddress: state.isAdmin ? nil : state.peer?.peer.addressName, lastPeers: peers, viewType: .singleItem, menuItems: {
 
                 var items:[ContextMenuItem] = []
                 if let permanent = state.permanent {
@@ -402,7 +402,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-    }
+ //   }
 
     
 
@@ -479,8 +479,10 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         
         if let list = state.revokedList, list.count > 0 {
             
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
+            if state.list?.isEmpty == false {
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+            }
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
@@ -642,7 +644,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             if peers.count == 2 {
                 current.adminPeer = peers.last
             }
-            if current.peer?.peer.addressName != nil {
+            if current.peer?.peer.addressName != nil && !current.isAdmin {
                 current.permanent = nil
             } else {
                 current.permanent = state.list?.first(where: { $0.isPermanent })

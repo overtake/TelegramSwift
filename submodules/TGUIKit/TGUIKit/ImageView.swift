@@ -47,6 +47,25 @@ open class ImageView: NSView {
             setFrameSize(image.backingSize)
         }
     }
+    
+    open override func hitTest(_ point: NSPoint) -> NSView? {
+        if isEventLess {
+            let view = super.hitTest(point)
+            if let view = view as? View {
+                if view.isEventLess || view === self {
+                    return nil
+                }
+            }
+            if let view = view as? ImageView {
+                if view.isEventLess || view === self {
+                    return nil
+                }
+            }
+            return view
+        } else {
+            return super.hitTest(point)
+        }
+    }
 
     open override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         return true

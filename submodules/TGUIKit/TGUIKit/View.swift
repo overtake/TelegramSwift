@@ -277,6 +277,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         }
     }
     
+    open override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+    }
+    
     open func mouseInside() -> Bool {
         return super._mouseInside()
     }
@@ -285,6 +289,11 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if isEventLess {
             let view = super.hitTest(point)
             if let view = view as? View {
+                if view.isEventLess || view === self {
+                    return nil
+                }
+            }
+            if let view = view as? ImageView {
                 if view.isEventLess || view === self {
                     return nil
                 }

@@ -104,12 +104,20 @@ private final class GroupCallControlsView : View {
                 self?.arguments?.toggleSpeaker()
             }
         }, for: .Click)
+        
+        videoStream.set(handler: { [weak self] _ in
+            self?.arguments?.settings()
+//            if !isStreaming {
+//                self?.arguments?.shareSource()
+//            } else {
+//                self?.arguments?.cancelSharing()
+//            }
+        }, for: .Click)
 
     }
     
     private var preiousState: PresentationGroupCallState?
     
-    private var clickToken:UInt32?
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
 
 
@@ -124,17 +132,7 @@ private final class GroupCallControlsView : View {
             isStreaming = false
         }
 
-        if let clickToken = clickToken {
-            videoStream.removeHandler(clickToken)
-        }
-        clickToken = videoStream.set(handler: { [weak self] _ in
-            self?.arguments?.settings()
-//            if !isStreaming {
-//                self?.arguments?.shareSource()
-//            } else {
-//                self?.arguments?.cancelSharing()
-//            }
-        }, for: .Click)
+        
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State
         
