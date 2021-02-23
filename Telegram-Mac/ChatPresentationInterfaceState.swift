@@ -535,7 +535,7 @@ struct ChatPresentationInterfaceState: Equatable {
                         if rule.platform == "ios" || rule.platform == "all" {
                             return .action(L10n.chatInputClose, { chatInteraction in
                                 chatInteraction.back()
-                            })
+                            }, nil)
                         }
                     }
                 }
