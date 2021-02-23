@@ -1165,8 +1165,12 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
             }
         }
         if microAccess {
-            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .call) |> mapToSignal { _ in
-                return sharedContext.endCurrentCall()
+            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .call, ignoreSame: ignoreSame) |> mapToSignal { value -> Signal<Bool, NoError> in
+                if ignoreSame {
+                    return .single(value)
+                } else {
+                    return sharedContext.endCurrentCall()
+                }
             } |> mapToSignal { _ in
                 return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
             }
@@ -1193,7 +1197,7 @@ enum CallConfirmationType {
     case voiceChat
 }
 
-func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountContext, newPeerId: PeerId, newCallType: CallConfirmationType) -> Signal<Bool, NoError> {
+func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountContext, newPeerId: PeerId, newCallType: CallConfirmationType, ignoreSame: Bool = false) -> Signal<Bool, NoError> {
     if sharedContext.hasActiveCall {
         let currentCallType: CallConfirmationType
         let currentPeerId: PeerId
@@ -1208,6 +1212,9 @@ func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountConte
             currentCallType = .voiceChat
         } else {
             fatalError("wtf")
+        }
+        if ignoreSame, newPeerId == currentPeerId {
+            return .single(true)
         }
         let from = currentAccount.postbox.transaction {
             return $0.getPeer(currentPeerId)

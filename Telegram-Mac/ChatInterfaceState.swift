@@ -458,9 +458,9 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                 if offsetRange.location < newRange.location {
                     newRange.location -= offsetRange.length
                 }
-                if newRange.intersection(offsetRange) != nil {
-                    newRange.length -= offsetRange.length
-                }
+//                if newRange.intersection(offsetRange) != nil {
+//                    newRange.length -= offsetRange.length
+//                }
             }
             
             
