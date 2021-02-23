@@ -196,6 +196,43 @@ private final class VoiceCurveLayer: CALayer {
             strongSelf.bigCurve.level = strongSelf.presentationAudioLevel
         }
     }
+    
+    override init(layer: Any) {
+        let maxLevel: CGFloat = 2.5
+        let smallCurveRange:CurveRange = (0.0, 0.0)
+        let mediumCurveRange:CurveRange = (0.1, 0.55)
+        let bigCurveRange:CurveRange = (0.1, 1.0)
+        self.maxLevel = maxLevel
+
+        self.smallCurve = CurveLayer(
+            pointsCount: 7,
+            minRandomness: 1,
+            maxRandomness: 1.3,
+            minSpeed: 0.9,
+            maxSpeed: 3.2,
+            minOffset: smallCurveRange.min,
+            maxOffset: smallCurveRange.max
+        )
+        self.mediumCurve = CurveLayer(
+            pointsCount: 7,
+            minRandomness: 1.2,
+            maxRandomness: 1.5,
+            minSpeed: 1.0,
+            maxSpeed: 4.4,
+            minOffset: mediumCurveRange.min,
+            maxOffset: mediumCurveRange.max
+        )
+        self.bigCurve = CurveLayer(
+            pointsCount: 7,
+            minRandomness: 1.2,
+            maxRandomness: 1.7,
+            minSpeed: 1.0,
+            maxSpeed: 5.8,
+            minOffset: bigCurveRange.min,
+            maxOffset: bigCurveRange.max
+        )
+        super.init(layer: layer)
+    }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
