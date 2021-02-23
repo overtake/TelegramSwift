@@ -585,13 +585,15 @@ class ChatListRowItem: TableRowItem {
             }
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
-                let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
-                
-                let attr = NSMutableAttributedString()
-                _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                
-                self.chatTitleAttributed = attr
+                if !(message.media.first is TelegramMediaAction) {
+                    let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
+                    
+                    let attr = NSMutableAttributedString()
+                    _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                    attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                    
+                    self.chatTitleAttributed = attr
+                }
             }
             
             let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
