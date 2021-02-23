@@ -26,7 +26,7 @@ private final class SelectMessagesPlaceholderView: View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         background = theme.colors.background
-        let layout = TextViewLayout(.initialize(string: "Report Messages", color: theme.colors.text, font: .medium(.header)))
+        let layout = TextViewLayout(.initialize(string: L10n.chatTitleReportMessages, color: theme.colors.text, font: .medium(.header)))
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
     }
@@ -735,7 +735,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
 
     override var inset:CGFloat {
-        return 36 + 50 + (callButton.isHidden ? 20 : callButton.frame.width + 40)
+        return 36 + 50 + (callButton.isHidden ? 20 : callButton.frame.width + 55)
     }
     
     
