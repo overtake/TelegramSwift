@@ -72,9 +72,13 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
                 items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
                     arguments.editLink(invitation)
                 }))
-                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
-                    arguments.revokeLink(invitation)
-                }))
+                if admin?.isBot == true {
+                    
+                } else {
+                    items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                        arguments.revokeLink(invitation)
+                    }))
+                }
             }
             return .single(items)
         }, share: arguments.shareLink, copyLink: arguments.copyLink)

@@ -382,9 +382,14 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                     items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
                         arguments.copyLink(permanent.link)
                     }))
-                    items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
-                        arguments.revokeLink(permanent)
-                    }))
+                    if state.adminPeer?.peer.isBot == true {
+                        
+                    } else {
+                        items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                            arguments.revokeLink(permanent)
+                        }))
+                    }
+                    
                 } else if let addressName = state.peer?.peer.addressName {
                     items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
                         arguments.copyLink(addressName)
@@ -459,9 +464,13 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                             items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
                                 arguments.editLink(link)
                             }))
-                            items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
-                                arguments.revokeLink(link)
-                            }))
+                            if state.adminPeer?.peer.isBot == true {
+                                
+                            } else {
+                                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                                    arguments.revokeLink(link)
+                                }))
+                            }
                         }
 
                         return .single(items)

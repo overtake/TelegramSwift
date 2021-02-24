@@ -210,13 +210,15 @@ class ChatInputActionsView: View, Notifable {
     
     override func layout() {
         super.layout()
+        
+        
+        
         inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset - 6)
         inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 10)
         voice.centerY(x:frame.width - voice.frame.width - iconsInset)
         send.centerY(x: frame.width - send.frame.width - iconsInset)
         slowModeTimeout.centerY(x: frame.width - slowModeTimeout.frame.width - iconsInset)
         entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - 0)
-        secretTimer?.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
         keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
         muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width)
         
@@ -225,6 +227,25 @@ class ChatInputActionsView: View, Notifable {
                 scheduled.centerY(x: (keyboard.isHidden ? entertaiments.frame.minX : keyboard.frame.minX) - scheduled.frame.width)
             } else {
                 scheduled.centerY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset)
+            }
+        }
+        
+        let views = [inlineCancel,
+         inlineProgress,
+         voice,
+         send,
+         slowModeTimeout,
+         entertaiments,
+         keyboard,
+         muteChannelMessages,
+         scheduled].filter { $0 != nil && !$0!.isHidden }.map { $0! }
+        
+        let minView = views.min(by: { $0.frame.minX < $1.frame.minX })
+        if let minView = minView, let secretTimer = secretTimer {
+            if minView == entertaiments {
+                secretTimer.centerY(x: minView.frame.minX - secretTimer.frame.width)
+            } else {
+                secretTimer.centerY(x: minView.frame.minX - secretTimer.frame.width - iconsInset)
             }
         }
     }
