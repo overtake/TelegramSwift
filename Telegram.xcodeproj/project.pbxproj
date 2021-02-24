@@ -18,6 +18,7 @@
 		2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */; };
 		2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2764A5AC25DFBB4300F9A20D /* police.tgs */; };
 		2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */; };
+		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
@@ -1027,6 +1028,7 @@
 		2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailsController.swift; sourceTree = "<group>"; };
 		2764A5AC25DFBB4300F9A20D /* police.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = police.tgs; sourceTree = "<group>"; };
 		2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoDeleteContextMenuView.swift; sourceTree = "<group>"; };
+		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -3429,6 +3431,7 @@
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
 				C252532C1DF0440300ADBC98 /* begin_record.caf */,
+				278C720325E67C2700F1B315 /* emoji1016.txt */,
 				C2844ADF1DA90C8A009308DC /* emoji.txt */,
 				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
 				C29B5F421DC794C700D13E65 /* sent.caf */,
@@ -4730,6 +4733,7 @@
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,
 				C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */,
 				D07450EA233D61B800769D7F /* write_words.tgs in Resources */,
+				278C720425E67C2700F1B315 /* emoji1016.txt in Resources */,
 				9F03681722771A9700456348 /* anim_unpin.json in Resources */,
 				C253A9701D92F9F100CDC850 /* Localizable.strings in Resources */,
 				D07450E7233D61B800769D7F /* gift.tgs in Resources */,

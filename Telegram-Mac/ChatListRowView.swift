@@ -624,47 +624,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.mediaPreviewViews.removeValue(forKey: messageId)
             }
 
-            
-//            var updateImageSignal: Signal<ImageDataTransformation, NoError>?
-//            if let contentImageMedia = item.contentImageMedia {
-//                if let oldContentImageMedia = oldItem?.contentImageMedia, contentImageMedia.isSemanticallyEqual(to: oldContentImageMedia) {
-//                } else {
-//                    if let message = item.message {
-//                        if let image = contentImageMedia as? TelegramMediaImage {
-//                            updateImageSignal = mediaGridMessagePhoto(account: item.context.account, imageReference: .message(message: MessageReference(message), media: image), scale: backingScaleFactor)
-//                        } else if let file = contentImageMedia as? TelegramMediaFile {
-//                            updateImageSignal = mediaGridMessageVideo(postbox: item.context.account.postbox, fileReference: .message(message: MessageReference(message), media: file), scale: backingScaleFactor)
-//                        }
-//                    }
-//                }
-//            }
-//
-//            if  let dimensions = item.contentDimensions {
-//                let previewView: TransformImageView
-//                if let current = self.previewView {
-//                    previewView = current
-//                } else {
-//                    previewView = TransformImageView()
-//                    previewView.setFrameSize(NSMakeSize(18, 18))
-//                    self.previewView = previewView
-//                    self.containerView.addSubview(previewView)
-//                }
-//                if let updateImageSignal = updateImageSignal {
-//                    previewView.setSignal(updateImageSignal)
-//                }
-//
-//                let contentImageSize = CGSize(width: 18.0, height: 18.0)
-//
-//                let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(contentImageSize), boundingSize: contentImageSize, intrinsicInsets: NSEdgeInsets())
-//
-//                previewView.set(arguments: arguments)
-//
-//            } else {
-//                previewView?.removeFromSuperview()
-//                previewView = nil
-//            }
-//
-            
             if item.isCollapsed != wasHidden {
                 expandView?.change(pos: NSMakePoint(0, item.isCollapsed ? 0 : item.height), animated: animated)
                 containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -70 : 0), animated: !revealActionInvoked && animated)
@@ -1601,7 +1560,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
-                for (message, media, mediaSize) in self.currentMediaPreviewSpecs {
+                for (message, _, mediaSize) in self.currentMediaPreviewSpecs {
                     if let previewView = self.mediaPreviewViews[message.id] {
                         previewView.frame = CGRect(origin: mediaPreviewOffset, size: mediaSize)
                     }
