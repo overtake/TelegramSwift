@@ -1048,7 +1048,7 @@ class PhoneCallWindowController {
                 switch callState.videoState {
                 case let .active(available), let .paused(available), let .inactive(available):
                     if available {
-                        if callState.isOutgoingVideoPaused || callState.isScreenCapture {
+                        if callState.isOutgoingVideoPaused || callState.isScreenCapture || callState.videoState == .inactive(available) {
                             self.session.requestVideo()
                         } else {
                             self.session.disableVideo()

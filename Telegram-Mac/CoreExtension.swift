@@ -1185,7 +1185,7 @@ extension Peer {
         if self.isUser && !self.isBot {
             return true
         }
-        if let peer = self as? TelegramChannel, self.isSupergroup {
+        if let peer = self as? TelegramChannel {
             if let adminRights = peer.adminRights, adminRights.rights.contains(.canDeleteMessages) {
                 return true
             } else if peer.groupAccess.isCreator {

@@ -173,6 +173,11 @@ final class ChatInteraction : InterfaceObserver  {
     let mediaPromise:Promise<[MediaSenderContainer]> = Promise()
     
     var hasSetDestructiveTimer: Bool {
+        
+        if mode != .history {
+            return false
+        }
+        
         if !self.presentation.interfaceState.inputState.inputText.isEmpty {
             return false
         }

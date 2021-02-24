@@ -644,7 +644,7 @@ public func shortTimeIntervalString(value: Int32) -> String {
         return L10n.messageTimerShortSeconds("\(max(1, value))")
     } else if value < 60 * 60 {
         return L10n.messageTimerShortMinutes("\(max(1, value / 60))")
-    } else if value <= 60 * 60 * 24 {
+    } else if value < 60 * 60 * 24 {
         return L10n.messageTimerShortHours("\(max(1, value / (60 * 60)))")
     } else if value <= 60 * 60 * 24 * 7 {
         return L10n.messageTimerShortDays("\(max(1, value / (60 * 60 * 24)))")

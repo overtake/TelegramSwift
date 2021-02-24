@@ -1910,9 +1910,14 @@ class ChatRowItem: TableRowItem {
             if message.media.count == 0 || message.media.first is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
-                if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                    return ChatServiceItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
-                } else if let file = message.media[0] as? TelegramMediaFile {
+                if let action = message.media[0] as? TelegramMediaAction {
+                   switch action.action {
+                   case .phoneCall:
+                       return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                   default:
+                       return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                   }
+               } else if let file = message.media[0] as? TelegramMediaFile {
                     if file.isInstantVideo {
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
@@ -1931,14 +1936,6 @@ class ChatRowItem: TableRowItem {
                         return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                     }
                     return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if let action = message.media[0] as? TelegramMediaAction {
-                    switch action.action {
-                    case .phoneCall:
-                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                    default:
-                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                    }
-                    
                 } else if message.media[0] is TelegramMediaMap {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
