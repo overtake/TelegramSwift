@@ -329,15 +329,17 @@ class UserInfoArguments : PeerInfoArguments {
     func updateBlocked(peer: Peer,_ blocked:Bool, _ isBot: Bool) {
         let context = self.context
         if blocked {
-            let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
-            blockDisposable.set(signal.start(error: { error in
-                switch error {
-                case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
-                }
-            }, completed: {
-                
-            }))
+            confirm(for: context.window, header: L10n.peerInfoBlockHeader, information: L10n.peerInfoBlockText(peer.displayTitle), okTitle: L10n.peerInfoBlockOK, successHandler: { [weak self] _ in
+                let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
+                self?.blockDisposable.set(signal.start(error: { error in
+                    switch error {
+                    case .generic:
+                        alert(for: context.window, info: L10n.unknownError)
+                    }
+                }, completed: {
+                    
+                }))
+            })
         } else {
             let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
             blockDisposable.set(signal.start(error: { error in

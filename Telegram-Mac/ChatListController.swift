@@ -295,13 +295,18 @@ class ChatListController : PeersListController {
     }
     
     func updateFilter(_ f:(FilterData)->FilterData) {
+        var changedFolder = false
         filter.set(_filterValue.modify { previous in
             var current = f(previous)
             if previous.filter?.id != current.filter?.id {
                 current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil))
+                changedFolder = true
             }
             return current
         })
+        if changedFolder {
+            self.removeRevealStateIfNeeded(nil)
+        }
         self.genericView.searchView.change(state: .None,  true)
         setCenterTitle(self.defaultBarTitle)
     }
@@ -681,7 +686,8 @@ class ChatListController : PeersListController {
         genericView.tableView.setScrollHandler({ [weak self] scroll in
             
             let view = previousChatList.modify({$0})
-            
+            self?.removeRevealStateIfNeeded(nil)
+
             if let strongSelf = self, let view = view {
                 var messageIndex:ChatListIndex?
                 

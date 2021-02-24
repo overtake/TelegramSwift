@@ -253,7 +253,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
         }
         
         var delayRequest = true
-        var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
+        var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .single({ _ in return nil })
         if let currentQuery = currentQuery {
             switch currentQuery {
             case let .contextRequest(currentAddressName, currentContextQuery) where currentAddressName == addressName:

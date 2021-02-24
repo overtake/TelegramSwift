@@ -5663,6 +5663,14 @@ internal final class L10n {
   internal static var peerInfoActionVideoCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.VideoCall") }
   /// Voice Chat
   internal static var peerInfoActionVoiceChat: String  { return L10n.tr("Localizable", "PeerInfo.Action.VoiceChat") }
+  /// Block User
+  internal static var peerInfoBlockHeader: String  { return L10n.tr("Localizable", "PeerInfo.Block.Header") }
+  /// Block
+  internal static var peerInfoBlockOK: String  { return L10n.tr("Localizable", "PeerInfo.Block.OK") }
+  /// Do you want to block %@ from messaging and calling you on Telegram?
+  internal static func peerInfoBlockText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Block.Text", p1)
+  }
   /// Add To Group
   internal static var peerInfoBotAddToGroup: String  { return L10n.tr("Localizable", "PeerInfo.Bot.AddToGroup") }
   /// Help
