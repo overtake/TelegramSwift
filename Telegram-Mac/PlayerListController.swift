@@ -88,8 +88,26 @@ fileprivate func preparedAudioListTransition(from fromView:[PlayerListEntry], to
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated:updated, animated:animated, state:scroll)
 }
 
+final class PlayerListView : View {
+    let tableView: TableView
+    required init(frame frameRect: NSRect) {
+        tableView = TableView.init(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    override func layout() {
+        super.layout()
+        tableView.frame = bounds
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
-class PlayerListController: TableViewController {
+
+class PlayerListController: TelegramGenericViewController<PlayerListView> {
     private let audioPlayer: InlineAudioPlayerView
     private let chatInteraction: ChatInteraction
     private let disposable = MetaDisposable()
@@ -105,9 +123,13 @@ class PlayerListController: TableViewController {
         
         
         chatInteraction.inlineAudioPlayer = { [weak self] controller in
-            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: currentContext, tableView: self?.genericView, supportTableView: nil)
+            let object = InlineAudioPlayerView.ContextObject(controller: controller, context: currentContext, tableView: self?.tableView, supportTableView: nil)
             self?.audioPlayer.update(with: object)
         }
+    }
+    
+    var tableView: TableView {
+        return genericView.tableView
     }
     
     deinit {
@@ -117,7 +139,7 @@ class PlayerListController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let chatLocationInput = (self.audioPlayer.controller as? APChatController)?.chatLocationInput
-        genericView.getBackgroundColor = {
+        tableView.getBackgroundColor = {
             return theme.colors.background
         }
         
@@ -187,10 +209,10 @@ class PlayerListController: TableViewController {
         
         disposable.set(historyViewTransition.start(next: { [weak self] transition in
             guard let `self` = self else {return}
-            self.genericView.merge(with: transition)
-            if !self.didSetReady, !self.genericView.isEmpty {
-                self.view.setFrameSize(300, min(self.genericView.listHeight, 325))
-                self.genericView.scroll(to: .top(id: PeerMediaSharedEntryStableId.messageId(self.messageIndex.id), innerId: nil, animated: false, focus: .init(focus: false), inset: -25))
+            self.tableView.merge(with: transition)
+            if !self.didSetReady, !self.tableView.isEmpty {
+                self.view.setFrameSize(300, min(self.tableView.listHeight, 325))
+                self.tableView.scroll(to: .top(id: PeerMediaSharedEntryStableId.messageId(self.messageIndex.id), innerId: nil, animated: false, focus: .init(focus: false), inset: -25))
                 self.readyOnce()
             }
         }))
@@ -198,7 +220,7 @@ class PlayerListController: TableViewController {
         location.set(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 50, side: .upper))
 
         
-        genericView.setScrollHandler { scroll in
+        tableView.setScrollHandler { scroll in
             let view = updateView.modify({$0})
             if let view = view {
                 var messageIndex:MessageIndex?
