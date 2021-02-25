@@ -68,10 +68,12 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
                         arguments.shareLink(invitation.link)
                     }))
                 }
-
-                items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
-                    arguments.editLink(invitation)
-                }))
+                if !invitation.isPermanent {
+                    items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
+                        arguments.editLink(invitation)
+                    }))
+                }
+               
                 if admin?.isBot == true {
                     
                 } else {
