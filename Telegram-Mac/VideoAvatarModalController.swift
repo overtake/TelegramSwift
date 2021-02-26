@@ -848,19 +848,19 @@ private func generateVideo(_ asset: AVComposition, composition: AVVideoCompositi
 
 
 /*
- - (UIImageOrientation)getVideoOrientationFromAsset:(AVAsset *)asset
+ - (NSImageOrientation)getVideoOrientationFromAsset:(AVAsset *)asset
  {
  AVAssetTrack *videoTrack = [[asset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
  CGSize size = [videoTrack naturalSize];
  CGAffineTransform txf = [videoTrack preferredTransform];
  
  if (size.width == txf.tx && size.height == txf.ty)
- return UIImageOrientationLeft; //return UIInterfaceOrientationLandscapeLeft;
+ return NSImageOrientationLeft; //return UIInterfaceOrientationLandscapeLeft;
  else if (txf.tx == 0 && txf.ty == 0)
- return UIImageOrientationRight; //return UIInterfaceOrientationLandscapeRight;
+ return NSImageOrientationRight; //return UIInterfaceOrientationLandscapeRight;
  else if (txf.tx == 0 && txf.ty == size.width)
- return UIImageOrientationDown; //return UIInterfaceOrientationPortraitUpsideDown;
+ return NSImageOrientationDown; //return UIInterfaceOrientationPortraitUpsideDown;
  else
- return UIImageOrientationUp;  //return UIInterfaceOrientationPortrait;
+ return NSImageOrientationUp;  //return UIInterfaceOrientationPortrait;
  }
  */

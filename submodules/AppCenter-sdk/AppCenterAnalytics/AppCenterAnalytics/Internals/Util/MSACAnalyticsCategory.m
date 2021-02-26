@@ -6,7 +6,7 @@
 #import <AppKit/AppKit.h>
 #define MSViewController NSViewController
 #else
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 #define MSViewController UIViewController
 #endif
 

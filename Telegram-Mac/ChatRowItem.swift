@@ -899,6 +899,10 @@ class ChatRowItem: TableRowItem {
         return message?.forwardInfo?.psaType != nil
     }
     
+    var hasHeader: Bool {
+        return !(hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil)
+    }
+    
     var hasBubble: Bool 
     
     static func hasBubble(_ message: Message?, entry: ChatHistoryEntry, type: ChatItemType, sharedContext: SharedAccountContext) -> Bool {

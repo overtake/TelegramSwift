@@ -26,12 +26,12 @@ class InputDataDataSelectorRowItem: GeneralRowItem, InputDataRowDataValue {
     }
     
     fileprivate let values: [ValuesSelectorValue<InputDataValue>]
-    init(_ initialSize: NSSize, stableId: AnyHashable, value: InputDataValue, error: InputDataValueError?, placeholder: String, updated: @escaping()->Void, values: [ValuesSelectorValue<InputDataValue>]) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, value: InputDataValue, error: InputDataValueError?, placeholder: String, viewType: GeneralViewType, updated: @escaping()->Void, values: [ValuesSelectorValue<InputDataValue>]) {
         self._value = value
         self.updated = updated
         self.placeholderLayout = TextViewLayout(.initialize(string: placeholder, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         self.values = values
-        super.init(initialSize, height: 42, stableId: stableId, error: error)
+        super.init(initialSize, height: 42, stableId: stableId, viewType: viewType, error: error)
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
     }
     
@@ -48,53 +48,48 @@ class InputDataDataSelectorRowItem: GeneralRowItem, InputDataRowDataValue {
 }
 
 
-final class InputDataDataSelectorRowView : GeneralRowView {
+final class InputDataDataSelectorRowView : GeneralContainableRowView {
     private let placeholderTextView = TextView()
     private let dataTextView = TextView()
+    private let overlay = OverlayControl()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(placeholderTextView)
         addSubview(dataTextView)
+        addSubview(overlay)
         placeholderTextView.userInteractionEnabled = false
         placeholderTextView.isSelectable = false
         dataTextView.userInteractionEnabled = false
         dataTextView.isSelectable = false
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-        if event.clickCount == 1 {
-            guard let item = item as? InputDataDataSelectorRowItem else {return}
+        
+        overlay.set(handler: { [weak self] _ in
+            guard let item = self?.item as? InputDataDataSelectorRowItem else {return}
             showModal(with: ValuesSelectorModalController(values: item.values, selected: item.values.first(where: {$0.value == item.value}), title: item.placeholderLayout.attributedString.string, onComplete: { [weak item] newValue in
                 item?._value = newValue.value
                 item?.redraw()
             }), for: mainWindow)
-        }
+        }, for: .Click)
     }
     
     override func shakeView() {
         dataTextView.shake()
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-        guard let item = item as? InputDataDataSelectorRowItem else {return}
-        
-        ctx.setFillColor(theme.colors.border.cgColor)
-        ctx.fill(NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.left - item.inset.right, .borderSize))
-    }
     
     override func layout() {
         super.layout()
         guard let item = item as? InputDataDataSelectorRowItem else {return}
-        placeholderTextView.setFrameOrigin(item.inset.left, 14)
+        placeholderTextView.setFrameOrigin(item.viewType.innerInset.left, 14)
         
-        dataTextView.layout?.measure(width: frame.width - item.inset.left - item.inset.right - 106)
+        dataTextView.layout?.measure(width: frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - 104)
         dataTextView.update(dataTextView.layout)
-        dataTextView.setFrameOrigin(item.inset.left + 106, 14)
+        dataTextView.setFrameOrigin(item.viewType.innerInset.left + 104, 14)
+        
+        overlay.frame = containerView.bounds
     }
     
     override func updateColors() {
+        super.updateColors()
         placeholderTextView.backgroundColor = theme.colors.background
     }
     

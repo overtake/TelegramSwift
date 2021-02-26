@@ -46,7 +46,7 @@ func template(context: AccountContext) -> InputDataController {
 
     let arguments = Arguments(context: context)
     
-    let signal = statePromise.get() |> map { state in
+    let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
@@ -59,4 +59,25 @@ func template(context: AccountContext) -> InputDataController {
     return controller
     
 }
+
+
+/*
+ let modalInteractions = ModalInteractions(acceptTitle: "PAY", accept: { [weak controller] in
+     _ = controller?.returnKeyAction()
+ }, drawBorder: true, height: 50, singleButton: true)
+ 
+ let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+ 
+ controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+     modalController?.close()
+ })
+ 
+ close = { [weak modalController] in
+     modalController?.modal?.close()
+ }
+ 
+ return modalController
+ */
+
+
 

@@ -18,7 +18,13 @@
 		2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */; };
 		2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2764A5AC25DFBB4300F9A20D /* police.tgs */; };
 		2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */; };
+		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
+		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
+		278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */; };
+		278FA2E925E8C36A00280629 /* PaymentsPaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */; };
+		278FA43825E8D5CD00280629 /* Stripe.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278FA43725E8D5CD00280629 /* Stripe.framework */; };
+		279A1E0D25E90D13007D48E7 /* PaymentWebInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
@@ -35,6 +41,9 @@
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
 		27F023D425A5C19F008F1C81 /* DesktopCapturerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */; };
+		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
+		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
+		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -1028,7 +1037,13 @@
 		2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailsController.swift; sourceTree = "<group>"; };
 		2764A5AC25DFBB4300F9A20D /* police.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = police.tgs; sourceTree = "<group>"; };
 		2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoDeleteContextMenuView.swift; sourceTree = "<group>"; };
+		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
+		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
+		278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingMethodController.swift; sourceTree = "<group>"; };
+		278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsPaymentMethodController.swift; sourceTree = "<group>"; };
+		278FA43725E8D5CD00280629 /* Stripe.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Stripe.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentWebInteractionController.swift; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -1045,6 +1060,9 @@
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
 		27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturerWindow.swift; sourceTree = "<group>"; };
+		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
+		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
+		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -2024,6 +2042,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				278FA43825E8D5CD00280629 /* Stripe.framework in Frameworks */,
 				2756EF1D25C463F10062303D /* LegacyReachability.framework in Frameworks */,
 				27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */,
 				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
@@ -2091,6 +2110,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2775101F25E790E7003D58D1 /* payments */ = {
+			isa = PBXGroup;
+			children = (
+				2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */,
+				2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */,
+				27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */,
+				27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */,
+				278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */,
+				278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */,
+				279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */,
+			);
+			name = payments;
+			sourceTree = "<group>";
+		};
 		27B15D2D259B28C700C7F280 /* capturer */ = {
 			isa = PBXGroup;
 			children = (
@@ -2513,6 +2546,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				2775101F25E790E7003D58D1 /* payments */,
 				A7E83210255E8A6F0095A167 /* hover */,
 				A72D7AE723C4718C005BAC59 /* polls */,
 				9F13EE152100AFDC00562E53 /* contacts */,
@@ -3982,6 +4016,7 @@
 				A7D2822E236C549B0000A9BF /* SyncCoreExtension.swift */,
 				A7D28236236C5B2C0000A9BF /* PhoneNumberUtils.swift */,
 				D00B318625729F0500D62056 /* DataItem.swift */,
+				27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -4386,6 +4421,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				278FA43725E8D5CD00280629 /* Stripe.framework */,
 				2756EF1C25C463F10062303D /* LegacyReachability.framework */,
 				273F9C0A257BC486004EC51B /* HotKey.framework */,
 				D00747002577A7D40000DF74 /* DDHotKey.framework */,
@@ -5163,6 +5199,7 @@
 				C209C3731F262537009231FE /* emoji_suggestions_data.cpp in Sources */,
 				D0BEB98F21628C250055B718 /* EditImageModalController.swift in Sources */,
 				C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */,
+				2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */,
 				C21B24651EDB115700FC6CDA /* StringPluralization.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
 				9F77B3982211979B003B65B8 /* AutoplayPreferences.swift in Sources */,
@@ -5174,6 +5211,7 @@
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
+				27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */,
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
 				D09D9DF4229C289F00378796 /* GZip.m in Sources */,
 				D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */,
@@ -5259,6 +5297,7 @@
 				D014193E22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift in Sources */,
 				C29A65011E0837A70071BCEF /* XCDYouTubeVideoWebpage.m in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
+				278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */,
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
 				9FFAE4FD205A8C89000C028E /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
@@ -5461,11 +5500,13 @@
 				C253E23C1DE4D4080022A29F /* ChatInterfaceStateContextQueries.swift in Sources */,
 				D0E7BD7D256BC9460068644D /* GroupCallParticipantRowItem.swift in Sources */,
 				C253E22E1DE33A7C0022A29F /* ChatMusicRowItem.swift in Sources */,
+				27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */,
 				D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */,
 				9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */,
 				27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
 				C219E1FC1D8D35FA0042F0C8 /* ChatMediaItem.swift in Sources */,
+				278FA2E925E8C36A00280629 /* PaymentsPaymentMethodController.swift in Sources */,
 				D0E82E002500F10E00E09A20 /* MergedAvatarsView.swift in Sources */,
 				C234D4121EEDE6990017DC25 /* LoadingTableItem.swift in Sources */,
 				9F1962D82101458C00FFF048 /* VCardLocationRowItem.swift in Sources */,
@@ -5489,14 +5530,17 @@
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,
 				C2E8BA0A1FB5F15900DEB5E2 /* GalleryThumbsControlView.swift in Sources */,
 				C2DF47E21DE846B8003AA6C0 /* ChatMusicContentView.swift in Sources */,
+				279A1E0D25E90D13007D48E7 /* PaymentWebInteractionController.swift in Sources */,
 				C2271F381DB4D0490045E719 /* EmojiViewController.swift in Sources */,
 				D071E8A421496F38001B6024 /* ChatListTouchBar.swift in Sources */,
+				2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */,
 				A7C7215723FD45D300CE3F75 /* SaveModalController.swift in Sources */,
 				9F147F6F223014EB00D71BD1 /* PasscodeControllers.swift in Sources */,
 				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				D001E978243B4639009025F9 /* LeftSidebarFolderItem.swift in Sources */,
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
 				D076F8872296CAB2004F895A /* ChannelDisscussionGroup.swift in Sources */,
+				27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */,
 				A7F2830A2395570400742C20 /* SearchSettingsController.swift in Sources */,
 				C253E2341DE3776A0022A29F /* InlineAudioPlayerView.swift in Sources */,
 				C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */,
