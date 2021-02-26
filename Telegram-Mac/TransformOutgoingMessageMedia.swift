@@ -69,7 +69,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                             }
                         }
                         
-                        try? FileManager.default.linkItem(atPath: data.0.path, toPath: thumbedFile)
+                        try? FileManager.default.createSymbolicLink(atPath: data.0.path, withDestinationPath: thumbedFile)
                         
                         if file.mimeType.hasPrefix("image/") {
                             
