@@ -473,7 +473,12 @@ final class ChatInteraction : InterfaceObserver  {
                             
                         }
                     case .payment:
-                        showModal(with: PaymentsCheckoutController(context: strongSelf.context, message: keyboardMessage), for: strongSelf.context.window)
+                        let receiptMessageId = (keyboardMessage.media.first as? TelegramMediaInvoice)?.receiptMessageId
+                        if let receiptMessageId = receiptMessageId {
+                            showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, message: keyboardMessage), for: strongSelf.context.window)
+                        } else {
+                            showModal(with: PaymentsCheckoutController(context: strongSelf.context, message: keyboardMessage), for: strongSelf.context.window)
+                        }
                     case let .urlAuth(url, buttonId):
                         let context = strongSelf.context
                         _ = showModalProgress(signal: requestMessageActionUrlAuth(account: strongSelf.context.account, messageId: keyboardMessage.id, buttonId: buttonId), for: context.window).start(next: { result in

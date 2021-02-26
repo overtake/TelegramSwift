@@ -144,7 +144,12 @@ class ChatInvoiceItem: ChatRowItem {
         }
         
         textLayout.measure(width: maxWidth)
-        contentSize.height += textLayout.layoutSize.height + defaultContentTopOffset
+        if arguments == nil {
+            contentSize.width = textLayout.layoutSize.width
+        } else {
+            contentSize.height += defaultContentTopOffset
+        }
+        contentSize.height += textLayout.layoutSize.height
         
         return contentSize
     }
@@ -187,7 +192,7 @@ class ChatInvoiceView : ChatRowView {
     override func layout() {
         super.layout()
         if let item = item as? ChatInvoiceItem {
-            textView.setFrameOrigin(NSMakePoint(item.elementsContentInset, imageView.frame.maxY + item.defaultContentInnerInset))
+            textView.setFrameOrigin(NSMakePoint(item.elementsContentInset, (item.arguments == nil ? 0 : imageView.frame.maxY + item.defaultContentInnerInset)))
         }
     }
     

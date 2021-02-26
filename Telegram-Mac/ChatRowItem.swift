@@ -1806,9 +1806,14 @@ class ChatRowItem: TableRowItem {
 //                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
 //                }
                 
-                
+                let paid: Bool
+                if let invoice = message.media.first as? TelegramMediaInvoice {
+                    paid = invoice.receiptMessageId != nil
+                } else {
+                    paid = false
+                }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
-                    replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message))
+                    replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
                 }
 //                else if let attribute = attribute as? ReactionsMessageAttribute {
 //                    var buttons:[ReplyMarkupButton] = []

@@ -66,16 +66,16 @@ private struct State : Equatable {
             if address.address2.isEmpty {
                 return _id_checkout_info_address2
             }
-            if address.city.isEmpty {
+            if address.city.count < 2 {
                 return _id_checkout_info_city
             }
-            if address.state.isEmpty {
+            if address.state.count < 2 {
                 return _id_checkout_info_state
             }
             if address.country.isEmpty {
                 return _id_checkout_info_country
             }
-            if address.postcode.isEmpty {
+            if address.postcode.count < 2 {
                 return _id_checkout_info_postcode
             }
         }
@@ -116,16 +116,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutInfoShippingInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address1), error: nil, identifier: _id_checkout_info_address1, mode: .plain, data: .init(viewType: .firstItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoAddress1), inputPlaceholder: L10n.checkoutInfoShippingInfoAddress1Placeholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address1), error: nil, identifier: _id_checkout_info_address1, mode: .plain, data: .init(viewType: .firstItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoAddress1), inputPlaceholder: L10n.checkoutInfoShippingInfoAddress1Placeholder, filter: { $0 }, limit: 64))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address2), error: nil, identifier: _id_checkout_info_address2, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoAddress2), inputPlaceholder: L10n.checkoutInfoShippingInfoAddress2Placeholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address2), error: nil, identifier: _id_checkout_info_address2, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoAddress2), inputPlaceholder: L10n.checkoutInfoShippingInfoAddress2Placeholder, filter: { $0 }, limit: 64))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.city), error: nil, identifier: _id_checkout_info_city, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoCity), inputPlaceholder: L10n.checkoutInfoShippingInfoCityPlaceholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.city), error: nil, identifier: _id_checkout_info_city, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoCity), inputPlaceholder: L10n.checkoutInfoShippingInfoCityPlaceholder, filter: { $0 }, limit: 64))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.state), error: nil, identifier: _id_checkout_info_state, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoState), inputPlaceholder: L10n.checkoutInfoShippingInfoStatePlaceholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.state), error: nil, identifier: _id_checkout_info_state, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoState), inputPlaceholder: L10n.checkoutInfoShippingInfoStatePlaceholder, filter: { $0 }, limit: 64))
         index += 1
         
         
@@ -145,7 +145,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.postcode), error: nil, identifier: _id_checkout_info_postcode, mode: .plain, data: .init(viewType: .lastItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoPostcode), inputPlaceholder: L10n.checkoutInfoShippingInfoPostcodePlaceholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.postcode), error: nil, identifier: _id_checkout_info_postcode, mode: .plain, data: .init(viewType: .lastItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoPostcode), inputPlaceholder: L10n.checkoutInfoShippingInfoPostcodePlaceholder, filter: { $0 }, limit: 12))
         index += 1
 
     }

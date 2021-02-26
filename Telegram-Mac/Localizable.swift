@@ -49,6 +49,8 @@ internal final class L10n {
   internal static var yourCardsNumberIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_number_is_invalid") }
   /// You've entered an invalid security code.
   internal static var yourCardsSecurityCodeIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_security_code_is_invalid") }
+  /// You've entered an invalid zip code.
+  internal static var yourCardsZipCodeIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_zip_code_is_invalid") }
   /// Check for Updates
   internal static var _1000Title: String  { return L10n.tr("Localizable", "1000.title") }
   /// Telegram
@@ -3125,8 +3127,6 @@ internal final class L10n {
   internal static func checkoutPayPrice(_ p1: String) -> String {
     return L10n.tr("Localizable", "Checkout.PayPrice", p1)
   }
-  /// Pay with Touch ID
-  internal static var checkoutPayWithTouchId: String  { return L10n.tr("Localizable", "Checkout.PayWithTouchId") }
   /// Phone
   internal static var checkoutPhone: String  { return L10n.tr("Localizable", "Checkout.Phone") }
   /// PRICE
@@ -3134,10 +3134,6 @@ internal final class L10n {
   /// Would you like to save your password for %@?
   internal static func checkoutSavePasswordTimeout(_ p1: String) -> String {
     return L10n.tr("Localizable", "Checkout.SavePasswordTimeout", p1)
-  }
-  /// Would you like to save your password for %@ and use Touch ID instead?
-  internal static func checkoutSavePasswordTimeoutAndTouchId(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Checkout.SavePasswordTimeoutAndTouchId", p1)
   }
   /// Shipping Information
   internal static var checkoutShippingAddress: String  { return L10n.tr("Localizable", "Checkout.ShippingAddress") }

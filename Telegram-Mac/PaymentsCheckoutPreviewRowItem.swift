@@ -49,6 +49,7 @@ final class PaymentsCheckoutPreviewRowItem : GeneralRowItem {
             height = max(fitted.height, textLayout.layoutSize.height)
         } else {
             textLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
+            height += textLayout.layoutSize.height
         }
         contentHeight = height
         return true

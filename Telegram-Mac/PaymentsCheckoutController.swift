@@ -15,6 +15,7 @@ import SyncCore
 import Postbox
 
 func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, PaymentsPaymentMethodAdditionalFields)? {
+        
     if let paymentForm = paymentForm, let nativeProvider = paymentForm.nativeProvider, nativeProvider.name == "stripe" {
                         
         guard let paramsData = nativeProvider.params.data(using: .utf8) else {
@@ -366,6 +367,14 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                     return current
                 }
             }), for: context.window)
+        } else if let paymentForm = stateValue.with({ $0.form }) {
+            showModal(with: PaymentWebInteractionController(context: context, url: paymentForm.url, intent: .addPaymentMethod({ token in
+                updateState { current in
+                    var current = current
+                    current.paymentMethod = .webToken(token)
+                    return current
+                }
+            })), for: context.window)
         }
     }, pay: {
         guard let paymentMethod = stateValue.with ({ $0.paymentMethod }) else {
@@ -411,6 +420,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                 text = L10n.checkoutErrorPrecheckoutFailed
             }
             alert(for: context.window, info: text)
+            close?()
         })
     })
     
