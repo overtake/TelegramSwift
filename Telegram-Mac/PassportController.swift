@@ -1912,7 +1912,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, viewType: .legacy, values: countries))
         index += 1
         
         entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressPostcodePlaceholder), inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { text in
@@ -2151,7 +2151,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         
         let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: L10n.secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: L10n.secureIdGenderFemale, value: .gender(.female))]
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, values: genders))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, viewType: .legacy, values: genders))
         index += 1
         
         entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.birthday ?? personalDetails?.birthdate.inputDataValue ?? .date(nil, nil, nil), error: pdErrors?[_id_birthday], identifier: _id_birthday, placeholder: L10n.secureIdIdentityPlaceholderBirthday))
@@ -2168,12 +2168,12 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCitizenship, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCitizenship, viewType: .legacy, values: countries))
         index += 1
         
         let residence = state.detailsIntermediateState?.residence ?? .string(personalDetails?.residenceCountryCode)
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: residence, error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: L10n.secureIdIdentityPlaceholderResidence, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: residence, error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: L10n.secureIdIdentityPlaceholderResidence, viewType: .legacy, values: countries))
         index += 1
         
         if let _ = relative {

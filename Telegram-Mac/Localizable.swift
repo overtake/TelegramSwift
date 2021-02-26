@@ -7,8 +7,16 @@ import Foundation
 
 // swiftlint:disable identifier_name line_length type_body_length
 internal final class L10n {
+  /// %1$@ sent an invoice for %3$@ to the group %2$@
+  internal static func chatMessageInvoice(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "CHAT_MESSAGE_INVOICE", p1, p2, p3)
+  }
   /// Default
   internal static var defaultSoundName: String  { return L10n.tr("Localizable", "DefaultSoundName") }
+  /// %1$@ sent you an invoice for %2$@
+  internal static func messageInvoice(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "MESSAGE_INVOICE", p1, p2)
+  }
   /// None
   internal static var notificationSettingsToneNone: String  { return L10n.tr("Localizable", "NotificationSettingsToneNone") }
   /// Incorrect password
@@ -19,12 +27,28 @@ internal final class L10n {
   internal static var phoneCodeInvalid: String  { return L10n.tr("Localizable", "PHONE_CODE_INVALID") }
   /// Invalid phone number
   internal static var phoneNumberInvalid: String  { return L10n.tr("Localizable", "PHONE_NUMBER_INVALID") }
+  /// %1$@ pinned an invoice
+  internal static func pinnedInvoice(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PINNED_INVOICE", p1)
+  }
   /// Share Call Logs
   internal static var shareCallLogs: String  { return L10n.tr("Localizable", "ShareCallLogs") }
   /// An error occurred. Please try again later
   internal static var unknownError: String  { return L10n.tr("Localizable", "UnknownError") }
   /// You
   internal static var you: String  { return L10n.tr("Localizable", "You") }
+  /// Your card has expired.
+  internal static var yourCardHasExpired: String  { return L10n.tr("Localizable", "Your_card_has_expired") }
+  /// Your card was declined.
+  internal static var yourCardWasDeclined: String  { return L10n.tr("Localizable", "Your_card_was_declined") }
+  /// You've entered an invalid expiration month.
+  internal static var yourCardsExpirationMonthIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_expiration_month_is_invalid") }
+  /// You've entered an invalid expiration year.
+  internal static var yourCardsExpirationYearIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_expiration_year_is_invalid") }
+  /// You've entered an invalid card number.
+  internal static var yourCardsNumberIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_number_is_invalid") }
+  /// You've entered an invalid security code.
+  internal static var yourCardsSecurityCodeIsInvalid: String  { return L10n.tr("Localizable", "Your_cards_security_code_is_invalid") }
   /// Check for Updates
   internal static var _1000Title: String  { return L10n.tr("Localizable", "1000.title") }
   /// Telegram
@@ -3075,6 +3099,154 @@ internal final class L10n {
   internal static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default
   internal static var chatWallpaperEmpty: String  { return L10n.tr("Localizable", "ChatWallpaper.Empty") }
+  /// E-Mail
+  internal static var checkoutEmail: String  { return L10n.tr("Localizable", "Checkout.Email") }
+  /// Enter Password
+  internal static var checkoutEnterPassword: String  { return L10n.tr("Localizable", "Checkout.EnterPassword") }
+  /// An error occurred while processing your payment. Your card has not been billed.
+  internal static var checkoutErrorGeneric: String  { return L10n.tr("Localizable", "Checkout.ErrorGeneric") }
+  /// You have already paid for this item.
+  internal static var checkoutErrorInvoiceAlreadyPaid: String  { return L10n.tr("Localizable", "Checkout.ErrorInvoiceAlreadyPaid") }
+  /// Payment failed. Your card has not been billed.
+  internal static var checkoutErrorPaymentFailed: String  { return L10n.tr("Localizable", "Checkout.ErrorPaymentFailed") }
+  /// The bot couldn't process your payment. Your card has not been billed.
+  internal static var checkoutErrorPrecheckoutFailed: String  { return L10n.tr("Localizable", "Checkout.ErrorPrecheckoutFailed") }
+  /// This bot can't accept payments at the moment. Please try again later.
+  internal static var checkoutErrorProviderAccountInvalid: String  { return L10n.tr("Localizable", "Checkout.ErrorProviderAccountInvalid") }
+  /// This bot can't process payments at the moment. Please try again later.
+  internal static var checkoutErrorProviderAccountTimeout: String  { return L10n.tr("Localizable", "Checkout.ErrorProviderAccountTimeout") }
+  /// Name
+  internal static var checkoutName: String  { return L10n.tr("Localizable", "Checkout.Name") }
+  /// Payment Method
+  internal static var checkoutPaymentMethod: String  { return L10n.tr("Localizable", "Checkout.PaymentMethod") }
+  /// Pay
+  internal static var checkoutPayNone: String  { return L10n.tr("Localizable", "Checkout.PayNone") }
+  /// Pay %@
+  internal static func checkoutPayPrice(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Checkout.PayPrice", p1)
+  }
+  /// Pay with Touch ID
+  internal static var checkoutPayWithTouchId: String  { return L10n.tr("Localizable", "Checkout.PayWithTouchId") }
+  /// Phone
+  internal static var checkoutPhone: String  { return L10n.tr("Localizable", "Checkout.Phone") }
+  /// PRICE
+  internal static var checkoutPriceHeader: String  { return L10n.tr("Localizable", "Checkout.PriceHeader") }
+  /// Would you like to save your password for %@?
+  internal static func checkoutSavePasswordTimeout(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Checkout.SavePasswordTimeout", p1)
+  }
+  /// Would you like to save your password for %@ and use Touch ID instead?
+  internal static func checkoutSavePasswordTimeoutAndTouchId(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Checkout.SavePasswordTimeoutAndTouchId", p1)
+  }
+  /// Shipping Information
+  internal static var checkoutShippingAddress: String  { return L10n.tr("Localizable", "Checkout.ShippingAddress") }
+  /// Shipping Method
+  internal static var checkoutShippingMethod: String  { return L10n.tr("Localizable", "Checkout.ShippingMethod") }
+  /// Your payment have successfully proceeded!
+  internal static var checkoutSuccess: String  { return L10n.tr("Localizable", "Checkout.Success") }
+  /// Checkout
+  internal static var checkoutTitle: String  { return L10n.tr("Localizable", "Checkout.Title") }
+  /// Total
+  internal static var checkoutTotalAmount: String  { return L10n.tr("Localizable", "Checkout.TotalAmount") }
+  /// Total Paid
+  internal static var checkoutTotalPaidAmount: String  { return L10n.tr("Localizable", "Checkout.TotalPaidAmount") }
+  /// Cardholder Name
+  internal static var checkoutNewCardCardholderNamePlaceholder: String  { return L10n.tr("Localizable", "Checkout.NewCard.CardholderNamePlaceholder") }
+  /// CARDHOLDER
+  internal static var checkoutNewCardCardholderNameTitle: String  { return L10n.tr("Localizable", "Checkout.NewCard.CardholderNameTitle") }
+  /// PAYMENT CARD
+  internal static var checkoutNewCardPaymentCard: String  { return L10n.tr("Localizable", "Checkout.NewCard.PaymentCard") }
+  /// Zip Code
+  internal static var checkoutNewCardPostcodePlaceholder: String  { return L10n.tr("Localizable", "Checkout.NewCard.PostcodePlaceholder") }
+  /// BILLING ADDRESS
+  internal static var checkoutNewCardPostcodeTitle: String  { return L10n.tr("Localizable", "Checkout.NewCard.PostcodeTitle") }
+  /// Save Payment Information
+  internal static var checkoutNewCardSaveInfo: String  { return L10n.tr("Localizable", "Checkout.NewCard.SaveInfo") }
+  /// You can save your payment information for future use.\nPlease [turn on Two-Step Verification] to enable this.
+  internal static var checkoutNewCardSaveInfoEnableHelp: String  { return L10n.tr("Localizable", "Checkout.NewCard.SaveInfoEnableHelp") }
+  /// You can save your payment information for future use.
+  internal static var checkoutNewCardSaveInfoHelp: String  { return L10n.tr("Localizable", "Checkout.NewCard.SaveInfoHelp") }
+  /// New Card
+  internal static var checkoutNewCardTitle: String  { return L10n.tr("Localizable", "Checkout.NewCard.Title") }
+  /// Pay
+  internal static var checkoutPasswordEntryPay: String  { return L10n.tr("Localizable", "Checkout.PasswordEntry.Pay") }
+  /// Your card %@ is on file. To pay with this card, please enter your 2-Step-Verification password.
+  internal static func checkoutPasswordEntryText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Checkout.PasswordEntry.Text", p1)
+  }
+  /// Payment Confirmation
+  internal static var checkoutPasswordEntryTitle: String  { return L10n.tr("Localizable", "Checkout.PasswordEntry.Title") }
+  /// New Card...
+  internal static var checkoutPaymentMethodNew: String  { return L10n.tr("Localizable", "Checkout.PaymentMethod.New") }
+  /// Payment Method
+  internal static var checkoutPaymentMethodTitle: String  { return L10n.tr("Localizable", "Checkout.PaymentMethod.Title") }
+  /// Receipt
+  internal static var checkoutReceiptTitle: String  { return L10n.tr("Localizable", "Checkout.Receipt.Title") }
+  /// Shipping Method
+  internal static var checkoutShippingOptionTitle: String  { return L10n.tr("Localizable", "Checkout.ShippingOption.Title") }
+  /// Complete Payment
+  internal static var checkoutWebConfirmationTitle: String  { return L10n.tr("Localizable", "Checkout.WebConfirmation.Title") }
+  /// Please enter a valid city.
+  internal static var checkoutInfoErrorCityInvalid: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorCityInvalid") }
+  /// Please enter a valid e-mail address.
+  internal static var checkoutInfoErrorEmailInvalid: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorEmailInvalid") }
+  /// Please enter a valid name.
+  internal static var checkoutInfoErrorNameInvalid: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorNameInvalid") }
+  /// Please enter a valid phone number.
+  internal static var checkoutInfoErrorPhoneInvalid: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorPhoneInvalid") }
+  /// Please enter a valid postcode.
+  internal static var checkoutInfoErrorPostcodeInvalid: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorPostcodeInvalid") }
+  /// Shipping to the selected country is not available.
+  internal static var checkoutInfoErrorShippingNotAvailable: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorShippingNotAvailable") }
+  /// Please enter a valid state.
+  internal static var checkoutInfoErrorStateInvalid: String  { return L10n.tr("Localizable", "CheckoutInfo.ErrorStateInvalid") }
+  /// Pay
+  internal static var checkoutInfoPay: String  { return L10n.tr("Localizable", "CheckoutInfo.Pay") }
+  /// Email
+  internal static var checkoutInfoReceiverInfoEmail: String  { return L10n.tr("Localizable", "CheckoutInfo.ReceiverInfoEmail") }
+  /// Email
+  internal static var checkoutInfoReceiverInfoEmailPlaceholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ReceiverInfoEmailPlaceholder") }
+  /// Name
+  internal static var checkoutInfoReceiverInfoName: String  { return L10n.tr("Localizable", "CheckoutInfo.ReceiverInfoName") }
+  /// Name Surname
+  internal static var checkoutInfoReceiverInfoNamePlaceholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ReceiverInfoNamePlaceholder") }
+  /// Phone
+  internal static var checkoutInfoReceiverInfoPhone: String  { return L10n.tr("Localizable", "CheckoutInfo.ReceiverInfoPhone") }
+  /// RECEIVER
+  internal static var checkoutInfoReceiverInfoTitle: String  { return L10n.tr("Localizable", "CheckoutInfo.ReceiverInfoTitle") }
+  /// Save Info
+  internal static var checkoutInfoSaveInfo: String  { return L10n.tr("Localizable", "CheckoutInfo.SaveInfo") }
+  /// You can save your shipping information for future use.
+  internal static var checkoutInfoSaveInfoHelp: String  { return L10n.tr("Localizable", "CheckoutInfo.SaveInfoHelp") }
+  /// Address 1
+  internal static var checkoutInfoShippingInfoAddress1: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoAddress1") }
+  /// Address
+  internal static var checkoutInfoShippingInfoAddress1Placeholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoAddress1Placeholder") }
+  /// Address 2
+  internal static var checkoutInfoShippingInfoAddress2: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoAddress2") }
+  /// Address
+  internal static var checkoutInfoShippingInfoAddress2Placeholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoAddress2Placeholder") }
+  /// City
+  internal static var checkoutInfoShippingInfoCity: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoCity") }
+  /// City
+  internal static var checkoutInfoShippingInfoCityPlaceholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoCityPlaceholder") }
+  /// Country
+  internal static var checkoutInfoShippingInfoCountry: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoCountry") }
+  /// Country
+  internal static var checkoutInfoShippingInfoCountryPlaceholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoCountryPlaceholder") }
+  /// Postcode
+  internal static var checkoutInfoShippingInfoPostcode: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoPostcode") }
+  /// Postcode
+  internal static var checkoutInfoShippingInfoPostcodePlaceholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoPostcodePlaceholder") }
+  /// State
+  internal static var checkoutInfoShippingInfoState: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoState") }
+  /// State
+  internal static var checkoutInfoShippingInfoStatePlaceholder: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoStatePlaceholder") }
+  /// SHIPPING ADDRESS
+  internal static var checkoutInfoShippingInfoTitle: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoTitle") }
+  /// Shipping Information
+  internal static var checkoutInfoTitle: String  { return L10n.tr("Localizable", "CheckoutInfo.Title") }
   /// Create
   internal static var composeCreate: String  { return L10n.tr("Localizable", "Compose.Create") }
   /// Next
@@ -4601,6 +4773,16 @@ internal final class L10n {
   internal static var mediaSenderDiscardChangesOK: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.OK") }
   /// Are you sure you want to discard all changes?
   internal static var mediaSenderDiscardChangesText: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Text") }
+  /// INVOICE
+  internal static var messageInvoiceLabel: String  { return L10n.tr("Localizable", "Message.InvoiceLabel") }
+  /// Payment: %@
+  internal static func messagePaymentSent(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Message.PaymentSent", p1)
+  }
+  /// pinned an invoice
+  internal static var messagePinnedInvoice: String  { return L10n.tr("Localizable", "Message.PinnedInvoice") }
+  /// Show Receipt
+  internal static var messageReplyActionButtonShowReceipt: String  { return L10n.tr("Localizable", "Message.ReplyActionButtonShowReceipt") }
   /// %d
   internal static func messageAccessoryPanelForwardedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Message.AccessoryPanel.Forwarded_countable", p1)

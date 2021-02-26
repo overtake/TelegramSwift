@@ -35,7 +35,7 @@
 #include <Availability.h>
 
 #if TARGET_OS_IPHONE
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 @interface DemoCrashAppDelegate : NSObject <UIApplicationDelegate> @end
 @implementation DemoCrashAppDelegate
 - (BOOL) application: (UIApplication *) application didFinishLaunchingWithOptions: (NSDictionary *) launchOptions {

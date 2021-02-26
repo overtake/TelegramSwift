@@ -367,6 +367,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var ignoreRightBarHandler: Bool = false
     
     var contextOject: Any?
+    var didAppear: ((InputDataController)->Void)?
     
     var _abolishWhenNavigationSame: Bool = false
 
@@ -709,6 +710,8 @@ class InputDataController: GenericViewController<InputDataView> {
     override func viewDidAppear(_ animated: Bool) {
         _ = self.window?.makeFirstResponder(nil)
         super.viewDidAppear(animated)
+        
+        didAppear?(self)
         
         window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}

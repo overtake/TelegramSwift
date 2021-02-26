@@ -473,7 +473,7 @@ final class ChatInteraction : InterfaceObserver  {
                             
                         }
                     case .payment:
-                        alert(for: strongSelf.context.window, info: L10n.paymentsUnsupported)
+                        showModal(with: PaymentsCheckoutController(context: strongSelf.context, message: keyboardMessage), for: strongSelf.context.window)
                     case let .urlAuth(url, buttonId):
                         let context = strongSelf.context
                         _ = showModalProgress(signal: requestMessageActionUrlAuth(account: strongSelf.context.account, messageId: keyboardMessage.id, buttonId: buttonId), for: context.window).start(next: { result in

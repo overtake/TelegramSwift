@@ -329,7 +329,7 @@ enum InputDataEntry : Identifiable, Comparable {
     case input(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, mode: InputDataInputMode, data: InputDataRowData, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, filter:(String)->String, limit: Int32)
     case general(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, data: InputDataGeneralData)
     case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String)
-    case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, values:[ValuesSelectorValue<InputDataValue>])
+    case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, viewType: GeneralViewType, values:[ValuesSelectorValue<InputDataValue>])
     case dataSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, description: String?, icon: CGImage?, action:()->Void)
     case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, item:(NSSize, InputDataEntryId)->TableRowItem)
     case search(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, update:(SearchState)->Void)
@@ -344,7 +344,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return .input(identifier)
         case let .general(_, _, _, _, identifier, _):
             return .general(identifier)
-        case let .selector(_, _, _, _, identifier, _, _):
+        case let .selector(_, _, _, _, identifier, _, _, _):
             return .selector(identifier)
         case let .dataSelector(_, _, _, _, identifier, _, _, _, _):
             return .dataSelector(identifier)
@@ -369,7 +369,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .general(_, index, _, _, _, _):
             return index
-        case let .selector(_, index, _, _, _, _, _):
+        case let .selector(_, index, _, _, _, _, _, _):
             return index
         case let .dateSelector(_, index, _, _, _, _):
             return index
@@ -392,7 +392,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .input(index, _, _, _, _, _, _, _, _, _, _):
             return index
-        case let .selector(index, _, _, _, _, _, _):
+        case let .selector(index, _, _, _, _, _, _, _):
             return index
         case let .general(index, _, _, _, _, _):
             return index
@@ -435,8 +435,8 @@ enum InputDataEntry : Identifiable, Comparable {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize)
         case let .custom(_, _, _, _, _, item):
             return item(initialSize, stableId)
-        case let .selector(_, _, value, error, _, placeholder, values):
-            return InputDataDataSelectorRowItem(initialSize, stableId: stableId, value: value, error: error, placeholder: placeholder, updated: arguments.dataUpdated, values: values)
+        case let .selector(_, _, value, error, _, placeholder, viewType, values):
+            return InputDataDataSelectorRowItem(initialSize, stableId: stableId, value: value, error: error, placeholder: placeholder, viewType: viewType, updated: arguments.dataUpdated, values: values)
         case let .dataSelector(_, _, _, error, _, placeholder, description, icon, action):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, icon: icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), description: description, type: .none, action: action, error: error)
         case let .general(_, _, value, error, identifier, data):
@@ -485,8 +485,8 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
         } else {
             return false
         }
-    case let .selector(sectionId, index, lhsValue, lhsError, identifier, placeholder, lhsValues):
-        if case .selector(sectionId, index, let rhsValue, let rhsError, identifier, placeholder, let rhsValues) = rhs {
+    case let .selector(sectionId, index, lhsValue, lhsError, identifier, placeholder, viewType, lhsValues):
+        if case .selector(sectionId, index, let rhsValue, let rhsError, identifier, placeholder, viewType, let rhsValues) = rhs {
             return lhsValues == rhsValues && lhsValue == rhsValue && lhsError == rhsError
         } else {
             return false
