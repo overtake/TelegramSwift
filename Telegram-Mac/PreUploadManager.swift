@@ -21,7 +21,9 @@ class PreUploadManager {
     init(_ path: String, account: Account, id: Int64) {
         self.path = path
         self.id = id
-        account.messageMediaPreuploadManager.add(network: account.network, postbox: account.postbox, id: id, encrypt: false, tag: nil, source: resource.get())
+        account.messageMediaPreuploadManager.add(network: account.network, postbox: account.postbox, id: id, encrypt: false, tag: nil, source: resource.get(), onComplete: {
+            unlink(path)
+        })
     }
     
     

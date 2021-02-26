@@ -262,10 +262,9 @@ class Sender: NSObject {
                     }
                     
                     let resource: TelegramMediaResource
-                    if let id = container.id, let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
+                    if let id = container.id, let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                         resource = LocalFileMediaResource(fileId: id, size: fileSize(path), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
-                        unlink(path)
                     } else {
                         resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path))
                     }
@@ -276,10 +275,9 @@ class Sender: NSObject {
                     var attrs:[TelegramMediaFileAttribute] = []
                     
                     let resource: TelegramMediaResource
-                    if let id = container.id, let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
+                    if let id = container.id, let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                         resource = LocalFileMediaResource(fileId: id, size: fileSize(path), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
-                        unlink(path)
                     } else {
                         resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: true, size: fs(path))
                     }
