@@ -62,10 +62,18 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
         }
     }
     
-    override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.modalCancel, accept: { [weak self] in
+
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }, height: 50, singleButton: true)
+        }), center: ModalHeaderData(title: defaultBarTitle), right: nil)
+    }
+    override var dynamicSize: Bool {
+        return true
+    }
+    
+    override func measure(size: NSSize) {
+        self.modal?.resize(with:NSMakeSize(min(max(380, size.width - 20), 500), size.height - 70), animated: false)
     }
     
     override func initializer() -> NSView {

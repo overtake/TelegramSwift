@@ -264,7 +264,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         if state.billingAddress.zipCode != nil {
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.billingAddress.zipCode), error: nil, identifier: _id_card_zip_code, mode: .plain, data: .init(viewType: state.billingAddress.country != nil ? .lastItem : .singleItem), placeholder: InputDataInputPlaceholder(L10n.checkoutNewCardPostcodePlaceholder), inputPlaceholder: L10n.checkoutNewCardPostcodePlaceholder, filter: { $0 }, limit: 255))
+            let type = STPPostalCodeValidator.postalCodeType(forCountryCode: state.billingAddress.country)
+            
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.billingAddress.zipCode), error: state.billingError, identifier: _id_card_zip_code, mode: .plain, data: .init(viewType: state.billingAddress.country != nil ? .lastItem : .singleItem), placeholder: InputDataInputPlaceholder(L10n.checkoutNewCardPostcodePlaceholder), inputPlaceholder: L10n.checkoutNewCardPostcodePlaceholder, filter: { value in
+                switch type {
+                case .countryPostalCodeTypeAlphanumeric:
+                    return value.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+                case .countryPostalCodeTypeNumericOnly:
+                    return value.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890"))
+                case .countryPostalCodeTypeNotRequired:
+                    return value
+                @unknown default:
+                    return value
+                }
+            }, limit: 12))
             index += 1
         }
         
@@ -352,6 +365,9 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+        updateState { _ in
+            State(card: .init(number: "", date: "", cvc: ""), holderName: "", billingAddress: .init(country: "", zipCode: ""), saveInfo: false)
+        }
     }
     
     controller.updateDatas = { data in
@@ -369,12 +385,14 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
             current.holderName = data[_id_card_holder_name]?.stringValue
             current.billingAddress.country = data[_id_card_country]?.stringValue
             current.billingAddress.zipCode = data[_id_card_zip_code]?.stringValue
+            
 
             let normalized = STPCardValidator.sanitizedNumericString(for: current.card.number)
             let brand = STPCardValidator.brand(forNumber: normalized)
             let maxCardNumberLength = STPCardValidator.maxLength(for: brand)
             let maxCVCLength = STPCardValidator.maxCVCLength(for: brand)
 
+            
             
             var cardError: InputDataValueError? = nil
             
@@ -402,7 +420,6 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                         cardError = nil
                     }
                 }
-                
             }
             
             if current.card.cvc.length == maxCVCLength && cardError == nil {
