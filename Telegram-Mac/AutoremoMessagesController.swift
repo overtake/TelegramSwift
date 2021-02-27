@@ -51,21 +51,21 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: L10n.chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
         index += 1
 
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_sticker, equatable: nil, item: { initialSize, stableId in
             return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .init())
         }))
         index += 1
 
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
     }
 
 
-    if state.peer.peer.canManageDestructTimer {
+    if state.peer.peer.canManageDestructTimer && state.peer.peer.id != arguments.context.peerId {
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+        
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
