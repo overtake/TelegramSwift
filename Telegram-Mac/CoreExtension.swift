@@ -3288,7 +3288,7 @@ extension CachedPeerAutoremoveTimeout {
 
 
 func clearHistory(context: AccountContext, peer: Peer) {
-    if peer.canClearHistory && peer.canManageDestructTimer {
+    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) {
         showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     } else if peer.canClearHistory {
         var thridTitle: String? = nil

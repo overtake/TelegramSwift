@@ -4713,7 +4713,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }, theme.icons.scheduledInputAction))
                                 }
                                 
-                                if peer.canClearHistory || peer.canManageDestructTimer {
+                                if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
                                     items.append(SPopoverItem(L10n.chatContextClearHistory, {
                                         clearHistory(context: context, peer: peer)
                                     }, theme.icons.chatActionClearHistory))
