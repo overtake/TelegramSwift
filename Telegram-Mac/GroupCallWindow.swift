@@ -91,6 +91,7 @@ struct GroupCallTheme {
                                                underSelectedColor: NSColor(rgb: 0xffffff),
                                                accentSelectColor: GroupCallTheme.blueStatusColor.darker(),
                                                redColor: GroupCallTheme.speakLockedColor,
+                                               indicatorColor: NSColor(rgb: 0xffffff),
                                                appearance: darkPalette.appearance,
                                                switchAppearance: switchAppearance)
         

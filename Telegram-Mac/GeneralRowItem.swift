@@ -240,7 +240,7 @@ class GeneralRowItem: TableRowItem {
         let underSelectedColor: NSColor
         let accentSelectColor: NSColor
         let redColor: NSColor
-        
+        let indicatorColor: NSColor
         let appearance: NSAppearance
         
         let switchAppearance: SwitchViewAppearance?
@@ -256,6 +256,7 @@ class GeneralRowItem: TableRowItem {
              underSelectedColor: NSColor = presentation.colors.underSelectedColor,
              accentSelectColor: NSColor = presentation.colors.accentSelect,
              redColor: NSColor = presentation.colors.redUI,
+             indicatorColor: NSColor = presentation.colors.indicatorColor,
              appearance: NSAppearance = presentation.colors.appearance,
              switchAppearance: SwitchViewAppearance? = nil) {
             
@@ -271,6 +272,7 @@ class GeneralRowItem: TableRowItem {
             self.underSelectedColor = underSelectedColor
             self.redColor = redColor
             self.accentSelectColor = accentSelectColor
+            self.indicatorColor = indicatorColor
             self.appearance = appearance
             self.switchAppearance = switchAppearance
         }

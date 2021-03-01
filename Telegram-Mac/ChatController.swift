@@ -2257,7 +2257,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     
                                     if result[index] == .selected {
-                                        signals.append(reportSupergroupPeer(account: context.account, peerId: peerId, memberId: memberId, messageIds: messageIds))
+                                        signals.append(reportPeerMessages(account: context.account, messageIds: messageIds, reason: .spam, message: ""))
                                     }
                                     index += 1
 
@@ -3118,7 +3118,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.joinChannel = { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: joinChannel(account: context.account, peerId: strongSelf.chatInteraction.peerId) |> deliverOnMainQueue, for: window).start(error: { error in
+                _ = showModalProgress(signal: joinChannel(account: context.account, peerId: strongSelf.chatInteraction.peerId, hash: nil) |> deliverOnMainQueue, for: window).start(error: { error in
                     let text: String
                     switch error {
                     case .generic:
@@ -3144,7 +3144,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 currentActiveCall = activeCall
             } 
             if let activeCall = currentActiveCall {
-                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: activeCall), for: context.window).start(next: { result in
+                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: nil, initialCall: activeCall), for: context.window).start(next: { result in
                     switch result {
                     case let .success(callContext), let .samePeer(callContext):
                         applyGroupCallResult(context.sharedContext, callContext)

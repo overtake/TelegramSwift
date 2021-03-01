@@ -157,7 +157,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let canMakeTransformations: Bool
     fileprivate let pasteFilter:((String)->(Bool, String))?
     private let maxBlockWidth: CGFloat?
-    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32, customTheme: GeneralRowItem.Theme? = nil) {
         self.filter = filter
         self.limit = limit
         self.updated = updated
@@ -180,7 +180,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
         self.mode = mode
     
-        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error, customTheme: customTheme)
         
        
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
@@ -686,23 +686,58 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
 //    }
     
     override var backdorColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.backgroundColor
+        }
         return theme.colors.background
+    }
+    
+    var textColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.textColor
+        }
+        return theme.colors.text
+    }
+    var linkColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.accentColor
+        }
+        return theme.colors.accent
+    }
+    var grayText: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.grayTextColor
+        }
+        return theme.colors.grayText
+    }
+    var borderColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.borderColor
+        }
+        return theme.colors.border
+    }
+    
+    var indicatorColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.indicatorColor
+        }
+        return theme.colors.indicatorColor
     }
     
     override func updateColors() {
         placeholderTextView.backgroundColor = backdorColor
         textView.cursorColor = theme.colors.indicatorColor
         textView.textFont = .normal(.text)
-        textView.textColor = theme.colors.text
-        textView.linkColor = theme.colors.link
+        textView.textColor = textColor
+        textView.linkColor = linkColor
 
         textView.setBackgroundColor(backdorColor)
         secureField.font = .normal(13)
         secureField.backgroundColor = backdorColor
-        secureField.textColor = theme.colors.text
+        secureField.textColor = textColor
         separator.backgroundColor = theme.colors.border
         containerView.backgroundColor = backdorColor
-        loadingView?.progressColor = theme.colors.grayText
+        loadingView?.progressColor = grayText
         guard let item = item as? InputDataRowItem else {
             return
         }

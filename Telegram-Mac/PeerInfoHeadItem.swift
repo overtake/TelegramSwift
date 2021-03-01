@@ -308,7 +308,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
-        
+        if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
+            }
+        }
         if let address = peer.addressName, !address.isEmpty {
             items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
         }
