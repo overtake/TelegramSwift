@@ -258,9 +258,10 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self._type = type
         self.control = control
         
+        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(300, 300))
       //  let difference = NSMakeSize(item.notFittedSize.width - item.sizeValue.width, item.notFittedSize.height - item.sizeValue.height)
-        
-        let newRect = NSMakeRect(origin.x, origin.y, item.notFittedSize.aspectFitted(control.view.frame.size).width, item.notFittedSize.aspectFitted(control.view.frame.size).height)
+        let size = item.notFittedSize.aspectFilled(NSMakeSize(300, 300)).aspectFilled(minSize)
+        let newRect = NSMakeRect(origin.x, origin.y, size.width, size.height)
         self.rect = newRect //NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.item = item
@@ -271,7 +272,10 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
 
         
-        self.contentView = PictureInpictureView.init(frame: bounds, window: _window)
+        let view = PictureInpictureView(frame: bounds, window: _window)
+        self.contentView = view
+        
+        view.forceMouseDownCanMoveWindow = true
         
       //  self.contentView?.wantsLayer = true;
         self.contentView?.layer?.cornerRadius = 4;
@@ -329,6 +333,11 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             self._window.sendEvent(event)
             return event
         })
+        
+        eventGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .mouseEntered, .mouseExited, .leftMouseDown, .leftMouseUp], handler: { [weak self] event in
+                guard let `self` = self else {return}
+                self._window.sendEvent(event)
+            })
 
 
         if let message = item.entry.message {
@@ -452,9 +461,9 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         super.makeKeyAndOrderFront(sender)
         if let screen = NSScreen.main {
             let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
-            let convert_s = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
+            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), savedRect.height))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-            self.minSize = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
+            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
             
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             

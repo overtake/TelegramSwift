@@ -537,11 +537,12 @@ class SVideoView: NSView {
         let oldSize = mediaPlayer.frame.size
         mediaPlayer.frame = bounds
         mediaPlayer.updateLayout()
+        let previousIsCompact: Bool = self.controlsStyle.isCompact
         self.controlsStyle = self.controlsStyle.withUpdatedStyle(compact: frame.width < 300).withUpdatedHideRewind(hideRewind: frame.width < 400)
         controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), 94)
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus
-        if controls.frame.origin == .zero {
+        if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact {
             controls.centerX(y: frame.height - controls.frame.height - 24)
         } else if oldSize != frame.size {
             let dif = oldSize - frame.size
