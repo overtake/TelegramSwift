@@ -101,8 +101,8 @@ private final class Arguments {
     let openForm:(PaymentsShippingInfoFocus?)->Void
     let openShippingMethod:()->Void
     let openPaymentMethod:()->Void
-    let pay:()->Void
-    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping()->Void) {
+    let pay:(TemporaryTwoStepPasswordToken?)->Void
+    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void) {
         self.context = context
         self.openForm = openForm
         self.openShippingMethod = openShippingMethod
@@ -359,14 +359,31 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             }), for: context.window)
         }
     }, openPaymentMethod: {
-        if let value = parseRequestedPaymentMethod(paymentForm: stateValue.with { $0.form }) {
-            showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, completion: { method in
-                updateState { current in
-                    var current = current
-                    current.paymentMethod = method
-                    return current
-                }
-            }), for: context.window)
+        if let form = stateValue.with({ $0.form }), let value = parseRequestedPaymentMethod(paymentForm: form) {
+            
+            let addPayment:()->Void = {
+                showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, completion: { method in
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = method
+                        return current
+                    }
+                }), for: context.window)
+            }
+            
+            if let savedCredentials = form.savedCredentials {
+                showModal(with: PamentsSelectMethodController(context: context, cards: [savedCredentials], form: form, select: { selected in
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = .savedCredentials(selected)
+                        return current
+                    }
+                }, addNew: addPayment), for: context.window)
+               
+            } else {
+                addPayment()
+            }
+            
         } else if let paymentForm = stateValue.with({ $0.form }) {
             showModal(with: PaymentWebInteractionController(context: context, url: paymentForm.url, intent: .addPaymentMethod({ token in
                 updateState { current in
@@ -376,52 +393,84 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                 }
             })), for: context.window)
         }
-    }, pay: {
+    }, pay: { savedCredentialsToken in
         guard let paymentMethod = stateValue.with ({ $0.paymentMethod }) else {
             return
         }
-        
         let state = stateValue.with { $0 }
         
-        let credentials: BotPaymentCredentials
+        let pay:(BotPaymentCredentials)->Void = { credentials in
+            let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, credentials: credentials)
+            
+            _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
+                
+                let success:(Bool)->Void = { value in
+                    if value {
+                        close?()
+                    }
+                }
+                switch result {
+                case .done:
+                    success(true)
+                case let .externalVerificationRequired(url: url):
+                    showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .externalVerification(success)), for: context.window)
+                }
+            }, error: { error in
+                let text: String
+                switch error {
+                case .alreadyPaid:
+                    text = L10n.checkoutErrorInvoiceAlreadyPaid
+                case .generic:
+                    text = L10n.unknownError
+                case .paymentFailed:
+                    text = L10n.checkoutErrorPaymentFailed
+                case .precheckoutFailed:
+                    text = L10n.checkoutErrorPrecheckoutFailed
+                }
+                alert(for: context.window, info: text)
+                close?()
+            })
+        }
+        
         switch paymentMethod {
+        case let .savedCredentials(savedCredentials):
+            switch savedCredentials {
+            case let .card(id, title):
+                if let savedCredentialsToken = savedCredentialsToken {
+                    pay(.saved(id: id, tempPassword: savedCredentialsToken.token))
+                } else {
+                    let _ = (cachedTwoStepPasswordToken(postbox: context.account.postbox)
+                                                   |> deliverOnMainQueue).start(next: { token in
+                        let timestamp = context.account.network.getApproximateRemoteTimestamp()
+                        if let token = token, token.validUntilDate > timestamp - 1 * 60  {
+                            pay(.saved(id: id, tempPassword: token.token))
+                        } else {
+                            showModal(with: InputPasswordController(context: context, title: L10n.checkoutPasswordEntryTitle, desc: L10n.checkoutPasswordEntryText(title), checker: { password in
+                                Signal { subscriber in
+                                    let checker = requestTemporaryTwoStepPasswordToken(account: context.account, password: password, period: 1 * 60, requiresBiometrics: false) |> deliverOnMainQueue
+                                    return checker.start(next: { token in
+                                        pay(.saved(id: id, tempPassword: token.token))
+                                        subscriber.putCompletion()
+                                    }, error: { error in
+                                        switch error {
+                                        case .invalidPassword:
+                                            subscriber.putError(.wrong)
+                                        default:
+                                            subscriber.putError(.generic)
+                                        }
+                                    })
+                                }
+                            }), for: context.window)
+                        }
+                    })
+                }
+            }
         case let .webToken(token):
-            credentials = .generic(data: token.data, saveOnServer: token.saveOnServer)
+            pay(.generic(data: token.data, saveOnServer: token.saveOnServer))
         default:
             alert(for: context.window, info: "Unsupported")
             return
         }
-        
-        let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, credentials: credentials)
-        
-        _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
-            
-            let success:(Bool)->Void = { value in
-                if value {
-                    close?()
-                }
-            }
-            switch result {
-            case .done:
-                success(true)
-            case let .externalVerificationRequired(url: url):
-                showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .externalVerification(success)), for: context.window)
-            }
-        }, error: { error in
-            let text: String
-            switch error {
-            case .alreadyPaid:
-                text = L10n.checkoutErrorInvoiceAlreadyPaid
-            case .generic:
-                text = L10n.unknownError
-            case .paymentFailed:
-                text = L10n.checkoutErrorPaymentFailed
-            case .precheckoutFailed:
-                text = L10n.checkoutErrorPrecheckoutFailed
-            }
-            alert(for: context.window, info: text)
-            close?()
-        })
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -499,7 +548,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         }
         
         return .fail(.doSomething(next: { _ in
-            arguments.pay()
+            arguments.pay(nil)
         }))
     }
 
@@ -536,3 +585,42 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     
 }
 
+
+
+/*
+ switch method {
+ case let .webToken(webToken) where webToken.saveOnServer:
+
+     confirm(for: context.window, information: L10n.checkoutNewCardSaveInfoEnableHelp, okTitle: L10n.modalYes, cancelTitle: L10n.modalNotNow, successHandler: { _ in
+         
+         if form.passwordMissing {
+             var updatedToken = webToken
+             updatedToken.saveOnServer = false
+             alert(for: context.window, info: L10n.checkout2FAText)
+             updateState { current in
+                 var current = current
+                 current.paymentMethod = .webToken(updatedToken)
+                 return current
+             }
+         } else {
+             var updatedToken = webToken
+             updatedToken.saveOnServer = true
+             updateState { current in
+                 var current = current
+                 current.paymentMethod = .webToken(updatedToken)
+                 return current
+             }
+         }
+     }, cancelHandler: {
+         var updatedToken = webToken
+         updatedToken.saveOnServer = false
+         updateState { current in
+             var current = current
+             current.paymentMethod = .webToken(updatedToken)
+             return current
+         }
+     })
+ default:
+     break
+ }
+ */

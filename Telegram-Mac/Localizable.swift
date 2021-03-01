@@ -3147,6 +3147,8 @@ internal final class L10n {
   internal static var checkoutTotalAmount: String  { return L10n.tr("Localizable", "Checkout.TotalAmount") }
   /// Total Paid
   internal static var checkoutTotalPaidAmount: String  { return L10n.tr("Localizable", "Checkout.TotalPaidAmount") }
+  /// Saving payments details are only available with 2-Step Verification.
+  internal static var checkout2FAText: String  { return L10n.tr("Localizable", "Checkout.2FA.Text") }
   /// Cardholder Name
   internal static var checkoutNewCardCardholderNamePlaceholder: String  { return L10n.tr("Localizable", "Checkout.NewCard.CardholderNamePlaceholder") }
   /// CARDHOLDER
@@ -5017,6 +5019,8 @@ internal final class L10n {
   internal static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
   /// Done
   internal static var modalDone: String  { return L10n.tr("Localizable", "Modal.Done") }
+  /// Not Now
+  internal static var modalNotNow: String  { return L10n.tr("Localizable", "Modal.NotNow") }
   /// OK
   internal static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
   /// Report

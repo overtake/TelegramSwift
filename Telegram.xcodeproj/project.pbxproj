@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
@@ -1027,6 +1028,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
@@ -2123,6 +2125,7 @@
 				278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */,
 				279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */,
 				279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */,
+				271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */,
 			);
 			name = payments;
 			sourceTree = "<group>";
@@ -5094,6 +5097,7 @@
 				C230B8F41DD368D40057F596 /* SelectPeersController.swift in Sources */,
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
 				C250BA8F1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift in Sources */,
+				271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */,
 				C271EBEB1EBA3BC90034792D /* PCallSession.swift in Sources */,
 				9F3D5F8622085B2000CB0CAA /* UpdaterNotifySettings.swift in Sources */,
 				C24DABC11E0834B7005EE404 /* XCDYouTubeVideoOperation.m in Sources */,

@@ -29,10 +29,12 @@ private final class Arguments {
     let context: AccountContext
     let toggleSaveInfo:()->Void
     let verify: ()->Void
-    init(context: AccountContext, toggleSaveInfo: @escaping()->Void, verify: @escaping()->Void) {
+    let passwordMissing:Bool
+    init(context: AccountContext, toggleSaveInfo: @escaping()->Void, verify: @escaping()->Void, passwordMissing:Bool) {
         self.context = context
         self.toggleSaveInfo = toggleSaveInfo
         self.verify = verify
+        self.passwordMissing = passwordMissing
     }
 }
 
@@ -288,9 +290,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_card_save_info, data: .init(name: L10n.checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, action: arguments.toggleSaveInfo)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_card_save_info, data: .init(name: L10n.checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, enabled: !arguments.passwordMissing, action: arguments.toggleSaveInfo)))
     index += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutNewCardSaveInfoHelp), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    let desc = arguments.passwordMissing ? L10n.checkout2FAText : L10n.checkoutNewCardSaveInfoHelp
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
 
     
@@ -302,7 +305,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPaymentMethodAdditionalFields, publishableKey: String, completion: @escaping (BotCheckoutPaymentMethod) -> Void) -> InputDataModalController {
+func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPaymentMethodAdditionalFields, publishableKey: String, passwordMissing: Bool, completion: @escaping (BotCheckoutPaymentMethod) -> Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -355,7 +358,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
             alert(for: context.window, info: error.localizedDescription)
         })
 
-    })
+    }, passwordMissing: passwordMissing)
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
