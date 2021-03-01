@@ -696,7 +696,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         context.sharedContext.bindings.rootNavigation().push(controller)
         afterComplete(true)
     case let .joinGroupCall(_, context, peerId, callId):
-        _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: callId), for: context.window).start(next: { result in
+        _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: nil, initialCall: callId), for: context.window).start(next: { result in
             switch result {
             case let .success(callContext), let .samePeer(callContext):
                 applyGroupCallResult(context.sharedContext, callContext)

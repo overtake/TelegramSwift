@@ -69,7 +69,9 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 id: call.id,
                 accessHash: call.accessHash,
                 participantCount: 0,
-                clientParams: nil
+                clientParams: nil,
+                streamDcId: nil,
+                title: nil
             ),
             topParticipants: [],
             participantCount: 0,
@@ -108,7 +110,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: nil),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -330,6 +332,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     let internalId: CallSessionInternalId
     let peerId: PeerId
     let peer: Peer?
+    let joinAs: PeerId?
     let initialCall: CachedChannelData.ActiveCall?
     
     private var internalState: InternalState = .requesting
@@ -482,13 +485,15 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         internalId: CallSessionInternalId,
         initialCall:CachedChannelData.ActiveCall?,
         peerId: PeerId,
-        peer: Peer?
+        peer: Peer?,
+        joinAs: PeerId?
     ) {
         self.account = account
         self.sharedContext = sharedContext
         self.internalId = internalId
         self.peerId = peerId
         self.peer = peer
+        self.joinAs = joinAs
         self.initialCall = initialCall
         self.peerChannelMemberCategoriesContextsManager = peerChannelMemberCategoriesContextsManager
         self.devicesContext = sharedContext.devicesContext
@@ -619,7 +624,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         }
                         strongSelf.maybeRequestParticipants(ssrcs: ssrcs)
                     }
-                })
+                }, demoAudioStream: false)
                 self.incomingVideoSourcePromise.set(combineLatest(outgoingStreamExists.get(), callContext.videoSources)
                 |> deliverOnMainQueue
                 |> map { [weak self] hasOutgoing, sources -> [PeerId: UInt32] in
@@ -648,6 +653,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     strongSelf.requestDisposable.set((joinGroupCall(
                         account: strongSelf.account,
                         peerId: strongSelf.peerId,
+                        joinAs: strongSelf.joinAs,
                         callId: callInfo.id,
                         accessHash: callInfo.accessHash,
                         preferMuted: true,
@@ -1155,6 +1161,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         
         let account = self.account
         let peerId = self.peerId
+        let joinAs = self.joinAs
         
         let currentCall: Signal<GroupCallInfo?, CallError>
         if let initialCall = self.initialCall {
@@ -1174,7 +1181,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             if let callInfo = callInfo {
                 return .single(callInfo)
             } else {
-                return createGroupCall(account: account, peerId: peerId)
+                return createGroupCall(account: account, peerId: peerId, joinAs: joinAs)
                 |> mapError { _ -> CallError in
                     return .generic
                 }
@@ -1462,7 +1469,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
 
 }
 
-func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall: CachedChannelData.ActiveCall?) -> Signal<RequestOrJoinGroupCallResult, NoError> {
+func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, joinAs: PeerId?, initialCall: CachedChannelData.ActiveCall?) -> Signal<RequestOrJoinGroupCallResult, NoError> {
     let sharedContext = context.sharedContext
     let accounts = context.sharedContext.activeAccounts |> take(1)
     let account = context.account
@@ -1474,7 +1481,7 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall
             |> mapToSignal { _ in
                 return sharedContext.endCurrentCall()
             } |> map { _ in
-                return .success(startGroupCall(context: context, peerId: peerId, initialCall: initialCall, peer: peer))
+                return .success(startGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: initialCall, peer: peer))
             }
         }
     }
@@ -1482,24 +1489,25 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, initialCall
 }
 
 
-private func startGroupCall(context: AccountContext, peerId: PeerId, initialCall: CachedChannelData.ActiveCall?, internalId: CallSessionInternalId = CallSessionInternalId(), peer: Peer? = nil) -> GroupCallContext {
+private func startGroupCall(context: AccountContext, peerId: PeerId, joinAs: PeerId?, initialCall: CachedChannelData.ActiveCall?, internalId: CallSessionInternalId = CallSessionInternalId(), peer: Peer? = nil) -> GroupCallContext {
     return GroupCallContext(call: PresentationGroupCallImpl(
         account: context.account,
         peerChannelMemberCategoriesContextsManager: context.peerChannelMemberCategoriesContextsManager,
         sharedContext: context.sharedContext,
         internalId: internalId, initialCall: initialCall,
         peerId: peerId,
-        peer: peer
+        peer: peer,
+        joinAs: joinAs
     ), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
 }
 
-func createVoiceChat(context: AccountContext, peerId: PeerId) {
+func createVoiceChat(context: AccountContext, peerId: PeerId, joinAs: PeerId? = nil) {
     let confirmation = makeNewCallConfirmation(account: context.account, sharedContext: context.sharedContext, newPeerId: peerId, newCallType: .voiceChat) |> mapToSignalPromotingError { _ in
-        return createGroupCall(account: context.account, peerId: peerId)
+        return createGroupCall(account: context.account, peerId: peerId, joinAs: joinAs)
     }
 
     let requestCall = confirmation |> mapToSignal { call in
-        return requestOrJoinGroupCall(context: context, peerId: peerId, initialCall: CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash)) |> mapError { _ in .generic }
+        return requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash)) |> mapError { _ in .generic }
     }
     
     _ = showModalProgress(signal: requestCall, for: context.window).start(next: { result in

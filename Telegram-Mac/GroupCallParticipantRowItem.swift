@@ -59,7 +59,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         } else if isInvited {
             string = L10n.voiceChatStatusInvited
         }
-        
         if let volume = data.unsyncVolume ?? data.state?.volume, volume != 10000 {
             if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
                 self.volume = nil

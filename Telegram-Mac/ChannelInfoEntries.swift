@@ -242,6 +242,9 @@ class ChannelInfoArguments : PeerInfoArguments {
     func admins() -> Void {
         pushViewController(ChannelAdminsViewController(context, peerId: peerId))
     }
+    func makeVoiceChat() {
+        createVoiceChat(context: context, peerId: peerId)
+    }
     
     func blocked() -> Void {
         pushViewController(ChannelBlacklistViewController(context, peerId: peerId))
