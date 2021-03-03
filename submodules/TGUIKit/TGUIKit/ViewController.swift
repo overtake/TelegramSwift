@@ -402,6 +402,7 @@ open class ViewController : NSObject {
             
             _ = atomicSize.swap(_view!.frame.size)
         }
+        viewDidLoad()
     }
     
     open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
