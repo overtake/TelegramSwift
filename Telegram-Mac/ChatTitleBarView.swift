@@ -790,7 +790,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             switch chatInteraction.mode {
             case .history:
                 if let peer = peerViewMainPeer(peerView) {
-                    if peer.isGroup || peer.isSupergroup {
+                    if peer.isGroup || peer.isSupergroup || peer.isChannel {
                         if let groupCall = presentation.groupCall {
                             if let data = groupCall.data, data.participantCount == 0 {
                                 callButton.isHidden = presentation.reportMode != nil
@@ -842,7 +842,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     titleImage = nil
                 }
                 
-                if peer.isGroup || peer.isSupergroup {
+                if peer.isGroup || peer.isSupergroup || peer.isChannel {
                     callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)
                     callButton.set(image: theme.icons.chat_voice_chat_active, for: .Highlight)
                 } else {

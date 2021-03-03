@@ -586,7 +586,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .selectable(stateback: stateback):
             if stateback {
                 choiceControl = ImageView()
-                choiceControl?.image = theme.icons.generalSelect
+                choiceControl?.image = #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
                 choiceControl?.sizeToFit()
                 containerView.addSubview(choiceControl!)
             }

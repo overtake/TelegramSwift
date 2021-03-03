@@ -90,9 +90,17 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         
         
 
-        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members in
-            if let peer = peer {
-                self?.setInfo(peer.displayTitle)
+        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members, context.call.summaryState).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members, summary in
+            
+            let title: String?
+            if let custom = summary?.info.title, !custom.isEmpty {
+                title = custom
+            } else {
+                title = peer?.displayTitle
+            }
+            
+            if let title = title {
+                self?.setInfo(title)
             }
             self?.updateState(state, isMuted: isMuted, data: data, members: members, accountPeer: accountPeer, animated: false)
             self?.needsLayout = true

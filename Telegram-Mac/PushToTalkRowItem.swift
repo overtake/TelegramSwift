@@ -32,9 +32,9 @@ final class PushToTalkRowItem : GeneralRowItem {
 
 
 
-private final class PushToTalkRowView: GeneralContainableRowView {
+final class PushToTalkRowView: GeneralContainableRowView {
         
-    private enum PTTMode {
+    enum PTTMode {
         case normal
         case editing
     }
@@ -42,7 +42,7 @@ private final class PushToTalkRowView: GeneralContainableRowView {
     private var textView: TextView?
     private let button: Control = Control()
     
-    private var mode: PTTMode = .normal
+    private(set) var mode: PTTMode = .normal
     
     private let shimmerView = View()
     
@@ -231,18 +231,18 @@ private final class PushToTalkRowView: GeneralContainableRowView {
     
   
     
-    override func viewWillMove(toWindow newWindow: NSWindow?) {
-        if let window = newWindow as? Window {
-            
-            window.set(responder: { [weak self] in
-                return self
-            }, with: self, priority: .supreme)
-            
-
-        } else if let window = self.window as? Window {
-            window.removeAllHandlers(for: self)
-        }
-    }
+//    override func viewWillMove(toWindow newWindow: NSWindow?) {
+//        if let window = newWindow as? Window {
+//
+//            window.set(responder: { [weak self] in
+//                return self
+//            }, with: self, priority: .supreme)
+//
+//
+//        } else if let window = self.window as? Window {
+//            window.removeAllHandlers(for: self)
+//        }
+//    }
     
     
     override func set(item: TableRowItem, animated: Bool = false) {

@@ -24,6 +24,7 @@ private final class Arguments {
     let updateSettings: (@escaping(VoiceCallSettings)->VoiceCallSettings)->Void
     let checkPermission:()->Void
     let showTooltip:(String)->Void
+    let switchAccount:(PeerId)->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -32,7 +33,7 @@ private final class Arguments {
          updateDefaultParticipantsAreMuted: @escaping(Bool)->Void,
          updateSettings:  @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void,
          checkPermission:@escaping()->Void,
-         showTooltip: @escaping(String)->Void) {
+         showTooltip: @escaping(String)->Void, switchAccount: @escaping(PeerId)->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -42,6 +43,7 @@ private final class Arguments {
         self.updateSettings = updateSettings
         self.checkPermission = checkPermission
         self.showTooltip = showTooltip
+        self.switchAccount = switchAccount
     }
 }
 
@@ -98,8 +100,9 @@ final class GroupCallSettingsView : View {
 }
 
 private struct GroupCallSettingsState : Equatable {
-    var hasPermission:Bool?
-    var displayPeers:[PeerEquatable]
+    var hasPermission: Bool?
+    var title: String?
+    var displayAsList: [FoundPeer]?
 }
 
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
@@ -120,7 +123,11 @@ private let _id_input_chat_title = InputDataIdentifier("_id_input_chat_title")
 private let _id_listening_link = InputDataIdentifier("_id_listening_link")
 private let _id_speaking_link = InputDataIdentifier("_id_speaking_link")
 
-private func groupCallSettingsEntries(state: PresentationGroupCallState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, arguments: Arguments) -> [InputDataEntry] {
+private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_peer_\(id.toInt64())")
+}
+
+private func groupCallSettingsEntries(state: PresentationGroupCallState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, arguments: Arguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     let theme = GroupCallTheme.customTheme
@@ -137,70 +144,122 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         index += 1
 
         //TODOLANG
-        entries.append(.input(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_chat_title, mode: .plain, data: .init(viewType: .singleItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "title...", filter: { $0 }, limit: 140))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.title), error: nil, identifier: _id_input_chat_title, mode: .plain, data: .init(viewType: .singleItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "Title...", filter: { $0 }, limit: 140))
         index += 1
 
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
     }
     
-    if state.canManageCall {
-        //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DISPLAY ME AS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-        index += 1
-
-        //TODOLANG
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_listening_link, data: InputDataGeneralData(name: "Copy Listening Link", color: theme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: {
-            copyToClipboard("t.me/listeninglink")
-            arguments.showTooltip("Listening link successfully copied to Clipboard")
-        }, theme: theme)))
-        index += 1
         
-        //TODOLANG
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_speaking_link, data: InputDataGeneralData(name: "Copy Speaking Link", color: theme.accentColor, type: .none, viewType: .lastItem, enabled: true, action: {
-            copyToClipboard("t.me/speakinglink")
-            arguments.showTooltip("Speaking link successfully copied to Clipboard")
-        }, theme: theme)))
-        index += 1
+    if let list = uiState.displayAsList {
+        
+        if !list.isEmpty {
+            
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+            
+            struct Tuple : Equatable {
+                let peer: FoundPeer
+                let viewType: GeneralViewType
+                let selected: Bool
+                let status: String?
+            }
+            //TODOLANG
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DISPLAY ME AS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+            index += 1
+            
+            let tuple = Tuple(peer: FoundPeer(peer: accountPeer, subscribers: nil), viewType: uiState.displayAsList == nil || uiState.displayAsList?.isEmpty == false ? .firstItem : .singleItem, selected: accountPeer.id == joinAsPeerId, status: "personal account")
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                    arguments.switchAccount(tuple.peer.peer.id)
+                }, customTheme: theme)
+            }))
+            index += 1
+            
+            //TODOLANG
+            for peer in list {
+                
+                var status: String? = nil
+                if let addressName = peer.peer.addressName {
+                    status = "@\(addressName)"
+                }
+                if let subscribers = peer.subscribers, let username = status {
+                    if peer.peer.isChannel {
+                        status = tr(L10n.searchGlobalChannel1Countable(username, Int(subscribers)))
+                    } else if peer.peer.isSupergroup || peer.peer.isGroup {
+                        status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
+                    }
+                }
+                
+                var viewType = bestGeneralViewType(list, for: peer)
+                if list.first == peer {
+                    if list.count == 1 {
+                        viewType = .lastItem
+                    } else {
+                        viewType = .innerItem
+                    }
+                }
+                
+                let tuple = Tuple(peer: peer, viewType: viewType, selected: peer.peer.id == joinAsPeerId, status: status)
+                
+                
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                        arguments.switchAccount(tuple.peer.peer.id)
+                    }, customTheme: theme)
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Use these links to invite listeners or speakers to your voice chat."), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
-        index += 1
-
-
+                }))
+            }
+        }
+        
+    } else {
+        
+        
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, item: { initialSize, stableId in
+            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+        }))
+        index += 1
     }
     
-    if state.canManageCall {
-        //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INVITE LINKS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-        index += 1
-
-        //TODOLANG
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_listening_link, data: InputDataGeneralData(name: "Copy Listening Link", color: theme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: {
-            copyToClipboard("t.me/listeninglink")
-            arguments.showTooltip("Listening link successfully copied to Clipboard")
-        }, theme: theme)))
-        index += 1
-        
-        //TODOLANG
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_speaking_link, data: InputDataGeneralData(name: "Copy Speaking Link", color: theme.accentColor, type: .none, viewType: .lastItem, enabled: true, action: {
-            copyToClipboard("t.me/speakinglink")
-            arguments.showTooltip("Speaking link successfully copied to Clipboard")
-        }, theme: theme)))
-        index += 1
-
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Use these links to invite listeners or speakers to your voice chat."), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
-        index += 1
-
-
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
-    }
+//    if state.canManageCall {
+//
+//        entries.append(.sectionId(sectionId, type: .customModern(20)))
+//        sectionId += 1
+//
+//        //TODOLANG
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INVITE LINKS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+//        index += 1
+//
+//        //TODOLANG
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_listening_link, data: InputDataGeneralData(name: "Copy Listening Link", color: theme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: {
+//            copyToClipboard("t.me/listeninglink")
+//            arguments.showTooltip("Listening link successfully copied to Clipboard")
+//        }, theme: theme)))
+//        index += 1
+//
+//        //TODOLANG
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_speaking_link, data: InputDataGeneralData(name: "Copy Speaking Link", color: theme.accentColor, type: .none, viewType: .lastItem, enabled: true, action: {
+//            copyToClipboard("t.me/speakinglink")
+//            arguments.showTooltip("Speaking link successfully copied to Clipboard")
+//        }, theme: theme)))
+//        index += 1
+//
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Use these links to invite listeners or speakers to your voice chat."), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
+//        index += 1
+//
+//
+//    }
     
     
     if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState {
         
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PERMISSIONS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
@@ -211,17 +270,16 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         }, theme: theme)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_speak_admin_only, data: InputDataGeneralData(name: L10n.voiceChatSettingsOnlyAdmins, color: theme.textColor, type: .selectable(isMuted), viewType: .innerItem, enabled: true, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_speak_admin_only, data: InputDataGeneralData(name: L10n.voiceChatSettingsOnlyAdmins, color: theme.textColor, type: .selectable(isMuted), viewType: .lastItem, enabled: true, action: {
             arguments.updateDefaultParticipantsAreMuted(true)
         }, theme: theme)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .lastItem, enabled: true, action: arguments.finishCall, theme: theme)))
-        index += 1
 
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
     }
+
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    sectionId += 1
 
         
     let microDevice = settings.audioInputDeviceId == nil ? devices.audioInput.first : devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
@@ -346,10 +404,16 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     }
 
 
+    if state.canManageCall {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
         
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .singleItem, enabled: true, action: arguments.finishCall, theme: theme)))
+        index += 1
+    }
+    
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
-    
     
     return entries
 }
@@ -368,6 +432,9 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     private let disposable = MetaDisposable()
     private let account: Account
     private let monitorPermissionDisposable = MetaDisposable()
+    private let actualizeTitleDisposable = MetaDisposable()
+    private let displayAsPeersDisposable = MetaDisposable()
+    
     
     init(sharedContext: SharedAccountContext, account: Account, call: PresentationGroupCall) {
         self.sharedContext = sharedContext
@@ -385,25 +452,40 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     override func firstResponder() -> NSResponder? {
         if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView {
             var first: NSResponder? = nil
+            var isRecordingPushToTalk: Bool = false
             tableView.enumerateViews { view -> Bool in
-                first = view.firstResponder
-                if first != nil, self.firstTake {
-                    if let item = view.item as? InputDataRowDataValue {
-                        switch item.value {
-                        case let .string(value):
-                            let value = value ?? ""
-                            if !value.isEmpty {
-                                return true
-                            }
-                        default:
-                            break
-                        }
+                if let view = view as? PushToTalkRowView {
+                    if view.mode == .editing {
+                        isRecordingPushToTalk = true
+                        return false
                     }
                 }
-                return first == nil
+                return true
             }
-            self.firstTake = false
-            return first
+            if !isRecordingPushToTalk {
+                tableView.enumerateViews { view -> Bool in
+                    first = view.firstResponder
+                    if first != nil, self.firstTake {
+                        if let item = view.item as? InputDataRowDataValue {
+                            switch item.value {
+                            case let .string(value):
+                                let value = value ?? ""
+                                if !value.isEmpty {
+                                    return true
+                                }
+                            default:
+                                break
+                            }
+                        }
+                    }
+                    return first == nil
+                }
+                self.firstTake = false
+                return first
+            } else {
+                return window?.firstResponder
+            }
+            
         }
         return window?.firstResponder
     }
@@ -419,12 +501,28 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     deinit {
         disposable.dispose()
         monitorPermissionDisposable.dispose()
+        actualizeTitleDisposable.dispose()
+        displayAsPeersDisposable.dispose()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         _ = self.window?.makeFirstResponder(nil)
     }
+    private func fetchData() -> [InputDataIdentifier : InputDataValue] {
+        var values:[InputDataIdentifier : InputDataValue] = [:]
+        tableView.enumerateItems { item -> Bool in
+            if let identifier = (item.stableId.base as? InputDataEntryId)?.identifier {
+                if let item = item as? InputDataRowDataValue {
+                    values[identifier] = item.value
+                }
+            }
+            return true
+        }
+        return values
+    }
+    
+    private var getState:(()->GroupCallSettingsState?)? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -435,7 +533,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         
         let account = self.account
                 
-        let initialState = GroupCallSettingsState(hasPermission: nil, displayPeers: [])
+        let initialState = GroupCallSettingsState(hasPermission: nil, title: nil)
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -450,8 +548,29 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 return current
             }
         }))
+        
+        getState = { [weak stateValue] in
+            return stateValue?.with { $0 }
+        }
 
         
+        actualizeTitleDisposable.set(call.summaryState.start(next: { state in
+            updateState { current in
+                var current = current
+                if current.title == nil {
+                    current.title = state?.info.title
+                }
+                return current
+            }
+        }))
+        
+        displayAsPeersDisposable.set(combineLatest(queue: prepareQueue,call.displayAsPeers, account.postbox.peerView(id: account.peerId)).start(next: { list, peerView in
+            updateState { current in
+                var current = current
+                current.displayAsList = list
+                return current
+            }
+        }))
         
         genericView.backButton.set(handler: { [weak self] _ in
             self?.navigationController?.back()
@@ -459,9 +578,6 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         
         let sharedContext = self.sharedContext
         
-        let updateSettings:(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void = { f in
-            _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, f).start()
-        }
         
         let arguments = Arguments(sharedContext: sharedContext, toggleInputAudioDevice: { value in
             _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
@@ -501,13 +617,26 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             if let window = self?.window {
                 showModalText(for: window, text: text)
             }
+        }, switchAccount: { [weak self] peerId in
+            self?.call.switchAccount(peerId)
         })
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
-        let inputDataArguments = InputDataArguments(select: { _, _ in }, dataUpdated: { })
+        let inputDataArguments = InputDataArguments(select: { _, _ in }, dataUpdated: { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            let data = self.fetchData()
+            updateState { current in
+                var current = current
+                current.title = data[_id_input_chat_title]?.stringValue ?? current.title
+                return current
+            }
+        })
         let initialSize = self.atomicSize
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.state, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, state, uiState in
-            let entries = groupCallSettingsEntries(state: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        let joinAsPeer: Signal<PeerId, NoError> = self.call.joinAsPeer |> map { $0.0.id }
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.call.state, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
+            let entries = groupCallSettingsEntries(state: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 
@@ -522,5 +651,16 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         backgroundColor = GroupCallTheme.windowBackground
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if let state = getState?(), let title = state.title {
+            self.call.updateTitle(title)
+        }
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        self.navigationController?.back()
+        return super.returnKeyAction()
+    }
     
 }
