@@ -24,6 +24,9 @@
 		27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */; };
 		27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */; };
 		27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */; };
+		27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */; };
+		27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D7ABA725EFD113008DB916 /* StreamingPart.h */; };
+		27D7ABAA25EFD113008DB916 /* StreamingPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D7ABA825EFD113008DB916 /* StreamingPart.cpp */; };
 		D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */; };
 		D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */; };
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
@@ -82,6 +85,9 @@
 		27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupNetworkManager.cpp; sourceTree = "<group>"; };
 		27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupNetworkManager.h; sourceTree = "<group>"; };
 		27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StaticThreads.cpp; path = ../../submodules/tgcalls/tgcalls/StaticThreads.cpp; sourceTree = "<group>"; };
+		27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		27D7ABA725EFD113008DB916 /* StreamingPart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamingPart.h; sourceTree = "<group>"; };
+		27D7ABA825EFD113008DB916 /* StreamingPart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StreamingPart.cpp; sourceTree = "<group>"; };
 		D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptedConnection.cpp; path = ../../submodules/tgcalls/tgcalls/EncryptedConnection.cpp; sourceTree = "<group>"; };
 		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
@@ -134,6 +140,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */,
 				2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */,
 				D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */,
 				D00B192224E5722A006CCB87 /* GLKit.framework in Frameworks */,
@@ -236,6 +243,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */,
 				2702A834259BD7F6007F1DDD /* SSignalKit.framework */,
 				D0076E3C25685056007EF588 /* webrtc.framework */,
 				D00B192124E5722A006CCB87 /* GLKit.framework */,
@@ -254,6 +262,8 @@
 		D0E7BD1C256A7E0D0068644D /* group */ = {
 			isa = PBXGroup;
 			children = (
+				27D7ABA825EFD113008DB916 /* StreamingPart.cpp */,
+				27D7ABA725EFD113008DB916 /* StreamingPart.h */,
 				27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */,
 				27335F0725C833D300FD040C /* GroupInstanceCustomImpl.h */,
 				27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */,
@@ -277,6 +287,7 @@
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
 				2767ADFD25D6DDDC00717AA1 /* DesktopCaptureSourceView.h in Headers */,
+				27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */,
 				2767ADF625D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h in Headers */,
 				27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */,
 				2767ADFF25D6DDDC00717AA1 /* DesktopSharingCapturer.h in Headers */,
@@ -372,6 +383,7 @@
 				D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
 				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
+				27D7ABAA25EFD113008DB916 /* StreamingPart.cpp in Sources */,
 				D00B192024E56FE2006CCB87 /* GLVideoViewMac.mm in Sources */,
 				2767ADFB25D6DDDC00717AA1 /* DesktopCaptureSource.mm in Sources */,
 				D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */,
@@ -553,6 +565,8 @@
 					"$(PROJECT_DIR)/../../submodules/libtgvoip",
 					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/../libopus/build/libopus/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -611,6 +625,8 @@
 					"$(PROJECT_DIR)/../../submodules/libtgvoip",
 					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/../libopus/build/libopus/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -735,6 +751,8 @@
 					"$(PROJECT_DIR)/../../submodules/libtgvoip",
 					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/../libopus/build/libopus/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -860,6 +878,8 @@
 					"$(PROJECT_DIR)/../../submodules/libtgvoip",
 					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/../libopus/build/libopus/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -976,6 +996,8 @@
 					"$(PROJECT_DIR)/../../submodules/libtgvoip",
 					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/../libopus/build/libopus/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1098,6 +1120,8 @@
 					"$(PROJECT_DIR)/../../submodules/libtgvoip",
 					"$(PROJECT_DIR)/../OpenSSLEncryption/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
+					"$(PROJECT_DIR)/../libopus/build/libopus/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

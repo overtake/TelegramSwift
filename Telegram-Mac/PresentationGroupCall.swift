@@ -72,7 +72,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 clientParams: nil,
                 streamDcId: nil,
                 title: nil,
-                recordStartDate: nil
+                recordingStartTimestamp: nil
             ),
             topParticipants: [],
             participantCount: 0,
@@ -111,7 +111,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: nil, recordStartDate: nil),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: nil, recordingStartTimestamp: nil),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -562,7 +562,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 } else if case .joined = participantUpdate.participationStatusChange {
                                 }
                             }
-                        case let .call(isTerminated, _):
+                        case let .call(isTerminated, _, _, _):
                             if isTerminated {
                                 strongSelf._canBeRemoved.set(.single(true))
                             }
@@ -663,7 +663,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         }
                         strongSelf.maybeRequestParticipants(ssrcs: ssrcs)
                     }
-                }, demoAudioStream: false)
+                }, audioStreamData: OngoingGroupCallContext.AudioStreamData(account: account, callId: callInfo.id, accessHash: callInfo.accessHash, datacenterId: callInfo.streamDcId.flatMap(Int.init)))
                 self.incomingVideoSourcePromise.set(combineLatest(outgoingStreamExists.get(), callContext.videoSources)
                 |> deliverOnMainQueue
                 |> map { [weak self] hasOutgoing, sources -> [PeerId: UInt32] in
