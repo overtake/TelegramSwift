@@ -401,8 +401,8 @@ open class ViewController : NSObject {
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
             
             _ = atomicSize.swap(_view!.frame.size)
+            viewDidLoad()
         }
-        viewDidLoad()
     }
     
     open func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
