@@ -170,12 +170,12 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         let holder = NSMutableAttributedString()
         switch mode {
         case .secure:
-            holder.append(.initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .light(.text)))
+            holder.append(.initialize(string: inputPlaceholder, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .light(.text)))
         case .plain:
-            holder.append(.initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)))
+            holder.append(.initialize(string: inputPlaceholder, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .normal(.text)))
         }
         self.inputPlaceholder = holder
-        placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
+        placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: customTheme?.grayTextColor ?? theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
         _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
         self.mode = mode
@@ -832,7 +832,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             case .loading:
                 if loadingView == nil {
                     loadingView = ProgressIndicator(frame: NSMakeRect(0, 0, 18, 18))
-                    loadingView?.progressColor = theme.colors.grayText
+                    loadingView?.progressColor = self.grayText
                     containerView.addSubview(loadingView!)
                 }
                 rightActionView.isHidden = true
@@ -908,7 +908,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             
             if placeholder.hasLimitationText {
                 textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2
-                textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: theme.colors.grayText, font: .normal(.small))
+                textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: self.grayText, font: .normal(.small))
             } else {
                 textLimitation.isHidden = true
             }

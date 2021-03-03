@@ -149,6 +149,8 @@ protocol PresentationGroupCall: class {
     var internalId: CallSessionInternalId { get }
     var peerId: PeerId { get }
     var peer: Peer? { get }
+    var joinAs: PeerId { get }
+    var joinAsPeer:Signal<(Peer, String?), NoError> { get }
     var canBeRemoved: Signal<Bool, NoError> { get }
     var state: Signal<PresentationGroupCallState, NoError> { get }
     var members: Signal<PresentationGroupCallMembers?, NoError> { get }
@@ -159,6 +161,9 @@ protocol PresentationGroupCall: class {
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
     
     var permissions:(PresentationGroupCallMuteAction, @escaping(Bool)->Void)->Void { get set }
+    
+    var displayAsPeers: Signal<[FoundPeer]?, NoError> { get }
+
     
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>
     
@@ -177,4 +182,6 @@ protocol PresentationGroupCall: class {
     func disableVideo()
     func loadMore()
 
+    func switchAccount(_ peerId: PeerId) -> Void
+    func updateTitle(_ title: String) -> Void
 }

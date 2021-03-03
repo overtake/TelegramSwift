@@ -50,12 +50,22 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                 string = L10n.voiceChatStatusSpeaking
                 color = GroupCallTheme.greenStatusColor
             } else {
-                string = L10n.voiceChatStatusListening
-                color = GroupCallTheme.blueStatusColor
+                if let about = data.about {
+                    string = about
+                    color = GroupCallTheme.grayStatusColor
+                } else {
+                    string = L10n.voiceChatStatusListening
+                    color = GroupCallTheme.blueStatusColor
+                }
             }
-        } else if data.peer.id == account.peerId {
-            string = L10n.voiceChatStatusListening
-            color = GroupCallTheme.blueStatusColor.withAlphaComponent(0.6)
+        } else if data.peer.id == data.accountPeerId {
+            if let about = data.about {
+                string = about
+                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
+            } else {
+                string = L10n.voiceChatStatusConnecting
+                color = GroupCallTheme.blueStatusColor.withAlphaComponent(0.6)
+            }
         } else if isInvited {
             string = L10n.voiceChatStatusInvited
         }
@@ -81,7 +91,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var isActivePeer: Bool {
-        return data.state != nil || data.peer.id == account.peerId
+        return data.state != nil || data.peer.id == data.accountPeerId
     }
     
     var peer: Peer {
@@ -100,7 +110,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         let inset: CGFloat = self.volume?.layoutSize.width ?? 0
                 
         titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
-        statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset - 30)
+        statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
         return true
     }
     
@@ -292,7 +302,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 button.userInteractionEnabled = true
             }
         }
-        if item.account.peerId == item.data.peer.id {
+        if item.data.accountPeerId == item.data.peer.id {
             button.userInteractionEnabled = false
         }
 

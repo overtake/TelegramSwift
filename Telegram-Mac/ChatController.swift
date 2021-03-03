@@ -3135,7 +3135,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.joinGroupCall = { [weak self] activeCall, serviceClick in
-            var currentActiveCall = self?.chatInteraction.presentation.groupCall?.activeCall
+            let groupCall = self?.chatInteraction.presentation.groupCall
+            var currentActiveCall = groupCall?.activeCall
             var activeCall: CachedChannelData.ActiveCall? = activeCall
             if currentActiveCall == nil {
                 activeCall = nil
@@ -3144,7 +3145,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 currentActiveCall = activeCall
             } 
             if let activeCall = currentActiveCall {
-                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: nil, initialCall: activeCall), for: context.window).start(next: { result in
+                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: activeCall, initialInfo: groupCall?.data?.info), for: context.window).start(next: { result in
                     switch result {
                     case let .success(callContext), let .samePeer(callContext):
                         applyGroupCallResult(context.sharedContext, callContext)
