@@ -45,10 +45,10 @@ private class CallRatingModalView: View {
             
             star.set(handler: { [weak self] current in
                 for j in 0 ... i {
-                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar_Highlighted").precomposed(), for: .Normal)
+                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar_Highlighted").precomposed(theme.colors.accent), for: .Normal)
                 }
                 for j in i + 1 ..< 5 {
-                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(), for: .Normal)
+                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(theme.colors.accent), for: .Normal)
                 }
                 self?.state = .stars
                 delay(0.15, closure: {
