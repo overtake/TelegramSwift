@@ -154,9 +154,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+ 
     
     return entries
 }
@@ -196,7 +194,7 @@ func proxyListController(accountManager: AccountManager, network: Network, showU
     let updateDisposable = MetaDisposable()
     actionsDisposable.add(updateDisposable)
     
-    let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettings(accountManager: accountManager) |> map { $0.servers})
+    let statuses: ProxyServersStatuses = ProxyServersStatuses(network: network, servers: proxySettings(accountManager: accountManager) |> map { $0.servers })
     
     let stateValue:Atomic<ProxyListState> = Atomic(value: ProxyListState())
     let statePromise:ValuePromise<ProxyListState> = ValuePromise(ignoreRepeated: true)
@@ -241,7 +239,7 @@ func proxyListController(accountManager: AccountManager, network: Network, showU
         updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, {$0.withUpdatedUseForCalls(enable)}).start())
     })
     
-    let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, network.connectionStatus |> deliverOnPrepareQueue, statuses.statuses() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.proxySettingsTitle, validateData: {
+    let controller = InputDataController(dataSignal: combineLatest(queue: prepareQueue, statePromise.get(), network.connectionStatus, statuses.statuses(), appearanceSignal) |> map {proxyListSettingsEntries($0.0, status: $0.1, statuses: $0.2, arguments: arguments, showUseCalls: showUseCalls)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.proxySettingsTitle, validateData: {
         data in
         
         if data[_p_id_add] != nil {
