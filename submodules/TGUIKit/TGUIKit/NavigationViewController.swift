@@ -393,7 +393,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     open override func loadView() {
         super.loadView();
-        viewDidLoad()
     }
     
     open override func viewDidLoad() {
