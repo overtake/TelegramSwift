@@ -488,7 +488,7 @@ class AuthHeaderView : View {
             var firstTime: Bool = false
             if self.exportTokenView == nil {
                 self.exportTokenView = ExportTokenView(frame: NSMakeRect(0, 0, 300, 500))
-                self.addSubview(self.exportTokenView!)
+                self.addSubview(self.exportTokenView!, positioned: .below, relativeTo: self.subviews.first(where: { $0 is UpdateTabView }))
                 self.exportTokenView?.center()
                 
                 self.exportTokenView?.cancelButton.set(handler: { [weak self] _ in
@@ -773,7 +773,14 @@ class AuthController : GenericViewController<AuthHeaderView> {
         super.viewDidResized(size)
         
         #if !APP_STORE        
-        updateController.frame = NSMakeRect(0, frame.height - 60, frame.width, 60)
+        updateController.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
+        #endif
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        #if !APP_STORE
+        updateController.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
         #endif
     }
     
@@ -783,7 +790,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         #if !APP_STORE
             addSubview(updateController.view)
         
-            updateController.frame = NSMakeRect(0, frame.height - 60, frame.width, 60)
+            updateController.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
         #endif
         
         var arguments: LoginAuthViewArguments?

@@ -26,6 +26,8 @@ final class UpdateTabView : Control {
     let imageView: ImageView = ImageView()
     let progressView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 24, 24))
     
+    var isChatList: Bool = false
+    
     var isInstalling: Bool = false {
         didSet {
             textView.isHidden = isInstalling || layoutState == .minimisize
@@ -38,7 +40,7 @@ final class UpdateTabView : Control {
                 change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, self.frame.minY), animated: true, timingFunction: .spring)
                 progressView.change(pos: self.bounds.focus(progressView.frame.size).origin, animated: true, timingFunction: .spring)
             } else {
-                if let superview = self.superview {
+                if let superview = self.superview, isChatList {
                     change(size: NSMakeSize(self.textView.frame.width + 40, frame.height), animated: true, timingFunction: .spring)
                     if layoutState != .minimisize {
                         change(pos: NSMakePoint(superview.bounds.focus(self.frame.size).minX, superview.frame.height - self.frame.height - 60), animated: true, timingFunction: .spring)
@@ -100,6 +102,9 @@ final class UpdateTabView : Control {
         needsLayout = true
     }
     
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
     
     
     override func layout() {
@@ -135,6 +140,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
             }
         }
     }
+    private var parentSize: NSSize = .zero
     private let stateDisposable = MetaDisposable()
     private var appcastItem: SUAppcastItem? {
         didSet {
@@ -165,6 +171,7 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
                 }
             }
             self.state = state
+//            self.updateLayout(self.context.layout, parentSize: parentSize, isChatList: true)
         }
     }
     
@@ -213,9 +220,9 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
     
     func updateLayout(_ layout: SplitViewState, parentSize: NSSize, isChatList: Bool) {
         genericView.layoutState = layout
-        
+        self.parentSize = parentSize
         let bottom = parentSize.height - genericView.frame.height
-        
+        genericView.isChatList = isChatList
         if isChatList && layout != .minimisize {
             genericView.setFrameSize(NSMakeSize(genericView.textView.frame.width + 40, 40))
             genericView.layer?.cornerRadius = genericView.frame.height / 2

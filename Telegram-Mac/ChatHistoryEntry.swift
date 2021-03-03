@@ -297,7 +297,14 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return self
         }
     }
-
+    func withUpdatedMessageMedia(_ media: Media) -> ChatHistoryEntry {
+        switch self {
+        case let .MessageEntry(values):
+            return .MessageEntry(values.0.withUpdatedMedia([media]), values.1, values.2, values.3, values.4, values.5, values.6)
+        default:
+            return self
+        }
+    }
 }
 
 func isEqualMessageList(lhs:[Message], rhs:[Message]) -> Bool {

@@ -501,13 +501,13 @@ public extension Message {
        
         return false
     }
-    var restrictedText: String? {
+    func restrictedText(_ contentSettings: ContentSettings) -> String? {
         #if APP_STORE || DEBUG
         for attr in attributes {
             if let attr = attr as? RestrictedContentMessageAttribute {
                 for rule in attr.rules {
-                    if rule.platform == "ios" || rule.platform == "macos" {
-                        return rule.text
+                    if rule.platform == "ios" || rule.platform == "all" {
+                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) ? rule.text : nil
                     }
                 }
             }
