@@ -2748,20 +2748,36 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             data.removeValue(forKey: messageId)
                             return data
                         }
+                        
                         self?.afterNextTransaction = { [weak self] in
                             if let tableView = self?.genericView.tableView {
-                                tableView.enumerateVisibleItems(with: { item -> Bool in
-                                    if let item = item as? ChatRowItem, item.message?.id == messageId {
+                                tableView.enumerateItems(with: { item -> Bool in
+                                    if let item = item as? ChatRowItem, let message = item.message, message.id == messageId, let `self` = self {
+                                        let entry = item.entry.withUpdatedMessageMedia(poll)
+                                        let size = self.atomicSize.with { $0 }
+                                        let updatedItem = ChatRowItem.item(size, from: entry, interaction: self.chatInteraction, theme: theme)
+                                        
+                                        _ = updatedItem.makeSize(size.width, oldWidth: 0)
+                                        
+                                        tableView.merge(with: .init(deleted: [], inserted: [], updated: [(item.index, updatedItem)], animated: true))
+                                        
                                         let view = item.view as? ChatPollItemView
-                                        view?.doAfterAnswer()
-                                        NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+                                        if let view = view, view.window != nil, view.visibleRect != .zero {
+                                            view.doAfterAnswer()
+                                            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .drawCompleted)
+                                        }
                                         return false
                                     }
                                     return true
                                 })
                             }
                         }
+                        
+                        if opaqueIdentifiers.isEmpty {
+                            self?.afterNextTransaction?()
+                        }
                     }
+
                 }, error: { [weak self] error in
                     switch error {
                     case .generic:
