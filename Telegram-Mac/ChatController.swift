@@ -2751,19 +2751,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 tableView.enumerateItems(with: { item -> Bool in
                                     if let item = item as? ChatRowItem, let message = item.message, message.id == messageId, let `self` = self {
                                         
-                                        let entry = item.entry.withUpdatedMessageMedia(poll)
-                                        let size = self.atomicSize.with { $0 }
-                                        let updatedItem = ChatRowItem.item(size, from: entry, interaction: self.chatInteraction, theme: theme)
+                                        if message.id == self.mode.threadId {
+                                            let entry = item.entry.withUpdatedMessageMedia(poll)
+                                            let size = self.atomicSize.with { $0 }
+                                            let updatedItem = ChatRowItem.item(size, from: entry, interaction: self.chatInteraction, theme: theme)
 
-                                        _ = updatedItem.makeSize(size.width, oldWidth: 0)
+                                            _ = updatedItem.makeSize(size.width, oldWidth: 0)
 
-                                        tableView.merge(with: .init(deleted: [], inserted: [], updated: [(item.index, updatedItem)], animated: true))
-                                        
-                                        delay(0.25, closure: { [weak self] in
-                                            if let location = self?._locationValue.with({$0}) {
-                                                self?.setLocation(location)
-                                            }
-                                        })
+                                            tableView.merge(with: .init(deleted: [], inserted: [], updated: [(item.index, updatedItem)], animated: true))
+                                            
+                                            delay(0.25, closure: { [weak self] in
+                                                if let location = self?._locationValue.with({$0}) {
+                                                    self?.setLocation(location)
+                                                }
+                                            })
+                                        }
                                         
                                         let view = item.view as? ChatPollItemView
                                         if let view = view, view.window != nil, view.visibleRect != .zero {
