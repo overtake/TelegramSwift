@@ -488,7 +488,11 @@ class AuthHeaderView : View {
             var firstTime: Bool = false
             if self.exportTokenView == nil {
                 self.exportTokenView = ExportTokenView(frame: NSMakeRect(0, 0, 300, 500))
+                #if !APP_STORE
                 self.addSubview(self.exportTokenView!, positioned: .below, relativeTo: self.subviews.first(where: { $0 is UpdateTabView }))
+                #else
+                self.addSubview(self.exportTokenView!)
+                #endif
                 self.exportTokenView?.center()
                 
                 self.exportTokenView?.cancelButton.set(handler: { [weak self] _ in
