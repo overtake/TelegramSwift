@@ -161,6 +161,8 @@ final class DevicesContext : NSObject {
             for subscriber in self.updaterContext.subscribers.copyItems() {
                 subscriber(self.updaterContext.status)
             }
+
+            self.updaterContext.status = (camera: nil, input: nil, output: nil)
         }))
         
         update()
