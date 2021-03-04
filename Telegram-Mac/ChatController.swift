@@ -1368,8 +1368,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     default:
                         maxReadIndex.set(nil)
                     }
-                    } |> map { view in
-                        return (view, location.side)
+                } |> map { view in
+                    return (view, location.side)
                 }
         }
         let historyViewUpdate = historyViewUpdate1
@@ -1496,13 +1496,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   appearanceSignal,
                                                   combineLatest(maxReadIndex.get() |> deliverOnMessagesViewQueue,
                                                                 pollAnswersLoadingSignal, threadLoadingSignal),
-                                                                clearHistoryUndoSignal,
                                                                 searchState.get(),
                                                   animatedEmojiStickers,
                                                   customChannelDiscussionReadState,
                                                   customThreadOutgoingReadState,
                                                   updatingMedia
-) |> mapToQueue { update, appearance, readIndexAndOther, clearHistoryStatus, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
+) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
             
             //NSLog("get history")
             
@@ -1580,10 +1579,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let view = view {
                 if let peer = chatInteraction.peer, peer.isRestrictedChannel(context.contentSettings) {
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
-                } else if let clearHistoryStatus = clearHistoryStatus, clearHistoryStatus != .cancelled {
-                    proccesedView = ChatHistoryView(originalView: view, filteredEntries: [])
                 } else {
-                    var msgEntries = view.entries
+                    let msgEntries = view.entries
                     let topMessages: [Message]?
                     var addTopThreadInset: CGFloat? = nil
                     switch chatInteraction.chatLocation {
@@ -2748,18 +2745,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             data.removeValue(forKey: messageId)
                             return data
                         }
-                        
+                        var once: Bool = true
                         self?.afterNextTransaction = { [weak self] in
-                            if let tableView = self?.genericView.tableView {
+                            if let tableView = self?.genericView.tableView, once {
                                 tableView.enumerateItems(with: { item -> Bool in
                                     if let item = item as? ChatRowItem, let message = item.message, message.id == messageId, let `self` = self {
-                                        let entry = item.entry.withUpdatedMessageMedia(poll)
-                                        let size = self.atomicSize.with { $0 }
-                                        let updatedItem = ChatRowItem.item(size, from: entry, interaction: self.chatInteraction, theme: theme)
                                         
-                                        _ = updatedItem.makeSize(size.width, oldWidth: 0)
-                                        
-                                        tableView.merge(with: .init(deleted: [], inserted: [], updated: [(item.index, updatedItem)], animated: true))
+                                        if message.id == self.mode.threadId {
+                                            let entry = item.entry.withUpdatedMessageMedia(poll)
+                                            let size = self.atomicSize.with { $0 }
+                                            let updatedItem = ChatRowItem.item(size, from: entry, interaction: self.chatInteraction, theme: theme)
+
+                                            _ = updatedItem.makeSize(size.width, oldWidth: 0)
+
+                                            tableView.merge(with: .init(deleted: [], inserted: [], updated: [(item.index, updatedItem)], animated: true))
+                                            
+                                            delay(0.25, closure: { [weak self] in
+                                                if let location = self?._locationValue.with({$0}) {
+                                                    self?.setLocation(location)
+                                                }
+                                            })
+                                        }
                                         
                                         let view = item.view as? ChatPollItemView
                                         if let view = view, view.window != nil, view.visibleRect != .zero {
@@ -2770,6 +2776,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     return true
                                 })
+                                once = false
                             }
                         }
                         
