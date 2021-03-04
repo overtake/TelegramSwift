@@ -1529,7 +1529,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }))
         
     }
-
+    
+    func updateShouldBeRecording(_ shouldBeRecording: Bool, title: String? = nil) {
+        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title)
+    }
 }
 
 func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, joinAs: PeerId, initialCall: CachedChannelData.ActiveCall?, initialInfo: GroupCallInfo? = nil) -> Signal<RequestOrJoinGroupCallResult, NoError> {

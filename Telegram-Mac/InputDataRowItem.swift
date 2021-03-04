@@ -735,7 +735,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         secureField.font = .normal(13)
         secureField.backgroundColor = backdorColor
         secureField.textColor = textColor
-        separator.backgroundColor = theme.colors.border
+        separator.backgroundColor = borderColor
         containerView.backgroundColor = backdorColor
         loadingView?.progressColor = grayText
         guard let item = item as? InputDataRowItem else {
