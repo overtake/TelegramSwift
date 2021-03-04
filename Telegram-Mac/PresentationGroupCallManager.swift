@@ -190,4 +190,5 @@ protocol PresentationGroupCall: class {
 
     func switchAccount(_ peerId: PeerId) -> Void
     func updateTitle(_ title: String) -> Void
+    func updateShouldBeRecording(_ shouldBeRecording: Bool, title: String?) -> Void
 }

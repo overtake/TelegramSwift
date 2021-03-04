@@ -25,6 +25,8 @@ private final class Arguments {
     let checkPermission:()->Void
     let showTooltip:(String)->Void
     let switchAccount:(PeerId)->Void
+    let startRecording:()->Void
+    let stopRecording:()->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -33,7 +35,10 @@ private final class Arguments {
          updateDefaultParticipantsAreMuted: @escaping(Bool)->Void,
          updateSettings:  @escaping(@escaping(VoiceCallSettings)->VoiceCallSettings)->Void,
          checkPermission:@escaping()->Void,
-         showTooltip: @escaping(String)->Void, switchAccount: @escaping(PeerId)->Void) {
+         showTooltip: @escaping(String)->Void,
+         switchAccount: @escaping(PeerId)->Void,
+         startRecording: @escaping()->Void,
+         stopRecording: @escaping()->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -44,6 +49,8 @@ private final class Arguments {
         self.checkPermission = checkPermission
         self.showTooltip = showTooltip
         self.switchAccount = switchAccount
+        self.startRecording = startRecording
+        self.stopRecording = stopRecording
     }
 }
 
@@ -103,6 +110,7 @@ private struct GroupCallSettingsState : Equatable {
     var hasPermission: Bool?
     var title: String?
     var displayAsList: [FoundPeer]?
+    var recordName: String?
 }
 
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
@@ -119,6 +127,7 @@ private let _id_input_mode_toggle = InputDataIdentifier("_id_input_mode_toggle")
 
 
 private let _id_input_chat_title = InputDataIdentifier("_id_input_chat_title")
+private let _id_input_record_title = InputDataIdentifier("_id_input_record_title")
 
 private let _id_listening_link = InputDataIdentifier("_id_listening_link")
 private let _id_speaking_link = InputDataIdentifier("_id_speaking_link")
@@ -233,13 +242,26 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("RECORD VOICE CHAT"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
+        
+        
         let recordingStartTimestamp = state.recordingStartTimestamp
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(recordingStartTimestamp), item: { initialSize, stableId in
-            return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: .singleItem, account: account, startedRecordedTime: recordingStartTimestamp, customTheme: theme, callback: {
-                
-            })
+        
+        if recordingStartTimestamp == nil {
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "Record Name...", filter: { $0 }, limit: 140))
+            index += 1
+        }
+        struct Tuple : Equatable {
+            let recordingStartTimestamp: Int32?
+            let viewType: GeneralViewType
+        }
+        
+        let tuple = Tuple(recordingStartTimestamp: recordingStartTimestamp, viewType: recordingStartTimestamp == nil ? .lastItem : .singleItem)
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+            return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, account: account, startedRecordedTime: tuple.recordingStartTimestamp, customTheme: theme, start: arguments.startRecording, stop: arguments.stopRecording)
         }))
         index += 1
+        
     }
     
 //    if state.canManageCall {
@@ -636,6 +658,18 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             }
         }, switchAccount: { [weak self] peerId in
             self?.call.switchAccount(peerId)
+        }, startRecording: { [weak self] in
+            if let window = self?.window {
+                confirm(for: window, header: L10n.voiceChatRecordingStartTitle, information: L10n.voiceChatRecordingStartText, okTitle: L10n.voiceChatRecordingStartOK, successHandler: { _ in
+                    self?.call.updateShouldBeRecording(true, title: stateValue.with { $0.recordName })
+                })
+            }
+        }, stopRecording: { [weak self] in
+            if let window = self?.window {
+                confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { _ in
+                    self?.call.updateShouldBeRecording(false, title: nil)
+                })
+            }
         })
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
@@ -647,6 +681,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             updateState { current in
                 var current = current
                 current.title = data[_id_input_chat_title]?.stringValue ?? current.title
+                current.recordName = data[_id_input_record_title]?.stringValue ?? current.title
                 return current
             }
         })

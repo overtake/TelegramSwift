@@ -66,6 +66,8 @@ private final class GroupCallUIArguments {
     }
 }
 
+
+
 private final class GroupCallControlsView : View {
     private let speak: GroupCallSpeakButton = GroupCallSpeakButton(frame: NSMakeRect(0, 0, 144, 144))
     private let videoStream: CallControl = CallControl(frame: .zero)
@@ -280,9 +282,116 @@ private final class GroupCallControlsView : View {
     }
 }
 
+private final class GroupCallRecordingView : Control {
+    private let textView: TextView = TextView()
+    private let indicator: View = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        addSubview(indicator)
+        
+        textView.isEventLess = true
+        indicator.isEventLess = true
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        self.set(handler: { control in
+            if let window = control.kitWindow {
+                //TODOLANG
+                showModalText(for: window, text: "This voice chat is being recorded.")
+            }
+        }, for: .Click)
+        
+        self.set(handler: { control in
+            control.backgroundColor = GroupCallTheme.membersColor.withAlphaComponent(0.6)
+        }, for: .Highlight)
+
+        self.set(handler: { control in
+            control.backgroundColor = GroupCallTheme.membersColor
+        }, for: .Normal)
+
+        self.set(handler: { control in
+            control.backgroundColor = GroupCallTheme.membersColor
+        }, for: .Hover)
+
+        indicator.backgroundColor = GroupCallTheme.customTheme.redColor
+        indicator.setFrameSize(NSMakeSize(10, 10))
+        indicator.layer?.cornerRadius = indicator.frame.height / 2
+        
+        let animation = CABasicAnimation(keyPath: "opacity")
+        animation.timingFunction = .init(name: .easeInEaseOut)
+        animation.fromValue = 0.5
+        animation.toValue = 1.0
+        animation.duration = 1.0
+        animation.autoreverses = true
+        animation.repeatCount = .infinity
+        animation.isRemovedOnCompletion = false
+        animation.fillMode = CAMediaTimingFillMode.forwards
+        
+        indicator.layer?.add(animation, forKey: "opacity")
+
+        timer = SwiftSignalKit.Timer.init(timeout: 0.5, repeat: true, completion: { [weak self] in
+            if let strongSelf = self, let account = strongSelf.account {
+                self?.update(recordingStartTime: strongSelf.recordingStartTime, account: account)
+            }
+        }, queue: .mainQueue())
+        
+        timer?.start()
+    }
+    private var timer: SwiftSignalKit.Timer?
+    private var recordingStartTime: Int32 = 0
+    private var account: Account?
+    func update(recordingStartTime: Int32, account: Account) {
+        self.account = account
+        self.recordingStartTime = recordingStartTime
+        let duration = account.network.getApproximateRemoteTimestamp() - recordingStartTime
+                
+        let days = Int(duration) / (3600 * 24)
+        let hours = Int(duration) / 3600
+        let minutes = Int(duration) / 60 % 60
+        let seconds = Int(duration) % 60
+        
+        var formatted: String
+        var minWidth: CGFloat = 0
+        if days != 0 {
+            formatted = String(format:"%02i:%02i:%02i:%02i", days, hours, minutes, seconds)
+            minWidth = max(minWidth, 77)
+        } else if hours != 0 {
+            formatted = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
+            minWidth = max(minWidth, 57)
+        } else {
+            formatted = String(format:"%02i:%02i", minutes, seconds)
+            minWidth = max(minWidth, 37)
+        }
+        let layout = TextViewLayout(.initialize(string: formatted, color: GroupCallTheme.customTheme.textColor, font: .normal(.text)))
+        
+        layout.measure(width: .greatestFiniteMagnitude)
+        
+        textView.update(layout)
+        
+        setFrameSize(NSMakeSize(max(layout.layoutSize.width, minWidth) + 6 + indicator.frame.width + 20, layout.layoutSize.height + 10))
+        
+        layer?.cornerRadius = frame.height / 2
+        
+        backgroundColor = GroupCallTheme.membersColor
+    }
+ 
+    override func layout() {
+        super.layout()
+        indicator.centerY(x: 10)
+        textView.centerY(x: indicator.frame.maxX + 6)
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private final class GroupCallTitleView : View {
     fileprivate let titleView: TextView = TextView()
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
+    private var recordingView: GroupCallRecordingView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
@@ -307,10 +416,14 @@ private final class GroupCallTitleView : View {
         super.layout()
         titleView.centerX(y: frame.midY - titleView.frame.height)
         statusView.centerX(y: frame.midY)
+        
+        if let recordingView = recordingView {
+            recordingView.centerY(x: frame.width - recordingView.frame.width - 24)
+        }
     }
     
     
-    func update(_ peer: Peer, _ state: GroupCallUIState, animated: Bool) {
+    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, animated: Bool) {
         
         let title: String
         if let custom = state.state.title, !custom.isEmpty {
@@ -323,6 +436,33 @@ private final class GroupCallTitleView : View {
         titleView.update(layout)
 
 
+        if let recordingStartTimestamp = state.state.recordingStartTimestamp {
+            let view: GroupCallRecordingView
+            if let current = self.recordingView {
+                view = current
+            } else {
+                view = GroupCallRecordingView(frame: .zero)
+                addSubview(view)
+                self.recordingView = view
+                
+                if animated {
+                    recordingView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            view.update(recordingStartTime: recordingStartTimestamp, account: account)
+        } else {
+            if let recordingView = recordingView {
+                self.recordingView = nil
+                if animated {
+                    recordingView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false,completion: { [weak recordingView] _ in
+                        recordingView?.removeFromSuperview()
+                    })
+                } else {
+                    recordingView.removeFromSuperview()
+                }
+            }
+        }
+        
         let status: String
         let count: Int
         if let summaryState = state.summaryState {
@@ -517,7 +657,7 @@ private final class GroupCallView : View {
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
         peersTable.merge(with: transition)
-        titleView.update(state.peer, state, animated: animated)
+        titleView.update(state.peer, state, call.account, animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
         peersTableContainer.change(size: substrateRect().size, animated: animated)

@@ -8859,6 +8859,10 @@ internal final class L10n {
   internal static var voiceChatRequestAccess: String  { return L10n.tr("Localizable", "VoiceChat.RequestAccess") }
   /// Settings
   internal static var voiceChatSettings: String  { return L10n.tr("Localizable", "VoiceChat.Settings") }
+  /// Start Recording
+  internal static var voiceChatStartRecording: String  { return L10n.tr("Localizable", "VoiceChat.StartRecording") }
+  /// Stop Recording
+  internal static var voiceChatStopRecording: String  { return L10n.tr("Localizable", "VoiceChat.StopRecording") }
   /// Unmute For Me
   internal static var voiceChatUnmuteForMe: String  { return L10n.tr("Localizable", "VoiceChat.UnmuteForMe") }
   /// Allow To Speak
@@ -8915,6 +8919,18 @@ internal final class L10n {
   internal static var voiceChatInviteTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Title") }
   /// Sorry, there are too many members in this voice chat. Please try again later.
   internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
+  /// Start
+  internal static var voiceChatRecordingStartOK: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.OK") }
+  /// Do you want to start recording this chat and save the result into an audio file?\n\nOther members will see that the chat is being recorded.
+  internal static var voiceChatRecordingStartText: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.Text") }
+  /// Start Recording
+  internal static var voiceChatRecordingStartTitle: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.Title") }
+  /// Stop
+  internal static var voiceChatRecordingStopOK: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Stop.OK") }
+  /// Are you sure to want to stop recording?
+  internal static var voiceChatRecordingStopText: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Stop.Text") }
+  /// Stop Recording
+  internal static var voiceChatRecordingStopTitle: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Stop.Title") }
   /// Are you sure you want to remove %1$@ from the group chat?
   internal static func voiceChatRemovePeerConfirm(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm", p1)
