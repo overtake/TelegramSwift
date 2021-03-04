@@ -103,19 +103,25 @@ public struct PresentationGroupCallState: Equatable {
     public var adminIds: Set<PeerId>
     public var muteState: GroupCallParticipantsContext.Participant.MuteState?
     public var defaultParticipantMuteState: DefaultParticipantMuteState?
-    
+    public var title: String?
+    public var recordingStartTimestamp: Int32?
     public init(
         networkState: NetworkState,
         canManageCall: Bool,
         adminIds: Set<PeerId>,
         muteState: GroupCallParticipantsContext.Participant.MuteState?,
-        defaultParticipantMuteState: DefaultParticipantMuteState?
+        defaultParticipantMuteState: DefaultParticipantMuteState?,
+        title: String?,
+        recordingStartTimestamp: Int32?
     ) {
         self.networkState = networkState
         self.canManageCall = canManageCall
         self.adminIds = adminIds
         self.muteState = muteState
         self.defaultParticipantMuteState = defaultParticipantMuteState
+        self.title = title
+        self.recordingStartTimestamp = recordingStartTimestamp
+        
     }
 }
 

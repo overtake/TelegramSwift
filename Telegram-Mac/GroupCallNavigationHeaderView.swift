@@ -93,7 +93,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members, context.call.summaryState).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members, summary in
             
             let title: String?
-            if let custom = summary?.info.title, !custom.isEmpty {
+            if let custom = state.title, !custom.isEmpty {
                 title = custom
             } else {
                 title = peer?.displayTitle

@@ -313,7 +313,7 @@ private final class GroupCallTitleView : View {
     func update(_ peer: Peer, _ state: GroupCallUIState, animated: Bool) {
         
         let title: String
-        if let custom = state.summaryState?.info.title, !custom.isEmpty {
+        if let custom = state.state.title, !custom.isEmpty {
             title = custom
         } else {
             title = peer.displayTitle

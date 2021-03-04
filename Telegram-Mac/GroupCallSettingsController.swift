@@ -225,6 +225,23 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         index += 1
     }
     
+    
+    if state.canManageCall {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("RECORD VOICE CHAT"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        index += 1
+        
+        let recordingStartTimestamp = state.recordingStartTimestamp
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(recordingStartTimestamp), item: { initialSize, stableId in
+            return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: .singleItem, account: account, startedRecordedTime: recordingStartTimestamp, customTheme: theme, callback: {
+                
+            })
+        }))
+        index += 1
+    }
+    
 //    if state.canManageCall {
 //
 //        entries.append(.sectionId(sectionId, type: .customModern(20)))
