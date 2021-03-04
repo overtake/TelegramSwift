@@ -111,7 +111,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: nil, recordingStartTimestamp: nil),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: state.title, recordingStartTimestamp: state.recordingStartTimestamp),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -197,7 +197,9 @@ private extension PresentationGroupCallState {
             canManageCall: false,
             adminIds: Set(),
             muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
-            defaultParticipantMuteState: nil
+            defaultParticipantMuteState: nil,
+            title: nil,
+            recordingStartTimestamp: nil
         )
     }
 }
@@ -918,13 +920,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                    
                    strongSelf.membersValue = members
                 
-                    
-                   
+                   strongSelf.stateValue.title = state.title
+                   strongSelf.stateValue.recordingStartTimestamp = state.recordingStartTimestamp
                    strongSelf.stateValue.adminIds = adminIds
                    strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.account.peerId)
                    if (state.isCreator || adminIds.contains(strongSelf.account.peerId)) && state.defaultParticipantsAreMuted.canChange {
                        strongSelf.stateValue.defaultParticipantMuteState = state.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
                    }
+                
 
                    strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
                        participantCount: state.totalCount,
@@ -1260,11 +1263,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         guard case let .estabilished(callInfo, _, _, _) = self.internalState else {
             return
         }
-        
-        var info = callInfo
-        info.title = title
         updateTitleDisposable.set(editGroupCallTitle(account: account, callId: callInfo.id, accessHash: callInfo.accessHash, title: title).start())
-        self.summaryInfoState.set(.single(SummaryInfoState(info: info)))
     }
     
     func invitePeer(_ peerId: PeerId) {
@@ -1588,13 +1587,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
                     create(context.peerId)
                 }
             } else {
-                _ = showModalProgress(signal: groupCallDisplayAsAvailablePeers(network: context.account.network, postbox: context.account.postbox), for: context.window).start(next: { displayAsList in
-                    if !displayAsList.isEmpty {
-                        showModal(with: GroupCallDisplayAsController(context: context, mode: .create, list: displayAsList, completion: create), for: context.window)
-                    } else {
-                        create(context.peerId)
-                    }
-                })
+                selectGroupCallJoiner(context: context, completion: create)
             }
             
             return ActionDisposable {

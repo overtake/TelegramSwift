@@ -208,6 +208,16 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 }
 
 
+func selectGroupCallJoiner(context: AccountContext, completion: @escaping(PeerId)->Void) {
+    _ = showModalProgress(signal: groupCallDisplayAsAvailablePeers(network: context.account.network, postbox: context.account.postbox), for: context.window).start(next: { displayAsList in
+        if !displayAsList.isEmpty {
+            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, list: displayAsList, completion: completion), for: context.window)
+        } else {
+            completion(context.peerId)
+        }
+    })
+}
+
 /*
  
  */

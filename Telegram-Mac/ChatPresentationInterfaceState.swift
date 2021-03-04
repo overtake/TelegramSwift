@@ -131,14 +131,17 @@ enum ChatPresentationInputQuery: Equatable {
 
 
 struct ChatActiveGroupCallInfo: Equatable {
-    let activeCall: CachedChannelData.ActiveCall
+    var activeCall: CachedChannelData.ActiveCall
     let data: GroupCallPanelData?
-    
+    let callJoinPeerId: PeerId?
     func withUpdatedData(_ data: GroupCallPanelData?) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data)
+        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data, callJoinPeerId: self.callJoinPeerId)
     }
     func withUpdatedActiveCall(_ activeCall: CachedChannelData.ActiveCall) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data)
+        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId)
+    }
+    func withUpdatedCallJoinPeerId(_ callJoinPeerId: PeerId?) -> ChatActiveGroupCallInfo {
+        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: callJoinPeerId)
     }
 }
 
