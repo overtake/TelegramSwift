@@ -37,7 +37,7 @@ private class CallRatingModalView: View {
         var x:CGFloat = 0
         for i in 0 ..< 5 {
             let star = ImageButton()
-            star.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(), for: .Normal)
+            star.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(theme.colors.accent), for: .Normal)
             star.sizeToFit()
             star.setFrameOrigin(x, 0)
             rating.addSubview(star)
