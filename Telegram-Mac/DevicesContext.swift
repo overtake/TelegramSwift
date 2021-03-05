@@ -66,7 +66,7 @@ final class DevicesContext : NSObject {
     private var observeContext = 0;
     
     private final class UpdaterContext {
-        var status: (camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
+//        var status: (camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
         let subscribers = Bag<((camera: String?, input: String?, output: String?)) -> Void>()
     }
     
@@ -84,7 +84,7 @@ final class DevicesContext : NSObject {
                 subscriber.putNext(status)
             })
             
-            subscriber.putNext(statusContext.status)
+//            subscriber.putNext(statusContext.status)
             
             disposable.set(ActionDisposable {
                 DispatchQueue.main.async {
@@ -156,13 +156,13 @@ final class DevicesContext : NSObject {
             guard let `self` = self else {
                 return
             }
-            self.updaterContext.status = result
+            //self.updaterContext.status = result
             
             for subscriber in self.updaterContext.subscribers.copyItems() {
-                subscriber(self.updaterContext.status)
+                subscriber(result)
             }
 
-            self.updaterContext.status = (camera: nil, input: nil, output: nil)
+           // self.updaterContext.status = (camera: nil, input: nil, output: nil)
         }))
         
         update()
