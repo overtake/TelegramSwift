@@ -1006,20 +1006,15 @@ class ChatListRowItem: TableRowItem {
         let chatLocation = self.chatLocation
         let associatedGroupId = self.associatedGroupId
         
-        if let peer = peer {
+        if let mainPeer = peer, let peerId = self.peerId, let peer = renderedPeer?.peers[peerId] {
             
             let deleteChat:()->Void = { [weak self] in
                 self?.delete()
             }
             
             
-            guard let peerId = self.peerId else {
-                return .single([])
-            }
-        
-            
             let call:()->Void = {
-                _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: mainPeer.id) |> deliverOnMainQueue).start(next: { result in
                     applyUIPCallResult(context.sharedContext, result)
                 })
             }
@@ -1058,12 +1053,12 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
             }
             
-            if peer is TelegramUser {
-                if peer.canCall && peer.id != context.peerId {
+            if mainPeer is TelegramUser {
+                if mainPeer.canCall && mainPeer.id != context.peerId {
                     items.append(ContextMenuItem(tr(L10n.chatListContextCall), handler: call))
                 }
                 items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: {
-                    clearHistory(context: context, peer: peer)
+                    clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                 }))
                 items.append(ContextMenuItem(L10n.chatListContextDeleteChat, handler: deleteChat))
             }
@@ -1091,7 +1086,7 @@ class ChatListRowItem: TableRowItem {
 
             if let peer = peer as? TelegramGroup, !isAd {
                 items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: {
-                    clearHistory(context: context, peer: peer)
+                    clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                 }))
                 switch peer.membership {
                 case .Member:
@@ -1109,7 +1104,7 @@ class ChatListRowItem: TableRowItem {
                 } else if !isAd {
                     if peer.addressName == nil {
                         items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: {
-                            clearHistory(context: context, peer: peer)
+                            clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                         }))
                     }
                     items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: deleteChat))

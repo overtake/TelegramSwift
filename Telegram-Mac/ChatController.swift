@@ -3658,13 +3658,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         self.chatInteraction.update(animated:false, { present in
                             var present = present
 
-                            if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
+                            if peerId.namespace == Namespaces.Peer.SecretChat {
+                                
+                            } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                            }
-                            if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
+                            } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                            }
-                            if let cachedData = combinedInitialData.cachedData as? CachedUserData {
+                            } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                             }
                             
@@ -3880,21 +3880,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
 
-                            if let peer = peerViewMainPeer(peerView) {
-                                if let peer = peer as? TelegramSecretChat, let value = peer.messageAutoremoveTimeout {
-                                    present = present.withUpdatedMessageSecretTimeout(.known(.init(peerValue: value)))
-                                } else {
-                                    present = present.withUpdatedMessageSecretTimeout(.known(nil))
-                                }
-                                if let cachedData = peerView.cachedData as? CachedChannelData {
+                            if let peer = peerView.peers[peerId] {
+                                if let peer = peer as? TelegramSecretChat {
+                                    if let value = peer.messageAutoremoveTimeout {
+                                        present = present.withUpdatedMessageSecretTimeout(.known(.init(peerValue: value)))
+                                    } else {
+                                        present = present.withUpdatedMessageSecretTimeout(.known(nil))
+                                    }
+                                } else if let cachedData = peerView.cachedData as? CachedUserData {
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                                } else if let cachedData = peerView.cachedData as? CachedChannelData {
+                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                                } else if let cachedData = peerView.cachedData as? CachedGroupData {
                                     present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                                 }
-                                if let cachedData = peerView.cachedData as? CachedGroupData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                }
-                                if let cachedData = peerView.cachedData as? CachedUserData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                }
+                                
                             }
                             
                             present = present.withUpdatedDiscussionGroupId(discussionGroupId)
@@ -4712,7 +4712,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
                             
-                            if let peer = peerViewMainPeer(peerView) {
+                            if let peer = peerView.peers[peerView.peerId], let mainPeer = peerViewMainPeer(peerView) {
                                 
                                 if let groupId = peerView.groupId, groupId != .root {
                                     items.append(SPopoverItem(L10n.chatContextUnarchive, {
@@ -4738,7 +4738,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                                 if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
                                     items.append(SPopoverItem(L10n.chatContextClearHistory, {
-                                        clearHistory(context: context, peer: peer)
+                                        clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                                     }, theme.icons.chatActionClearHistory))
                                 }
                                 
