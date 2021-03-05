@@ -188,15 +188,12 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
             //TODOLANG
             for peer in list {
                 
-                var status: String? = nil
-                if let addressName = peer.peer.addressName {
-                    status = "@\(addressName)"
-                }
-                if let subscribers = peer.subscribers, let username = status {
+                var status: String?
+                if let subscribers = peer.subscribers {
                     if peer.peer.isChannel {
-                        status = tr(L10n.searchGlobalChannel1Countable(username, Int(subscribers)))
+                        status = L10n.voiceChatJoinAsChannelCountable(Int(subscribers))
                     } else if peer.peer.isSupergroup || peer.peer.isGroup {
-                        status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
+                        status = L10n.voiceChatJoinAsGroupCountable(Int(subscribers))
                     }
                 }
                 
@@ -247,7 +244,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         let recordingStartTimestamp = state.recordingStartTimestamp
         
         if recordingStartTimestamp == nil {
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "Record Name...", filter: { $0 }, limit: 140))
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "Audio Title (Optional)", filter: { $0 }, limit: 140))
             index += 1
         }
         struct Tuple : Equatable {
@@ -593,11 +590,11 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         }
 
         
-        actualizeTitleDisposable.set(call.summaryState.start(next: { state in
+        actualizeTitleDisposable.set(call.state.start(next: { state in
             updateState { current in
                 var current = current
                 if current.title == nil {
-                    current.title = state?.info.title
+                    current.title = state.title
                 }
                 return current
             }
@@ -678,11 +675,17 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 return
             }
             let data = self.fetchData()
+            var previousTitle: String? = stateValue.with { $0.title }
+
             updateState { current in
                 var current = current
                 current.title = data[_id_input_chat_title]?.stringValue ?? current.title
                 current.recordName = data[_id_input_record_title]?.stringValue ?? current.title
                 return current
+            }
+            let title = stateValue.with({ $0.title })
+            if previousTitle != title, let title = title {
+                self.call.updateTitle(title, force: false)
             }
         })
         let initialSize = self.atomicSize
@@ -706,7 +709,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if let state = getState?(), let title = state.title {
-            self.call.updateTitle(title)
+            self.call.updateTitle(title, force: true)
         }
     }
     

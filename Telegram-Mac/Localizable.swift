@@ -4039,6 +4039,8 @@ internal final class L10n {
   internal static var graphZoomOut: String  { return L10n.tr("Localizable", "Graph.ZoomOut") }
   /// New Group
   internal static var groupCreateGroup: String  { return L10n.tr("Localizable", "Group.CreateGroup") }
+  /// Sorry, you can't add this user to group.
+  internal static var groupErrorAddBlocked: String  { return L10n.tr("Localizable", "Group.ErrorAddBlocked") }
   /// New Group
   internal static var groupNewGroup: String  { return L10n.tr("Localizable", "Group.NewGroup") }
   /// Sorry, this group doesn't seem to exist.
@@ -8919,6 +8921,62 @@ internal final class L10n {
   internal static var voiceChatInviteTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Title") }
   /// Sorry, there are too many members in this voice chat. Please try again later.
   internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
+  /// %d
+  internal static func voiceChatJoinAsChannelCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_countable", p1)
+  }
+  /// %d subscribers
+  internal static func voiceChatJoinAsChannelFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_few", p1)
+  }
+  /// %d subscribers
+  internal static func voiceChatJoinAsChannelMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_many", p1)
+  }
+  /// %d subscriber
+  internal static func voiceChatJoinAsChannelOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_one", p1)
+  }
+  /// %d subscribers
+  internal static func voiceChatJoinAsChannelOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_other", p1)
+  }
+  /// %d subscribers
+  internal static func voiceChatJoinAsChannelTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_two", p1)
+  }
+  /// %d subscribers
+  internal static func voiceChatJoinAsChannelZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Channel_zero", p1)
+  }
+  /// %d
+  internal static func voiceChatJoinAsGroupCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_countable", p1)
+  }
+  /// %d members
+  internal static func voiceChatJoinAsGroupFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_few", p1)
+  }
+  /// %d members
+  internal static func voiceChatJoinAsGroupMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_many", p1)
+  }
+  /// %d member
+  internal static func voiceChatJoinAsGroupOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_one", p1)
+  }
+  /// %d members
+  internal static func voiceChatJoinAsGroupOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_other", p1)
+  }
+  /// %d members
+  internal static func voiceChatJoinAsGroupTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_two", p1)
+  }
+  /// %d members
+  internal static func voiceChatJoinAsGroupZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_zero", p1)
+  }
   /// Start
   internal static var voiceChatRecordingStartOK: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.OK") }
   /// Do you want to start recording this chat and save the result into an audio file?\n\nOther members will see that the chat is being recorded.
@@ -9023,6 +9081,8 @@ internal final class L10n {
   internal static var voiceChatStatusMutedForYou: String  { return L10n.tr("Localizable", "VoiceChat.Status.MutedForYou") }
   /// speaking
   internal static var voiceChatStatusSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Status.Speaking") }
+  /// wants to speak
+  internal static var voiceChatStatusWantsSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Status.WantsSpeak") }
   /// Leave
   internal static var voiceChatTitleEnd: String  { return L10n.tr("Localizable", "VoiceChat.Title.End") }
   /// invited

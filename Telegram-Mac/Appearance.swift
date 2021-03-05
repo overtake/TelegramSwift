@@ -446,17 +446,31 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
     })!
 }
 
-private func generateDialogVerify(background: NSColor, foreground: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(24, 24), rotatedContext: { size, ctx in
-        ctx.clear(CGRect(origin: CGPoint(), size: size))
+func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bool = false) -> CGImage {
+    if reversed {
+        return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
 
-        let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
-        
-        ctx.setFillColor(background.cgColor)
-        ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
-        
-        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
-    })!
+            let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    } else {
+        return generateImage(NSMakeSize(24, 24), rotatedContext: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+            let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    }
+    
 }
 
 private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
@@ -494,7 +508,7 @@ private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColo
     })!
 }
 
-private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
+func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
     let textNode = TextNode.layoutText(.initialize(string: text, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     
     let draw: (CGSize, CGContext) -> Void = { size, ctx in
@@ -518,14 +532,14 @@ private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor
     }
 }
 
-private func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, isReversed: true)
 }
 
-private func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
+func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
     return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: isReversed)
 }
-private func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: true)
 }
 

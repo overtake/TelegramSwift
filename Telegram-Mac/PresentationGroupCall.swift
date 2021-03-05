@@ -199,7 +199,8 @@ private extension PresentationGroupCallState {
             muteState: GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
             defaultParticipantMuteState: nil,
             title: nil,
-            recordingStartTimestamp: nil
+            recordingStartTimestamp: nil,
+            isRaisedHand: false
         )
     }
 }
@@ -920,10 +921,13 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                    
                    strongSelf.membersValue = members
                 
-                   strongSelf.stateValue.title = state.title
-                   strongSelf.stateValue.recordingStartTimestamp = state.recordingStartTimestamp
-                   strongSelf.stateValue.adminIds = adminIds
-                   strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.account.peerId)
+                    let member = members.participants.first(where: { $0.peer.id == strongSelf.joinAs })
+                
+                    strongSelf.stateValue.isRaisedHand = member?.raiseHandRating != nil
+                
+                    strongSelf.stateValue.title = state.title
+                    strongSelf.stateValue.recordingStartTimestamp = state.recordingStartTimestamp
+                    strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.account.peerId)
                    if (state.isCreator || adminIds.contains(strongSelf.account.peerId)) && state.defaultParticipantsAreMuted.canChange {
                        strongSelf.stateValue.defaultParticipantMuteState = state.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
                    }
@@ -1151,37 +1155,37 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     
     private func muteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState? {
         let canThenUnmute: Bool
-          if isMuted {
-              var mutedByYou = false
-              if peerId == self.joinAs {
-                  canThenUnmute = true
-              } else if self.stateValue.canManageCall {
-                  if self.stateValue.adminIds.contains(peerId) {
-                      canThenUnmute = true
-                  } else {
-                      canThenUnmute = false
-                  }
-              } else if self.stateValue.adminIds.contains(self.account.peerId) {
-                  canThenUnmute = true
-              } else {
-                  mutedByYou = true
-                  canThenUnmute = true
-              }
+        if isMuted {
+            var mutedByYou = false
+            if peerId == self.joinAs {
+                canThenUnmute = self.stateValue.muteState?.canUnmute ?? true
+            } else if self.stateValue.canManageCall {
+                if self.stateValue.adminIds.contains(peerId) {
+                    canThenUnmute = true
+                } else {
+                    canThenUnmute = false
+                }
+            } else if self.stateValue.adminIds.contains(self.account.peerId) {
+                canThenUnmute = true
+            } else {
+                mutedByYou = true
+                canThenUnmute = true
+            }
             return isMuted ? GroupCallParticipantsContext.Participant.MuteState(canUnmute: canThenUnmute, mutedByYou: mutedByYou) : nil
-          } else {
-              if peerId == self.joinAs {
-                  return nil
-              } else if self.stateValue.canManageCall || self.stateValue.adminIds.contains(self.account.peerId) {
+        } else {
+            if peerId == self.joinAs {
+                return nil
+            } else if self.stateValue.canManageCall || self.stateValue.adminIds.contains(self.account.peerId) {
                 return GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
-              } else {
-                  return nil
-              }
+            } else {
+                return nil
+            }
           }
     }
     
     
-    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32? = nil) {
-        self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: isMuted), volume: volume)
+    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32? = nil, raiseHand: Bool? = nil) {
+        self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: isMuted), volume: volume, raiseHand: raiseHand)
     }
     
     private func requestCall() {
@@ -1204,6 +1208,23 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         let account = self.account
         let peerId = self.peerId
         let joinAs = self.joinAs
+        
+        let updateCachedData = account.postbox.transaction { transaction in
+            transaction.updatePeerCachedData(peerIds: [peerId], update: { peerId, current in
+                if peerId.namespace == Namespaces.Peer.CloudGroup {
+                    var current = current as? CachedGroupData ?? CachedGroupData()
+                    current = current.withUpdatedCallJoinPeerId(peerId)
+                    return current
+                } else if peerId.namespace == Namespaces.Peer.CloudChannel {
+                    var current = current as? CachedChannelData ?? CachedChannelData()
+                    current = current.withUpdatedCallJoinPeerId(peerId)
+                    return current
+                } else {
+                    return current
+                }
+            })
+        }
+        _ = updateCachedData.start()
         
         let currentCall: Signal<GroupCallInfo?, CallError>
         if let initialCall = self.initialCall {
@@ -1258,12 +1279,15 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
     }
     
-    func updateTitle(_ title: String) {
-        
+    func updateTitle(_ title: String, force: Bool) {
         guard case let .estabilished(callInfo, _, _, _) = self.internalState else {
             return
         }
-        updateTitleDisposable.set(editGroupCallTitle(account: account, callId: callInfo.id, accessHash: callInfo.accessHash, title: title).start())
+        var signal = editGroupCallTitle(account: account, callId: callInfo.id, accessHash: callInfo.accessHash, title: title)
+        if !force {
+            signal = signal |> delay(0.2, queue: .mainQueue())
+        }
+        updateTitleDisposable.set(signal.start())
     }
     
     func invitePeer(_ peerId: PeerId) {
@@ -1332,7 +1356,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             if id == peerId {
                 self.callContext?.setVolume(ssrc: ssrc, volume: Double(volume) / 10000)
                 if sync {
-                    self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: volume == 0), volume: volume)
+                    self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: volume == 0), volume: volume, raiseHand: nil)
                 }
                 break
             }
@@ -1517,8 +1541,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
        }
     }
     
-    func switchAccount(_ peerId: PeerId) -> Void {
-        self.joinAs = peerId
+    func switchAccount(_ joinAs: PeerId) -> Void {
+        self.joinAs = joinAs
         
         guard case let .estabilished(callInfo, _, localSsrc, _) = self.internalState else {
             return
@@ -1527,6 +1551,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         |> deliverOnMainQueue).start(completed: { [weak self] in
             self?.requestCall()
         }))
+        
         
     }
     
@@ -1539,6 +1564,7 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, joinAs: Pee
     let sharedContext = context.sharedContext
     let accounts = context.sharedContext.activeAccounts |> take(1)
     let account = context.account
+    
     return combineLatest(queue: .mainQueue(), accounts, account.postbox.loadedPeerWithId(peerId)) |> mapToSignal { accounts, peer in
         if let context = sharedContext.bindings.groupCall(), context.call.peerId == peerId, context.call.account.id == account.id {
             return .single(.samePeer(context))

@@ -15,6 +15,10 @@ import TelegramCore
 
 private let photoSize: NSSize = NSMakeSize(35, 35)
 
+private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
+private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
+private let verifyIcon = NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
+
 final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
@@ -43,7 +47,10 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
         if let state = data.state {
-            if let muteState = state.muteState, muteState.mutedByYou {
+            if data.isRaisedHand, let _ = state.muteState {
+                string = L10n.voiceChatStatusWantsSpeak
+                color = GroupCallTheme.blueStatusColor
+            } else if let muteState = state.muteState, muteState.mutedByYou {
                 string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
                 color = GroupCallTheme.speakLockedColor
             } else if data.isSpeaking {
@@ -63,8 +70,8 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                 string = about
                 color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
             } else {
-                string = L10n.voiceChatStatusConnecting
-                color = GroupCallTheme.blueStatusColor.withAlphaComponent(0.6)
+                string = L10n.voiceChatStatusConnecting.lowercased()
+                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
             }
         } else if isInvited {
             string = L10n.voiceChatStatusInvited
@@ -96,6 +103,31 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     
     var peer: Peer {
         return data.peer
+    }
+    
+    private var temp: Int? = nil
+    
+    var supplementIcon: (CGImage, NSSize)? {
+        
+        if temp == nil {
+            self.temp = Int.random(in: 0...2)
+        }
+        
+        let isScam: Bool = temp == 0 ? true : peer.isScam
+        let isFake: Bool = temp == 1 ? true : peer.isFake
+        let verified: Bool = temp == 2 ? true : peer.isVerified
+        
+        
+
+        if isScam {
+            return (scamIcon, .zero)
+        } else if isFake {
+            return (fakeIcon, .zero)
+        } else if verified {
+            return (verifyIcon, NSMakeSize(-4, -4))
+        } else {
+            return nil
+        }
     }
     
     override var hasBorder: Bool {
@@ -141,6 +173,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
     private let videoContainer: View = View()
     private var volumeView: TextView?
     private var statusImageView: ImageView?
+    private var supplementImageView: ImageView?
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
             frame: NSMakeRect(0, 0, 55, 55),
@@ -206,6 +239,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 
         titleView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, 6))
         
+        if let imageView = self.supplementImageView {
+            imageView.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)))
+        }
+        
         statusView?.setFrameOrigin(statusViewPoint)
         volumeView?.setFrameOrigin(volumeViewPoint)
         statusImageView?.setFrameOrigin(statusImageViewViewPoint)
@@ -269,6 +306,22 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 }
             }
         }
+        
+        if let icon = item.supplementIcon {
+            let current: ImageView
+            if let value = self.supplementImageView {
+                current = value
+            } else {
+                current = ImageView()
+                self.supplementImageView = current
+                addSubview(current)
+            }
+            current.image = icon.0
+            current.sizeToFit()
+        } else {
+            self.supplementImageView?.removeFromSuperview()
+            self.supplementImageView = nil
+        }
 
         if item.isActivePeer {
             if item.data.isSpeaking {
@@ -276,7 +329,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 button.set(image: GroupCallTheme.small_speaking_active, for: .Highlight)
             } else {
                 if let muteState = item.data.state?.muteState {
-                    if muteState.canUnmute && !muteState.mutedByYou {
+                    if !muteState.canUnmute && item.data.isRaisedHand {
+                        button.set(image: GroupCallTheme.small_raised_hand, for: .Normal)
+                        button.set(image: GroupCallTheme.small_raised_hand_active, for: .Highlight)
+                    } else if muteState.canUnmute && !muteState.mutedByYou {
                         button.set(image: GroupCallTheme.small_muted, for: .Normal)
                         button.set(image: GroupCallTheme.small_muted_active, for: .Highlight)
                     } else {

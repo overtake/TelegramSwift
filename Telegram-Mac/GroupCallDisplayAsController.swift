@@ -66,15 +66,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             //TODOLANG
             for peer in list {
                 
-                var status: String? = nil
-                if let addressName = peer.peer.addressName {
-                    status = "@\(addressName)"
-                }
-                if let subscribers = peer.subscribers, let username = status {
+                var status: String?
+                if let subscribers = peer.subscribers {
                     if peer.peer.isChannel {
-                        status = tr(L10n.searchGlobalChannel1Countable(username, Int(subscribers)))
+                        status = L10n.voiceChatJoinAsChannelCountable(Int(subscribers))
                     } else if peer.peer.isSupergroup || peer.peer.isGroup {
-                        status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
+                        status = L10n.voiceChatJoinAsGroupCountable(Int(subscribers))
                     }
                 }
                 
@@ -173,7 +170,8 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
     }
     
     controller.validateData = { _ in
-        completion(stateValue.with { $0.selected })
+        let selected = stateValue.with { $0.selected }
+        completion(selected)
         close?()
         return .none
     }
