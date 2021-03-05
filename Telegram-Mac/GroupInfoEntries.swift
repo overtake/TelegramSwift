@@ -1459,7 +1459,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 title = channel.displayTitle
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoLinkedChannel, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .groupStickerset(_, name, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSetGroupStickersSet, icon: theme.icons.settingsStickers, type: .nextContext(name), viewType: viewType, action: arguments.setGroupStickerset)
         case let .permissions(section: _, count, viewType):
