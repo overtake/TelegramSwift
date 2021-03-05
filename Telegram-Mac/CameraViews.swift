@@ -111,9 +111,12 @@ final class OutgoingVideoView : Control {
     
     override var isEventLess: Bool {
         didSet {
+            self.userInteractionEnabled = !isEventLess
             //overlay.isEventLess = isEventLess
         }
     }
+    
+    
     
     static var defaultSize: NSSize = NSMakeSize(floor(100 * System.aspectRatio), 100)
     
@@ -137,7 +140,6 @@ final class OutgoingVideoView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         super.addSubview(overlay)
-        self.userInteractionEnabled = false
         self.overlay.forceMouseDownCanMoveWindow = true
         
         self.layer?.cornerRadius = .cornerRadius
@@ -266,7 +268,7 @@ final class OutgoingVideoView : Control {
     }
     
     override var mouseDownCanMoveWindow: Bool {
-        return true
+        return isEventLess
     }
 }
 
