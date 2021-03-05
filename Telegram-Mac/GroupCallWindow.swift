@@ -61,6 +61,14 @@ struct GroupCallTheme {
     static let small_muted_locked_active = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
 
     
+    static let small_raised_hand = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
+    static let small_raised_hand_active = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.speakLockedColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+
+    
+    static let big_raised_hand = NSImage(named: "Icon_GroupCall_RaiseHand_Big")!.precomposed(GroupCallTheme.speakLockedColor)
+
+    
+    
     static let big_unmuted = NSImage(named: "Icon_GroupCall_Big_Unmuted")!.precomposed(.white)
     static let big_muted = NSImage(named: "Icon_GroupCall_Big_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
     

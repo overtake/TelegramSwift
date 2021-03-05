@@ -27,11 +27,13 @@ private final class VoiceChatMicrophoneNodeDrawingState: NSObject {
 final class VoiceChatMicrophoneView: View {
     class State: Equatable {
         let muted: Bool
+        let raisedHand: Bool
         let color: NSColor
 
-        init(muted: Bool, color: NSColor) {
+        init(muted: Bool, raisedHand: Bool, color: NSColor) {
             self.muted = muted
             self.color = color
+            self.raisedHand = raisedHand
         }
 
         static func ==(lhs: State, rhs: State) -> Bool {
@@ -39,6 +41,9 @@ final class VoiceChatMicrophoneView: View {
                 return false
             }
             if lhs.color.argb != rhs.color.argb {
+                return false
+            }
+            if lhs.raisedHand != rhs.raisedHand {
                 return false
             }
             return true
@@ -60,7 +65,7 @@ final class VoiceChatMicrophoneView: View {
     private var animator: ConstantDisplayLinkAnimator?
 
     private var hasState = false
-    private var state: State = State(muted: false, color: .black)
+    private var state: State = State(muted: false, raisedHand: false, color: .black)
     private var transitionContext: TransitionContext?
 
     override init() {

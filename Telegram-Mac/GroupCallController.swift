@@ -18,7 +18,7 @@ private final class GroupCallUIArguments {
     let leave:()->Void
     let settings:()->Void
     let invite:(PeerId)->Void
-    let mute:(PeerId, Bool, Int32?)->Void
+    let mute:(PeerId, Bool, Int32?, Bool?)->Void
     let toggleSpeaker:()->Void
     let remove:(Peer)->Void
     let openInfo: (PeerId)->Void
@@ -31,10 +31,12 @@ private final class GroupCallUIArguments {
     let isPinnedVideo:(PeerId)->Bool
     let getAccountPeerId: ()->PeerId?
     let cancelSharing: ()->Void
+    let toggleRaiseHand:(GroupCallUIState?)->Void
+    let recordClick:(PresentationGroupCallState)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
-    mute:@escaping(PeerId, Bool, Int32?)->Void,
+    mute:@escaping(PeerId, Bool, Int32?, Bool?)->Void,
     toggleSpeaker:@escaping()->Void,
     remove:@escaping(Peer)->Void,
     openInfo: @escaping(PeerId)->Void,
@@ -46,7 +48,9 @@ private final class GroupCallUIArguments {
     isPinnedVideo:@escaping(PeerId)->Bool,
     setVolume: @escaping(PeerId, Double, Bool)->Void,
     getAccountPeerId: @escaping()->PeerId?,
-    cancelSharing: @escaping()->Void) {
+    cancelSharing: @escaping()->Void,
+    toggleRaiseHand:@escaping(GroupCallUIState?)->Void,
+    recordClick:@escaping(PresentationGroupCallState)->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -63,6 +67,8 @@ private final class GroupCallUIArguments {
         self.setVolume = setVolume
         self.getAccountPeerId = getAccountPeerId
         self.cancelSharing = cancelSharing
+        self.toggleRaiseHand = toggleRaiseHand
+        self.recordClick = recordClick
     }
 }
 
@@ -99,9 +105,10 @@ private final class GroupCallControlsView : View {
 
         
         speak.set(handler: { [weak self] _ in
-            if let muteState = self?.preiousState?.muteState, !muteState.canUnmute {
-                self?.speakText?.shake()
-                NSSound.beep()
+            if let muteState = self?.preiousState?.state.muteState, !muteState.canUnmute {
+                self?.arguments?.toggleRaiseHand(self?.preiousState)
+//                self?.speakText?.shake()
+//                NSSound.beep()
             } else {
                 self?.arguments?.toggleSpeaker()
             }
@@ -118,7 +125,7 @@ private final class GroupCallControlsView : View {
 
     }
     
-    private var preiousState: PresentationGroupCallState?
+    private var preiousState: GroupCallUIState?
     
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
 
@@ -191,8 +198,15 @@ private final class GroupCallControlsView : View {
                             secondary = nil
                         }
                     } else {
-                        statusText = L10n.voiceChatMutedByAdmin
-                        secondary = L10n.voiceChatListenMode
+                        if !state.isRaisedHand {
+                            //TODOLANG
+                            statusText = "Raise hand"
+                            secondary = "Click to Raise Hand"
+                        } else {
+                            statusText = L10n.voiceChatMutedByAdmin
+                            secondary = L10n.voiceChatListenMode
+                        }
+                       
                     }
                 } else {
                     statusText = L10n.voiceChatYouLive
@@ -241,7 +255,7 @@ private final class GroupCallControlsView : View {
             }
         }
 
-        self.preiousState = state
+        self.preiousState = callState
         needsLayout = true
     }
     
@@ -295,10 +309,10 @@ private final class GroupCallRecordingView : Control {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
-        self.set(handler: { control in
+        self.set(handler: { [weak self] control in
             if let window = control.kitWindow {
                 //TODOLANG
-                showModalText(for: window, text: "This voice chat is being recorded.")
+                self?.recordClick?()
             }
         }, for: .Click)
         
@@ -332,7 +346,7 @@ private final class GroupCallRecordingView : Control {
 
         timer = SwiftSignalKit.Timer.init(timeout: 0.5, repeat: true, completion: { [weak self] in
             if let strongSelf = self, let account = strongSelf.account {
-                self?.update(recordingStartTime: strongSelf.recordingStartTime, account: account)
+                self?.update(recordingStartTime: strongSelf.recordingStartTime, account: account, recordClick: strongSelf.recordClick)
             }
         }, queue: .mainQueue())
         
@@ -341,8 +355,10 @@ private final class GroupCallRecordingView : Control {
     private var timer: SwiftSignalKit.Timer?
     private var recordingStartTime: Int32 = 0
     private var account: Account?
-    func update(recordingStartTime: Int32, account: Account) {
+    private var recordClick:(()->Void)? = nil
+    func update(recordingStartTime: Int32, account: Account, recordClick: (()->Void)?) {
         self.account = account
+        self.recordClick = recordClick
         self.recordingStartTime = recordingStartTime
         let duration = account.network.getApproximateRemoteTimestamp() - recordingStartTime
                 
@@ -423,7 +439,8 @@ private final class GroupCallTitleView : View {
     }
     
     
-    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, animated: Bool) {
+    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, animated: Bool) {
+        
         
         let title: String
         if let custom = state.state.title, !custom.isEmpty {
@@ -449,7 +466,7 @@ private final class GroupCallTitleView : View {
                     recordingView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            view.update(recordingStartTime: recordingStartTimestamp, account: account)
+            view.update(recordingStartTime: recordingStartTimestamp, account: account, recordClick: recordClick)
         } else {
             if let recordingView = recordingView {
                 self.recordingView = nil
@@ -657,7 +674,11 @@ private final class GroupCallView : View {
     
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
         peersTable.merge(with: transition)
-        titleView.update(state.peer, state, call.account, animated: animated)
+        titleView.update(state.peer, state, call.account, recordClick: { [weak self, weak state] in
+            if let state = state {
+                self?.arguments?.recordClick(state.state)
+            }
+        }, animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
         peersTableContainer.change(size: substrateRect().size, animated: animated)
@@ -726,6 +747,10 @@ struct PeerGroupCallData : Equatable, Comparable {
     let isPinned: Bool
     let accountPeerId: PeerId
     let accountAbout: String?
+    
+    var isRaisedHand: Bool {
+        return self.state?.raiseHandRating != nil
+    }
     
     var about: String? {
         let about: String?
@@ -1104,16 +1129,16 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         if let muteState = data.state?.muteState {
                             if muteState.mutedByYou {
                                 items.append(.init(L10n.voiceChatUnmuteForMe, handler: {
-                                    arguments.mute(data.peer.id, false, data.state?.volume)
+                                    arguments.mute(data.peer.id, false, data.state?.volume, nil)
                                 }))
                             } else {
                                 items.append(.init(L10n.voiceChatMuteForMe, handler: {
-                                    arguments.mute(data.peer.id, true, data.state?.volume)
+                                    arguments.mute(data.peer.id, true, data.state?.volume, nil)
                                 }))
                             }
                         } else {
                             items.append(.init(L10n.voiceChatMuteForMe, handler: {
-                                arguments.mute(data.peer.id, true, data.state?.volume)
+                                arguments.mute(data.peer.id, true, data.state?.volume, nil)
                             }))
                         }                        
                         items.append(ContextSeparatorItem())
@@ -1123,7 +1148,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         if tuple.adminIds.contains(data.peer.id) {
                             if data.state?.muteState == nil {
                                 items.append(.init(L10n.voiceChatMutePeer, handler: {
-                                    arguments.mute(data.peer.id, true, data.state?.volume)
+                                    arguments.mute(data.peer.id, true, data.state?.volume, nil)
                                 }))
                             }
                             if !tuple.adminIds.contains(data.peer.id) {
@@ -1136,11 +1161,11 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                             }
                         } else if let muteState = data.state?.muteState, !muteState.canUnmute {
                             items.append(.init(L10n.voiceChatUnmutePeer, handler: {
-                                arguments.mute(data.peer.id, false, data.state?.volume)
+                                arguments.mute(data.peer.id, false, data.state?.volume, nil)
                             }))
                         } else {
                             items.append(.init(L10n.voiceChatMutePeer, handler: {
-                                arguments.mute(data.peer.id, true, data.state?.volume)
+                                arguments.mute(data.peer.id, true, data.state?.volume, nil)
                             }))
                         }
                         if !tuple.adminIds.contains(data.peer.id) {
@@ -1251,8 +1276,8 @@ final class GroupCallUIController : ViewController {
             self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, call: self.data.call))
         }, invite: { [weak self] peerId in
             self?.data.call.invitePeer(peerId)
-        }, mute: { [weak self] peerId, isMuted, volume in
-            self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted, volume: volume)
+        }, mute: { [weak self] peerId, isMuted, volume, raiseHand in
+            self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted, volume: volume, raiseHand: raiseHand)
         }, toggleSpeaker: { [weak self] in
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
@@ -1308,6 +1333,22 @@ final class GroupCallUIController : ViewController {
             return self?.data.call.joinAs
         }, cancelSharing: { [weak self] in
             self?.data.call.disableVideo()
+        }, toggleRaiseHand: { [weak self] state in
+            if let strongSelf = self, let state = state {
+                let call = strongSelf.data.call
+                call.updateMuteState(peerId: call.joinAs, isMuted: state.isMuted, volume: nil, raiseHand: !state.state.isRaisedHand ? true : false)
+            }
+        }, recordClick: { [weak self] state in
+            if state.canManageCall {
+                if let window = self?.window {
+                    confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { _ in
+                        self?.data.call.updateShouldBeRecording(false, title: nil)
+                    })
+                }
+            } else {
+                //TODOLANG
+                showModalText(for: window, text: "This voice chat is being recorded.")
+            }
         })
         
         genericView.arguments = arguments

@@ -105,6 +105,7 @@ public struct PresentationGroupCallState: Equatable {
     public var defaultParticipantMuteState: DefaultParticipantMuteState?
     public var title: String?
     public var recordingStartTimestamp: Int32?
+    public var isRaisedHand: Bool
     public init(
         networkState: NetworkState,
         canManageCall: Bool,
@@ -112,7 +113,8 @@ public struct PresentationGroupCallState: Equatable {
         muteState: GroupCallParticipantsContext.Participant.MuteState?,
         defaultParticipantMuteState: DefaultParticipantMuteState?,
         title: String?,
-        recordingStartTimestamp: Int32?
+        recordingStartTimestamp: Int32?,
+        isRaisedHand: Bool
     ) {
         self.networkState = networkState
         self.canManageCall = canManageCall
@@ -121,7 +123,7 @@ public struct PresentationGroupCallState: Equatable {
         self.defaultParticipantMuteState = defaultParticipantMuteState
         self.title = title
         self.recordingStartTimestamp = recordingStartTimestamp
-        
+        self.isRaisedHand = isRaisedHand
     }
 }
 
@@ -176,7 +178,7 @@ protocol PresentationGroupCall: class {
     func toggleIsMuted()
     func setVolume(peerId: PeerId, volume: Int32, sync: Bool)
     func setIsMuted(action: PresentationGroupCallMuteAction)
-    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32?)
+    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32?, raiseHand: Bool?)
     func invitePeer(_ peerId: PeerId)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
@@ -189,6 +191,7 @@ protocol PresentationGroupCall: class {
     func loadMore()
 
     func switchAccount(_ peerId: PeerId) -> Void
-    func updateTitle(_ title: String) -> Void
+    func updateTitle(_ title: String, force: Bool) -> Void
     func updateShouldBeRecording(_ shouldBeRecording: Bool, title: String?) -> Void
+    
 }

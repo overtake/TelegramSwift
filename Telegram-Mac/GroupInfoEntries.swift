@@ -629,7 +629,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                                 })
                                             return .complete()
                                         case .restricted:
-                                            text = L10n.channelErrorAddBlocked
+                                            text = L10n.groupErrorAddBlocked
                                         }
                                         alert(for: context.window, info: text)
                                         

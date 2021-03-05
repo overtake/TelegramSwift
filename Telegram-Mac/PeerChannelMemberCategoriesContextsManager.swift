@@ -371,7 +371,11 @@ final class PeerChannelMemberCategoriesContextsManager {
             return addChannelMember(account: account, peerId: peerId, memberId: memberId)
                 |> map(Optional.init)
                 |> `catch` { error -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError> in
-                    return .fail(error)
+                    if memberIds.count == 1 {
+                        return .fail(error)
+                    } else {
+                        return .single(nil)
+                    }
             }
         })
         return combineLatest(signals)

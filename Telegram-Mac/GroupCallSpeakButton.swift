@@ -58,7 +58,7 @@ final class GroupCallSpeakButton : Control {
             }
         }
 
-        button.update(state: .init(muted: isMuted, color: color), animated: animated)
+        button.update(state: .init(muted: isMuted, raisedHand: state.isRaisedHand, color: color), animated: animated)
 
     }
 

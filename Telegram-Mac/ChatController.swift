@@ -3169,7 +3169,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } 
             if let activeCall = currentActiveCall {
                 let join:(PeerId)->Void = { joinAs in
-                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: activeCall, initialInfo: groupCall?.data?.info), for: context.window).start(next: { result in
+                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info), for: context.window).start(next: { result in
                         switch result {
                         case let .success(callContext), let .samePeer(callContext):
                             applyGroupCallResult(context.sharedContext, callContext)
