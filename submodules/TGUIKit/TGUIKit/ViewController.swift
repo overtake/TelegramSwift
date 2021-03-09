@@ -73,6 +73,11 @@ open class BackgroundView: ImageView {
         return _customHandler!
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     private let gradient: BackgroundGradientView
 
     public override init(frame frameRect: NSRect) {

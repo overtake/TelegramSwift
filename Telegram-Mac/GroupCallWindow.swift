@@ -61,11 +61,11 @@ struct GroupCallTheme {
     static let small_muted_locked_active = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
 
     
-    static let small_raised_hand = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
-    static let small_raised_hand_active = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.speakLockedColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    static let small_raised_hand = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: .clear)
+    static let small_raised_hand_active = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
 
     
-    static let big_raised_hand = NSImage(named: "Icon_GroupCall_RaiseHand_Big")!.precomposed(GroupCallTheme.speakLockedColor)
+    static let big_raised_hand = NSImage(named: "Icon_GroupCall_RaiseHand_Big")!.precomposed(.white, flipVertical: true)
 
     
     
@@ -108,6 +108,9 @@ struct GroupCallTheme {
 }
 
 final class GroupCallWindow : Window {
+    
+    var navigation: MajorNavigationController?
+    
     init() {
         let size = NSMakeSize(380, 600)
         var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
@@ -143,9 +146,12 @@ final class GroupCallWindow : Window {
         point.x += 20
         self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
     }
-    
-    deinit {
         
+    deinit {
+    }
+    
+    override func orderOut(_ sender: Any?) {
+        super.orderOut(sender)
     }
 }
 
@@ -168,9 +174,10 @@ final class GroupCallContext {
         self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager))
         self.navigation = MajorNavigationController(GroupCallUIController.self, controller, self.window)
         self.navigation.alwaysAnimate = true
-        self.navigation.cleanupAfterDeinit = false
+        self.navigation.cleanupAfterDeinit = true
         self.navigation.viewWillAppear(false)
         self.window.contentView = self.navigation.view
+        self.window.navigation = self.navigation
         self.navigation.viewDidAppear(false)
         removeDisposable.set((self.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
@@ -187,7 +194,8 @@ final class GroupCallContext {
     deinit {
         presentDisposable.dispose()
         removeDisposable.dispose()
-        self.window.removeObserver(for: window)
+//        self.window.removeObserver(for: window)
+//        self.window.contentView?.removeAllSubviews()
     }
     
     func present() {
@@ -205,11 +213,14 @@ final class GroupCallContext {
             call.sharedContext.updateCurrentGroupCallValue(nil)
         }
         self.navigation.viewWillDisappear(false)
-        let window: Window = self.window
+        let window: GroupCallWindow = self.window
         if window.isVisible {
             NSAnimationContext.runAnimationGroup({ _ in
                 window.animator().alphaValue = 0
             }, completionHandler: {
+                if last {
+                    window.navigation = nil
+                }
                 window.orderOut(nil)
             })
         }

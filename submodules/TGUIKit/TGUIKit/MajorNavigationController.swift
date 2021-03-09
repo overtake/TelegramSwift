@@ -33,7 +33,10 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         }
     }
     
-    
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     open override func loadView() {
         super.loadView()

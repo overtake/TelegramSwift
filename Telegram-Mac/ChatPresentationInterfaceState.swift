@@ -134,14 +134,18 @@ struct ChatActiveGroupCallInfo: Equatable {
     var activeCall: CachedChannelData.ActiveCall
     let data: GroupCallPanelData?
     let callJoinPeerId: PeerId?
+    let joinHash: String?
     func withUpdatedData(_ data: GroupCallPanelData?) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data, callJoinPeerId: self.callJoinPeerId)
+        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash)
     }
     func withUpdatedActiveCall(_ activeCall: CachedChannelData.ActiveCall) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId)
+        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash)
     }
     func withUpdatedCallJoinPeerId(_ callJoinPeerId: PeerId?) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: callJoinPeerId)
+        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: callJoinPeerId, joinHash: self.joinHash)
+    }
+    func withUpdatedJoinHash(_ joinHash: String?) -> ChatActiveGroupCallInfo {
+        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId, joinHash: joinHash)
     }
 }
 

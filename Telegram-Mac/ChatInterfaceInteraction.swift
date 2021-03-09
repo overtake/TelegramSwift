@@ -155,7 +155,7 @@ final class ChatInteraction : InterfaceObserver  {
     var scrollToTheFirst: () -> Void = {}
     var openReplyThread:(MessageId, Bool, Bool, ReplyThreadMode)->Void = {  _, _, _, _ in }
     
-    var joinGroupCall:(CachedChannelData.ActiveCall, Bool)->Void = { _, _ in }
+    var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
 
     var showDeleterSetup:(Control)->Void = { _ in }
 
@@ -428,6 +428,22 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
                 })
+            case let .joinVoiceChat(joinHash):
+                
+                update(animated: animated, {
+                    $0.updatedGroupCall { $0?.withUpdatedJoinHash(joinHash) }.withoutInitialAction()
+                })
+                if presentation.groupCall?.data?.groupCall?.call.peerId != self.peerId {
+                    confirm(for: context.window, information: L10n.chatVoiceChatJoinLinkText, okTitle: L10n.chatVoiceChatJoinLinkOK, successHandler: { [weak self] _ in
+                        if let call = self?.presentation.groupCall?.activeCall {
+                            self?.joinGroupCall(call, joinHash)
+                        }
+                    })
+                } else {
+                    if let call = self.presentation.groupCall?.activeCall {
+                        self.joinGroupCall(call, joinHash)
+                    }
+                }
             }
            
         }

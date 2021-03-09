@@ -934,6 +934,15 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(peerId, necessary: true))
         }
     }
+    func navigateChat(_ peerId: PeerId, account: Account) {
+        if let context = self.contextValue?.context, context.peerId == account.peerId {
+            context.sharedContext.bindings.rootNavigation().push(ChatAdditionController.init(context: context, chatLocation: .peer(peerId)))
+            context.window.makeKeyAndOrderFront(nil)
+            context.window.orderFrontRegardless()
+        } else {
+            sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .chat(peerId, necessary: true))
+        }
+    }
     
     
     private func updatePeerPresence() {
