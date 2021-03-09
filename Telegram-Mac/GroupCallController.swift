@@ -1048,7 +1048,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     let nameStyle = ControlStyle(font: .normal(.title), foregroundColor: .white)
     
     
-    let canInvite: Bool = state.peer.groupAccess.canAddMembers
+    let canInvite: Bool = true
     
     if canInvite {
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("invite"), equatable: nil, item: { initialSize, stableId in
