@@ -477,7 +477,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 return
             }
             if let groupCall = chatInteraction.presentation.groupCall {
-                chatInteraction.joinGroupCall(groupCall.activeCall, true)
+                chatInteraction.joinGroupCall(groupCall.activeCall, groupCall.joinHash)
             } else {
                 chatInteraction.call()
             }

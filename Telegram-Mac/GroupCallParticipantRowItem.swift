@@ -62,7 +62,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                     color = GroupCallTheme.grayStatusColor
                 } else {
                     string = L10n.voiceChatStatusListening
-                    color = GroupCallTheme.blueStatusColor
+                    color = GroupCallTheme.grayStatusColor
                 }
             }
         } else if data.peer.id == data.accountPeerId {
@@ -80,10 +80,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
                 self.volume = nil
             } else {
+                var volumeColor: NSColor = GroupCallTheme.blueStatusColor
                 if volume == 0 {
-                    color = GroupCallTheme.grayStatusColor
+                    volumeColor = GroupCallTheme.grayStatusColor
                 }
-                self.volume = TextViewLayout(.initialize(string: "\(Int(Float(volume) / 10000 * 100))%", color: color, font: .normal(.short)))
+                self.volume = TextViewLayout(.initialize(string: "\(Int(Float(volume) / 10000 * 100))%", color: volumeColor, font: .normal(.short)))
             }
         } else {
             self.volume = nil
@@ -105,17 +106,12 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return data.peer
     }
     
-    private var temp: Int? = nil
     
     var supplementIcon: (CGImage, NSSize)? {
         
-        if temp == nil {
-            self.temp = Int.random(in: 0...2)
-        }
-        
-        let isScam: Bool = temp == 0 ? true : peer.isScam
-        let isFake: Bool = temp == 1 ? true : peer.isFake
-        let verified: Bool = temp == 2 ? true : peer.isVerified
+        let isScam: Bool = peer.isScam
+        let isFake: Bool = peer.isFake
+        let verified: Bool = peer.isVerified
         
         
 

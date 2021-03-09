@@ -21,6 +21,7 @@
 		2767ADFD25D6DDDC00717AA1 /* DesktopCaptureSourceView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF325D6DDDC00717AA1 /* DesktopCaptureSourceView.h */; };
 		2767ADFE25D6DDDC00717AA1 /* DesktopCaptureSourceView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2767ADF425D6DDDC00717AA1 /* DesktopCaptureSourceView.mm */; };
 		2767ADFF25D6DDDC00717AA1 /* DesktopSharingCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF525D6DDDC00717AA1 /* DesktopSharingCapturer.h */; };
+		27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A0A4DF25F764FA00B789AF /* ffmpeg.framework */; };
 		27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */; };
 		27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */; };
 		27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */; };
@@ -63,7 +64,6 @@
 		D0E3685224DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */; };
 		D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */; };
 		D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */; };
-		D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */; };
 		D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */; };
 /* End PBXBuildFile section */
 
@@ -82,6 +82,7 @@
 		2767ADF325D6DDDC00717AA1 /* DesktopCaptureSourceView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceView.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceView.h; sourceTree = "<group>"; };
 		2767ADF425D6DDDC00717AA1 /* DesktopCaptureSourceView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DesktopCaptureSourceView.mm; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceView.mm; sourceTree = "<group>"; };
 		2767ADF525D6DDDC00717AA1 /* DesktopSharingCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopSharingCapturer.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopSharingCapturer.h; sourceTree = "<group>"; };
+		27A0A4DF25F764FA00B789AF /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupNetworkManager.cpp; sourceTree = "<group>"; };
 		27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupNetworkManager.h; sourceTree = "<group>"; };
 		27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StaticThreads.cpp; path = ../../submodules/tgcalls/tgcalls/StaticThreads.cpp; sourceTree = "<group>"; };
@@ -131,7 +132,6 @@
 		D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCCVPixelBuffer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCCVPixelBuffer.mm; sourceTree = "<group>"; };
 		D0E3685324DAADF5009896D4 /* TGRTCVideoDecoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoDecoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoDecoderH264.mm; sourceTree = "<group>"; };
 		D0E3685424DAADF5009896D4 /* TGRTCVideoEncoderH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCVideoEncoderH264.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCVideoEncoderH264.mm; sourceTree = "<group>"; };
-		D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupInstanceImpl.cpp; sourceTree = "<group>"; };
 		D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupInstanceImpl.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -140,6 +140,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */,
 				27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */,
 				2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */,
 				D0076E90256854E7007EF588 /* webrtc.framework in Frameworks */,
@@ -243,6 +244,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27A0A4DF25F764FA00B789AF /* ffmpeg.framework */,
 				27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */,
 				2702A834259BD7F6007F1DDD /* SSignalKit.framework */,
 				D0076E3C25685056007EF588 /* webrtc.framework */,
@@ -268,7 +270,6 @@
 				27335F0725C833D300FD040C /* GroupInstanceCustomImpl.h */,
 				27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */,
 				27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */,
-				D0E7BD1D256A7E0D0068644D /* GroupInstanceImpl.cpp */,
 				D0E7BD1E256A7E0D0068644D /* GroupInstanceImpl.h */,
 			);
 			name = group;
@@ -380,7 +381,6 @@
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
 				274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */,
 				D0D751A024BE34AB0037D73A /* OngoingCallThreadLocalContext.mm in Sources */,
-				D0E7BD1F256A7E0D0068644D /* GroupInstanceImpl.cpp in Sources */,
 				D0D751AE24BE3A140037D73A /* VideoMetalViewMac.mm in Sources */,
 				D0D751AF24BE3A140037D73A /* TGRTCDefaultVideoEncoderFactory.mm in Sources */,
 				27D7ABAA25EFD113008DB916 /* StreamingPart.cpp in Sources */,
@@ -567,6 +567,7 @@
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
+					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -627,6 +628,7 @@
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
+					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -753,6 +755,7 @@
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
+					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -880,6 +883,7 @@
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
+					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -998,6 +1002,7 @@
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
+					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1122,6 +1127,7 @@
 					"$(PROJECT_DIR)/../../submodules/tgcalls/tgcalls",
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
+					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

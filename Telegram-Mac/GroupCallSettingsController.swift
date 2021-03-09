@@ -163,8 +163,12 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         
         if !list.isEmpty {
             
-            entries.append(.sectionId(sectionId, type: .customModern(20)))
-            sectionId += 1
+            if case .sectionId = entries.last {
+                
+            } else {
+                entries.append(.sectionId(sectionId, type: .customModern(20)))
+                sectionId += 1
+            }
             
             struct Tuple : Equatable {
                 let peer: FoundPeer
@@ -221,10 +225,12 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         
     } else {
         
-        
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
-        
+        if case .sectionId = entries.last {
+            
+        } else {
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+        }
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, item: { initialSize, stableId in
             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
         }))
@@ -233,9 +239,12 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     
     
     if state.canManageCall {
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
-
+        if case .sectionId = entries.last {
+            
+        } else {
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+        }
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("RECORD VOICE CHAT"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
@@ -293,9 +302,12 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     
     if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState {
         
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
-
+        if case .sectionId = entries.last {
+            
+        } else {
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+        }
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PERMISSIONS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
@@ -314,8 +326,13 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
 
     }
 
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
+    
+    if case .sectionId = entries.last {
+        
+    } else {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+    }
 
         
     let microDevice = settings.audioInputDeviceId == nil ? devices.audioInput.first : devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })

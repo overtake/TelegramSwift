@@ -274,7 +274,7 @@ private final class PlayerRenderer {
     
     func initializeAndPlay() {
         self.updateState(.initializing)
-        assert(stateQueue.isCurrent())
+        assert(animation.runOnQueue.isCurrent())
         let decompressed = TGGUnzipData(self.animation.compressed, 8 * 1024 * 1024)
         let data: Data?
         if let decompressed = decompressed {
@@ -329,6 +329,10 @@ private final class PlayerRenderer {
     private func play(_ player: RLottieBridge) {
         
         self.finished = false
+        
+        let runOnQueue = animation.runOnQueue
+        
+        let maximum_renderer_frames: Int = Thread.isMainThread ? 2 : maximum_rendered_frames
         
         let fps: Int = max(min(Int(player.fps()), self.animation.maximumFps), 24)
         
@@ -393,7 +397,6 @@ private final class PlayerRenderer {
         var askedRender: Bool = false
         var playedCount: Int32 = 0
         let render:()->Void = { [weak self] in
-            assert(stateQueue.isCurrent())
             var hungry: Bool = false
             var cancelled: Bool = false
             if let renderer = self {
@@ -403,7 +406,7 @@ private final class PlayerRenderer {
                         return stateValue
                     }
                     current = state.takeFirst()
-                    hungry = state.frames.count < maximum_rendered_frames - 1
+                    hungry = state.frames.count < maximum_renderer_frames - 1
                     cancelled = state.cancelled
                     return state
                 }
@@ -495,18 +498,17 @@ private final class PlayerRenderer {
                     }
                 }
             }
-            isRendering.with { isRendering in
-                if hungry && !isRendering && !cancelled && !askedRender {
-                    askedRender = true
-                    add_frames_impl?()
-                }
+            let isRendering = isRendering.with { $0 }
+            if hungry && !isRendering && !cancelled && !askedRender {
+                askedRender = true
+                add_frames_impl?()
             }
         }
         
         let maximum = Int(initialState.startFrame + initialState.endFrame)
         framesTask = ThreadPoolTask { state in
             _ = isRendering.swap(true)
-            while !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_rendered_frames, maximum) {
+            while !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_renderer_frames, maximum) {
                 
                 let currentFrame = stateValue.with { $0?.currentFrame ?? 0 }
                 
@@ -534,14 +536,18 @@ private final class PlayerRenderer {
                 }
             }
             _ = isRendering.swap(false)
-            stateQueue.async {
+            runOnQueue.async {
                 askedRender = false
             }
         }
         
         let add_frames:()->Void = {
             if let framesTask = framesTask {
-                lottieThreadPool.addTask(framesTask)
+                if Thread.isMainThread {
+                    framesTask.execute()
+                } else {
+                    lottieThreadPool.addTask(framesTask)
+                }
             }
         }
         
@@ -552,7 +558,7 @@ private final class PlayerRenderer {
         
         self.timer = SwiftSignalKit.Timer(timeout: (1.0 / TimeInterval(fps)), repeat: true, completion: {
             render()
-        }, queue: stateQueue)
+        }, queue: runOnQueue)
         
         self.timer?.start()
         
@@ -565,7 +571,7 @@ private final class PlayerContext {
     fileprivate let animation: LottieAnimation
     init(_ animation: LottieAnimation, displayFrame: @escaping(RenderedFrame)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
-        self.rendererRef = QueueLocalObject.init(queue: stateQueue, generate: {
+        self.rendererRef = QueueLocalObject.init(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
                 Queue.mainQueue().async {
                     updateState(state)
@@ -686,13 +692,13 @@ final class LottieAnimation : Equatable {
     let colors:[LottieColor]
     let soundEffect: LottieSoundEffect?
     let postbox: Postbox?
-    
+    let runOnQueue: Queue
     var onFinish:(()->Void)?
 
     var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil) {
+    init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue) {
         self.compressed = compressed
         self.key = key
         self.cache = cachePurpose
@@ -701,6 +707,7 @@ final class LottieAnimation : Equatable {
         self.colors = colors
         self.postbox = postbox
         self.soundEffect = soundEffect
+        self.runOnQueue = runOnQueue
     }
     
     var size: NSSize {
@@ -742,20 +749,6 @@ final class LottieAnimation : Equatable {
         }
     }
 }
-private final class PlayerViewLayer: AVSampleBufferDisplayLayer {
-    override func action(forKey event: String) -> CAAction? {
-        return NSNull()
-    }
-    
-    deinit {
-        if !Thread.isMainThread {
-            var bp: Int = 0
-            bp += 1
-        }
-        // assertOnMainThread()
-    }
-}
-
 
 final class MetalContext {
     let device: MTLDevice
@@ -1048,13 +1041,16 @@ class LottiePlayerView : NSView {
     }
     
     func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false) {
-        
+        assertOnMainThread()
         if let animation = animation {
             self.stateValue.set(self._currentState.modify { _ in .initializing })
             if self.context?.animation != animation || reset {
-                if holder == nil {
-                    holder = ContextHolder()
+                if !animation.runOnQueue.isCurrent() {
+                    if holder == nil {
+                        holder = ContextHolder()
+                    }
                 }
+                
                 if let holder = holder {
                     let metal = MetalRenderer(animation: animation, context: holder.context)
                     self.addSubview(metal)

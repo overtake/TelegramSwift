@@ -117,7 +117,7 @@ enum GroupCallDisplayAsMode {
     case create
 }
 
-func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDisplayAsMode, list: [FoundPeer]? = nil, completion: @escaping(PeerId)->Void) -> InputDataModalController {
+func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDisplayAsMode, peerId: PeerId, list:[FoundPeer], completion: @escaping(PeerId)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -140,8 +140,8 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
-    
-    let list: Signal<[FoundPeer]?, NoError> = .single(list) |> then(groupCallDisplayAsAvailablePeers(network: context.account.network, postbox: context.account.postbox) |> map(Optional.init))
+        
+    let list: Signal<[FoundPeer]?, NoError> = cachedGroupCallDisplayAsAvailablePeers(account: context.account, peerId: peerId) |> map(Optional.init)
     let peerSignal = context.account.postbox.loadedPeerWithId(context.peerId)
     
     actionsDisposable.add(combineLatest(list, peerSignal).start(next: { list, peer in
@@ -206,10 +206,10 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 }
 
 
-func selectGroupCallJoiner(context: AccountContext, completion: @escaping(PeerId)->Void) {
-    _ = showModalProgress(signal: groupCallDisplayAsAvailablePeers(network: context.account.network, postbox: context.account.postbox), for: context.window).start(next: { displayAsList in
+func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId)->Void) {
+    _ = showModalProgress(signal: groupCallDisplayAsAvailablePeers(network: context.account.network, postbox: context.account.postbox, peerId: peerId), for: context.window).start(next: { displayAsList in
         if !displayAsList.isEmpty {
-            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, list: displayAsList, completion: completion), for: context.window)
+            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion), for: context.window)
         } else {
             completion(context.peerId)
         }

@@ -3157,7 +3157,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.joinGroupCall = { [weak self] activeCall, serviceClick in
+        chatInteraction.joinGroupCall = { [weak self] activeCall, joinHash in
             let groupCall = self?.chatInteraction.presentation.groupCall
             var currentActiveCall = groupCall?.activeCall
             var activeCall: CachedChannelData.ActiveCall? = activeCall
@@ -3181,7 +3181,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let callJoinPeerId = groupCall?.callJoinPeerId {
                     join(callJoinPeerId)
                 } else {
-                    selectGroupCallJoiner(context: context, completion: join)
+                    selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
                 }
             } else if let peer = self?.chatInteraction.peer {
                 if peer.groupAccess.canMakeVoiceChat {
@@ -3679,7 +3679,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                                 present = present.updatedGroupCall({ currentValue in
                                     if let call = cachedData.activeCall {
-                                        return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data, callJoinPeerId: cachedData.callJoinPeerId)
+                                        return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data, callJoinPeerId: cachedData.callJoinPeerId, joinHash: currentValue?.joinHash)
                                     } else {
                                         return nil
                                     }
@@ -3695,7 +3695,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
                                     .updatedGroupCall({ currentValue in
                                         if let call = cachedData.activeCall {
-                                            return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data, callJoinPeerId: cachedData.callJoinPeerId)
+                                            return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data, callJoinPeerId: cachedData.callJoinPeerId, joinHash: currentValue?.joinHash)
                                         } else {
                                             return nil
                                         }
@@ -3793,7 +3793,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                 let disposable = MetaDisposable()
                                                 let callContext = context.cachedGroupCallContexts
                                                 callContext.impl.syncWith { impl in
-                                                    let callContext = impl.get(account: context.account, peerId: peerId, call: activeCall)
+                                                    let callContext = impl.get(account: context.account, peerId: peerId, myPeerId: context.peerId, call: activeCall)
                                                     disposable.set((callContext.context.panelData
                                                     |> deliverOnMainQueue).start(next: { panelData in
                                                         callContext.keep()
@@ -3927,9 +3927,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
                                     .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                    .updatedGroupCall({ _ in
+                                    .updatedGroupCall({ current in
                                         if let call = cachedData.activeCall {
-                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId)
+                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId, joinHash: current?.joinHash)
                                         } else {
                                             return nil
                                         }
@@ -3960,9 +3960,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let cachedData = peerView.cachedData as? CachedGroupData {
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
-                                    .updatedGroupCall({ _ in
+                                    .updatedGroupCall({ current in
                                         if let call = cachedData.activeCall {
-                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId)
+                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId, joinHash: current?.joinHash)
                                         } else {
                                             return nil
                                         }

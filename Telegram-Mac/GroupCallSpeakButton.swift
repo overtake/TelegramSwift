@@ -35,6 +35,8 @@ final class GroupCallSpeakButton : Control {
     func update(with state: PresentationGroupCallState, isMuted: Bool, audioLevel: Float?, animated: Bool) {
         let color: NSColor
         let white = NSColor(rgb: 0xffffff)
+        var canRaiseHand: Bool = true
+        var allowToSpeak: Bool = true
         switch state.networkState {
         case .connecting:
             userInteractionEnabled = false
@@ -46,19 +48,22 @@ final class GroupCallSpeakButton : Control {
                         color = white
                     } else {
                         color = white
+                        allowToSpeak = false
                     }
                     userInteractionEnabled = true
                 } else {
                     userInteractionEnabled = true
                     color = white
+                    canRaiseHand = false
                 }
             } else {
+                canRaiseHand = false
                 userInteractionEnabled = true
                 color = white
             }
         }
 
-        button.update(state: .init(muted: isMuted, raisedHand: state.isRaisedHand, color: color), animated: animated)
+        button.update(state: .init(muted: isMuted, raisedHand: state.isRaisedHand, canRaiseHand: canRaiseHand, allowToSpeak: allowToSpeak, color: color), animated: animated)
 
     }
 

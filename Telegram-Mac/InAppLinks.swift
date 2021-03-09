@@ -82,7 +82,7 @@ enum ChatInitialAction : Equatable {
     case source(MessageId)
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
-
+    case joinVoiceChat(_ joinHash: String?)
     var selectionNeeded: Bool {
         switch self {
         case .selectToReport:
@@ -696,14 +696,18 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         context.sharedContext.bindings.rootNavigation().push(controller)
         afterComplete(true)
     case let .joinGroupCall(_, context, peerId, callId):
-        _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId), for: context.window).start(next: { result in
-            switch result {
-            case let .success(callContext), let .samePeer(callContext):
-                applyGroupCallResult(context.sharedContext, callContext)
-            default:
-                alert(for: context.window, info: L10n.errorAnError)
-            }
+        selectGroupCallJoiner(context: context, peerId: peerId, completion: { peerId in
+            _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId), for: context.window).start(next: { result in
+                switch result {
+                case let .success(callContext), let .samePeer(callContext):
+                    applyGroupCallResult(context.sharedContext, callContext)
+                default:
+                    alert(for: context.window, info: L10n.errorAnError)
+                }
+            })
         })
+       
+        afterComplete(true)
     }
     
 }
@@ -752,13 +756,14 @@ func escape(with link:String, addPercent: Bool = true) -> String {
 }
 
 
-func urlVars(with url:String) -> [String:String] {
+func urlVars(with url:String) -> ([String:String], Set<String>) {
     var vars:[String:String] = [:]
     let range = url.nsstring.range(of: "?")
     let ns:NSString = range.location != NSNotFound ? url.nsstring.substring(from: range.location + 1).nsstring : url.nsstring
     
     
     let hashes = ns.components(separatedBy: "&")
+    var emptyVars:Set<String> = Set()
     for hash in hashes {
        
         let param = hash.components(separatedBy: "=")
@@ -774,9 +779,11 @@ func urlVars(with url:String) -> [String:String] {
             } else {
                 vars[param[0]] = param[1]
             }
+        } else if param.count == 1 {
+            emptyVars.insert(param[0])
         }
     }
-    return vars
+    return (vars, emptyVars)
 }
 
 
@@ -900,6 +907,7 @@ private let keyURLUrl = "url";
 private let keyURLSet = "set";
 private let keyURLText = "text";
 private let keyURLStart = "start";
+private let keyURLVoiceChat = "voicechat";
 private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
 
@@ -937,12 +945,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .stickerPack(link: urlString, StickerPackReference.name(value), context: context, peerId: peerId)
                         }
                     case actions_me[2]:
-                        let vars = urlVars(with: string)
+                        let (vars, _) = urlVars(with: string)
                         if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
                             return .confirmPhone(link: urlString, context: context, phone: phone, hash: hash)
                         }
                     case actions_me[3]:
-                        let vars = urlVars(with: string)
+                        let (vars, _) = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                             let server = escape(with: server)
                             let username = vars[keyURLUser] != nil ? escape(with: vars[keyURLUser]!) : nil
@@ -950,7 +958,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .socks5(username: username, password: pass)), applyProxy: applyProxy)
                         }
                     case actions_me[4]:
-                        let vars = urlVars(with: string)
+                        let (vars, _) = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret]  {
                             let server = escape(with: server)
                             if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
@@ -971,7 +979,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     return .wallpaper(link: urlString, context: context, preview: .color(color))
                                 } else {
                                     
-                                    let vars = urlVars(with: value)
+                                    let (vars, emptyVars) = urlVars(with: value)
 
                                     var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
                                     
@@ -1042,7 +1050,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 let username:String = userAndVariables[0]
                 var action:ChatInitialAction? = nil
                 if userAndVariables.count == 2 {
-                    let vars = urlVars(with: userAndVariables[1])
+                    let (vars, emptyVars) = urlVars(with: userAndVariables[1])
                     loop: for (key,value) in vars {
                         switch key {
                         case keyURLStart:
@@ -1053,9 +1061,15 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .automatic), callback: openInfo)
                             }
                             break loop;
+                        case keyURLVoiceChat:
+                            action = .joinVoiceChat(value)
+                            break loop;
                         default:
                             break
                         }
+                    }
+                    if vars.isEmpty && userAndVariables[1] == keyURLVoiceChat {
+                        action = .joinVoiceChat(nil)
                     }
                 }
 
@@ -1088,7 +1102,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             if userAndPost.count >= 3, let range = userAndPost[2].range(of: "?") {
                                 post = Int32(userAndPost[2][..<range.lowerBound])
                             }
-                            let params = urlVars(with: url as String)
+                            let (params, _) = urlVars(with: url as String)
                             if let thread = params[keyURLThreadId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: "_private_\(userAndPost[1])", context: context, threadId: thread, commentId: post)
                             } else {
@@ -1109,13 +1123,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if name.hasPrefix("iv?") {
                             return .external(link: url as String, false)
                         } else if name.hasPrefix("share?") || name == "share" {
-                            let params = urlVars(with: url as String)
+                            let (params, _) = urlVars(with: url as String)
                             if let url = params["url"], let context = context {
                                 return .shareUrl(link: urlString, context, url)
                             }
                             return .external(link: url as String, false)
                         } else if let context = context {
-                            let params = urlVars(with: url as String)
+                            let (params, _) = urlVars(with: url as String)
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: name, context: context, threadId: post, commentId: comment)
                             } else if let thread = params[keyURLThreadId]?.nsstring.intValue, let comment = post {
@@ -1144,7 +1158,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     if url.hasPrefix(telegram_scheme) {
         let action = url.substring(from: telegram_scheme.length)
         
-        let vars = urlVars(with: external as String)
+        let (vars, emptyVars) = urlVars(with: external as String)
         
         for i in 0 ..< known_scheme.count {
             let known = known_scheme[i]
@@ -1166,9 +1180,15 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if let context = context {
                                     return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .none), callback: openInfo)
                                 }
+                            case keyURLVoiceChat:
+                                action = .joinVoiceChat(value)
+                                break loop;
                             default:
                                 break
                             }
+                        }
+                        if action == nil && emptyVars.contains(keyURLVoiceChat) {
+                            action = .joinVoiceChat(nil)
                         }
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
@@ -1344,7 +1364,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         return .external(link: url as String, false)
 //        let action = url.substring(from: ton_scheme.length)
 //        if action.hasPrefix("transfer/") {
-//            let vars = urlVars(with: url as String)
+//            let (vars, emptyVars) = urlVars(with: url as String)
 //            let preAddressLength = ton_scheme.length + "transfer/".length + walletAddressLength
 //            let address = urlString.prefix(preAddressLength)
 //            if address.length == preAddressLength {
@@ -1397,7 +1417,7 @@ func proxySettings(from url:String) -> (ProxyServerSettings?, Bool) {
     if url.hasPrefix(telegram_scheme), let _ = URL(string: url as String) {
         let action = url.substring(from: telegram_scheme.length)
         
-        let vars = urlVars(with: url as String)
+        let (vars, emptyVars) = urlVars(with: url as String)
         if action.hasPrefix("socks") {
             if let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                 let server = escape(with: server)

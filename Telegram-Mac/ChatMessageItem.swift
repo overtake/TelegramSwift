@@ -94,7 +94,15 @@ class ChatMessageItem: ChatRowItem {
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
-            case let .followResolvedName(_, _, postId, _, _, _):
+            case let .followResolvedName(_, _, postId, _, action, _):
+                if let action = action {
+                    inner: switch action {
+                    case .joinVoiceChat:
+                        return L10n.chatMessageJoinVoiceChat
+                    default:
+                        break inner
+                    }
+                }
                 if let postId = postId, postId > 0 {
                     return L10n.chatMessageActionShowMessage
                 }

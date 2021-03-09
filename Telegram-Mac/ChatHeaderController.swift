@@ -1643,13 +1643,13 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, false)
+                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
         button.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, false)
+                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         

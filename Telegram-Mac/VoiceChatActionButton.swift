@@ -152,7 +152,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 
         self.maskBlobLayer.scaleUpdated = { [weak self] scale in
             if let strongSelf = self {
-                strongSelf.updateGlowScale(strongSelf.isActive ? scale : nil)
+                strongSelf.updateGlowScale(strongSelf.isActive == true ? scale : nil)
             }
         }
     }
@@ -267,7 +267,7 @@ final class VoiceChatActionButtonBackgroundView: View {
             self.maskGradientLayer.transform = CATransform3DMakeScale(0.89 + 0.11 * scale, 0.89 + 0.11 * scale, 1.0)
         } else {
             let initialScale: CGFloat = ((self.maskGradientLayer.value(forKeyPath: "presentationLayer.transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (((self.maskGradientLayer.value(forKeyPath: "transform.scale.x") as? NSNumber)?.floatValue).flatMap({ CGFloat($0) }) ?? (0.89))
-            let targetScale: CGFloat = self.isActive ? 0.89 : 0.85
+            let targetScale: CGFloat = self.isActive == true ? 0.89 : 0.85
             if abs(targetScale - initialScale) > 0.03 {
                 self.maskGradientLayer.transform = CATransform3DMakeScale(targetScale, targetScale, 1.0)
                 self.maskGradientLayer.animateScale(from: initialScale, to: targetScale, duration: 0.3)
@@ -479,7 +479,7 @@ final class VoiceChatActionButtonBackgroundView: View {
             completion()
             
 
-            self.updateGlowAndGradientAnimations(active: active, previousActive: nil)
+            self.updateGlowAndGradientAnimations(active: self.isActive, previousActive: nil)
 
             self.maskBlobLayer.isHidden = false
             self.maskBlobLayer.startAnimating()
@@ -509,7 +509,11 @@ final class VoiceChatActionButtonBackgroundView: View {
         CATransaction.commit()
     }
 
-    var isActive = false
+    var isActive: Bool? = nil {
+        didSet {
+            
+        }
+    }
     func updateAnimations() {
         if !self.isCurrentlyInHierarchy {
             self.foregroundGradientLayer.removeAllAnimations()
@@ -527,6 +531,8 @@ final class VoiceChatActionButtonBackgroundView: View {
                     self.updateGlowScale(nil)
                     if case let .blob(active) = transition {
                         playBlobsDisappearanceAnimation(wasActive: active)
+                    } else if case .disabled = transition {
+                        playBlobsDisappearanceAnimation(wasActive: nil)
                     }
                     self.transition = nil
                 }
@@ -536,7 +542,9 @@ final class VoiceChatActionButtonBackgroundView: View {
                 if let transition = self.transition {
                     if transition == .connecting {
                         self.playConnectionAnimation(active: newActive) { [weak self] in
-                            self?.isActive = newActive
+                            if self?.transition == transition {
+                                self?.isActive = newActive
+                            }
                         }
                     } else if transition == .disabled {
                         updateGlowAndGradientAnimations(active: newActive, previousActive: nil)
@@ -554,12 +562,12 @@ final class VoiceChatActionButtonBackgroundView: View {
                 }
             case .disabled:
                 self.updatedActive?(true)
-                self.isActive = false
+                self.isActive = nil
 
                 if let transition = self.transition {
                     if case .connecting = transition {
                         self.playConnectionAnimation(active: nil) { [weak self] in
-                            self?.isActive = false
+                            self?.isActive = nil
                         }
                     } else if case let .blob(previousActive) = transition {
                         updateGlowAndGradientAnimations(active: nil, previousActive: previousActive)
