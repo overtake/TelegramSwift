@@ -1282,10 +1282,7 @@ final class GroupCallUIController : ViewController {
         super.viewDidLoad()
         
         let actionsDisposable = self.actionsDisposable
-        
-        let downHandDisposable = MetaDisposable()
-        actionsDisposable.add(downHandDisposable)
-        
+                
         let peerId = self.data.call.peerId
         let account = self.data.call.account
 
@@ -1319,7 +1316,7 @@ final class GroupCallUIController : ViewController {
             }
             self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, call: self.data.call))
         }, invite: { [weak self] peerId in
-            self?.data.call.invitePeer(peerId, canUnmute: false)
+            self?.data.call.invitePeer(peerId)
         }, mute: { [weak self] peerId, isMuted, volume, raiseHand in
             self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted, volume: volume, raiseHand: raiseHand)
         }, toggleSpeaker: { [weak self] in
@@ -1350,7 +1347,7 @@ final class GroupCallUIController : ViewController {
             
             actionsDisposable.add(GroupCallAddmembers(data, window: window).start(next: { [weak window, weak self] peerId in
                 if let peerId = peerId.first, let window = window {
-                    self?.data.call.invitePeer(peerId, canUnmute: false)
+                    self?.data.call.invitePeer(peerId)
                     _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
                 }
             }))
@@ -1385,11 +1382,6 @@ final class GroupCallUIController : ViewController {
             if let strongSelf = self, let state = state, !state.state.isRaisedHand {
                 let call = strongSelf.data.call
                 call.updateMuteState(peerId: call.joinAs, isMuted: state.isMuted, volume: nil, raiseHand: !state.state.isRaisedHand ? true : false)
-                downHandDisposable.set(delaySignal(5 * 60).start(completed: { [weak self] in
-                    if let state = self?.genericView.state, let call = self?.data.call {
-                        call.updateMuteState(peerId: call.joinAs, isMuted: state.isMuted, volume: nil, raiseHand: false)
-                    }
-                }))
             }
         }, recordClick: { [weak self] state in
             if state.canManageCall {
@@ -1561,7 +1553,6 @@ final class GroupCallUIController : ViewController {
                 if notifyCanSpeak {
                     previousState = nil
                     showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
-                    downHandDisposable.set(nil)
                 } else {
                     previousState = value.0.state
                 }

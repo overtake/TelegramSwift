@@ -171,6 +171,9 @@ protocol PresentationGroupCall: class {
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
     
+    var activeCall: CachedChannelData.ActiveCall? { get }
+    var groupCallInviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
+
     var permissions:(PresentationGroupCallMuteAction, @escaping(Bool)->Void)->Void { get set }
     
     var displayAsPeers: Signal<[FoundPeer]?, NoError> { get }
@@ -182,7 +185,7 @@ protocol PresentationGroupCall: class {
     func setVolume(peerId: PeerId, volume: Int32, sync: Bool)
     func setIsMuted(action: PresentationGroupCallMuteAction)
     func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32?, raiseHand: Bool?)
-    func invitePeer(_ peerId: PeerId, canUnmute: Bool)
+    func invitePeer(_ peerId: PeerId)
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
     func setFullSizeVideo(peerId: PeerId?)

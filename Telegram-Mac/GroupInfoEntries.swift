@@ -529,9 +529,9 @@ final class GroupInfoArguments : PeerInfoArguments {
                 excludePeerIds = Array(cachedData.peerIds)
             }
             
-            var linkInvation: (()->Void)? = nil
+            var linkInvation: ((Int)->Void)? = nil
             if canInviteByLink {
-                linkInvation = { [weak self] in
+                linkInvation = { [weak self] _  in
                     self?.invation()
                 }
             }

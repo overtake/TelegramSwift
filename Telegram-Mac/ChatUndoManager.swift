@@ -444,6 +444,4 @@ final class ChatUndoManager  {
 }
 
 
-func enqueueMessages(context: AccountContext, peerId: PeerId, messages: [EnqueueMessage]) -> Signal<[MessageId?], NoError> {
-    return TelegramCore.enqueueMessages(account: context.account, peerId: peerId, messages: messages)
-}
+

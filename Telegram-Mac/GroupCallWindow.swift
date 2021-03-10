@@ -212,6 +212,7 @@ final class GroupCallContext {
         if last {
             call.sharedContext.updateCurrentGroupCallValue(nil)
         }
+        closeAllModals(window: window)
         self.navigation.viewWillDisappear(false)
         let window: GroupCallWindow = self.window
         if window.isVisible {

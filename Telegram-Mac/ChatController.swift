@@ -2317,6 +2317,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         if let action = action {
                             strongSelf.chatInteraction.update({ $0.updatedInitialAction(action) })
+                            strongSelf.chatInteraction.invokeInitialAction()
                         }
                     } else {
                        strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
@@ -3169,7 +3170,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } 
             if let activeCall = currentActiveCall {
                 let join:(PeerId)->Void = { joinAs in
-                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info), for: context.window).start(next: { result in
+                    _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info, joinHash: joinHash), for: context.window).start(next: { result in
                         switch result {
                         case let .success(callContext), let .samePeer(callContext):
                             applyGroupCallResult(context.sharedContext, callContext)
