@@ -219,7 +219,7 @@ class Sender: NSObject {
             return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil)
         }
         
-        return enqueueMessages(context: context, peerId: peerId, messages: mapped) |> mapToSignal { value in
+        return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
             if !emojis.isEmpty {
                 return saveUsedEmoji(emojis, postbox: context.account.postbox) |> map {
                     return value
@@ -231,7 +231,7 @@ class Sender: NSObject {
     }
     
     public static func enqueue(message:EnqueueMessage, context: AccountContext, peerId:PeerId) ->Signal<[MessageId?],NoError> {
-        return  enqueueMessages(context: context, peerId: peerId, messages: [message])
+        return  enqueueMessages(account: context.account, peerId: peerId, messages: [message])
             |> deliverOnMainQueue
     }
     
@@ -441,7 +441,7 @@ class Sender: NSObject {
         for msgId in sorted {
             fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: messageIds.count > 1 ? .auto : .none, attributes: attributes))
         }
-        return enqueueMessages(context: context, peerId: peerId, messages: fwdMessages.reversed())
+        return enqueueMessages(account: context.account, peerId: peerId, messages: fwdMessages.reversed())
     }
     
     public static func shareContact(context: AccountContext, peerId:PeerId, contact:TelegramUser) -> Signal<[MessageId?], NoError>  {
@@ -451,7 +451,7 @@ class Sender: NSObject {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         
-        return enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil)])
+        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil)])
     }
     
     public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate:Date? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
@@ -474,7 +474,7 @@ class Sender: NSObject {
         
         for path in media {
             senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
-                return enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: nil)])
+                return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: nil)])
             })
         }
         
@@ -546,7 +546,7 @@ class Sender: NSObject {
             }
             messages.insert(contentsOf: mapped, at: 0)
         }
-        return enqueueMessages(context: context, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
+        return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> deliverOnMainQueue |> afterNext { _ -> Void in
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
         } |> take(1)
     }

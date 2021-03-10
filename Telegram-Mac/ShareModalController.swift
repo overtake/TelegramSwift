@@ -363,7 +363,7 @@ class ShareLinkObject : ShareObject {
             if FastSettings.isChannelMessagesMuted(peerId) {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
         }
         return .complete()
     }
@@ -395,7 +395,7 @@ class ShareUrlObject : ShareObject {
             
             let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)])
                         
-            _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: nil, localGroupingKey: nil)]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: nil, localGroupingKey: nil)]).start()
         }
         return .complete()
     }
@@ -415,7 +415,7 @@ class ShareContactObject : ShareObject {
                 if FastSettings.isChannelMessagesMuted(peerId) {
                     attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
                 }
-                _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
             }
             _ = Sender.shareContact(context: context, peerId: peerId, contact: user).start()
         }

@@ -8931,6 +8931,10 @@ internal final class L10n {
   internal static var voiceChatInviteContacts: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Contacts") }
   /// Copy Invite Link
   internal static var voiceChatInviteCopyInviteLink: String  { return L10n.tr("Localizable", "VoiceChat.Invite.CopyInviteLink") }
+  /// Copy Listener Link
+  internal static var voiceChatInviteCopyListenersLink: String  { return L10n.tr("Localizable", "VoiceChat.Invite.CopyListenersLink") }
+  /// Copy Speaker Link
+  internal static var voiceChatInviteCopySpeakersLink: String  { return L10n.tr("Localizable", "VoiceChat.Invite.CopySpeakersLink") }
   /// global search
   internal static var voiceChatInviteGlobalSearch: String  { return L10n.tr("Localizable", "VoiceChat.Invite.GlobalSearch") }
   /// group members
@@ -8939,6 +8943,18 @@ internal final class L10n {
   internal static var voiceChatInviteInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Invite.InviteMembers") }
   /// Add Members
   internal static var voiceChatInviteTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Title") }
+  /// Invite Members
+  internal static var voiceChatInviteChannelsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Channels.Title") }
+  /// Voice Chat
+  internal static var voiceChatInviteConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Header") }
+  /// Invite
+  internal static var voiceChatInviteConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.OK") }
+  /// Invite %@?
+  internal static func voiceChatInviteConfirmText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Text", p1)
+  }
+  /// Invite as Speaker
+  internal static var voiceChatInviteConfirmThird: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Third") }
   /// Sorry, there are too many members in this voice chat. Please try again later.
   internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
   /// %d

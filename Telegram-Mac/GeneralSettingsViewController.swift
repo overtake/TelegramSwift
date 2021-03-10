@@ -454,7 +454,7 @@ class GeneralSettingsViewController: TableViewController {
                         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
                         return .message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: file), replyToMessageId: nil, localGroupingKey: nil)
                     }
-                    return enqueueMessages(context: context, peerId: peerId, messages: messages) |> map {_ in}
+                    return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> map {_ in}
                 }
             }
             _ = logs.start()
