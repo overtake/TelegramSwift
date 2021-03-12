@@ -11,7 +11,7 @@ import TelegramCore
 import SyncCore
 import Postbox
 
-enum LocalAnimatedSticker {
+enum LocalAnimatedSticker : String {
     case brilliant_static
     case brilliant_loading
     case smart_guy
@@ -40,72 +40,45 @@ enum LocalAnimatedSticker {
     case destructor
     case gigagroup
     case police
+    
+    case voice_chat_raise_hand_1
+    case voice_chat_raise_hand_2
+    case voice_chat_raise_hand_3
+    case voice_chat_raise_hand_4
+    case voice_chat_raise_hand_5
+    case voice_chat_raise_hand_6
+    case voice_chat_raise_hand_7
+
+    case voice_chat_hand_on_muted
+    case voice_chat_hand_on_unmuted
+    case voice_chat_hand_off
+    case voice_chat_mute
+    case voice_chat_unmute
+    
     var file: TelegramMediaFile {
-        let resource:LocalBundleResource
-        switch self {
-        case .brilliant_static:
-            resource = LocalBundleResource(name: "brilliant_static", ext: "tgs")
-        case .brilliant_loading:
-            resource = LocalBundleResource(name: "brilliant_loading", ext: "tgs")
-        case .smart_guy:
-            resource = LocalBundleResource(name: "smart_guy", ext: "tgs")
-        case .fly_dollar:
-            resource = LocalBundleResource(name: "fly_dollar", ext: "tgs")
-        case .gift:
-            resource = LocalBundleResource(name: "gift", ext: "tgs")
-        case .keychain:
-            resource = LocalBundleResource(name: "keychain", ext: "tgs")
-        case .keyboard_typing:
-            resource = LocalBundleResource(name: "keyboard_typing", ext: "tgs")
-        case .swap_money:
-            resource = LocalBundleResource(name: "swap_money", ext: "tgs")
-        case .write_words:
-            resource = LocalBundleResource(name: "write_words", ext: "tgs")
-        case .chiken_born:
-            resource = LocalBundleResource(name: "chiken_born", ext: "tgs")
-        case .sad:
-            resource = LocalBundleResource(name: "sad_man", ext: "tgs")
-        case .success:
-            resource = LocalBundleResource(name: "wallet_success_created", ext: "tgs")
-        case .monkey_unsee:
-            resource = LocalBundleResource(name: "monkey_unsee", ext: "tgs")
-        case .monkey_see:
-            resource = LocalBundleResource(name: "monkey_see", ext: "tgs")
-        case .think_spectacular:
-            resource = LocalBundleResource(name: "think_spectacular", ext: "tgs")
-        case .success_saved:
-            resource = LocalBundleResource(name: "success_saved", ext: "tgs")
-        case .dice_idle:
-            resource = LocalBundleResource(name: "dice_idle", ext: "tgs")
-        case .folder:
-            resource = LocalBundleResource(name: "folder", ext: "tgs")
-        case .new_folder:
-            resource = LocalBundleResource(name: "folder_new", ext: "tgs")
-        case .folder_empty:
-            resource = LocalBundleResource(name: "folder_empty", ext: "tgs")
-        case .graph_loading:
-            resource = LocalBundleResource(name: "graph_loading", ext: "tgs")
-        case .dart_idle:
-            resource = LocalBundleResource(name: "dart_idle", ext: "tgs")
-        case .discussion:
-            resource = LocalBundleResource(name: "discussion", ext: "tgs")
-        case .group_call_chatlist_typing:
-            resource = LocalBundleResource(name: "group_call_chatlist_typing", ext: "json")
-        case .invitations:
-            resource = LocalBundleResource(name: "invitations", ext: "tgs")
-        case .destructor:
-            resource = LocalBundleResource(name: "destructor", ext: "tgs")
-        case .gigagroup:
-            resource = LocalBundleResource(name: "gigagroup", ext: "tgs")
-        case .police:
-            resource = LocalBundleResource(name: "police", ext: "tgs")
-        }
+        let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
+    }
+    
+    
+    private static var cachedData:[String: Data] = [:]
+    var data: Data? {
+        if let data = LocalAnimatedSticker.cachedData[self.rawValue] {
+            return data
+        }
+        let path = Bundle.main.path(forResource: self.rawValue, ofType: "tgs")
+        if let path = path {
+            let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+            if let data = data {
+                LocalAnimatedSticker.cachedData[self.rawValue] = data
+                return data
+            }
+        }
+        return nil
     }
     
     var parameters: ChatAnimatedStickerMediaLayoutParameters {
         let playPolicy: LottiePlayPolicy?
-        var alwaysAccept: Bool? = nil
         var hidePlayer: Bool = true
         switch self {
         case .brilliant_static:
@@ -116,7 +89,6 @@ enum LocalAnimatedSticker {
             playPolicy = .once
         case .fly_dollar:
             playPolicy = .loop
-            alwaysAccept = true
         case .gift:
             playPolicy = .once
         case .keychain:
@@ -171,6 +143,9 @@ enum LocalAnimatedSticker {
             playPolicy = .loop
             hidePlayer = false
         case .police:
+            playPolicy = .loop
+            hidePlayer = false
+        default:
             playPolicy = .loop
             hidePlayer = false
         }

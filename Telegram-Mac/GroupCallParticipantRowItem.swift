@@ -424,12 +424,13 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                     statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in
                         statusView?.removeFromSuperview()
                     })
-                    statusView.layer?.animateScaleSpring(from: 1, to: 0.4, duration: 0.3)
+                    statusView.layer?.animatePosition(from: statusView.frame.origin, to: NSMakePoint(statusView.frame.minX, statusView.frame.minY + 10))
                 } else {
                     statusView.removeFromSuperview()
                 }
             }
             let statusView = TextView()
+            self.statusView = statusView
             statusView.userInteractionEnabled = false
             statusView.isSelectable = false
             statusView.update(item.statusLayout)
@@ -437,9 +438,8 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
             statusView.setFrameOrigin(statusViewPoint)
             
             statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
-            statusView.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.4)
-            
-            self.statusView = statusView
+            statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
+
         }
         
         statusView?.update(item.statusLayout)

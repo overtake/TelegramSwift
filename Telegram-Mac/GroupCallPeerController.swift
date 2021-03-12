@@ -73,11 +73,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     let theme = GroupCallTheme.customTheme
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("avatar"), equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return GroupCallPeerAvatarRowItem(initialSize, stableId: stableId, account: arguments.account, peer: state.peer.peer, customTheme: theme)
-    }))
-    index += 1
-    
+   
     
     struct InfoTuple : Equatable {
         var title: String
@@ -112,9 +108,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         info.append(.init(title: L10n.peerInfoAbout, info: about, viewType: .singleItem))
     }
     
+    let viewType: GeneralViewType = info.isEmpty ? .singleItem : .firstItem
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("avatar"), equatable: InputDataEquatable(state), item: { initialSize, stableId in
+        return GroupCallPeerAvatarRowItem(initialSize, stableId: stableId, account: arguments.account, peer: state.peer.peer, viewType: viewType, customTheme: theme)
+    }))
+    index += 1
+    
+    
     for i in 0 ..< info.count {
         var value = info[i]
-        value.viewType = bestGeneralViewType(info, for: i)
+        if i == 0 {
+            if info.count == 1 {
+                value.viewType = .lastItem
+            } else {
+                value.viewType = .innerItem
+            }
+        } else {
+            value.viewType = bestGeneralViewType(info, for: i)
+        }
         info[i] = value
     }
     
@@ -132,7 +144,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     var actions:[ActionTuple] = []
     
-    //TODOLANG
     if let peer = state.peer.peer as? TelegramUser {
         actions.append(.init(title: L10n.voiceChatInfoSendMessage, action: {
             arguments.openChat(peer.id)
@@ -260,7 +271,7 @@ func GroupCallPeerController(account: Account, peer: Peer) -> InputDataModalCont
     let customTheme = GroupCallTheme.customTheme
 
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(280, 300))
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(350, 300))
     
     controller.leftModalHeader = ModalHeaderData(image: #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(customTheme.accentColor), handler: { [weak modalController] in
         modalController?.close()

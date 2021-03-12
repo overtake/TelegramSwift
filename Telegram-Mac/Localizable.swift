@@ -2673,8 +2673,36 @@ internal final class L10n {
   internal static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
   /// Join
   internal static var chatVoiceChatJoinLinkOK: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.OK") }
+  /// %d
+  internal static func chatVoiceChatJoinLinkParticipantsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_countable", p1)
+  }
+  /// %d participants
+  internal static func chatVoiceChatJoinLinkParticipantsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_few", p1)
+  }
+  /// %d participants
+  internal static func chatVoiceChatJoinLinkParticipantsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_many", p1)
+  }
+  /// %d participant
+  internal static func chatVoiceChatJoinLinkParticipantsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_one", p1)
+  }
+  /// %d participants
+  internal static func chatVoiceChatJoinLinkParticipantsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_other", p1)
+  }
+  /// %d participants
+  internal static func chatVoiceChatJoinLinkParticipantsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_two", p1)
+  }
+  /// no one joined yet
+  internal static var chatVoiceChatJoinLinkParticipantsZero: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_zero") }
   /// Are you sure you want to join voice chat?
   internal static var chatVoiceChatJoinLinkText: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Text") }
+  /// Voice Chat
+  internal static var chatVoiceChatJoinLinkTitle: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Title") }
   /// Chat Background
   internal static var chatWPBackgroundTitle: String  { return L10n.tr("Localizable", "Chat.WP.BackgroundTitle") }
   /// Color
@@ -3497,6 +3525,16 @@ internal final class L10n {
   internal static var discussionControllerGroupSetUnlinkChannel: String  { return L10n.tr("Localizable", "DiscussionController.Group.Set.UnlinkChannel") }
   /// The channel successfully unlinked.
   internal static var discussionControllerGroupUnsetDescription: String  { return L10n.tr("Localizable", "DiscussionController.Group.Unset.Description") }
+  /// Continue as %@
+  internal static func displayMeAsContinueAs(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DisplayMeAs.ContinueAs", p1)
+  }
+  /// personal account
+  internal static var displayMeAsPersonalAccount: String  { return L10n.tr("Localizable", "DisplayMeAs.PersonalAccount") }
+  /// Choose whether you want to be displayed as your personal account or as your channel.
+  internal static var displayMeAsText: String  { return L10n.tr("Localizable", "DisplayMeAs.Text") }
+  /// Display Me As
+  internal static var displayMeAsTitle: String  { return L10n.tr("Localizable", "DisplayMeAs.Title") }
   /// Spelling and Grammar
   internal static var dv1IoYv7Title: String  { return L10n.tr("Localizable", "Dv1-io-Yv7.title") }
   /// Edit
@@ -8837,6 +8875,8 @@ internal final class L10n {
   internal static var voiceChatClickToUnmute: String  { return L10n.tr("Localizable", "VoiceChat.ClickToUnmute") }
   /// Connecting...
   internal static var voiceChatConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Connecting") }
+  /// Cancel request to speak
+  internal static var voiceChatDownHand: String  { return L10n.tr("Localizable", "VoiceChat.DownHand") }
   /// group members
   internal static var voiceChatGroupMembers: String  { return L10n.tr("Localizable", "VoiceChat.GroupMembers") }
   /// Add
@@ -8887,6 +8927,8 @@ internal final class L10n {
   }
   /// You're Live
   internal static var voiceChatYouLive: String  { return L10n.tr("Localizable", "VoiceChat.YouLive") }
+  /// Voice chat is being recorded.
+  internal static var voiceChatAlertRecording: String  { return L10n.tr("Localizable", "VoiceChat.Alert.Recording") }
   /// listening
   internal static var voiceChatBlockListening: String  { return L10n.tr("Localizable", "VoiceChat.Block.Listening") }
   /// recent active
@@ -8949,7 +8991,7 @@ internal final class L10n {
   internal static var voiceChatInviteConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Header") }
   /// Invite
   internal static var voiceChatInviteConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.OK") }
-  /// Invite %@?
+  /// Invite %@ to voice chat?
   internal static func voiceChatInviteConfirmText(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Text", p1)
   }
@@ -9013,7 +9055,7 @@ internal final class L10n {
   internal static func voiceChatJoinAsGroupZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_zero", p1)
   }
-  /// we let admins know
+  /// we let the speakers know
   internal static var voiceChatRaisedHandText: String  { return L10n.tr("Localizable", "VoiceChat.RaisedHand.Text") }
   /// You asked to speak
   internal static var voiceChatRaisedHandTitle: String  { return L10n.tr("Localizable", "VoiceChat.RaisedHand.Title") }
@@ -9049,8 +9091,12 @@ internal final class L10n {
   internal static var voiceChatSettingsOutput: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output") }
   /// SHORTCUT
   internal static var voiceChatSettingsPushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk") }
-  /// Voice Chat Settings
+  /// VOICE CHAT TITLE
   internal static var voiceChatSettingsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title") }
+  /// personal account
+  internal static var voiceChatSettingsDisplayAsPersonalAccount: String  { return L10n.tr("Localizable", "VoiceChat.Settings.DisplayAs.PersonalAccount") }
+  /// DISPLAY ME AS
+  internal static var voiceChatSettingsDisplayAsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.DisplayAs.Title") }
   /// Are you sure you want to end this voice chat?
   internal static var voiceChatSettingsEndConfirm: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End.Confirm") }
   /// End
@@ -9065,6 +9111,8 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeSoundEffects: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.SoundEffects") }
   /// Output Device
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
+  /// PERMISSIONS
+  internal static var voiceChatSettingsPermissionsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Permissions.Title") }
   /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor](input)
   internal static var voiceChatSettingsPushToTalkAccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access") }
   /// When the Voice Chat window is in focus, you can also use ⎵ regardless of this setting.
@@ -9081,6 +9129,8 @@ internal final class L10n {
   internal static var voiceChatSettingsPushToTalkUndefined: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Undefined") }
   /// Please allow Accessibility for Telegram in [Privacy Settings.](access)\n\nApp restart may be required.
   internal static var voiceChatSettingsPushToTalkAccessOld: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access.Old") }
+  /// Title...
+  internal static var voiceChatSettingsTitlePlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title.Placeholder") }
   /// Connecting...
   internal static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
   /// invited
@@ -9129,6 +9179,8 @@ internal final class L10n {
   internal static var voiceChatTitleInvited: String  { return L10n.tr("Localizable", "VoiceChat.Title.Invited") }
   /// Invite Members
   internal static var voiceChatTitleInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Title.InviteMembers") }
+  /// Audio saved to Saved Messsages.
+  internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
   /// stream
@@ -9139,6 +9191,10 @@ internal final class L10n {
   internal static var voiceChatVideoVideoSourceCancel: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Cancel") }
   /// Share
   internal static var voiceChatVideoVideoSourceShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Share") }
+  /// Audio Title (Optional)
+  internal static var voiecChatSettingsRecordPlaceholder: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Placeholder") }
+  /// RECORD VOICE CHAT
+  internal static var voiecChatSettingsRecordTitle: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Title") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply

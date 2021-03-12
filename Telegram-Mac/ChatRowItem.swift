@@ -863,7 +863,15 @@ class ChatRowItem: TableRowItem {
                     canFillAuthorName = false
                 }
                 if message.isAnonymousMessage, !isIncoming {
-                    canFillAuthorName = true
+                    var disable: Bool = false
+                    if let media = message.media.first as? TelegramMediaFile {
+                        if media.isSticker || media.isAnimatedSticker {
+                            disable = true
+                        }
+                    }
+                    if !disable {
+                        canFillAuthorName = true
+                    }
                 }
             }
         }

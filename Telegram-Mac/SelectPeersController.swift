@@ -25,7 +25,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
     case peer(SelectPeerValue, Int32, Bool)
     case searchEmpty(GeneralRowItem.Theme, CGImage)
     case separator(Int32, GeneralRowItem.Theme, String)
-    case inviteLink(String, Int, GeneralRowItem.Theme, (Int)->Void)
+    case inviteLink(String, CGImage, Int, GeneralRowItem.Theme, (Int)->Void)
     var stableId: SelectPeerEntryStableId {
         switch self {
         case .searchEmpty:
@@ -34,7 +34,7 @@ enum SelectPeerEntry : Comparable, Identifiable {
             return .separator(index)
         case let .peer(peer, index, _):
             return .peerId(peer.peer.id, index)
-        case let .inviteLink(_, index, _, _):
+        case let .inviteLink(_, _, index, _, _):
             return .inviteLink(index)
         }
     }
@@ -53,8 +53,8 @@ enum SelectPeerEntry : Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .inviteLink(text, index, customTheme, _):
-            if case .inviteLink(text, index, customTheme, _) = rhs {
+        case let .inviteLink(text, image, index, customTheme, _):
+            if case .inviteLink(text, image, index, customTheme, _) = rhs {
                 return true
             } else {
                 return false
@@ -216,7 +216,8 @@ private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], sear
     var entries: [SelectPeerEntry] = []
 
     if let linkInvation = linkInvation {
-        entries.append(SelectPeerEntry.inviteLink(L10n.peerSelectInviteViaLink, 0, GeneralRowItem.Theme(), linkInvation))
+        let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.colors.accent, flipVertical: true)
+        entries.append(SelectPeerEntry.inviteLink(L10n.peerSelectInviteViaLink, icon, 0, GeneralRowItem.Theme(), linkInvation))
     }
     
     //entries.append(.search(false))
@@ -351,12 +352,12 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                 return SearchEmptyRowItem(initialSize, stableId: entry.stableId, icon: icon, customTheme: theme)
             case let .separator(_, customTheme, text):
                 return SeparatorRowItem(initialSize, entry.stableId, string: text.uppercased(), customTheme: customTheme)
-            case let .inviteLink(text, index, customTheme, action):
+            case let .inviteLink(text, image, index, customTheme, action):
                 let style = ControlStyle(font: .normal(.title), foregroundColor: customTheme.accentColor)
                 return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: text, nameStyle: style, type: .none, action: {
                     action(index)
                     interactions.close()
-                }, thumb: GeneralThumbAdditional(thumb: NSImage(named: "Icon_InviteViaLink")!.precomposed(customTheme.accentColor), textInset: 39), inset: NSEdgeInsetsMake(0, 16, 0, 10), customTheme: customTheme)
+                }, thumb: GeneralThumbAdditional(thumb: image, textInset: 39), inset: NSEdgeInsetsMake(0, 16, 0, 10), customTheme: customTheme)
             }
             
             let _ = item.makeSize(initialSize.width)

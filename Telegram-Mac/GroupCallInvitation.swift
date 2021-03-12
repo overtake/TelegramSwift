@@ -194,12 +194,12 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 if search.request.isEmpty {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.addressName != nil {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, 0, customTheme(), linkInvation))
+                            entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
                             if peer.groupAccess.canMakeVoiceChat {
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, 1, customTheme(), linkInvation))
+                                entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                             }
                         } else {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, 0, customTheme(), linkInvation))
+                            entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                         }
                     }
                 }
@@ -356,12 +356,12 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                 if search.request.isEmpty {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.addressName != nil {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, 0, customTheme(), linkInvation))
+                            entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
                             if peer.groupAccess.canMakeVoiceChat {
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, 1, customTheme(), linkInvation))
+                                entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                             }
                         } else {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, 0, customTheme(), linkInvation))
+                            entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                         }
                     }
                 }

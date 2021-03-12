@@ -31,7 +31,7 @@ private final class GroupCallUIArguments {
     let isPinnedVideo:(PeerId)->Bool
     let getAccountPeerId: ()->PeerId?
     let cancelSharing: ()->Void
-    let toggleRaiseHand:(GroupCallUIState?)->Void
+    let toggleRaiseHand:()->Void
     let recordClick:(PresentationGroupCallState)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
@@ -49,7 +49,7 @@ private final class GroupCallUIArguments {
     setVolume: @escaping(PeerId, Double, Bool)->Void,
     getAccountPeerId: @escaping()->PeerId?,
     cancelSharing: @escaping()->Void,
-    toggleRaiseHand:@escaping(GroupCallUIState?)->Void,
+    toggleRaiseHand:@escaping()->Void,
     recordClick:@escaping(PresentationGroupCallState)->Void) {
         self.leave = leave
         self.invite = invite
@@ -105,8 +105,11 @@ private final class GroupCallControlsView : View {
 
         
         speak.set(handler: { [weak self] _ in
-            if let muteState = self?.preiousState?.state.muteState, !muteState.canUnmute {
-                self?.arguments?.toggleRaiseHand(self?.preiousState)
+            if let muteState = self?.currentState?.state.muteState, !muteState.canUnmute {
+                if self?.currentState?.state.isRaisedHand == false {
+                    self?.arguments?.toggleRaiseHand()
+                }
+                self?.speak.playRaiseHand()
 //                self?.speakText?.shake()
 //                NSSound.beep()
             } else {
@@ -125,7 +128,7 @@ private final class GroupCallControlsView : View {
 
     }
     
-    private var preiousState: GroupCallUIState?
+    fileprivate private(set) var currentState: GroupCallUIState?
     
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
 
@@ -168,7 +171,7 @@ private final class GroupCallControlsView : View {
 
         self.backgroundView.audioLevel = CGFloat(audioLevel ?? 0)
 
-      //  if state != preiousState {
+      //  if state != currentState {
             end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
         //isStreaming ? GroupCallTheme.video_off : GroupCallTheme.video_on
         videoStream.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
@@ -199,7 +202,6 @@ private final class GroupCallControlsView : View {
                         }
                     } else {
                         if !state.isRaisedHand {
-                            //TODOLANG
                             statusText = L10n.voiceChatMutedByAdmin
                             secondary = L10n.voiceChatClickToRaiseHand
                         } else {
@@ -255,7 +257,7 @@ private final class GroupCallControlsView : View {
             }
         }
 
-        self.preiousState = callState
+        self.currentState = callState
         needsLayout = true
     }
     
@@ -311,7 +313,6 @@ private final class GroupCallRecordingView : Control {
         
         self.set(handler: { [weak self] control in
             if let window = control.kitWindow {
-                //TODOLANG
                 self?.recordClick?()
             }
         }, for: .Click)
@@ -356,6 +357,9 @@ private final class GroupCallRecordingView : Control {
     private var recordingStartTime: Int32 = 0
     private var account: Account?
     private var recordClick:(()->Void)? = nil
+    
+    var updateParentLayout:(()->Void)? = nil
+    
     func update(recordingStartTime: Int32, account: Account, recordClick: (()->Void)?) {
         self.account = account
         self.recordClick = recordClick
@@ -390,6 +394,8 @@ private final class GroupCallRecordingView : Control {
         layer?.cornerRadius = frame.height / 2
         
         backgroundColor = GroupCallTheme.membersColor
+        
+        updateParentLayout?()
     }
  
     override func layout() {
@@ -430,12 +436,25 @@ private final class GroupCallTitleView : View {
     
     override func layout() {
         super.layout()
-        titleView.centerX(y: frame.midY - titleView.frame.height)
         statusView.centerX(y: frame.midY)
         
         if let recordingView = recordingView {
+            
+            let layout = titleView.layout
+            layout?.measure(width: frame.width - 115 - recordingView.frame.width - 10)
+            titleView.update(layout)
+            
             recordingView.centerY(x: frame.width - recordingView.frame.width - 24)
+            
+            let rect = focus(titleView.frame.size)
+            titleView.setFrameOrigin(NSMakePoint(min(max(90, rect.minX), recordingView.frame.minX - 10 - titleView.frame.width), frame.midY - titleView.frame.height))
+
+            
+        } else {
         }
+        let rect = focus(titleView.frame.size)
+        titleView.setFrameOrigin(NSMakePoint(max(90, rect.minX), frame.midY - titleView.frame.height))
+
     }
     
     
@@ -449,7 +468,7 @@ private final class GroupCallTitleView : View {
             title = peer.displayTitle
         }
         let layout = TextViewLayout(.initialize(string: title, color: GroupCallTheme.titleColor, font: .medium(.title)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 180)
+        layout.measure(width: frame.width - 115 - (recordingView != nil ? 80 : 0))
         titleView.update(layout)
 
 
@@ -467,6 +486,10 @@ private final class GroupCallTitleView : View {
                 }
             }
             view.update(recordingStartTime: recordingStartTimestamp, account: account, recordClick: recordClick)
+            
+            view.updateParentLayout = { [weak self] in
+                self?.needsLayout = true
+            }
         } else {
             if let recordingView = recordingView {
                 self.recordingView = nil
@@ -773,6 +796,9 @@ struct PeerGroupCallData : Equatable, Comparable {
     var isRaisedHand: Bool {
         return self.state?.raiseHandRating != nil
     }
+    var wantsToSpeak: Bool {
+        return isRaisedHand
+    }
     
     var about: String? {
         let about: String?
@@ -973,10 +999,7 @@ private func makeState(previousActive: [GroupCallUIState.RecentActive], previous
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
         memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow, unsyncVolume: unsyncVolumes[accountPeerId], isRecentActive: false, activeIndex: nil, isPinned: currentDominantSpeakerWithVideo?.0 == accountPeerId, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall))
-    } else {
-        var bp:Int = 0
-        bp += 1
-    }
+    } 
 
 
     var lastActivity:[GroupCallUIState.RecentActive] = previousActive
@@ -1127,6 +1150,10 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                 var items: [ContextMenuItem] = []
 
                 if let state = data.state {
+                    
+                    if data.peer.id == arguments.getAccountPeerId(), data.wantsToSpeak {
+                        items.append(ContextMenuItem(L10n.voiceChatDownHand, handler: arguments.toggleRaiseHand))
+                    }
                     
                     if data.peer.id != arguments.getAccountPeerId() {
                         let volume: ContextMenuItem = .init("Volume", handler: {
@@ -1378,21 +1405,23 @@ final class GroupCallUIController : ViewController {
             return self?.data.call.joinAs
         }, cancelSharing: { [weak self] in
             self?.data.call.disableVideo()
-        }, toggleRaiseHand: { [weak self] state in
-            if let strongSelf = self, let state = state, !state.state.isRaisedHand {
+        }, toggleRaiseHand: { [weak self] in
+            if let strongSelf = self, let state = self?.genericView.state {
                 let call = strongSelf.data.call
                 call.updateMuteState(peerId: call.joinAs, isMuted: state.isMuted, volume: nil, raiseHand: !state.state.isRaisedHand ? true : false)
             }
         }, recordClick: { [weak self] state in
             if state.canManageCall {
                 if let window = self?.window {
-                    confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { _ in
+                    confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                         self?.data.call.updateShouldBeRecording(false, title: nil)
+                        if let window = window {
+                            showModalText(for: window, text: L10n.voiceChatToastStop)
+                        }
                     })
                 }
             } else {
-                //TODOLANG
-                showModalText(for: window, text: "This voice chat is being recorded.")
+                showModalText(for: window, text: L10n.voiceChatAlertRecording)
             }
         })
         
@@ -1535,7 +1564,7 @@ final class GroupCallUIController : ViewController {
             }
         } |> deliverOnMainQueue
         
-        var previousState: PresentationGroupCallState?
+        var currentState: PresentationGroupCallState?
         
         self.disposable.set(transition.start { [weak self] value in
             guard let strongSelf = self else {
@@ -1545,16 +1574,16 @@ final class GroupCallUIController : ViewController {
             switch value.0.state.networkState {
             case .connected:
                 var notifyCanSpeak: Bool = false
-                if let previous = previousState, previous.muteState != value.0.state.muteState {
+                if let previous = currentState, previous.muteState != value.0.state.muteState {
                     if previous.isRaisedHand, let muteState = value.0.state.muteState, muteState.canUnmute {
                         notifyCanSpeak = true
                     }
                 }
                 if notifyCanSpeak {
-                    previousState = nil
+                    currentState = nil
                     showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
                 } else {
-                    previousState = value.0.state
+                    currentState = value.0.state
                 }
             default:
                 break
@@ -1570,6 +1599,7 @@ final class GroupCallUIController : ViewController {
             _ = previousActive.modify { _ in
                 return []
             }
+            currentState = nil
         }
 
         genericView.peersTable.setScrollHandler { [weak self] position in
@@ -1687,6 +1717,7 @@ final class GroupCallUIController : ViewController {
     }
     
     private var pushToTalkIsActive: Bool = false
+
     
     private func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
         self.genericView.applyUpdates(state, transition, call, animated: animated)

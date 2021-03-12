@@ -148,12 +148,10 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     sectionId += 1
     
     if state.canManageCall {
-        //TODOLANG
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("VOICE CHAT TITLE"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
 
-        //TODOLANG
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.title), error: nil, identifier: _id_input_chat_title, mode: .plain, data: .init(viewType: .singleItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "Title...", filter: { $0 }, limit: 140))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.title), error: nil, identifier: _id_input_chat_title, mode: .plain, data: .init(viewType: .singleItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: L10n.voiceChatSettingsTitlePlaceholder, filter: { $0 }, limit: 64))
         index += 1
 
     }
@@ -175,13 +173,11 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
                 let viewType: GeneralViewType
                 let selected: Bool
                 let status: String?
-            }
-            //TODOLANG
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DISPLAY ME AS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+            }            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsDisplayAsTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
             index += 1
             
-            let tuple = Tuple(peer: FoundPeer(peer: accountPeer, subscribers: nil), viewType: uiState.displayAsList == nil || uiState.displayAsList?.isEmpty == false ? .firstItem : .singleItem, selected: accountPeer.id == joinAsPeerId, status: "personal account")
+            let tuple = Tuple(peer: FoundPeer(peer: accountPeer, subscribers: nil), viewType: uiState.displayAsList == nil || uiState.displayAsList?.isEmpty == false ? .firstItem : .singleItem, selected: accountPeer.id == joinAsPeerId, status: L10n.voiceChatSettingsDisplayAsPersonalAccount)
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                     arguments.switchAccount(tuple.peer.peer.id)
@@ -189,7 +185,6 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
             }))
             index += 1
             
-            //TODOLANG
             for peer in list {
                 
                 var status: String?
@@ -245,7 +240,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
             entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("RECORD VOICE CHAT"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiecChatSettingsRecordTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
         
@@ -253,7 +248,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         let recordingStartTimestamp = state.recordingStartTimestamp
         
         if recordingStartTimestamp == nil {
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: "Audio Title (Optional)", filter: { $0 }, limit: 140))
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: L10n.voiecChatSettingsRecordPlaceholder, filter: { $0 }, limit: 64))
             index += 1
         }
         struct Tuple : Equatable {
@@ -308,7 +303,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
             entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PERMISSIONS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPermissionsTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
         let isMuted = defaultParticipantMuteState == .muted
@@ -674,14 +669,20 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             self?.call.switchAccount(peerId)
         }, startRecording: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: L10n.voiceChatRecordingStartTitle, information: L10n.voiceChatRecordingStartText, okTitle: L10n.voiceChatRecordingStartOK, successHandler: { _ in
+                confirm(for: window, header: L10n.voiceChatRecordingStartTitle, information: L10n.voiceChatRecordingStartText, okTitle: L10n.voiceChatRecordingStartOK, successHandler: { [weak window] _ in
                     self?.call.updateShouldBeRecording(true, title: stateValue.with { $0.recordName })
+                    if let window = window {
+                        showModalText(for: window, text: L10n.voiceChatAlertRecording)
+                    }
                 })
             }
         }, stopRecording: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { _ in
+                confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                     self?.call.updateShouldBeRecording(false, title: nil)
+                    if let window = window {
+                        showModalText(for: window, text: L10n.voiceChatToastStop)
+                    }
                 })
             }
         })

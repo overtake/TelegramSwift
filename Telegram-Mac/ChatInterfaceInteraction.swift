@@ -429,20 +429,34 @@ final class ChatInteraction : InterfaceObserver  {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
                 })
             case let .joinVoiceChat(joinHash):
-                
                 update(animated: animated, {
                     $0.updatedGroupCall { $0?.withUpdatedJoinHash(joinHash) }.withoutInitialAction()
                 })
-                if presentation.groupCall?.data?.groupCall?.call.peerId != self.peerId {
-                    confirm(for: context.window, information: L10n.chatVoiceChatJoinLinkText, okTitle: L10n.chatVoiceChatJoinLinkOK, successHandler: { [weak self] _ in
-                        if let call = self?.presentation.groupCall?.activeCall {
-                            self?.joinGroupCall(call, joinHash)
+                
+                let peerId = self.peerId
+                let context = self.context
+                
+                let joinCall:(GroupCallPanelData)->Void = { [weak self] data in
+                    if data.groupCall?.call.peerId != peerId, let peer = self?.peer {
+                        showModal(with: JoinVoiceChatAlertController(context: context, groupCall: data, peer: peer, join: { [weak self] in
+                            if let call = data.info {
+                                self?.joinGroupCall(CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title), joinHash)
+                            }
+                        }), for: context.window)
+                    } else {
+                        if let call = data.info {
+                            self?.joinGroupCall(CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title), joinHash)
+                        }
+                    }
+                }
+                if let data = presentation.groupCall?.data {
+                    joinCall(data)
+                } else {
+                    _ = showModalProgress(signal: getGroupCallPanelData(context: context, peerId: peerId), for: context.window).start(next: {  data in
+                        if let data = data {
+                            joinCall(data)
                         }
                     })
-                } else {
-                    if let call = self.presentation.groupCall?.activeCall {
-                        self.joinGroupCall(call, joinHash)
-                    }
                 }
             }
            

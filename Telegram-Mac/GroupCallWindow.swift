@@ -85,6 +85,11 @@ struct GroupCallTheme {
     static let video_on = NSImage(named: "Icon_GroupCall_VideoOn")!.precomposed(.white)
     static let video_off = NSImage(named: "Icon_GroupCall_VideoOff")!.precomposed(.white)
     
+    static let invite_listener = NSImage(named: "Icon_VoiceChat_InviteListener")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
+    static let invite_speaker = NSImage(named: "Icon_VoiceChat_InviteSpeaker")!.precomposed(customTheme.accentColor, flipVertical: true)
+    static let invite_link = NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
+
+    
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
     
     static var customTheme: GeneralRowItem.Theme {

@@ -15,12 +15,26 @@
 		27335F0325C8295200FD040C /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0225C8295100FD040C /* GroupVideoView.swift */; };
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
+		27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */; };
 		274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */; };
 		275045E525EE271D00872D20 /* GroupCallDisplayAsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */; };
 		2756EF1D25C463F10062303D /* LegacyReachability.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2756EF1C25C463F10062303D /* LegacyReachability.framework */; };
 		2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */; };
 		2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2764A5AC25DFBB4300F9A20D /* police.tgs */; };
 		2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */; };
+		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
+		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
+		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
+		2773A54425FA324B00AB45E9 /* voice_chat_unmute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A54025FA324900AB45E9 /* voice_chat_unmute.tgs */; };
+		2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A54225FA324A00AB45E9 /* voice_chat_mute.tgs */; };
+		2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A54325FA324B00AB45E9 /* voice_chat_hand_off.tgs */; };
+		2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A55025FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs */; };
+		2773A55F25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A55E25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs */; };
+		2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56125FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs */; };
+		2773A56525FA4E3A00AB45E9 /* voice_chat_raise_hand_6.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56425FA4E3A00AB45E9 /* voice_chat_raise_hand_6.tgs */; };
+		2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56725FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs */; };
+		2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56A25FAA63D00AB45E9 /* voice_chat_hand_on_unmuted.tgs */; };
+		2773A56D25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56B25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs */; };
 		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
@@ -1041,12 +1055,26 @@
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
 		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
+		27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_3.tgs; sourceTree = "<group>"; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
 		2756EF1C25C463F10062303D /* LegacyReachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LegacyReachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailsController.swift; sourceTree = "<group>"; };
 		2764A5AC25DFBB4300F9A20D /* police.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = police.tgs; sourceTree = "<group>"; };
 		2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoDeleteContextMenuView.swift; sourceTree = "<group>"; };
+		2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = text; path = voice_chat_raise_hand_1.tgs; sourceTree = "<group>"; };
+		2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertController.swift; sourceTree = "<group>"; };
+		2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertRowItem.swift; sourceTree = "<group>"; };
+		2773A54025FA324900AB45E9 /* voice_chat_unmute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_unmute.tgs; sourceTree = "<group>"; };
+		2773A54225FA324A00AB45E9 /* voice_chat_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_mute.tgs; sourceTree = "<group>"; };
+		2773A54325FA324B00AB45E9 /* voice_chat_hand_off.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_hand_off.tgs; sourceTree = "<group>"; };
+		2773A55025FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_2.tgs; sourceTree = "<group>"; };
+		2773A55E25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_4.tgs; sourceTree = "<group>"; };
+		2773A56125FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_5.tgs; sourceTree = "<group>"; };
+		2773A56425FA4E3A00AB45E9 /* voice_chat_raise_hand_6.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_6.tgs; sourceTree = "<group>"; };
+		2773A56725FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_7.tgs; sourceTree = "<group>"; };
+		2773A56A25FAA63D00AB45E9 /* voice_chat_hand_on_unmuted.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_hand_on_unmuted.tgs; sourceTree = "<group>"; };
+		2773A56B25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_hand_on_muted.tgs; sourceTree = "<group>"; };
 		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
@@ -2124,6 +2152,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2773A53825FA1D8C00AB45E9 /* alerts */ = {
+			isa = PBXGroup;
+			children = (
+				2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */,
+				2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */,
+			);
+			name = alerts;
+			sourceTree = "<group>";
+		};
 		2775101F25E790E7003D58D1 /* payments */ = {
 			isa = PBXGroup;
 			children = (
@@ -2572,6 +2609,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				2773A53825FA1D8C00AB45E9 /* alerts */,
 				2775101F25E790E7003D58D1 /* payments */,
 				A7E83210255E8A6F0095A167 /* hover */,
 				A72D7AE723C4718C005BAC59 /* polls */,
@@ -4342,6 +4380,18 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				2773A56B25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs */,
+				2773A56A25FAA63D00AB45E9 /* voice_chat_hand_on_unmuted.tgs */,
+				2773A56725FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs */,
+				2773A56425FA4E3A00AB45E9 /* voice_chat_raise_hand_6.tgs */,
+				2773A56125FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs */,
+				2773A55E25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs */,
+				27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */,
+				2773A55025FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs */,
+				2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */,
+				2773A54325FA324B00AB45E9 /* voice_chat_hand_off.tgs */,
+				2773A54225FA324A00AB45E9 /* voice_chat_mute.tgs */,
+				2773A54025FA324900AB45E9 /* voice_chat_unmute.tgs */,
 				2764A5AC25DFBB4300F9A20D /* police.tgs */,
 				A731925825DBA60000218E0E /* gigagroup.tgs */,
 				A731924E25CD5F2200218E0E /* destructor.tgs */,
@@ -4761,6 +4811,7 @@
 				A76C8AA224221D3000FDB071 /* graph_loading.tgs in Resources */,
 				A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */,
 				D0830FC424127473006198E7 /* folder_new.tgs in Resources */,
+				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
@@ -4783,11 +4834,15 @@
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
+				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
+				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
+				2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */,
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				27E969E12589172D00CB9F64 /* call down.mp3 in Resources */,
 				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
+				2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
 				27A9904E257A8047009044DB /* Pop.wav in Resources */,
@@ -4795,30 +4850,37 @@
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
+				2773A54425FA324B00AB45E9 /* voice_chat_unmute.tgs in Resources */,
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,
+				2773A56525FA4E3A00AB45E9 /* voice_chat_raise_hand_6.tgs in Resources */,
 				C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */,
 				D07450EA233D61B800769D7F /* write_words.tgs in Resources */,
+				2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */,
 				278C720425E67C2700F1B315 /* emoji1016.txt in Resources */,
 				9F03681722771A9700456348 /* anim_unpin.json in Resources */,
 				C253A9701D92F9F100CDC850 /* Localizable.strings in Resources */,
 				D07450E7233D61B800769D7F /* gift.tgs in Resources */,
+				2773A56D25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs in Resources */,
 				9F03681B22771A9700456348 /* anim_pin.json in Resources */,
 				C232EA3D1E1C06EF00C4D38C /* dsa_pub.pem in Resources */,
 				D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */,
 				C2CFCABE1EBB4A4D00843F6A /* voip_connecting.mp3 in Resources */,
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
+				2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */,
 				D07450F32340E89100769D7F /* sad_man.tgs in Resources */,
 				D07C6D802346A43000468B1A /* monkey_unsee.tgs in Resources */,
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				D07450EE233D61B800769D7F /* keychain.tgs in Resources */,
 				D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */,
 				D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */,
+				2773A55F25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
 				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
+				27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
 				D0A5586E2574F75B00B7C182 /* group_call_chatlist_typing.json in Resources */,
 				9F03681122771A9700456348 /* archiveAvatar.json in Resources */,
@@ -5357,6 +5419,7 @@
 				C2271F401DB4D5850045E719 /* ETabRowView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
 				D04D2144230DB55B00609388 /* TelegramIconsTheme.swift in Sources */,
+				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,
 				D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */,
@@ -5658,6 +5721,7 @@
 				A7F282B2238D122900742C20 /* UnauthorizedConfiguration.swift in Sources */,
 				9FC4DA9C21DD187C003E2A62 /* SearchPeerMembers.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
+				2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,
 				9F18DD93206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift in Sources */,
 				9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */,
