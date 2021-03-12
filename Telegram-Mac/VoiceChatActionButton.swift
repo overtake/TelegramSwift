@@ -167,7 +167,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.isCurrentlyInHierarchy = window != nil
+        self.isCurrentlyInHierarchy = true
         self.updateAnimations()
 
     }
@@ -521,6 +521,8 @@ final class VoiceChatActionButtonBackgroundView: View {
             self.maskProgressLayer.removeAllAnimations()
             self.maskBlobLayer.stopAnimating()
             return
+        } else {
+           // self.maskBlobLayer.startAnimating()
         }
         self.setupGradientAnimations()
 

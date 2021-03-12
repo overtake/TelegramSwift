@@ -3752,64 +3752,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let first:Atomic<Bool> = Atomic(value: true)
-        let account = self.context.account
         
         
-        var availableGroupCall: Signal<GroupCallPanelData?, NoError>
-        if peerId.namespace == Namespaces.Peer.CloudChannel || peerId.namespace == Namespaces.Peer.CloudGroup {
-            availableGroupCall = context.account.viewTracker.peerView(peerId)
-                            |> map { peerView -> CachedChannelData.ActiveCall? in
-                                if let cachedData = peerView.cachedData as? CachedChannelData {
-                                    return cachedData.activeCall
-                                }
-                                if let cachedData = peerView.cachedData as? CachedGroupData {
-                                    return cachedData.activeCall
-                                }
-                                return nil
-                            }
-                            |> distinctUntilChanged
-                               |> mapToSignal { activeCall -> Signal<GroupCallPanelData?, NoError> in
-                                   guard let activeCall = activeCall else {
-                                       return .single(nil)
-                                   }
-                                    return context.sharedContext.groupCallContext |> mapToSignal { groupCall in
-                                        if let context = groupCall, context.call.peerId == peerId && context.call.account.id == account.id {
-                                            return context.call.summaryState
-                                                |> map { summary -> GroupCallPanelData in
-                                                    if let summary = summary {
-                                                        return GroupCallPanelData(
-                                                            peerId: peerId,
-                                                            info: summary.info,
-                                                            topParticipants: summary.topParticipants,
-                                                            participantCount: summary.participantCount,
-                                                            activeSpeakers: summary.activeSpeakers,
-                                                            groupCall: context
-                                                        )
-                                                    } else {
-                                                        return GroupCallPanelData(peerId: peerId, info: nil, topParticipants: [], participantCount: 0, activeSpeakers: [], groupCall: context)
-                                                    }
-                                                }
-                                        } else {
-                                            return Signal { subscriber in
-                                                let disposable = MetaDisposable()
-                                                let callContext = context.cachedGroupCallContexts
-                                                callContext.impl.syncWith { impl in
-                                                    let callContext = impl.get(account: context.account, peerId: peerId, myPeerId: context.peerId, call: activeCall)
-                                                    disposable.set((callContext.context.panelData
-                                                    |> deliverOnMainQueue).start(next: { panelData in
-                                                        callContext.keep()
-                                                        subscriber.putNext(panelData)
-                                                    }))
-                                                }
-                                                return disposable
-                                            }
-                                        }
-                                    }
-                               }
-
-        } else {
-            availableGroupCall = .single(nil)
-        }
+        let availableGroupCall: Signal<GroupCallPanelData?, NoError> = getGroupCallPanelData(context: context, peerId: peerId)
         
         
         peerDisposable.set((combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall) |> beforeNext  { [weak self] topPinnedMessage, postboxView, groupCallData in

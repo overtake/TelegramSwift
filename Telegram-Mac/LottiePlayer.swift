@@ -116,6 +116,7 @@ private final class RendererState  {
     private(set) weak var layer: RLottieBridge?
     private(set) var videoFormat:CMVideoFormatDescription?
     private var fileSupplyment: TRLotFileSupplyment?
+    private(set) var renderIndex: Int32?
     init(cancelled: Bool, animation: LottieAnimation, layer: RLottieBridge?, fileSupplyment: TRLotFileSupplyment?, frames: [RenderedFrame], cachedFrames: [Int32 : RenderedFrame], currentFrame: Int32, startFrame: Int32, endFrame: Int32, fps: Int32) {
         self.fileSupplyment = fileSupplyment
         self.animation = animation
@@ -168,6 +169,7 @@ private final class RendererState  {
             self.previousFrame = frames.last
         }
         let prev = frames.removeFirst()
+        self.renderIndex = prev.frame
         self.frames = frames
         return prev
     }
@@ -325,7 +327,10 @@ private final class PlayerRenderer {
     var currentFrame: Int32? {
         return self.getCurrentFrame()
     }
-    
+    private var getTotalFrames:()->Int32? = { return nil }
+    var totalFrames: Int32? {
+        return self.getTotalFrames()
+    }
     private func play(_ player: RLottieBridge) {
         
         self.finished = false
@@ -360,6 +365,10 @@ private final class PlayerRenderer {
         case let .toEnd(from):
             startFrame = max(min(from, endFrame - 1), startFrame)
             currentFrame = max(min(from, endFrame - 1), startFrame)
+        case let .toStart(from):
+            startFrame = 1
+            
+            currentFrame = max(min(from, endFrame - 1), startFrame)
         default:
             break
         }
@@ -371,8 +380,11 @@ private final class PlayerRenderer {
             _ = stateValue.modify(f)
         }
         
-        self.getCurrentFrame = {
-            return stateValue.with { $0?.currentFrame }
+        self.getCurrentFrame = { [weak stateValue] in
+            return stateValue?.with { $0?.renderIndex }
+        }
+        self.getTotalFrames = { [weak stateValue] in
+            return stateValue?.with { $0?.endFrame }
         }
         
         var framesTask: ThreadPoolTask? = nil
@@ -435,7 +447,7 @@ private final class PlayerRenderer {
                         if let triggerOn = renderer.animation.triggerOn {
                             switch triggerOn.0 {
                             case .first:
-                                if startFrame == current.frame {
+                                if currentState(stateValue)?.startFrame == current.frame {
                                     DispatchQueue.main.async(execute: triggerOn.1)
                                 }
                             case .last:
@@ -450,48 +462,38 @@ private final class PlayerRenderer {
                             
                         }
                         
+                        let finish:()->Void = {
+                            renderer.finished = true
+                            cancelled = true
+                            updateState(.stoped)
+                            renderer.timer?.invalidate()
+                            framesTask?.cancel()
+                            let onFinish = renderer.animation.onFinish ?? {}
+                            DispatchQueue.main.async(execute: onFinish)
+                        }
+                        
                         switch renderer.animation.playPolicy {
                         case .loop, .loopAt:
                             break
                         case .once:
                             if current.frame + 1 == currentState(stateValue)?.endFrame {
-                                renderer.finished = true
-                                cancelled = true
-                                updateState(.stoped)
-                                renderer.timer?.invalidate()
-                                framesTask?.cancel()
-                                let onFinish = renderer.animation.onFinish ?? {}
-                                DispatchQueue.main.async(execute: onFinish)
+                                finish()
                             }
                         case .onceEnd, .toEnd:
                             if let state = currentState(stateValue), state.endFrame - current.frame <= 1  {
-                                renderer.finished = true
-                                cancelled = true
-                                updateState(.stoped)
-                                renderer.timer?.invalidate()
-                                framesTask?.cancel()
-                                let onFinish = renderer.animation.onFinish ?? {}
-                                DispatchQueue.main.async(execute: onFinish)
+                                finish()
+                            }
+                        case .toStart:
+                            if current.frame <= 1, playedCount > 1 {
+                                finish()
                             }
                         case let .framesCount(limit):
                             if limit <= playedCount {
-                                renderer.finished = true
-                                cancelled = true
-                                updateState(.stoped)
-                                renderer.timer?.invalidate()
-                                framesTask?.cancel()
-                                let onFinish = renderer.animation.onFinish ?? {}
-                                DispatchQueue.main.async(execute: onFinish)
+                                finish()
                             }
                         case let .onceToFrame(frame):
                             if frame <= current.frame  {
-                                renderer.finished = true
-                                cancelled = true
-                                updateState(.stoped)
-                                renderer.timer?.invalidate()
-                                framesTask?.cancel()
-                                let onFinish = renderer.animation.onFinish ?? {}
-                                DispatchQueue.main.async(execute: onFinish)
+                                finish()
                             }
                         }
                         
@@ -560,6 +562,8 @@ private final class PlayerRenderer {
             render()
         }, queue: runOnQueue)
         
+        render()
+        
         self.timer?.start()
         
     }
@@ -610,6 +614,13 @@ private final class PlayerContext {
         }
         return currentFrame
     }
+    var totalFrames:Int32? {
+        var totalFrames:Int32? = nil
+        self.rendererRef.syncWith { renderer in
+            totalFrames = renderer.totalFrames
+        }
+        return totalFrames
+    }
 }
 
 
@@ -655,6 +666,7 @@ enum LottiePlayPolicy : Equatable {
     case once
     case onceEnd
     case toEnd(from: Int32)
+    case toStart(from: Int32)
     case framesCount(Int32)
     case onceToFrame(Int32)
 }
@@ -975,7 +987,7 @@ private final class LottieFallbackView: NSView {
 
 class LottiePlayerView : NSView {
     private var context: PlayerContext?
-    
+    private var _ignoreCachedContext: Bool = false
     private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
     var currentState: LottiePlayerState {
         return _currentState.with { $0 }
@@ -1029,8 +1041,26 @@ class LottiePlayerView : NSView {
     }
     
     var currentFrame: Int32? {
+        if _ignoreCachedContext {
+            return nil
+        }
         if let context = self.context {
             return context.currentFrame
+        } else {
+            return nil
+        }
+    }
+    
+    func ignoreCachedContext() {
+        _ignoreCachedContext = true
+    }
+    
+    var totalFrames: Int32? {
+        if _ignoreCachedContext {
+            return nil
+        }
+        if let context = self.context {
+            return context.totalFrames
         } else {
             return nil
         }
@@ -1040,8 +1070,9 @@ class LottiePlayerView : NSView {
         context?.setColors(colors)
     }
     
-    func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false) {
+    func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false, animated: Bool = false) {
         assertOnMainThread()
+        _ignoreCachedContext = false
         if let animation = animation {
             self.stateValue.set(self._currentState.modify { _ in .initializing })
             if self.context?.animation != animation || reset {
@@ -1092,6 +1123,9 @@ class LottiePlayerView : NSView {
                     fallback.frame = CGRect(origin: CGPoint(), size: animation.viewSize)
                     fallback.layer?.contentsGravity = .resize
                     self.addSubview(fallback)
+                    if animated {
+                        fallback.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                     let layer = Unmanaged.passRetained(fallback)
                     
                     self.context = PlayerContext(animation, displayFrame: { frame in
@@ -1104,7 +1138,14 @@ class LottiePlayerView : NSView {
                         }
                     }, release: {
                         Queue.mainQueue().async {
-                            layer.takeRetainedValue().removeFromSuperview()
+                            let view = layer.takeRetainedValue()
+                            if animated {
+                                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                                    view?.removeFromSuperview()
+                                })
+                            } else {
+                                view.removeFromSuperview()
+                            }
                         }
                     }, updateState: { [weak self] state in
                         guard let `self` = self else {

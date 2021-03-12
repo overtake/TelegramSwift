@@ -14,6 +14,58 @@ import TelegramCore
 import Postbox
 import SyncCore
 
+
+private final class DisplayMeAsHeaderItem : GeneralRowItem {
+    fileprivate let textLayout: TextViewLayout
+    init(_ initialSize: NSSize, stableId: AnyHashable) {
+        textLayout = .init(.initialize(string: L10n.displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
+        super.init(initialSize, stableId: stableId)
+    }
+    override var height: CGFloat {
+        return textLayout.layoutSize.height
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        textLayout.measure(width: width - 60)
+        return true
+    }
+    
+    override func viewClass() -> AnyClass {
+        return DisplayMeAsHeaderView.self
+    }
+}
+
+private final class DisplayMeAsHeaderView : TableRowView {
+    private let textView: TextView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.center()
+    }
+    
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        guard let item = item as? DisplayMeAsHeaderItem else {
+            return
+        }
+        textView.update(item.textLayout)
+        needsLayout = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private final class Arguments {
     let context: AccountContext
     let select:(PeerId)->Void
@@ -42,6 +94,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, item: { initialSize, stableId in
+        return DisplayMeAsHeaderItem(initialSize, stableId: stableId)
+    }))
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
     struct Tuple : Equatable {
         let peer: FoundPeer
         let viewType: GeneralViewType
@@ -50,8 +109,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if let peer = state.peer {
-        //TODOLANG
-        let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || state.list?.isEmpty == false ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: "personal account")
+        let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || state.list?.isEmpty == false ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: L10n.displayMeAsPersonalAccount)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                 arguments.select(tuple.peer.peer.id)
@@ -153,21 +211,12 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
         }
     }))
     //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: "Display Me As")
+    let controller = InputDataController(dataSignal: signal, title: L10n.displayMeAsTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
-    let ok: String
-    switch mode {
-    case .create:
-        //TODOLANG
-        ok = "Create Voice Chat"
-    case .join:
-        //TODOLANG
-        ok = "Join Voice Chat"
-    }
     
     controller.validateData = { _ in
         let selected = stateValue.with { $0.selected }
@@ -176,7 +225,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
         return .none
     }
     
-    let modalInteractions = ModalInteractions(acceptTitle: ok, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     
@@ -186,8 +235,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
                 let peer = value.list?.first(where: { $0.peer.id == value.selected })?.peer ?? value.peer?.peer
                 return peer?.compactDisplayTitle ?? ""
             }
-            //TODOLANG
-            button.set(text: "Continue as \(title)", for: .Normal)
+            button.set(text: L10n.displayMeAsContinueAs(title), for: .Normal)
         }
     }
 

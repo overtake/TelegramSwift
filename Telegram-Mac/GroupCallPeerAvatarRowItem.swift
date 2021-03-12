@@ -11,16 +11,17 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import SwiftSignalKit
+import SyncCore
 
 final class GroupCallPeerAvatarRowItem : GeneralRowItem {
     fileprivate let account: Account
     fileprivate let peer: Peer
     fileprivate let nameLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, peer: Peer, customTheme: GeneralRowItem.Theme) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, peer: Peer, viewType: GeneralViewType, customTheme: GeneralRowItem.Theme) {
         self.account = account
         self.peer = peer
         self.nameLayout = TextViewLayout(.initialize(string: peer.displayTitle, color: customTheme.textColor, font: .medium(.title)))
-        super.init(initialSize, stableId: stableId, viewType: .singleItem, customTheme: customTheme)
+        super.init(initialSize, stableId: stableId, viewType: viewType, customTheme: customTheme)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -32,7 +33,11 @@ final class GroupCallPeerAvatarRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 90 + viewType.innerInset.top + viewType.innerInset.bottom + nameLayout.layoutSize.height
+        return 180
+    }
+    
+    override var hasBorder: Bool {
+        return false
     }
     
     override func viewClass() -> AnyClass {
@@ -41,13 +46,19 @@ final class GroupCallPeerAvatarRowItem : GeneralRowItem {
 }
 
 
-private final class GroupCallPeerAvatarRowView: TableRowView {
-    private let avatar: AvatarControl = AvatarControl(font: .avatar(20))
+private final class GroupCallPeerAvatarRowView: GeneralContainableRowView {
+    private let imageView: TransformImageView = TransformImageView()
     private let nameView = TextView()
+    private let shadowView = ShadowView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        avatar.setFrameSize(NSMakeSize(90, 90))
-        addSubview(avatar)
+        addSubview(imageView)
+        
+        
+        shadowView.direction = .vertical(true)
+        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.2)
+        self.addSubview(shadowView)
+        
         addSubview(nameView)
     }
 
@@ -60,9 +71,9 @@ private final class GroupCallPeerAvatarRowView: TableRowView {
         guard let item = item as? GeneralRowItem else {
             return
         }
-
-        avatar.centerX(y: 0)
-        nameView.centerX(y: avatar.frame.maxY + item.viewType.innerInset.top)
+        imageView.frame = containerView.bounds
+        nameView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, imageView.frame.maxY - nameView.frame.height - item.viewType.innerInset.top))
+        shadowView.frame = NSMakeRect(0, containerView.frame.height - 40, containerView.frame.width, 40)
     }
     
     override var backdorColor: NSColor {
@@ -76,9 +87,40 @@ private final class GroupCallPeerAvatarRowView: TableRowView {
             return
         }
         
-        avatar.setPeer(account: item.account, peer: item.peer)
         nameView.update(item.nameLayout)
         
+        let profileImageRepresentations:[TelegramMediaImageRepresentation]
+        if let peer = item.peer as? TelegramChannel {
+            profileImageRepresentations = peer.profileImageRepresentations
+        } else if let peer = item.peer as? TelegramUser {
+            profileImageRepresentations = peer.profileImageRepresentations
+        } else if let peer = item.peer as? TelegramGroup {
+            profileImageRepresentations = peer.profileImageRepresentations
+        } else {
+            profileImageRepresentations = []
+        }
         
+        let id = profileImageRepresentations.first?.resource.id.hashValue ?? Int(item.peer.id.toInt64())
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(id)), representations: profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        
+        layout()
+        
+        
+        if let dimension = profileImageRepresentations.last?.dimensions.size {
+            
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: NSMakeSize(item.blockWidth, item.height), intrinsicInsets: NSEdgeInsets())
+            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: false)
+            self.imageView.setSignal(chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: media), peer: item.peer, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
+                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+            })
+            self.imageView.set(arguments: arguments)
+            
+            if let reference = PeerReference(item.peer) {
+                _ = fetchedMediaResource(mediaBox: item.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
+            }
+        } else {
+            self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: item.account, peer: item.peer) |> map { TransformImageResult($0, true) })
+        }
     }
 }

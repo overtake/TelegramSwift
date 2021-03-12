@@ -12,15 +12,14 @@ import TelegramCore
 
 
 final class GroupCallSpeakButton : Control {
-    private let button: VoiceChatMicrophoneView = VoiceChatMicrophoneView()
+    private let animationView: LottiePlayerView = LottiePlayerView(frame: NSMakeRect(0, 0, 120, 120))
     required init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
-        addSubview(button)
-
-        button.userInteractionEnabled = false
 
 
+        scaleOnClick = true
+        addSubview(animationView)
     }
 
     override var mouseDownCanMoveWindow: Bool {
@@ -29,59 +28,122 @@ final class GroupCallSpeakButton : Control {
     
     override func layout() {
         super.layout()
-        button.frame = focus(NSMakeSize(90, 90))
+        animationView.frame = focus(NSMakeSize(120, 120))
     }
     
+    private var previousState: PresentationGroupCallState?
+    private var previousIsMuted: Bool?
+    
     func update(with state: PresentationGroupCallState, isMuted: Bool, audioLevel: Float?, animated: Bool) {
-        let color: NSColor
-        let white = NSColor(rgb: 0xffffff)
-        var canRaiseHand: Bool = true
-        var allowToSpeak: Bool = true
         switch state.networkState {
         case .connecting:
             userInteractionEnabled = false
-            color = white
         case .connected:
             if isMuted {
-                if let muteState = state.muteState {
-                    if muteState.canUnmute {
-                        color = white
-                    } else {
-                        color = white
-                        allowToSpeak = false
-                    }
+                if let _ = state.muteState {
                     userInteractionEnabled = true
                 } else {
                     userInteractionEnabled = true
-                    color = white
-                    canRaiseHand = false
                 }
             } else {
-                canRaiseHand = false
                 userInteractionEnabled = true
-                color = white
             }
         }
-
-        button.update(state: .init(muted: isMuted, raisedHand: state.isRaisedHand, canRaiseHand: canRaiseHand, allowToSpeak: allowToSpeak, color: color), animated: animated)
-
-    }
-
-    
-    private var previousState: ControlState?
-    
-    override func stateDidUpdated( _ state: ControlState) {
-        switch controlState {
-        case .Highlight:
-            self.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
-        default:
-            if let previousState = previousState, previousState == .Highlight {
-                self.layer?.animateScaleCenter(from: 0.95, to: 1.0, duration: 0.2)
+ 
+        
+        let activeRaiseHand = state.muteState?.canUnmute == false
+        let previousActiveRaiseHand = previousState?.muteState?.canUnmute == false
+        let raiseHandUpdated = activeRaiseHand != previousActiveRaiseHand
+        
+        let previousIsMuted = self.previousIsMuted
+        let isMutedUpdated = (previousState?.muteState != nil) != (state.muteState != nil) || previousIsMuted != isMuted
+                
+        if previousState != nil {
+            if raiseHandUpdated {
+                if activeRaiseHand {
+                    playChangeState(previousState?.muteState != nil ? .voice_chat_hand_on_muted : .voice_chat_hand_on_unmuted)
+                } else {
+                    playChangeState(.voice_chat_hand_off)
+                }
+            } else if isMutedUpdated {
+                if isMuted {
+                    playChangeState(.voice_chat_mute)
+                } else {
+                    playChangeState(.voice_chat_unmute)
+                }
+            }
+        } else {
+            if activeRaiseHand {
+                setupRaiseHand(activeRaiseHand ? .voice_chat_hand_off : .voice_chat_hand_on_muted)
+            } else {
+                setupRaiseHand(isMuted ? .voice_chat_mute : .voice_chat_unmute)
             }
         }
-        previousState = state
+        
+        
+        self.previousState = state
+        self.previousIsMuted = isMuted
     }
     
+    private func setupRaiseHand(_ animation: LocalAnimatedSticker) {
+        if let data = animation.data {
+            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: .max), maximumFps: 60, runOnQueue: .mainQueue()))
+        }
+    }
+    private func playChangeState(_ animation: LocalAnimatedSticker) {
+        if let data = animation.data {
+                           
+            let animated = allHands.contains(where: { $0.rawValue == currentAnimation?.rawValue})
+            
+            var fromFrame: Int32 = 1
+            if currentAnimation?.rawValue == animation.rawValue {
+                fromFrame = self.animationView.currentFrame ?? 1
+            }
+            
+            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: fromFrame), maximumFps: 60, runOnQueue: .mainQueue()), animated: animated)
+            
+            
+        }
+    }
+    
+    private var renderSize: NSSize {
+        return NSMakeSize(animationView.frame.width, animationView.frame.height)
+    }
+    
+    let allHands:[LocalAnimatedSticker] = [.voice_chat_raise_hand_1,
+                                      .voice_chat_raise_hand_2,
+                                      .voice_chat_raise_hand_3,
+                                      .voice_chat_raise_hand_4,
+                                      .voice_chat_raise_hand_5,
+                                      .voice_chat_raise_hand_6,
+                                      .voice_chat_raise_hand_7]
+    
+    private var currentAnimation: LocalAnimatedSticker?
+    
+    func playRaiseHand() {
+        let raise_hand: LocalAnimatedSticker
+        
+        
+        var startFrame: Int32 = 1
+        if let current = currentAnimation {
+            raise_hand = current
+            startFrame = animationView.currentFrame ?? 1
+        } else {
+            raise_hand = allHands.randomElement()!
+        }
+        
+        if let data = raise_hand.data {
+            let animation = LottieAnimation(compressed: data, key: .init(key: .bundle("\(arc4random())"), size: renderSize), cachePurpose: .none, playPolicy: .toStart(from: startFrame), maximumFps: 60, runOnQueue: .mainQueue())
+            
+            animation.onFinish = { [weak self] in
+                self?.currentAnimation = nil
+                self?.animationView.ignoreCachedContext()
+            }
+            self.currentAnimation = raise_hand
+            animationView.set(animation)
+        }
+    }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
