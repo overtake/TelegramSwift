@@ -1036,9 +1036,13 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }
                 |> distinctUntilChanged
 
+                let myPeerId = self.joinAs
+
+                
                 var initialState = initialState
                 if let participantsContext = self.participantsContext, let immediateState = participantsContext.immediateState {
-                    initialState.mergeActivity(from: immediateState)
+                    initialState.mergeActivity(from: immediateState, myPeerId: myPeerId, previousMyPeerId: nil)
+
                 }
 
                 let participantsContext = GroupCallParticipantsContext(
