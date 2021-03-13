@@ -1946,7 +1946,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
 
     let requestCall = confirmation |> mapToSignal { call, joinAs in
         return showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title)) |> mapError { _ in .generic }, for: context.window)
-    }
+    } |> deliverOnMainQueue
     _ = requestCall.start(next: { result in
         switch result {
         case let .success(callContext), let .samePeer(callContext):

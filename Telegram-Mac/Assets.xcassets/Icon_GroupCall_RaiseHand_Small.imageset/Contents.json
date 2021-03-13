@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "Raise_hand_small.png",
+      "filename" : "ic_hand.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Raise_hand_small@2x.png",
+      "filename" : "ic_hand@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
