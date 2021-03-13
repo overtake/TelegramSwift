@@ -464,8 +464,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 } else {
                     if item.data.isSpeaking {
                         statusImage = GroupCallTheme.status_unmuted_green
-                    } else {
+                    } else if item.data.wantsToSpeak {
                         statusImage = GroupCallTheme.status_unmuted_accent
+                    } else {
+                        statusImage = GroupCallTheme.status_unmuted_gray
                     }
                 }
             }
