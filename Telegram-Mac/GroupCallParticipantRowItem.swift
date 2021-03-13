@@ -81,15 +81,10 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                 self.volume = nil
             } else {
                 var volumeColor: NSColor
-                if data.isSpeaking {
-                    volumeColor = GroupCallTheme.greenStatusColor
-                } else if data.wantsToSpeak {
-                    volumeColor = GroupCallTheme.blueStatusColor
-                } else {
-                    volumeColor = GroupCallTheme.grayStatusColor
-                }
                 if volume == 0 {
                     volumeColor = GroupCallTheme.grayStatusColor
+                } else {
+                    volumeColor = color
                 }
                 self.volume = TextViewLayout(.initialize(string: "\(Int(Float(volume) / 10000 * 100))%", color: volumeColor, font: .normal(.short)))
             }
