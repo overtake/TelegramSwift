@@ -1080,6 +1080,8 @@ class LottiePlayerView : NSView {
                     if holder == nil {
                         holder = ContextHolder()
                     }
+                } else {
+                    holder = nil
                 }
                 
                 if let holder = holder {
