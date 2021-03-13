@@ -80,7 +80,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
                 self.volume = nil
             } else {
-                var volumeColor: NSColor = GroupCallTheme.blueStatusColor
+                var volumeColor: NSColor
+                if data.isSpeaking {
+                    volumeColor = GroupCallTheme.greenStatusColor
+                } else if data.wantsToSpeak {
+                    volumeColor = GroupCallTheme.blueStatusColor
+                } else {
+                    volumeColor = GroupCallTheme.grayStatusColor
+                }
                 if volume == 0 {
                     volumeColor = GroupCallTheme.grayStatusColor
                 }
