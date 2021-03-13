@@ -129,7 +129,16 @@ final class GroupCallSpeakButton : Control {
             raise_hand = current
             startFrame = animationView.currentFrame ?? 1
         } else {
-            raise_hand = allHands.randomElement()!
+            var random = Int.random(in: 0 ... 6)
+            loop: while random == 6 || random == 5 {
+                let percent = Int.random(in: 0 ..< 100)
+                if percent == 1 {
+                    break loop
+                } else {
+                    random = Int.random(in: 0 ... 6)
+                }
+            }
+            raise_hand = allHands[random]
         }
         
         if let data = raise_hand.data {
