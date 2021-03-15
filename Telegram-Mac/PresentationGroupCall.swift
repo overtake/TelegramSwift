@@ -830,13 +830,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     let peerAdminIds: Signal<[PeerId], NoError>
                     let peerId = strongSelf.peerId
                     if strongSelf.peerId.namespace == Namespaces.Peer.CloudChannel {
-                        peerAdminIds = strongSelf.account.postbox.transaction { transaction -> [PeerId] in
-                            var result: [PeerId] = []
-                            if let entry = transaction.retrieveItemCacheEntry(id: cachedChannelAdminRanksEntryId(peerId: peerId)) as? CachedChannelAdminRanks {
-                                result = entry.ranks.map { $0.peerId }
-                            }
-                            return result
-                        }
+                        peerAdminIds = .single([])
                     } else {
                         peerAdminIds = strongSelf.account.postbox.transaction { transaction -> [PeerId] in
                             var result: [PeerId] = []
@@ -1000,7 +994,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
                 self.groupCallInviteLinksPromise.set(TelegramCore.groupCallInviteLinks(account: account, callId: callInfo.id, accessHash: callInfo.accessHash))
                 
-                self.stateValue.canManageCall = initialState.isCreator || initialState.adminIds.contains(self.joinAs)
+                self.stateValue.canManageCall = initialState.isCreator || initialState.adminIds.contains(self.account.peerId)
                 if self.stateValue.canManageCall && initialState.defaultParticipantsAreMuted.canChange {
                     self.stateValue.defaultParticipantMuteState = initialState.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
                 }
@@ -1011,13 +1005,43 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 let account = self.account
                 let joinAs = self.joinAs
 
-                let rawAdminIds = Signal<Set<PeerId>, NoError> { subscriber in
-                    let (disposable, _) = peerChannelMemberCategoriesContextsManager.admins(postbox: account.postbox, network: account.network, accountPeerId: joinAs, peerId: peerId, updated: { list in
-                        subscriber.putNext(Set(list.list.map { $0.peer.id }))
-                    })
-                    return disposable
+                let rawAdminIds: Signal<Set<PeerId>, NoError>
+                if peerId.namespace == Namespaces.Peer.CloudChannel {
+                    rawAdminIds = Signal { subscriber in
+                        let (disposable, _) = peerChannelMemberCategoriesContextsManager.admins(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, updated: { list in
+                            var peerIds = Set<PeerId>()
+                            for item in list.list {
+                                if let adminInfo = item.participant.adminInfo, adminInfo.rights.rights.contains(.canManageCalls) {
+                                    peerIds.insert(item.peer.id)
+                                }
+                            }
+                            subscriber.putNext(peerIds)
+                        })
+                        return disposable
+                    }
+                    |> distinctUntilChanged
+                    |> runOn(.mainQueue())
+                } else {
+                    rawAdminIds = account.postbox.combinedView(keys: [.cachedPeerData(peerId: peerId)])
+                        |> map { views -> Set<PeerId> in
+                            guard let view = views.views[.cachedPeerData(peerId: peerId)] as? CachedPeerDataView else {
+                                return Set()
+                            }
+                            guard let cachedData = view.cachedPeerData as? CachedGroupData, let participants = cachedData.participants else {
+                                return Set()
+                            }
+                            return Set(participants.participants.compactMap { item -> PeerId? in
+                                switch item {
+                                case .creator, .admin:
+                                    return item.peerId
+                                default:
+                                    return nil
+                                }
+                            })
+                        }
+                        |> distinctUntilChanged
                 }
-                |> runOn(.mainQueue())
+
 
                 let adminIds = combineLatest(queue: .mainQueue(),
                     rawAdminIds,
@@ -1118,17 +1142,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
                     strongSelf.stateValue.title = state.title
                     strongSelf.stateValue.recordingStartTimestamp = state.recordingStartTimestamp
-                    strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.joinAs)
-                   if (state.isCreator || adminIds.contains(strongSelf.joinAs)) && state.defaultParticipantsAreMuted.canChange {
-                       strongSelf.stateValue.defaultParticipantMuteState = state.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
-                   }
+                    strongSelf.stateValue.canManageCall = initialState.isCreator || adminIds.contains(strongSelf.account.peerId)
+                    if (state.isCreator || adminIds.contains(strongSelf.account.peerId)) && state.defaultParticipantsAreMuted.canChange {
+                        strongSelf.stateValue.defaultParticipantMuteState = state.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
+                    }
                 
 
-                   strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
-                       participantCount: state.totalCount,
-                       topParticipants: topParticipants,
-                       activeSpeakers: activeSpeakers
-                   )))
+                    strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
+                        participantCount: state.totalCount,
+                        topParticipants: topParticipants,
+                        activeSpeakers: activeSpeakers
+                    )))
                }))
 
 
@@ -1360,7 +1384,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 } else {
                     canThenUnmute = false
                 }
-            } else if self.stateValue.adminIds.contains(self.joinAs) {
+            } else if self.stateValue.adminIds.contains(self.account.peerId) {
                 canThenUnmute = true
             } else {
                 mutedByYou = true
@@ -1370,7 +1394,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         } else {
             if peerId == self.joinAs {
                 return nil
-            } else if self.stateValue.canManageCall || self.stateValue.adminIds.contains(self.joinAs) {
+            } else if self.stateValue.canManageCall || self.stateValue.adminIds.contains(self.account.peerId) {
                 return GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
             } else {
                 return nil
@@ -1381,6 +1405,13 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     
     func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32? = nil, raiseHand: Bool? = nil) {
         self.participantsContext?.updateMuteState(peerId: peerId, muteState: muteState(peerId: peerId, isMuted: isMuted), volume: volume, raiseHand: raiseHand)
+    }
+    
+    func joinAsSpeakerIfNeeded(_ joinHash: String) {
+        self.joinHash = joinHash
+        if let muteState = self.stateValue.muteState, !muteState.canUnmute {
+            requestCall(movingFromBroadcastToRtc: true)
+        }
     }
     
     private func requestCall(movingFromBroadcastToRtc: Bool) {
@@ -1495,6 +1526,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     func invitePeer(_ peerId: PeerId) {
         guard case let .established(callInfo, _, _, _, _) = self.internalState, !self.invitedPeersValue.contains(peerId) else {
             return
+        }
+        if let channel = self.peer as? TelegramChannel {
+            if channel.isChannel {
+                return
+            }
         }
 
         var updatedInvitedPeers = self.invitedPeersValue

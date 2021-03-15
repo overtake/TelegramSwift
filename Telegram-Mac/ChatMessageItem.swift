@@ -97,8 +97,12 @@ class ChatMessageItem: ChatRowItem {
             case let .followResolvedName(_, _, postId, _, action, _):
                 if let action = action {
                     inner: switch action {
-                    case .joinVoiceChat:
-                        return L10n.chatMessageJoinVoiceChat
+                    case let .joinVoiceChat(hash):
+                        if hash != nil {
+                            return L10n.chatMessageJoinVoiceChatAsSpeaker
+                        } else {
+                            return L10n.chatMessageJoinVoiceChatAsListener
+                        }
                     default:
                         break inner
                     }

@@ -1155,7 +1155,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         items.append(ContextMenuItem(L10n.voiceChatDownHand, handler: arguments.toggleRaiseHand))
                     }
                     
-                    if data.peer.id != arguments.getAccountPeerId() {
+                    if data.peer.id != arguments.getAccountPeerId(), data.state?.muteState == nil {
                         let volume: ContextMenuItem = .init("Volume", handler: {
 
                         })
@@ -1219,7 +1219,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                                     arguments.mute(data.peer.id, true, data.state?.volume, nil)
                                 }))
                             }
-                            if !tuple.adminIds.contains(data.peer.id) {
+                            if !tuple.adminIds.contains(data.peer.id), !data.peer.isChannel {
                                 items.append(.init(L10n.voiceChatRemovePeer, handler: {
                                     arguments.remove(data.peer)
                                 }))
@@ -1352,7 +1352,9 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            modernConfirm(for: window, account: account, peerId: peer.id, information: L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
+            let isChannel = self?.data.call.peer?.isChannel == true
+            
+            modernConfirm(for: window, account: account, peerId: peer.id, information: isChannel ? L10n.voiceChatRemovePeerConfirmChannel(peer.displayTitle) : L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
 
                 if peerId.namespace == Namespaces.Peer.CloudChannel {
                     _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
@@ -1571,24 +1573,18 @@ final class GroupCallUIController : ViewController {
                 return
             }
             
-            switch value.0.state.networkState {
-            case .connected:
-                var notifyCanSpeak: Bool = false
-                if let previous = currentState, previous.muteState != value.0.state.muteState {
-                    if previous.isRaisedHand, let muteState = value.0.state.muteState, muteState.canUnmute {
-                        notifyCanSpeak = true
-                    }
+            var notifyCanSpeak: Bool = false
+            if let previous = currentState, previous.muteState != value.0.state.muteState {
+                if previous.isRaisedHand, let muteState = value.0.state.muteState, muteState.canUnmute {
+                    notifyCanSpeak = true
                 }
-                if notifyCanSpeak {
-                    currentState = nil
-                    showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
-                } else {
-                    currentState = value.0.state
-                }
-            default:
-                break
             }
-            
+            if notifyCanSpeak {
+                currentState = nil
+                showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
+            } else {
+                currentState = value.0.state
+            }
             
             strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call, animated: animated.swap(true))
             strongSelf.readyOnce()

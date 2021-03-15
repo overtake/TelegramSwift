@@ -2007,8 +2007,6 @@ internal final class L10n {
   }
   /// imported
   internal static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
-  /// JOIN VOICE CHAT
-  internal static var chatMessageJoinVoiceChat: String  { return L10n.tr("Localizable", "Chat.Message.JoinVoiceChat") }
   /// %d
   internal static func chatMessageUnsendMessagesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.UnsendMessages_countable", p1)
@@ -2033,6 +2031,10 @@ internal final class L10n {
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
   /// This message was imported from another app. We can't guarantee it's real.
   internal static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
+  /// JOIN AS LISTENER
+  internal static var chatMessageJoinVoiceChatAsListener: String  { return L10n.tr("Localizable", "Chat.Message.JoinVoiceChat.AsListener") }
+  /// JOIN AS SPEAKER
+  internal static var chatMessageJoinVoiceChatAsSpeaker: String  { return L10n.tr("Localizable", "Chat.Message.JoinVoiceChat.AsSpeaker") }
   /// MTProxy Configuration
   internal static var chatMessageMTProxyConfig: String  { return L10n.tr("Localizable", "Chat.Message.MTProxy.Config") }
   /// SOCKS5 Configuration
@@ -9077,6 +9079,10 @@ internal final class L10n {
   }
   /// Cancel
   internal static var voiceChatRemovePeerConfirmCancel: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm.Cancel") }
+  /// Are you sure you want to remove %1$@ from the channel?
+  internal static func voiceChatRemovePeerConfirmChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm.Channel", p1)
+  }
   /// Remove
   internal static var voiceChatRemovePeerConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm.OK") }
   /// New participants can speak

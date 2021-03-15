@@ -131,6 +131,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     } else if peer.peer.isSupergroup || peer.peer.isGroup {
                         status = L10n.voiceChatJoinAsGroupCountable(Int(subscribers))
                     }
+                } else {
+                    status = L10n.chatChannelBadge
                 }
                 
                 var viewType = bestGeneralViewType(list, for: peer)
@@ -255,7 +257,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 
 
 func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId)->Void) {
-    _ = showModalProgress(signal: groupCallDisplayAsAvailablePeers(network: context.account.network, postbox: context.account.postbox, peerId: peerId), for: context.window).start(next: { displayAsList in
+    _ = showModalProgress(signal: cachedGroupCallDisplayAsAvailablePeers(account: context.account, peerId: peerId), for: context.window).start(next: { displayAsList in
         if !displayAsList.isEmpty {
             showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion), for: context.window)
         } else {
