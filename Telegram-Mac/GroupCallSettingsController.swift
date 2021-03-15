@@ -556,6 +556,23 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         _ = self.window?.makeFirstResponder(nil)
+        
+        window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
+            guard let `self` = self else {return .rejected}
+            
+            let index = self.tableView.row(at: self.tableView.documentView!.convert(event.locationInWindow, from: nil))
+            
+            if index > -1, let view = self.tableView.item(at: index).view {
+                if view.mouseInsideField {
+                    if self.window?.firstResponder != view.firstResponder {
+                        _ = self.window?.makeFirstResponder(view.firstResponder)
+                        return .invoked
+                    }
+                }
+            }
+            
+            return .invokeNext
+        }, with: self, for: .leftMouseUp, priority: self.responderPriority)
     }
     private func fetchData() -> [InputDataIdentifier : InputDataValue] {
         var values:[InputDataIdentifier : InputDataValue] = [:]
@@ -729,6 +746,11 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         if let state = getState?(), let title = state.title {
             self.call.updateTitle(title, force: true)
         }
+        self.window?.removeObserver(for: self)
+    }
+    
+    override func backKeyAction() -> KeyHandlerResult {
+        return .invokeNext
     }
     
     override func returnKeyAction() -> KeyHandlerResult {

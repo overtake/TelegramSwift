@@ -178,9 +178,8 @@ protocol PresentationGroupCall: class {
     
     var displayAsPeers: Signal<[FoundPeer]?, NoError> { get }
 
-    
+    func joinAsSpeakerIfNeeded(_ joinHash: String)
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>
-    
     func toggleIsMuted()
     func setVolume(peerId: PeerId, volume: Int32, sync: Bool)
     func setIsMuted(action: PresentationGroupCallMuteAction)

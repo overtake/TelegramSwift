@@ -3172,7 +3172,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let join:(PeerId)->Void = { joinAs in
                     _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info, joinHash: joinHash), for: context.window).start(next: { result in
                         switch result {
-                        case let .success(callContext), let .samePeer(callContext):
+                        case let .samePeer(callContext):
+                            applyGroupCallResult(context.sharedContext, callContext)
+                            if let joinHash = joinHash {
+                                callContext.call.joinAsSpeakerIfNeeded(joinHash)
+                            }
+                        case let .success(callContext):
                             applyGroupCallResult(context.sharedContext, callContext)
                         default:
                             alert(for: context.window, info: L10n.errorAnError)
