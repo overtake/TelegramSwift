@@ -1210,6 +1210,9 @@ extension Peer {
                 return true
             }
         }
+        if self is TelegramSecretChat {
+            return true
+        }
         return false
     }
     
@@ -2327,7 +2330,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             }
         }
         if peerId.namespace == Namespaces.Peer.SecretChat {
-            canRemoveGlobally = true
+            canRemoveGlobally = false
         }
         
         if canRemoveGlobally {
@@ -3287,8 +3290,8 @@ extension CachedPeerAutoremoveTimeout {
 
 
 
-func clearHistory(context: AccountContext, peer: Peer) {
-    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) {
+func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
+    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) && !peer.isSecretChat {
         showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     } else if peer.canClearHistory {
         var thridTitle: String? = nil
@@ -3301,7 +3304,11 @@ func clearHistory(context: AccountContext, peer: Peer) {
         if canRemoveGlobally {
             thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
         }
-        modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+        
+        
+        let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup
+        
+        modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
             context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
         })
     } else {

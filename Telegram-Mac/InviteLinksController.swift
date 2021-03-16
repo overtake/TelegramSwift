@@ -490,7 +490,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         
         if let list = state.revokedList, list.count > 0 {
             
-            if state.list?.isEmpty == false {
+            if state.list?.isEmpty == false || !state.isAdmin {
                 entries.append(.sectionId(sectionId, type: .normal))
                 sectionId += 1
             }
