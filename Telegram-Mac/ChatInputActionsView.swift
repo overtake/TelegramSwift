@@ -330,7 +330,7 @@ class ChatInputActionsView: View, Notifable {
                 
                 if let timeout = value.messageSecretTimeout?.timeout?.effectiveValue {
                     secretTimer?.set(image: theme.chat.messageSecretTimer(shortTimeIntervalString(value: timeout)), for: .Normal)
-                } else if value.messageSecretTimeout == nil {
+                } else {
                     secretTimer?.set(image: theme.icons.chatSecretTimer, for: .Normal)
                 }
               
