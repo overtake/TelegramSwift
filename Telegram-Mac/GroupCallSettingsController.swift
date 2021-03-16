@@ -691,17 +691,17 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 showModalText(for: window, text: text)
             }
         }, switchAccount: { [weak self] peerId in
-            self?.call.switchAccount(peerId)
+            self?.call.reconnect(as: peerId)
         }, startRecording: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: L10n.voiceChatRecordingStartTitle, information: L10n.voiceChatRecordingStartText, okTitle: L10n.voiceChatRecordingStartOK, successHandler: { [weak window] _ in
-                    self?.call.updateShouldBeRecording(true, title: stateValue.with { $0.recordName })
+                confirm(for: window, header: L10n.voiceChatRecordingStartTitle, information: L10n.voiceChatRecordingStartText, okTitle: L10n.voiceChatRecordingStartOK, successHandler: { _ in
+                    self?.call.setShouldBeRecording(true, title: stateValue.with { $0.recordName })
                 })
             }
         }, stopRecording: { [weak self] in
             if let window = self?.window {
                 confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
-                    self?.call.updateShouldBeRecording(false, title: nil)
+                    self?.call.setShouldBeRecording(false, title: nil)
                     if let window = window {
                         showModalText(for: window, text: L10n.voiceChatToastStop)
                     }
@@ -734,7 +734,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             }
         })
         let initialSize = self.atomicSize
-        let joinAsPeer: Signal<PeerId, NoError> = self.call.joinAsPeer |> map { $0.0.id }
+        let joinAsPeer: Signal<PeerId, NoError> = self.call.joinAsPeerIdValue
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.call.state, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
             let entries = groupCallSettingsEntries(state: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)

@@ -125,7 +125,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                         effectiveLevel = myAudioLevel
                     } else {
                         effectiveLevel = audioLevels.reduce(0, { current, value in
-                            return current + value.1
+                            return current + value.2
                         })
                         if !audioLevels.isEmpty {
                             effectiveLevel = effectiveLevel / Float(audioLevels.count)
