@@ -302,38 +302,20 @@ private final class GroupCallControlsView : View {
 }
 
 private final class GroupCallRecordingView : Control {
-    private let textView: TextView = TextView()
     private let indicator: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(textView)
         addSubview(indicator)
         
-        textView.isEventLess = true
         indicator.isEventLess = true
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
         
         self.set(handler: { [weak self] control in
-            if let window = control.kitWindow {
-                self?.recordClick?()
-            }
+            self?.recordClick?()
         }, for: .Click)
         
-        self.set(handler: { control in
-            control.backgroundColor = GroupCallTheme.membersColor.withAlphaComponent(0.6)
-        }, for: .Highlight)
-
-        self.set(handler: { control in
-            control.backgroundColor = GroupCallTheme.membersColor
-        }, for: .Normal)
-
-        self.set(handler: { control in
-            control.backgroundColor = GroupCallTheme.membersColor
-        }, for: .Hover)
 
         indicator.backgroundColor = GroupCallTheme.customTheme.redColor
-        indicator.setFrameSize(NSMakeSize(10, 10))
+        indicator.setFrameSize(NSMakeSize(8, 8))
         indicator.layer?.cornerRadius = indicator.frame.height / 2
         
         let animation = CABasicAnimation(keyPath: "opacity")
@@ -348,15 +330,7 @@ private final class GroupCallRecordingView : Control {
         
         indicator.layer?.add(animation, forKey: "opacity")
 
-        timer = SwiftSignalKit.Timer.init(timeout: 0.5, repeat: true, completion: { [weak self] in
-            if let strongSelf = self, let account = strongSelf.account {
-                self?.update(recordingStartTime: strongSelf.recordingStartTime, account: account, recordClick: strongSelf.recordClick)
-            }
-        }, queue: .mainQueue())
-        
-        timer?.start()
     }
-    private var timer: SwiftSignalKit.Timer?
     private var recordingStartTime: Int32 = 0
     private var account: Account?
     private var recordClick:(()->Void)? = nil
@@ -367,45 +341,15 @@ private final class GroupCallRecordingView : Control {
         self.account = account
         self.recordClick = recordClick
         self.recordingStartTime = recordingStartTime
-        let duration = account.network.getApproximateRemoteTimestamp() - recordingStartTime
-                
-        let days = Int(duration) / (3600 * 24)
-        let hours = Int(duration) / 3600
-        let minutes = Int(duration) / 60 % 60
-        let seconds = Int(duration) % 60
+        self.backgroundColor = .clear
+        self.updateParentLayout?()
         
-        var formatted: String
-        var minWidth: CGFloat = 0
-        if days != 0 {
-            formatted = String(format:"%02i:%02i:%02i:%02i", days, hours, minutes, seconds)
-            minWidth = max(minWidth, 77)
-        } else if hours != 0 {
-            formatted = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
-            minWidth = max(minWidth, 57)
-        } else {
-            formatted = String(format:"%02i:%02i", minutes, seconds)
-            minWidth = max(minWidth, 37)
-        }
-        let layout = TextViewLayout(.initialize(string: formatted, color: GroupCallTheme.customTheme.textColor, font: .normal(.text)))
-        
-        layout.measure(width: .greatestFiniteMagnitude)
-        
-        textView.update(layout)
-        
-        setFrameSize(NSMakeSize(max(layout.layoutSize.width, minWidth) + 6 + indicator.frame.width + 20, layout.layoutSize.height + 10))
-        
-        layer?.cornerRadius = frame.height / 2
-        
-        backgroundColor = GroupCallTheme.membersColor
-        
-        updateParentLayout?()
+        setFrameSize(NSMakeSize(8, 8))
     }
  
     override func layout() {
         super.layout()
-        indicator.centerY(x: 10)
-        textView.centerY(x: indicator.frame.maxX + 6)
-
+        indicator.center()
     }
     
     required init?(coder: NSCoder) {
@@ -447,11 +391,11 @@ private final class GroupCallTitleView : View {
             layout?.measure(width: frame.width - 115 - recordingView.frame.width - 10)
             titleView.update(layout)
             
-            recordingView.centerY(x: frame.width - recordingView.frame.width - 24)
             
             let rect = focus(titleView.frame.size)
-            titleView.setFrameOrigin(NSMakePoint(min(max(90, rect.minX), recordingView.frame.minX - 10 - titleView.frame.width), frame.midY - titleView.frame.height))
+            titleView.setFrameOrigin(NSMakePoint(max(90, rect.minX), frame.midY - titleView.frame.height))
 
+            recordingView.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 5, titleView.frame.minY + 6))
             
         } else {
         }

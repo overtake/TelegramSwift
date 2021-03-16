@@ -1423,7 +1423,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     func joinAsSpeakerIfNeeded(_ joinHash: String) {
         self.joinHash = joinHash
         if let muteState = self.stateValue.muteState, !muteState.canUnmute {
-            requestCall(movingFromBroadcastToRtc: false)
+            requestCall(movingFromBroadcastToRtc: true)
         }
     }
     

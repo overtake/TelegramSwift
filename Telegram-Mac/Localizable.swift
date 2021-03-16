@@ -2719,6 +2719,8 @@ internal final class L10n {
   internal static var chatWPSecondMessage: String  { return L10n.tr("Localizable", "Chat.WP.SecondMessage") }
   /// Select From File
   internal static var chatWPSelectFromFile: String  { return L10n.tr("Localizable", "Chat.WP.SelectFromFile") }
+  /// Voice Chat
+  internal static var chatWPVoiceChatTitle: String  { return L10n.tr("Localizable", "Chat.WP.VoiceChatTitle") }
   /// Press Apply to set the background
   internal static var chatWPColorFirstMessage: String  { return L10n.tr("Localizable", "Chat.WP.Color.FirstMessage") }
   /// Enjoy the view
