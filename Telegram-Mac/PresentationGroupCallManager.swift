@@ -43,13 +43,13 @@ final class PresentationCallVideoView {
 
 
 struct PresentationGroupCallSummaryState: Equatable {
-    var info: GroupCallInfo
+    var info: GroupCallInfo?
     var participantCount: Int
     var callState: PresentationGroupCallState
     var topParticipants: [GroupCallParticipantsContext.Participant]
     var activeSpeakers: Set<PeerId>
     init(
-        info: GroupCallInfo,
+        info: GroupCallInfo?,
         participantCount: Int,
         callState: PresentationGroupCallState,
         topParticipants: [GroupCallParticipantsContext.Participant],
@@ -96,17 +96,17 @@ public struct PresentationGroupCallState: Equatable {
         case unmuted
         case muted
     }
-
+    
     public var myPeerId: PeerId
-
     public var networkState: NetworkState
     public var canManageCall: Bool
     public var adminIds: Set<PeerId>
     public var muteState: GroupCallParticipantsContext.Participant.MuteState?
     public var defaultParticipantMuteState: DefaultParticipantMuteState?
-    public var title: String?
     public var recordingStartTimestamp: Int32?
-    public var isRaisedHand: Bool
+    public var title: String?
+    public var raisedHand: Bool
+    
     public init(
         myPeerId: PeerId,
         networkState: NetworkState,
@@ -114,9 +114,9 @@ public struct PresentationGroupCallState: Equatable {
         adminIds: Set<PeerId>,
         muteState: GroupCallParticipantsContext.Participant.MuteState?,
         defaultParticipantMuteState: DefaultParticipantMuteState?,
-        title: String?,
         recordingStartTimestamp: Int32?,
-        isRaisedHand: Bool
+        title: String?,
+        raisedHand: Bool
     ) {
         self.myPeerId = myPeerId
         self.networkState = networkState
@@ -124,11 +124,21 @@ public struct PresentationGroupCallState: Equatable {
         self.adminIds = adminIds
         self.muteState = muteState
         self.defaultParticipantMuteState = defaultParticipantMuteState
-        self.title = title
         self.recordingStartTimestamp = recordingStartTimestamp
-        self.isRaisedHand = isRaisedHand
+        self.title = title
+        self.raisedHand = raisedHand
     }
 }
+final class PresentationGroupCallMemberEvent {
+    let peer: Peer
+    let joined: Bool
+    
+    init(peer: Peer, joined: Bool) {
+        self.peer = peer
+        self.joined = joined
+    }
+}
+
 
 
 
@@ -161,18 +171,18 @@ protocol PresentationGroupCall: class {
     var peerId: PeerId { get }
     var peer: Peer? { get }
     var joinAsPeerId: PeerId { get }
-    var joinAsPeer:Signal<(Peer, String?), NoError> { get }
+    var joinAsPeerIdValue:Signal<PeerId, NoError> { get }
     var canBeRemoved: Signal<Bool, NoError> { get }
     var state: Signal<PresentationGroupCallState, NoError> { get }
     var members: Signal<PresentationGroupCallMembers?, NoError> { get }
-    var audioLevels: Signal<[(PeerId, Float, Bool)], NoError> { get }
+    var audioLevels: Signal<[(PeerId, UInt32, Float, Bool)], NoError> { get }
     var myAudioLevel: Signal<Float, NoError> { get }
-    var invitedPeers: Signal<Set<PeerId>, NoError> { get }
+    var invitedPeers: Signal<[PeerId], NoError> { get }
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
     
-    var activeCall: CachedChannelData.ActiveCall? { get }
-    var groupCallInviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
+//    var activeCall: CachedChannelData.ActiveCall? { get }
+    var inviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
 
     var permissions:(PresentationGroupCallMuteAction, @escaping(Bool)->Void)->Void { get set }
     
@@ -182,13 +192,12 @@ protocol PresentationGroupCall: class {
     func lowerHand()
     func resetListenerLink()
 
-    func joinAsSpeakerIfNeeded(_ joinHash: String)
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>
     func toggleIsMuted()
     func setVolume(peerId: PeerId, volume: Int32, sync: Bool)
     func setIsMuted(action: PresentationGroupCallMuteAction)
-    func updateMuteState(peerId: PeerId, isMuted: Bool, volume: Int32?, raiseHand: Bool?)
-    func invitePeer(_ peerId: PeerId)
+    func updateMuteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState?
+    func invitePeer(_ peerId: PeerId) -> Bool
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
     func setFullSizeVideo(peerId: PeerId?)
@@ -199,8 +208,9 @@ protocol PresentationGroupCall: class {
     func disableVideo()
     func loadMore()
 
-    func switchAccount(_ peerId: PeerId) -> Void
+    func joinAsSpeakerIfNeeded(_ joinHash: String)
+    func reconnect(as peerId: PeerId) -> Void
     func updateTitle(_ title: String, force: Bool) -> Void
-    func updateShouldBeRecording(_ shouldBeRecording: Bool, title: String?) -> Void
+    func setShouldBeRecording(_ shouldBeRecording: Bool, title: String?) -> Void
     
 }

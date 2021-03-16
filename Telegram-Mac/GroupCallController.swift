@@ -18,7 +18,7 @@ private final class GroupCallUIArguments {
     let leave:()->Void
     let settings:()->Void
     let invite:(PeerId)->Void
-    let mute:(PeerId, Bool, Int32?, Bool?)->Void
+    let mute:(PeerId, Bool)->Void
     let toggleSpeaker:()->Void
     let remove:(Peer)->Void
     let openInfo: (Peer)->Void
@@ -36,7 +36,7 @@ private final class GroupCallUIArguments {
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
-    mute:@escaping(PeerId, Bool, Int32?, Bool?)->Void,
+    mute:@escaping(PeerId, Bool)->Void,
     toggleSpeaker:@escaping()->Void,
     remove:@escaping(Peer)->Void,
     openInfo: @escaping(Peer)->Void,
@@ -109,7 +109,7 @@ private final class GroupCallControlsView : View {
         
         speak.set(handler: { [weak self] _ in
             if let muteState = self?.currentState?.state.muteState, !muteState.canUnmute {
-                if self?.currentState?.state.isRaisedHand == false {
+                if self?.currentState?.state.raisedHand == false {
                     self?.arguments?.toggleRaiseHand()
                 }
                 self?.speak.playRaiseHand()
@@ -204,7 +204,7 @@ private final class GroupCallControlsView : View {
                             secondary = nil
                         }
                     } else {
-                        if !state.isRaisedHand {
+                        if !state.raisedHand {
                             statusText = L10n.voiceChatMutedByAdmin
                             secondary = L10n.voiceChatClickToRaiseHand
                         } else {
@@ -782,7 +782,7 @@ struct PeerGroupCallData : Equatable, Comparable {
             weight += 2251799813685248//(1 << 51)
         }
         if let state = state, state.hasRaiseHand {
-            if let rating = state.raiseHandRating {
+            if let rating = state.raiseHandRating, peer.id != accountPeerId {
                 weight += Int(rating)
             } else {
                 weight += 140737488355328//(1 << 47)
@@ -1153,16 +1153,16 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         if let muteState = data.state?.muteState {
                             if muteState.mutedByYou {
                                 items.append(.init(L10n.voiceChatUnmuteForMe, handler: {
-                                    arguments.mute(data.peer.id, false, data.state?.volume, nil)
+                                    arguments.mute(data.peer.id, false)
                                 }))
                             } else {
                                 items.append(.init(L10n.voiceChatMuteForMe, handler: {
-                                    arguments.mute(data.peer.id, true, data.state?.volume, nil)
+                                    arguments.mute(data.peer.id, true)
                                 }))
                             }
                         } else {
                             items.append(.init(L10n.voiceChatMuteForMe, handler: {
-                                arguments.mute(data.peer.id, true, data.state?.volume, nil)
+                                arguments.mute(data.peer.id, true)
                             }))
                         }                        
                         items.append(ContextSeparatorItem())
@@ -1172,7 +1172,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         if tuple.adminIds.contains(data.peer.id) {
                             if data.state?.muteState == nil {
                                 items.append(.init(L10n.voiceChatMutePeer, handler: {
-                                    arguments.mute(data.peer.id, true, data.state?.volume, nil)
+                                    arguments.mute(data.peer.id, true)
                                 }))
                             }
                             if !tuple.adminIds.contains(data.peer.id), !tuple.data.peer.isChannel {
@@ -1185,11 +1185,11 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                             }
                         } else if let muteState = data.state?.muteState, !muteState.canUnmute {
                             items.append(.init(L10n.voiceChatUnmutePeer, handler: {
-                                arguments.mute(data.peer.id, false, data.state?.volume, nil)
+                                arguments.mute(data.peer.id, false)
                             }))
                         } else {
                             items.append(.init(L10n.voiceChatMutePeer, handler: {
-                                arguments.mute(data.peer.id, true, data.state?.volume, nil)
+                                arguments.mute(data.peer.id, true)
                             }))
                         }
                         if !tuple.adminIds.contains(data.peer.id), !tuple.data.peer.isChannel {
@@ -1316,8 +1316,8 @@ final class GroupCallUIController : ViewController {
             self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, call: self.data.call))
         }, invite: { [weak self] peerId in
             self?.data.call.invitePeer(peerId)
-        }, mute: { [weak self] peerId, isMuted, volume, raiseHand in
-            self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted, volume: volume, raiseHand: raiseHand)
+        }, mute: { [weak self] peerId, isMuted in
+            self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
@@ -1383,7 +1383,7 @@ final class GroupCallUIController : ViewController {
             if let strongSelf = self, let state = self?.genericView.state {
                 let call = strongSelf.data.call
                 
-                if !state.state.isRaisedHand {
+                if !state.state.raisedHand {
                     askedForSpeak = true
                     call.raiseHand()
                 } else {
@@ -1395,7 +1395,7 @@ final class GroupCallUIController : ViewController {
             if state.canManageCall {
                 if let window = self?.window {
                     confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
-                        self?.data.call.updateShouldBeRecording(false, title: nil)
+                        self?.data.call.setShouldBeRecording(false, title: nil)
                         if let window = window {
                             showModalText(for: window, text: L10n.voiceChatToastStop)
                         }
@@ -1472,12 +1472,12 @@ final class GroupCallUIController : ViewController {
                 for value in values {
                     var updated: Bool = true
                     if let listValue = list[value.0] {
-                        if listValue.value == value.1 {
+                        if listValue.value == value.2 {
                             updated = false
                         }
                     }
                     if updated {
-                        list[value.0] = PeerGroupCallData.AudioLevel(timestamp: Int32(Date().timeIntervalSince1970), value: value.1)
+                        list[value.0] = PeerGroupCallData.AudioLevel(timestamp: Int32(Date().timeIntervalSince1970), value: value.2)
                     }
                 }
                 return list
@@ -1503,8 +1503,19 @@ final class GroupCallUIController : ViewController {
                
         let queue = Queue(name: "voicechat.ui")
 
+        let joinAsPeer:Signal<(Peer, String?), NoError> = self.data.call.joinAsPeerIdValue |> mapToSignal {
+            return account.postbox.peerView(id: $0) |> map { view in
+                if let cachedData = view.cachedData as? CachedChannelData {
+                    return (peerViewMainPeer(view)!, cachedData.about)
+                } else if let cachedData = view.cachedData as? CachedUserData {
+                    return (peerViewMainPeer(view)!, cachedData.about)
+                } else {
+                    return (peerViewMainPeer(view)!, nil)
+                }
+            }
+        }
         
-        let some = combineLatest(queue: queue, self.data.call.isMuted, animate, self.data.call.joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), self.data.call.incomingVideoSources)
+        let some = combineLatest(queue: queue, self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), self.data.call.incomingVideoSources)
 
         let previousActive: Atomic<[GroupCallUIState.RecentActive]> = Atomic(value: [])
         let previousActiveIndexes:Atomic<[PeerId: PeerGroupCallData.ActiveIndex]> = Atomic(value: [:])

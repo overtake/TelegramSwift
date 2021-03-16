@@ -456,9 +456,8 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
     let callPeerId = data.call.peerId
     let peerMemberContextsManager = data.peerMemberContextsManager
 
-    let activeCall = data.call.activeCall
     let peer = data.call.peer
-    let links = data.call.groupCallInviteLinks
+    let links = data.call.inviteLinks
     return selectModalPeers(window: window, account: data.call.account, title: title, settings: [], excludePeerIds: [], limit: behaviour is GroupCallAddMembersBehaviour ? 1 : 100, behavior: behaviour, confirmation: { [weak behaviour, weak window, weak data] peerIds in
         
 
@@ -563,9 +562,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
         
     }, linkInvation: { [weak window] index in
         
-        if let activeCall = activeCall, let peer = peer {
-            let links:Signal<GroupCallInviteLinks?, NoError> = groupCallInviteLinks(account: account, callId: activeCall.id, accessHash: activeCall.accessHash)
-                    
+        if let peer = peer {
             if let window = window {
                 if peer.addressName != nil {
                     _ = showModalProgress(signal: links, for: window).start(next: { [weak window] links in
