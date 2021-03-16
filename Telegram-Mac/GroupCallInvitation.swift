@@ -79,6 +79,17 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
         let invited = data.call.invitedPeers
         let peer = data.call.peer
+        let isUnmutedForAll: Signal<Bool, NoError> = data.call.state |> take(1) |> map { value in
+            if let muteState = value.defaultParticipantMuteState {
+                switch muteState {
+                case .muted:
+                    return false
+                case .unmuted:
+                    return true
+                }
+            }
+            return false
+        }
         return search |> mapToSignal { search in
             var contacts:Signal<([Peer], [PeerId : PeerPresence]), NoError>
             if search.request.isEmpty {
@@ -188,14 +199,16 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             }
             
             let previousSearch: Atomic<String> = Atomic<String>(value: "")
-            return allMembers |> map { members in
+            return combineLatest(queue: .mainQueue(), allMembers, isUnmutedForAll) |> map { members, isUnmutedForAll in
                 var entries:[SelectPeerEntry] = []
                 var index:Int32 = 0
                 if search.request.isEmpty {
                     if let linkInvation = linkInvation, let peer = peer {
-                        if peer.addressName != nil {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                            if peer.groupAccess.canMakeVoiceChat {
+                        if peer.groupAccess.canMakeVoiceChat {
+                            if peer.isSupergroup, isUnmutedForAll {
+                                entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            } else {
+                                entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
                                 entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                             }
                         } else {

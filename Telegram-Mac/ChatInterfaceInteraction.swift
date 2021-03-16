@@ -449,31 +449,26 @@ final class ChatInteraction : InterfaceObserver  {
                         }
                     }
                 }
-                if let data = presentation.groupCall?.data {
-                    joinCall(data)
-                } else {
-                    let call: Signal<GroupCallPanelData?, GetCurrentGroupCallError> = updatedCurrentPeerGroupCall(account: context.account, peerId: peerId) |> mapToSignalPromotingError { call -> Signal<GroupCallSummary?, GetCurrentGroupCallError> in
-                        if let call = call {
-                            return getCurrentGroupCall(account: context.account, callId: call.id, accessHash: call.accessHash)
-                        } else {
-                            return .single(nil)
-                        }
-                    } |> mapToSignal { data in
-                        if let data = data {
-                            return context.sharedContext.groupCallContext |> take(1) |> mapToSignalPromotingError { groupCallContext in
-                                return .single(GroupCallPanelData(peerId: peerId, info: data.info, topParticipants: data.topParticipants, participantCount: data.info.participantCount, activeSpeakers: [], groupCall: groupCallContext))
-                            }
-                        } else {
-                            return .single(nil)
-                        }
+                let call: Signal<GroupCallPanelData?, GetCurrentGroupCallError> = updatedCurrentPeerGroupCall(account: context.account, peerId: peerId) |> mapToSignalPromotingError { call -> Signal<GroupCallSummary?, GetCurrentGroupCallError> in
+                    if let call = call {
+                        return getCurrentGroupCall(account: context.account, callId: call.id, accessHash: call.accessHash)
+                    } else {
+                        return .single(nil)
                     }
-                    
-                    _ = showModalProgress(signal: call, for: context.window).start(next: {  data in
-                        if let data = data {
-                            joinCall(data)
+                } |> mapToSignal { data in
+                    if let data = data {
+                        return context.sharedContext.groupCallContext |> take(1) |> mapToSignalPromotingError { groupCallContext in
+                            return .single(GroupCallPanelData(peerId: peerId, info: data.info, topParticipants: data.topParticipants, participantCount: data.info.participantCount, activeSpeakers: [], groupCall: groupCallContext))
                         }
-                    })
+                    } else {
+                        return .single(nil)
+                    }
                 }
+                _ = showModalProgress(signal: call, for: context.window).start(next: {  data in
+                    if let data = data {
+                        joinCall(data)
+                    }
+                })
             }
            
         }
