@@ -130,7 +130,7 @@ final class GroupCallSpeakButton : Control {
             startFrame = animationView.currentFrame ?? 1
         } else {
             var random = Int.random(in: 0 ... 6)
-            loop: while random == 6 || random == 5 {
+            loop: while random == 5 || random == 4 {
                 let percent = Int.random(in: 0 ..< 100)
                 if percent == 1 {
                     break loop
