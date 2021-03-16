@@ -160,7 +160,7 @@ protocol PresentationGroupCall: class {
     var internalId: CallSessionInternalId { get }
     var peerId: PeerId { get }
     var peer: Peer? { get }
-    var joinAs: PeerId { get }
+    var joinAsPeerId: PeerId { get }
     var joinAsPeer:Signal<(Peer, String?), NoError> { get }
     var canBeRemoved: Signal<Bool, NoError> { get }
     var state: Signal<PresentationGroupCallState, NoError> { get }
@@ -177,6 +177,10 @@ protocol PresentationGroupCall: class {
     var permissions:(PresentationGroupCallMuteAction, @escaping(Bool)->Void)->Void { get set }
     
     var displayAsPeers: Signal<[FoundPeer]?, NoError> { get }
+    
+    func raiseHand()
+    func lowerHand()
+    func resetListenerLink()
 
     func joinAsSpeakerIfNeeded(_ joinHash: String)
     func leave(terminateIfPossible: Bool) -> Signal<Bool, NoError>

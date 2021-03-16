@@ -57,7 +57,10 @@ public class ModalInteractions {
     var doneUpdatable:(((TitleButton)->Void)->Void)? = nil
     var cancelUpdatable:(((TitleButton)->Void)->Void)? = nil
     let singleButton: Bool
-    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50, alignCancelLeft: Bool = false, singleButton: Bool = false)  {
+    
+    fileprivate var customTheme: ()->ModalViewController.Theme
+
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50, alignCancelLeft: Bool = false, singleButton: Bool = false, customTheme: @escaping() -> ModalViewController.Theme = { .init() })  {
         self.drawBorder = drawBorder
         self.accept = accept
         self.cancel = cancel
@@ -66,6 +69,7 @@ public class ModalInteractions {
         self.height = height
         self.alignCancelLeft = alignCancelLeft
         self.singleButton = singleButton
+        self.customTheme = customTheme
     }
     
     public func updateEnables(_ enable:Bool) -> Void {
@@ -100,29 +104,29 @@ private class ModalInteractionsContainer : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
-        cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
-        borderView?.backgroundColor = theme.colors.border
-        backgroundColor = theme.colors.background
+        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
+        cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
+        borderView?.backgroundColor = interactions.customTheme().border
+        backgroundColor = interactions.customTheme().background
         
         if interactions.singleButton {
-            acceptView.set(background: theme.colors.background, for: .Normal)
-            acceptView.set(background: theme.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
+            acceptView.set(background: interactions.customTheme().background, for: .Normal)
+            acceptView.set(background: interactions.customTheme().grayForeground.withAlphaComponent(0.25), for: .Highlight)
         } else {
-            acceptView.set(background: theme.colors.background, for: .Normal)
+            acceptView.set(background: interactions.customTheme().background, for: .Normal)
         }
     }
     
     init(interactions:ModalInteractions, modal:Modal) {
         self.interactions = interactions
         acceptView = TitleButton()
-        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.accent, backgroundColor: presentation.colors.background)
+        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
         acceptView.set(text: interactions.acceptTitle, for: .Normal)
         acceptView.disableActions()
         _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         if let cancelTitle = interactions.cancelTitle {
             cancelView = TitleButton()
-            cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: presentation.colors.accent, backgroundColor: presentation.colors.background)
+            cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
             cancelView?.set(text: cancelTitle, for: .Normal)
             _ = cancelView?.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
             
@@ -130,15 +134,15 @@ private class ModalInteractionsContainer : View {
             cancelView = nil
         }
         if interactions.singleButton {
-            acceptView.set(background: presentation.colors.background, for: .Normal)
-            acceptView.set(background: presentation.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
+            acceptView.set(background: interactions.customTheme().background, for: .Normal)
+            acceptView.set(background: interactions.customTheme().grayForeground.withAlphaComponent(0.25), for: .Highlight)
         } else {
-            acceptView.set(background: presentation.colors.background, for: .Normal)
+            acceptView.set(background: interactions.customTheme().background, for: .Normal)
         }
         
         if interactions.drawBorder {
             borderView = View()
-            borderView?.backgroundColor = presentation.colors.border
+            borderView?.backgroundColor = interactions.customTheme().border
         } else {
             borderView = nil
         }
@@ -146,7 +150,7 @@ private class ModalInteractionsContainer : View {
        
         
         super.init()
-        self.backgroundColor = presentation.colors.background
+        self.backgroundColor = interactions.customTheme().background
         if let cancel = interactions.cancel {
             cancelView?.set(handler: { _ in
                 cancel()
@@ -514,8 +518,15 @@ public class Modal: NSObject {
             }, with: self, for: .Return, priority: controller.responderPriority)
         }
         
-        var isDown: Bool = false
+        if controller.redirectMouseAfterClosing {
+            window.set(mouseHandler: { [weak self] _ in
+                self?.controller?.close()
+                return .rejected
+            }, with: self, for: .leftMouseDown)
+        }
         
+        var isDown: Bool = false
+        background.isEventLess = controller.redirectMouseAfterClosing
         background.set(handler: { [weak self] control in
             guard let controller = self?.controller, let `self` = self else { return }
             

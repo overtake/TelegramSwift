@@ -890,11 +890,15 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let grayText: NSColor
         let background: NSColor
         let border: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border) {
+        let accent: NSColor
+        let grayForeground: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground) {
             self.text = text
             self.grayText = grayText
             self.background = background
             self.border = border
+            self.accent = accent
+            self.grayForeground = grayForeground
         }
     }
     

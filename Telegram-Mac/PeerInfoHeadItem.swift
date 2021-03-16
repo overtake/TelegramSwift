@@ -250,12 +250,16 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
+            if peer.groupAccess.canMakeVoiceChat {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                    arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
+                }))
             }
         } else if let cachedData = item.peerView.cachedData as? CachedGroupData {
-            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
+            if peer.groupAccess.canMakeVoiceChat {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                    arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
+                }))
             }
         }
         
@@ -309,8 +313,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
         }
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
+            if peer.groupAccess.canMakeVoiceChat {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                    arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
+                }))
             }
         }
         if let address = peer.addressName, !address.isEmpty {

@@ -422,7 +422,10 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .selectable(interaction):
            
             if selectControl == nil {
-                selectControl = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                let unselected: CGImage = item.customTheme?.unselectedImage ?? theme.icons.chatToggleUnselected
+                let selected: CGImage = item.customTheme?.selectedImage ?? theme.icons.chatToggleSelected
+
+                selectControl = SelectingControl(unselectedImage: unselected, selectedImage: selected)
             }
             selectControl?.set(selected: interaction.presentation.selected.contains(item.peerId), animated: animated)
             

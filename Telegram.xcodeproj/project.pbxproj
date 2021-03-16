@@ -46,6 +46,8 @@
 		27A0A4E325F76F4600B789AF /* GroupCallPeerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */; };
 		27A0A4E725F7764600B789AF /* GroupCallPeerAvatarRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */; };
 		27A0A4EB25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */; };
+		27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */; };
+		27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */; };
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
@@ -1086,6 +1088,8 @@
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
 		27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerAvatarRowItem.swift; sourceTree = "<group>"; };
 		27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTextAndLabelRowItem.swift; sourceTree = "<group>"; };
+		27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_unmuted.mp3; sourceTree = "<group>"; };
+		27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = voip_group_recording_started.mp3; sourceTree = "<group>"; };
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
@@ -2505,6 +2509,8 @@
 			children = (
 				27E969E5258B417200CB9F64 /* reconnecting.mp3 */,
 				27E969DF2589172D00CB9F64 /* call down.mp3 */,
+				27A7D37C2600F58A00A67737 /* voip_group_recording_started.mp3 */,
+				27A7D37B2600F58900A67737 /* voip_group_unmuted.mp3 */,
 				27E969DE2589172B00CB9F64 /* call up.mp3 */,
 				27A9904C257A8044009044DB /* Pop.wav */,
 				27A9904D257A8046009044DB /* Purr.wav */,
@@ -4891,10 +4897,12 @@
 				27A9904F257A8047009044DB /* Purr.wav in Resources */,
 				D0E7BE72256D30130068644D /* group_call_speaker_unmute.json in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
+				27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */,
 				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
 				27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */,
 				9F03681022771A9700456348 /* anim_ungroup.json in Resources */,
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
+				27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */,
 				A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */,
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
 				A731925925DBA60000218E0E /* gigagroup.tgs in Resources */,

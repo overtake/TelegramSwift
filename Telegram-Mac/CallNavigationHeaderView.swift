@@ -22,8 +22,33 @@ private let purple =  NSColor(rgb: 0x766EE9)
 private let lightPurple =  NSColor(rgb: 0xF05459)
 
 
+class CallStatusBarBackgroundViewLegacy : View, CallStatusBarBackground {
+    var audioLevel: Float = 0
+    var speaking:(Bool, Bool, Bool)? = nil {
+        didSet {
+            if let speaking = self.speaking, (speaking.0 != oldValue?.0 || speaking.1 != oldValue?.1 || speaking.2 != oldValue?.2) {
+                let targetColors: [NSColor]
+                if speaking.1 {
+                    if speaking.2 {
+                        if speaking.0 {
+                            targetColors = [green, blue]
+                        } else {
+                            targetColors = [blue, lightBlue]
+                        }
+                    } else {
+                        targetColors = [purple, lightPurple]
+                    }
 
-class CallStatusBarBackgroundView: View {
+                } else {
+                    targetColors = [theme.colors.grayIcon, theme.colors.grayIcon.lighter()]
+                }
+                self.backgroundColor = targetColors.first ?? theme.colors.accent
+            }
+        }
+    }
+}
+
+class CallStatusBarBackgroundView: View, CallStatusBarBackground {
     private let foregroundView: View
     private let foregroundGradientLayer: CAGradientLayer
     private let maskCurveLayer: VoiceCurveLayer
@@ -516,14 +541,18 @@ final class CurveLayer: CAShapeLayer {
 }
 
 
+protocol CallStatusBarBackground : View {
+    var audioLevel: Float { get set }
+    var speaking:(Bool, Bool, Bool)? { get set }
+}
 
 
 class CallHeaderBasicView : NavigationHeaderView {
 
     
-    private let _backgroundView: CallStatusBarBackgroundView = CallStatusBarBackgroundView()
+    private let _backgroundView: CallStatusBarBackground
 
-    var backgroundView: CallStatusBarBackgroundView {
+    var backgroundView: CallStatusBarBackground {
         return _backgroundView
     }
     
@@ -592,6 +621,11 @@ class CallHeaderBasicView : NavigationHeaderView {
     }
     
     override init(_ header: NavigationHeader) {
+        if #available(OSX 10.12, *) {
+            self._backgroundView = CallStatusBarBackgroundView()
+        } else {
+            self._backgroundView = CallStatusBarBackgroundViewLegacy()
+        }
         super.init(header)
         
         backgroundView.frame = bounds
@@ -688,12 +722,10 @@ class CallHeaderBasicView : NavigationHeaderView {
         muteControl.centerY(x:18)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         endCall.centerY(x: frame.width - endCall.frame.width - 20)
-        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 140 - 20 - endCall.frame.width - 10, callInfo.frame.height), thatFit: true)
-        
+        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 140 - 20 - endCall.frame.width - 10, callInfo.frame.height), thatFit: false)
         
         let rect = container.focus(callInfo.frame.size)
-        
-        callInfo.setFrameOrigin(NSMakePoint(min(max(140, rect.minX), endCall.frame.minX - 10 - callInfo.frame.width), rect.minY))
+        callInfo.setFrameOrigin(NSMakePoint(max(140, min(rect.minX, endCall.frame.minX - 10 - callInfo.frame.width)), rect.minY))
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

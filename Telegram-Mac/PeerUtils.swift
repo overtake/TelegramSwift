@@ -145,7 +145,7 @@ extension Peer {
     
     
     
-    func canSendMessage(_ isisThreadMode: Bool = false) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
@@ -157,7 +157,7 @@ extension Peer {
                 case .member:
                     return !channel.hasBannedRights(.banSendMessages)
                 case .left:
-                    if isisThreadMode {
+                    if isThreadMode {
                         return !channel.hasBannedRights(.banSendMessages)
                     }
                     return false

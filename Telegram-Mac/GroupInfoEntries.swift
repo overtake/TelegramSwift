@@ -314,8 +314,30 @@ final class GroupInfoArguments : PeerInfoArguments {
         self.pushViewController(GroupStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
     }
     
-    func makeVoiceChat() {
-        createVoiceChat(context: context, peerId: peerId)
+    func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {
+        let context = self.context
+        let peerId = self.peerId
+        if let activeCall = current {
+            let join:(PeerId)->Void = { joinAs in
+                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
+                    switch result {
+                    case let .samePeer(callContext):
+                        applyGroupCallResult(context.sharedContext, callContext)
+                    case let .success(callContext):
+                        applyGroupCallResult(context.sharedContext, callContext)
+                    default:
+                        alert(for: context.window, info: L10n.errorAnError)
+                    }
+                })
+            }
+            if let callJoinPeerId = callJoinPeerId {
+                join(callJoinPeerId)
+            } else {
+                selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
+            }
+        } else {
+            createVoiceChat(context: context, peerId: peerId)
+        }
     }
     
     func showMore() {
