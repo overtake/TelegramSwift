@@ -410,7 +410,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             
             
             if let fullSizeData = fullSizeData {
-                if data.fullSizeComplete {
+                if data.fullSizeData != nil {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         return generateImage(image.size, contextGenerator: { (size, ctx) in
                             ctx.setFillColor(theme.colors.transparentBackground.cgColor)
