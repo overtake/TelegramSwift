@@ -767,25 +767,25 @@ struct PeerGroupCallData : Equatable, Comparable {
         
         if let _ = state {
             if isSpeaking {
-                weight += (1 << 50)
+                weight += 1125899906842624 //(1 << 50)
             } else {
                 if isRecentActive {
-                    weight += (1 << 49)
+                    weight += 562949953421312//(1 << 49)
                 } else {
-                    weight += (1 << 1)
+                    weight += 2//(1 << 1)
                 }
             }
         } else if self.accountPeerId == self.peer.id {
-            weight += (1 << 1)
+            weight += 2//(1 << 1)
         }
         if isPinned {
-            weight += (1 << 51)
+            weight += 2251799813685248//(1 << 51)
         }
         if let state = state, state.hasRaiseHand {
             if let rating = state.raiseHandRating {
                 weight += Int(rating)
             } else {
-                weight += (1 << 47)
+                weight += 140737488355328//(1 << 47)
             }
         }
         return weight
@@ -883,6 +883,11 @@ private final class GroupCallUIState : Equatable {
         self.lastActivity = lastActivity
         self.activeIndexes = activeIndexes
         self.activeVideoSources = activeVideoSources
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
     
     static func == (lhs: GroupCallUIState, rhs: GroupCallUIState) -> Bool {
@@ -1215,13 +1220,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     return entries
 }
 
-private struct HiddenRaisedHandStatus : Equatable {
-    var peerIds:Set<PeerId> = []
-    
-    static func ==(lhs: HiddenRaisedHandStatus, rhs: HiddenRaisedHandStatus) -> Bool {
-        return lhs.peerIds == rhs.peerIds
-    }
-}
+
 
 final class GroupCallUIController : ViewController {
     
@@ -1276,7 +1275,7 @@ final class GroupCallUIController : ViewController {
         
 
         
-        let displayedRaisedHandsPromise = ValuePromise<Set<PeerId>>([])
+        let displayedRaisedHandsPromise = ValuePromise<Set<PeerId>>([], ignoreRepeated: true)
         let displayedRaisedHands: Atomic<Set<PeerId>> = Atomic(value: [])
         
         var raisedHandDisplayDisposables: [PeerId: Disposable] = [:]
