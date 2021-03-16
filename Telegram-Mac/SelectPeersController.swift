@@ -150,11 +150,13 @@ struct SelectPeerValue : Equatable {
     let presence: PeerPresence?
     let subscribers: Int?
     let customTheme: GeneralRowItem.Theme?
-    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil) {
+    let ignoreStatus: Bool
+    init(peer: Peer, presence: PeerPresence?, subscribers: Int?, customTheme: GeneralRowItem.Theme? = nil, ignoreStatus: Bool = false) {
         self.peer = peer
         self.presence = presence
         self.subscribers = subscribers
         self.customTheme = customTheme
+        self.ignoreStatus = ignoreStatus
     }
     
     static func == (lhs: SelectPeerValue, rhs: SelectPeerValue) -> Bool {
@@ -166,6 +168,9 @@ struct SelectPeerValue : Equatable {
                 return false
             }
         } else if (lhs.presence != nil) != (rhs.presence != nil) {
+            return false
+        }
+        if lhs.ignoreStatus != rhs.ignoreStatus {
             return false
         }
         
@@ -207,6 +212,9 @@ struct SelectPeerValue : Equatable {
         }
         if peer.isBot {
             string = L10n.presenceBot.lowercased()
+        }
+        if ignoreStatus {
+            return (nil, customTheme?.grayTextColor ?? theme.colors.grayText)
         }
         return (string, color)
     }
@@ -343,7 +351,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                 
                 let (status, color) = peer.status(account)
                 
-                item = ShortPeerRowItem(initialSize, peer: peer.peer, account: account, stableId: entry.stableId, enabled: enabled, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: peer.customTheme?.textColor ?? theme.colors.text, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: color), status: status, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
+                item = ShortPeerRowItem(initialSize, peer: peer.peer, account: account, stableId: entry.stableId, enabled: enabled, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: peer.customTheme?.textColor ?? theme.colors.text, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: color), status: status, isLookSavedMessage: true, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
                     if let singleAction = singleAction {
                         singleAction(peer.peer)
                     }
@@ -466,6 +474,10 @@ class SelectPeersBehavior {
     
     var participants:[PeerId:RenderedChannelParticipant] {
         return [:]
+    }
+    
+    var okTitle: String? {
+        return nil
     }
     
     fileprivate let inSearchSelected:Atomic<[PeerId]> = Atomic(value:[])
@@ -1544,6 +1556,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         disposable.set(transition.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
+            
+            
         }))
     }
     
@@ -1595,18 +1609,22 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     override var modalTheme: ModalViewController.Theme {
         let customTheme = behavior.customTheme()
-        return .init(text: customTheme.textColor, grayText: customTheme.grayTextColor, background: customTheme.backgroundColor, border: customTheme.borderColor)
+        return .init(text: customTheme.textColor, grayText: customTheme.grayTextColor, background: customTheme.backgroundColor, border: customTheme.borderColor, accent: customTheme.accentColor, grayForeground: customTheme.grayBackground)
     }
     
     override var modalInteractions: ModalInteractions? {
         if behavior.limit == 1 {
             return nil
         } else {
-            return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
+            return ModalInteractions(acceptTitle: behavior.okTitle ?? L10n.modalOK, accept: { [weak self] in
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
-            }, drawBorder: true, height: 50, singleButton: true)
+            }, drawBorder: true, height: 50, singleButton: true, customTheme: { [weak self] in
+                return self?.modalTheme ?? .init()
+            })
+            
+            
         }
     }
     

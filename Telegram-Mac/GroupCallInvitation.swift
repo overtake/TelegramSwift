@@ -262,7 +262,11 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
     init(data: GroupCallUIController.UIData, window: Window) {
         self.data = data
         self.window = window
-        super.init(settings: [], excludePeerIds: [], limit: 1, customTheme: { GroupCallTheme.customTheme })
+        super.init(settings: [], excludePeerIds: [], limit: 100, customTheme: { GroupCallTheme.customTheme })
+    }
+    
+    override var okTitle: String? {
+        return L10n.voiceChatInviteInvite
     }
     
     private let cachedContacts:Atomic<[PeerId]> = Atomic(value: [])
@@ -281,21 +285,42 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
         let invited = data.call.invitedPeers
         let peer = data.call.peer
-  
+        let isUnmutedForAll: Signal<Bool, NoError> = data.call.state |> take(1) |> map { value in
+            if let muteState = value.defaultParticipantMuteState {
+                switch muteState {
+                case .muted:
+                    return false
+                case .unmuted:
+                    return true
+                }
+            }
+            return false
+        }
         return search |> mapToSignal { search in
-            var contacts:Signal<([Peer], [PeerId : PeerPresence]), NoError>
+            var dialogs:Signal<([Peer]), NoError>
             if search.request.isEmpty {
-                contacts = account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true) |> map {
-                    return ($0.peers, $0.peerPresences)
+                dialogs = account.viewTracker.tailChatListView(groupId: .root, count: 100) |> map { value in
+                    var entries:[Peer] = []
+                    for entry in value.0.entries.reversed() {
+                        switch entry {
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage() {
+                                entries.append(peer)
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    return entries
                 }
             } else {
-                contacts = account.postbox.searchContacts(query: search.request)
+                dialogs = .single([])
             }
             
             let globalSearch: Signal<[Peer], NoError>
             if search.request.isEmpty {
                 globalSearch = .single([])
-            } else if let peer = peer, peer.groupAccess.canAddMembers {
+            } else {
                 globalSearch = searchPeers(account: account, query: search.request) |> map {
                     return $0.0.map {
                         $0.peer
@@ -303,8 +328,6 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                         $0.peer
                     }
                 }
-            } else {
-                globalSearch = .single([])
             }
 
             struct Participant {
@@ -313,15 +336,15 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
             }
             
             
-            let allMembers: Signal<([InvitationPeer], [InvitationPeer]), NoError> = combineLatest(members, contacts, globalSearch, invited) |> map { recent, contacts, global, invited in
+            let allMembers: Signal<([InvitationPeer], [InvitationPeer]), NoError> = combineLatest(members, dialogs, globalSearch, invited) |> map { recent, contacts, global, invited in
                 let membersList = recent.participants.map {
                     InvitationPeer(peer: $0.peer, presence: nil, contact: false, enabled: !invited.contains($0.peer.id))
                 }
                 var contactList:[InvitationPeer] = []
-                for contact in contacts.0 {
+                for contact in contacts {
                     let containsInMembers = membersList.contains(where: { $0.peer.id == contact.id })
                     if !containsInMembers {
-                        contactList.append(InvitationPeer(peer: contact, presence: contacts.1[contact.id], contact: true, enabled: !invited.contains(contact.id)))
+                        contactList.append(InvitationPeer(peer: contact, presence: nil, contact: true, enabled: !invited.contains(contact.id)))
                     }
                 }
                 
@@ -332,7 +355,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     let containsInContacts = contactList.contains(where: { $0.peer.id == peer.id })
                     
                     if !containsInMembers && !containsInContacts {
-                        if !peer.isBot && peer.isUser {
+                        if peer.canSendMessage() {
                             globalList.append(.init(peer: peer, presence: nil, contact: false, enabled: !invited.contains(peer.id)))
                         }
                     }
@@ -350,15 +373,21 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
             }
             
             let previousSearch: Atomic<String> = Atomic<String>(value: "")
-            return combineLatest(allMembers, inviteLink) |> map { members, inviteLink in
+            return combineLatest(allMembers, inviteLink, isUnmutedForAll) |> map { members, inviteLink, isUnmutedForAll in
                 var entries:[SelectPeerEntry] = []
                 var index:Int32 = 0
                 if search.request.isEmpty {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.addressName != nil {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
                             if peer.groupAccess.canMakeVoiceChat {
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                if peer.isSupergroup, isUnmutedForAll {
+                                    entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                } else {
+                                    entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
+                                    entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                }
+                            } else {
+                                entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                             }
                         } else {
                             entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
@@ -367,12 +396,12 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                 }
                 
                 if !members.0.isEmpty {
-                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteContacts))
+                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteChats))
                     index += 1
                 }
                 
                 for member in members.0 {
-                    entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme()), index, member.enabled))
+                    entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme(), ignoreStatus: true), index, member.enabled))
                     index += 1
                 }
                 
@@ -383,7 +412,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                 
                 
                 for member in members.1 {
-                    entries.append(.peer(SelectPeerValue(peer: member.peer, presence: member.presence, subscribers: nil, customTheme: customTheme()), index, member.enabled))
+                    entries.append(.peer(SelectPeerValue(peer: member.peer, presence: nil, subscribers: nil, customTheme: customTheme(), ignoreStatus: true), index, member.enabled))
                     index += 1
                 }
                             
@@ -417,84 +446,106 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
     let activeCall = data.call.activeCall
     let peer = data.call.peer
     let links = data.call.groupCallInviteLinks
-    return selectModalPeers(window: window, account: data.call.account, title: title, settings: [], excludePeerIds: [], limit: 1, behavior: behaviour, confirmation: { [weak behaviour, weak window] peerIds in
+    return selectModalPeers(window: window, account: data.call.account, title: title, settings: [], excludePeerIds: [], limit: behaviour is GroupCallAddMembersBehaviour ? 1 : 100, behavior: behaviour, confirmation: { [weak behaviour, weak window, weak data] peerIds in
         
-        guard let peerId = peerIds.first, let behaviour = behaviour else {
-            return .single(true)
-        }
-        if let behaviour = behaviour as? GroupCallAddMembersBehaviour, behaviour.isContact(peerId) {
-            return account.postbox.transaction {
-                return (user: $0.getPeer(peerId), chat: $0.getPeer(callPeerId))
-            } |> mapToSignal { [weak window] values in
-                if let window = window {
-                    return confirmSignal(for: window, information: L10n.voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: L10n.voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
-                        |> take(1)
-                    |> mapToSignal { _ in
-                        if peerId.namespace == Namespaces.Peer.CloudChannel {
-                            return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
-                                return true
+
+        if let behaviour = behaviour as? GroupCallAddMembersBehaviour {
+            guard let peerId = peerIds.first else {
+                return .single(false)
+            }
+            if behaviour.isContact(peerId) {
+                return account.postbox.transaction {
+                    return (user: $0.getPeer(peerId), chat: $0.getPeer(callPeerId))
+                } |> mapToSignal { [weak window] values in
+                    if let window = window {
+                        return confirmSignal(for: window, information: L10n.voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: L10n.voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
+                            |> take(1)
+                        |> mapToSignal { _ in
+                            if peerId.namespace == Namespaces.Peer.CloudChannel {
+                                return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
+                                    return true
+                                }
+                            } else {
+                                return addGroupMember(account: account, peerId: callPeerId, memberId: peerId)
+                                |> map {
+                                    return true
+                                } |> `catch` { _ in
+                                    return .single(false)
+                                }
+                            }
+
+                        } |> deliverOnMainQueue
+                    } else {
+                        return .single(false)
+                    }
+                }
+            } else {
+                return .single(true)
+            }
+        } else if let call = data?.call {
+            
+            let isUnmutedForAll: Signal<Bool, NoError> = call.state |> take(1) |> map { value in
+                if let muteState = value.defaultParticipantMuteState {
+                    switch muteState {
+                    case .muted:
+                        return false
+                    case .unmuted:
+                        return true
+                    }
+                }
+                return false
+            }
+            
+            return combineLatest(queue: .mainQueue(), links, isUnmutedForAll) |> mapToSignal { [weak window] links, isUnmutedForAll in
+                return Signal { [weak window] subscriber in
+                    if let window = window, let links = links, let peer = peer {
+                        let third: String?
+                        if peer.groupAccess.canMakeVoiceChat, peer.addressName != nil {
+                            if peer.isSupergroup && isUnmutedForAll {
+                                third = nil
+                            } else {
+                                third = L10n.voiceChatInviteConfirmThird
                             }
                         } else {
-                            return addGroupMember(account: account, peerId: callPeerId, memberId: peerId)
-                            |> map {
-                                return true
-                            } |> `catch` { _ in
-                                return .single(false)
-                            }
+                            third = nil
                         }
-
-                    } |> deliverOnMainQueue
-                } else {
-                    return .single(false)
-                }
-            }
-        } else {
-            return account.postbox.transaction {
-                return $0.getPeer(peerId)
-            } |> deliverOnMainQueue |> mapToSignal { [weak window] userPeer in
-                guard let userPeer = userPeer else {
-                    return .single(false)
-                }
-                return links |> mapToSignal { [weak window] links in
-                    return Signal { [weak window] subscriber in
-                        if let window = window, let links = links, let peer = peer {
-                            let third: String?
-                            if peer.groupAccess.canCreateInviteLink {
-                                third = L10n.voiceChatInviteConfirmThird
-                            } else {
-                                third = nil
-                            }
-                            if let third = third {
-                                modernConfirm(for: window, header: L10n.voiceChatInviteConfirmHeader, information: L10n.voiceChatInviteConfirmText(userPeer.displayTitle), okTitle: L10n.voiceChatInviteConfirmOK, cancelTitle: L10n.modalCancel, thridTitle: third, successHandler: { result in
-                                    
-                                    let link: String
-                                    switch result {
-                                    case .basic:
-                                        link = links.listenerLink
-                                    case .thrid:
-                                        link = links.speakerLink ?? links.listenerLink
-                                    }
+                        
+                        if let third = third {
+                            modernConfirm(for: window, header: L10n.voiceChatInviteConfirmHeader, information: L10n.voiceChatInviteConfirmText, okTitle: L10n.voiceChatInviteConfirmOK, cancelTitle: L10n.modalCancel, thridTitle: third, successHandler: { result in
+                                
+                                let link: String
+                                switch result {
+                                case .basic:
+                                    link = links.listenerLink
+                                case .thrid:
+                                    link = links.speakerLink ?? links.listenerLink
+                                }
+                                for peerId in peerIds {
                                     _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
-                                    
-                                    subscriber.putNext(true)
-                                    subscriber.putCompletion()
-                                    
-                                }, appearance: GroupCallTheme.customTheme.appearance)
-                            } else {
-                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                                }
+                                
                                 subscriber.putNext(true)
                                 subscriber.putCompletion()
-                            }
-                            
+                                
+                            }, appearance: GroupCallTheme.customTheme.appearance)
                         } else {
-                            subscriber.putNext(false)
+                            for peerId in peerIds {
+                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                            }
+                            subscriber.putNext(true)
                             subscriber.putCompletion()
                         }
                         
-                        return EmptyDisposable
+                    } else {
+                        subscriber.putNext(false)
+                        subscriber.putCompletion()
                     }
+                    
+                    return EmptyDisposable
                 }
             }
+        } else {
+            return .single(false)
         }
         
     }, linkInvation: { [weak window] index in

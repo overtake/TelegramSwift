@@ -95,6 +95,9 @@ private final class GroupCallControlsView : View {
         addSubview(end)
 
 
+        backgroundView.isEventLess = true
+        backgroundView.userInteractionEnabled = false
+        
         self.isEventLess = true
 
 
@@ -793,11 +796,12 @@ struct PeerGroupCallData : Equatable, Comparable {
     let accountPeerId: PeerId
     let accountAbout: String?
     let canManageCall: Bool
+    let hideWantsToSpeak: Bool
     var isRaisedHand: Bool {
-        return self.state?.raiseHandRating != nil
+        return self.state?.hasRaiseHand == true
     }
     var wantsToSpeak: Bool {
-        return isRaisedHand
+        return isRaisedHand && !hideWantsToSpeak
     }
     
     var about: String? {
@@ -833,8 +837,8 @@ struct PeerGroupCallData : Equatable, Comparable {
         if isPinned {
             weight += (1 << 51)
         }
-        if let rating = state?.raiseHandRating, canManageCall {
-            if accountPeerId != self.peer.id {
+        if let state = state, state.hasRaiseHand {
+            if let rating = state.raiseHandRating {
                 weight += Int(rating)
             } else {
                 weight += (1 << 47)
@@ -882,6 +886,9 @@ struct PeerGroupCallData : Equatable, Comparable {
             return false
         }
         if lhs.accountAbout != rhs.accountAbout {
+            return false
+        }
+        if lhs.hideWantsToSpeak != rhs.hideWantsToSpeak {
             return false
         }
         return true
@@ -979,7 +986,7 @@ private final class GroupCallUIState : Equatable {
     }
 }
 
-private func makeState(previousActive: [GroupCallUIState.RecentActive], previousActiveIndexes: [PeerId : PeerGroupCallData.ActiveIndex], peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, audioLevels: [PeerId : PeerGroupCallData.AudioLevel], summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: (PeerId, UInt32)?, activeVideoSources: [PeerId: UInt32]) -> GroupCallUIState {
+private func makeState(previousActive: [GroupCallUIState.RecentActive], previousActiveIndexes: [PeerId : PeerGroupCallData.ActiveIndex], peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, audioLevels: [PeerId : PeerGroupCallData.AudioLevel], summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isKeyWindow: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: (PeerId, UInt32)?, activeVideoSources: [PeerId: UInt32], hideWantsToSpeak: Set<PeerId>) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -998,7 +1005,7 @@ private func makeState(previousActive: [GroupCallUIState.RecentActive], previous
 //    })
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow, unsyncVolume: unsyncVolumes[accountPeerId], isRecentActive: false, activeIndex: nil, isPinned: currentDominantSpeakerWithVideo?.0 == accountPeerId, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, audioLevel: nil, isInvited: false, isKeyWindow: isKeyWindow, unsyncVolume: unsyncVolumes[accountPeerId], isRecentActive: false, activeIndex: nil, isPinned: currentDominantSpeakerWithVideo?.0 == accountPeerId, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId)))
     } 
 
 
@@ -1050,12 +1057,12 @@ private func makeState(previousActive: [GroupCallUIState.RecentActive], previous
             }
         }
                 
-        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, audioLevel: audioLevel?.value, isInvited: false, isKeyWindow: isKeyWindow, unsyncVolume: unsyncVolumes[value.peer.id], isRecentActive: containsInActive && !isSpeaking, activeIndex: activeIndexes[value.peer.id], isPinned: currentDominantSpeakerWithVideo?.0 == value.peer.id, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, audioLevel: audioLevel?.value, isInvited: false, isKeyWindow: isKeyWindow, unsyncVolume: unsyncVolumes[value.peer.id], isRecentActive: containsInActive && !isSpeaking, activeIndex: activeIndexes[value.peer.id], isPinned: currentDominantSpeakerWithVideo?.0 == value.peer.id, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id)))
     }
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, audioLevel: nil, isInvited: true, isKeyWindow: isKeyWindow, unsyncVolume: nil, isRecentActive: false, activeIndex: nil, isPinned: false, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, audioLevel: nil, isInvited: true, isKeyWindow: isKeyWindow, unsyncVolume: nil, isRecentActive: false, activeIndex: nil, isPinned: false, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false))
         }
     }
 
@@ -1151,7 +1158,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
                 if let state = data.state {
                     
-                    if data.peer.id == arguments.getAccountPeerId(), data.wantsToSpeak {
+                    if data.peer.id == arguments.getAccountPeerId(), data.isRaisedHand {
                         items.append(ContextMenuItem(L10n.voiceChatDownHand, handler: arguments.toggleRaiseHand))
                     }
                     
@@ -1219,7 +1226,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                                     arguments.mute(data.peer.id, true, data.state?.volume, nil)
                                 }))
                             }
-                            if !tuple.adminIds.contains(data.peer.id), !data.peer.isChannel {
+                            if !tuple.adminIds.contains(data.peer.id), !tuple.data.peer.isChannel {
                                 items.append(.init(L10n.voiceChatRemovePeer, handler: {
                                     arguments.remove(data.peer)
                                 }))
@@ -1236,7 +1243,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                                 arguments.mute(data.peer.id, true, data.state?.volume, nil)
                             }))
                         }
-                        if !tuple.adminIds.contains(data.peer.id) {
+                        if !tuple.adminIds.contains(data.peer.id), !tuple.data.peer.isChannel {
                             items.append(.init(L10n.voiceChatRemovePeer, handler: {
                                 arguments.remove(data.peer)
                             }))
@@ -1264,11 +1271,17 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     return entries
 }
 
-
+private struct HiddenRaisedHandStatus : Equatable {
+    var peerIds:Set<PeerId> = []
+    
+    static func ==(lhs: HiddenRaisedHandStatus, rhs: HiddenRaisedHandStatus) -> Bool {
+        return lhs.peerIds == rhs.peerIds
+    }
+}
 
 final class GroupCallUIController : ViewController {
     
-    struct UIData {
+    final class UIData {
         let call: PresentationGroupCall
         let peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager
         init(call: PresentationGroupCall, peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager) {
@@ -1317,12 +1330,28 @@ final class GroupCallUIController : ViewController {
             fatalError()
         }
         
+
+        
+        let displayedRaisedHandsPromise = ValuePromise<Set<PeerId>>([])
+        let displayedRaisedHands: Atomic<Set<PeerId>> = Atomic(value: [])
+        
+        var raisedHandDisplayDisposables: [PeerId: Disposable] = [:]
+
+
+        let updateDisplayedRaisedHands:(@escaping(Set<PeerId>)->Set<PeerId>)->Void = { f in
+            DispatchQueue.main.async {
+                displayedRaisedHandsPromise.set(displayedRaisedHands.modify(f))
+            }
+        }
+        
         
         self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext, window: window)
 
         let sharedContext = self.data.call.sharedContext
         
         let unsyncVolumes = ValuePromise<[PeerId: Int32]>([:])
+        
+        var askedForSpeak: Bool = false
         
         let arguments = GroupCallUIArguments(leave: { [weak self] in
 
@@ -1404,13 +1433,20 @@ final class GroupCallUIController : ViewController {
                 unsyncVolumes.set([peerId : value])
             }
         }, getAccountPeerId:{ [weak self] in
-            return self?.data.call.joinAs
+            return self?.data.call.joinAsPeerId
         }, cancelSharing: { [weak self] in
             self?.data.call.disableVideo()
         }, toggleRaiseHand: { [weak self] in
             if let strongSelf = self, let state = self?.genericView.state {
                 let call = strongSelf.data.call
-                call.updateMuteState(peerId: call.joinAs, isMuted: state.isMuted, volume: nil, raiseHand: !state.state.isRaisedHand ? true : false)
+                
+                if !state.state.isRaisedHand {
+                    askedForSpeak = true
+                    call.raiseHand()
+                } else {
+                    askedForSpeak = false
+                    call.lowerHand()
+                }
             }
         }, recordClick: { [weak self] state in
             if state.canManageCall {
@@ -1530,7 +1566,7 @@ final class GroupCallUIController : ViewController {
         let previousActive: Atomic<[GroupCallUIState.RecentActive]> = Atomic(value: [])
         let previousActiveIndexes:Atomic<[PeerId: PeerGroupCallData.ActiveIndex]> = Atomic(value: [:])
 
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: queue, self.data.call.state, members, audioLevels, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some) |> mapToQueue { values in
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: queue, self.data.call.state, members, audioLevels, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get()) |> mapToQueue { values in
 
             let state = makeState(previousActive: previousActive.with { $0 },
                                 previousActiveIndexes: previousActiveIndexes.with { $0 },
@@ -1546,7 +1582,8 @@ final class GroupCallUIController : ViewController {
                                 accountPeer: values.7.2,
                                 unsyncVolumes: values.7.3,
                                 currentDominantSpeakerWithVideo: values.7.4,
-                                activeVideoSources: values.7.5)
+                                activeVideoSources: values.7.5,
+                                hideWantsToSpeak: values.8)
 
             _ = previousActive.swap(state.lastActivity)
             _ = previousActiveIndexes.swap(state.activeIndexes)
@@ -1573,21 +1610,65 @@ final class GroupCallUIController : ViewController {
                 return
             }
             
-            var notifyCanSpeak: Bool = false
-            if let previous = currentState, previous.muteState != value.0.state.muteState {
-                if previous.isRaisedHand, let muteState = value.0.state.muteState, muteState.canUnmute {
-                    notifyCanSpeak = true
+            switch value.0.state.networkState {
+            case .connected:
+                var notifyCanSpeak: Bool = false
+                var notifyStartRecording: Bool = false
+                
+                if let previous = currentState {
+                    if previous.muteState != value.0.state.muteState {
+                        if askedForSpeak, let muteState = value.0.state.muteState, muteState.canUnmute {
+                            notifyCanSpeak = true
+                        }
+                    }
+                    if previous.recordingStartTimestamp == nil && value.0.state.recordingStartTimestamp != nil {
+                        notifyStartRecording = true
+                    }
                 }
+                if notifyCanSpeak {
+                    askedForSpeak = false
+                    SoundEffectPlay.play(postbox: account.postbox, name: "voip_group_unmuted")
+                    showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
+                }
+                if notifyStartRecording {
+                    SoundEffectPlay.play(postbox: account.postbox, name: "voip_group_recording_started")
+                    showModalText(for: mainWindow, text: L10n.voiceChatAlertRecording)
+                }
+            case .connecting:
+                break
             }
-            if notifyCanSpeak {
-                currentState = nil
-                showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
-            } else {
-                currentState = value.0.state
-            }
+            currentState = value.0.state
+            
             
             strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call, animated: animated.swap(true))
             strongSelf.readyOnce()
+            
+            for member in value.0.memberDatas {
+                if member.isRaisedHand {
+                    let displayedRaisedHands = displayedRaisedHands.with { $0 }
+                    let signal: Signal<Never, NoError> = Signal.complete() |> delay(3.0, queue: Queue.mainQueue())
+                    if !displayedRaisedHands.contains(member.peer.id) {
+                        if raisedHandDisplayDisposables[member.peer.id] == nil {
+                            raisedHandDisplayDisposables[member.peer.id] = signal.start(completed: {
+                                updateDisplayedRaisedHands { current in
+                                    var current = current
+                                    current.insert(member.peer.id)
+                                    return current
+                                }
+                                raisedHandDisplayDisposables[member.peer.id] = nil
+                            })
+                        }
+                    }
+                } else {
+                    raisedHandDisplayDisposables[member.peer.id]?.dispose()
+                    raisedHandDisplayDisposables[member.peer.id] = nil
+                    updateDisplayedRaisedHands { current in
+                        var current = current
+                        current.remove(member.peer.id)
+                        return current
+                    }
+                }
+            }
         })
         
 

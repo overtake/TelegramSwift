@@ -869,7 +869,7 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
     })!
 }
 
-private func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width + 2, icon.backingSize.height + 2), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
@@ -893,7 +893,7 @@ private func generateChatGroupToggleSelectionForeground(foregroundColor: NSColor
     }, scale: 2)!
 }
 
-private func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width, icon.backingSize.height), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))

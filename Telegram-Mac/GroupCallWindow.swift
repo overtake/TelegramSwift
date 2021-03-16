@@ -93,23 +93,24 @@ struct GroupCallTheme {
     
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
     
-    static var customTheme: GeneralRowItem.Theme {
-        return GeneralRowItem.Theme(backgroundColor: GroupCallTheme.membersColor,
+    static let customTheme: GeneralRowItem.Theme = GeneralRowItem.Theme(backgroundColor:                                            GroupCallTheme.membersColor,
                                     grayBackground: GroupCallTheme.windowBackground,
-                                               highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
-                                               borderColor: GroupCallTheme.memberSeparatorColor,
-                                               accentColor: GroupCallTheme.blueStatusColor,
-                                               secondaryColor: GroupCallTheme.grayStatusColor,
-                                               textColor: NSColor(rgb: 0xffffff),
-                                               grayTextColor: GroupCallTheme.grayStatusColor,
-                                               underSelectedColor: NSColor(rgb: 0xffffff),
-                                               accentSelectColor: GroupCallTheme.blueStatusColor.darker(),
-                                               redColor: GroupCallTheme.speakLockedColor,
-                                               indicatorColor: NSColor(rgb: 0xffffff),
-                                               appearance: darkPalette.appearance,
-                                               switchAppearance: switchAppearance)
+                                    grayForeground: GroupCallTheme.grayStatusColor,
+                                    highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
+                                    borderColor: GroupCallTheme.memberSeparatorColor,
+                                    accentColor: GroupCallTheme.blueStatusColor,
+                                    secondaryColor: GroupCallTheme.grayStatusColor,
+                                    textColor: NSColor(rgb: 0xffffff),
+                                    grayTextColor: GroupCallTheme.grayStatusColor,
+                                    underSelectedColor: NSColor(rgb: 0xffffff),
+                                    accentSelectColor: GroupCallTheme.blueStatusColor.darker(),
+                                    redColor: GroupCallTheme.speakLockedColor,
+                                    indicatorColor: NSColor(rgb: 0xffffff),
+                                    appearance: darkPalette.appearance,
+                                    switchAppearance: switchAppearance,
+                                    unselectedImage: generateChatGroupToggleUnselected(foregroundColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)),
+                                    selectedImage: generateChatGroupToggleSelected(foregroundColor: GroupCallTheme.blueStatusColor, backgroundColor: NSColor(rgb: 0xffffff)))
         
-    }
 
 }
 

@@ -47,7 +47,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
         if let state = data.state {
-            if data.isRaisedHand, let _ = state.muteState {
+            if data.wantsToSpeak, let _ = state.muteState {
                 string = L10n.voiceChatStatusWantsSpeak
                 color = GroupCallTheme.blueStatusColor
             } else if let muteState = state.muteState, muteState.mutedByYou {
@@ -431,6 +431,9 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                     statusView.removeFromSuperview()
                 }
             }
+            
+            let animated = statusView?.layout != nil
+            
             let statusView = TextView()
             self.statusView = statusView
             statusView.userInteractionEnabled = false
@@ -439,9 +442,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
             addSubview(statusView)
             statusView.setFrameOrigin(statusViewPoint)
             
-            statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
-            statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
-
+            if animated {
+                statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
+            }
         }
         
         statusView?.update(item.statusLayout)

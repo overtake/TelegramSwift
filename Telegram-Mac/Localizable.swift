@@ -8971,6 +8971,8 @@ internal final class L10n {
   internal static var voiceChatInfoOpenProfile: String  { return L10n.tr("Localizable", "VoiceChat.Info.OpenProfile") }
   /// Send Message
   internal static var voiceChatInfoSendMessage: String  { return L10n.tr("Localizable", "VoiceChat.Info.SendMessage") }
+  /// CHATS
+  internal static var voiceChatInviteChats: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Chats") }
   /// contacts
   internal static var voiceChatInviteContacts: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Contacts") }
   /// Copy Invite Link
@@ -8983,6 +8985,8 @@ internal final class L10n {
   internal static var voiceChatInviteGlobalSearch: String  { return L10n.tr("Localizable", "VoiceChat.Invite.GlobalSearch") }
   /// group members
   internal static var voiceChatInviteGroupMembers: String  { return L10n.tr("Localizable", "VoiceChat.Invite.GroupMembers") }
+  /// Send
+  internal static var voiceChatInviteInvite: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Invite") }
   /// Invite members
   internal static var voiceChatInviteInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Invite.InviteMembers") }
   /// Add Members
@@ -8991,13 +8995,11 @@ internal final class L10n {
   internal static var voiceChatInviteChannelsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Channels.Title") }
   /// Voice Chat
   internal static var voiceChatInviteConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Header") }
-  /// Invite
+  /// Send
   internal static var voiceChatInviteConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.OK") }
-  /// Invite %@ to voice chat?
-  internal static func voiceChatInviteConfirmText(_ p1: String) -> String {
-    return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Text", p1)
-  }
-  /// Invite as Speaker
+  /// Send Invite Link to selected chats?
+  internal static var voiceChatInviteConfirmText: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Text") }
+  /// Send Speaker Link
   internal static var voiceChatInviteConfirmThird: String  { return L10n.tr("Localizable", "VoiceChat.Invite.Confirm.Third") }
   /// Sorry, there are too many members in this voice chat. Please try again later.
   internal static var voiceChatJoinErrorTooMany: String  { return L10n.tr("Localizable", "VoiceChat.Join.Error.TooMany") }
@@ -9097,6 +9099,8 @@ internal final class L10n {
   internal static var voiceChatSettingsOutput: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output") }
   /// SHORTCUT
   internal static var voiceChatSettingsPushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk") }
+  /// Reset Speakers Link
+  internal static var voiceChatSettingsResetLink: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink") }
   /// VOICE CHAT TITLE
   internal static var voiceChatSettingsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title") }
   /// personal account
@@ -9135,6 +9139,8 @@ internal final class L10n {
   internal static var voiceChatSettingsPushToTalkUndefined: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Undefined") }
   /// Please allow Accessibility for Telegram in [Privacy Settings.](access)\n\nApp restart may be required.
   internal static var voiceChatSettingsPushToTalkAccessOld: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access.Old") }
+  /// Speakers Link has been reset.
+  internal static var voiceChatSettingsResetLinkSuccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink.Success") }
   /// Title...
   internal static var voiceChatSettingsTitlePlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title.Placeholder") }
   /// Connecting...

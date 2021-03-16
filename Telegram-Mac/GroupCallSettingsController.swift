@@ -27,6 +27,7 @@ private final class Arguments {
     let switchAccount:(PeerId)->Void
     let startRecording:()->Void
     let stopRecording:()->Void
+    let resetLink:()->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -38,7 +39,8 @@ private final class Arguments {
          showTooltip: @escaping(String)->Void,
          switchAccount: @escaping(PeerId)->Void,
          startRecording: @escaping()->Void,
-         stopRecording: @escaping()->Void) {
+         stopRecording: @escaping()->Void,
+         resetLink: @escaping()->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -51,6 +53,7 @@ private final class Arguments {
         self.switchAccount = switchAccount
         self.startRecording = startRecording
         self.stopRecording = stopRecording
+        self.resetLink = resetLink
     }
 }
 
@@ -114,6 +117,7 @@ private struct GroupCallSettingsState : Equatable {
 }
 
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
+private let _id_reset_link = InputDataIdentifier.init("_id_reset_link")
 private let _id_input_audio = InputDataIdentifier("_id_input_audio")
 private let _id_output_audio = InputDataIdentifier("_id_output_audio")
 private let _id_micro = InputDataIdentifier("_id_micro")
@@ -151,7 +155,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
 
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.title), error: nil, identifier: _id_input_chat_title, mode: .plain, data: .init(viewType: .singleItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: L10n.voiceChatSettingsTitlePlaceholder, filter: { $0 }, limit: 64))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.title), error: nil, identifier: _id_input_chat_title, mode: .plain, data: .init(viewType: .singleItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: L10n.voiceChatSettingsTitlePlaceholder, filter: { $0 }, limit: 40))
         index += 1
 
     }
@@ -248,7 +252,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         let recordingStartTimestamp = state.recordingStartTimestamp
         
         if recordingStartTimestamp == nil {
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: L10n.voiecChatSettingsRecordPlaceholder, filter: { $0 }, limit: 64))
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(uiState.recordName), error: nil, identifier: _id_input_record_title, mode: .plain, data: .init(viewType: .firstItem, pasteFilter: nil, customTheme: theme), placeholder: nil, inputPlaceholder: L10n.voiecChatSettingsRecordPlaceholder, filter: { $0 }, limit: 40))
             index += 1
         }
         struct Tuple : Equatable {
@@ -456,11 +460,15 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .singleItem, enabled: true, action: arguments.finishCall, theme: theme)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_link, data: InputDataGeneralData(name: L10n.voiceChatSettingsResetLink, color: GroupCallTheme.customTheme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: arguments.resetLink, theme: theme)))
+        index += 1
+
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .lastItem, enabled: true, action: arguments.finishCall, theme: theme)))
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .customModern(10)))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -688,9 +696,6 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             if let window = self?.window {
                 confirm(for: window, header: L10n.voiceChatRecordingStartTitle, information: L10n.voiceChatRecordingStartText, okTitle: L10n.voiceChatRecordingStartOK, successHandler: { [weak window] _ in
                     self?.call.updateShouldBeRecording(true, title: stateValue.with { $0.recordName })
-                    if let window = window {
-                        showModalText(for: window, text: L10n.voiceChatAlertRecording)
-                    }
                 })
             }
         }, stopRecording: { [weak self] in
@@ -701,6 +706,11 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                         showModalText(for: window, text: L10n.voiceChatToastStop)
                     }
                 })
+            }
+        }, resetLink: { [weak self] in
+            self?.call.resetListenerLink()
+            if let window = self?.window {
+                showModalText(for: window, text: L10n.voiceChatSettingsResetLinkSuccess)
             }
         })
         
