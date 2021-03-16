@@ -868,7 +868,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             }
         }
         
-        let apply = combineLatest(queue: prepareQueue, statePromise.get(), peerView, peersDisablingAddressNameAssignment.get(), importers, appearanceSignal)
+        let apply = combineLatest(queue: .mainQueue(), statePromise.get(), peerView, peersDisablingAddressNameAssignment.get(), importers, appearanceSignal)
             |> map { state, view, publicChannelsToRevoke, importers, appearance -> (TableUpdateTransition, Peer?, Bool) in
                 let peer = peerViewMainPeer(view)
                 
