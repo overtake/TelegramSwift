@@ -1004,18 +1004,19 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         })
         
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())"), equatable: InputDataEquatable(tuple), comparable: comparable, item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: data, canManageCall: state.state.canManageCall, isInvited: data.isInvited, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
+            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: tuple.data, canManageCall: tuple.canManageCall, isInvited: tuple.data.isInvited, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
                 
             }, invite: arguments.invite, contextMenu: {
                 var items: [ContextMenuItem] = []
 
-                if let state = data.state {
+                let data = tuple.data
+                if let state = tuple.data.state {
                     
                     if data.peer.id == arguments.getAccountPeerId(), data.isRaisedHand {
                         items.append(ContextMenuItem(L10n.voiceChatDownHand, handler: arguments.toggleRaiseHand))
                     }
                     
-                    if data.peer.id != arguments.getAccountPeerId(), data.state?.muteState == nil {
+                    if data.peer.id != arguments.getAccountPeerId(), state.muteState == nil {
                         let volume: ContextMenuItem = .init("Volume", handler: {
 
                         })
@@ -1023,7 +1024,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         let volumeControl = VolumeMenuItemView(frame: NSMakeRect(0, 0, 160, 26))
                         volumeControl.stateImages = (on: NSImage(named: "Icon_VolumeMenu_On")!.precomposed(.white),
                                                      off: NSImage(named: "Icon_VolumeMenu_Off")!.precomposed(.white))
-                        volumeControl.value = CGFloat((data.state?.volume ?? 10000)) / 10000.0
+                        volumeControl.value = CGFloat((state.volume ?? 10000)) / 10000.0
                         volumeControl.lineColor = GroupCallTheme.memberSeparatorColor.lighter()
                         volume.view = volumeControl
 
@@ -1054,7 +1055,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     
                     
                     if !tuple.canManageCall, data.peer.id != arguments.getAccountPeerId() {
-                        if let muteState = data.state?.muteState {
+                        if let muteState = state.muteState {
                             if muteState.mutedByYou {
                                 items.append(.init(L10n.voiceChatUnmuteForMe, handler: {
                                     arguments.mute(data.peer.id, false)
@@ -1074,7 +1075,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     
                     if tuple.canManageCall, data.peer.id != arguments.getAccountPeerId() {
                         if tuple.adminIds.contains(data.peer.id) {
-                            if data.state?.muteState == nil {
+                            if state.muteState == nil {
                                 items.append(.init(L10n.voiceChatMutePeer, handler: {
                                     arguments.mute(data.peer.id, true)
                                 }))
@@ -1087,7 +1088,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                             if !items.isEmpty {
                                 items.append(ContextSeparatorItem())
                             }
-                        } else if let muteState = data.state?.muteState, !muteState.canUnmute {
+                        } else if let muteState = state.muteState, !muteState.canUnmute {
                             items.append(.init(L10n.voiceChatUnmutePeer, handler: {
                                 arguments.mute(data.peer.id, false)
                             }))
@@ -1173,9 +1174,6 @@ final class GroupCallUIController : ViewController {
         let peerId = self.data.call.peerId
         let account = self.data.call.account
 
-        guard let window = self.navigationController?.window else {
-            fatalError()
-        }
         
 
         
@@ -1186,12 +1184,13 @@ final class GroupCallUIController : ViewController {
 
 
         let updateDisplayedRaisedHands:(@escaping(Set<PeerId>)->Set<PeerId>)->Void = { f in
-            DispatchQueue.main.async {
-                displayedRaisedHandsPromise.set(displayedRaisedHands.modify(f))
-            }
+            displayedRaisedHands.modify(f)
         }
         
-        
+        guard let window = self.navigationController?.window else {
+            fatalError()
+        }
+
         self.pushToTalk = PushToTalk(sharedContext: data.call.sharedContext, window: window)
 
         let sharedContext = self.data.call.sharedContext
@@ -1251,9 +1250,10 @@ final class GroupCallUIController : ViewController {
             }
             
             actionsDisposable.add(GroupCallAddmembers(data, window: window).start(next: { [weak window, weak self] peerId in
-                if let peerId = peerId.first, let window = window {
-                    self?.data.call.invitePeer(peerId)
-                    _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
+                if let peerId = peerId.first, let window = window, let `self` = self {
+                    if self.data.call.invitePeer(peerId) {
+                        _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
+                    }
                 }
             }))
                 
@@ -1296,17 +1296,17 @@ final class GroupCallUIController : ViewController {
                 }
             }
         }, recordClick: { [weak self] state in
-            if state.canManageCall {
-                if let window = self?.window {
+            if let window = self?.window {
+                if state.canManageCall {
                     confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                         self?.data.call.setShouldBeRecording(false, title: nil)
                         if let window = window {
                             showModalText(for: window, text: L10n.voiceChatToastStop)
                         }
                     })
+                } else {
+                    showModalText(for: window, text: L10n.voiceChatAlertRecording)
                 }
-            } else {
-                showModalText(for: window, text: L10n.voiceChatAlertRecording)
             }
         })
         
@@ -1439,9 +1439,7 @@ final class GroupCallUIController : ViewController {
                                 activeVideoSources: values.7.5,
                                 hideWantsToSpeak: values.8)
 
-            return .single(state) |> mapToThrottled { next in
-                return .single(next) |> then(.complete() |> delay(0.0016, queue: queue))
-            }
+            return .single(state)
         } |> distinctUntilChanged
         
         
@@ -1450,11 +1448,14 @@ final class GroupCallUIController : ViewController {
         let animated: Atomic<Bool> = Atomic(value: false)
         let inputArguments = InputDataArguments(select: { _, _ in }, dataUpdated: {})
         
+        
+        
         let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> mapToQueue { state, appAppearance in
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
-            return prepareInputDataTransition(left: previousEntries.swap(current), right: current, animated: state.isKeyWindow, searchState: nil, initialSize: initialSize, arguments: inputArguments, onMainQueue: false) |> map {
-                (state, $0)
-            }
+            let previous = previousEntries.swap(current)
+            
+            let signal = prepareInputDataTransition(left: previous, right: current, animated: abs(current.count - previous.count) <= 10, searchState: nil, initialSize: initialSize, arguments: inputArguments, onMainQueue: false)
+            return combineLatest(.single(state), signal)
         } |> deliverOnMainQueue
         
         var currentState: PresentationGroupCallState?
@@ -1482,11 +1483,15 @@ final class GroupCallUIController : ViewController {
                 if notifyCanSpeak {
                     askedForSpeak = false
                     SoundEffectPlay.play(postbox: account.postbox, name: "voip_group_unmuted")
-                    showModalText(for: mainWindow, text: L10n.voiceChatToastYouCanSpeak)
+                    if let window = strongSelf.window {
+                        showModalText(for: window, text: L10n.voiceChatToastYouCanSpeak)
+                    }
                 }
                 if notifyStartRecording {
                     SoundEffectPlay.play(postbox: account.postbox, name: "voip_group_recording_started")
-                    showModalText(for: mainWindow, text: L10n.voiceChatAlertRecording)
+                    if let window = strongSelf.window {
+                        showModalText(for: window, text: L10n.voiceChatAlertRecording)
+                    }
                 }
             case .connecting:
                 break
@@ -1522,6 +1527,9 @@ final class GroupCallUIController : ViewController {
                         return current
                     }
                 }
+            }
+            DispatchQueue.main.async {
+                displayedRaisedHandsPromise.set(displayedRaisedHands.with { $0 })
             }
         })
         

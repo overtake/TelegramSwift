@@ -466,7 +466,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     
     private let summaryStatePromise = Promise<PresentationGroupCallSummaryState?>(nil)
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> {
-        return self.summaryStatePromise.get()
+        return self.summaryStatePromise.get() |> distinctUntilChanged
     }
     private var summaryStateDisposable: Disposable?
     
@@ -2014,7 +2014,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     var inviteLinks: Signal<GroupCallInviteLinks?, NoError> {
         let account = self.account
         let internalStatePromise = self.internalStatePromise
-        return self.state
+        return self.state  |> take(1)
         |> map { state -> PeerId in
             return state.myPeerId
         }
@@ -2027,7 +2027,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 } else {
                     return true
                 }
-            }
+            } |> take(1)
             |> mapToSignal { state in
                 if let callInfo =  state.callInfo {
                     return groupCallInviteLinks(account: account, callId: callInfo.id, accessHash: callInfo.accessHash)
