@@ -182,7 +182,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
             index += 1
             
             let tuple = Tuple(peer: FoundPeer(peer: accountPeer, subscribers: nil), viewType: uiState.displayAsList == nil || uiState.displayAsList?.isEmpty == false ? .firstItem : .singleItem, selected: accountPeer.id == joinAsPeerId, status: L10n.voiceChatSettingsDisplayAsPersonalAccount)
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                     arguments.switchAccount(tuple.peer.peer.id)
                 }, customTheme: theme)
@@ -213,7 +213,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
                 
                 
                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                     return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                         arguments.switchAccount(tuple.peer.peer.id)
                     }, customTheme: theme)
@@ -230,7 +230,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
             entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
         }))
         index += 1
@@ -262,7 +262,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         
         let tuple = Tuple(recordingStartTimestamp: recordingStartTimestamp, viewType: recordingStartTimestamp == nil ? .lastItem : .singleItem)
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, account: account, startedRecordedTime: tuple.recordingStartTimestamp, customTheme: theme, start: arguments.startRecording, stop: arguments.stopRecording)
         }))
         index += 1
@@ -349,7 +349,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     index += 1
     
     if let microDevice = microDevice {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), item: { initialSize, stableId -> TableRowItem in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
             return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: microDevice, viewType: .lastItem, customTheme: theme)
         }))
         index += 1
@@ -425,7 +425,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
         index += 1
 
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), item: { initialSize, stableId -> TableRowItem in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), comparable: nil, item: { initialSize, stableId -> TableRowItem in
             return PushToTalkRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
                 arguments.updateSettings {
                     $0.withUpdatedPushToTalk(value)

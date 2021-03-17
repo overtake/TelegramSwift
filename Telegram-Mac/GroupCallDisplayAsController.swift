@@ -17,8 +17,8 @@ import SyncCore
 
 private final class DisplayMeAsHeaderItem : GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable) {
-        textLayout = .init(.initialize(string: L10n.displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
+    init(_ initialSize: NSSize, stableId: AnyHashable, isGroup: Bool) {
+        textLayout = .init(.initialize(string: isGroup ? L10n.displayMeAsTextGroup : L10n.displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize, stableId: stableId)
     }
     override var height: CGFloat {
@@ -94,8 +94,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, item: { initialSize, stableId in
-        return DisplayMeAsHeaderItem(initialSize, stableId: stableId)
+    let isGroup = state.peer?.peer.isGroup == true || state.peer?.peer.isSupergroup == true
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(isGroup), comparable: nil, item: { initialSize, stableId in
+        return DisplayMeAsHeaderItem(initialSize, stableId: stableId, isGroup: isGroup)
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -110,7 +112,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let peer = state.peer {
         let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || state.list?.isEmpty == false ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: L10n.displayMeAsPersonalAccount)
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                 arguments.select(tuple.peer.peer.id)
             })
@@ -148,7 +150,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 
                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                     return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                         arguments.select(tuple.peer.peer.id)
                     })
@@ -158,7 +160,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
         }))
         index += 1

@@ -36,7 +36,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .gigagroup, text: .init())
     }))
     index += 1
@@ -45,7 +45,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
 
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("features"), equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("features"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.broadcastGroupsIntroText, font: .normal(.text))
     }))
     index += 1

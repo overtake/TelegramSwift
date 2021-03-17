@@ -32,7 +32,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .police, text: .initialize(string: L10n.reportAdditionText, color: theme.colors.text, font: .normal(.text)))
     }))
     index += 1

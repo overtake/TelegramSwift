@@ -467,6 +467,8 @@ final class ChatInteraction : InterfaceObserver  {
                 _ = showModalProgress(signal: call, for: context.window).start(next: {  data in
                     if let data = data {
                         joinCall(data)
+                    } else {
+                        alert(for: context.window, info: L10n.chatVoiceChatJoinLinkUnavailable)
                     }
                 })
             }

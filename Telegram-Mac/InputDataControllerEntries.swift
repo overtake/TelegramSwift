@@ -95,6 +95,19 @@ internal struct _ConcreteEquatableBox<Base : Equatable> : _InputDataEquatableBox
 }
 
 
+struct InputDataComparableIndex : Comparable {
+    let data: Any
+    let compare:(Any, Any)->Bool
+    let equatable:(Any, Any)->Bool
+
+    static func <(lhs: InputDataComparableIndex, rhs: InputDataComparableIndex) -> Bool {
+        return lhs.compare(lhs.data, rhs.data)
+    }
+    static func ==(lhs: InputDataComparableIndex, rhs: InputDataComparableIndex) -> Bool {
+        return lhs.equatable(lhs.data, rhs.data)
+    }
+}
+
 public struct InputDataEquatable {
     internal var _box: _InputDataEquatableBox
     internal var _usedCustomRepresentation: Bool
@@ -333,10 +346,19 @@ enum InputDataEntry : Identifiable, Comparable {
     case dateSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String)
     case selector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, viewType: GeneralViewType, values:[ValuesSelectorValue<InputDataValue>])
     case dataSelector(sectionId: Int32, index: Int32, value: InputDataValue, error: InputDataValueError?, identifier: InputDataIdentifier, placeholder: String, description: String?, icon: CGImage?, action:()->Void)
-    case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, item:(NSSize, InputDataEntryId)->TableRowItem)
+    case custom(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, equatable: InputDataEquatable?, comparable: InputDataComparableIndex?, item:(NSSize, InputDataEntryId)->TableRowItem)
     case search(sectionId: Int32, index: Int32, value: InputDataValue, identifier: InputDataIdentifier, update:(SearchState)->Void)
     case loading
     case sectionId(Int32, type: InputDataSectionType)
+    
+    var comparable: InputDataComparableIndex? {
+        switch self {
+        case let .custom(_, _, _, _, _, comparable, _):
+            return comparable
+        default:
+            return nil
+        }
+    }
     
     var stableId: InputDataEntryId {
         switch self {
@@ -352,7 +374,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return .dataSelector(identifier)
         case let .dateSelector(_, _, _, _, identifier, _):
             return .dateSelector(identifier)
-        case let .custom(_, _, _, identifier, _, _):
+        case let .custom(_, _, _, identifier, _, _, _):
             return .custom(identifier)
         case let .search(_, _, _, identifier, _):
             return .custom(identifier)
@@ -377,7 +399,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .dataSelector(_, index, _, _, _, _, _, _, _):
             return index
-        case let .custom(_, index, _, _, _, _):
+        case let .custom(_, index, _, _, _, _, _):
             return index
         case let .search(_, index, _, _, _):
             return index
@@ -402,7 +424,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return index
         case let .dataSelector(index, _, _, _, _, _, _, _, _):
             return index
-        case let .custom(index, _, _, _, _, _):
+        case let .custom(index, _, _, _, _, _, _):
             return index
         case let .search(index, _, _, _, _):
             return index
@@ -416,9 +438,9 @@ enum InputDataEntry : Identifiable, Comparable {
     var index: Int32 {
         switch self {
         case let .sectionId(sectionId, _):
-            return (sectionId + 1) * 1000 - sectionId
+            return (sectionId + 1) * 100000 - sectionId
         default:
-            return (sectionIndex * 1000) + stableIndex
+            return (sectionIndex * 100000) + stableIndex
         }
     }
     
@@ -435,7 +457,7 @@ enum InputDataEntry : Identifiable, Comparable {
             return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
         case let .desc(_, _, text, data):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize)
-        case let .custom(_, _, _, _, _, item):
+        case let .custom(_, _, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, viewType, values):
             return InputDataDataSelectorRowItem(initialSize, stableId: stableId, value: value, error: error, placeholder: placeholder, viewType: viewType, updated: arguments.dataUpdated, values: values)
@@ -464,6 +486,9 @@ enum InputDataEntry : Identifiable, Comparable {
 }
 
 func <(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
+    if let lhsComparable = lhs.comparable, let rhsComparable = rhs.comparable {
+        return lhsComparable < rhsComparable
+    }
     return lhs.index < rhs.index
 }
 
@@ -505,8 +530,8 @@ func ==(lhs: InputDataEntry, rhs: InputDataEntry) -> Bool {
         } else {
             return false
         }
-    case let .custom(sectionId, index, value, identifier, lhsEquatable, _):
-        if case .custom(sectionId, index, value, identifier, let rhsEquatable, _) = rhs {
+    case let .custom(_, _, value, identifier, lhsEquatable, comparable, _):
+        if case .custom(_, _, value, identifier, let rhsEquatable, comparable, _) = rhs {
             return lhsEquatable == rhsEquatable
         } else {
             return false

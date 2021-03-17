@@ -218,7 +218,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         sectionId += 1
     
         let text = "**" + item.versionTitle + "**" + "\n" + item.updateText
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(item.fileURL.path), equatable: nil, item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(item.fileURL.path), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, textColor: theme.colors.listGrayText, fontSize: 13, isTextSelectable: true, viewType: .textTopItem)
         }))
         index += 1

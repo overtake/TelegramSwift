@@ -53,7 +53,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link, equatable: InputDataEquatable(invitation), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_link, equatable: InputDataEquatable(invitation), comparable: nil, item: { initialSize, stableId in
         return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.accountContext, exportedLink: invitation, lastPeers: [], viewType: .singleItem, mode: .short, menuItems: {
 
             var items:[ContextMenuItem] = []
@@ -100,7 +100,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
         index += 1
 
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_admin(admin.id), equatable: InputDataEquatable(PeerEquatable(admin)), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_admin(admin.id), equatable: InputDataEquatable(PeerEquatable(admin)), comparable: nil, item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: admin, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(invitation.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem)
         }))
     }
@@ -122,7 +122,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
             
             let tuple = Tuple(importer: importer, viewType: bestGeneralViewType(state.importers, for: importer))
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
                     arguments.openProfile(tuple.importer.peer.peerId)
                 }, contextMenuItems: {
@@ -140,7 +140,7 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_join_count"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_join_count"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.inviteLinkEmptyJoinDescCountable(Int(usageCount)), font: .normal(.text))
         }))
     }

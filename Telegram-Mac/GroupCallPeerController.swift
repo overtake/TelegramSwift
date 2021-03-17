@@ -110,7 +110,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     let viewType: GeneralViewType = info.isEmpty ? .singleItem : .firstItem
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("avatar"), equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("avatar"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         return GroupCallPeerAvatarRowItem(initialSize, stableId: stableId, account: arguments.account, peer: state.peer.peer, viewType: viewType, customTheme: theme)
     }))
     index += 1
@@ -135,7 +135,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 //        sectionId += 1
 
         for info in info {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: info.id, equatable: InputDataEquatable(info), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: info.id, equatable: InputDataEquatable(info), comparable: nil, item: { initialSize, stableId in
                 return GroupCallTextAndLabelItem(initialSize, stableId: stableId, label: info.title, text: info.info, viewType: info.viewType, customTheme: theme)
             }))
             index += 1

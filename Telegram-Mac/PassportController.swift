@@ -1831,7 +1831,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(""), identifier: _id_phone_new, equatable: nil, item: { initialSize, stableId -> TableRowItem in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(""), identifier: _id_phone_new, equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
         return PassportNewPhoneNumberRowItem(initialSize, stableId: stableId, action: {
             
         })
@@ -1945,7 +1945,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         if let accessContext = state.accessContext {
             for file in files {
                 let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier:  InputDataIdentifier("_file_\(fileIndex)"), equatable: InputDataEquatable(file), item: { initialSize, stableId -> TableRowItem in
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier:  InputDataIdentifier("_file_\(fileIndex)"), equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[file.errorIdentifier], header: header, removeAction: { value in
                         updateState { current in
                             return current.withRemovedFile(value, for: relative.valueKey)
@@ -2000,7 +2000,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             if let accessContext = state.accessContext {
                 for translation in translations {
                     let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), item: { initialSize, stableId -> TableRowItem in
+                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: translation, context: accessContext, stableId: stableId), error: rErrors?[translation.errorIdentifier], header: header, removeAction: { value in
                             updateState { current in
                                 return current.withRemovedTranslation(value, for: relative.valueKey)
@@ -2255,7 +2255,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         if let accessContext = state.accessContext {
             let isMainNotFront: Bool = !relative.hasBacksideDocument
             if let file = state.frontSideFile[relative.valueKey] {
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_frontside, equatable: InputDataEquatable(file), item: { initialSize, stableId -> TableRowItem in
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_frontside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_frontside], header: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleFrontSide, removeAction: { value in
                         modernConfirm(for: mainWindow, account: state.context.account, peerId: nil, information: L10n.secureIdConfirmDeleteDocument, successHandler: { _ in
                             updateState { current in
@@ -2278,7 +2278,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             
             if relative.hasBacksideDocument {
                 if let file = state.backSideFile[relative.valueKey] {
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_backside, equatable: InputDataEquatable(file), item: { initialSize, stableId -> TableRowItem in
+                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_backside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_backside], header: L10n.secureIdUploadTitleReverseSide, removeAction: { value in
                             updateState { current in
                                 return current.withUpdatedBackSide(nil, for: relative.valueKey)
@@ -2320,7 +2320,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         if relative.hasSelfie, let accessContext = state.accessContext {
             let rErrors = state.errors[relative.valueKey]
             if let selfie = state.selfies[relative.valueKey] {
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(selfie), identifier: _id_selfie, equatable: InputDataEquatable(selfie), item: { initialSize, stableId -> TableRowItem in
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(selfie), identifier: _id_selfie, equatable: InputDataEquatable(selfie), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: selfie, context: accessContext, stableId: stableId), error: rErrors?[_id_selfie], header: L10n.secureIdIdentitySelfie, removeAction: { value in
                         updateState { current in
                             return current.withUpdatedSelfie(nil, for: relative.valueKey)
@@ -2367,7 +2367,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             if let accessContext = state.accessContext {
                 for translation in translations {
                     let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), item: { initialSize, stableId -> TableRowItem in
+                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: translation, context: accessContext, stableId: stableId), error: rErrors?[translation.errorIdentifier], header: header, removeAction: { value in
                             updateState { current in
                                 return current.withRemovedTranslation(value, for: relative.valueKey)
