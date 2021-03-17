@@ -106,7 +106,6 @@ public struct PresentationGroupCallState: Equatable {
     public var recordingStartTimestamp: Int32?
     public var title: String?
     public var raisedHand: Bool
-    
     public init(
         myPeerId: PeerId,
         networkState: NetworkState,
