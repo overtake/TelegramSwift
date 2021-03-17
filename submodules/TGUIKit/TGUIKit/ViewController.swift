@@ -255,9 +255,7 @@ public class ControllerToaster {
     
     deinit {
         let view = self.view
-        view?.layer?.animatePosition(from: NSZeroPoint, to: NSMakePoint(0, -height), duration: 0.2, removeOnCompletion:false, completion:{ (completed) in
-            view?.removeFromSuperview()
-        })
+        view?.removeFromSuperview()
         disposable.dispose()
     }
     
@@ -833,6 +831,11 @@ open class GenericViewController<T> : ViewController where T:NSView {
     open override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         genericView.background = presentation.colors.background
+    }
+    
+    deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     override open func loadView() -> Void {

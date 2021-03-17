@@ -116,7 +116,6 @@ struct GroupCallTheme {
 
 final class GroupCallWindow : Window {
     
-    var navigation: MajorNavigationController?
     
     init() {
         let size = NSMakeSize(380, 600)
@@ -155,6 +154,8 @@ final class GroupCallWindow : Window {
     }
         
     deinit {
+        var bp:Int = 0
+        bp += 1
     }
     
     override func orderOut(_ sender: Any?) {
@@ -184,7 +185,6 @@ final class GroupCallContext {
         self.navigation.cleanupAfterDeinit = true
         self.navigation.viewWillAppear(false)
         self.window.contentView = self.navigation.view
-        self.window.navigation = self.navigation
         self.navigation.viewDidAppear(false)
         removeDisposable.set((self.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
@@ -201,7 +201,6 @@ final class GroupCallContext {
     deinit {
         presentDisposable.dispose()
         removeDisposable.dispose()
-//        self.window.removeObserver(for: window)
 //        self.window.contentView?.removeAllSubviews()
     }
     
@@ -221,15 +220,18 @@ final class GroupCallContext {
         }
         closeAllModals(window: window)
         self.navigation.viewWillDisappear(false)
-        let window: GroupCallWindow = self.window
-        if window.isVisible {
+        var window: GroupCallWindow? = self.window
+        if self.window.isVisible {
             NSAnimationContext.runAnimationGroup({ _ in
-                window.animator().alphaValue = 0
+                window?.animator().alphaValue = 0
             }, completionHandler: {
+                window?.orderOut(nil)
                 if last {
-                    window.navigation = nil
+                    window?.contentView?.removeFromSuperview()
+                    window?.contentView = nil
+                  //o windo  window.navigation = nil
                 }
-                window.orderOut(nil)
+                window = nil
             })
         }
         self.navigation.viewDidDisappear(false)

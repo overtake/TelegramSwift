@@ -518,6 +518,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         if cleanupAfterDeinit {
             while !stack.isEmpty {
                 let value = stack.removeFirst()
+                
                 value.removeFromSuperview()
             }
         }
