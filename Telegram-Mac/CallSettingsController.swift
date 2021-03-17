@@ -74,7 +74,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     index += 1
     
     if let activeCameraDevice = activeCameraDevice {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_camera, equatable: InputDataEquatable(activeCameraDevice.uniqueID), item: { initialSize, stableId -> TableRowItem in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_camera, equatable: InputDataEquatable(activeCameraDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
             return CameraPreviewRowItem(initialSize, stableId: stableId, device: activeCameraDevice, viewType: .lastItem)
         }))
         index += 1
@@ -111,7 +111,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     index += 1
     
     if let activeMicroDevice = activeMicroDevice {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(activeMicroDevice.uniqueID), item: { initialSize, stableId -> TableRowItem in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(activeMicroDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
             return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: activeMicroDevice, viewType: .lastItem)
         }))
         index += 1

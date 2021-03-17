@@ -73,7 +73,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     
     let updateEnableRow: UpdateEnableRow = UpdateEnableRow(enabled: state.settings.enabled, hasActiveServer: state.settings.effectiveActiveServer != nil, hasServers: !state.settings.servers.isEmpty)
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_enable, equatable: InputDataEquatable(updateEnableRow), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_enable, equatable: InputDataEquatable(updateEnableRow), comparable: nil, item: { initialSize, stableId in
         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsEnable, type: .switchable(state.settings.effectiveActiveServer != nil), viewType: showUseCalls ? .firstItem : .singleItem, action: {
             if state.settings.enabled {
                 arguments.disconnect()
@@ -100,7 +100,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
             let useForCalls: Bool
         }
         
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _id_calls, equatable: InputDataEquatable(UseForCallEquatable(enabled: enabled, useForCalls: state.settings.useForCalls)), item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _id_calls, equatable: InputDataEquatable(UseForCallEquatable(enabled: enabled, useForCalls: state.settings.useForCalls)), comparable: nil, item: { initialSize, stableId in
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsUseForCalls, type: .switchable(state.settings.useForCalls && enabled), viewType: .lastItem, action: {
                 arguments.enableForCalls(!state.settings.useForCalls)
             }, enabled: enabled)
@@ -117,7 +117,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
     }
 
     let addViewType: GeneralViewType = list.isEmpty ? .singleItem : .firstItem
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_add, equatable: InputDataEquatable(addViewType), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: _p_id_add, equatable: InputDataEquatable(addViewType), comparable: nil, item: { initialSize, stableId in
         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.proxySettingsAddProxy, nameStyle: blueActionButton, type: .none, viewType: addViewType, action: { () in
             arguments.edit(nil)
         }, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 30, thumbInset: -5), inset:NSEdgeInsets(left: 30, right: 30))
@@ -140,7 +140,7 @@ private func proxyListSettingsEntries(_ state: ProxyListState, status: Connectio
 
         let value = ProxyEquatable(enabled: state.settings.enabled, isActiveServer: state.settings.activeServer == proxy, connectionStatus: proxy == state.settings.effectiveActiveServer ? status : nil, proxy: proxy, status: statuses[proxy], viewType: viewType)
         
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: InputDataIdentifier("_proxy_\(proxy.hashValue))"), equatable: InputDataEquatable(value), item: { initialSize, stableId -> TableRowItem in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(nil), identifier: InputDataIdentifier("_proxy_\(proxy.hashValue))"), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId -> TableRowItem in
             return ProxyListRowItem(initialSize, stableId: stableId, proxy: proxy, waiting: !value.enabled && state.settings.activeServer == proxy, connectionStatus: value.connectionStatus, status: value.status, viewType: viewType, action: {
                 arguments.connect(proxy)
             }, info: {
@@ -479,7 +479,7 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
         
         let link = server.withDataHextString().link
         
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_qrcode, equatable: InputDataEquatable(link), item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_qrcode, equatable: InputDataEquatable(link), comparable: nil, item: { initialSize, stableId in
             return ProxyQRCodeRowItem(initialSize, stableId: stableId, link: link)
         }))
         index += 1

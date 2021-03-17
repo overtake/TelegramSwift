@@ -55,7 +55,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let hour: Int32 = 60 * 60
         let day: Int32 = hour * 24 * 1
         var sizes:[Int32] = [hour, day, day * 7, Int32.max]
@@ -116,7 +116,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         var sizes:[Int32] = [1, 10, 50, 100, Int32.max]
         
         if let temp = state.tempCount {

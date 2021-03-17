@@ -22,7 +22,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
     
     
     if state.stats == nil {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
         }))
     } else if let stats = state.stats  {
@@ -50,7 +50,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
             overviewItems.append(ChannelOverviewItem(title: L10n.statsGroupPosters, value: stats.posters.attributedString))
         }
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
         index += 1
@@ -134,7 +134,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
             switch graph.graph {
             case let .Loaded(_, string):
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticRowItem(initialSize, stableId: stableId, context: accountContext, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
                             detailedDisposable.set(context.loadDetailedGraph(graph.graph, x: Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
                                 if let graph = graph, case let .Loaded(_, data) = graph {
@@ -144,7 +144,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         })
                     }))
                 }, failure: { error in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error.localizedDescription)
                     }))
                 })
@@ -153,7 +153,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 
                 index += 1
             case .OnDemand:
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: nil)
                 }))
                 index += 1
@@ -161,7 +161,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                     graph.load(graph.identifier)
                 }
             case let .Failed(error):
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error)
                 }))
                 index += 1
@@ -206,7 +206,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                             viewType = .innerItem
                         }
                         
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_posters_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_posters_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                             return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
@@ -216,7 +216,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 }
                 
                 if needReveal {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topPosters.id, equatable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topPosters.id, equatable: nil, comparable: nil, item: { initialSize, stableId in
                         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             
                             revealSection(UIStatsState.RevealSection.topPosters)
@@ -267,7 +267,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                             viewType = .innerItem
                         }
                         
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier.init("top_admin_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier.init("top_admin_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                             return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
@@ -278,7 +278,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 
                 
                 if needReveal {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topAdmins.id, equatable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topAdmins.id, equatable: nil, comparable: nil, item: { initialSize, stableId in
                         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             
                             revealSection(UIStatsState.RevealSection.topAdmins)
@@ -330,7 +330,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         }
                         
                         
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_inviter_\(peer.id)"), equatable: nil, item: { initialSize, stableId in
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_inviter_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                             return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
@@ -340,7 +340,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 }
                 
                 if needReveal {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topInviters.id, equatable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topInviters.id, equatable: nil, comparable: nil, item: { initialSize, stableId in
                         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             
                             revealSection(UIStatsState.RevealSection.topInviters)

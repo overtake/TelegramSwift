@@ -49,7 +49,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: nil, comparable: nil, item: { initialSize, stableId in
         return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, viewType: .singleItem)
     }))
 
@@ -86,7 +86,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             let tuple = Tuple(label:price.label, price: formatCurrencyAmount(price.amount, currency: receipt.invoice.currency), viewType: viewType)
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(price.label, index: i), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(price.label, index: i), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .normal(.text), color: theme.colors.grayText, viewType: tuple.viewType)
             }))
             index += 1
@@ -97,7 +97,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
             let tuple = Tuple(label: L10n.checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: receipt.invoice.currency), viewType: viewType)
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(L10n.checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(L10n.checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .medium(.text), color: theme.colors.text, viewType: tuple.viewType)
             }))
             index += 1
@@ -164,7 +164,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .singleItem)
         }))
     }

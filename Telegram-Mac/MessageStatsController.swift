@@ -46,7 +46,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             overviewItems.append(ChannelOverviewItem(title: L10n.statsMessagePrivateForwardsTitle, value: .initialize(string: "≈" + stats.forwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
         }
     
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
         index += 1
@@ -91,13 +91,13 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             switch graph.graph {
             case let .Loaded(_, string):
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticRowItem(initialSize, stableId: stableId, context: accountContext, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
 
                         })
                     }))
                 }, failure: { error in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error.localizedDescription)
                     }))
                 })
@@ -106,7 +106,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
                 
                 index += 1
             case .OnDemand:
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: nil)
                 }))
                 index += 1
@@ -114,7 +114,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
                     graph.load(graph.identifier)
                 }
             case let .Failed(error):
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error)
                 }))
                 index += 1
@@ -132,7 +132,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             index += 1
             
             for (i, message) in messages.messages.enumerated() {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), comparable: nil, item: { initialSize, stableId in
                     return MessageSharedRowItem(initialSize, stableId: stableId, context: accountContext, message: message, viewType: bestGeneralViewType(messages.messages, for: i), action: {
                         openMessage(message.id)
                     })
@@ -144,7 +144,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             sectionId += 1
         }
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
         }))
     }

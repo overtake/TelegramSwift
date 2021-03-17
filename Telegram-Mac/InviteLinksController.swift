@@ -357,7 +357,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     sectionId += 1
 
     if !state.isAdmin {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
             let text:String = state.peer?.peer.isChannel == true ? L10n.manageLinksHeaderChannelDesc :  L10n.manageLinksHeaderGroupDesc
             return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
         }))
@@ -374,7 +374,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
         peers = Array(peers.prefix(3))
 
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
             return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, publicAddress: state.isAdmin ? nil : state.peer?.peer.addressName, lastPeers: peers, viewType: .singleItem, menuItems: {
 
                 var items:[ContextMenuItem] = []
@@ -424,7 +424,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     let viewType: GeneralViewType = state.list == nil || !state.list!.isEmpty ? .firstItem : .singleItem
     if !state.isAdmin {
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: InputDataEquatable(viewType), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: InputDataEquatable(viewType), comparable: nil, item: { initialSize, stableId in
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.manageLinksCreateNew, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.newLink, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 43, thumbInset: 0))
         }))
         index += 1
@@ -447,7 +447,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
                 let tuple = Tuple(link: link, viewType: viewType)
 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links([link]), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links([link]), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                     return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
 
                         var items:[ContextMenuItem] = []
@@ -517,7 +517,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
                 let tuple = Tuple(link: link, viewType: viewType)
                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links_revoked([link]), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links_revoked([link]), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                     return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
                         var items:[ContextMenuItem] = []
                         items.append(ContextMenuItem(L10n.manageLinksDelete, handler: {
@@ -532,7 +532,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         }
         
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: !state.isAdmin ? .lastItem : .singleItem)
         }))
         index += 1
@@ -553,7 +553,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
             let viewType = bestGeneralViewType(creators, for: i)
 
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: L10n.manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openAdminLinks(creator)
                 })

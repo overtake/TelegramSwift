@@ -37,7 +37,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         return JoinVoiceChatAlertRowItem(initialSize, stableId: stableId, account: arguments.context.account, peer: state.peer.peer, title: state.title, participantsCount: state.participantsCount)
     }))
     

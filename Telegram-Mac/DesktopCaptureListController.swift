@@ -123,7 +123,7 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(sectionId)"), equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(sectionId)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return GeneralRowItem(initialSize, height: 15, stableId: stableId, backgroundColor: .clear)
     }))
     sectionId += 1
@@ -133,7 +133,7 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
         let id: String = source.uniqueKey()
         let selected = state.selected != nil ? source.isEqual(state.selected!) : false
         let tuple = CameraTuple(source: source, selected: selected, isAvailable: state.access.camera)
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return DesktopCameraCapturerRowItem(initialSize, stableId: stableId, device: tuple.source, isAvailable: tuple.isAvailable, isSelected: tuple.selected, select: arguments.selectCamera)
         }))
         index += 1
@@ -143,7 +143,7 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
         let id: String = source.uniqueKey()
         let selected = state.selected != nil ? source.isEqual(state.selected!) : false
         let tuple = DesktopTuple(source: source, selected: selected, isAvailable: state.access.sharing)
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak screens] initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), comparable: nil, item: { [weak screens] initialSize, stableId in
             return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, isAvailable: tuple.isAvailable, isSelected: tuple.selected, manager: screens, select: arguments.selectDesktop)
         }))
         index += 1
@@ -154,13 +154,13 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
         let selected = state.selected != nil ? source.isEqual(state.selected!) : false
         let tuple = DesktopTuple(source: source, selected: selected, isAvailable: state.access.sharing)
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), item: { [weak windows] initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier(id), equatable: InputDataEquatable(tuple), comparable: nil, item: { [weak windows] initialSize, stableId in
             return DesktopCapturePreviewItem(initialSize, stableId: stableId, source: tuple.source, isAvailable: tuple.isAvailable, isSelected: tuple.selected, manager: windows, select: arguments.selectDesktop)
         }))
         index += 1
     }
 
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(sectionId)"), equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("\(sectionId)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return GeneralRowItem(initialSize, height: 15, stableId: stableId, backgroundColor: .clear)
     }))
     sectionId += 1

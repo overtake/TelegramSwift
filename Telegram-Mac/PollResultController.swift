@@ -138,7 +138,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
             
             let text = option.option.text
             let additionText:String = " — \(option.percent)%"
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(state), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
                 
                 let collapse:(()->Void)?
                 if state.expandedOptions[option.option.opaqueIdentifier] != nil {
@@ -196,7 +196,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                                 viewType = .innerItem
                             }
                         }
-                        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
                             return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
                                 openProfile(peer.id)
                             })
@@ -211,12 +211,12 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 
                 if remainingCount > 0 {
                     if optionState.isLoadingMore && state.expandedOptions[option.option.opaqueIdentifier] != nil {
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
                             return LoadingTableItem(initialSize, height: 41, stableId: stableId, viewType: .lastItem)
                         }))
                         index += 1
                     } else {
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
                             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                                 expandOption(option.option.opaqueIdentifier)
                             }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
@@ -254,13 +254,13 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                         }
                     }
                     
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_empty(Int(index)), equatable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_empty(Int(index)), equatable: nil, comparable: nil, item: { initialSize, stableId in
                         return PeerEmptyHolderItem(initialSize, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), viewType: viewType)
                     }))
                     index += 1
                 }
                 if let remainingCount = remainingCount {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
                         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUpDisabled, textInset: 52, thumbInset: 4), enabled: false)
                     }))
                     index += 1

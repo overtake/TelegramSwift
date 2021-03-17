@@ -78,7 +78,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
         for item in block {
             switch item {
             case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, menuItems, enabled, viewType):
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer!.id), equatable: InputDataEquatable(item), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer!.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                     let label: String
                     switch memberStatus {
                     case let .admin(rank):
@@ -115,7 +115,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 }))
                 index += 1
             case let .showMore(_, _, viewType):
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_show_more"), equatable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_show_more"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                     return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                         arguments.showMore()
                     }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4), inset: NSEdgeInsetsZero)

@@ -119,7 +119,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appearanceSettingsColorThemeHeader), data: .init(viewType: .textTopItem)))
     index += 1
 
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_preview, equatable: InputDataEquatable(appearance), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_preview, equatable: InputDataEquatable(appearance), comparable: nil, item: { initialSize, stableId in
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
 
@@ -148,7 +148,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         let theme: TelegramPresentationTheme
         let cloudThemes:[TelegramTheme]
     }
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_list, equatable: InputDataEquatable(ListEquatable(theme: appearance.presentation, cloudThemes: cloudThemes)), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_list, equatable: InputDataEquatable(ListEquatable(theme: appearance.presentation, cloudThemes: cloudThemes)), comparable: nil, item: { initialSize, stableId in
 
         let selected: ThemeSource
         if let cloud = appearance.presentation.cloudTheme {
@@ -213,7 +213,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
             let theme: TelegramPresentationTheme
         }
 
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList, theme: appearance.presentation)), item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList, theme: appearance.presentation)), comparable: nil, item: { initialSize, stableId in
             return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
                 var items:[ContextMenuItem] = []
                 if let cloud = accent.cloudTheme {
@@ -250,7 +250,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appearanceSettingsTextSizeHeader), data: .init(viewType: .textTopItem)))
     index += 1
 
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_text_size, equatable: InputDataEquatable(appearance), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_text_size, equatable: InputDataEquatable(appearance), comparable: nil, item: { initialSize, stableId in
         let sizes:[Int32] = [11, 12, 13, 14, 15, 16, 17, 18]
         return SelectSizeRowItem(initialSize, stableId: stableId, current: Int32(appearance.presentation.fontSize), sizes: sizes, hasMarkers: true, viewType: .singleItem, selectAction: { index in
             arguments.toggleFontSize(CGFloat(sizes[index]))

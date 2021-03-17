@@ -52,7 +52,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
         index += 1
 
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_sticker, equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_sticker, equatable: nil, comparable: nil, item: { initialSize, stableId in
             return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .init())
         }))
         index += 1
@@ -69,7 +69,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), item: { [weak arguments] initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), comparable: nil, item: { [weak arguments] initialSize, stableId in
             let values:[Int32] = [0, .secondsInDay, .secondsInWeek]
 
 

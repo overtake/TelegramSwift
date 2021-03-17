@@ -2705,6 +2705,8 @@ internal final class L10n {
   internal static var chatVoiceChatJoinLinkText: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Text") }
   /// Voice Chat
   internal static var chatVoiceChatJoinLinkTitle: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Title") }
+  /// Voice Chat no longer available
+  internal static var chatVoiceChatJoinLinkUnavailable: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Unavailable") }
   /// Chat Background
   internal static var chatWPBackgroundTitle: String  { return L10n.tr("Localizable", "Chat.WP.BackgroundTitle") }
   /// Color
@@ -3539,6 +3541,8 @@ internal final class L10n {
   internal static var displayMeAsText: String  { return L10n.tr("Localizable", "DisplayMeAs.Text") }
   /// Display Me As
   internal static var displayMeAsTitle: String  { return L10n.tr("Localizable", "DisplayMeAs.Title") }
+  /// Choose whether you want to be displayed as your personal account or as group.
+  internal static var displayMeAsTextGroup: String  { return L10n.tr("Localizable", "DisplayMeAs.Text.Group") }
   /// Spelling and Grammar
   internal static var dv1IoYv7Title: String  { return L10n.tr("Localizable", "Dv1-io-Yv7.title") }
   /// Edit
@@ -9101,7 +9105,7 @@ internal final class L10n {
   internal static var voiceChatSettingsOutput: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output") }
   /// SHORTCUT
   internal static var voiceChatSettingsPushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk") }
-  /// Reset Speakers Link
+  /// Revoke Speakers Link
   internal static var voiceChatSettingsResetLink: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink") }
   /// VOICE CHAT TITLE
   internal static var voiceChatSettingsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title") }
@@ -9141,7 +9145,7 @@ internal final class L10n {
   internal static var voiceChatSettingsPushToTalkUndefined: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Undefined") }
   /// Please allow Accessibility for Telegram in [Privacy Settings.](access)\n\nApp restart may be required.
   internal static var voiceChatSettingsPushToTalkAccessOld: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access.Old") }
-  /// Speakers Link has been reset.
+  /// Speaker Link has been revoked.
   internal static var voiceChatSettingsResetLinkSuccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink.Success") }
   /// Title...
   internal static var voiceChatSettingsTitlePlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title.Placeholder") }
