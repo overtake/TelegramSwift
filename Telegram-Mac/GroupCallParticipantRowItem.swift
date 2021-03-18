@@ -416,38 +416,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
 
-        
-        
-        if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
-            if let statusView = statusView {
-                if animated {
-                    statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in
-                        statusView?.removeFromSuperview()
-                    })
-                    statusView.layer?.animatePosition(from: statusView.frame.origin, to: NSMakePoint(statusView.frame.minX, statusView.frame.minY + 10))
-                } else {
-                    statusView.removeFromSuperview()
-                }
-            }
-            
-            let animated = statusView?.layout != nil
-            
-            let statusView = TextView()
-            self.statusView = statusView
-            statusView.userInteractionEnabled = false
-            statusView.isSelectable = false
-            statusView.update(item.statusLayout)
-            addSubview(statusView)
-            statusView.setFrameOrigin(statusViewPoint)
-            
-            if animated {
-                statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
-                statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
-            }
-        }
-        
-        statusView?.update(item.statusLayout)
-        
         if videoView != nil || item.volume != nil, let state = item.data.state {
             var statusImage: CGImage
             if videoView != nil {
@@ -500,6 +468,38 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 
             }
         }
+        
+        if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
+            if let statusView = statusView {
+                if animated {
+                    statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in
+                        statusView?.removeFromSuperview()
+                    })
+                    statusView.layer?.animatePosition(from: statusView.frame.origin, to: NSMakePoint(statusView.frame.minX, statusView.frame.minY + 10))
+                } else {
+                    statusView.removeFromSuperview()
+                }
+            }
+            
+            let animated = statusView?.layout != nil
+            
+            let statusView = TextView()
+            self.statusView = statusView
+            statusView.userInteractionEnabled = false
+            statusView.isSelectable = false
+            statusView.update(item.statusLayout)
+            addSubview(statusView)
+            statusView.setFrameOrigin(statusViewPoint)
+            
+            if animated {
+                statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
+            }
+        }
+        
+        statusView?.update(item.statusLayout)
+        
+        
         
         
         if let volume = item.volume {

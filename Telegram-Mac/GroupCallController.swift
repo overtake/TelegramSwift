@@ -1041,7 +1041,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                         items.append(ContextMenuItem(L10n.voiceChatDownHand, handler: arguments.toggleRaiseHand))
                     }
                     
-                    if data.peer.id != arguments.getAccountPeerId(), state.muteState == nil {
+                    if data.peer.id != arguments.getAccountPeerId(), state.muteState == nil || state.muteState?.canUnmute == true {
                         let volume: ContextMenuItem = .init("Volume", handler: {
 
                         })
