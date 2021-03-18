@@ -122,7 +122,7 @@ open class ImageButton: Button {
         if imageView.image != updated {
             self.imageView.image = updated
         }
-        if state != previousState {
+       // if state != previousState {
             self.imageView.animator().alphaValue = isEnabled ? 1 : 0.8
             
             if let policy = self.hoverAdditionPolicy[state], previous != state {
@@ -156,7 +156,7 @@ open class ImageButton: Button {
                     self.additionBackgroundView.layer?.cornerRadius = max(additionBackgroundView.frame.width, additionBackgroundView.frame.height) / 2
                 }
             }
-        }
+        //}
     }
     
     public func applyAnimation(from: CGImage, to: CGImage, animation: ImageButtonAnimationPolicy) {
