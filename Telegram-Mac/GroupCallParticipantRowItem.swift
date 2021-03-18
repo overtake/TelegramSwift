@@ -199,7 +199,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
 
 
 private final class GroupCallParticipantRowView : GeneralContainableRowView {
-    private let photoView: AvatarControl = AvatarControl(font: .avatar(15))
+    private let photoView: AvatarControl = AvatarControl(font: .avatar(25))
     private let titleView: TextView = TextView()
     private var statusView: TextView?
     private let micro = VoiceChatMicrophoneView()
