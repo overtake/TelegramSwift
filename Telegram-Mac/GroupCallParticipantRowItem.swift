@@ -170,8 +170,13 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         self.volume?.measure(width: .greatestFiniteMagnitude)
-
-        let inset: CGFloat = self.volume?.layoutSize.width ?? 0
+        let inset: CGFloat
+        if let volume = self.volume {
+            inset = volume.layoutSize.width + 28
+        } else {
+            inset = 0
+        }
+        
                 
         titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
         statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
