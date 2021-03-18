@@ -355,7 +355,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
         
         private var participants: [PeerId: Participant] = [:]
-        private let speakingParticipantsPromise = ValuePromise<[PeerId: UInt32]>()
+        private let speakingParticipantsPromise = ValuePromise<[PeerId: UInt32]>(ignoreRepeated: true)
         private var speakingParticipants = [PeerId: UInt32]() {
             didSet {
                 self.speakingParticipantsPromise.set(self.speakingParticipants)
@@ -416,7 +416,19 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
         
         func getAudioLevels() -> Signal<[(PeerId, UInt32, Float, Bool)], NoError> {
-            return self.audioLevelsPromise.get()
+            return self.audioLevelsPromise.get() |> distinctUntilChanged(isEqual: { lhs, rhs in
+                if lhs.count != rhs.count {
+                    return false
+                } else {
+                    for (i, lhsValue) in lhs.enumerated() {
+                        let rhsValue = rhs[i]
+                        if lhsValue != rhsValue {
+                            return false
+                        }
+                    }
+                }
+                return true
+            })
         }
     }
     

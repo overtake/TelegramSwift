@@ -469,6 +469,7 @@ final class CurveLayer: CAShapeLayer {
     func stopAnimating() {
         fromPoints = currentPoints
         toPoints = nil
+        self.curveAnimation?.invalidate()
         curveAnimation = nil
     }
 
