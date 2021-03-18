@@ -112,13 +112,14 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 self?.hide(true)
             }
         }))
-
-        self.audioLevelDisposable.set((combineLatest(context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted, context.call.state)
-           |> deliverOnMainQueue).start(next: { [weak self] myAudioLevel, audioLevels, isMuted, state in
-                guard let strongSelf = self else {
-                    return
-                }
-                var effectiveLevel: Float = 0.0
+        let isVisible = context.window.takeOcclusionState |> map { $0.contains(.visible) }
+        self.audioLevelDisposable.set((combineLatest(isVisible, context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted, context.call.state)
+        |> deliverOnMainQueue).start(next: { [weak self] isVisible, myAudioLevel, audioLevels, isMuted, state in
+            guard let strongSelf = self else {
+                return
+            }
+            var effectiveLevel: Float = 0.0
+            if isVisible {
                 switch state.networkState {
                 case .connected:
                     if !isMuted {
@@ -134,8 +135,9 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 case .connecting:
                     effectiveLevel = 0
                 }
-                strongSelf.backgroundView.audioLevel = effectiveLevel
-           }))
+            }
+            strongSelf.backgroundView.audioLevel = effectiveLevel
+        }))
     }
 
     deinit {

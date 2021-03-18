@@ -117,6 +117,8 @@ struct GroupCallTheme {
 final class GroupCallWindow : Window {
     
     
+    var navigation: NavigationViewController?
+    
     init() {
         let size = NSMakeSize(380, 600)
         var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
@@ -185,6 +187,7 @@ final class GroupCallContext {
         self.navigation.cleanupAfterDeinit = true
         self.navigation.viewWillAppear(false)
         self.window.contentView = self.navigation.view
+        self.window.navigation = navigation
         self.navigation.viewDidAppear(false)
         removeDisposable.set((self.call.canBeRemoved |> deliverOnMainQueue).start(next: { [weak self] value in
             if value {
@@ -229,7 +232,7 @@ final class GroupCallContext {
                 if last {
                     window?.contentView?.removeFromSuperview()
                     window?.contentView = nil
-                  //o windo  window.navigation = nil
+                    window?.navigation = nil
                 }
                 window = nil
             })

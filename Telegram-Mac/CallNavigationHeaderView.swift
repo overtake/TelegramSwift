@@ -131,12 +131,27 @@ class CallStatusBarBackgroundView: View, CallStatusBarBackground {
         self.maskCurveLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
         CATransaction.commit()
     }
-
-    private var isCurrentlyInHierarchy: Bool = false
+    private let occlusionDisposable = MetaDisposable()
+    private var isCurrentlyInHierarchy: Bool = false {
+        didSet {
+            updateAnimations()
+        }
+    }
+    
+    deinit {
+        occlusionDisposable.dispose()
+    }
+    
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        isCurrentlyInHierarchy = window != nil
-        updateAnimations()
+        if let window = window as? Window {
+            occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
+                self?.isCurrentlyInHierarchy = value.contains(.visible)
+            }))
+        } else {
+            occlusionDisposable.set(nil)
+            isCurrentlyInHierarchy = false
+        }
     }
 
     func updateAnimations() {

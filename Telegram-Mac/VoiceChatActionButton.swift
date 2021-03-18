@@ -8,7 +8,7 @@
 
 import Foundation
 import TGUIKit
-
+import SwiftSignalKit
 
 private let white = NSColor(rgb: 0xffffff)
 private let greyColor = NSColor(rgb: 0x2c2c2e)
@@ -68,7 +68,6 @@ final class VoiceChatActionButtonBackgroundView: View {
     private let maskMediumBlobLayer = CAShapeLayer()
     private let maskBigBlobLayer = CAShapeLayer()
 
-    private var isCurrentlyInHierarchy = false
 
     override init() {
         self.state = .connecting
@@ -165,11 +164,27 @@ final class VoiceChatActionButtonBackgroundView: View {
         fatalError("init(frame:) has not been implemented")
     }
 
+    private let occlusionDisposable = MetaDisposable()
+    private var isCurrentlyInHierarchy: Bool = false {
+        didSet {
+            updateAnimations()
+        }
+    }
+    
+    deinit {
+        occlusionDisposable.dispose()
+    }
+    
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.isCurrentlyInHierarchy = true
-        self.updateAnimations()
-
+        if let window = window as? Window {
+            occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
+                self?.isCurrentlyInHierarchy = value.contains(.visible)
+            }))
+        } else {
+            occlusionDisposable.set(nil)
+            isCurrentlyInHierarchy = false
+        }
     }
 
 
@@ -522,7 +537,7 @@ final class VoiceChatActionButtonBackgroundView: View {
             self.maskBlobLayer.stopAnimating()
             return
         } else {
-           // self.maskBlobLayer.startAnimating()
+            self.maskBlobLayer.startAnimating()
         }
         self.setupGradientAnimations()
 
