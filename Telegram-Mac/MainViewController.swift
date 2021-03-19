@@ -678,6 +678,9 @@ class MainViewController: TelegramViewController {
     func showPreferences() {
         context.sharedContext.bindings.switchSplitLayout(.dual)
         if self.context.sharedContext.layout != .minimisize {
+            if self.context.sharedContext.layout == .single {
+                self.navigationController?.close()
+            }
             self.tabController.select(index:settingsIndex)
         }
     }

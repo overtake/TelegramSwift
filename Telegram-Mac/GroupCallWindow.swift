@@ -236,6 +236,10 @@ final class GroupCallContext {
                 }
                 window = nil
             })
+        } else if last {
+            window?.contentView?.removeFromSuperview()
+            window?.contentView = nil
+            window?.navigation = nil
         }
         self.navigation.viewDidDisappear(false)
     }
