@@ -1099,9 +1099,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             viewer?.windowDidResignKey()
         } else if let passport = passport {
             passport.window.makeKeyAndOrderFront(nil)
-        } else if let groupCallWindow = sharedApplicationContextValue?.sharedContext.bindings.groupCall()?.window {
-            groupCallWindow.makeKeyAndOrderFront(nil)
-            groupCallWindow.orderFrontRegardless()
         } else if !makeKeyAndOrderFrontCallWindow() {
             window.makeKeyAndOrderFront(nil)
         }

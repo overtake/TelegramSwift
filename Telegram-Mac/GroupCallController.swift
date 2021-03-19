@@ -1203,9 +1203,7 @@ final class GroupCallUIController : ViewController {
         let peerId = self.data.call.peerId
         let account = self.data.call.account
 
-        
-
-        
+                
         let displayedRaisedHandsPromise = ValuePromise<Set<PeerId>>([], ignoreRepeated: true)
         let displayedRaisedHands: Atomic<Set<PeerId>> = Atomic(value: [])
         
