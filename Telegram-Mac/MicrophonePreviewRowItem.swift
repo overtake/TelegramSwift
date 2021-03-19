@@ -163,7 +163,7 @@ private final class MicrophonePreviewRowView : GeneralContainableRowView {
         guard let item = item as? MicrophonePreviewRowItem else {
             return
         }
-        view.setFrameSize(NSMakeSize(200, 20))
+        view.setFrameSize(NSMakeSize(160, 20))
         view.centerY(x: containerView.frame.width - view.frame.width - item.viewType.innerInset.right)
         
         title.centerY(x: item.viewType.innerInset.left)
