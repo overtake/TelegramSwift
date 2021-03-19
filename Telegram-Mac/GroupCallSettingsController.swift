@@ -105,7 +105,8 @@ final class GroupCallSettingsView : View {
         titleContainer.frame = NSMakeRect(0, 0, frame.width, 54)
         tableView.frame = NSMakeRect(0, titleContainer.frame.maxY, frame.width, frame.height - titleContainer.frame.height)
         backButton.centerY(x: 90)
-        title.center()
+        let f = titleContainer.focus(title.frame.size)
+        title.setFrameOrigin(NSMakePoint(max(126, f.minX), f.minY))
     }
 }
 
