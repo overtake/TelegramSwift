@@ -348,14 +348,18 @@ class ChatServiceItem: ChatRowItem {
                 case let .groupPhoneCall(callId, accessHash, duration):
                     let text: String
                     if let duration = duration {
-                        if authorId == context.peerId {
+                        if peer.isChannel {
+                            text = L10n.chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                        } else if authorId == context.peerId {
                             text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                         } else {
                             text = L10n.chatServiceVoiceChatFinished(authorName, autoremoveLocalized(Int(duration)))
                         }
                         let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     } else {
-                        if authorId == context.peerId {
+                        if peer.isChannel {
+                            text = L10n.chatServiceVoiceChatStartedChannel
+                        } else if authorId == context.peerId {
                             text = L10n.chatServiceVoiceChatStartedYou
                         } else {
                             text = L10n.chatServiceVoiceChatStarted(authorName)

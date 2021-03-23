@@ -2402,7 +2402,16 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
                                                profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)},
                                                destruct_clear_history: { NSImage(named: "Icon_ClearChat")!.precomposed(palette.redUI, flipVertical: true) },
-                                               chat_gigagroup_info: { NSImage(named: "Icon_GigagroupInfo")!.precomposed(palette.accent) }
+                                               chat_gigagroup_info: { NSImage(named: "Icon_GigagroupInfo")!.precomposed(palette.accent) },
+                                               playlist_next: { NSImage(named: "Icon_PlayList_Next")!.precomposed(palette.text) },
+                                               playlist_prev: { NSImage(named: "Icon_PlayList_Next")!.precomposed(palette.text, flipHorizontal: true) },
+                                               playlist_random: { NSImage(named: "Icon_PlayList_Random")!.precomposed(palette.text) },
+                                               playlist_order_normal: { NSImage(named: "Icon_PlayList_Order")!.precomposed(palette.text) },
+                                               playlist_order_reversed: { NSImage(named: "Icon_PlayList_Order")!.precomposed(palette.accent) },
+                                               playlist_order_random: { NSImage(named: "Icon_PlayList_Random")!.precomposed(palette.accent) },
+                                               playlist_repeat_none: { NSImage(named: "Icon_PlayList_Repeat")!.precomposed(palette.text) },
+                                               playlist_repeat_circle: { NSImage(named: "Icon_PlayList_Repeat")!.precomposed(palette.accent) },
+                                               playlist_repeat_one: { NSImage(named: "Icon_PlayList_RepeatOne")!.precomposed(palette.accent) }
 
     )
 

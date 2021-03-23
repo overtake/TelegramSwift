@@ -643,6 +643,18 @@ func initialize() -> [String] {
 
     array.append("chat_gigagroup_info")
     
+    
+    array.append("playlist_next")
+    array.append("playlist_prev")
+    array.append("playlist_random")
+    array.append("playlist_order_normal")
+    array.append("playlist_order_reversed")
+    array.append("playlist_order_random")
+
+    array.append("playlist_repeat_none")
+    array.append("playlist_repeat_circle")
+    array.append("playlist_repeat_one")
+
     return array
 }
 //swift ./tools/generate-images.swift

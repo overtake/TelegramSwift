@@ -78,7 +78,7 @@ class ChatMusicContentView: ChatAudioContentView {
         
         let resource: TelegramMediaResource?
         if file.previewRepresentations.isEmpty {
-            if file.mimeType.contains("mp3") {
+            if !file.mimeType.contains("ogg") {
                 resource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
             } else {
                 resource = nil
@@ -108,7 +108,7 @@ class ChatMusicContentView: ChatAudioContentView {
       //  imageView.layer?.cornerRadius = 20
     }
     
-    override func checkState() {
+    override func checkState(animated: Bool) {
         if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 if playAnimationView == nil {

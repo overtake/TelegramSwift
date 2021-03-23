@@ -281,11 +281,11 @@ class ChatControllerView : View, ChatInputDelegate {
         })
         
         
-        tableView.addScroll(listener: TableScrollListener { [weak self] position in
+        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             if let state = self?.historyState {
                 self?.updateScroller(state)
             }
-        })
+        }))
         
         tableView.backgroundColor = .clear
         tableView.layer?.backgroundColor = .clear

@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
+		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
+		2713B21F260A42FE00CE0EC6 /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */; };
+		2713B220260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21A260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift */; };
+		2713B221260A42FE00CE0EC6 /* MediaTrackFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21B260A42FE00CE0EC6 /* MediaTrackFrame.swift */; };
+		2713B222260A42FE00CE0EC6 /* MediaPlaybackData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21C260A42FE00CE0EC6 /* MediaPlaybackData.swift */; };
+		2713B223260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21D260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift */; };
+		2713B224260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21E260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift */; };
 		2719655425EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
@@ -41,6 +49,12 @@
 		278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */; };
 		278FA2E925E8C36A00280629 /* PaymentsPaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */; };
 		278FA43825E8D5CD00280629 /* Stripe.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278FA43725E8D5CD00280629 /* Stripe.framework */; };
+		27949110260A41EB0003BFA0 /* FFMpegMediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910A260A41E80003BFA0 /* FFMpegMediaFrameSource.swift */; };
+		27949111260A41EB0003BFA0 /* FFMpegMediaFrameSourceContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910B260A41EA0003BFA0 /* FFMpegMediaFrameSourceContext.swift */; };
+		27949112260A41EB0003BFA0 /* FFMpegAudioFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910C260A41EA0003BFA0 /* FFMpegAudioFrameDecoder.swift */; };
+		27949113260A41EB0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910D260A41EA0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift */; };
+		27949114260A41EB0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910E260A41EA0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift */; };
+		27949115260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910F260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift */; };
 		279A1E0D25E90D13007D48E7 /* PaymentWebInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */; };
 		279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */; };
 		27A0A4E325F76F4600B789AF /* GroupCallPeerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */; };
@@ -222,20 +236,8 @@
 		9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF1DEA5225B699D009512C9 /* SearchUtils.swift */; };
 		9FF32C7C21B7DF4800BF58B6 /* StickerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF32C7B21B7DF4800BF58B6 /* StickerSettings.swift */; };
 		9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FF5A1CA2232A2FF00BC1359 /* UpgradedAccount.swift */; };
-		9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */; };
-		9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */; };
-		9FFAE4F1205A8C89000C028E /* MediaTrackFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E0205A8C82000C028E /* MediaTrackFrame.swift */; };
-		9FFAE4F2205A8C89000C028E /* MediaTrackFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E1205A8C83000C028E /* MediaTrackFrameBuffer.swift */; };
 		9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E2205A8C83000C028E /* MediaPlayerAudioRenderer.swift */; };
-		9FFAE4F4205A8C89000C028E /* FFMpegMediaFrameSourceContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E3205A8C84000C028E /* FFMpegMediaFrameSourceContext.swift */; };
-		9FFAE4F5205A8C89000C028E /* MediaTrackFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E4205A8C84000C028E /* MediaTrackFrameDecoder.swift */; };
-		9FFAE4F7205A8C89000C028E /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E6205A8C85000C028E /* FFMpegMediaFrameSourceContextHelpers.swift */; };
-		9FFAE4F8205A8C89000C028E /* FFMpegMediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E7205A8C86000C028E /* FFMpegMediaFrameSource.swift */; };
-		9FFAE4F9205A8C89000C028E /* FFMpegAudioFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E8205A8C86000C028E /* FFMpegAudioFrameDecoder.swift */; };
-		9FFAE4FA205A8C89000C028E /* MediaPlaybackData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4E9205A8C87000C028E /* MediaPlaybackData.swift */; };
 		9FFAE4FB205A8C89000C028E /* MediaPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4EA205A8C87000C028E /* MediaPlayer.swift */; };
-		9FFAE4FC205A8C89000C028E /* MediaTrackDecodableFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4EB205A8C88000C028E /* MediaTrackDecodableFrame.swift */; };
-		9FFAE4FD205A8C89000C028E /* FFMpegMediaVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE4EC205A8C88000C028E /* FFMpegMediaVideoFrameDecoder.swift */; };
 		9FFAE502205A9154000C028E /* ManagedAudioSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE501205A9153000C028E /* ManagedAudioSession.swift */; };
 		9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE503205A916B000C028E /* VideoPlayerProxy.swift */; };
 		9FFAE506205A928C000C028E /* RingByteBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FFAE505205A928C000C028E /* RingByteBuffer.swift */; };
@@ -1049,6 +1051,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
+		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
+		2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaFrameSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaFrameSource.swift"; sourceTree = SOURCE_ROOT; };
+		2713B21A260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackDecodableFrame.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackDecodableFrame.swift"; sourceTree = SOURCE_ROOT; };
+		2713B21B260A42FE00CE0EC6 /* MediaTrackFrame.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackFrame.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackFrame.swift"; sourceTree = SOURCE_ROOT; };
+		2713B21C260A42FE00CE0EC6 /* MediaPlaybackData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaPlaybackData.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaPlaybackData.swift"; sourceTree = SOURCE_ROOT; };
+		2713B21D260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
+		2713B21E260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackFrameBuffer.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackFrameBuffer.swift"; sourceTree = SOURCE_ROOT; };
 		2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallRecorderRowItem.swift; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
@@ -1083,6 +1093,12 @@
 		278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingMethodController.swift; sourceTree = "<group>"; };
 		278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsPaymentMethodController.swift; sourceTree = "<group>"; };
 		278FA43725E8D5CD00280629 /* Stripe.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Stripe.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2794910A260A41E80003BFA0 /* FFMpegMediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaFrameSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaFrameSource.swift"; sourceTree = SOURCE_ROOT; };
+		2794910B260A41EA0003BFA0 /* FFMpegMediaFrameSourceContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaFrameSourceContext.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaFrameSourceContext.swift"; sourceTree = SOURCE_ROOT; };
+		2794910C260A41EA0003BFA0 /* FFMpegAudioFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegAudioFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegAudioFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
+		2794910D260A41EA0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaFrameSourceContextHelpers.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaFrameSourceContextHelpers.swift"; sourceTree = SOURCE_ROOT; };
+		2794910E260A41EA0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaPassthroughVideoFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaPassthroughVideoFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
+		2794910F260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaVideoFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaVideoFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
 		279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentWebInteractionController.swift; sourceTree = "<group>"; };
 		279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsReceiptController.swift; sourceTree = "<group>"; };
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
@@ -1270,20 +1286,8 @@
 		9FF1DEA5225B699D009512C9 /* SearchUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchUtils.swift; sourceTree = "<group>"; };
 		9FF32C7B21B7DF4800BF58B6 /* StickerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerSettings.swift; sourceTree = "<group>"; };
 		9FF5A1CA2232A2FF00BC1359 /* UpgradedAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradedAccount.swift; sourceTree = "<group>"; };
-		9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaPassthroughVideoFrameDecoder.swift; sourceTree = "<group>"; };
-		9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaFrameSource.swift; sourceTree = "<group>"; };
-		9FFAE4E0205A8C82000C028E /* MediaTrackFrame.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTrackFrame.swift; sourceTree = "<group>"; };
-		9FFAE4E1205A8C83000C028E /* MediaTrackFrameBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTrackFrameBuffer.swift; sourceTree = "<group>"; };
 		9FFAE4E2205A8C83000C028E /* MediaPlayerAudioRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaPlayerAudioRenderer.swift; sourceTree = "<group>"; };
-		9FFAE4E3205A8C84000C028E /* FFMpegMediaFrameSourceContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaFrameSourceContext.swift; sourceTree = "<group>"; };
-		9FFAE4E4205A8C84000C028E /* MediaTrackFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTrackFrameDecoder.swift; sourceTree = "<group>"; };
-		9FFAE4E6205A8C85000C028E /* FFMpegMediaFrameSourceContextHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaFrameSourceContextHelpers.swift; sourceTree = "<group>"; };
-		9FFAE4E7205A8C86000C028E /* FFMpegMediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaFrameSource.swift; sourceTree = "<group>"; };
-		9FFAE4E8205A8C86000C028E /* FFMpegAudioFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegAudioFrameDecoder.swift; sourceTree = "<group>"; };
-		9FFAE4E9205A8C87000C028E /* MediaPlaybackData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaPlaybackData.swift; sourceTree = "<group>"; };
 		9FFAE4EA205A8C87000C028E /* MediaPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaPlayer.swift; sourceTree = "<group>"; };
-		9FFAE4EB205A8C88000C028E /* MediaTrackDecodableFrame.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MediaTrackDecodableFrame.swift; sourceTree = "<group>"; };
-		9FFAE4EC205A8C88000C028E /* FFMpegMediaVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FFMpegMediaVideoFrameDecoder.swift; sourceTree = "<group>"; };
 		9FFAE501205A9153000C028E /* ManagedAudioSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManagedAudioSession.swift; sourceTree = "<group>"; };
 		9FFAE503205A916B000C028E /* VideoPlayerProxy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VideoPlayerProxy.swift; sourceTree = "<group>"; };
 		9FFAE505205A928C000C028E /* RingByteBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RingByteBuffer.swift; sourceTree = "<group>"; };
@@ -2181,6 +2185,25 @@
 			name = payments;
 			sourceTree = "<group>";
 		};
+		27949108260A41C60003BFA0 /* ffmpeg */ = {
+			isa = PBXGroup;
+			children = (
+				2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */,
+				2713B21C260A42FE00CE0EC6 /* MediaPlaybackData.swift */,
+				2713B21A260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift */,
+				2713B21B260A42FE00CE0EC6 /* MediaTrackFrame.swift */,
+				2713B21E260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift */,
+				2713B21D260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift */,
+				2794910C260A41EA0003BFA0 /* FFMpegAudioFrameDecoder.swift */,
+				2794910A260A41E80003BFA0 /* FFMpegMediaFrameSource.swift */,
+				2794910B260A41EA0003BFA0 /* FFMpegMediaFrameSourceContext.swift */,
+				2794910D260A41EA0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift */,
+				2794910E260A41EA0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift */,
+				2794910F260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift */,
+			);
+			name = ffmpeg;
+			sourceTree = "<group>";
+		};
 		27A0A4E525F7762F00B789AF /* profile */ = {
 			isa = PBXGroup;
 			children = (
@@ -2454,23 +2477,12 @@
 		9FFAE4DB205A8C76000C028E /* modern */ = {
 			isa = PBXGroup;
 			children = (
+				27949108260A41C60003BFA0 /* ffmpeg */,
 				9FFAE505205A928C000C028E /* RingByteBuffer.swift */,
 				9FFAE503205A916B000C028E /* VideoPlayerProxy.swift */,
 				9FFAE501205A9153000C028E /* ManagedAudioSession.swift */,
-				9FFAE4E8205A8C86000C028E /* FFMpegAudioFrameDecoder.swift */,
-				9FFAE4E7205A8C86000C028E /* FFMpegMediaFrameSource.swift */,
-				9FFAE4E3205A8C84000C028E /* FFMpegMediaFrameSourceContext.swift */,
-				9FFAE4E6205A8C85000C028E /* FFMpegMediaFrameSourceContextHelpers.swift */,
-				9FFAE4DC205A8C80000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift */,
-				9FFAE4EC205A8C88000C028E /* FFMpegMediaVideoFrameDecoder.swift */,
-				9FFAE4DE205A8C81000C028E /* MediaFrameSource.swift */,
-				9FFAE4E9205A8C87000C028E /* MediaPlaybackData.swift */,
 				9FFAE4EA205A8C87000C028E /* MediaPlayer.swift */,
 				9FFAE4E2205A8C83000C028E /* MediaPlayerAudioRenderer.swift */,
-				9FFAE4EB205A8C88000C028E /* MediaTrackDecodableFrame.swift */,
-				9FFAE4E0205A8C82000C028E /* MediaTrackFrame.swift */,
-				9FFAE4E1205A8C83000C028E /* MediaTrackFrameBuffer.swift */,
-				9FFAE4E4205A8C84000C028E /* MediaTrackFrameDecoder.swift */,
 				D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */,
 				D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */,
 				D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */,
@@ -4386,6 +4398,8 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */,
+				270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */,
 				2773A56B25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs */,
 				2773A56A25FAA63D00AB45E9 /* voice_chat_hand_on_unmuted.tgs */,
 				2773A56725FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs */,
@@ -4826,6 +4840,7 @@
 				C2057FA51EBBCEA7000423DC /* voip_busy.caf in Resources */,
 				9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */,
 				C2057FA61EBBCEA7000423DC /* voip_end.caf in Resources */,
+				270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */,
 				D07450EB233D61B800769D7F /* fly_dollar.tgs in Resources */,
 				C2057FA71EBBCEA7000423DC /* voip_fail.caf in Resources */,
 				C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */,
@@ -4862,6 +4877,7 @@
 				C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */,
 				D07450EA233D61B800769D7F /* write_words.tgs in Resources */,
 				2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */,
+				270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */,
 				278C720425E67C2700F1B315 /* emoji1016.txt in Resources */,
 				9F03681722771A9700456348 /* anim_unpin.json in Resources */,
 				C253A9701D92F9F100CDC850 /* Localizable.strings in Resources */,
@@ -5044,9 +5060,9 @@
 				C2DE5D2C1F3CA6E80081EC1E /* InstantPageMediaItem.swift in Sources */,
 				C218FF981F41FF2300DD7D35 /* InstantPageAnchorItem.swift in Sources */,
 				A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */,
-				9FFAE4EF205A8C89000C028E /* MediaFrameSource.swift in Sources */,
 				A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,
+				2713B224260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift in Sources */,
 				D0E7BD70256AA6430068644D /* PresentationGroupCall.swift in Sources */,
 				D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */,
 				D02BD7C7232D4DB200D1814A /* AppearanceThumbs.swift in Sources */,
@@ -5061,14 +5077,12 @@
 				C2271F3E1DB4D4240045E719 /* ETabRowItem.swift in Sources */,
 				9F7B5FCB22003DC70087D020 /* WallpaperColorPicker.swift in Sources */,
 				D00B191C24E54BA3006CCB87 /* CallReceptionControl.swift in Sources */,
-				9FFAE4F7205A8C89000C028E /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */,
 				A7393D352407CAE100CE44CA /* ChatMediaDice.swift in Sources */,
 				D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatMessageAccessoryView.swift in Sources */,
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
-				9FFAE4F9205A8C89000C028E /* FFMpegAudioFrameDecoder.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
 				27C4089125B068C300372302 /* InviteLinkRowItem.swift in Sources */,
@@ -5092,8 +5106,6 @@
 				D00CE50D2289C9B7008C1B4F /* MediaAnimatedStickerView.swift in Sources */,
 				C205FEA61EB39DE400455808 /* SidebarCapViewController.swift in Sources */,
 				C2271DAE1DAE1172001792B6 /* UserInfoEntries.swift in Sources */,
-				9FFAE4F4205A8C89000C028E /* FFMpegMediaFrameSourceContext.swift in Sources */,
-				9FFAE4F2205A8C89000C028E /* MediaTrackFrameBuffer.swift in Sources */,
 				C230B9131DD392EB0057F596 /* SearchRowItem.swift in Sources */,
 				C2F4ED1B1EC5AE1D005F2696 /* CallRatingModalViewController.swift in Sources */,
 				C2DF47E91DE892E3003AA6C0 /* ChatToasterView.swift in Sources */,
@@ -5179,6 +5191,7 @@
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
 				C2016F681EAE0A68003AF981 /* CallWindowController.swift in Sources */,
 				9FDA713220E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift in Sources */,
+				2713B223260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift in Sources */,
 				C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */,
 				C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */,
 				C20CB7291E60886F00C992AC /* LinkInvationController.swift in Sources */,
@@ -5252,6 +5265,7 @@
 				9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */,
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
 				C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */,
+				27949113260A41EB0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */,
 				C27A6F711ECF604A00C65577 /* TGCurrencyFormatter.m in Sources */,
 				A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */,
 				C2A506771DF5664F00971A93 /* ForwardChatListController.swift in Sources */,
@@ -5294,6 +5308,7 @@
 				C2F9C4481F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift in Sources */,
 				C2B6A9651E8519FA00A441B7 /* RecentGIFRowItem.swift in Sources */,
 				C2E8BA071FB5EF4C00DEB5E2 /* GalleryThumbsControl.swift in Sources */,
+				2713B21F260A42FE00CE0EC6 /* MediaFrameSource.swift in Sources */,
 				C2A1054B1E0163D500B01F48 /* GalleryPageController.swift in Sources */,
 				D0D752C822F8A76100E2CB74 /* Geocoding.swift in Sources */,
 				274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */,
@@ -5333,6 +5348,7 @@
 				9F7D421F22203DB1007B68BB /* ChannelStatisticsController.swift in Sources */,
 				C2271F491DB4FC220045E719 /* EStickView.swift in Sources */,
 				9F153D1421F0C7F800B95D82 /* WallpaperPreviewController.swift in Sources */,
+				2713B222260A42FE00CE0EC6 /* MediaPlaybackData.swift in Sources */,
 				27A0A4E325F76F4600B789AF /* GroupCallPeerController.swift in Sources */,
 				9F6B54C821369B4000748FC1 /* GalleryModernControls.swift in Sources */,
 				D06C69592539FBFB00DD9005 /* LiveLocationManager.swift in Sources */,
@@ -5354,6 +5370,7 @@
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
+				27949110260A41EB0003BFA0 /* FFMpegMediaFrameSource.swift in Sources */,
 				9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */,
 				D032AFA42578172400E67215 /* PushToTalk.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
@@ -5371,6 +5388,7 @@
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				D071E8B3214C15C7001B6024 /* TouchBarEmojiPicker.swift in Sources */,
 				C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */,
+				27949115260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */,
 				9F7B5FCD220099220087D020 /* WallpaperPatternPreview.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
@@ -5402,7 +5420,6 @@
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */,
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
-				9FFAE4FD205A8C89000C028E /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
 				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,
 				D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */,
@@ -5461,7 +5478,6 @@
 				9F7D422C222415C9007B68BB /* SharedAccountContext.swift in Sources */,
 				9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */,
 				A789E08423E05EAE00AEB34A /* ChatListFiltersListController.swift in Sources */,
-				9FFAE4ED205A8C89000C028E /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */,
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
 				9F354E9C2270630A006F1D42 /* HapticEngine.swift in Sources */,
@@ -5526,7 +5542,6 @@
 				C22674451DC20664000BA9ED /* PeerMediaListController.swift in Sources */,
 				D076A07E248A5F890077BC0A /* GifPanelTabRowItem.swift in Sources */,
 				9FB7CB6D221EB22700888EA9 /* CallSettingsModalController.swift in Sources */,
-				9FFAE4F8205A8C89000C028E /* FFMpegMediaFrameSource.swift in Sources */,
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */,
@@ -5550,7 +5565,6 @@
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
 				D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */,
-				9FFAE4F5205A8C89000C028E /* MediaTrackFrameDecoder.swift in Sources */,
 				D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */,
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
 				C29C3E5B1E421F1700193A7E /* ChatAccessoryModel.swift in Sources */,
@@ -5568,7 +5582,7 @@
 				9F7B74052227F4F2006610E4 /* SharedAccountInfo.swift in Sources */,
 				C24FD40E1F20EE8B00A97196 /* ContextClueRowItem.swift in Sources */,
 				C29A65051E0845B80071BCEF /* ExternalVideoLoader.swift in Sources */,
-				9FFAE4FA205A8C89000C028E /* MediaPlaybackData.swift in Sources */,
+				2713B221260A42FE00CE0EC6 /* MediaTrackFrame.swift in Sources */,
 				C2FD33EE1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift in Sources */,
 				D0558D852152B4D3006B403D /* GalleryTouchBar.swift in Sources */,
 				C253A9451D90303200CDC850 /* FastBlur.m in Sources */,
@@ -5622,6 +5636,7 @@
 				D00EECD7252CD2EF001EB99F /* MicrophonePreviewRowItem.swift in Sources */,
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
+				27949114260A41EB0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */,
@@ -5648,6 +5663,7 @@
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
 				D076F8872296CAB2004F895A /* ChannelDisscussionGroup.swift in Sources */,
 				27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */,
+				27949112260A41EB0003BFA0 /* FFMpegAudioFrameDecoder.swift in Sources */,
 				A7F2830A2395570400742C20 /* SearchSettingsController.swift in Sources */,
 				C253E2341DE3776A0022A29F /* InlineAudioPlayerView.swift in Sources */,
 				C26D8A3C1E464944002FAA3F /* JoinLinkPreviewModalController.swift in Sources */,
@@ -5701,7 +5717,6 @@
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2905E1E207E545600990AD7 /* InstantPageAudioItem.swift in Sources */,
 				D074A56724A1DF5200E92F8A /* VoipDerivedState.swift in Sources */,
-				9FFAE4FC205A8C89000C028E /* MediaTrackDecodableFrame.swift in Sources */,
 				C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */,
 				D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */,
 				D0530D4024E693A5003273BC /* CameraViews.swift in Sources */,
@@ -5728,6 +5743,7 @@
 				D0C550C4251127DA00B64966 /* ChatCommentsHeaderItem.swift in Sources */,
 				A7F282B2238D122900742C20 /* UnauthorizedConfiguration.swift in Sources */,
 				9FC4DA9C21DD187C003E2A62 /* SearchPeerMembers.swift in Sources */,
+				2713B220260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,
@@ -5736,6 +5752,7 @@
 				C241025D1FD5702D00DB8625 /* ChatMessageBubbleImages.swift in Sources */,
 				9FC8AD9A2062A5610094F7B4 /* InputDataDataSelectorRowItem.swift in Sources */,
 				D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */,
+				27949111260A41EB0003BFA0 /* FFMpegMediaFrameSourceContext.swift in Sources */,
 				9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */,
 				A7E831F3255041020095A167 /* IsEqualMessages.swift in Sources */,
 				D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */,
@@ -5747,7 +5764,6 @@
 				9F3EAB4720A5ED2F003FE7E3 /* fast-edge.cpp in Sources */,
 				A7E831F0255040B70095A167 /* ChatPresentationInputQueryResult.swift in Sources */,
 				9F6314E121CAA0AB009FD379 /* NewPollController.swift in Sources */,
-				9FFAE4F1205A8C89000C028E /* MediaTrackFrame.swift in Sources */,
 				C2DE5D2A1F3CA69D0081EC1E /* InstantPageMedia.swift in Sources */,
 				C2DE5D2E1F3CA72E0081EC1E /* InstantPageView.swift in Sources */,
 				C2FB2FAB1EBF73D00093C8BA /* RecentCallsViewController.swift in Sources */,

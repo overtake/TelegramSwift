@@ -220,21 +220,7 @@ final class GroupCallRecorderRowView : GeneralContainableRowView {
             indicator.backgroundColor = item.customTheme?.redColor ?? theme.colors.redUI
             
             let duration:Int32 = item.account.network.getApproximateRemoteTimestamp() - recording
-            
-            let days = Int(duration) / (3600 * 24)
-            let hours = (Int(duration) - (days * 3600 * 24)) / 3600
-            let minutes = Int(duration) / 60 % 60
-            let seconds = Int(duration) % 60
-            
-            var formatted: String
-            if days != 0 {
-                formatted = String(format:"%d:%02i:%02i:%02i", days, hours, minutes, seconds)
-            } else if hours != 0 {
-                formatted = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
-            } else {
-                formatted = String(format:"%02i:%02i", minutes, seconds)
-            }
-            let layout = TextViewLayout(.initialize(string: formatted, color: secondaryColor, font: .normal(.short)))
+            let layout = TextViewLayout(.initialize(string: timerText(Int(duration)), color: secondaryColor, font: .normal(.short)))
             
             layout.measure(width: .greatestFiniteMagnitude)
             statusView.update(layout)

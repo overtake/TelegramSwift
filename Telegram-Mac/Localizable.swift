@@ -2415,6 +2415,12 @@ internal final class L10n {
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
   }
+  /// Voice chat ended (%1$@)
+  internal static func chatServiceVoiceChatFinishedChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished.Channel", p1)
+  }
+  /// [Voice Chat](open) started
+  internal static var chatServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted.Channel") }
   /// %d
   internal static func chatTitleCommentsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Comments_countable", p1)
@@ -3115,6 +3121,12 @@ internal final class L10n {
   internal static func chatListServiceVideoCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VideoCall.outgoing", p1)
   }
+  /// voice chat ended (%1$@)
+  internal static func chatListServiceVoiceChatFinishedChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatFinished.Channel", p1)
+  }
+  /// voice chat started
+  internal static var chatListServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel") }
   /// Archive
   internal static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
   /// Delete
@@ -3841,6 +3853,22 @@ internal final class L10n {
   internal static var fastSettingsSetPasscode: String  { return L10n.tr("Localizable", "FastSettings.SetPasscode") }
   /// Unmute
   internal static var fastSettingsUnmute: String  { return L10n.tr("Localizable", "FastSettings.Unmute") }
+  /// %@ B
+  internal static func fileSizeB(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FileSize.B", p1)
+  }
+  /// %@ GB
+  internal static func fileSizeGB(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FileSize.GB", p1)
+  }
+  /// %@ KB
+  internal static func fileSizeKB(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FileSize.KB", p1)
+  }
+  /// %@ MB
+  internal static func fileSizeMB(_ p1: String) -> String {
+    return L10n.tr("Localizable", "FileSize.MB", p1)
+  }
   /// forward messages here for quick access
   internal static var forwardToSavedMessages: String  { return L10n.tr("Localizable", "Forward.ToSavedMessages") }
   /// %d %@

@@ -2359,6 +2359,34 @@ func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModifier?) -
     }
 }
 
+func applyLottieColor(data: Data, color: NSColor) -> Data {
+    if var string = String(data: data, encoding: .utf8) {
+        func colorToString(_ color: NSColor) -> String {
+            var r: CGFloat = 0.0
+            var g: CGFloat = 0.0
+            var b: CGFloat = 0.0
+            color.getRed(&r, green: &g, blue: &b, alpha: nil)
+            return "\"k\":[\(r),\(g),\(b),1]"
+        }
+        var replacements: [(NSTextCheckingResult, String)] = []
+        if let colorKeyRegex = colorKeyRegex {
+            let results = colorKeyRegex.matches(in: string, range: NSRange(string.startIndex..., in: string))
+            for result in results.reversed()  {
+                replacements.append((result, colorToString(color)))
+            }
+        }
+        for (result, text) in replacements {
+            if let range = Range(result.range, in: string) {
+                string = string.replacingCharacters(in: range, with: text)
+            }
+        }
+        return string.data(using: .utf8) ?? data
+    } else {
+        return data
+    }
+}
+
+
 
 extension Double {
     
@@ -2559,5 +2587,35 @@ func smartTimeleftText( _ left: Int) -> String {
         return string
     } else {
         return autoremoveLocalized(left, roundToCeil: true)
+    }
+}
+
+
+public typealias UIImage = NSImage
+
+extension NSImage {
+    
+    enum Orientation {
+        case up
+        case down
+    }
+    
+    convenience init(cgImage: CGImage, scale: CGFloat, orientation: UIImage.Orientation) {
+        self.init(cgImage: cgImage, size: cgImage.systemSize)
+    }
+}
+
+public extension DataSizeStringFormatting {
+    
+    static var current: DataSizeStringFormatting {
+        return DataSizeStringFormatting.init(decimalSeparator: NumberFormatter().decimalSeparator, byte: { value in
+            return (L10n.fileSizeB(value), [])
+        }, kilobyte: { value in
+            return (L10n.fileSizeKB(value), [])
+        }, megabyte: { value in
+            return (L10n.fileSizeMB(value), [])
+        }, gigabyte: { value in
+            return (L10n.fileSizeGB(value), [])
+        })
     }
 }

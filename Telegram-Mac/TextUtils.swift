@@ -426,13 +426,17 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         case let .groupPhoneCall(_, _, duration):
             let text: String
             if let duration = duration {
-                if authorId == account.peerId {
+                if peer.isChannel {
+                    text = L10n.chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                } else if authorId == account.peerId {
                     text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                 } else {
                     text = L10n.chatServiceVoiceChatFinished(authorName, autoremoveLocalized(Int(duration)))
                 }
             } else {
-                if authorId == account.peerId {
+                if peer.isChannel {
+                    text = L10n.chatListServiceVoiceChatStartedChannel
+                } else if authorId == account.peerId {
                     text = L10n.chatListServiceVoiceChatStartedYou
                 } else {
                     text = L10n.chatListServiceVoiceChatStarted(authorName)
@@ -748,3 +752,21 @@ func timeIntervalString( _ value: Int) -> String {
     }
 }
 
+
+
+func timerText(_ duration: Int) -> String {
+    let days = Int(duration) / (3600 * 24)
+    let hours = (Int(duration) - (days * 3600 * 24)) / 3600
+    let minutes = Int(duration) / 60 % 60
+    let seconds = Int(duration) % 60
+    
+    var formatted: String
+    if days != 0 {
+        formatted = String(format:"%d:%02i:%02i:%02i", days, hours, minutes, seconds)
+    } else if hours != 0 {
+        formatted = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
+    } else {
+        formatted = String(format:"%02i:%02i", minutes, seconds)
+    }
+    return formatted
+}

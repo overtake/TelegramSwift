@@ -42,7 +42,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
         
-        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end)
+        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0, formatting: DataSizeStringFormatting.current)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end)
         
         let localAction = NSMutableAttributedString()
         let range = localAction.append(string: tr(L10n.contextShowInFinder), color: theme.colors.link, font: .normal(.text))
