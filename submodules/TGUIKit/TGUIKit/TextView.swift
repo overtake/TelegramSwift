@@ -1680,7 +1680,10 @@ public class TextView: Control, NSViewToolTipOwner {
     }
     
     
-    
+    public func resize(_ width: CGFloat) {
+        self.layout?.measure(width: width)
+        self.update(self.layout)
+    }
     
     public override func becomeFirstResponder() -> Bool {
         if canBeResponder {

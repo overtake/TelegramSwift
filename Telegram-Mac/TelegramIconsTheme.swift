@@ -7557,6 +7557,123 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var playlist_next: CGImage {
+      if let image = cached.with({ $0["playlist_next"] }) {
+          return image
+      } else {
+          let image = _playlist_next()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_next"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_prev: CGImage {
+      if let image = cached.with({ $0["playlist_prev"] }) {
+          return image
+      } else {
+          let image = _playlist_prev()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_prev"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_random: CGImage {
+      if let image = cached.with({ $0["playlist_random"] }) {
+          return image
+      } else {
+          let image = _playlist_random()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_random"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_order_normal: CGImage {
+      if let image = cached.with({ $0["playlist_order_normal"] }) {
+          return image
+      } else {
+          let image = _playlist_order_normal()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_order_normal"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_order_reversed: CGImage {
+      if let image = cached.with({ $0["playlist_order_reversed"] }) {
+          return image
+      } else {
+          let image = _playlist_order_reversed()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_order_reversed"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_order_random: CGImage {
+      if let image = cached.with({ $0["playlist_order_random"] }) {
+          return image
+      } else {
+          let image = _playlist_order_random()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_order_random"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_repeat_none: CGImage {
+      if let image = cached.with({ $0["playlist_repeat_none"] }) {
+          return image
+      } else {
+          let image = _playlist_repeat_none()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_repeat_none"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_repeat_circle: CGImage {
+      if let image = cached.with({ $0["playlist_repeat_circle"] }) {
+          return image
+      } else {
+          let image = _playlist_repeat_circle()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_repeat_circle"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_repeat_one: CGImage {
+      if let image = cached.with({ $0["playlist_repeat_one"] }) {
+          return image
+      } else {
+          let image = _playlist_repeat_one()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_repeat_one"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8139,6 +8256,15 @@ final class TelegramIconsTheme {
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
   private let _chat_gigagroup_info: ()->CGImage
+  private let _playlist_next: ()->CGImage
+  private let _playlist_prev: ()->CGImage
+  private let _playlist_random: ()->CGImage
+  private let _playlist_order_normal: ()->CGImage
+  private let _playlist_order_reversed: ()->CGImage
+  private let _playlist_order_random: ()->CGImage
+  private let _playlist_repeat_none: ()->CGImage
+  private let _playlist_repeat_circle: ()->CGImage
+  private let _playlist_repeat_one: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8721,7 +8847,16 @@ final class TelegramIconsTheme {
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
       destruct_clear_history: @escaping()->CGImage,
-      chat_gigagroup_info: @escaping()->CGImage
+      chat_gigagroup_info: @escaping()->CGImage,
+      playlist_next: @escaping()->CGImage,
+      playlist_prev: @escaping()->CGImage,
+      playlist_random: @escaping()->CGImage,
+      playlist_order_normal: @escaping()->CGImage,
+      playlist_order_reversed: @escaping()->CGImage,
+      playlist_order_random: @escaping()->CGImage,
+      playlist_repeat_none: @escaping()->CGImage,
+      playlist_repeat_circle: @escaping()->CGImage,
+      playlist_repeat_one: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9304,5 +9439,14 @@ final class TelegramIconsTheme {
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history
       self._chat_gigagroup_info = chat_gigagroup_info
+      self._playlist_next = playlist_next
+      self._playlist_prev = playlist_prev
+      self._playlist_random = playlist_random
+      self._playlist_order_normal = playlist_order_normal
+      self._playlist_order_reversed = playlist_order_reversed
+      self._playlist_order_random = playlist_order_random
+      self._playlist_repeat_none = playlist_repeat_none
+      self._playlist_repeat_circle = playlist_repeat_circle
+      self._playlist_repeat_one = playlist_repeat_one
   }
 }

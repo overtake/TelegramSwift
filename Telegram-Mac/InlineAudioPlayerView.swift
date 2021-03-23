@@ -41,8 +41,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private let dismiss:ImageButton = ImageButton()
     private let repeatControl:ImageButton = ImageButton()
     private let volumeControl: ImageButton = ImageButton()
-    private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
+    private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: 2)
     private let textView:TextView = TextView()
+    private let textViewContainer = Control()
     private let containerView:Control
     private let separator:View = View()
     private let playingSpeed: ImageButton = ImageButton()
@@ -86,11 +87,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             self?.controller?.playOrPause()
         }, for: .Click)
         
-        repeatControl.set(handler: { [weak self] control in
-            let control = control as! ImageButton
+        repeatControl.set(handler: { [weak self] _ in
             if let controller = self?.controller {
-                controller.toggleRepeat()
-                control.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
+                controller.nextRepeatState()
             }
         }, for: .Click)
         
@@ -103,13 +102,22 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         var paused: Bool = false
         
         progressView.startScrobbling = { [weak self]  in
-            _ = self?.controller?.pause()
-            paused = true
+            guard let controller = self?.controller else {
+                return
+            }
+            if controller.isPlaying {
+                _ = self?.controller?.pause()
+                paused = true
+            } else {
+                paused = false
+            }
         }
         
         progressView.endScrobbling = { [weak self]  in
             if paused {
-                _ = self?.controller?.play()
+                DispatchQueue.main.async {
+                    _ = self?.controller?.play()
+                }
             }
         }
         
@@ -128,7 +136,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         containerView.addSubview(playOrPause)
         containerView.addSubview(dismiss)
         containerView.addSubview(repeatControl)
-        containerView.addSubview(textView)
+        textViewContainer.addSubview(textView)
+        containerView.addSubview(textViewContainer)
         containerView.addSubview(playingSpeed)
         containerView.addSubview(volumeControl)
         addSubview(containerView)
@@ -140,7 +149,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         updateLocalizationAndTheme(theme: theme)
         
-        containerView.set(handler: { [weak self] _ in
+        textViewContainer.set(handler: { [weak self] _ in
             self?.showAudioPlayerList()
         }, for: .LongOver)
         
@@ -178,11 +187,11 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     private func showAudioPlayerList() {
         guard let window = kitWindow, let context = self.context else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-        if NSPointInRect(point, textView.frame) {
+        if NSPointInRect(point, textViewContainer.frame) {
             if let controller = controller as? APChatMusicController, let song = controller.currentSong {
                 switch song.stableId {
                 case let .message(message):
-                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                    showPopover(for: textViewContainer, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), edge: .minX, inset: NSMakePoint(40, -60))
                 default:
                     break
                 }
@@ -224,13 +233,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         volumeControl.set(image: FastSettings.volumeRate == 0 ? theme.icons.inline_audio_volume_off : theme.icons.inline_audio_volume, for: .Normal)
         
         progressView.fetchingColor = theme.colors.accent.withAlphaComponent(0.5)
+
         
         if let controller = controller {
-            repeatControl.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
-            if let song = controller.currentSong {
-                songDidChanged(song: song, for: controller)
-                songDidChangedState(song: song, for: controller)
-            }
+            repeatControl.set(image: controller.state.repeatState != .none ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
         } else {
             repeatControl.set(image: theme.icons.audioPlayerRepeat, for: .Normal)
         }
@@ -283,7 +289,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         controller.add(listener: self)
         self.ready.set(controller.ready.get())
 
-        repeatControl.isHidden = !(controller is APChatMusicController)
+        repeatControl.isHidden = !controller.canMakeRepeat
         if let tableView = contextObject.tableView {
             if self.instantVideoPip == nil {
                 self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: mainWindow)
@@ -295,7 +301,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             addGlobalAudioToVisible(tableView: supportTableView)
         }
         if let song = controller.currentSong {
-            songDidChanged(song: song, for: controller)
+            songDidChanged(song: song, for: controller, animated: true)
         }
     }
 
@@ -326,7 +332,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                 }
                 return true
             })
-            controller.notifyGlobalStateChanged()
+            controller.notifyGlobalStateChanged(animated: false)
         }
     }
     
@@ -345,7 +351,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         return attributed
     }
     
-    func songDidChanged(song:APSongItem, for controller:APController) {
+    func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
         next.set(image: controller.nextEnabled ? theme.icons.audioPlayerNext : theme.icons.audioPlayerLockedNext, for: .Normal)
         previous.set(image: controller.prevEnabled ? theme.icons.audioPlayerPrev : theme.icons.audioPlayerLockedPrev, for: .Normal)
         let layout = TextViewLayout(attributedTitle(for: song), maximumNumberOfLines:2, alignment: .left)
@@ -360,38 +366,51 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
     }
     
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
         switch song.state {
-        case .waiting, .paused:
+        case .waiting:
             progressView.style = playProgressStyle
-            playOrPause.set(image: theme.icons.audioPlayerPlay, for: .Normal)
         case .stoped:
-            playOrPause.set(image: theme.icons.audioPlayerPlay, for: .Normal)
-            progressView.set(progress: 0, animated:true)
-        case let .playing(data):
+            progressView.set(progress: 0, animated: animated)
+        case let .playing(_, _, progress), let .paused(_, _, progress):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(data.progress == .nan ? 0 : data.progress), animated: data.animated, duration: 0.2)
-            playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
-            break
-        case let .fetching(progress, animated):
-            playOrPause.set(image: theme.icons.audioPlayerLockedPlay, for: .Normal)
+            progressView.set(progress: CGFloat(progress == .nan ? 0 : progress), animated: animated, duration: 0.2)
+        case let .fetching(progress):
             progressView.style = fetchProgressStyle
             progressView.set(progress: CGFloat(progress), animated:animated)
-            break
         }
+        
+        switch controller.state.status {
+        case .playing:
+            playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
+        case .paused:
+            playOrPause.set(image: theme.icons.audioPlayerPlay, for: .Normal)
+        default:
+            playOrPause.set(image: theme.icons.audioPlayerLockedPlay, for: .Normal)
+        }
+        
+        switch controller.state.repeatState {
+        case .circle:
+            repeatControl.set(image: theme.icons.audioPlayerRepeatActive, for: .Normal)
+        case .one:
+            repeatControl.set(image: theme.icons.audioPlayerRepeatActive, for: .Normal)
+        case .none:
+            repeatControl.set(image: theme.icons.audioPlayerRepeat, for: .Normal)
+        }
+        repeatControl.sizeToFit()
     }
     
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
     
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         stopAndHide(true)
     }
     
@@ -407,10 +426,14 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10) + volumeControl.frame.width + 50))
         textView.update(textView.layout)
         
+        
+        textViewContainer.setFrameSize(textView.frame.size)
+        textViewContainer.centerY(x: next.frame.maxX + 10)
+        
         playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 10)
 
 
-        textView.centerY(x: next.frame.maxX + 10)
+//        textView.centerY(x: next.frame.maxX + 10)
         
         
         if repeatControl.isHidden {

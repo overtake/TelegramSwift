@@ -285,7 +285,12 @@ private final class PlayerRenderer {
             data = self.animation.compressed
         }
         if let data = data, !data.isEmpty {
-            let modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
+            let modified: Data
+            if let color = self.animation.colors.first(where: { $0.keyPath == "" }) {
+                modified = applyLottieColor(data: data, color: color.color)
+            } else {
+                modified = transformedWithFitzModifier(data: data, fitzModifier: self.animation.key.fitzModifier)
+            }
             if let json = String(data: modified, encoding: .utf8) {
                 if let bridge = RLottieBridge(json: json, key: self.animation.cacheKey) {
                     for color in self.animation.colors {

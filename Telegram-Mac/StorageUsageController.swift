@@ -349,7 +349,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             
             for (i, value) in filtered.enumerated() {
                 let peer = stats.peers[value.0]!
-                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1)), bestGeneralViewType(filtered, for: i)))
+                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1), formatting: DataSizeStringFormatting.current), bestGeneralViewType(filtered, for: i)))
                 index += 1
             }
         } else {
