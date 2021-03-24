@@ -152,20 +152,20 @@ class APSongItem : APItem {
             }
             if file.isVoice || file.isInstantVideo {
                 if let forward = message.forwardInfo {
-                    performerName = forward.authorTitle
+                    songName = forward.authorTitle
                 } else if let peer = message.author {
                     if peer.id == account.peerId {
-                        performerName = localizedString("You");
+                        songName = localizedString("You");
                     } else {
-                        performerName = peer.displayTitle
+                        songName = peer.displayTitle
                     }
                 } else {
-                    performerName = ""
+                    songName = ""
                 }
                 if file.isVoice {
-                    songName = tr(L10n.audioControllerVoiceMessage)
+                    performerName = L10n.audioControllerVoiceMessage
                 } else {
-                    songName = tr(L10n.audioControllerVideoMessage)
+                    performerName = L10n.audioControllerVideoMessage
                 }
             }  else {
                 var t:String?
@@ -488,6 +488,14 @@ class APController : NSResponder {
         fileprivate(set) var status: Status
         fileprivate(set) var repeatState: RepeatState
         fileprivate(set) var orderState: OrderState
+        
+        fileprivate(set) var volume: Float
+        fileprivate(set) var baseRate: Double
+        
+        static var `default`:State {
+            return State(status: .waiting, repeatState: .none, orderState: .normal, volume: 1, baseRate: 1.0)
+        }
+
     }
     
     private var mediaPlayer: MediaPlayer?
@@ -496,14 +504,20 @@ class APController : NSResponder {
     private let readyDisposable = MetaDisposable()
 
 
-    private let statePromise = ValuePromise(State(status: .waiting, repeatState: .none, orderState: .normal), ignoreRepeated: true)
+    private let statePromise = ValuePromise(State.default, ignoreRepeated: true)
     var stateValue: Signal<State, NoError> {
         return statePromise.get()
     }
-    private(set) var state: State = State(status: .waiting, repeatState: .none, orderState: .normal) {
+    private(set) var state: State = State.default {
         didSet {
             statePromise.set(self.state)
             if oldValue != state {
+                if oldValue.baseRate != state.baseRate {
+                    mediaPlayer?.setBaseRate(state.baseRate)
+                }
+                if oldValue.volume != state.volume {
+                    mediaPlayer?.setVolume(state.volume)
+                }
                 notifyGlobalStateChanged(animated: true)
             }
         }
@@ -652,22 +666,28 @@ class APController : NSResponder {
 
     private let streamable: Bool
     var baseRate: Double {
-        didSet {
-            mediaPlayer?.setBaseRate(baseRate)
+        set {
+            state.baseRate = newValue
+        }
+        get {
+            return state.baseRate
         }
     }
     
-    var volume: Float = 1.0 {
-        didSet {
-            mediaPlayer?.setVolume(volume)
+    var volume: Float {
+        set {
+            state.volume = newValue
+        }
+        get {
+            return state.volume
         }
     }
     
     init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
-        self.volume = volume
+        self.state.volume = volume
         self.streamable = streamable
-        self.baseRate = baseRate
+        self.state.baseRate = baseRate
         super.init()
     }
 

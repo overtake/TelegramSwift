@@ -1196,10 +1196,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
-    open override func focusSearch(animated: Bool) {
+    open override func focusSearch(animated: Bool, text: String? = nil) {
         super.focusSearch(animated: animated)
         if controller.redirectUserInterfaceCalls {
-            controller.focusSearch(animated: animated)
+            controller.focusSearch(animated: animated, text: text)
         }
     }
 }
