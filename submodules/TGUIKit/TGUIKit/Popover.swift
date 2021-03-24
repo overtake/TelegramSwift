@@ -79,12 +79,12 @@ open class Popover: NSObject {
                 
                 switch edge {
                 case .maxX:
-                    point.x -= controller.frame.width
+                    point.x += controller.frame.width
                 case .maxY:
                     point.y -= controller.frame.height
                     background.flip = true
                 case .minX:
-                    point.x -= (controller.frame.width - control.frame.width)
+                   // point.x -= (controller.frame.width - control.frame.width)
                     point.y -= controller.frame.height
                     background.flip = true
                 default:

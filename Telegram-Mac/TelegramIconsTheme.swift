@@ -1070,136 +1070,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var audioPlayerPlay: CGImage {
-      if let image = cached.with({ $0["audioPlayerPlay"] }) {
-          return image
-      } else {
-          let image = _audioPlayerPlay()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerPlay"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerPause: CGImage {
-      if let image = cached.with({ $0["audioPlayerPause"] }) {
-          return image
-      } else {
-          let image = _audioPlayerPause()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerPause"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerNext: CGImage {
-      if let image = cached.with({ $0["audioPlayerNext"] }) {
-          return image
-      } else {
-          let image = _audioPlayerNext()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerNext"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerPrev: CGImage {
-      if let image = cached.with({ $0["audioPlayerPrev"] }) {
-          return image
-      } else {
-          let image = _audioPlayerPrev()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerPrev"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var auduiPlayerDismiss: CGImage {
-      if let image = cached.with({ $0["auduiPlayerDismiss"] }) {
-          return image
-      } else {
-          let image = _auduiPlayerDismiss()
-          _ = cached.modify { current in 
-              var current = current
-              current["auduiPlayerDismiss"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerRepeat: CGImage {
-      if let image = cached.with({ $0["audioPlayerRepeat"] }) {
-          return image
-      } else {
-          let image = _audioPlayerRepeat()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerRepeat"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerRepeatActive: CGImage {
-      if let image = cached.with({ $0["audioPlayerRepeatActive"] }) {
-          return image
-      } else {
-          let image = _audioPlayerRepeatActive()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerRepeatActive"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerLockedPlay: CGImage {
-      if let image = cached.with({ $0["audioPlayerLockedPlay"] }) {
-          return image
-      } else {
-          let image = _audioPlayerLockedPlay()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerLockedPlay"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerLockedNext: CGImage {
-      if let image = cached.with({ $0["audioPlayerLockedNext"] }) {
-          return image
-      } else {
-          let image = _audioPlayerLockedNext()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerLockedNext"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var audioPlayerLockedPrev: CGImage {
-      if let image = cached.with({ $0["audioPlayerLockedPrev"] }) {
-          return image
-      } else {
-          let image = _audioPlayerLockedPrev()
-          _ = cached.modify { current in 
-              var current = current
-              current["audioPlayerLockedPrev"] = image
-              return current
-          }
-          return image
-      }
-  }
   var chatSendMessage: CGImage {
       if let image = cached.with({ $0["chatSendMessage"] }) {
           return image
@@ -4606,32 +4476,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var playingVoice1x: CGImage {
-      if let image = cached.with({ $0["playingVoice1x"] }) {
-          return image
-      } else {
-          let image = _playingVoice1x()
-          _ = cached.modify { current in 
-              var current = current
-              current["playingVoice1x"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var playingVoice2x: CGImage {
-      if let image = cached.with({ $0["playingVoice2x"] }) {
-          return image
-      } else {
-          let image = _playingVoice2x()
-          _ = cached.modify { current in 
-              var current = current
-              current["playingVoice2x"] = image
-              return current
-          }
-          return image
-      }
-  }
   var galleryRotate: CGImage {
       if let image = cached.with({ $0["galleryRotate"] }) {
           return image
@@ -6894,32 +6738,6 @@ final class TelegramIconsTheme {
           return image
       }
   }
-  var inline_audio_volume: CGImage {
-      if let image = cached.with({ $0["inline_audio_volume"] }) {
-          return image
-      } else {
-          let image = _inline_audio_volume()
-          _ = cached.modify { current in 
-              var current = current
-              current["inline_audio_volume"] = image
-              return current
-          }
-          return image
-      }
-  }
-  var inline_audio_volume_off: CGImage {
-      if let image = cached.with({ $0["inline_audio_volume_off"] }) {
-          return image
-      } else {
-          let image = _inline_audio_volume_off()
-          _ = cached.modify { current in 
-              var current = current
-              current["inline_audio_volume_off"] = image
-              return current
-          }
-          return image
-      }
-  }
   var call_tooltip_battery_low: CGImage {
       if let image = cached.with({ $0["call_tooltip_battery_low"] }) {
           return image
@@ -7583,6 +7401,32 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var playlist_next_locked: CGImage {
+      if let image = cached.with({ $0["playlist_next_locked"] }) {
+          return image
+      } else {
+          let image = _playlist_next_locked()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_next_locked"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var playlist_prev_locked: CGImage {
+      if let image = cached.with({ $0["playlist_prev_locked"] }) {
+          return image
+      } else {
+          let image = _playlist_prev_locked()
+          _ = cached.modify { current in 
+              var current = current
+              current["playlist_prev_locked"] = image
+              return current
+          }
+          return image
+      }
+  }
   var playlist_random: CGImage {
       if let image = cached.with({ $0["playlist_random"] }) {
           return image
@@ -7674,6 +7518,162 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var audioplayer_next: CGImage {
+      if let image = cached.with({ $0["audioplayer_next"] }) {
+          return image
+      } else {
+          let image = _audioplayer_next()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_next"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_prev: CGImage {
+      if let image = cached.with({ $0["audioplayer_prev"] }) {
+          return image
+      } else {
+          let image = _audioplayer_prev()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_prev"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_dismiss: CGImage {
+      if let image = cached.with({ $0["audioplayer_dismiss"] }) {
+          return image
+      } else {
+          let image = _audioplayer_dismiss()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_dismiss"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_repeat_none: CGImage {
+      if let image = cached.with({ $0["audioplayer_repeat_none"] }) {
+          return image
+      } else {
+          let image = _audioplayer_repeat_none()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_repeat_none"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_repeat_circle: CGImage {
+      if let image = cached.with({ $0["audioplayer_repeat_circle"] }) {
+          return image
+      } else {
+          let image = _audioplayer_repeat_circle()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_repeat_circle"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_repeat_one: CGImage {
+      if let image = cached.with({ $0["audioplayer_repeat_one"] }) {
+          return image
+      } else {
+          let image = _audioplayer_repeat_one()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_repeat_one"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_locked_next: CGImage {
+      if let image = cached.with({ $0["audioplayer_locked_next"] }) {
+          return image
+      } else {
+          let image = _audioplayer_locked_next()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_locked_next"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_locked_prev: CGImage {
+      if let image = cached.with({ $0["audioplayer_locked_prev"] }) {
+          return image
+      } else {
+          let image = _audioplayer_locked_prev()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_locked_prev"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_volume: CGImage {
+      if let image = cached.with({ $0["audioplayer_volume"] }) {
+          return image
+      } else {
+          let image = _audioplayer_volume()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_volume"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_volume_off: CGImage {
+      if let image = cached.with({ $0["audioplayer_volume_off"] }) {
+          return image
+      } else {
+          let image = _audioplayer_volume_off()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_volume_off"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_speed_x1: CGImage {
+      if let image = cached.with({ $0["audioplayer_speed_x1"] }) {
+          return image
+      } else {
+          let image = _audioplayer_speed_x1()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_speed_x1"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var audioplayer_speed_x2: CGImage {
+      if let image = cached.with({ $0["audioplayer_speed_x2"] }) {
+          return image
+      } else {
+          let image = _audioplayer_speed_x2()
+          _ = cached.modify { current in 
+              var current = current
+              current["audioplayer_speed_x2"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -7757,16 +7757,6 @@ final class TelegramIconsTheme {
   private let _dismissAccessory: ()->CGImage
   private let _chatScrollUp: ()->CGImage
   private let _chatScrollUpActive: ()->CGImage
-  private let _audioPlayerPlay: ()->CGImage
-  private let _audioPlayerPause: ()->CGImage
-  private let _audioPlayerNext: ()->CGImage
-  private let _audioPlayerPrev: ()->CGImage
-  private let _auduiPlayerDismiss: ()->CGImage
-  private let _audioPlayerRepeat: ()->CGImage
-  private let _audioPlayerRepeatActive: ()->CGImage
-  private let _audioPlayerLockedPlay: ()->CGImage
-  private let _audioPlayerLockedNext: ()->CGImage
-  private let _audioPlayerLockedPrev: ()->CGImage
   private let _chatSendMessage: ()->CGImage
   private let _chatSaveEditedMessage: ()->CGImage
   private let _chatRecordVoice: ()->CGImage
@@ -8029,8 +8019,6 @@ final class TelegramIconsTheme {
   private let _galleryMore: ()->CGImage
   private let _galleryShare: ()->CGImage
   private let _galleryFastSave: ()->CGImage
-  private let _playingVoice1x: ()->CGImage
-  private let _playingVoice2x: ()->CGImage
   private let _galleryRotate: ()->CGImage
   private let _galleryZoomIn: ()->CGImage
   private let _galleryZoomOut: ()->CGImage
@@ -8205,8 +8193,6 @@ final class TelegramIconsTheme {
   private let _chat_like_inside_empty_bubble_overlay: ()->CGImage
   private let _gif_trending: ()->CGImage
   private let _chat_list_thumb_play: ()->CGImage
-  private let _inline_audio_volume: ()->CGImage
-  private let _inline_audio_volume_off: ()->CGImage
   private let _call_tooltip_battery_low: ()->CGImage
   private let _call_tooltip_camera_off: ()->CGImage
   private let _call_tooltip_micro_off: ()->CGImage
@@ -8258,6 +8244,8 @@ final class TelegramIconsTheme {
   private let _chat_gigagroup_info: ()->CGImage
   private let _playlist_next: ()->CGImage
   private let _playlist_prev: ()->CGImage
+  private let _playlist_next_locked: ()->CGImage
+  private let _playlist_prev_locked: ()->CGImage
   private let _playlist_random: ()->CGImage
   private let _playlist_order_normal: ()->CGImage
   private let _playlist_order_reversed: ()->CGImage
@@ -8265,6 +8253,18 @@ final class TelegramIconsTheme {
   private let _playlist_repeat_none: ()->CGImage
   private let _playlist_repeat_circle: ()->CGImage
   private let _playlist_repeat_one: ()->CGImage
+  private let _audioplayer_next: ()->CGImage
+  private let _audioplayer_prev: ()->CGImage
+  private let _audioplayer_dismiss: ()->CGImage
+  private let _audioplayer_repeat_none: ()->CGImage
+  private let _audioplayer_repeat_circle: ()->CGImage
+  private let _audioplayer_repeat_one: ()->CGImage
+  private let _audioplayer_locked_next: ()->CGImage
+  private let _audioplayer_locked_prev: ()->CGImage
+  private let _audioplayer_volume: ()->CGImage
+  private let _audioplayer_volume_off: ()->CGImage
+  private let _audioplayer_speed_x1: ()->CGImage
+  private let _audioplayer_speed_x2: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8349,16 +8349,6 @@ final class TelegramIconsTheme {
       dismissAccessory: @escaping()->CGImage,
       chatScrollUp: @escaping()->CGImage,
       chatScrollUpActive: @escaping()->CGImage,
-      audioPlayerPlay: @escaping()->CGImage,
-      audioPlayerPause: @escaping()->CGImage,
-      audioPlayerNext: @escaping()->CGImage,
-      audioPlayerPrev: @escaping()->CGImage,
-      auduiPlayerDismiss: @escaping()->CGImage,
-      audioPlayerRepeat: @escaping()->CGImage,
-      audioPlayerRepeatActive: @escaping()->CGImage,
-      audioPlayerLockedPlay: @escaping()->CGImage,
-      audioPlayerLockedNext: @escaping()->CGImage,
-      audioPlayerLockedPrev: @escaping()->CGImage,
       chatSendMessage: @escaping()->CGImage,
       chatSaveEditedMessage: @escaping()->CGImage,
       chatRecordVoice: @escaping()->CGImage,
@@ -8621,8 +8611,6 @@ final class TelegramIconsTheme {
       galleryMore: @escaping()->CGImage,
       galleryShare: @escaping()->CGImage,
       galleryFastSave: @escaping()->CGImage,
-      playingVoice1x: @escaping()->CGImage,
-      playingVoice2x: @escaping()->CGImage,
       galleryRotate: @escaping()->CGImage,
       galleryZoomIn: @escaping()->CGImage,
       galleryZoomOut: @escaping()->CGImage,
@@ -8797,8 +8785,6 @@ final class TelegramIconsTheme {
       chat_like_inside_empty_bubble_overlay: @escaping()->CGImage,
       gif_trending: @escaping()->CGImage,
       chat_list_thumb_play: @escaping()->CGImage,
-      inline_audio_volume: @escaping()->CGImage,
-      inline_audio_volume_off: @escaping()->CGImage,
       call_tooltip_battery_low: @escaping()->CGImage,
       call_tooltip_camera_off: @escaping()->CGImage,
       call_tooltip_micro_off: @escaping()->CGImage,
@@ -8850,13 +8836,27 @@ final class TelegramIconsTheme {
       chat_gigagroup_info: @escaping()->CGImage,
       playlist_next: @escaping()->CGImage,
       playlist_prev: @escaping()->CGImage,
+      playlist_next_locked: @escaping()->CGImage,
+      playlist_prev_locked: @escaping()->CGImage,
       playlist_random: @escaping()->CGImage,
       playlist_order_normal: @escaping()->CGImage,
       playlist_order_reversed: @escaping()->CGImage,
       playlist_order_random: @escaping()->CGImage,
       playlist_repeat_none: @escaping()->CGImage,
       playlist_repeat_circle: @escaping()->CGImage,
-      playlist_repeat_one: @escaping()->CGImage
+      playlist_repeat_one: @escaping()->CGImage,
+      audioplayer_next: @escaping()->CGImage,
+      audioplayer_prev: @escaping()->CGImage,
+      audioplayer_dismiss: @escaping()->CGImage,
+      audioplayer_repeat_none: @escaping()->CGImage,
+      audioplayer_repeat_circle: @escaping()->CGImage,
+      audioplayer_repeat_one: @escaping()->CGImage,
+      audioplayer_locked_next: @escaping()->CGImage,
+      audioplayer_locked_prev: @escaping()->CGImage,
+      audioplayer_volume: @escaping()->CGImage,
+      audioplayer_volume_off: @escaping()->CGImage,
+      audioplayer_speed_x1: @escaping()->CGImage,
+      audioplayer_speed_x2: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -8940,16 +8940,6 @@ final class TelegramIconsTheme {
       self._dismissAccessory = dismissAccessory
       self._chatScrollUp = chatScrollUp
       self._chatScrollUpActive = chatScrollUpActive
-      self._audioPlayerPlay = audioPlayerPlay
-      self._audioPlayerPause = audioPlayerPause
-      self._audioPlayerNext = audioPlayerNext
-      self._audioPlayerPrev = audioPlayerPrev
-      self._auduiPlayerDismiss = auduiPlayerDismiss
-      self._audioPlayerRepeat = audioPlayerRepeat
-      self._audioPlayerRepeatActive = audioPlayerRepeatActive
-      self._audioPlayerLockedPlay = audioPlayerLockedPlay
-      self._audioPlayerLockedNext = audioPlayerLockedNext
-      self._audioPlayerLockedPrev = audioPlayerLockedPrev
       self._chatSendMessage = chatSendMessage
       self._chatSaveEditedMessage = chatSaveEditedMessage
       self._chatRecordVoice = chatRecordVoice
@@ -9212,8 +9202,6 @@ final class TelegramIconsTheme {
       self._galleryMore = galleryMore
       self._galleryShare = galleryShare
       self._galleryFastSave = galleryFastSave
-      self._playingVoice1x = playingVoice1x
-      self._playingVoice2x = playingVoice2x
       self._galleryRotate = galleryRotate
       self._galleryZoomIn = galleryZoomIn
       self._galleryZoomOut = galleryZoomOut
@@ -9388,8 +9376,6 @@ final class TelegramIconsTheme {
       self._chat_like_inside_empty_bubble_overlay = chat_like_inside_empty_bubble_overlay
       self._gif_trending = gif_trending
       self._chat_list_thumb_play = chat_list_thumb_play
-      self._inline_audio_volume = inline_audio_volume
-      self._inline_audio_volume_off = inline_audio_volume_off
       self._call_tooltip_battery_low = call_tooltip_battery_low
       self._call_tooltip_camera_off = call_tooltip_camera_off
       self._call_tooltip_micro_off = call_tooltip_micro_off
@@ -9441,6 +9427,8 @@ final class TelegramIconsTheme {
       self._chat_gigagroup_info = chat_gigagroup_info
       self._playlist_next = playlist_next
       self._playlist_prev = playlist_prev
+      self._playlist_next_locked = playlist_next_locked
+      self._playlist_prev_locked = playlist_prev_locked
       self._playlist_random = playlist_random
       self._playlist_order_normal = playlist_order_normal
       self._playlist_order_reversed = playlist_order_reversed
@@ -9448,5 +9436,17 @@ final class TelegramIconsTheme {
       self._playlist_repeat_none = playlist_repeat_none
       self._playlist_repeat_circle = playlist_repeat_circle
       self._playlist_repeat_one = playlist_repeat_one
+      self._audioplayer_next = audioplayer_next
+      self._audioplayer_prev = audioplayer_prev
+      self._audioplayer_dismiss = audioplayer_dismiss
+      self._audioplayer_repeat_none = audioplayer_repeat_none
+      self._audioplayer_repeat_circle = audioplayer_repeat_circle
+      self._audioplayer_repeat_one = audioplayer_repeat_one
+      self._audioplayer_locked_next = audioplayer_locked_next
+      self._audioplayer_locked_prev = audioplayer_locked_prev
+      self._audioplayer_volume = audioplayer_volume
+      self._audioplayer_volume_off = audioplayer_volume_off
+      self._audioplayer_speed_x1 = audioplayer_speed_x1
+      self._audioplayer_speed_x2 = audioplayer_speed_x2
   }
 }

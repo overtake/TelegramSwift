@@ -487,7 +487,7 @@ open class ViewController : NSObject {
         
     }
     
-    open func focusSearch(animated: Bool) {
+    open func focusSearch(animated: Bool, text: String? = nil) {
         
     }
     

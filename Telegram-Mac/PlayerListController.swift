@@ -93,7 +93,7 @@ fileprivate func preparedAudioListTransition(from fromView:[PlayerListEntry], to
 private final class PlayerListTrackView: View {
     private let cover: TransformImageView = TransformImageView()
     private let trackName: TextView = TextView()
-    private let artistName: TextView = TextView()
+    let artistName: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(cover)
@@ -103,8 +103,19 @@ private final class PlayerListTrackView: View {
         trackName.userInteractionEnabled = false
         trackName.isSelectable = false
         
-        artistName.userInteractionEnabled = false
         artistName.isSelectable = false
+        
+        artistName.set(handler: { control in
+            control.alphaValue = 1
+        }, for: .Hover)
+        
+        artistName.set(handler: { control in
+            control.alphaValue = 1
+        }, for: .Normal)
+        
+        artistName.set(handler: { control in
+            control.alphaValue = 0.8
+        }, for: .Highlight)
         
         updateLocalizationAndTheme(theme: theme)
     }
@@ -200,8 +211,26 @@ private final class PlayerListHandlingView: View {
         order.centerY(x: 0)
     }
         
-    func update(_ item: APSongItem, state: APController.State, animated: Bool) {
-        switch state.status {
+    func update(_ item: APSongItem, controller: APController, animated: Bool) {
+        
+        next.userInteractionEnabled = controller.nextEnabled
+        prev.userInteractionEnabled = controller.prevEnabled
+
+        switch controller.nextEnabled {
+        case true:
+            next.set(image: theme.icons.playlist_next, for: .Normal)
+        case false:
+            next.set(image: theme.icons.playlist_next_locked, for: .Normal)
+        }
+        
+        switch controller.prevEnabled {
+        case true:
+            prev.set(image: theme.icons.playlist_prev, for: .Normal)
+        case false:
+            prev.set(image: theme.icons.playlist_prev_locked, for: .Normal)
+        }
+        
+        switch controller.state.status {
         case .playing:
             play(animated: animated, sticker: LocalAnimatedSticker.playlist_play_pause)
         case .paused:
@@ -210,7 +239,7 @@ private final class PlayerListHandlingView: View {
             break
         }
         
-        switch state.orderState {
+        switch controller.state.orderState {
         case .normal:
             order.set(image: theme.icons.playlist_order_normal, for: .Normal)
         case .reversed:
@@ -219,7 +248,7 @@ private final class PlayerListHandlingView: View {
             order.set(image: theme.icons.playlist_order_random, for: .Normal)
         }
         
-        switch state.repeatState {
+        switch controller.state.repeatState {
         case .none:
             iteration.set(image: theme.icons.playlist_repeat_none, for: .Normal)
         case .one:
@@ -229,7 +258,8 @@ private final class PlayerListHandlingView: View {
         }
         order.sizeToFit()
         iteration.sizeToFit()
-        
+        next.sizeToFit()
+        prev.sizeToFit()
         needsLayout = true
     }
     private func play(animated: Bool, sticker: LocalAnimatedSticker) {
@@ -256,21 +286,13 @@ private final class PlayerListHandlingView: View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        let theme = theme as! TelegramPresentationTheme
-        next.set(image: theme.icons.playlist_next, for: .Normal)
-        prev.set(image: theme.icons.playlist_prev, for: .Normal)
-        
-
-        
-        next.sizeToFit()
-        prev.sizeToFit()
 
     }
 }
 
 private final class PlayerListControlsView : View {
     private let separator: View = View()
-    private var trackView: PlayerListTrackView?
+    fileprivate var trackView: PlayerListTrackView?
     fileprivate let progress: LinearProgressControl = LinearProgressControl(progressHeight: 5)
     private let playedView: TextView = TextView()
     private let restView: TextView = TextView()
@@ -287,9 +309,11 @@ private final class PlayerListControlsView : View {
         
     }
     
+    var searchClick:((String)->Void)? = nil
+    
     private var track: APSongItem?
     
-    func update(_ track: APSongItem, state: APController.State, animated: Bool) {
+    func update(_ track: APSongItem, controller: APController, animated: Bool) {
         if track != self.track {
             if let current = self.trackView {
                 self.trackView = nil
@@ -305,6 +329,12 @@ private final class PlayerListControlsView : View {
             self.trackView = trackView
             addSubview(trackView)
             trackView.update(track)
+            let trackName = track.performerName
+            
+            trackView.artistName.set(handler: { [weak self] _ in
+                self?.searchClick?(trackName)
+            }, for: .Click)
+            
             if animated {
                 trackView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
@@ -315,7 +345,7 @@ private final class PlayerListControlsView : View {
         var played: Int? = nil
         var rest: Int? = nil
 
-        handlings.update(track, state: state, animated: animated)
+        handlings.update(track, controller: controller, animated: animated)
         
         switch track.state {
         case .waiting:
@@ -392,7 +422,7 @@ final class PlayerListView : View, APDelegate {
     private let controls: PlayerListControlsView = PlayerListControlsView(frame: .zero)
     private let bufferingStatusDisposable = MetaDisposable()
     private var ranges: (IndexSet, Int)?
-    private var controller:APController? {
+    private(set) var controller:APController? {
         didSet {
             oldValue?.remove(listener: self)
             controller?.add(listener: self)
@@ -481,13 +511,26 @@ final class PlayerListView : View, APDelegate {
                 self.controls.updateScroll(position, tableFrame: self.tableView.frame)
             }
         }))
+        
+        controls.searchClick = { [weak self] text in
+            let context = self?.controller?.context
+            if let context = context {
+                context.sharedContext.bindings.mainController().focusSearch(animated: true, text: text)
+            }
+        }
     }
+    
     
     func setController(_ controller: APController?) {
         self.controller = controller
         if let controller = controller, let item = controller.currentSong {
-            self.controls.update(item, state: controller.state, animated: false)
+            self.controls.update(item, controller: controller, animated: false)
         }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        controller?.notifyGlobalStateChanged(animated: false)
     }
     
     private func scrollToCurrent() {
@@ -512,27 +555,26 @@ final class PlayerListView : View, APDelegate {
     }
     
     func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
-        self.controls.update(song, state: controller.state, animated: true)
+        self.controls.update(song, controller: controller, animated: true)
     }
     
     func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
-        controls.update(song, state: controller.state, animated: true)
+        controls.update(song, controller: controller, animated: true)
     }
     
     func songDidStartPlaying(song: APSongItem, for controller: APController, animated: Bool) {
-        
+        controls.update(song, controller: controller, animated: true)
     }
     
     func songDidStopPlaying(song: APSongItem, for controller: APController, animated: Bool) {
-        
+        controls.update(song, controller: controller, animated: true)
     }
     
     func playerDidChangedTimebase(song: APSongItem, for controller: APController, animated: Bool) {
-        
+        controls.update(song, controller: controller, animated: true)
     }
     
     func audioDidCompleteQueue(for controller: APController, animated: Bool) {
-        
     }
     
 }
@@ -566,6 +608,23 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
     
     deinit {
         disposable.dispose()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        window?.set(handler: { [weak self] event in
+            self?.genericView.controller?.prev()
+            return .invoked
+        }, with: self, for: .LeftArrow, priority: .modal)
+        
+        window?.set(handler: { [weak self] event in
+            self?.genericView.controller?.next()
+            return .invoked
+        }, with: self, for: .RightArrow, priority: .modal)
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeObserver(for: self)
     }
     
     override func viewDidLoad() {

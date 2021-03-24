@@ -601,7 +601,7 @@ class MainViewController: TelegramViewController {
         context.sharedContext.bindings.rootNavigation().to(index: index)
     }
     
-    override func focusSearch(animated: Bool) {
+    override func focusSearch(animated: Bool, text: String? = nil) {
         if context.sharedContext.layout == .minimisize {
             return
         }
@@ -613,7 +613,7 @@ class MainViewController: TelegramViewController {
             if current is AccountViewController {
                 tabController.select(index: chatIndex)
             }
-            tabController.current?.focusSearch(animated: animated)
+            tabController.current?.focusSearch(animated: animated, text: text)
         }
     }
     
