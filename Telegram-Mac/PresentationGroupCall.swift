@@ -446,14 +446,15 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private(set) var joinAsPeerId: PeerId {
         didSet {
             joinAsPeerIdSignal.set(joinAsPeerId)
+            if !outgoingVideoSourceValue.isEmpty {
+                self.outgoingVideoSourceValue = [self.joinAsPeerId : 0]
+            }
         }
     }
     private var ignorePreviousJoinAsPeerId: (PeerId, UInt32)?
     private var reconnectingAsPeer: Peer?
     
-    
-    private(set) var isVideo: Bool
-    
+        
     private let updateTitleDisposable = MetaDisposable()
     
     private var temporaryJoinTimestamp: Int32
@@ -611,8 +612,23 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     
     private let incomingVideoSourcePromise = Promise<[PeerId: UInt32]>([:])
     var incomingVideoSources: Signal<[PeerId: UInt32], NoError> {
-        return self.incomingVideoSourcePromise.get()
+        return combineLatest(self.incomingVideoSourcePromise.get(),
+                             outgoingVideoSourceValuePromise.get())
+        |> map {
+            $0.0 + $0.1
+        }
     }
+    
+    private let outgoingVideoSourceValuePromise: ValuePromise<[PeerId: UInt32]> = ValuePromise([:], ignoreRepeated: true)
+    private var outgoingVideoSourceValue: [PeerId: UInt32] = [:] {
+        didSet {
+            outgoingVideoSourceValuePromise.set(outgoingVideoSourceValue)
+        }
+    }
+    var outgoingVideoSource: Signal<[PeerId: UInt32], NoError> {
+        return self.outgoingVideoSourceValuePromise.get()
+    }
+    
     
     private var missingSsrcs = Set<UInt32>()
     private let missingSsrcsDisposable = MetaDisposable()
@@ -649,7 +665,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.temporaryJoinTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
         
         //self.videoCapturer = OngoingCallVideoCapturer(keepLandscape: true)
-        self.isVideo = self.videoCapturer != nil
+//        self.isVideo = self.videoCapturer != nil
         
         self.devicesContext = accountContext.sharedContext.devicesContext
 
@@ -1836,16 +1852,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         } else {
             self.switchVideoInput(deviceId)
         }
+        self.outgoingVideoSourceValue = [self.joinAsPeerId : 0]
         //self.isVideo = true
 
     }
 
     func disableVideo() {
      //  self.isVideo = false
-       if let _ = self.videoCapturer {
-           self.videoCapturer = nil
-           self.callContext?.disableVideo()
-       }
+        if let _ = self.videoCapturer {
+            self.videoCapturer = nil
+            self.callContext?.disableVideo()
+        }
+        self.outgoingVideoSourceValue = [:]
     }
     
     func setVolume(peerId: PeerId, volume: Int32, sync: Bool) {
@@ -2144,6 +2162,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         } else {
                             return 0.0
                         }
+                    }, setVideoContentMode: { [weak view] mode in
+                        view?.setVideoContentMode(mode)
                     },
                     setOnOrientationUpdated: { f in
                         setOnOrientationUpdated { value, aspect in
@@ -2212,6 +2232,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             } else {
                                 return 0.0
                             }
+                        }, setVideoContentMode: { [weak view] mode in
+                            view?.setVideoContentMode(mode)
                         },
                         setOnOrientationUpdated: { f in
                             setOnOrientationUpdated { value, aspect in

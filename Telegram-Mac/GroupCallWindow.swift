@@ -72,6 +72,7 @@ struct GroupCallTheme {
     static let big_unmuted = NSImage(named: "Icon_GroupCall_Big_Unmuted")!.precomposed(.white)
     static let big_muted = NSImage(named: "Icon_GroupCall_Big_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
     
+    static let status_video_gray = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.grayStatusColor)
     static let status_video_accent = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.blueStatusColor)
     static let status_video_green = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.greenStatusColor)
     static let status_video_red = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.speakLockedColor)
@@ -128,17 +129,18 @@ final class GroupCallWindow : Window {
             rect = .init(origin: .init(x: x, y: y), size: size)
         }
 
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
-        self.minSize = NSMakeSize(380, 670)
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .resizable, .closable, .titled], backing: .buffered, defer: true)
+        self.minSize = NSMakeSize(380, 600)
         self.name = "GroupCallWindow4"
         self.titlebarAppearsTransparent = true
-        self.titleVisibility = .visible
+        self.titleVisibility = .hidden
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
         self.isMovableByWindowBackground = true
         self.level = .normal
-        self.toolbar = NSToolbar(identifier: "window")
-        self.toolbar?.showsBaselineSeparator = false
+        self.appearance = darkPalette.appearance
+//        self.toolbar = NSToolbar(identifier: "window")
+//        self.toolbar?.showsBaselineSeparator = false
         
         initSaver()
     }
@@ -147,12 +149,15 @@ final class GroupCallWindow : Window {
     override func layoutIfNeeded() {
         super.layoutIfNeeded()
         
-        var point: NSPoint = NSMakePoint(20, 17)
-        self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
-        point.x += 20
-        self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
-        point.x += 20
-        self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+        if !isFullScreen {
+            var point: NSPoint = NSMakePoint(20, 0)
+            self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
+            point.x += 20
+            self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
+            point.x += 20
+            self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+        }
+       
     }
         
     deinit {
@@ -181,8 +186,9 @@ final class GroupCallContext {
         self.call = call
         self.peerMemberContextsManager = peerMemberContextsManager
         self.window = GroupCallWindow()
-        self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager))
+        self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager), size: window.frame.size)
         self.navigation = MajorNavigationController(GroupCallUIController.self, controller, self.window)
+        self.navigation._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
         self.navigation.alwaysAnimate = true
         self.navigation.cleanupAfterDeinit = true
         self.navigation.viewWillAppear(false)

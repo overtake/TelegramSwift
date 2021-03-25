@@ -20,6 +20,7 @@ final class PresentationCallVideoView {
     public let getOrientation: () -> Orientation
     public let getAspect: () -> CGFloat
     public let setOnOrientationUpdated: (((Orientation, CGFloat) -> Void)?) -> Void
+    public let setVideoContentMode:(CALayerContentsGravity)->Void
     public let setOnIsMirroredUpdated: (((Bool) -> Void)?) -> Void
     
     public init(
@@ -28,6 +29,7 @@ final class PresentationCallVideoView {
         setOnFirstFrameReceived: @escaping (((Float) -> Void)?) -> Void,
         getOrientation: @escaping () -> Orientation,
         getAspect: @escaping () -> CGFloat,
+        setVideoContentMode:@escaping(CALayerContentsGravity)->Void,
         setOnOrientationUpdated: @escaping (((Orientation, CGFloat) -> Void)?) -> Void,
         setOnIsMirroredUpdated: @escaping (((Bool) -> Void)?) -> Void
     ) {
@@ -38,6 +40,7 @@ final class PresentationCallVideoView {
         self.getAspect = getAspect
         self.setOnOrientationUpdated = setOnOrientationUpdated
         self.setOnIsMirroredUpdated = setOnIsMirroredUpdated
+        self.setVideoContentMode = setVideoContentMode
     }
 }
 
@@ -180,6 +183,7 @@ protocol PresentationGroupCall: class {
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
     
+    var outgoingVideoSource: Signal<[PeerId: UInt32], NoError> { get }
 //    var activeCall: CachedChannelData.ActiveCall? { get }
     var inviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
 

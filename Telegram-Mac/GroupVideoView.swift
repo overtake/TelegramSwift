@@ -13,7 +13,7 @@ import SwiftSignalKit
 
 final class GroupVideoView: View {
     private let videoViewContainer: View
-    private let videoView: PresentationCallVideoView
+    let videoView: PresentationCallVideoView
     
     private var validLayout: CGSize?
     
