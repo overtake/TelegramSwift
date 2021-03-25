@@ -290,6 +290,11 @@ open class Window: NSWindow {
     public var keyWindowUpdater: Signal<Bool, NoError> {
         return self.isKeyWindowValue.get()
     }
+    
+    private let isFullScreenValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    public var fullScreen: Signal<Bool, NoError> {
+        return self.isFullScreenValue.get()
+    }
 
     private let occlusionStateValue: ValuePromise<NSWindow.OcclusionState> = ValuePromise(NSWindow.OcclusionState.visible, ignoreRepeated: true)
 
@@ -878,6 +883,8 @@ open class Window: NSWindow {
         super.toggleFullScreen(sender)
         CATransaction.commit()
         saver?.isFullScreen = isFullScreen
+        
+        isFullScreenValue.set(isFullScreen)
     }
     
     @objc func windowDidNeedSaveState(_ notification: Notification) {

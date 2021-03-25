@@ -424,8 +424,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 } else {
                     if item.data.isSpeaking {
                         statusImage = GroupCallTheme.status_video_green
-                    } else {
+                    } else if item.data.wantsToSpeak {
                         statusImage = GroupCallTheme.status_video_accent
+                    } else {
+                        statusImage = GroupCallTheme.status_video_gray
                     }
                 }
             } else {
@@ -495,6 +497,8 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
                 statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
             }
+        } else {
+            statusView?.change(pos: statusViewPoint, animated: animated)
         }
         
         statusView?.update(item.statusLayout)
