@@ -644,15 +644,22 @@ struct LottieAnimationEntryKey : Hashable {
     let backingScale: Int
     let key:LottieAnimationKey
     let fitzModifier: EmojiFitzModifier?
-    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil) {
+    let colors: [LottieColor]
+    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil, colors: [LottieColor] = []) {
         self.key = key
         self.size = size
         self.backingScale = backingScale
         self.fitzModifier = fitzModifier
+        self.colors = colors
     }
     
+    func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimationEntryKey {
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
+    }
+
+    
     func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
-        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier)
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
     }
     
     func hash(into hasher: inout Hasher) {
@@ -717,7 +724,7 @@ final class LottieAnimation : Equatable {
     
     init(compressed: Data, key: LottieAnimationEntryKey, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue) {
         self.compressed = compressed
-        self.key = key
+        self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
         self.maximumFps = maximumFps
         self.playPolicy = playPolicy
