@@ -255,6 +255,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         artistNameView?.backgroundColor = theme.colors.background
         separator.backgroundColor = theme.colors.border
         
+        controller?.notifyGlobalStateChanged(animated: false)
+        
     }
     
     private func gotoMessage() {
