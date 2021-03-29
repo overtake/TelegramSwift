@@ -224,6 +224,17 @@ final class GroupCallContext {
     }
     
     private func readyClose(last: Bool = false) {
+        if window.isFullScreen {
+            window.toggleFullScreen(nil)
+            window._windowDidExitFullScreen = { [weak self] in
+                self?.invikeClose(last: last)
+            }
+        } else {
+            invikeClose(last: last)
+        }
+        
+    }
+    private func invikeClose(last: Bool) {
         if last {
             call.sharedContext.updateCurrentGroupCallValue(nil)
         }

@@ -877,14 +877,35 @@ open class Window: NSWindow {
         return false
     }
     
-    open override func toggleFullScreen(_ sender: Any?) {
-        self.onToggleFullScreen?(!isFullScreen)
+    public var processFullScreen:((Bool, @escaping(Bool)->Void)->Void)?
+    
+    private func invokeFullScreen(_ sender: Any?) {
         CATransaction.begin()
         super.toggleFullScreen(sender)
         CATransaction.commit()
         saver?.isFullScreen = isFullScreen
+    }
+    
+    open override func toggleFullScreen(_ sender: Any?) {
+        self.onToggleFullScreen?(!isFullScreen)
+        isFullScreenValue.set(!isFullScreen)
         
-        isFullScreenValue.set(isFullScreen)
+        if let process = processFullScreen {
+            process(!isFullScreen, { [weak self] value in
+                self?.invokeFullScreen(nil)
+            })
+        } else {
+            invokeFullScreen(nil)
+        }
+        
+       
+        
+    }
+    
+    public var _windowDidExitFullScreen:(()->Void)?
+    @objc func windowDidExitFullScreen(_ notification: Notification) {
+        _windowDidExitFullScreen?()
+        _windowDidExitFullScreen = nil
     }
     
     @objc func windowDidNeedSaveState(_ notification: Notification) {
@@ -945,6 +966,9 @@ open class Window: NSWindow {
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: self)
 
 
+        NotificationCenter.default.addObserver(self, selector: #selector(windowDidExitFullScreen(_:)), name: NSWindow.didExitFullScreenNotification, object: self)
+
+        
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidChangeOcclusionState), name: NSWindow.didChangeOcclusionStateNotification, object: self)
 
 

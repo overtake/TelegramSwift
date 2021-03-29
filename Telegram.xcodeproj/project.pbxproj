@@ -717,7 +717,6 @@
 		C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */; };
 		C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */; };
 		C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */; };
-		C2B1B1201E5F170A00895E0D /* ValidateAddressNameInteractive.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */; };
 		C2B1B1261E5F840B00895E0D /* PeerInfoUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */; };
 		C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */; };
 		C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */; };
@@ -1797,7 +1796,6 @@
 		C2B1A1261DA3D84900ACB1DD /* ChatInputAccessory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputAccessory.swift; sourceTree = "<group>"; };
 		C2B1A1351DA6587100ACB1DD /* GalleryViewer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GalleryViewer.swift; sourceTree = "<group>"; };
 		C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChannelVisibilityController.swift; sourceTree = "<group>"; };
-		C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidateAddressNameInteractive.swift; sourceTree = "<group>"; };
 		C2B1B1251E5F840B00895E0D /* PeerInfoUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerInfoUtils.swift; sourceTree = "<group>"; };
 		C2B4D0C01E34E07100CBC4E6 /* PrettyGridUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrettyGridUtils.swift; sourceTree = "<group>"; };
 		C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatActivitiesModel.swift; sourceTree = "<group>"; };
@@ -4077,7 +4075,6 @@
 				C232EABD1E1D13A800C4D38C /* TextUtils.swift */,
 				C201C2311E3B2D1C0026C21E /* FastSettings.swift */,
 				C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */,
-				C2B1B11F1E5F170A00895E0D /* ValidateAddressNameInteractive.swift */,
 				C2FD33ED1E697B31008D13D4 /* TransformOutgoingMessageMedia.swift */,
 				C2C98FEE1E818FB5009CBDB7 /* ClearUserNotifies.swift */,
 				C25C13321E8A433700AE26A1 /* TableUtils.swift */,
@@ -5355,7 +5352,6 @@
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
 				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				C2C98FEF1E818FB5009CBDB7 /* ClearUserNotifies.swift in Sources */,
-				C2B1B1201E5F170A00895E0D /* ValidateAddressNameInteractive.swift in Sources */,
 				A7831B1C2403CFDD0056AEAC /* ChannelStatsViewController.swift in Sources */,
 				A7C1377D23D1A62800803ED3 /* PeerEmptyHolderItem.swift in Sources */,
 				A778DC4223CD9F3C00DD307B /* SearchSettingsEmptyItem.swift in Sources */,

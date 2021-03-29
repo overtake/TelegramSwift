@@ -3209,8 +3209,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.openBank = { card in
-            
-            _ = showModalProgress(signal: getBankCardInfo(account: context.account, cardNumber: card), for: context.window).start(next: { info in
+            _ = showModalProgress(signal: context.engine.payments.getBankCardInfo(cardNumber: card), for: context.window).start(next: { info in
                 if let info = info {
                     
                     let values: [ValuesSelectorValue<String>] = info.urls.map {
