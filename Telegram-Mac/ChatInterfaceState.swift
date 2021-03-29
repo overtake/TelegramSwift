@@ -505,7 +505,7 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         
         let charset = CharacterSet.whitespacesAndNewlines
         
-        while let range = appliedText.rangeOfCharacter(from: charset), range.lowerBound == appliedText.startIndex {
+        while !appliedText.isEmpty, let range = appliedText.rangeOfCharacter(from: charset), range.lowerBound == appliedText.startIndex {
             
             let oldLength = appliedText.length
             appliedText.removeSubrange(range)
@@ -525,7 +525,8 @@ final class ChatTextInputState: PostboxCoding, Equatable {
         }
         
         
-        while let range = appliedText.rangeOfCharacter(from: charset, options: [], range: appliedText.index(before: appliedText.endIndex) ..< appliedText.endIndex), range.upperBound == appliedText.endIndex {
+        
+        while !appliedText.isEmpty, let range = appliedText.rangeOfCharacter(from: charset, options: [], range: appliedText.index(before: appliedText.endIndex) ..< appliedText.endIndex), range.upperBound == appliedText.endIndex {
             
             let oldLength = appliedText.length
             appliedText.removeSubrange(range)
