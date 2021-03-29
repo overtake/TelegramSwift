@@ -120,7 +120,8 @@ class UsernameSettingsViewController: TableViewController {
     
     func saveUsername() {
         if let item = genericView.item(stableId: AnyHashable(UsernameEntryId.inputEntry)) as? InputDataRowItem, let window = window {
-            updateDisposable.set(showModalProgress(signal: updateAddressName(account: context.account, domain: .account, name: item.currentText.string), for: window).start(error: { error in
+            
+            updateDisposable.set(showModalProgress(signal: context.engine.peerNames.updateAddressName(domain: .account, name: item.currentText.string), for: window).start(error: { error in
                 switch error {
                 case .generic:
                     alert(for: mainWindow, info: L10n.unknownError)
@@ -178,11 +179,10 @@ class UsernameSettingsViewController: TableViewController {
         let availabilityChecker = combineLatest(availability.get(), username.get()
             |> distinctUntilChanged)
             |> mapToSignal { (value,username) -> Signal<(AddressNameAvailabilityState,String), NoError> in
-                if let error = checkAddressNameFormat(value) {
-                    return .single((AddressNameAvailabilityState.fail(username: value, formatError: error, availability: .available), username))
-                } else {
-                    return .single((AddressNameAvailabilityState.progress(username: value), username)) |> then(addressNameAvailability(account: context.account, domain: .account, name: value)
-                        |> map { availability -> (AddressNameAvailabilityState,String) in
+                
+                return context.engine.peerNames.validateAddressNameInteractive(domain: .account, name: value) |> map { state in
+                    switch state {
+                    case let .availability(availability):
                         switch availability {
                         case .available:
                             return (AddressNameAvailabilityState.success(username: value), username)
@@ -191,7 +191,11 @@ class UsernameSettingsViewController: TableViewController {
                         case .taken:
                             return (AddressNameAvailabilityState.fail(username: value, formatError: nil, availability: availability), username)
                         }
-                    })
+                    case let .invalidFormat(error):
+                        return (AddressNameAvailabilityState.fail(username: value, formatError: error, availability: .invalid), username)
+                    case .checking:
+                        return (AddressNameAvailabilityState.progress(username: value), username)
+                    }
                 }
             }
             |> deliverOnMainQueue

@@ -364,6 +364,12 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         dismiss.set(image: theme.icons.audioplayer_dismiss, for: .Normal)
 
+        switch song.entry {
+        case let .song(message):
+            self.message = message
+        default:
+            self.message = nil
+        }
         
         next.userInteractionEnabled = controller.nextEnabled
         previous.userInteractionEnabled = controller.prevEnabled

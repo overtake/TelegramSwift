@@ -217,7 +217,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
         
         let cancelled: Atomic<Bool> = Atomic(value: false)
         
-        if Thread.isMainThread {
+        if Thread.isMainThread && left.isEmpty {
             var initialIndex:Int = 0
             var height:CGFloat = 0
             var firstInsertion:[(Int, TableRowItem)] = []
@@ -236,45 +236,40 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             initialIndex = firstInsertion.count
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchState))
             
-            queue.async {
-                if !cancelled.with({ $0 }) {
-                    
-                    var insertions:[(Int, TableRowItem)] = []
-                    let updates:[(Int, TableRowItem)] = []
-                    
-                    for i in initialIndex ..< entries.count {
-                        let item:TableRowItem
-                        item = makeItem(entries[i].entry)
-                        insertions.append((i, item))
-                        if cancelled.with({ $0 }) {
-                            break
-                        }
-                    }
-                    if !cancelled.with({ $0 }) {
-                        applyQueue.async {
-                            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchState))
-                            subscriber.putCompletion()
-                        }
+            if !cancelled.with({ $0 }) {
+                
+                var insertions:[(Int, TableRowItem)] = []
+                let updates:[(Int, TableRowItem)] = []
+                
+                for i in initialIndex ..< entries.count {
+                    let item:TableRowItem
+                    item = makeItem(entries[i].entry)
+                    insertions.append((i, item))
+                    if cancelled.with({ $0 }) {
+                        break
                     }
                 }
-            }
-        } else {
-            queue.async {
-                let (deleted,inserted,updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
-                    if !cancelled.with({ $0 }) {
-                        return makeItem(entry.entry)
-                    } else {
-                        return TableRowItem(.zero)
-                    }
-                })
                 if !cancelled.with({ $0 }) {
                     applyQueue.async {
-                        subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), searchState: searchState))
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchState))
                         subscriber.putCompletion()
                     }
                 }
             }
-            
+        } else {
+            let (deleted,inserted,updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
+                if !cancelled.with({ $0 }) {
+                    return makeItem(entry.entry)
+                } else {
+                    return TableRowItem(.zero)
+                }
+            })
+            if !cancelled.with({ $0 }) {
+                applyQueue.async {
+                    subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), searchState: searchState))
+                    subscriber.putCompletion()
+                }
+            }
         }
         
         return ActionDisposable {

@@ -485,7 +485,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 confirm(for: mainWindow, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
-                        _ = showModalProgress(signal: supportPeerId(account: arguments.context.account), for: mainWindow).start(next: {  peerId in
+                        
+                        _ = showModalProgress(signal: arguments.context.engine.peerNames.supportPeerId(), for: mainWindow).start(next: {  peerId in
                             if let peerId = peerId {
                                 arguments.presentController(ChatController(context: arguments.context, chatLocation: .peer(peerId)), true)
                             }

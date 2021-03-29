@@ -33,7 +33,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return findChannelById(postbox: context.account.postbox, network: context.account.network, channelId: peerId.id)
+                        return context.engine.peerNames.findChannelById(channelId: peerId.id)
                     }
             }
             
@@ -335,7 +335,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return findChannelById(postbox: context.account.postbox, network: context.account.network, channelId: peerId.id)
+                        return context.engine.peerNames.findChannelById(channelId: peerId.id)
                             |> mapToSignalPromotingError { value in
                                 if let value = value {
                                     return .single(value)
@@ -423,7 +423,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let peer = peer {
                             return .single(peer)
                         } else {
-                            return findChannelById(postbox: context.account.postbox, network: context.account.network, channelId: peerId.id)
+                            return context.engine.peerNames.findChannelById(channelId: peerId.id)
                         }
                 }
                 

@@ -180,13 +180,15 @@ final class AccountContext {
     public var closeFolderFirst: Bool = false
     
     private let preloadGifsDisposable = MetaDisposable()
-    
+    let engine: TelegramEngine
+
     
     //, tonContext: StoredTonContext?
     init(sharedContext: SharedAccountContext, window: Window, account: Account) {
         self.sharedContext = sharedContext
         self.account = account
         self.window = window
+        self.engine = TelegramEngine(account: account)
        // self.tonContext = tonContext
         #if !SHARE
         self.diceCache = DiceCache(postbox: account.postbox, network: account.network)

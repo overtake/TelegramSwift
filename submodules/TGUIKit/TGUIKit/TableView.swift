@@ -1779,6 +1779,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 view.change(size: NSMakeSize(width, height), animated: animated)
                 view.set(item: item, animated: animated)
             } else {
+                NSAnimationContext.current.duration = animated ? 0.2 : 0.0
+                NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
                 self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  options)
             }

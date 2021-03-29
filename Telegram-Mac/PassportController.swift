@@ -2594,7 +2594,6 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         
         let passwordVerificationData: Promise<TwoStepVerificationConfiguration?> = Promise()
         
-        let engine = TelegramEngine(account: context.account).secureId
         
         
         let emailActivation = MetaDisposable()
@@ -2656,7 +2655,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                             switch config {
                                             case .set:
                                                 if let encryptedForm = encryptedForm {
-                                                    return engine.accessSecureId(password: password) |> map { values in
+                                                    return context.engine.secureId.accessSecureId(password: password) |> map { values in
                                                         return (decryptedSecureIdForm(context: values.context, form: encryptedForm), values.context, values.settings)
                                                         } |> deliverOnMainQueue |> map { form, ctx, settings in
                                                             
@@ -2675,7 +2674,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                                             return Optional(config)
                                                         } |> `catch` { _ in return .single(nil) }
                                                 } else {
-                                                    let signal = engine.accessSecureId(password: password) |> mapToSignal { values in
+                                                    let signal = context.engine.secureId.accessSecureId(password: password) |> mapToSignal { values in
                                                         return getAllSecureIdValues(network: context.account.network)
                                                             |> map { encryptedValues in
                                                                 return decryptedAllSecureIdValues(context: values.context, encryptedValues: encryptedValues)
@@ -2742,7 +2741,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 return
             }
             if let encryptedForm = encryptedForm {
-                checkPassword.set((engine.accessSecureId(password: value) |> map { data in
+                checkPassword.set((context.engine.secureId.accessSecureId(password: value) |> map { data in
                     return (decryptedSecureIdForm(context: data.context, form: encryptedForm), data.context, data.settings)
                     } |> deliverOnMainQueue).start(next: { form, ctx, settings in
                         
@@ -2843,7 +2842,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         
                     }))
             } else {
-                let signal = engine.accessSecureId(password: value) |> mapToSignal { data in
+                let signal = context.engine.secureId.accessSecureId(password: value) |> mapToSignal { data in
                     return getAllSecureIdValues(network: context.account.network)
                         |> map { encryptedValues in
                             return decryptedAllSecureIdValues(context: data.context, encryptedValues: encryptedValues)

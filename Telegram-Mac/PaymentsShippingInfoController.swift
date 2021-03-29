@@ -96,7 +96,7 @@ private struct State : Equatable {
         if let address = self.address {
             shippingAddress = BotPaymentShippingAddress(streetLine1: address.address1, streetLine2: address.address2, city: address.city, state: address.state, countryIso2: address.country, postCode: address.postcode)
         }
-        return BotPaymentRequestedInfo(name: self.name, phone: self.phone, email: self.email, shippingAddress: shippingAddress)
+        return BotPaymentRequestedInfo(name: self.name, phone: self.phone, email: self.email, shippingAddress: shippingAddress, tipAmount: nil)
     }
 
 }
@@ -267,7 +267,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
         let formInfo = state.formInfo
         
         return .fail(.doSomething(next: { f in
-            _ = showModalProgress(signal: validateBotPaymentForm(network: context.account.network, saveInfo: state.saveInfo, messageId: messageId, formInfo: formInfo), for: context.window).start(next: { result in
+            _ = showModalProgress(signal: validateBotPaymentForm(account: context.account, saveInfo: state.saveInfo, messageId: messageId, formInfo: formInfo), for: context.window).start(next: { result in
                 
                 formInfoUpdated(formInfo, result)
                 close?()
