@@ -25,6 +25,7 @@
 		27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */; };
 		27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */; };
 		27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */; };
+		27D1D62C2611FAFF00684DEA /* rnnoise.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D1D62B2611FAFF00684DEA /* rnnoise.framework */; };
 		27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */; };
 		27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D7ABA725EFD113008DB916 /* StreamingPart.h */; };
 		27D7ABAA25EFD113008DB916 /* StreamingPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D7ABA825EFD113008DB916 /* StreamingPart.cpp */; };
@@ -86,6 +87,7 @@
 		27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupNetworkManager.cpp; sourceTree = "<group>"; };
 		27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupNetworkManager.h; sourceTree = "<group>"; };
 		27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StaticThreads.cpp; path = ../../submodules/tgcalls/tgcalls/StaticThreads.cpp; sourceTree = "<group>"; };
+		27D1D62B2611FAFF00684DEA /* rnnoise.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = rnnoise.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D7ABA725EFD113008DB916 /* StreamingPart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamingPart.h; sourceTree = "<group>"; };
 		27D7ABA825EFD113008DB916 /* StreamingPart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StreamingPart.cpp; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27D1D62C2611FAFF00684DEA /* rnnoise.framework in Frameworks */,
 				27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */,
 				27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */,
 				2702A835259BD7F6007F1DDD /* SSignalKit.framework in Frameworks */,
@@ -244,6 +247,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27D1D62B2611FAFF00684DEA /* rnnoise.framework */,
 				27A0A4DF25F764FA00B789AF /* ffmpeg.framework */,
 				27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */,
 				2702A834259BD7F6007F1DDD /* SSignalKit.framework */,

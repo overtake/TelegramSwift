@@ -2384,7 +2384,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if peer.addressName == nil {
                         let state = strongSelf.chatInteraction.presentation.effectiveInput
                         var attributes = state.attributes
-                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id))
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt32Value()))
                         let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
                         strongSelf.chatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
                     }

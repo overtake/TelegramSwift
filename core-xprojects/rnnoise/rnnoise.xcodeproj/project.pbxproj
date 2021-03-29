@@ -1,0 +1,915 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		27D1D5FA2611F6EF00684DEA /* _rnnoise.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D5F82611F6EF00684DEA /* _rnnoise.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27D1D6162611F78F00684DEA /* rnnoise.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D6022611F78F00684DEA /* rnnoise.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27D1D6172611F78F00684DEA /* celt_lpc.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D6042611F78F00684DEA /* celt_lpc.h */; };
+		27D1D6182611F78F00684DEA /* kiss_fft.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6052611F78F00684DEA /* kiss_fft.c */; };
+		27D1D6192611F78F00684DEA /* rnn.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D6062611F78F00684DEA /* rnn.h */; };
+		27D1D61A2611F78F00684DEA /* denoise.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6072611F78F00684DEA /* denoise.c */; };
+		27D1D61B2611F78F00684DEA /* compile.sh in Resources */ = {isa = PBXBuildFile; fileRef = 27D1D6082611F78F00684DEA /* compile.sh */; };
+		27D1D61C2611F78F00684DEA /* pitch.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D6092611F78F00684DEA /* pitch.h */; };
+		27D1D61D2611F78F00684DEA /* tansig_table.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D60A2611F78F00684DEA /* tansig_table.h */; };
+		27D1D61E2611F78F00684DEA /* _kiss_fft_guts.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D60B2611F78F00684DEA /* _kiss_fft_guts.h */; };
+		27D1D61F2611F78F00684DEA /* rnn_data.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D60C2611F78F00684DEA /* rnn_data.h */; };
+		27D1D6202611F78F00684DEA /* kiss_fft.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D60D2611F78F00684DEA /* kiss_fft.h */; };
+		27D1D6212611F78F00684DEA /* common.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D60E2611F78F00684DEA /* common.h */; };
+		27D1D6222611F78F00684DEA /* celt_lpc.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D60F2611F78F00684DEA /* celt_lpc.c */; };
+		27D1D6232611F78F00684DEA /* pitch.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6102611F78F00684DEA /* pitch.c */; };
+		27D1D6242611F78F00684DEA /* rnn.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6112611F78F00684DEA /* rnn.c */; };
+		27D1D6252611F78F00684DEA /* rnn_reader.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6122611F78F00684DEA /* rnn_reader.c */; };
+		27D1D6262611F78F00684DEA /* opus_types.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D6132611F78F00684DEA /* opus_types.h */; };
+		27D1D6272611F78F00684DEA /* rnn_data.c in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6142611F78F00684DEA /* rnn_data.c */; };
+		27D1D6282611F78F00684DEA /* arch.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D1D6152611F78F00684DEA /* arch.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		27D1D5F52611F6EF00684DEA /* rnnoise.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = rnnoise.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		27D1D5F82611F6EF00684DEA /* _rnnoise.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = _rnnoise.h; sourceTree = "<group>"; };
+		27D1D5F92611F6EF00684DEA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		27D1D6022611F78F00684DEA /* rnnoise.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rnnoise.h; sourceTree = "<group>"; };
+		27D1D6042611F78F00684DEA /* celt_lpc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = celt_lpc.h; sourceTree = "<group>"; };
+		27D1D6052611F78F00684DEA /* kiss_fft.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = kiss_fft.c; sourceTree = "<group>"; };
+		27D1D6062611F78F00684DEA /* rnn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rnn.h; sourceTree = "<group>"; };
+		27D1D6072611F78F00684DEA /* denoise.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = denoise.c; sourceTree = "<group>"; };
+		27D1D6082611F78F00684DEA /* compile.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = compile.sh; sourceTree = "<group>"; };
+		27D1D6092611F78F00684DEA /* pitch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pitch.h; sourceTree = "<group>"; };
+		27D1D60A2611F78F00684DEA /* tansig_table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tansig_table.h; sourceTree = "<group>"; };
+		27D1D60B2611F78F00684DEA /* _kiss_fft_guts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _kiss_fft_guts.h; sourceTree = "<group>"; };
+		27D1D60C2611F78F00684DEA /* rnn_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rnn_data.h; sourceTree = "<group>"; };
+		27D1D60D2611F78F00684DEA /* kiss_fft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kiss_fft.h; sourceTree = "<group>"; };
+		27D1D60E2611F78F00684DEA /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		27D1D60F2611F78F00684DEA /* celt_lpc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = celt_lpc.c; sourceTree = "<group>"; };
+		27D1D6102611F78F00684DEA /* pitch.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pitch.c; sourceTree = "<group>"; };
+		27D1D6112611F78F00684DEA /* rnn.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rnn.c; sourceTree = "<group>"; };
+		27D1D6122611F78F00684DEA /* rnn_reader.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rnn_reader.c; sourceTree = "<group>"; };
+		27D1D6132611F78F00684DEA /* opus_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
+		27D1D6142611F78F00684DEA /* rnn_data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rnn_data.c; sourceTree = "<group>"; };
+		27D1D6152611F78F00684DEA /* arch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arch.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		27D1D5F22611F6EF00684DEA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		27D1D5EB2611F6EF00684DEA = {
+			isa = PBXGroup;
+			children = (
+				27D1D6012611F78F00684DEA /* PublicHeaders */,
+				27D1D6032611F78F00684DEA /* Sources */,
+				27D1D5F72611F6EF00684DEA /* rnnoise */,
+				27D1D5F62611F6EF00684DEA /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		27D1D5F62611F6EF00684DEA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				27D1D5F52611F6EF00684DEA /* rnnoise.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		27D1D5F72611F6EF00684DEA /* rnnoise */ = {
+			isa = PBXGroup;
+			children = (
+				27D1D5F82611F6EF00684DEA /* _rnnoise.h */,
+				27D1D5F92611F6EF00684DEA /* Info.plist */,
+			);
+			path = rnnoise;
+			sourceTree = "<group>";
+		};
+		27D1D6012611F78F00684DEA /* PublicHeaders */ = {
+			isa = PBXGroup;
+			children = (
+				27D1D6022611F78F00684DEA /* rnnoise.h */,
+			);
+			name = PublicHeaders;
+			path = "../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders";
+			sourceTree = "<group>";
+		};
+		27D1D6032611F78F00684DEA /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				27D1D6042611F78F00684DEA /* celt_lpc.h */,
+				27D1D6052611F78F00684DEA /* kiss_fft.c */,
+				27D1D6062611F78F00684DEA /* rnn.h */,
+				27D1D6072611F78F00684DEA /* denoise.c */,
+				27D1D6082611F78F00684DEA /* compile.sh */,
+				27D1D6092611F78F00684DEA /* pitch.h */,
+				27D1D60A2611F78F00684DEA /* tansig_table.h */,
+				27D1D60B2611F78F00684DEA /* _kiss_fft_guts.h */,
+				27D1D60C2611F78F00684DEA /* rnn_data.h */,
+				27D1D60D2611F78F00684DEA /* kiss_fft.h */,
+				27D1D60E2611F78F00684DEA /* common.h */,
+				27D1D60F2611F78F00684DEA /* celt_lpc.c */,
+				27D1D6102611F78F00684DEA /* pitch.c */,
+				27D1D6112611F78F00684DEA /* rnn.c */,
+				27D1D6122611F78F00684DEA /* rnn_reader.c */,
+				27D1D6132611F78F00684DEA /* opus_types.h */,
+				27D1D6142611F78F00684DEA /* rnn_data.c */,
+				27D1D6152611F78F00684DEA /* arch.h */,
+			);
+			name = Sources;
+			path = "../../submodules/telegram-ios/third-party/rnnoise/Sources";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		27D1D5F02611F6EF00684DEA /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D1D6172611F78F00684DEA /* celt_lpc.h in Headers */,
+				27D1D6162611F78F00684DEA /* rnnoise.h in Headers */,
+				27D1D6212611F78F00684DEA /* common.h in Headers */,
+				27D1D6192611F78F00684DEA /* rnn.h in Headers */,
+				27D1D61C2611F78F00684DEA /* pitch.h in Headers */,
+				27D1D6202611F78F00684DEA /* kiss_fft.h in Headers */,
+				27D1D5FA2611F6EF00684DEA /* _rnnoise.h in Headers */,
+				27D1D61D2611F78F00684DEA /* tansig_table.h in Headers */,
+				27D1D61E2611F78F00684DEA /* _kiss_fft_guts.h in Headers */,
+				27D1D6262611F78F00684DEA /* opus_types.h in Headers */,
+				27D1D6282611F78F00684DEA /* arch.h in Headers */,
+				27D1D61F2611F78F00684DEA /* rnn_data.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		27D1D5F42611F6EF00684DEA /* rnnoise */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 27D1D5FD2611F6EF00684DEA /* Build configuration list for PBXNativeTarget "rnnoise" */;
+			buildPhases = (
+				27D1D5F02611F6EF00684DEA /* Headers */,
+				27D1D5F12611F6EF00684DEA /* Sources */,
+				27D1D5F22611F6EF00684DEA /* Frameworks */,
+				27D1D5F32611F6EF00684DEA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = rnnoise;
+			productName = rnnoise;
+			productReference = 27D1D5F52611F6EF00684DEA /* rnnoise.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		27D1D5EC2611F6EF00684DEA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1220;
+				TargetAttributes = {
+					27D1D5F42611F6EF00684DEA = {
+						CreatedOnToolsVersion = 12.2;
+					};
+				};
+			};
+			buildConfigurationList = 27D1D5EF2611F6EF00684DEA /* Build configuration list for PBXProject "rnnoise" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 27D1D5EB2611F6EF00684DEA;
+			productRefGroup = 27D1D5F62611F6EF00684DEA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				27D1D5F42611F6EF00684DEA /* rnnoise */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		27D1D5F32611F6EF00684DEA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D1D61B2611F78F00684DEA /* compile.sh in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		27D1D5F12611F6EF00684DEA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				27D1D6242611F78F00684DEA /* rnn.c in Sources */,
+				27D1D6232611F78F00684DEA /* pitch.c in Sources */,
+				27D1D6182611F78F00684DEA /* kiss_fft.c in Sources */,
+				27D1D61A2611F78F00684DEA /* denoise.c in Sources */,
+				27D1D6222611F78F00684DEA /* celt_lpc.c in Sources */,
+				27D1D6272611F78F00684DEA /* rnn_data.c in Sources */,
+				27D1D6252611F78F00684DEA /* rnn_reader.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		27D1D5FB2611F6EF00684DEA /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		27D1D5FC2611F6EF00684DEA /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		27D1D5FE2611F6EF00684DEA /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = rnnoise/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CFLAGS = (
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-D_celt_autocorr=rnnoise__celt_autocorr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_pitch_xcorr=rnnoise_celt_pitch_xcorr",
+					"-Dremove_doubling=rnnoise_remove_doubling",
+					"-Dpitch_search=rnnoise_pitch_search",
+					"-Dpitch_filter=rnnoise_pitch_filter",
+					"-Dpitch_downsample=rnnoise_pitch_downsample",
+					"-Dopus_ifft_c=rnnoise_opus_ifft_c",
+					"-Dopus_fft_impl=rnnoise_opus_fft_impl",
+					"-Dopus_fft_free_arch_c=rnnoise_opus_fft_free_arch_c",
+					"-Dopus_fft_free=rnnoise_opus_fft_free",
+					"-Dopus_fft_c=rnnoise_opus_fft_c",
+					"-Dopus_fft_alloc_twiddles=rnnoise_opus_fft_alloc_twiddles",
+					"-Dopus_fft_alloc_arch_c=rnnoise_opus_fft_alloc_arch_c",
+					"-Dopus_fft_alloc=rnnoise_opus_fft_alloc",
+					"-Dinterp_band_gain=rnnoise_interp_band_gain",
+					"-Dcompute_rnn=rnnoise_compute_rnn",
+					"-Dcompute_gru=rnnoise_compute_gru",
+					"-Dcompute_dense=rnnoise_compute_dense",
+					"-Dcompute_band_energy=rnnoise_compute_band_energy",
+					"-Dcompute_band_corr=rnnoise_compute_band_corr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-Dcelt_fir=rnnoise_celt_fir",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.rnnoise;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = DebugAppStore;
+		};
+		27D1D5FF2611F6EF00684DEA /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = rnnoise/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CFLAGS = (
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-D_celt_autocorr=rnnoise__celt_autocorr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_pitch_xcorr=rnnoise_celt_pitch_xcorr",
+					"-Dremove_doubling=rnnoise_remove_doubling",
+					"-Dpitch_search=rnnoise_pitch_search",
+					"-Dpitch_filter=rnnoise_pitch_filter",
+					"-Dpitch_downsample=rnnoise_pitch_downsample",
+					"-Dopus_ifft_c=rnnoise_opus_ifft_c",
+					"-Dopus_fft_impl=rnnoise_opus_fft_impl",
+					"-Dopus_fft_free_arch_c=rnnoise_opus_fft_free_arch_c",
+					"-Dopus_fft_free=rnnoise_opus_fft_free",
+					"-Dopus_fft_c=rnnoise_opus_fft_c",
+					"-Dopus_fft_alloc_twiddles=rnnoise_opus_fft_alloc_twiddles",
+					"-Dopus_fft_alloc_arch_c=rnnoise_opus_fft_alloc_arch_c",
+					"-Dopus_fft_alloc=rnnoise_opus_fft_alloc",
+					"-Dinterp_band_gain=rnnoise_interp_band_gain",
+					"-Dcompute_rnn=rnnoise_compute_rnn",
+					"-Dcompute_gru=rnnoise_compute_gru",
+					"-Dcompute_dense=rnnoise_compute_dense",
+					"-Dcompute_band_energy=rnnoise_compute_band_energy",
+					"-Dcompute_band_corr=rnnoise_compute_band_corr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-Dcelt_fir=rnnoise_celt_fir",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.rnnoise;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = ReleaseAppStore;
+		};
+		27D1D6322611FB2500684DEA /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Github;
+		};
+		27D1D6332611FB2500684DEA /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = rnnoise/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CFLAGS = (
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-D_celt_autocorr=rnnoise__celt_autocorr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_pitch_xcorr=rnnoise_celt_pitch_xcorr",
+					"-Dremove_doubling=rnnoise_remove_doubling",
+					"-Dpitch_search=rnnoise_pitch_search",
+					"-Dpitch_filter=rnnoise_pitch_filter",
+					"-Dpitch_downsample=rnnoise_pitch_downsample",
+					"-Dopus_ifft_c=rnnoise_opus_ifft_c",
+					"-Dopus_fft_impl=rnnoise_opus_fft_impl",
+					"-Dopus_fft_free_arch_c=rnnoise_opus_fft_free_arch_c",
+					"-Dopus_fft_free=rnnoise_opus_fft_free",
+					"-Dopus_fft_c=rnnoise_opus_fft_c",
+					"-Dopus_fft_alloc_twiddles=rnnoise_opus_fft_alloc_twiddles",
+					"-Dopus_fft_alloc_arch_c=rnnoise_opus_fft_alloc_arch_c",
+					"-Dopus_fft_alloc=rnnoise_opus_fft_alloc",
+					"-Dinterp_band_gain=rnnoise_interp_band_gain",
+					"-Dcompute_rnn=rnnoise_compute_rnn",
+					"-Dcompute_gru=rnnoise_compute_gru",
+					"-Dcompute_dense=rnnoise_compute_dense",
+					"-Dcompute_band_energy=rnnoise_compute_band_energy",
+					"-Dcompute_band_corr=rnnoise_compute_band_corr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-Dcelt_fir=rnnoise_celt_fir",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.rnnoise;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = Github;
+		};
+		27D1D6342611FB3300684DEA /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		27D1D6352611FB3300684DEA /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = rnnoise/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CFLAGS = (
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-D_celt_autocorr=rnnoise__celt_autocorr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_pitch_xcorr=rnnoise_celt_pitch_xcorr",
+					"-Dremove_doubling=rnnoise_remove_doubling",
+					"-Dpitch_search=rnnoise_pitch_search",
+					"-Dpitch_filter=rnnoise_pitch_filter",
+					"-Dpitch_downsample=rnnoise_pitch_downsample",
+					"-Dopus_ifft_c=rnnoise_opus_ifft_c",
+					"-Dopus_fft_impl=rnnoise_opus_fft_impl",
+					"-Dopus_fft_free_arch_c=rnnoise_opus_fft_free_arch_c",
+					"-Dopus_fft_free=rnnoise_opus_fft_free",
+					"-Dopus_fft_c=rnnoise_opus_fft_c",
+					"-Dopus_fft_alloc_twiddles=rnnoise_opus_fft_alloc_twiddles",
+					"-Dopus_fft_alloc_arch_c=rnnoise_opus_fft_alloc_arch_c",
+					"-Dopus_fft_alloc=rnnoise_opus_fft_alloc",
+					"-Dinterp_band_gain=rnnoise_interp_band_gain",
+					"-Dcompute_rnn=rnnoise_compute_rnn",
+					"-Dcompute_gru=rnnoise_compute_gru",
+					"-Dcompute_dense=rnnoise_compute_dense",
+					"-Dcompute_band_energy=rnnoise_compute_band_energy",
+					"-Dcompute_band_corr=rnnoise_compute_band_corr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-Dcelt_fir=rnnoise_celt_fir",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.rnnoise;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = ReleaseHockeyapp;
+		};
+		27D1D6362611FB3A00684DEA /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		27D1D6372611FB3A00684DEA /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = rnnoise/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CFLAGS = (
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-D_celt_autocorr=rnnoise__celt_autocorr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_pitch_xcorr=rnnoise_celt_pitch_xcorr",
+					"-Dremove_doubling=rnnoise_remove_doubling",
+					"-Dpitch_search=rnnoise_pitch_search",
+					"-Dpitch_filter=rnnoise_pitch_filter",
+					"-Dpitch_downsample=rnnoise_pitch_downsample",
+					"-Dopus_ifft_c=rnnoise_opus_ifft_c",
+					"-Dopus_fft_impl=rnnoise_opus_fft_impl",
+					"-Dopus_fft_free_arch_c=rnnoise_opus_fft_free_arch_c",
+					"-Dopus_fft_free=rnnoise_opus_fft_free",
+					"-Dopus_fft_c=rnnoise_opus_fft_c",
+					"-Dopus_fft_alloc_twiddles=rnnoise_opus_fft_alloc_twiddles",
+					"-Dopus_fft_alloc_arch_c=rnnoise_opus_fft_alloc_arch_c",
+					"-Dopus_fft_alloc=rnnoise_opus_fft_alloc",
+					"-Dinterp_band_gain=rnnoise_interp_band_gain",
+					"-Dcompute_rnn=rnnoise_compute_rnn",
+					"-Dcompute_gru=rnnoise_compute_gru",
+					"-Dcompute_dense=rnnoise_compute_dense",
+					"-Dcompute_band_energy=rnnoise_compute_band_energy",
+					"-Dcompute_band_corr=rnnoise_compute_band_corr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-Dcelt_fir=rnnoise_celt_fir",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.rnnoise;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = DebugHockeyapp;
+		};
+		27D1D6382611FB4000684DEA /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		27D1D6392611FB4000684DEA /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = rnnoise/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CFLAGS = (
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-D_celt_autocorr=rnnoise__celt_autocorr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_pitch_xcorr=rnnoise_celt_pitch_xcorr",
+					"-Dremove_doubling=rnnoise_remove_doubling",
+					"-Dpitch_search=rnnoise_pitch_search",
+					"-Dpitch_filter=rnnoise_pitch_filter",
+					"-Dpitch_downsample=rnnoise_pitch_downsample",
+					"-Dopus_ifft_c=rnnoise_opus_ifft_c",
+					"-Dopus_fft_impl=rnnoise_opus_fft_impl",
+					"-Dopus_fft_free_arch_c=rnnoise_opus_fft_free_arch_c",
+					"-Dopus_fft_free=rnnoise_opus_fft_free",
+					"-Dopus_fft_c=rnnoise_opus_fft_c",
+					"-Dopus_fft_alloc_twiddles=rnnoise_opus_fft_alloc_twiddles",
+					"-Dopus_fft_alloc_arch_c=rnnoise_opus_fft_alloc_arch_c",
+					"-Dopus_fft_alloc=rnnoise_opus_fft_alloc",
+					"-Dinterp_band_gain=rnnoise_interp_band_gain",
+					"-Dcompute_rnn=rnnoise_compute_rnn",
+					"-Dcompute_gru=rnnoise_compute_gru",
+					"-Dcompute_dense=rnnoise_compute_dense",
+					"-Dcompute_band_energy=rnnoise_compute_band_energy",
+					"-Dcompute_band_corr=rnnoise_compute_band_corr",
+					"-D_celt_lpc=rnnoise__celt_lpc",
+					"-Dcelt_iir=rnnoise_celt_iir",
+					"-Dcelt_fir=rnnoise_celt_fir",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.rnnoise;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = HockeyappMacAlpha;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		27D1D5EF2611F6EF00684DEA /* Build configuration list for PBXProject "rnnoise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27D1D5FB2611F6EF00684DEA /* DebugAppStore */,
+				27D1D6322611FB2500684DEA /* Github */,
+				27D1D5FC2611F6EF00684DEA /* ReleaseAppStore */,
+				27D1D6342611FB3300684DEA /* ReleaseHockeyapp */,
+				27D1D6362611FB3A00684DEA /* DebugHockeyapp */,
+				27D1D6382611FB4000684DEA /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+		27D1D5FD2611F6EF00684DEA /* Build configuration list for PBXNativeTarget "rnnoise" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				27D1D5FE2611F6EF00684DEA /* DebugAppStore */,
+				27D1D6332611FB2500684DEA /* Github */,
+				27D1D5FF2611F6EF00684DEA /* ReleaseAppStore */,
+				27D1D6352611FB3300684DEA /* ReleaseHockeyapp */,
+				27D1D6372611FB3A00684DEA /* DebugHockeyapp */,
+				27D1D6392611FB4000684DEA /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 27D1D5EC2611F6EF00684DEA /* Project object */;
+}

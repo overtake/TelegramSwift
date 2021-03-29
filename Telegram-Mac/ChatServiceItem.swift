@@ -47,7 +47,7 @@ class ChatServiceItem: ChatRowItem {
                 if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                     return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
                 } else if context.peerId != peerId {
-                    let value = abs(Int(peerId.id) % 7)
+                    let value = abs(Int(peerId.id._internalGetInt32Value()) % 7)
                     return theme.chat.peerName(value)
                 }
             }

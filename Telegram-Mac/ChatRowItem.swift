@@ -1409,13 +1409,14 @@ class ChatRowItem: TableRowItem {
                 if let author = info.author {
                     self.peer = author
                 } else if let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -1640,7 +1641,7 @@ class ChatRowItem: TableRowItem {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
                                 nameColor = presentation.colors.accentIconBubble_outgoing
                             } else {
-                                let value = abs(Int(peer.id.id) % 7)
+                                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                                 nameColor = presentation.chat.peerName(value)
                             }
                         }
@@ -1652,7 +1653,7 @@ class ChatRowItem: TableRowItem {
                     
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
-                        if peer.id.id != 0 {
+                        if peer.id.id._internalGetInt32Value() != 0 {
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId:peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo), range: range)
                         } else {
                             nameHide = L10n.chatTooltipHiddenForwardName

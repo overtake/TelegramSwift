@@ -521,7 +521,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 var state = state
                 
                 let categories = peerIds.filter {
-                    $0.namespace == ChatListFilterPeerCategories.Namespace
+                    $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
                 }
                 let peerIds = Set(peerIds).subtracting(categories)
                 
@@ -529,7 +529,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                     var filter = filter
                     filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(maximumPeers)))
                     var updatedCats: ChatListFilterPeerCategories = []
-                    let cats = categories.map { ChatListFilterPeerCategories(rawValue: $0.id) }
+                    let cats = categories.map { ChatListFilterPeerCategories(rawValue: $0.id._internalGetInt32Value()) }
                     for cat in cats {
                         updatedCats.insert(cat)
                     }
@@ -553,18 +553,18 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                     var filter = filter
                     
                     let categories = peerIds.filter {
-                        $0.namespace == ChatListFilterPeerCategories.Namespace
+                        $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
                     }
                     let peerIds = Set(peerIds).subtracting(categories)
                     filter.data.excludePeers = Array(peerIds.uniqueElements.prefix(maximumPeers))
                     for cat in categories {
-                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeMuted {
+                        if ChatListFilterPeerCategories(rawValue: cat.id._internalGetInt32Value()) == .excludeMuted {
                             filter.data.excludeMuted = true
                         }
-                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeRead {
+                        if ChatListFilterPeerCategories(rawValue: cat.id._internalGetInt32Value()) == .excludeRead {
                             filter.data.excludeRead = true
                         }
-                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeArchived {
+                        if ChatListFilterPeerCategories(rawValue: cat.id._internalGetInt32Value()) == .excludeArchived {
                             filter.data.excludeArchived = true
                         }
                     }
@@ -584,8 +584,8 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 var peers = filter.data.includePeers.peers
                 peers.removeAll(where: { $0 == peerId })
                 filter.data.includePeers.setPeers(peers)
-                if peerId.namespace == ChatListFilterPeerCategories.Namespace  {
-                    filter.data.categories.remove(ChatListFilterPeerCategories(rawValue: peerId.id))
+                if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace  {
+                    filter.data.categories.remove(ChatListFilterPeerCategories(rawValue: peerId.id._internalGetInt32Value()))
                 }
                 return filter
             }
@@ -600,14 +600,14 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 var peers = filter.data.excludePeers
                 peers.removeAll(where: { $0 == peerId })
                 filter.data.excludePeers = peers
-                if peerId.namespace == ChatListFilterPeerCategories.Namespace  {
-                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeMuted {
+                if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace  {
+                    if ChatListFilterPeerCategories(rawValue: peerId.id._internalGetInt32Value()) == .excludeMuted {
                         filter.data.excludeMuted = false
                     }
-                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeRead {
+                    if ChatListFilterPeerCategories(rawValue: peerId.id._internalGetInt32Value()) == .excludeRead {
                         filter.data.excludeRead = false
                     }
-                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeArchived {
+                    if ChatListFilterPeerCategories(rawValue: peerId.id._internalGetInt32Value()) == .excludeArchived {
                         filter.data.excludeArchived = false
                     }
                 }

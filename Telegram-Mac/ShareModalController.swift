@@ -751,7 +751,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
 
             
             let selected = value.selected.filter {
-                $0.namespace != ChatListFilterPeerCategories.Namespace
+                $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace
             }
             
             if let limit = self.share.limit, selected.count > limit {
@@ -1622,7 +1622,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     if peer.addressName == nil {
                         let state = strongSelf.contextChatInteraction.presentation.effectiveInput
                         var attributes = state.attributes
-                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id))
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt32Value()))
                         let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
                         strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
                     }
