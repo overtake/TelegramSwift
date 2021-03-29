@@ -791,7 +791,7 @@ extension SuggestedLocalizationInfo {
 
 public extension MessageId {
     func toInt64() -> Int64 {
-        return (Int64(id) << 32) | Int64(peerId.id)
+        return (Int64(id) << 32) | Int64(peerId.id._internalGetInt32Value())
     }
 }
 

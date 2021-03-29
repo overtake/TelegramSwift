@@ -96,7 +96,7 @@ private struct State : Equatable {
         if let address = self.address {
             shippingAddress = BotPaymentShippingAddress(streetLine1: address.address1, streetLine2: address.address2, city: address.city, state: address.state, countryIso2: address.country, postCode: address.postcode)
         }
-        return BotPaymentRequestedInfo(name: self.name, phone: self.phone, email: self.email, shippingAddress: shippingAddress, tipAmount: nil)
+        return BotPaymentRequestedInfo(name: self.name, phone: self.phone, email: self.email, shippingAddress: shippingAddress)
     }
 
 }

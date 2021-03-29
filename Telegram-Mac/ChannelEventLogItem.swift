@@ -241,7 +241,7 @@ class ServiceEventLogItem: TableRowItem {
             if chatInteraction.context.peerId == peer.id {
                 nameColor = theme.colors.link
             } else {
-                let value = abs(Int(peer.id.id) % 7)
+                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                 nameColor = theme.chat.peerName(value)
             }
             

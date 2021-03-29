@@ -25,7 +25,7 @@ private let tgme:String = "tg://"
 func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?, NoError> {
     if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
         if let channelId = Int32(username[range.upperBound...]) {
-            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: channelId)
+            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt32Value(channelId))
             
             let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(peerId)
@@ -33,7 +33,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return context.engine.peerNames.findChannelById(channelId: peerId.id)
+                        return context.engine.peerNames.findChannelById(channelId: peerId.id._internalGetInt32Value())
                     }
             }
             
@@ -328,14 +328,14 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         var peerSignal: Signal<Peer, Error> = .fail(.doesntExists)
         if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
             if let channelId = Int32(username[range.upperBound...]) {
-                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: channelId)
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt32Value(channelId))
                 peerSignal = context.account.postbox.transaction { transaction -> Peer? in
                     return transaction.getPeer(peerId)
                 } |> mapToSignalPromotingError { peer in
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return context.engine.peerNames.findChannelById(channelId: peerId.id)
+                        return context.engine.peerNames.findChannelById(channelId: peerId.id._internalGetInt32Value())
                             |> mapToSignalPromotingError { value in
                                 if let value = value {
                                     return .single(value)
@@ -415,7 +415,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         
         if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
             if let channelId = Int32(username[range.upperBound...]) {
-                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: channelId)
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt32Value(channelId))
                 
                 let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                     return transaction.getPeer(peerId)
@@ -423,7 +423,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let peer = peer {
                             return .single(peer)
                         } else {
-                            return context.engine.peerNames.findChannelById(channelId: peerId.id)
+                            return context.engine.peerNames.findChannelById(channelId: peerId.id._internalGetInt32Value())
                         }
                 }
                 
@@ -1256,7 +1256,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let nonce = escape(with: nonceString, addPercent: false).data(using: .utf8) ?? Data()
                         
                         let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
-                        return .requestSecureId(link: urlString, context: context, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: botId), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
+                        return .requestSecureId(link: urlString, context: context, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(botId)), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
                     }
                 case known_scheme[8]:
                     if let context = context, let value = vars["lang"] {
