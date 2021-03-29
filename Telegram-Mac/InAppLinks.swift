@@ -248,7 +248,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         }
         url = String(reversedUrl.reversed())
-        
         if !url.hasPrefix("http") && !url.hasPrefix("ftp"), url.range(of: "://") == nil {
             if isValidEmail(link) {
               //  url = "mailto:" + url
@@ -256,57 +255,59 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 url = "http://" + url
             }
         }
-        var urlValue = url
+        let urlValue = url
         let escaped = escape(with:url)
-        if let urlQueryAllowed = Optional(escaped), let url = URL(string: urlQueryAllowed) {
-            var url = url
-            var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
-            
-            if needConfirm {
-                let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe"]
-                if let url = URL(string: urlValue) {
-                    if let host = url.host, allowed.contains(host) {
-                        needConfirm = false
-                    }
-                }
-            }
-
-            if let withToken = appDelegate?.tryApplyAutologinToken(url.absoluteString), let url = URL(string: withToken) {
-                NSWorkspace.shared.open(url)
-                afterComplete(true)
-                return
-            }
-            
-            let removePecentEncoding = url.host == URL(string: urlValue)?.host
-            let success:()->Void = {
+        if let urlQueryAllowed = Optional(escaped) {
+            if let url = URL(string: urlQueryAllowed) ?? URL(string: urlValue) {
+                var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
                 
-                var path = url.absoluteString
-                let supportSchemes:[String] = ["itunes.apple.com"]
-                for scheme in supportSchemes {
-                    var url:URL? = nil
-                    if path.contains(scheme) {
-                        switch scheme {
-                        case supportSchemes[0]: // itunes
-                           path = "itms://" + path.nsstring.substring(from: path.nsstring.range(of: scheme).location)
-                           url = URL(string: path)
-                        default:
-                            continue
+                if needConfirm {
+                    let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe"]
+                    if let url = URL(string: urlValue) {
+                        if let host = url.host, allowed.contains(host) {
+                            needConfirm = false
                         }
                     }
-                    if let url = url {
-                        NSWorkspace.shared.open(url)
-                        afterComplete(true)
-                        return
-                    }
                 }
-                afterComplete(true)
-                NSWorkspace.shared.open(url)
+
+                if let withToken = appDelegate?.tryApplyAutologinToken(url.absoluteString), let url = URL(string: withToken) {
+                    NSWorkspace.shared.open(url)
+                    afterComplete(true)
+                    return
+                }
+                
+                let removePecentEncoding = url.host == URL(string: urlValue)?.host
+                let success:()->Void = {
+                    
+                    var path = url.absoluteString
+                    let supportSchemes:[String] = ["itunes.apple.com"]
+                    for scheme in supportSchemes {
+                        var url:URL? = nil
+                        if path.contains(scheme) {
+                            switch scheme {
+                            case supportSchemes[0]: // itunes
+                               path = "itms://" + path.nsstring.substring(from: path.nsstring.range(of: scheme).location)
+                               url = URL(string: path)
+                            default:
+                                continue
+                            }
+                        }
+                        if let url = url {
+                            NSWorkspace.shared.open(url)
+                            afterComplete(true)
+                            return
+                        }
+                    }
+                    afterComplete(true)
+                    NSWorkspace.shared.open(url)
+                }
+                if needConfirm {
+                    confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
+                } else {
+                    success()
+                }
             }
-            if needConfirm {
-                confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
-            } else {
-                success()
-            }
+            
         }
     case let .peerInfo(_, peerId, action, openChat, postId, callback):
         let messageId:MessageId?

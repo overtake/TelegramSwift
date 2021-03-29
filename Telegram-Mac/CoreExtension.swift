@@ -1014,7 +1014,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
                 if peer.hasPermission(.pinMessages) {
                     return true
                 }
-                return Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > Int(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                return Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
             }
         }
     }
@@ -1029,7 +1029,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     }
     
     
-    if Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) < Int(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970) {
+    if Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) < context.account.network.getApproximateRemoteTimestamp() {
         return false
     }
     

@@ -202,6 +202,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     @objc func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
+        
+                
         if let autoplayView = autoplayVideoView {
             if accept {
                 autoplayView.mediaPlayer.play()
@@ -233,16 +235,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func viewDidMoveToWindow() {
         updateListeners()
-        DispatchQueue.main.async { [weak self] in
-            self?.updatePlayerIfNeeded()
-        }
+        self.updatePlayerIfNeeded()
     }
 
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
-        if superview == nil {
-            self.autoplayVideoView = nil
-        }
+        self.updatePlayerIfNeeded()
     }
     
     override func layout() {

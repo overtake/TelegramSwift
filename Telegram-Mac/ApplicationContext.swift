@@ -870,6 +870,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if rightController.stackCount == 1, previousState != .none {
                 leftController.viewDidAppear(false)
             }
+            
         case .dual:
             rightController.empty = emptyController
             if rightController.controller is ForwardChatListController {
