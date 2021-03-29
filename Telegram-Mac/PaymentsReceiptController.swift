@@ -221,7 +221,7 @@ func PaymentsReceiptController(context: AccountContext, messageId: MessageId, me
         modalController?.modal?.close()
     }
     
-    actionsDisposable.add(requestBotPaymentReceipt(account: context.account, messageId: messageId).start(next: { receipt in
+    actionsDisposable.add(requestBotPaymentReceipt(network: context.account.network, messageId: messageId).start(next: { receipt in
         updateState { current in
             var current = current
             current.receipt = receipt

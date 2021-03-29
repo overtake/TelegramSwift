@@ -327,7 +327,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     let messageId = message.id
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(mode: .invoice, message: message, savedInfo: BotPaymentRequestedInfo(name: nil, phone: nil, email: nil, shippingAddress: nil, tipAmount: nil))
+    let initialState = State(mode: .invoice, message: message, savedInfo: BotPaymentRequestedInfo(name: nil, phone: nil, email: nil, shippingAddress: nil))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -405,7 +405,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                 return
             }
             
-            let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, credentials: credentials)
+            let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, credentials: credentials)
             
             _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
                 
@@ -488,7 +488,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     let formAndMaybeValidatedInfo = fetchBotPaymentForm(postbox: context.account.postbox, network: context.account.network, messageId: messageId)
                |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
                    if let current = paymentForm.savedInfo {
-                       return validateBotPaymentForm(account: context.account, saveInfo: true, messageId: messageId, formInfo: current)
+                    return validateBotPaymentForm(network: context.account.network, saveInfo: true, messageId: messageId, formInfo: current)
                            |> mapError { _ -> BotPaymentFormRequestError in
                                return .generic
                            }

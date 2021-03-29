@@ -153,12 +153,12 @@ private final class GroupCallControlsView : View {
         }
         
         videoStreamToken = videoStream.set(handler: { [weak self] _ in
-//            self?.arguments?.settings()
-            if !isStreaming {
-                self?.arguments?.shareSource()
-            } else {
-                self?.arguments?.cancelSharing()
-            }
+            self?.arguments?.settings()
+//            if !isStreaming {
+//                self?.arguments?.shareSource()
+//            } else {
+//                self?.arguments?.cancelSharing()
+//            }
         }, for: .Click)
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State

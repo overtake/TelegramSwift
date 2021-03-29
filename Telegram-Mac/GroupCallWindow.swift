@@ -129,9 +129,10 @@ final class GroupCallWindow : Window {
             rect = .init(origin: .init(x: x, y: y), size: size)
         }
 
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .resizable, .closable, .titled], backing: .buffered, defer: true)
+        //.resizable
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
         self.minSize = NSMakeSize(380, 600)
-        self.name = "GroupCallWindow4"
+        self.name = "GroupCallWindow5"
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .hidden
         self.animationBehavior = .alertPanel

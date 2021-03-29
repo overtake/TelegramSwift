@@ -318,8 +318,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 controllerInset += header.height
             }
             
-            empty.loadViewIfNeeded(NSMakeRect(0, controllerInset, self.bounds.width, self.bounds.height - controllerInset))
+            let rect = NSMakeRect(0, controllerInset, self.bounds.width, self.bounds.height - controllerInset - bar.height)
             
+            empty.loadViewIfNeeded(rect)
+                        
             if prev == oldValue {
                 controller = empty
                 oldValue.removeFromSuperview()
@@ -335,9 +337,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 }
             }
             
-            empty.view.frame = NSMakeRect(0, controllerInset, self.bounds.width, self.bounds.height - controllerInset - bar.height)
+            empty.view.frame = rect
 
-            
         }
     }
     
@@ -462,6 +463,13 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, containerSize.width, controller.bar.height)
         navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
         
+        var controllerInset: CGFloat = 0
+        if let header = header, header.needShown {
+            controllerInset += header.height
+        }
+        if let header = callHeader, header.needShown {
+            controllerInset += header.height
+        }
         if let header = callHeader, header.needShown {
             header.view.setFrameSize(NSMakeSize(containerSize.width, header.realHeight))
         }
@@ -470,7 +478,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
         
         if controller.isLoaded() {
-            controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerSize.width, containerSize.height - barInset - controller.bar.height)
+            controller.frame = NSMakeRect(0, barInset + controller.bar.height + controllerInset, containerSize.width, containerSize.height - barInset - controller.bar.height - controllerInset)
         }
     }
     
