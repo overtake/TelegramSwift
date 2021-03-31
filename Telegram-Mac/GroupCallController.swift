@@ -27,6 +27,7 @@ private final class GroupCallUIArguments {
     let inviteMembers:()->Void
     let shareSource:()->Void
     let takeVideo:(PeerId)->NSView?
+    let isStreamingVideo:(PeerId)->Bool
     let setVolume: (PeerId, Double, Bool) -> Void
     let pinVideo:(PeerId, UInt32)->Void
     let unpinVideo:()->Void
@@ -46,6 +47,7 @@ private final class GroupCallUIArguments {
     inviteMembers:@escaping()->Void,
     shareSource: @escaping()->Void,
     takeVideo:@escaping(PeerId)->NSView?,
+    isStreamingVideo: @escaping(PeerId)->Bool,
     pinVideo:@escaping(PeerId, UInt32)->Void,
     unpinVideo:@escaping()->Void,
     isPinnedVideo:@escaping(PeerId)->Bool,
@@ -65,6 +67,7 @@ private final class GroupCallUIArguments {
         self.inviteMembers = inviteMembers
         self.shareSource = shareSource
         self.takeVideo = takeVideo
+        self.isStreamingVideo = isStreamingVideo
         self.pinVideo = pinVideo
         self.unpinVideo = unpinVideo
         self.isPinnedVideo = isPinnedVideo
@@ -1351,12 +1354,13 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     }
                    // if data.peer.id != arguments.getAccountPeerId() {
                     //, let ssrc = state.ssrc
-                        if arguments.takeVideo(data.peer.id) != nil {
+                        if arguments.isStreamingVideo(data.peer.id) {
                             if !arguments.isPinnedVideo(data.peer.id) {
                                 items.append(ContextMenuItem(L10n.voiceChatPinVideo, handler: {
                                     if data.peer.id != arguments.getAccountPeerId() {
-                                        fatalError()
-                                        arguments.pinVideo(data.peer.id, 0)
+                                        if let ssrc = state.ssrc {
+                                            arguments.pinVideo(data.peer.id, ssrc)
+                                        }
                                     } else {
                                         arguments.pinVideo(data.peer.id, 0)
                                     }
@@ -1589,7 +1593,13 @@ final class GroupCallUIController : ViewController {
                 self?.data.call.requestVideo(deviceId: source.deviceIdKey())
             }, devices: sharedContext.devicesContext)
         }, takeVideo: { [weak self] peerId in
-            return self?.videoViews.first(where: { $0.0 == peerId })?.2
+            if self?.currentDominantSpeakerWithVideo?.0 == peerId {
+                return nil
+            } else {
+                return self?.videoViews.first(where: { $0.0 == peerId })?.2
+            }
+        }, isStreamingVideo: { [weak self] peerId in
+            return self?.videoViews.first(where: { $0.0 == peerId }) != nil
         }, pinVideo: { [weak self] peerId, ssrc in
             self?.currentDominantSpeakerWithVideo = (peerId, ssrc)
             self?.data.call.setFullSizeVideo(peerId: peerId)

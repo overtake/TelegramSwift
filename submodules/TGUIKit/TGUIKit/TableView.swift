@@ -926,7 +926,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let before = item.heightValue
             let updated = item.makeSize(tableView.frame.width, oldWidth: oldWidth)
             let after = item.heightValue
-            if (before != after && updated) || item.instantlyResize {
+            if (before != after && updated) || item.instantlyResize || inLiveResize {
                 reloadData(row: i, animated: false)
                 noteHeightOfRow(i, false)
             }
