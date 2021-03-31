@@ -519,6 +519,14 @@ public extension NSView {
         self.setFrameOrigin(NSMakePoint(x + addition, y == nil ? NSMinY(self.frame) : y!))
     }
     
+    func centerFrameX(y:CGFloat? = nil, addition: CGFloat = 0) -> CGRect {
+        var x:CGFloat = 0
+        if let sv = self.superview {
+            x = CGFloat(roundf(Float((sv.frame.width - frame.width)/2.0)))
+        }
+        return CGRect(origin: NSMakePoint(x + addition, y == nil ? NSMinY(self.frame) : y!), size: frame.size)
+    }
+    
     func focus(_ size:NSSize) -> NSRect {
         var x:CGFloat = 0
         var y:CGFloat = 0
@@ -549,6 +557,17 @@ public extension NSView {
         self.setFrameOrigin(NSMakePoint(x ?? frame.minX, y + addition))
     }
     
+    func centerFrameY(x:CGFloat? = nil, addition: CGFloat = 0) -> CGRect {
+        
+        var y:CGFloat = 0
+        
+        if let sv = self.superview {
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
+        }
+        
+        return CGRect(origin: NSMakePoint(x ?? frame.minX, y + addition), size: frame.size)
+    }
+    
     
     func center(_ superView:NSView? = nil) -> Void {
         
@@ -567,6 +586,29 @@ public extension NSView {
         
     }
     
+    func centerPoint() -> CGPoint {
+        var x:CGFloat = 0
+        var y:CGFloat = 0
+        
+        if let sv = self.superview {
+            x = CGFloat(round((sv.frame.width - frame.width)/2.0))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
+        }
+        return NSMakePoint(x, y)
+    }
+    
+    func centerFrame() -> CGRect {
+        var x:CGFloat = 0
+        var y:CGFloat = 0
+        
+        if let sv = self.superview {
+            x = CGFloat(round((sv.frame.width - frame.width)/2.0))
+            y = CGFloat(round((sv.frame.height - frame.height)/2.0))
+        }
+        return CGRect(origin: NSMakePoint(x, y), size: frame.size)
+    }
+
+
     
     func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
         if animated || (forceAnimateIfHasAnimation && self.layer?.animation(forKey:"position") != nil) {

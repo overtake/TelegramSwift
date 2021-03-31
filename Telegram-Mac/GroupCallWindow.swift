@@ -47,7 +47,7 @@ struct GroupCallTheme {
     
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
-    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white, flipVertical: true)
+    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
     static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
 
     static let small_speaking = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: .clear)

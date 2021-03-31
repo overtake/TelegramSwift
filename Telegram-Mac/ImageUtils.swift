@@ -40,6 +40,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                    return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
                                } else {
                                    return Signal { subscriber in
+                                                
+                                       if let data = representation.immediateThumbnailData {
+                                           subscriber.putNext((decodeTinyThumbnail(data: data), false))
+                                       }
+                                    
                                        let resourceDataDisposable = resourceData.start(next: { data in
                                            if data.complete {
                                                subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true))

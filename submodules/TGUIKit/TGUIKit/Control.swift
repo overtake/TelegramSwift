@@ -20,6 +20,7 @@ public enum ControlEvent {
     case Down
     case Up
     case Click
+    case DoubleClick
     case SingleClick
     case RightClick
     case RightDown
@@ -384,6 +385,9 @@ open class Control: View {
                 if mouseInside() && !longInvoked {
                     if event.clickCount == 1  {
                         send(event: .SingleClick)
+                    }
+                    if event.clickCount == 2 {
+                        send(event: .DoubleClick)
                     }
                     send(event: .Click)
                 }
