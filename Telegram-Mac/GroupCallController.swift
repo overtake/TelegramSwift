@@ -673,6 +673,10 @@ private final class MainVideoContainerView: Control {
         }, for: .DoubleClick)
     }
     
+    override var mouseDownCanMoveWindow: Bool {
+        return true
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
