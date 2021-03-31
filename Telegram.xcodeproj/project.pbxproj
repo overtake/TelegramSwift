@@ -20,7 +20,10 @@
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
+		2729712126135C94006D38E2 /* GroupCallInviteRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */; };
 		27335F0325C8295200FD040C /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0225C8295100FD040C /* GroupVideoView.swift */; };
+		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
+		273BE6CB26136D5200AAFE4E /* Mozjpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */; };
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
 		27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */; };
@@ -269,7 +272,6 @@
 		A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CDCC240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift */; };
 		A742CE45241A517800C6B69B /* ChannelRecentPostRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A742CE44241A517800C6B69B /* ChannelRecentPostRowItem.swift */; };
 		A7565EAE23BE02AF0031EADE /* ChatGradientModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */; };
-		A76157F62588E00400B7FCFD /* VoiceChatMicrophoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76157F52588E00400B7FCFD /* VoiceChatMicrophoneView.swift */; };
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
@@ -1063,6 +1065,7 @@
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
+		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
@@ -1322,7 +1325,6 @@
 		A74EB06F237961A1005F55AE /* AppCenter.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenter.framework; path = submodules/AppCenter/AppCenter.framework; sourceTree = "<group>"; };
 		A74EB070237961A1005F55AE /* AppCenterCrashes.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppCenterCrashes.framework; path = submodules/AppCenter/AppCenterCrashes.framework; sourceTree = "<group>"; };
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
-		A76157F52588E00400B7FCFD /* VoiceChatMicrophoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceChatMicrophoneView.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
 		A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchModalController.swift; sourceTree = "<group>"; };
@@ -2079,6 +2081,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				273BE6CB26136D5200AAFE4E /* Mozjpeg.framework in Frameworks */,
 				A7D2822D236C51F10000A9BF /* OpenSSLEncryption.framework in Frameworks */,
 				A7D28229236C50FC0000A9BF /* TelegramCore.framework in Frameworks */,
 				A7D28228236C50F60000A9BF /* SyncCore.framework in Frameworks */,
@@ -4670,9 +4673,9 @@
 				A7388431257E6E0C002E8424 /* GroupCallNavigationHeaderView.swift */,
 				274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */,
 				A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */,
-				A76157F52588E00400B7FCFD /* VoiceChatMicrophoneView.swift */,
 				275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */,
 				2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */,
+				2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -4984,6 +4987,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */,
 				A7E831F1255040D60095A167 /* ChatPresentationInputQueryResult.swift in Sources */,
 				D06C69532539E30200DD9005 /* SlotMachineValue.swift in Sources */,
 				A789E09723E427CE00AEB34A /* ChatListFilterPreferences.swift in Sources */,
@@ -5564,6 +5568,7 @@
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
+				2729712126135C94006D38E2 /* GroupCallInviteRowItem.swift in Sources */,
 				D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */,
 				D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */,
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
@@ -5689,7 +5694,6 @@
 				C201C2321E3B2D1C0026C21E /* FastSettings.swift in Sources */,
 				C2A315B41E2E65C600D89000 /* CalendarUtils.m in Sources */,
 				A72D7AE923C471A7005BAC59 /* PollResultController.swift in Sources */,
-				A76157F62588E00400B7FCFD /* VoiceChatMicrophoneView.swift in Sources */,
 				C2DE5D361F3CACCF0081EC1E /* InstantPageLayoutSpacings.swift in Sources */,
 				C2423A541F2235080041907F /* InstantPageViewController.swift in Sources */,
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,

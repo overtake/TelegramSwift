@@ -120,9 +120,9 @@ final class SettingsThemeWallpaperView: BackgroundView {
             var representations:[TelegramMediaImageRepresentation] = []
 //            representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
             } else {
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
             }
             
             let sz = largestImageRepresentation(representations)?.dimensions.size ?? size

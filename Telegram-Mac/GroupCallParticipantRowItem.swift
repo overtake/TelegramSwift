@@ -156,9 +156,18 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return insets
     }
     
-    var isVertical: Bool {
-        return data.videoMode && (width == 80 || width > (fullScreenThreshold - 40))
+    override var width: CGFloat {
+        if let superview = table?.superview {
+            return superview.frame.width
+        } else {
+            return super.width
+        }
     }
+    
+    var isVertical: Bool {
+        return data.videoMode && (width == 80 || width > fullScreenThreshold)
+    }
+    
     
     var itemInset: NSEdgeInsets {
         return NSEdgeInsetsMake(0, 12, 0, 12)
@@ -193,6 +202,9 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var hasBorder: Bool {
+        return false
+    }
+    override var instantlyResize: Bool {
         return false
     }
     
@@ -235,8 +247,12 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
 }
 
+protocol GroupCallParticipantRowProtocolView : NSView {
+    func getPhotoView() -> NSView
+}
 
-private final class GroupCallParticipantRowView : GeneralContainableRowView {
+
+private final class GroupCallParticipantRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
     private let titleView: TextView = TextView()
     private var statusView: TextView?
@@ -268,7 +284,8 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
 
-                
+        photoView.userInteractionEnabled = false
+
         photoView.addSubview(videoContainer)
         videoContainer.frame = .init(origin: .zero, size: photoSize)
         photoView.layer?.cornerRadius = photoSize.height / 2
@@ -299,6 +316,33 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
                 self?.showContextMenu(event)
             }
         }, for: .Click)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+    }
+    
+    override var backdorColor: NSColor {
+        let color: NSColor
+        if containerView.controlState == .Highlight || contextMenu != nil {
+            color = GroupCallTheme.membersColor.lighter()
+        } else {
+            color = GroupCallTheme.membersColor
+        }
+        return color
+    }
+    
+    
+    func getPhotoView() -> NSView {
+        return self.photoView
     }
     
     override func layout() {
@@ -678,10 +722,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
     deinit {
         audioLevelDisposable.dispose()
     }
-    
-    override var backdorColor: NSColor {
-        return GroupCallTheme.membersColor
-    }
+
     
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
@@ -698,7 +739,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView {
 }
 
 
-final class GroupCallParticipantVerticalRowView : GeneralContainableRowView {
+final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
     
     private final class VideoContainer : View {
@@ -730,6 +771,10 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView {
         }
     }
     
+    func getPhotoView() -> NSView {
+        return self.photoView
+    }
+    
     private var videoContainer: VideoContainer?
     private let titleView = TextView()
     required init(frame frameRect: NSRect) {
@@ -747,11 +792,31 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView {
                 self?.showContextMenu(event)
             }
         }, for: .Click)
+        
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
     }
     
     override var backdorColor: NSColor {
-        return GroupCallTheme.membersColor
+        let color: NSColor
+        if containerView.controlState == .Highlight || contextMenu != nil {
+            color = GroupCallTheme.membersColor.lighter()
+        } else {
+            color = GroupCallTheme.membersColor
+        }
+        return color
     }
+    
     
     override func updateColors() {
         super.updateColors()
@@ -768,7 +833,7 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView {
         
         photoView.centerX(y: item.viewType.innerInset.top)
         videoContainer?.frame = containerView.bounds
-        titleView.centerX(y: containerView.frame.height - titleView.frame.height - 5)
+        titleView.centerX(y: containerView.frame.height - titleView.frame.height - 7)
         
     }
 
@@ -810,20 +875,36 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView {
                 isPresented = true
             }
             videoContainer.view = videoView
-            
+            photoView._change(opacity: 0, animated: animated)
+
             if animated && isPresented {
-                videoContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                if isPresented {
-                    
-                }
+                videoContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                let from = Float(videoContainer.frame.height / 2)
+                videoContainer.layer?.animate(from: NSNumber(value: from), to: NSNumber(value: 0), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.3, forKey: "cornerRadius")
+                
+                videoContainer.layer?.animateScaleCenter(from: photoView.frame.height / videoContainer.frame.width, to: 1, duration: 0.3)
+                
+                videoContainer.layer?.animatePosition(from: NSMakePoint(0, -photoView.frame.minY), to: videoContainer.frame.origin, duration: 0.3)
+                
+                photoView.layer?.animateScaleCenter(from: 1, to: videoContainer.frame.width / photoView.frame.height, duration: 0.3)
             }
         } else {
             if let first = self.videoContainer {
                 self.videoContainer = nil
+                photoView._change(opacity: 1, animated: animated)
                 if animated {
-                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first] _ in
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak first] _ in
                         first?.removeFromSuperview()
                     })
+                    
+                    let to = Float(first.frame.height / 2)
+                    first.layer?.animate(from: NSNumber(value: 0), to: NSNumber(value: to), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.3, removeOnCompletion: false, forKey: "cornerRadius")
+                    
+                    first.layer?.animateScaleCenter(from: 1, to: photoView.frame.height / first.frame.width, duration: 0.3, removeOnCompletion: false)
+                    
+                    first.layer?.animatePosition(from: first.frame.origin, to: NSMakePoint(0, -photoView.frame.minY), duration: 0.3, removeOnCompletion: false)
+                    
+                    photoView.layer?.animateScaleCenter(from:  first.frame.width / photoView.frame.height, to: 1, duration: 0.2)
                 } else {
                     first.removeFromSuperview()
                 }

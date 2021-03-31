@@ -296,10 +296,12 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open func onShowContextMenu() ->Void {
         self.layer?.setNeedsDisplay()
+        updateColors()
     }
     
     open func onCloseContextMenu() ->Void {
         self.layer?.setNeedsDisplay()
+        updateColors()
     }
     
     required public init?(coder: NSCoder) {
