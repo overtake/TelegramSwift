@@ -293,7 +293,12 @@ private final class SVideoControlsView : Control {
         volumeSlider.setFrameSize(NSMakeSize(60, 12))
         volumeContainer.setFrameSize(NSMakeSize(volumeToggle.frame.width + 60 + 16, volumeToggle.frame.height))
         
-        volumeSlider.scrubberImage = theme.icons.videoPlayerSliderInteractor
+        volumeSlider.scrubberImage = generateImage(NSMakeSize(8, 8), contextGenerator: { size, ctx in
+            let rect = CGRect(origin: .zero, size: size)
+            ctx.clear(rect)
+            ctx.setFillColor(NSColor.white.cgColor)
+            ctx.fillEllipse(in: rect)
+        })
         volumeSlider.roundCorners = true
         volumeSlider.alignment = .center
         volumeSlider.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
@@ -330,7 +335,12 @@ private final class SVideoControlsView : Control {
         _ = togglePip.sizeToFit()
 
         progress.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
-        progress.scrubberImage = theme.icons.videoPlayerSliderInteractor
+        progress.scrubberImage = generateImage(NSMakeSize(8, 8), contextGenerator: { size, ctx in
+            let rect = CGRect(origin: .zero, size: size)
+            ctx.clear(rect)
+            ctx.setFillColor(NSColor.white.cgColor)
+            ctx.fillEllipse(in: rect)
+        })
         progress.roundCorners = true
         progress.alignment = .center
         progress.liveScrobbling = false
