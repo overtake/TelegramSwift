@@ -13,7 +13,8 @@ import SwiftSignalKit
 final class GroupVideoView: View {
     private let videoViewContainer: View
     let videoView: PresentationCallVideoView
-    private var gravity: CALayerContentsGravity = .resizeAspect
+    var gravity: CALayerContentsGravity = .resizeAspect
+    var initialGravity: CALayerContentsGravity? = nil
     private var validLayout: CGSize?
     
     var tapped: (() -> Void)?
@@ -59,11 +60,23 @@ final class GroupVideoView: View {
     }
     
     func setVideoContentMode(_ contentMode: CALayerContentsGravity, animated: Bool) {
+
+        if let gravity = initialGravity {
+            switch gravity {
+            case .resizeAspectFill:
+                self.videoView.setVideoContentMode(.resizeAspect)
+                self.validLayout = nil
+                let transition: ContainedViewLayoutTransition = .immediate
+                self.gravity = .resizeAspectFill
+                self.updateLayout(size: frame.size, transition: transition)
+                self.initialGravity = nil
+            default:
+                break
+            }
+        }
         self.gravity = contentMode
-        
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate
-        
         self.validLayout = nil
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate
         self.updateLayout(size: frame.size, transition: transition)
     }
     

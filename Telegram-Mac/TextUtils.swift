@@ -423,7 +423,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 return L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
-        case let .groupPhoneCall(_, _, duration):
+        case let .groupPhoneCall(_, _, _, duration):
             let text: String
             if let duration = duration {
                 if peer.isChannel {

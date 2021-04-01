@@ -345,7 +345,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case let .groupPhoneCall(callId, accessHash, duration):
+                case let .groupPhoneCall(callId, accessHash, _, duration):
                     let text: String
                     if let duration = duration {
                         if peer.isChannel {

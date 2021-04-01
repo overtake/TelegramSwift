@@ -777,11 +777,17 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
     
     private var videoContainer: VideoContainer?
     private let titleView = TextView()
+    private let pinnedFrameView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         photoView.setFrameSize(photoSize)
         addSubview(photoView)
+        addSubview(pinnedFrameView)
         addSubview(titleView)
+        
+        pinnedFrameView.layer?.cornerRadius = 10
+        pinnedFrameView.layer?.borderWidth = 2
+        pinnedFrameView.layer?.borderColor = GroupCallTheme.customTheme.accentColor.cgColor
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
@@ -834,7 +840,7 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
         photoView.centerX(y: item.viewType.innerInset.top)
         videoContainer?.frame = containerView.bounds
         titleView.centerX(y: containerView.frame.height - titleView.frame.height - 7)
-        
+        pinnedFrameView.frame = containerView.bounds
     }
 
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -846,6 +852,8 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
         photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
         
+        
+        pinnedFrameView.change(opacity: item.data.isPinned ? 1 : 0)
         
         titleView.update(item.titleLayout)
         
