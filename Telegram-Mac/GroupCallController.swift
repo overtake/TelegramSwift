@@ -1636,8 +1636,12 @@ final class GroupCallUIController : ViewController {
                     && member.state != nil
             }
             if !ignorePinned {
-                guard strongSelf.pinnedDominantSpeaker == nil else {
-                    return strongSelf.pinnedDominantSpeaker
+                if let pinned = strongSelf.pinnedDominantSpeaker {
+                    if state.activeVideoSources[pinned.0] != nil {
+                        return pinned
+                    } else {
+                        return nil
+                    }
                 }
             }
             
