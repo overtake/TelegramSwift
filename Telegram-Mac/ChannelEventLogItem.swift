@@ -470,7 +470,7 @@ class ServiceEventLogItem: TableRowItem {
                     }
                 } else if let media = new.media.first as? TelegramMediaAction {
                     switch media.action {
-                    case let .groupPhoneCall(_, _, duration):
+                    case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {
                             let text: String
                             if new.author?.id == chatInteraction.context.peerId {
