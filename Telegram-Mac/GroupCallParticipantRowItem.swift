@@ -143,13 +143,13 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return isVertical ? 90 : 48
+        return isVertical ? 80 : 48
     }
     
     override var inset: NSEdgeInsets {
         let insets: NSEdgeInsets
         if isVertical {
-            insets = NSEdgeInsetsMake(5, 0, 5, 0)
+            insets = NSEdgeInsetsMake(5, 0, 0, 0)
         } else {
             insets = NSEdgeInsetsMake(0, 0, 0, 0)
         }
@@ -221,7 +221,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         
         if isVertical {
-            titleLayout.measure(width: 80 - 10 - 16)
+            titleLayout.measure(width: 80 - 10 - 16 - 10)
         } else {
             titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
         }
@@ -277,6 +277,9 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var videoBoxImage: CGImage {
+        if isInvited {
+            return GroupCallTheme.videoBox_muted_locked
+        }
         if let _ = data.state?.muteState {
             return GroupCallTheme.videoBox_muted
         } else if data.state == nil {
@@ -336,6 +339,10 @@ private final class GroupCallAvatarView : View {
         photoView.setFrameSize(photoSize)
         addSubview(playbackAudioLevelView)
         addSubview(photoView)
+        
+        self.isEventLess = true
+        playbackAudioLevelView.isEventLess = true
+        photoView.userInteractionEnabled = false
     }
     
     deinit {
@@ -437,9 +444,9 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
 
         photoView.userInteractionEnabled = false
 
-        photoView.addSubview(videoContainer)
+        addSubview(videoContainer)
         videoContainer.frame = .init(origin: .zero, size: photoSize)
-        photoView.layer?.cornerRadius = photoSize.height / 2
+        videoContainer.layer?.cornerRadius = photoSize.height / 2
         
         button.animates = true
 
@@ -523,7 +530,8 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
 
         button.centerY(x: frame.width - 12 - button.frame.width)
-
+        
+        videoContainer.centerY(x: item.itemInset.left, addition: -1)
     }
     
     override func updateColors() {
@@ -872,6 +880,16 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
     override func updateColors() {
         super.updateColors()
         self.titleView.backgroundColor = .clear
+    }
+    
+    override var maxBlockWidth: CGFloat {
+        return 80
+    }
+    override var maxHeight: CGFloat {
+        return 80
+    }
+    override var maxWidth: CGFloat {
+        return 80
     }
     
     override func layout() {
