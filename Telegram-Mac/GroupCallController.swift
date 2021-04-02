@@ -93,7 +93,7 @@ private final class GroupCallControlsView : View {
     }
     
     private(set) var mode: Mode = .normal
-        
+    private(set) var hasOutgoingVideo: Bool = false
     
     private let speak: GroupCallSpeakButton = GroupCallSpeakButton(frame: NSMakeRect(0, 0, 140, 140))
     private let videoStream: CallControl = CallControl(frame: .zero)
@@ -152,55 +152,60 @@ private final class GroupCallControlsView : View {
             }
         }, for: .Click)
 
-        end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: false)
-        
-        videoStream.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: false)
+//        end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: false)
+//
+//        videoStream.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: false)
 
+        self.updateMode(self.mode, hasOutgoingVideo: false, animated: false, force: true)
     }
     
-    private func updateMode(_ mode: Mode, animated: Bool) {
+    private func updateMode(_ mode: Mode, hasOutgoingVideo: Bool, animated: Bool, force: Bool = false) {
         let previous = self.mode
-        self.mode = mode
+       
         
-        if previous != mode {
+        if previous != mode || hasOutgoingVideo != self.hasOutgoingVideo || force {
             self.speakText?.change(opacity: mode == .fullscreen ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
             
+            let videoStreamIcon = hasOutgoingVideo ? GroupCallTheme.video_off : GroupCallTheme.video_on
+            let videoStreamText = L10n.voiceChatVideoStream//L10n.voiceChatSettings
             switch mode {
             case .fullscreen:
                 end.updateWithData(CallControlData(text: nil, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
                 
-                videoStream.updateWithData(CallControlData(text: nil, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+                videoStream.updateWithData(CallControlData(text: nil, isVisualEffect: false, icon: videoStreamIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
             case .normal:
                 end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
                 
-                videoStream.updateWithData(CallControlData(text: L10n.voiceChatSettings, isVisualEffect: false, icon: GroupCallTheme.settingsIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+                videoStream.updateWithData(CallControlData(text: videoStreamText, isVisualEffect: false, icon: videoStreamIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
             }
-            
-            let from: CGFloat
-            let to: CGFloat
-            switch mode {
-            case .fullscreen:
-                from = 1.0
-                to = 0.5
-            case .normal:
-                from = 0.5
-                to = 1.0
+            if previous != mode {
+                let from: CGFloat
+                let to: CGFloat
+                switch mode {
+                case .fullscreen:
+                    from = 1.0
+                    to = 0.5
+                case .normal:
+                    from = 0.5
+                    to = 1.0
+                }
+                if animated {
+                    self.backgroundView.layer?.transform = CATransform3DIdentity
+                    self.backgroundView.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false)
+                } else {
+                    let rect = self.backgroundView.bounds
+                    var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                    fr = CATransform3DScale(fr, to, to, 1)
+                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                    self.backgroundView.layer?.transform = fr
+                    self.backgroundView.layer?.removeAnimation(forKey: "transform")
+                }
             }
-            if animated {
-                self.backgroundView.layer?.transform = CATransform3DIdentity
-                self.backgroundView.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false)
-            } else {
-                let rect = self.backgroundView.bounds
-                var fr = CATransform3DIdentity
-                fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
-                fr = CATransform3DScale(fr, to, to, 1)
-                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                self.backgroundView.layer?.transform = fr
-                self.backgroundView.layer?.removeAnimation(forKey: "transform")
-            }
-            
         }
+        self.mode = mode
+        self.hasOutgoingVideo = hasOutgoingVideo
     }
     
     
@@ -245,17 +250,19 @@ private final class GroupCallControlsView : View {
 
         let mode: Mode = callState.isFullScreen && callState.currentDominantSpeakerWithVideo != nil ? .fullscreen : .normal
         
-        self.updateMode(mode, animated: animated)
+        let hasOutgoingVideo: Bool
+        if let arguments = arguments, let peerId = arguments.getAccountPeerId() {
+            hasOutgoingVideo = callState.activeVideoSources[peerId] != nil
+        } else {
+            hasOutgoingVideo = false
+        }
+        
+        self.updateMode(mode, hasOutgoingVideo: hasOutgoingVideo, animated: animated)
 
         let state = callState.state
         speak.update(with: state, isMuted: callState.isMuted, animated: animated)
 
-        let isStreaming: Bool
-        if let arguments = arguments, let peerId = arguments.getAccountPeerId() {
-            isStreaming = callState.activeVideoSources[peerId] != nil
-        } else {
-            isStreaming = false
-        }
+        
 
         if let videoStreamToken = videoStreamToken {
             videoStream.removeHandler(videoStreamToken)
@@ -263,7 +270,7 @@ private final class GroupCallControlsView : View {
         
         videoStreamToken = videoStream.set(handler: { [weak self] _ in
 //            self?.arguments?.settings()
-            if !isStreaming {
+            if !hasOutgoingVideo {
                 self?.arguments?.shareSource()
             } else {
                 self?.arguments?.cancelSharing()
@@ -469,7 +476,7 @@ private final class GroupCallRecordingView : Control {
     }
 }
 
-private final class GroupCallTitleView : View {
+private final class GroupCallTitleView : Control {
     fileprivate let titleView: TextView = TextView()
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     private var recordingView: GroupCallRecordingView?
@@ -504,6 +511,11 @@ private final class GroupCallTitleView : View {
         settings.set(handler: { [weak self] _ in
             self?.settingsClick?()
         }, for: .SingleClick)
+        
+        
+        set(handler: { [weak self] _ in
+            self?.window?.performZoom(nil)
+        }, for: .DoubleClick)
     }
     
     override var backgroundColor: NSColor {
@@ -665,7 +677,7 @@ private final class GroupCallTitleView : View {
                 count = 0
             }
 
-            let dynamicResult = DynamicCounterTextView.make(for: status, count: "\(count)", font: .normal(.text), textColor: mode == .transparent ? .white : GroupCallTheme.grayStatusColor, width: frame.width - 140)
+            let dynamicResult = DynamicCounterTextView.make(for: status, count: "\(count)", font: .normal(.text), textColor: mode == .transparent ? NSColor.white.withAlphaComponent(0.8) : GroupCallTheme.grayStatusColor, width: frame.width - 140)
 
             self.statusView.update(dynamicResult.values, animated: animated && oldMode == mode)
 
@@ -1639,8 +1651,6 @@ final class GroupCallUIController : ViewController {
                 if let pinned = strongSelf.pinnedDominantSpeaker {
                     if state.activeVideoSources[pinned.0] != nil {
                         return pinned
-                    } else {
-                        return nil
                     }
                 }
             }

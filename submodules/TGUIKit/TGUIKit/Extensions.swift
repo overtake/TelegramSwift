@@ -344,6 +344,12 @@ public extension CALayer {
         self.add(animation, forKey: "borderWidth")
     }
     
+    func animateBorderColor() ->Void {
+        let animation = CABasicAnimation(keyPath: "borderColor")
+        animation.duration = 0.2
+        self.add(animation, forKey: "borderColor")
+    }
+    
     func animateContents() ->Void {
         let animation = CABasicAnimation(keyPath: "contents")
         animation.duration = 0.2
