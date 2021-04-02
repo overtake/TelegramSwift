@@ -906,9 +906,17 @@ class AuthController : GenericViewController<AuthHeaderView> {
                 }
             }
         },resendCode: { [weak self] in
-            if let strongSelf = self {
-                _ = resendAuthorizationCode(account: strongSelf.account).start()
+            if let window = self?.window {
+                confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                    
+                }, cancelHandler:{
+                    execute(inapp: .external(link: "https://telegram.org", false))
+                })
+
             }
+//            if let strongSelf = self {
+//                _ = resendAuthorizationCode(account: strongSelf.account).start()
+//            }
         }, editPhone: {
             resetState()
         }, checkCode: { [weak self] code in
