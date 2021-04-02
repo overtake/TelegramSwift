@@ -1876,17 +1876,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
     }
     
-    func setFullSizeVideo(peerId: PeerId?) {
-        var resolvedSsrc: UInt32?
-        if let peerId = peerId {
-            for (ssrc, id) in self.ssrcMapping {
-                if id == peerId {
-                    resolvedSsrc = ssrc
-                    break
-                }
-            }
-        }
-        self.callContext?.setFullSizeVideoSsrc(ssrc: resolvedSsrc)
+    func setFullSizeVideo(ssrc: UInt32?) {
+//        var resolvedSsrc: UInt32?
+//        if let peerId = peerId {
+//            for (ssrc, id) in self.ssrcMapping {
+//                if id == peerId {
+//                    resolvedSsrc = ssrc
+//                    break
+//                }
+//            }
+//        }
+        self.callContext?.setFullSizeVideoSsrc(ssrc: ssrc)
     }
     
     func updateMuteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState? {

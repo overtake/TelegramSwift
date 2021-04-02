@@ -203,7 +203,7 @@ protocol PresentationGroupCall: class {
     func invitePeer(_ peerId: PeerId) -> Bool
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
-    func setFullSizeVideo(peerId: PeerId?)
+    func setFullSizeVideo(ssrc: UInt32?)
     func makeVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void)
     var incomingVideoSources: Signal<[PeerId: UInt32], NoError> { get }
     

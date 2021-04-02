@@ -4749,6 +4749,10 @@ internal final class L10n {
   internal static var loginRegisterFirstNamePlaceholder: String  { return L10n.tr("Localizable", "Login.Register.FirstName.Placeholder") }
   /// Last Name
   internal static var loginRegisterLastNamePlaceholder: String  { return L10n.tr("Localizable", "Login.Register.LastName.Placeholder") }
+  /// If you already signed up for Telegram, please enter the code which was sent to your mobile app via Telegram.\n\nIf you haven’t signed up yet, please register from your phone or tablet first.
+  internal static var loginSmsAppErr: String  { return L10n.tr("Localizable", "Login.Sms.AppErr") }
+  /// Open Site
+  internal static var loginSmsAppErrGotoSite: String  { return L10n.tr("Localizable", "Login.Sms.AppErr.GotoSite") }
   /// Set up multiple phone numbers and easily switch between them.
   internal static var logoutOptionsAddAccountText: String  { return L10n.tr("Localizable", "LogoutOptions.AddAccountText") }
   /// Add another account
