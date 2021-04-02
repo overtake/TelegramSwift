@@ -48,6 +48,10 @@ struct GroupCallTheme {
     static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(.white)
     static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(.white)
 
+    static let videoBox_muted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let videoBox_unmuted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+
+    
     static let topSettingsIcon = NSImage(named: "Icon_GroupCall_TopSettings")!.precomposed(.white)
     
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
