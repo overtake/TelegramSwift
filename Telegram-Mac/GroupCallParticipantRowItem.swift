@@ -50,7 +50,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         let isVertical = initialSize.width > (fullScreenThreshold - 40) && data.videoMode
         
         if isVertical {
-            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
+            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
@@ -221,7 +221,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         
         if isVertical {
-            titleLayout.measure(width: 80 - 10)
+            titleLayout.measure(width: 80 - 10 - 16)
         } else {
             titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
         }
@@ -241,9 +241,76 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return GroupCallParticipantRowView.self
     }
     
+    var statusImage: CGImage? {
+        assertOnMainThread()
+        let videoView = self.takeVideo()
+        if videoView != nil || volume != nil, let state = data.state {
+            var statusImage: CGImage
+            if videoView != nil {
+                if let muteState = state.muteState, muteState.mutedByYou {
+                    statusImage = GroupCallTheme.status_video_red
+                } else {
+                    if data.isSpeaking {
+                        statusImage = GroupCallTheme.status_video_green
+                    } else if data.wantsToSpeak {
+                        statusImage = GroupCallTheme.status_video_accent
+                    } else {
+                        statusImage = GroupCallTheme.status_video_gray
+                    }
+                }
+            } else {
+                if let muteState = state.muteState, muteState.mutedByYou {
+                    statusImage = GroupCallTheme.status_muted
+                } else {
+                    if data.isSpeaking {
+                        statusImage = GroupCallTheme.status_unmuted_green
+                    } else if data.wantsToSpeak {
+                        statusImage = GroupCallTheme.status_unmuted_accent
+                    } else {
+                        statusImage = GroupCallTheme.status_unmuted_gray
+                    }
+                }
+            }
+            return statusImage
+        }
+        return nil
+    }
+    
+    var videoBoxImage: CGImage {
+        if let _ = data.state?.muteState {
+            return GroupCallTheme.videoBox_muted
+        } else if data.state == nil {
+            return GroupCallTheme.videoBox_muted
+        } else {
+            return GroupCallTheme.videoBox_unmuted
+        }
+    }
+    
+    var actionInteractionEnabled: Bool {
+        if data.accountPeerId == data.peer.id {
+            return false
+        }
+        if isActivePeer {
+            return canManageCall
+        } else {
+            if isInvited {
+                return false
+            } else {
+                return true
+            }
+        }
+    }
+    
+    var activityColor: NSColor {
+        if  let muteState = data.state?.muteState, muteState.mutedByYou {
+            return GroupCallTheme.speakLockedColor
+        } else {
+            return data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor
+        }
+    }
+    
     deinit {
-        var bp:Int = 0
-        bp += 1
+       
     }
 }
 
@@ -252,18 +319,10 @@ protocol GroupCallParticipantRowProtocolView : NSView {
 }
 
 
-private final class GroupCallParticipantRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
-    private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
-    private let titleView: TextView = TextView()
-    private var statusView: TextView?
-    private let button = ImageButton()
-    private let separator: View = View()
+private final class GroupCallAvatarView : View {
     private let playbackAudioLevelView: VoiceBlobView
     private var scaleAnimator: DisplayLinkAnimator?
-    private let videoContainer: View = View()
-    private var volumeView: TextView?
-    private var statusImageView: ImageView?
-    private var supplementImageView: ImageView?
+    private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
     private let audioLevelDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         playbackAudioLevelView = VoiceBlobView(
@@ -273,10 +332,102 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             mediumBlobRange: (0.7, 0.8),
             bigBlobRange: (0.8, 0.9)
         )
-
         super.init(frame: frameRect)
         photoView.setFrameSize(photoSize)
         addSubview(playbackAudioLevelView)
+        addSubview(photoView)
+    }
+    
+    deinit {
+        audioLevelDisposable.dispose()
+    }
+    
+    func update(_ item: GroupCallParticipantRowItem, animated: Bool) {
+        if let audioLevel = item.audioLevel(item.data.peer.id) {
+            self.audioLevelDisposable.set(audioLevel.start(next: { [weak item, weak self] value in
+                if let item = item {
+                    self?.updateAudioLevel(value, item: item, animated: animated)
+                }
+            }))
+        } else {
+            self.audioLevelDisposable.set(nil)
+            self.updateAudioLevel(nil, item: item, animated: animated)
+        }
+
+        playbackAudioLevelView.setColor(item.activityColor)
+        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
+    }
+    
+    private func updateAudioLevel(_ value: Float?, item: GroupCallParticipantRowItem, animated: Bool) {
+        if (value != nil || item.data.isSpeaking)  {
+            playbackAudioLevelView.startAnimating()
+        } else {
+            playbackAudioLevelView.stopAnimating()
+        }
+        playbackAudioLevelView.change(opacity: (value != nil || item.data.isSpeaking) ? 1 : 0, animated: animated)
+
+        playbackAudioLevelView.updateLevel(CGFloat(value ?? 0))
+
+        
+        let audioLevel = value ?? 0
+        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
+        let avatarScale: CGFloat
+        if audioLevel > 0.0 {
+            avatarScale = 0.9 + level * 0.07
+        } else {
+            avatarScale = 1.0
+        }
+
+        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+
+        let t = photoView.layer!.transform
+        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+
+        if animated {
+            self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+                guard let `self` = self else {
+                    return
+                }
+                let rect = self.photoView.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                fr = CATransform3DScale(fr, value, value, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                self.photoView.layer?.transform = fr
+            }, completion: {
+
+            })
+        } else {
+            self.scaleAnimator = nil
+            self.photoView.layer?.transform = CATransform3DIdentity
+        }
+    }
+
+    
+    override func layout() {
+        super.layout()
+        photoView.center()
+        playbackAudioLevelView.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private final class GroupCallParticipantRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
+    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55))
+    private let titleView: TextView = TextView()
+    private var statusView: TextView?
+    private let button = ImageButton()
+    private let separator: View = View()
+    private let videoContainer: View = View()
+    private var volumeView: TextView?
+    private var statusImageView: ImageView?
+    private var supplementImageView: ImageView?
+    private let audioLevelDisposable = MetaDisposable()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
         addSubview(photoView)
         addSubview(titleView)
         addSubview(separator)
@@ -353,7 +504,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         
         let frame = containerView.frame
         
-        self.photoView.centerY(x: item.itemInset.left)
+        self.photoView.centerY(x: item.itemInset.left - (self.photoView.frame.width - photoSize.width) / 2)
 
         titleView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, 6))
         
@@ -373,7 +524,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
 
         button.centerY(x: frame.width - 12 - button.frame.width)
 
-        playbackAudioLevelView.centerY(x: 2, addition: 1)
     }
     
     override func updateColors() {
@@ -382,7 +532,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         self.statusView?.backgroundColor = backdorColor
         self.separator.backgroundColor = GroupCallTheme.memberSeparatorColor
     }
-    
     
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -441,15 +590,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             self.supplementImageView?.removeFromSuperview()
             self.supplementImageView = nil
         }
-        if item.isActivePeer {
-            button.userInteractionEnabled = item.canManageCall
-        } else {
-            if item.isInvited {
-                button.userInteractionEnabled = false
-            } else {
-                button.userInteractionEnabled = true
-            }
-        }
+        
         
         if previousItem?.buttonImage?.0 != item.buttonImage?.0 {
             if let image = item.buttonImage {
@@ -462,72 +603,19 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             }
             button.sizeToFit(.zero, NSMakeSize(28, 28), thatFit: true)
         }
-        
-        if item.data.accountPeerId == item.data.peer.id {
-            button.userInteractionEnabled = false
-        }
-
-        if let audioLevel = item.audioLevel(item.data.peer.id) {
-            self.audioLevelDisposable.set(audioLevel.start(next: { [weak item, weak self] value in
-                if let item = item {
-                    self?.updateAudioLevel(value, item: item, animated: animated)
-                }
-            }))
-        } else {
-            self.audioLevelDisposable.set(nil)
-            self.updateAudioLevel(nil, item: item, animated: animated)
-        }
-
-        
-
-        let activityColor: NSColor
-        if  let muteState = item.data.state?.muteState, muteState.mutedByYou {
-            activityColor = GroupCallTheme.speakLockedColor
-        } else {
-            activityColor = item.data.isSpeaking ? GroupCallTheme.speakActiveColor : GroupCallTheme.speakInactiveColor
-        }
-
-        playbackAudioLevelView.setColor(activityColor)
+        button.userInteractionEnabled = item.actionInteractionEnabled
 
 
+        photoView.update(item, animated: animated)
         
         titleView.update(item.titleLayout)
-        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
 
-        if videoView != nil || item.volume != nil, let state = item.data.state {
-            var statusImage: CGImage
-            if videoView != nil {
-                if let muteState = state.muteState, muteState.mutedByYou {
-                    statusImage = GroupCallTheme.status_video_red
-                } else {
-                    if item.data.isSpeaking {
-                        statusImage = GroupCallTheme.status_video_green
-                    } else if item.data.wantsToSpeak {
-                        statusImage = GroupCallTheme.status_video_accent
-                    } else {
-                        statusImage = GroupCallTheme.status_video_gray
-                    }
-                }
-            } else {
-                if let muteState = state.muteState, muteState.mutedByYou {
-                    statusImage = GroupCallTheme.status_muted
-                } else {
-                    if item.data.isSpeaking {
-                        statusImage = GroupCallTheme.status_unmuted_green
-                    } else if item.data.wantsToSpeak {
-                        statusImage = GroupCallTheme.status_unmuted_accent
-                    } else {
-                        statusImage = GroupCallTheme.status_unmuted_gray
-                    }
-                }
-            }
-            var isPresented = false
+        if let statusImage = item.statusImage {
             if statusImageView == nil {
                 statusImageView = ImageView()
                 addSubview(statusImageView!)
-                isPresented = true
             }
             guard let statusImageView = statusImageView else {
                 return
@@ -584,8 +672,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         statusView?.update(item.statusLayout)
         
         
-        
-        
         if let volume = item.volume {
             var isPresented: Bool = false
             if volumeView == nil {
@@ -629,50 +715,6 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
     }
     
-    private func updateAudioLevel(_ value: Float?, item: GroupCallParticipantRowItem, animated: Bool) {
-        if (value != nil || item.data.isSpeaking)  {
-            playbackAudioLevelView.startAnimating()
-        } else {
-            playbackAudioLevelView.stopAnimating()
-        }
-        playbackAudioLevelView.change(opacity: (value != nil || item.data.isSpeaking) ? 1 : 0, animated: animated)
-
-        playbackAudioLevelView.updateLevel(CGFloat(value ?? 0))
-
-        
-        let audioLevel = value ?? 0
-        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
-        let avatarScale: CGFloat
-        if audioLevel > 0.0 {
-            avatarScale = 0.9 + level * 0.07
-        } else {
-            avatarScale = 1.0
-        }
-
-        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
-
-        let t = photoView.layer!.transform
-        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
-
-        if animated {
-            self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
-                guard let `self` = self else {
-                    return
-                }
-                let rect = self.photoView.bounds
-                var fr = CATransform3DIdentity
-                fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
-                fr = CATransform3DScale(fr, value, value, 1)
-                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                self.photoView.layer?.transform = fr
-            }, completion: {
-
-            })
-        } else {
-            self.scaleAnimator = nil
-            self.photoView.layer?.transform = CATransform3DIdentity
-        }
-    }
     
     var statusViewPoint: NSPoint {
         guard let item = item as? GroupCallParticipantRowItem else {
@@ -740,8 +782,8 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
 
 
 final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
-    private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
-    
+    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55))
+
     private final class VideoContainer : View {
         private let shadowView = ShadowView()
         var view: NSView? {
@@ -777,17 +819,20 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
     
     private var videoContainer: VideoContainer?
     private let titleView = TextView()
+    private let statusView = ImageView()
     private let pinnedFrameView: View = View()
+    private let button: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        photoView.setFrameSize(photoSize)
         addSubview(photoView)
         addSubview(pinnedFrameView)
         addSubview(titleView)
-        
+        addSubview(button)
+        addSubview(statusView)
         pinnedFrameView.layer?.cornerRadius = 10
         pinnedFrameView.layer?.borderWidth = 2
-        pinnedFrameView.layer?.borderColor = GroupCallTheme.customTheme.accentColor.cgColor
+        
+        button.animates = true
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
@@ -837,9 +882,15 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
         }
 
         
-        photoView.centerX(y: item.viewType.innerInset.top)
+        photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoSize.height) / 2)
         videoContainer?.frame = containerView.bounds
-        titleView.centerX(y: containerView.frame.height - titleView.frame.height - 7)
+        
+        
+        titleView.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (containerView.frame.width - titleView.frame.width + button.frame.width) / 2), containerView.frame.height - titleView.frame.height - 7))
+        
+        button.setFrameOrigin(NSMakePoint(titleView.frame.minX - button.frame.width, containerView.frame.height - titleView.frame.height - 7))
+
+        
         pinnedFrameView.frame = containerView.bounds
     }
 
@@ -849,9 +900,20 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
-        photoView.setPeer(account: item.account, peer: item.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
+        
+        photoView.update(item, animated: animated)
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
         
+        
+        pinnedFrameView.layer?.borderColor = item.activityColor.cgColor
+        if animated {
+            pinnedFrameView.layer?.animateBorderColor()
+        }
+        
+        
+        button.image = item.videoBoxImage
+        button.sizeToFit()
+
         
         pinnedFrameView.change(opacity: item.data.isPinned ? 1 : 0)
         
