@@ -202,6 +202,13 @@ private final class DesktopCaptureSourceView : Control {
         return nil
     }
     
+    deinit {
+        if let layer = self.view?.layer as? AVCaptureVideoPreviewLayer {
+            layer.session?.stopRunning()
+            layer.session = nil
+        }
+    }
+    
     override func layout() {
         super.layout()
         self.contentView.frame = contentRect
@@ -297,6 +304,8 @@ final class DesktopCapturePreviewView : HorizontalRowView {
         super.updateMouse()
         contentView.updateState()
     }
+    
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
                 
