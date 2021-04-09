@@ -41,31 +41,69 @@ final class GroupCallSpeakButton : Control {
     private var previousIsMuted: Bool?
     
     func update(with state: PresentationGroupCallState, isMuted: Bool, animated: Bool) {
-        switch state.networkState {
-        case .connecting:
-            userInteractionEnabled = false
-        case .connected:
-            if isMuted {
-                if let _ = state.muteState {
-                    userInteractionEnabled = true
+        if state.scheduleTimestamp == nil {
+            switch state.networkState {
+            case .connecting:
+                userInteractionEnabled = false
+            case .connected:
+                if isMuted {
+                    if let _ = state.muteState {
+                        userInteractionEnabled = true
+                    } else {
+                        userInteractionEnabled = true
+                    }
                 } else {
                     userInteractionEnabled = true
                 }
-            } else {
-                userInteractionEnabled = true
             }
+        } else {
+            userInteractionEnabled = true
         }
+       
  
+    
+        
+        let scheduleState = state.scheduleState
+        let previousScheduleState = previousState?.scheduleState
+
         
         let activeRaiseHand = state.muteState?.canUnmute == false
         let previousActiveRaiseHand = previousState?.muteState?.canUnmute == false
         let raiseHandUpdated = activeRaiseHand != previousActiveRaiseHand
+        let scheduleUpdated = scheduleState != previousScheduleState
         
         let previousIsMuted = self.previousIsMuted
         let isMutedUpdated = (previousState?.muteState != nil) != (state.muteState != nil) || previousIsMuted != isMuted
                 
         if previousState != nil {
-            if raiseHandUpdated {
+            if scheduleUpdated {
+                if scheduleState == nil, let previous = previousScheduleState {
+                    if state.canManageCall {
+                        playChangeState(.voice_chat_start_chat_to_mute)
+                    } else {
+                        if previous.subscribed {
+                            if activeRaiseHand {
+                                playChangeState(.voice_chat_cancel_reminder_to_raise_hand)
+                            } else {
+                                playChangeState(.voice_chat_cancel_reminder_to_mute)
+                            }
+                        } else {
+                            if activeRaiseHand {
+                                playChangeState(.voice_chat_set_reminder_to_raise_hand)
+                            } else {
+                                playChangeState(.voice_chat_set_reminder_to_mute)
+                            }
+                        }
+                    }
+                } else {
+                    if scheduleState?.subscribed != previousScheduleState?.subscribed {
+                        if let subscribed = scheduleState?.subscribed {
+                            playChangeState(subscribed ? .voice_chat_cancel_reminder : .voice_chat_set_reminder)
+                        }
+                    }
+                }
+                //playChangeState(state.canManageCall ? .voice_chat_start_chat_to_mute : .voice_chat_start_chat_to_mute)
+            } else if raiseHandUpdated {
                 if activeRaiseHand {
                     playChangeState(previousState?.muteState != nil ? .voice_chat_hand_on_muted : .voice_chat_hand_on_unmuted)
                 } else {
@@ -79,10 +117,16 @@ final class GroupCallSpeakButton : Control {
                 }
             }
         } else {
-            if activeRaiseHand {
-                setupRaiseHand(activeRaiseHand ? .voice_chat_hand_off : .voice_chat_hand_on_muted)
+            if let scheduleState = scheduleState {
+                if state.canManageCall {
+                    setupScheduled(.voice_chat_start_chat_to_mute)
+                } else {
+                    setupEndAnimation(scheduleState.subscribed ? .voice_chat_cancel_reminder : .voice_chat_set_reminder)
+                }
+            } else if activeRaiseHand {
+                setupEndAnimation(activeRaiseHand ? .voice_chat_hand_off : .voice_chat_hand_on_muted)
             } else {
-                setupRaiseHand(isMuted ? .voice_chat_mute : .voice_chat_unmute)
+                setupEndAnimation(isMuted ? .voice_chat_mute : .voice_chat_unmute)
             }
         }
         
@@ -91,7 +135,13 @@ final class GroupCallSpeakButton : Control {
         self.previousIsMuted = isMuted
     }
     
-    private func setupRaiseHand(_ animation: LocalAnimatedSticker) {
+    private func setupScheduled(_ animation: LocalAnimatedSticker) {
+        if let data = animation.data {
+            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, runOnQueue: .mainQueue()))
+        }
+    }
+    
+    private func setupEndAnimation(_ animation: LocalAnimatedSticker) {
         if let data = animation.data {
             animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: .max), maximumFps: 60, runOnQueue: .mainQueue()))
         }

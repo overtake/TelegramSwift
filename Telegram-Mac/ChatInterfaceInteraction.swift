@@ -440,18 +440,18 @@ final class ChatInteraction : InterfaceObserver  {
                     if data.groupCall?.call.peerId != peerId, let peer = self?.peer {
                         showModal(with: JoinVoiceChatAlertController(context: context, groupCall: data, peer: peer, join: { [weak self] in
                             if let call = data.info {
-                                self?.joinGroupCall(CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title), joinHash)
+                                self?.joinGroupCall(CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title, scheduleTimestamp: call.scheduleTimestamp, subscribedToScheduled: call.subscribedToScheduled), joinHash)
                             }
                         }), for: context.window)
                     } else {
                         if let call = data.info {
-                            self?.joinGroupCall(CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title), joinHash)
+                            self?.joinGroupCall(CachedChannelData.ActiveCall(id: call.id, accessHash: call.accessHash, title: call.title, scheduleTimestamp: call.scheduleTimestamp, subscribedToScheduled: call.subscribedToScheduled), joinHash)
                         }
                     }
                 }
                 let call: Signal<GroupCallPanelData?, GetCurrentGroupCallError> = updatedCurrentPeerGroupCall(account: context.account, peerId: peerId) |> mapToSignalPromotingError { call -> Signal<GroupCallSummary?, GetCurrentGroupCallError> in
                     if let call = call {
-                        return getCurrentGroupCall(account: context.account, callId: call.id, accessHash: call.accessHash)
+                        return getCurrentGroupCall(account: context.account, callId: call.id, accessHash: call.accessHash, peerId: peerId)
                     } else {
                         return .single(nil)
                     }

@@ -1777,13 +1777,19 @@ class ChatRowItem: TableRowItem {
                 editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 
                 fullDate = L10n.chatMessageImportedText + "\n\n" + fullDate
+            } else if let forwardInfo = message.forwardInfo {
+                let formatterEdited = DateFormatter()
+                formatterEdited.dateStyle = .medium
+                formatterEdited.timeStyle = .medium
+                formatterEdited.timeZone = NSTimeZone.local
+                fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account: context.account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
+                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let `self` = self else {return}
                         _ = self.makeSize(self.oldWidth, oldWidth: 0)
                         Queue.mainQueue().async { [weak self] in
@@ -1822,7 +1828,9 @@ class ChatRowItem: TableRowItem {
                     paid = false
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
-                    replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
+                    if message.restrictedText(context.contentSettings) == nil {
+                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
+                    }
                 }
 //                else if let attribute = attribute as? ReactionsMessageAttribute {
 //                    var buttons:[ReplyMarkupButton] = []

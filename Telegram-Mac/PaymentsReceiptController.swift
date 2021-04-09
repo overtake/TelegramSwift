@@ -23,6 +23,10 @@ private final class Arguments {
 private struct State : Equatable {
     var message: Message
     var receipt: BotPaymentReceipt?
+    
+    static func ==(lhs: State, rhs: State) -> Bool {
+        return true
+    }
 }
 
 private let _id_loading = InputDataIdentifier("_id_loading")
@@ -73,6 +77,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             prices += shippingOption.prices
         }
         
+        if let tipAmount = receipt.tipAmount {
+            prices.append(.init(label: L10n.paymentsReceiptTip, amount: tipAmount))
+        }
+        
         for (i, price) in prices.enumerated() {
             var viewType = bestGeneralViewType(prices, for: i)
             
@@ -82,7 +90,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 viewType = viewType.withUpdatedInsets(insets)
             }
             if price == prices.last {
-                viewType = GeneralViewType.innerItem.withUpdatedInsets(insets)
+                if prices.count > 1 {
+                    viewType = GeneralViewType.innerItem.withUpdatedInsets(insets)
+                } else {
+                    viewType = GeneralViewType.firstItem.withUpdatedInsets(insets)
+                }
             }
             let tuple = Tuple(label:price.label, price: formatCurrencyAmount(price.amount, currency: receipt.invoice.currency), viewType: viewType)
             

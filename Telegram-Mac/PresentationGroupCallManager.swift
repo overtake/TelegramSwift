@@ -100,6 +100,11 @@ public struct PresentationGroupCallState: Equatable {
         case muted
     }
     
+    public struct ScheduleState : Equatable {
+        var date: Int32
+        var subscribed: Bool
+    }
+    
     public var myPeerId: PeerId
     public var networkState: NetworkState
     public var canManageCall: Bool
@@ -109,6 +114,8 @@ public struct PresentationGroupCallState: Equatable {
     public var recordingStartTimestamp: Int32?
     public var title: String?
     public var raisedHand: Bool
+    public var scheduleTimestamp: Int32?
+    public var subscribedToScheduled: Bool
     public init(
         myPeerId: PeerId,
         networkState: NetworkState,
@@ -118,7 +125,9 @@ public struct PresentationGroupCallState: Equatable {
         defaultParticipantMuteState: DefaultParticipantMuteState?,
         recordingStartTimestamp: Int32?,
         title: String?,
-        raisedHand: Bool
+        raisedHand: Bool,
+        scheduleTimestamp: Int32?,
+        subscribedToScheduled: Bool
     ) {
         self.myPeerId = myPeerId
         self.networkState = networkState
@@ -129,6 +138,16 @@ public struct PresentationGroupCallState: Equatable {
         self.recordingStartTimestamp = recordingStartTimestamp
         self.title = title
         self.raisedHand = raisedHand
+        self.scheduleTimestamp = scheduleTimestamp
+        self.subscribedToScheduled = subscribedToScheduled
+    }
+    
+    var scheduleState: ScheduleState? {
+        if let scheduleTimestamp = scheduleTimestamp {
+            return .init(date: scheduleTimestamp, subscribed: subscribedToScheduled)
+        } else {
+            return nil
+        }
     }
 }
 final class PresentationGroupCallMemberEvent {
@@ -215,5 +234,6 @@ protocol PresentationGroupCall: class {
     func reconnect(as peerId: PeerId) -> Void
     func updateTitle(_ title: String, force: Bool) -> Void
     func setShouldBeRecording(_ shouldBeRecording: Bool, title: String?) -> Void
-    
+    func startScheduled()
+    func toggleScheduledSubscription(_ subscribe: Bool)
 }

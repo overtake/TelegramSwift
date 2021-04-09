@@ -792,7 +792,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 if let peer = peerViewMainPeer(peerView) {
                     if peer.isGroup || peer.isSupergroup || peer.isChannel {
                         if let groupCall = presentation.groupCall {
-                            if let data = groupCall.data, data.participantCount == 0 {
+                            if let data = groupCall.data, data.participantCount == 0 && groupCall.activeCall.scheduleTimestamp == nil {
                                 callButton.isHidden = presentation.reportMode != nil
                             } else {
                                 callButton.isHidden = true

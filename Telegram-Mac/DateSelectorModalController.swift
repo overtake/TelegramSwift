@@ -116,7 +116,7 @@ final class DateSelectorModalView : View {
 
 
 
-private extension TimePickerOption {
+extension TimePickerOption {
     var interval: TimeInterval {
         let hours = Double(self.hours) * 60.0 * 60
         let minutes = Double(self.minutes) * 60.0

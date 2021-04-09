@@ -637,7 +637,21 @@ class InputDataController: GenericViewController<InputDataView> {
     private var firstTake: Bool = true
     
     override func firstResponder() -> NSResponder? {
-        if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView {
+        
+        let responder = window?.firstResponder as? NSView
+        
+        var responderInController: Bool = false
+        var superview = responder?.superview
+        while superview != nil {
+            if superview == self.genericView {
+                responderInController = true
+                break
+            } else {
+                superview = superview?.superview
+            }
+        }
+        
+        if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView || !responderInController {
             var first: NSResponder? = nil
             tableView.enumerateViews { view -> Bool in
                 first = view.firstResponder

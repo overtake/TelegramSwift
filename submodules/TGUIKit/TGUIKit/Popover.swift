@@ -76,20 +76,36 @@ open class Popover: NSObject {
 
             
             if let edge = frameValue.edge {
-                
-                switch edge {
-                case .maxX:
-                    point.x -= controller.frame.width
-                case .maxY:
-                    point.y -= controller.frame.height
-                    background.flip = true
-                case .minX:
-                   // point.x -= (controller.frame.width - control.frame.width)
-                    point.y -= controller.frame.height
-                    background.flip = true
-                default:
-                    fatalError("Not Implemented")
+                if !parentView.isFlipped {
+                    switch edge {
+                    case .maxX:
+                        point.x -= controller.frame.width
+                    case .maxY:
+                        point.y -= controller.frame.height
+                        background.flip = true
+                    case .minX:
+                       // point.x -= (controller.frame.width - control.frame.width)
+                        point.y -= controller.frame.height
+                        background.flip = true
+                    default:
+                        fatalError("Not Implemented")
+                    }
+                } else {
+                    switch edge {
+                    case .maxX:
+                        point.x -= controller.frame.width
+                    case .maxY:
+                        point.y += control.frame.height
+                        background.flip = true
+                    case .minX:
+                       // point.x -= (controller.frame.width - control.frame.width)
+                        point.y += control.frame.height
+                        background.flip = true
+                    default:
+                        fatalError("Not Implemented")
+                    }
                 }
+                
                 
                 
             }

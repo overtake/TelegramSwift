@@ -110,7 +110,7 @@ class ChatInputAccessory: Node {
             }, for: .Click)
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, account:account, replyMessage: state.interfaceState.replyMessage)
+            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)

@@ -1817,6 +1817,12 @@ internal final class L10n {
   internal static var chatGroupCallSpeakersZero: String  { return L10n.tr("Localizable", "Chat.GroupCall.Speakers_zero") }
   /// Voice Chat
   internal static var chatGroupCallTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Title") }
+  /// Starts %@
+  internal static func chatGroupCallScheduledStatus(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Scheduled.Status", p1)
+  }
+  /// Scheduled Voice Chat
+  internal static var chatGroupCallScheduledTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Scheduled.Title") }
   /// Pinned message
   internal static var chatHeaderPinnedMessage: String  { return L10n.tr("Localizable", "Chat.Header.PinnedMessage") }
   /// Pinned message #%d
@@ -1827,6 +1833,10 @@ internal final class L10n {
   internal static var chatHeaderPinnedPrevious: String  { return L10n.tr("Localizable", "Chat.Header.PinnedPrevious") }
   /// Report Spam
   internal static var chatHeaderReportSpam: String  { return L10n.tr("Localizable", "Chat.Header.ReportSpam") }
+  /// Starts in: %@
+  internal static func chatHeaderVoiceChatStartsIn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Header.VoiceChat.StartsIn", p1)
+  }
   /// Loading...
   internal static var chatInlineRequestLoading: String  { return L10n.tr("Localizable", "Chat.InlineRequest.Loading") }
   /// Close
@@ -2313,6 +2323,14 @@ internal final class L10n {
   internal static func chatServiceVoiceChatInvitationForYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatInvitationForYou", p1)
   }
+  /// %1$@ scheduled a [voice chat](open) for %2$@
+  internal static func chatServiceVoiceChatScheduled(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduled", p1, p2)
+  }
+  /// You scheduled a [voice chat](open) for %1$@
+  internal static func chatServiceVoiceChatScheduledYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduledYou", p1)
+  }
   /// %1$@ started a [voice chat](open)
   internal static func chatServiceVoiceChatStarted(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted", p1)
@@ -2418,6 +2436,10 @@ internal final class L10n {
   /// Voice chat ended (%1$@)
   internal static func chatServiceVoiceChatFinishedChannel(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished.Channel", p1)
+  }
+  /// [Voice Chat](open) scheduled for %@
+  internal static func chatServiceVoiceChatScheduledChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduled.Channel", p1)
   }
   /// [Voice Chat](open) started
   internal static var chatServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted.Channel") }
@@ -3091,6 +3113,14 @@ internal final class L10n {
   internal static func chatListServiceVoiceChatInvitationForYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VoiceChatInvitationForYou", p1)
   }
+  /// %1$@ scheduled a voice chat for %2$@
+  internal static func chatListServiceVoiceChatScheduled(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduled", p1, p2)
+  }
+  /// You scheduled a voice chat for %2$@
+  internal static func chatListServiceVoiceChatScheduledYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduledYou", p1)
+  }
   /// %1$@ started a voice chat
   internal static func chatListServiceVoiceChatStarted(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted", p1)
@@ -3124,6 +3154,10 @@ internal final class L10n {
   /// voice chat ended (%1$@)
   internal static func chatListServiceVoiceChatFinishedChannel(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VoiceChatFinished.Channel", p1)
+  }
+  /// voice chat scheduled for %@
+  internal static func chatListServiceVoiceChatScheduledChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduled.Channel", p1)
   }
   /// voice chat started
   internal static var chatListServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel") }
@@ -3543,16 +3577,36 @@ internal final class L10n {
   internal static var discussionControllerGroupSetUnlinkChannel: String  { return L10n.tr("Localizable", "DiscussionController.Group.Set.UnlinkChannel") }
   /// The channel successfully unlinked.
   internal static var discussionControllerGroupUnsetDescription: String  { return L10n.tr("Localizable", "DiscussionController.Group.Unset.Description") }
+  /// You will be displayed as your personal account.
+  internal static var displayMeAsAlone: String  { return L10n.tr("Localizable", "DisplayMeAs.Alone") }
   /// Continue as %@
   internal static func displayMeAsContinueAs(_ p1: String) -> String {
     return L10n.tr("Localizable", "DisplayMeAs.ContinueAs", p1)
   }
   /// personal account
   internal static var displayMeAsPersonalAccount: String  { return L10n.tr("Localizable", "DisplayMeAs.PersonalAccount") }
+  /// Scheduled Voice Chat
+  internal static var displayMeAsScheduled: String  { return L10n.tr("Localizable", "DisplayMeAs.Scheduled") }
   /// Choose whether you want to be displayed as your personal account or as your channel.
   internal static var displayMeAsText: String  { return L10n.tr("Localizable", "DisplayMeAs.Text") }
   /// Display Me As
   internal static var displayMeAsTitle: String  { return L10n.tr("Localizable", "DisplayMeAs.Title") }
+  /// You can also create a public channel to participate in voice chats as a channel.
+  internal static var displayMeAsAloneDesc: String  { return L10n.tr("Localizable", "DisplayMeAs.Alone.Desc") }
+  /// Schedule Voice Chat as %@
+  internal static func displayMeAsNewScheduleAs(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DisplayMeAs.New.ScheduleAs", p1)
+  }
+  /// Start Voice Chat as %@
+  internal static func displayMeAsNewStartAs(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DisplayMeAs.New.StartAs", p1)
+  }
+  /// New Voice Chat
+  internal static var displayMeAsNewTitle: String  { return L10n.tr("Localizable", "DisplayMeAs.New.Title") }
+  /// Subscribers will be notified that the voice chat start in %@
+  internal static func displayMeAsScheduledDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DisplayMeAs.Scheduled.Desc", p1)
+  }
   /// Choose whether you want to be displayed as your personal account or as group.
   internal static var displayMeAsTextGroup: String  { return L10n.tr("Localizable", "DisplayMeAs.Text.Group") }
   /// Spelling and Grammar
@@ -5523,8 +5577,18 @@ internal final class L10n {
   internal static var passportResetPasswordConfirmOK: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.OK") }
   /// All documents uploaded to your Telegram Passport will be lost. You will be able to upload new documents.
   internal static var passportResetPasswordConfirmText: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.Text") }
+  /// Tip (Optional)
+  internal static var paymentsTipLabel: String  { return L10n.tr("Localizable", "Payments.TipLabel") }
   /// Sorry, Telegram for macOS doesn't support payments yet. Please use one of our mobile apps to do this.
   internal static var paymentsUnsupported: String  { return L10n.tr("Localizable", "Payments.Unsupported") }
+  /// Neither Telegram nor %1$@ will have access to your credit card information. Credit card details will be handled only by the payments system, %2$@.\n\n Payments will go directly to the developer of %3$@. Telegram cannot provide any guarantees, so proceed at your own risk. In case of problems, please contact the developer of %4$@ or your bank.
+  internal static func paymentsWarningText(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Payments.WarningText", p1, p2, p3, p4)
+  }
+  /// Warning
+  internal static var paymentsWarninTitle: String  { return L10n.tr("Localizable", "Payments.WarninTitle") }
+  /// Tip
+  internal static var paymentsReceiptTip: String  { return L10n.tr("Localizable", "Payments.Receipt.Tip") }
   /// Deleted Account
   internal static var peerDeletedUser: String  { return L10n.tr("Localizable", "Peer.DeletedUser") }
   /// Replies Notifications
@@ -8501,11 +8565,67 @@ internal final class L10n {
   internal static func timePreciseDateM9(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Time.PreciseDate_m9", p1, p2, p3)
   }
+  /// Jan %@ at %@
+  internal static func timePreciseMediumDateM1(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m1", p1, p2)
+  }
+  /// Oct %@ at %@
+  internal static func timePreciseMediumDateM10(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m10", p1, p2)
+  }
+  /// Nov %@ at %@
+  internal static func timePreciseMediumDateM11(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m11", p1, p2)
+  }
+  /// Dec %@ at %@
+  internal static func timePreciseMediumDateM12(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m12", p1, p2)
+  }
+  /// Feb %@ at %@
+  internal static func timePreciseMediumDateM2(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m2", p1, p2)
+  }
+  /// Mar %@ at %@
+  internal static func timePreciseMediumDateM3(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m3", p1, p2)
+  }
+  /// Apr %@ at %@
+  internal static func timePreciseMediumDateM4(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m4", p1, p2)
+  }
+  /// May %@ at %@
+  internal static func timePreciseMediumDateM5(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m5", p1, p2)
+  }
+  /// Jun %@ at %@
+  internal static func timePreciseMediumDateM6(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m6", p1, p2)
+  }
+  /// Jul %@ at %@
+  internal static func timePreciseMediumDateM7(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m7", p1, p2)
+  }
+  /// Aug %@ at %@
+  internal static func timePreciseMediumDateM8(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m8", p1, p2)
+  }
+  /// Sep %@, at %@
+  internal static func timePreciseMediumDateM9(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Time.PreciseMediumDate_m9", p1, p2)
+  }
   /// today
   internal static var timeToday: String  { return L10n.tr("Localizable", "Time.today") }
   /// today at %@
   internal static func timeTodayAt(_ p1: String) -> String {
     return L10n.tr("Localizable", "Time.TodayAt", p1)
+  }
+  /// tomorrow at %@
+  internal static func timeTomorrow(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Time.tomorrow", p1)
+  }
+  /// tomorrow at %@
+  internal static func timeTomorrowAt(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Time.TomorrowAt", p1)
   }
   /// yesterday
   internal static var timeYesterday: String  { return L10n.tr("Localizable", "Time.yesterday") }
@@ -8945,12 +9065,18 @@ internal final class L10n {
   internal static var voiceChatRemovePeer: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer") }
   /// Remove
   internal static var voiceChatRemovePeerRemove: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeerRemove") }
+  /// Cancel Reminder
+  internal static var voiceChatRemoveReminder: String  { return L10n.tr("Localizable", "VoiceChat.RemoveReminder") }
   /// Telegram needs access to your microphone to speak
   internal static var voiceChatRequestAccess: String  { return L10n.tr("Localizable", "VoiceChat.RequestAccess") }
+  /// Set Reminder
+  internal static var voiceChatSetReminder: String  { return L10n.tr("Localizable", "VoiceChat.SetReminder") }
   /// Settings
   internal static var voiceChatSettings: String  { return L10n.tr("Localizable", "VoiceChat.Settings") }
   /// Show Info
   internal static var voiceChatShowInfo: String  { return L10n.tr("Localizable", "VoiceChat.ShowInfo") }
+  /// Start Now
+  internal static var voiceChatStartNow: String  { return L10n.tr("Localizable", "VoiceChat.StartNow") }
   /// Start Recording
   internal static var voiceChatStartRecording: String  { return L10n.tr("Localizable", "VoiceChat.StartRecording") }
   /// Stop Recording
@@ -9125,6 +9251,10 @@ internal final class L10n {
   }
   /// Remove
   internal static var voiceChatRemovePeerConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.RemovePeer.Confirm.OK") }
+  /// Starts In
+  internal static var voiceChatScheduledHeader: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.Header") }
+  /// Late For
+  internal static var voiceChatScheduledHeaderLate: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.HeaderLate") }
   /// New participants can speak
   internal static var voiceChatSettingsAllMembers: String  { return L10n.tr("Localizable", "VoiceChat.Settings.AllMembers") }
   /// End Voice Chat
@@ -9229,6 +9359,10 @@ internal final class L10n {
   internal static var voiceChatTitleInvited: String  { return L10n.tr("Localizable", "VoiceChat.Title.Invited") }
   /// Invite Members
   internal static var voiceChatTitleInviteMembers: String  { return L10n.tr("Localizable", "VoiceChat.Title.InviteMembers") }
+  /// Voice Chat
+  internal static var voiceChatTitleScheduled: String  { return L10n.tr("Localizable", "VoiceChat.Title.Scheduled") }
+  /// scheduled
+  internal static var voiceChatTitleScheduledSoon: String  { return L10n.tr("Localizable", "VoiceChat.Title.Scheduled.Soon") }
   /// Audio saved to Saved Messsages.
   internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat

@@ -37,9 +37,11 @@ final class CalendarMonthStruct {
     let components:DateComponents
     let dayHandler:(Int)->Void
     let onlyFuture: Bool
-    init(month:Date, selectDayAnyway: Bool, onlyFuture: Bool, dayHandler:@escaping (Int)->Void) {
+    let limitedBy: Date?
+    init(month:Date, selectDayAnyway: Bool, onlyFuture: Bool, limitedBy: Date?, dayHandler:@escaping (Int)->Void) {
         self.month = month
         self.onlyFuture = onlyFuture
+        self.limitedBy = limitedBy
         self.dayHandler = dayHandler
         self.prevMonth = CalendarUtils.stepMonth(-1, date: month)
         self.nextMonth = CalendarUtils.stepMonth(1, date: month)
@@ -83,6 +85,7 @@ class CalendarMonthView : View {
             day.set(background: theme.colors.background, for: .Normal)
             
             let current:Int
+            
             if i + 1 < month.currentStartDay {
                 current = (month.lastDayOfPrevMonth - month.currentStartDay) + i + 2
                 day.set(color: theme.colors.grayText, for: .Normal)
@@ -101,17 +104,22 @@ class CalendarMonthView : View {
                 
                 if month.onlyFuture, CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false) {
                     if current < components.day! {
-                        day.set(color: theme.colors.grayText, for: .Normal)
                         skipDay = true
                     }
                 } else if month.onlyFuture, components.year! + 1 == month.components.year! && components.month! == month.components.month!  {
                     if current > components.day! {
-                        day.set(color: theme.colors.grayText, for: .Normal)
                         skipDay = true
                     }
                 } else if CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false), current > components.day! {
-                    day.set(color: theme.colors.grayText, for: .Normal)
                     skipDay = true
+                }
+                
+                if let limitedBy = month.limitedBy {
+                    let limited = calendar.dateComponents([.year, .month, .day], from: limitedBy)
+                    if limited.year! < month.components.year! || limited.month! < month.components.month! || limited.day! < current {
+                        skipDay = true
+                    }
+                    
                 }
                 if !skipDay {
                     day.set(color: theme.colors.underSelectedColor, for: .Highlight)
@@ -141,6 +149,8 @@ class CalendarMonthView : View {
                         self?.layout(for: month)
                         
                     }, for: .Click)
+                } else {
+                    day.set(color: theme.colors.grayText, for: .Normal)
                 }
             }
             day.set(text: "\(current)", for: .Normal)
@@ -178,9 +188,11 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
     let interactions:CalendarMonthInteractions
     let month:CalendarMonthStruct
     let onlyFuture: Bool
-    init(_ month:Date, onlyFuture: Bool, selectDayAnyway: Bool, interactions:CalendarMonthInteractions) {
+    let limitedBy: Date?
+    init(_ month:Date, onlyFuture: Bool, limitedBy: Date?, selectDayAnyway: Bool, interactions:CalendarMonthInteractions) {
         self.onlyFuture = onlyFuture
-        self.month = CalendarMonthStruct(month: month, selectDayAnyway: selectDayAnyway, onlyFuture: self.onlyFuture, dayHandler: { day in
+        self.limitedBy = limitedBy
+        self.month = CalendarMonthStruct(month: month, selectDayAnyway: selectDayAnyway, onlyFuture: self.onlyFuture, limitedBy: self.limitedBy, dayHandler: { day in
             interactions.selectAction(CalendarUtils.monthDay(day, date: month))
         })
         self.interactions = interactions

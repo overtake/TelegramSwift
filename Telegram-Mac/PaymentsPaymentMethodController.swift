@@ -12,17 +12,6 @@ import TGUIKit
 import SwiftSignalKit
 import Stripe
 
-struct PaymentsPaymentMethodAdditionalFields: OptionSet {
-    var rawValue: Int32
-    
-    init(rawValue: Int32) {
-        self.rawValue = rawValue
-    }
-    
-    static let cardholderName = PaymentsPaymentMethodAdditionalFields(rawValue: 1 << 0)
-    static let country = PaymentsPaymentMethodAdditionalFields(rawValue: 1 << 1)
-    static let zipCode = PaymentsPaymentMethodAdditionalFields(rawValue: 1 << 2)
-}
 
 
 private final class Arguments {
@@ -37,6 +26,18 @@ private final class Arguments {
         self.passwordMissing = passwordMissing
     }
 }
+
+
+private let _id_card_number = InputDataIdentifier("_id_card_number")
+private let _id_card_date = InputDataIdentifier("_id_card_date")
+private let _id_card_cvc = InputDataIdentifier("_id_card_cvc")
+
+private let _id_card_holder_name = InputDataIdentifier("_id_card_holder_name")
+
+private let _id_card_country = InputDataIdentifier("_id_card_country")
+private let _id_card_zip_code = InputDataIdentifier("_id_card_zip_code")
+
+private let _id_card_save_info = InputDataIdentifier("_id_card_save_info")
 
 private struct State : Equatable {
     struct Card : Equatable {
@@ -136,16 +137,134 @@ private struct State : Equatable {
     }
 }
 
-private let _id_card_number = InputDataIdentifier("_id_card_number")
-private let _id_card_date = InputDataIdentifier("_id_card_date")
-private let _id_card_cvc = InputDataIdentifier("_id_card_cvc")
+private func validateSmartGlobal(_ publicToken: String, isTesting: Bool, state: State) -> Signal<BotCheckoutPaymentMethod, Error> {
+    return Signal { subscriber in
+        
+        let url: String
+        if isTesting {
+            url = "https://tgb-playground.smart-glocal.com/cds/v1/tokenize/card"
+        } else {
+            url = "https://tgb.smart-glocal.com/cds/v1/tokenize/card"
+        }
 
-private let _id_card_holder_name = InputDataIdentifier("_id_card_holder_name")
+        let stripe = state.stripe
+        
+        let jsonPayload: [String: Any] = [
+            "card": [
+                "number": stripe.number ?? "",
+                "expiration_month": "\(state.card.date.prefix(2))",
+                "expiration_year": "\(state.card.date.suffix(2))",
+                "security_code": "\(stripe.cvc ?? "")"
+            ] as [String: Any]
+        ]
 
-private let _id_card_country = InputDataIdentifier("_id_card_country")
-private let _id_card_zip_code = InputDataIdentifier("_id_card_zip_code")
+        guard let parsedUrl = URL(string: url) else {
+            return EmptyDisposable
+        }
 
-private let _id_card_save_info = InputDataIdentifier("_id_card_save_info")
+        var request = URLRequest(url: parsedUrl)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(publicToken, forHTTPHeaderField: "X-PUBLIC-TOKEN")
+        guard let requestBody = try? JSONSerialization.data(withJSONObject: jsonPayload, options: []) else {
+            return EmptyDisposable
+        }
+        request.httpBody = requestBody
+
+        let session = URLSession.shared
+        
+        var cancelled: Bool = false
+        
+        let dataTask = session.dataTask(with: request, completionHandler: { data, response, error in
+            enum ReponseError: Error {
+                case generic
+            }
+            
+            if cancelled {
+                return
+            } else if let error = error {
+                subscriber.putError(error)
+                return
+            }
+
+            do {
+                guard let data = data else {
+                    throw ReponseError.generic
+                }
+
+                let jsonRaw = try JSONSerialization.jsonObject(with: data, options: [])
+                guard let json = jsonRaw as? [String: Any] else {
+                    throw ReponseError.generic
+                }
+                guard let resultData = json["data"] as? [String: Any] else {
+                    throw ReponseError.generic
+                }
+                guard let resultInfo = resultData["info"] as? [String: Any] else {
+                    throw ReponseError.generic
+                }
+                guard let token = resultData["token"] as? String else {
+                    throw ReponseError.generic
+                }
+                guard let maskedCardNumber = resultInfo["masked_card_number"] as? String else {
+                    throw ReponseError.generic
+                }
+                guard let cardType = resultInfo["card_type"] as? String else {
+                    throw ReponseError.generic
+                }
+
+                var last4 = maskedCardNumber
+                if last4.count > 4 {
+                    let lastDigits = String(maskedCardNumber[maskedCardNumber.index(maskedCardNumber.endIndex, offsetBy: -4)...])
+                    if lastDigits.allSatisfy(\.isNumber) {
+                        last4 = "\(cardType) *\(lastDigits)"
+                    }
+                }
+
+                let responseJson: [String: Any] = [
+                    "type": "card",
+                    "token": "\(token)"
+                ]
+
+                let serializedResponseJson = try JSONSerialization.data(withJSONObject: responseJson, options: [])
+
+                guard let serializedResponseString = String(data: serializedResponseJson, encoding: .utf8) else {
+                    throw ReponseError.generic
+                }
+
+                subscriber.putNext(.webToken(BotCheckoutPaymentWebToken(
+                    title: last4,
+                    data: serializedResponseString,
+                    saveOnServer: state.saveInfo
+                )))
+                subscriber.putCompletion()
+            } catch {
+                subscriber.putError(error)
+            }
+        })
+        
+        dataTask.resume()
+
+
+        return ActionDisposable {
+            cancelled = true
+            dataTask.cancel()
+        }
+    }
+}
+
+
+struct PaymentsPaymentMethodAdditionalFields: OptionSet {
+    var rawValue: Int32
+    
+    init(rawValue: Int32) {
+        self.rawValue = rawValue
+    }
+    
+    static let cardholderName = PaymentsPaymentMethodAdditionalFields(rawValue: 1 << 0)
+    static let country = PaymentsPaymentMethodAdditionalFields(rawValue: 1 << 1)
+    static let zipCode = PaymentsPaymentMethodAdditionalFields(rawValue: 1 << 2)
+}
+
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -305,7 +424,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPaymentMethodAdditionalFields, publishableKey: String, passwordMissing: Bool, completion: @escaping (BotCheckoutPaymentMethod) -> Void) -> InputDataModalController {
+func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPaymentMethodAdditionalFields, publishableKey: String, passwordMissing: Bool, isTesting: Bool, provider: PaymentProvider, completion: @escaping (BotCheckoutPaymentMethod) -> Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -326,32 +445,45 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
             return current
         }
     }, verify: {
-        let configuration = STPPaymentConfiguration.shared().copy() as! STPPaymentConfiguration
-        configuration.smsAutofillDisabled = true
-        configuration.publishableKey = publishableKey
-        configuration.appleMerchantIdentifier = "merchant.ph.telegra.Telegraph"
-        let apiClient = STPAPIClient(configuration: configuration)
-        let card = stateValue.with { $0.stripe }
-        let saveOnServer = stateValue.with { $0.saveInfo }
-        let createToken: Signal<STPToken, Error> = Signal { subscriber in
-            apiClient.createToken(withCard: card, completion: { token, error in
-                if let error = error {
-                    subscriber.putError(error)
-                } else if let token = token {
-                    subscriber.putNext(token)
-                    subscriber.putCompletion()
+        
+        let tokenSignal:Signal<BotCheckoutPaymentMethod?, Error>
+        
+        switch provider {
+        case .stripe:
+            let configuration = STPPaymentConfiguration.shared().copy() as! STPPaymentConfiguration
+            configuration.smsAutofillDisabled = true
+            configuration.publishableKey = publishableKey
+            configuration.appleMerchantIdentifier = "merchant.ph.telegra.Telegraph"
+            let apiClient = STPAPIClient(configuration: configuration)
+            let card = stateValue.with { $0.stripe }
+            let saveOnServer = stateValue.with { $0.saveInfo }
+            let createToken: Signal<STPToken, Error> = Signal { subscriber in
+                apiClient.createToken(withCard: card, completion: { token, error in
+                    if let error = error {
+                        subscriber.putError(error)
+                    } else if let token = token {
+                        subscriber.putNext(token)
+                        subscriber.putCompletion()
+                    }
+                })
+                return ActionDisposable {
+                    let _ = apiClient.publishableKey
                 }
-            })
-            return ActionDisposable {
-                let _ = apiClient.publishableKey
             }
+            tokenSignal = createToken |> map { token in
+                if let card = token.card {
+                    let last4 = card.last4()
+                    let brand = STPAPIClient.string(with: card.brand)
+                    return .webToken(BotCheckoutPaymentWebToken(title: "\(brand)*\(last4)", data: "{\"type\": \"card\", \"id\": \"\(token.tokenId)\"}", saveOnServer: saveOnServer))
+                }
+                return nil
+            }
+        case .smartglocal:
+            tokenSignal = validateSmartGlobal(publishableKey, isTesting: isTesting, state: stateValue.with { $0 }) |> map(Optional.init)
         }
-            
-        _ = showModalProgress(signal: createToken, for: context.window).start(next: { token in
-            if let card = token.card {
-                let last4 = card.last4()
-                let brand = STPAPIClient.string(with: card.brand)
-                completion(.webToken(BotCheckoutPaymentWebToken(title: "\(brand)*\(last4)", data: "{\"type\": \"card\", \"id\": \"\(token.tokenId)\"}", saveOnServer: saveOnServer)))
+        _ = showModalProgress(signal: tokenSignal, for: context.window).start(next: { token in
+            if let token = token {
+                completion(token)
                 close?()
             }
         }, error: { error in

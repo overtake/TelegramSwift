@@ -224,7 +224,6 @@ final class GroupCallContext {
     deinit {
         presentDisposable.dispose()
         removeDisposable.dispose()
-//        self.window.contentView?.removeAllSubviews()
     }
     
     func present() {

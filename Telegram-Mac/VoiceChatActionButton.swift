@@ -454,6 +454,19 @@ final class VoiceChatActionButtonBackgroundView: View {
         self.foregroundCircleLayer.add(shrinkAnimation, forKey: "insideShrink")
         CATransaction.commit()
     }
+    
+    private func setDisabledBlobWithoutAnimation() {
+        CATransaction.begin()
+        CATransaction.disableActions()
+        self.foregroundCircleLayer.isHidden = false
+        self.maskCircleLayer.isHidden = false
+        self.maskProgressLayer.isHidden = true
+        self.maskGradientLayer.isHidden = false
+        self.updateGlowAndGradientAnimations(active: self.isActive, previousActive: nil)
+        self.maskBlobLayer.isHidden = false
+        self.maskBlobLayer.startAnimating()
+        CATransaction.commit()
+    }
 
     private func playConnectionAnimation(active: Bool?, completion: @escaping () -> Void) {
         CATransaction.begin()
@@ -590,6 +603,8 @@ final class VoiceChatActionButtonBackgroundView: View {
                         updateGlowAndGradientAnimations(active: nil, previousActive: previousActive)
                     }
                     self.transition = nil
+                } else {
+                    setDisabledBlobWithoutAnimation()
                 }
                 break
         }

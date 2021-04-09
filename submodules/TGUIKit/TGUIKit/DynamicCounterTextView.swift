@@ -13,6 +13,7 @@ public final class DynamicCounterTextView : View {
     public struct Value {
         public let values: [(TextViewLayout, DynamicCounterTextView.Text)]
         public let size: NSSize
+        public let numSize: CGFloat
     }
     
     public static func make(for text: String, count: String, font: NSFont, textColor: NSColor, width: CGFloat, onlyFade: Bool = false) -> Value {
@@ -48,12 +49,25 @@ public final class DynamicCounterTextView : View {
         }
         
         let layouts = texts.map {
-            return (TextViewLayout($0.text, maximumNumberOfLines: 1, truncationType: .end), $0)
+            return (TextViewLayout($0.text, maximumNumberOfLines: 1, truncationType: .end, alignment: .center), $0)
         }
+        
+        let numeroSize: CGFloat = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map { value -> TextViewLayout in
+            let layout = TextViewLayout(.initialize(string: "\(value)", color: nil, font: font), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+            layout.measure(width: .greatestFiniteMagnitude)
+            return layout
+        }.map {
+            $0.layoutSize.width
+        }.max()!
+        
         var mw: CGFloat = width
         for layout in layouts {
             layout.0.measure(width: mw)
-            mw -= max(layout.0.layoutSize.width, 4) - 2
+            var w = layout.0.layoutSize.width
+            if Int(layout.0.attributedString.string) != nil {
+                w = max(w, numeroSize)
+            }
+            mw -= max(w, 4) - 2
         }
         
         let size = layouts.reduce(NSZeroSize, { current, value in
@@ -61,13 +75,17 @@ public final class DynamicCounterTextView : View {
             if value.0.attributedString.string == " " {
                 current.width += 4
             } else {
-                current.width += value.0.layoutSize.width
+                var w = value.0.layoutSize.width
+                if Int(value.0.attributedString.string) != nil {
+                    w = max(w, numeroSize)
+                }
+                current.width += w
             }
             current.height = max(current.height, value.0.layoutSize.height)
             return current
         })
         
-        return Value(values: layouts, size: size)
+        return Value(values: layouts, size: size, numSize: numeroSize)
     }
     
     
@@ -105,15 +123,36 @@ public final class DynamicCounterTextView : View {
         }
     }
     
+    public var effectiveSubviews: [NSView] {
+        return textViews.map { $0.value.0 }
+    }
+    
     fileprivate var textViews: [Text : (TextView, Text)] = [:]
-    public func update(_ layouts: [(TextViewLayout, Text)], animated: Bool) {
+    fileprivate var layouts: [(TextViewLayout, Text)] = []
+    public func update(_ value: Value, animated: Bool, reversed: Bool = false) {
                 
         enum NumericAnimation {
             case forward
             case backward
         }
+        let layouts = value.values
         
         let texts = layouts.map { $0.1 }
+        
+        let previous = Int(self.layouts.compactMap { Int($0.1.text.string) }.reduce("", { current, value in
+            return current + "\(value)"
+        })) ?? 0
+        
+        let current = Int(layouts.compactMap { Int($0.1.text.string) }.reduce("", { current, value in
+            return current + "\(value)"
+        })) ?? 0
+        
+        if self.layouts.map({ $0.1 }) == layouts.map({ $0.1 }) {
+            return
+        }
+        self.layouts = layouts
+                
+        let numberAnimation: NumericAnimation = (reversed ? current > previous : current < previous) ? .backward : .forward
         
         var addition: [Int : NumericAnimation] = [:]
         var previousTextPos:[Int: NSPoint] = [:]
@@ -121,8 +160,8 @@ public final class DynamicCounterTextView : View {
             let title = texts.first(where: { $0.hashValue == key.hashValue })
             if textView.1 != title {
                 let updated = title ?? key
-                if let title = title {
-                    addition[key.hashValue] = title < key ? .backward : .forward
+                if let _ = title {
+                    addition[key.hashValue] = numberAnimation//title < key ? .backward : .forward
                 }
                 
                 textViews[key] = nil
