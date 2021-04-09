@@ -791,7 +791,7 @@ extension SuggestedLocalizationInfo {
 
 public extension MessageId {
     func toInt64() -> Int64 {
-        return (Int64(id) << 32) | Int64(peerId.id)
+        return (Int64(id) << 32) | Int64(peerId.id._internalGetInt32Value())
     }
 }
 
@@ -2787,7 +2787,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
     }
 }
 

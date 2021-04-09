@@ -87,24 +87,26 @@ private struct PeerMediaPhotosState : Equatable {
     let isLoading: Bool
     let messages:[Message]
     let searchState: SearchState
-    init(isLoading: Bool, messages: [Message], searchState: SearchState) {
+    let contentSettings: ContentSettings
+    init(isLoading: Bool, messages: [Message], searchState: SearchState, contentSettings: ContentSettings) {
         self.isLoading = isLoading
-        self.messages = messages.reversed()
+        self.messages = messages.reversed().filter { $0.restrictedText(contentSettings) == nil }
         self.searchState = searchState
+        self.contentSettings = contentSettings
     }
     func withAppendMessages(_ collection: [Message]) -> PeerMediaPhotosState {
         var messages = self.messages
         messages.append(contentsOf: collection)
-        return PeerMediaPhotosState(isLoading: self.isLoading, messages: messages, searchState: self.searchState)
+        return PeerMediaPhotosState(isLoading: self.isLoading, messages: messages, searchState: self.searchState, contentSettings: self.contentSettings)
     }
     func withUpdatedMessages(_ collection: [Message]) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: self.isLoading, messages: collection, searchState: self.searchState)
+        return PeerMediaPhotosState(isLoading: self.isLoading, messages: collection, searchState: self.searchState, contentSettings: self.contentSettings)
     }
     func withUpdatedLoading(_ isLoading: Bool) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: self.searchState)
+        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: self.searchState, contentSettings: self.contentSettings)
     }
     func withUpdatedSeachState(_ searchState: SearchState) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: searchState)
+        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: searchState, contentSettings: self.contentSettings)
     }
 }
 
@@ -293,7 +295,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         
         let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount), ignoreRepeated: true)
         
-        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil))
+        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings)
         let state: ValuePromise<PeerMediaPhotosState> = ValuePromise()
         let stateValue: Atomic<PeerMediaPhotosState> = Atomic(value: initialState)
         let updateState:((PeerMediaPhotosState)->PeerMediaPhotosState) -> Void = { f in

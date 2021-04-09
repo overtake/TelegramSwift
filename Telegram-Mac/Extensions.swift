@@ -2278,6 +2278,12 @@ extension Date {
         
         return Int32(bootTime.tv_sec)
     }
+    var isToday: Bool {
+        return CalendarUtils.isSameDate(self, date: Date(), checkDay: true)
+    }
+    var isTomorrow: Bool {
+        return Calendar.current.isDateInTomorrow(self)
+    }
 }
 
 

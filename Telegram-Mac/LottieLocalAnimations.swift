@@ -54,6 +54,14 @@ enum LocalAnimatedSticker : String {
     case voice_chat_hand_off
     case voice_chat_mute
     case voice_chat_unmute
+
+    case voice_chat_start_chat_to_mute
+    case voice_chat_set_reminder
+    case voice_chat_set_reminder_to_raise_hand
+    case voice_chat_set_reminder_to_mute
+    case voice_chat_cancel_reminder_to_raise_hand
+    case voice_chat_cancel_reminder
+    case voice_chat_cancel_reminder_to_mute
     
     case playlist_play_pause
     case playlist_pause_play

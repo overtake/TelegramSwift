@@ -158,7 +158,7 @@ private final class DesktopCaptureSourceView : Control {
         self.contentView.subviews = [self.backgroundView, view, self.shadowView, self.textView]
 
         
-        let layout = TextViewLayout(.initialize(string: source.title(), color: theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
+        let layout = TextViewLayout(.initialize(string: source.title(), color: .white, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
         layout.measure(width: frame.width - 20)
         textView.update(layout)
       
@@ -200,6 +200,13 @@ private final class DesktopCaptureSourceView : Control {
             }
         }
         return nil
+    }
+    
+    deinit {
+        if let layer = self.view?.layer as? AVCaptureVideoPreviewLayer {
+            layer.session?.stopRunning()
+            layer.session = nil
+        }
     }
     
     override func layout() {
@@ -297,6 +304,8 @@ final class DesktopCapturePreviewView : HorizontalRowView {
         super.updateMouse()
         contentView.updateState()
     }
+    
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
                 

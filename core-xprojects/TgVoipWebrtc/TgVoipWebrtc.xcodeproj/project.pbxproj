@@ -22,6 +22,12 @@
 		2767ADFE25D6DDDC00717AA1 /* DesktopCaptureSourceView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2767ADF425D6DDDC00717AA1 /* DesktopCaptureSourceView.mm */; };
 		2767ADFF25D6DDDC00717AA1 /* DesktopSharingCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF525D6DDDC00717AA1 /* DesktopSharingCapturer.h */; };
 		27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A0A4DF25F764FA00B789AF /* ffmpeg.framework */; };
+		27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167F926203A56000B8449 /* NativeNetworkingImpl.h */; };
+		27C1680026203A56000B8449 /* Signaling.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167FA26203A56000B8449 /* Signaling.h */; };
+		27C1680126203A56000B8449 /* NativeNetworkingImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27C167FB26203A56000B8449 /* NativeNetworkingImpl.cpp */; };
+		27C1680226203A56000B8449 /* InstanceV2Impl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167FC26203A56000B8449 /* InstanceV2Impl.h */; };
+		27C1680326203A56000B8449 /* InstanceV2Impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27C167FD26203A56000B8449 /* InstanceV2Impl.cpp */; };
+		27C1680426203A56000B8449 /* Signaling.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27C167FE26203A56000B8449 /* Signaling.cpp */; };
 		27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */; };
 		27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */; };
 		27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */; };
@@ -83,6 +89,12 @@
 		2767ADF425D6DDDC00717AA1 /* DesktopCaptureSourceView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DesktopCaptureSourceView.mm; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceView.mm; sourceTree = "<group>"; };
 		2767ADF525D6DDDC00717AA1 /* DesktopSharingCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopSharingCapturer.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopSharingCapturer.h; sourceTree = "<group>"; };
 		27A0A4DF25F764FA00B789AF /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		27C167F926203A56000B8449 /* NativeNetworkingImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeNetworkingImpl.h; sourceTree = "<group>"; };
+		27C167FA26203A56000B8449 /* Signaling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Signaling.h; sourceTree = "<group>"; };
+		27C167FB26203A56000B8449 /* NativeNetworkingImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NativeNetworkingImpl.cpp; sourceTree = "<group>"; };
+		27C167FC26203A56000B8449 /* InstanceV2Impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstanceV2Impl.h; sourceTree = "<group>"; };
+		27C167FD26203A56000B8449 /* InstanceV2Impl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = InstanceV2Impl.cpp; sourceTree = "<group>"; };
+		27C167FE26203A56000B8449 /* Signaling.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Signaling.cpp; sourceTree = "<group>"; };
 		27D0067B25AF266400EE3EB1 /* GroupNetworkManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupNetworkManager.cpp; sourceTree = "<group>"; };
 		27D0067C25AF266400EE3EB1 /* GroupNetworkManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupNetworkManager.h; sourceTree = "<group>"; };
 		27D0068125AF26AE00EE3EB1 /* StaticThreads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StaticThreads.cpp; path = ../../submodules/tgcalls/tgcalls/StaticThreads.cpp; sourceTree = "<group>"; };
@@ -173,9 +185,24 @@
 			name = capturer;
 			sourceTree = "<group>";
 		};
+		27C167F826203A56000B8449 /* v2 */ = {
+			isa = PBXGroup;
+			children = (
+				27C167F926203A56000B8449 /* NativeNetworkingImpl.h */,
+				27C167FA26203A56000B8449 /* Signaling.h */,
+				27C167FB26203A56000B8449 /* NativeNetworkingImpl.cpp */,
+				27C167FC26203A56000B8449 /* InstanceV2Impl.h */,
+				27C167FD26203A56000B8449 /* InstanceV2Impl.cpp */,
+				27C167FE26203A56000B8449 /* Signaling.cpp */,
+			);
+			name = v2;
+			path = ../../submodules/tgcalls/tgcalls/v2;
+			sourceTree = "<group>";
+		};
 		D06E367F24A4FD4900C7D03A = {
 			isa = PBXGroup;
 			children = (
+				27C167F826203A56000B8449 /* v2 */,
 				2771ADBF2590E63E000B29FF /* capturer */,
 				D0E7BD1C256A7E0D0068644D /* group */,
 				D0D751CB24BE3AD30037D73A /* InstanceImplLegacy.cpp */,
@@ -286,14 +313,17 @@
 				D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
+				27C1680226203A56000B8449 /* InstanceV2Impl.h in Headers */,
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
 				2767ADFD25D6DDDC00717AA1 /* DesktopCaptureSourceView.h in Headers */,
+				27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */,
 				27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */,
 				2767ADF625D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h in Headers */,
 				27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */,
 				2767ADFF25D6DDDC00717AA1 /* DesktopSharingCapturer.h in Headers */,
 				27335F0925C833D400FD040C /* GroupInstanceCustomImpl.h in Headers */,
 				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
+				27C1680026203A56000B8449 /* Signaling.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -374,6 +404,7 @@
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
+				27C1680326203A56000B8449 /* InstanceV2Impl.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				2767ADF925D6DDDC00717AA1 /* DesktopCaptureSourceManager.mm in Sources */,
@@ -391,12 +422,14 @@
 				D0D751B224BE3A140037D73A /* TGRTCVideoEncoderH265.mm in Sources */,
 				D0D751B324BE3A140037D73A /* TGRTCVideoDecoderH265.mm in Sources */,
 				27335F0825C833D400FD040C /* GroupInstanceCustomImpl.cpp in Sources */,
+				27C1680126203A56000B8449 /* NativeNetworkingImpl.cpp in Sources */,
 				D0D751B424BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm in Sources */,
 				D0D751B524BE3A140037D73A /* VideoCameraCapturerMac.mm in Sources */,
 				D0E3685524DAADF5009896D4 /* TGRTCVideoDecoderH264.mm in Sources */,
 				2767ADFC25D6DDDC00717AA1 /* DesktopCaptureSourceHelper.mm in Sources */,
 				27D0067D25AF266400EE3EB1 /* GroupNetworkManager.cpp in Sources */,
 				D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */,
+				27C1680426203A56000B8449 /* Signaling.cpp in Sources */,
 				D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */,
 				D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */,
 				2767ADF825D6DDDC00717AA1 /* DesktopSharingCapturer.mm in Sources */,
@@ -568,6 +601,7 @@
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -584,6 +618,7 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -629,6 +664,7 @@
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -645,6 +681,7 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -756,6 +793,7 @@
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -772,6 +810,7 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -884,6 +923,7 @@
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -900,6 +940,7 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1003,6 +1044,7 @@
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1019,6 +1061,7 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1128,6 +1171,7 @@
 					"$(PROJECT_DIR)/../libopus/build/libopus/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpusBinding/Sources",
 					$PROJECT_DIR/../ffmpeg/build/ffmpeg/include,
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/third-party/rnnoise/PublicHeaders",
 				);
 				INFOPLIST_FILE = TgVoipWebrtc/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1144,6 +1188,7 @@
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

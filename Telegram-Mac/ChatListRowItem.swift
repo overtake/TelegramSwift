@@ -239,7 +239,7 @@ class ChatListRowItem: TableRowItem {
         if case .ad = pinnedType {
             return false
         }
-        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 777000)
+        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(777000))
         if self.peer?.id == supportId {
             return false
         }
@@ -477,7 +477,8 @@ class ChatListRowItem: TableRowItem {
                 embeddedState = nil
             }
         }
-        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 777000)
+        
+        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(777000))
 
         if let peerPresence = peerPresence, context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
             if let peerPresence = peerPresence as? TelegramUserPresence {
@@ -578,7 +579,8 @@ class ChatListRowItem: TableRowItem {
                 if let peer = info.author {
                     author = peer
                 } else if let signature = info.authorSignature {
-                    author = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                                        
+                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 }
             } else {
                 author = message.author

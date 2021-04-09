@@ -52,14 +52,24 @@ class GeneralContainableRowView : TableRowView {
         self.borderView.backgroundColor = borderColor
     }
     
+    var maxBlockWidth: CGFloat {
+        return 600
+    }
+    var maxWidth: CGFloat {
+        return frame.width
+    }
+    var maxHeight: CGFloat {
+        return frame.height
+    }
+    
     override func layout() {
         super.layout()
         guard let item = item as? GeneralRowItem else {
             return
         }
-        let blockWidth = min(600, frame.width - item.inset.left - item.inset.right)
+        let blockWidth = min(maxBlockWidth, frame.width - item.inset.left - item.inset.right)
         
-        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - blockWidth) / 2), item.inset.top, blockWidth, frame.height - item.inset.bottom - item.inset.top)
+        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (maxWidth - blockWidth) / 2), item.inset.top, blockWidth, maxHeight - item.inset.bottom - item.inset.top)
         self.containerView.setCorners(item.viewType.corners)
 
 

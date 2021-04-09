@@ -926,7 +926,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let before = item.heightValue
             let updated = item.makeSize(tableView.frame.width, oldWidth: oldWidth)
             let after = item.heightValue
-            if (before != after && updated) || item.instantlyResize {
+            if (before != after && updated) || item.instantlyResize || inLiveResize {
                 reloadData(row: i, animated: false)
                 noteHeightOfRow(i, false)
             }
@@ -1783,6 +1783,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
                 self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  options)
+                self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
             }
         } else {
             NSAnimationContext.current.duration = 0.0
