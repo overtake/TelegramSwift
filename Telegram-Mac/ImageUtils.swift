@@ -40,6 +40,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                    return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
                                } else {
                                    return Signal { subscriber in
+                                                
+                                       if let data = representation.immediateThumbnailData {
+                                           subscriber.putNext((decodeTinyThumbnail(data: data), false))
+                                       }
+                                    
                                        let resourceDataDisposable = resourceData.start(next: { data in
                                            if data.complete {
                                                subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true))
@@ -117,7 +122,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
         }
         
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id % 7)))
+        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt32Value() % 7)))
         
         
         let symbol = letters.reduce("", { (current, letter) -> String in
@@ -278,7 +283,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id % 7)))
+        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt32Value() % 7)))
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))

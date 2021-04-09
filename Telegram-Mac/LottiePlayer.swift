@@ -250,7 +250,7 @@ private final class PlayerRenderer {
     private var soundEffect: LottieSoundEffect?
     
     private(set) var finished: Bool = false
-    private let animation: LottieAnimation
+    private var animation: LottieAnimation
     private var layer: Atomic<RLottieBridge?> = Atomic(value: nil)
     private let updateState:(LottiePlayerState)->Void
     private let displayFrame: (RenderedFrame)->Void
@@ -318,6 +318,10 @@ private final class PlayerRenderer {
     
     func playSoundEffect() {
         self.soundEffect?.markAsPlayable()
+    }
+    
+    func updateSize(_ size: NSSize) {
+        self.animation = self.animation.withUpdatedSize(size)
     }
     
     func setColors(_ colors: [LottieColor]) {
@@ -612,6 +616,11 @@ private final class PlayerContext {
             renderer.playSoundEffect()
         }
     }
+    func updateSize(_ size: NSSize) {
+        self.rendererRef.syncWith { renderer in
+            renderer.updateSize(size)
+        }
+    }
     var currentFrame:Int32? {
         var currentFrame:Int32? = nil
         self.rendererRef.syncWith { renderer in
@@ -659,6 +668,9 @@ struct LottieAnimationEntryKey : Hashable {
 
     
     func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
+    }
+    func withUpdatedSize(_ size: CGSize) -> LottieAnimationEntryKey {
         return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
     }
     
@@ -754,6 +766,9 @@ final class LottieAnimation : Equatable {
     }
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
         return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
+    }
+    func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
     }
     
     var cacheKey: String {
@@ -1022,8 +1037,15 @@ class LottiePlayerView : NSView {
         return true
     }
     
-    override func layout() {
-        super.layout()
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        update(size: newSize, transition: .immediate)
+    }
+    
+    func update(size: NSSize, transition: ContainedViewLayoutTransition) {
+        for subview in subviews {
+            transition.updateFrame(view: subview, frame: bounds)
+        }
     }
     
     deinit {
@@ -1134,7 +1156,7 @@ class LottiePlayerView : NSView {
                 } else {
                     let fallback = LottieFallbackView()
                     fallback.wantsLayer = true
-                    fallback.frame = CGRect(origin: CGPoint(), size: animation.viewSize)
+                    fallback.frame = CGRect(origin: CGPoint(), size: self.frame.size)
                     fallback.layer?.contentsGravity = .resize
                     self.addSubview(fallback)
                     if animated {

@@ -31,7 +31,7 @@ public enum ContainedViewLayoutTransition {
 }
 
 public extension ContainedViewLayoutTransition {
-    func updateFrame(view: View, frame: CGRect, completion: ((Bool) -> Void)? = nil) {
+    func updateFrame(view: NSView, frame: CGRect, completion: ((Bool) -> Void)? = nil) {
         switch self {
         case .immediate:
             view.frame = frame
@@ -40,12 +40,23 @@ public extension ContainedViewLayoutTransition {
             }
         case let .animated(duration, curve):
             let previousFrame = view.frame
-            view.frame = frame
-            view.layer?.animateFrame(from: previousFrame, to: frame, duration: duration, timingFunction: curve.timingFunction, completion: { result in
-                if let completion = completion {
-                    completion(result)
-                }
+            
+            NSAnimationContext.runAnimationGroup({ ctx in
+                ctx.duration = duration
+                ctx.timingFunction = .init(name: curve.timingFunction)
+                view.animator().frame = frame
+            }, completionHandler: {
+                completion?(true)
             })
+            view.animator().frame = frame
+            
+//
+//
+//            view.layer?.animateFrame(from: previousFrame, to: frame, duration: duration, timingFunction: curve.timingFunction, completion: { result in
+//                if let completion = completion {
+//                    completion(result)
+//                }
+//            })
         }
     }
     

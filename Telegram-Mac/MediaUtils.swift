@@ -38,7 +38,8 @@ final class ImageRenderData {
 private let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
     (400, [1]),
-    (600, [2, 3]),
+    (400, [3]),
+    (600, [4]),
     (Int(Int32.max), [2, 3, 4])
 ]
 

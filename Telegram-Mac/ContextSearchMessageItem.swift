@@ -70,7 +70,7 @@ class ContextSearchMessageItem: GeneralRowItem {
             if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                 nameColor = theme.chat.linkColor(true, false)
             } else if context.peerId != peer.id {
-                let value = abs(Int(peer.id.id) % 7)
+                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                 nameColor = theme.chat.peerName(value)
             }
         }

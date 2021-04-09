@@ -241,7 +241,7 @@ class ServiceEventLogItem: TableRowItem {
             if chatInteraction.context.peerId == peer.id {
                 nameColor = theme.colors.link
             } else {
-                let value = abs(Int(peer.id.id) % 7)
+                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                 nameColor = theme.chat.peerName(value)
             }
             
@@ -470,7 +470,7 @@ class ServiceEventLogItem: TableRowItem {
                     }
                 } else if let media = new.media.first as? TelegramMediaAction {
                     switch media.action {
-                    case let .groupPhoneCall(_, _, duration):
+                    case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {
                             let text: String
                             if new.author?.id == chatInteraction.context.peerId {

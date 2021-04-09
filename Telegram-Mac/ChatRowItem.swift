@@ -1409,13 +1409,14 @@ class ChatRowItem: TableRowItem {
                 if let author = info.author {
                     self.peer = author
                 } else if let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -1640,7 +1641,7 @@ class ChatRowItem: TableRowItem {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
                                 nameColor = presentation.colors.accentIconBubble_outgoing
                             } else {
-                                let value = abs(Int(peer.id.id) % 7)
+                                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                                 nameColor = presentation.chat.peerName(value)
                             }
                         }
@@ -1652,7 +1653,7 @@ class ChatRowItem: TableRowItem {
                     
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
-                        if peer.id.id != 0 {
+                        if peer.id.id._internalGetInt32Value() != 0 {
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId:peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo), range: range)
                         } else {
                             nameHide = L10n.chatTooltipHiddenForwardName
@@ -1776,13 +1777,19 @@ class ChatRowItem: TableRowItem {
                 editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 
                 fullDate = L10n.chatMessageImportedText + "\n\n" + fullDate
+            } else if let forwardInfo = message.forwardInfo {
+                let formatterEdited = DateFormatter()
+                formatterEdited.dateStyle = .medium
+                formatterEdited.timeStyle = .medium
+                formatterEdited.timeZone = NSTimeZone.local
+                fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account: context.account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
+                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let `self` = self else {return}
                         _ = self.makeSize(self.oldWidth, oldWidth: 0)
                         Queue.mainQueue().async { [weak self] in
@@ -1821,7 +1828,9 @@ class ChatRowItem: TableRowItem {
                     paid = false
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
-                    replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
+                    if message.restrictedText(context.contentSettings) == nil {
+                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
+                    }
                 }
 //                else if let attribute = attribute as? ReactionsMessageAttribute {
 //                    var buttons:[ReplyMarkupButton] = []

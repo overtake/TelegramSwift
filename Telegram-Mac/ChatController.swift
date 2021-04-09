@@ -497,7 +497,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
         var voiceChat: ChatActiveGroupCallInfo?
         if interfaceState.groupCall?.data?.groupCall == nil {
-            if let data = interfaceState.groupCall?.data, data.participantCount == 0 {
+            if let data = interfaceState.groupCall?.data, data.participantCount == 0 && interfaceState.groupCall?.activeCall.scheduleTimestamp == nil {
                 voiceChat = nil
             } else {
                 voiceChat = interfaceState.groupCall
@@ -524,7 +524,11 @@ class ChatControllerView : View, ChatInputDelegate {
                 state = .none(voiceChat)
             }
         } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
-            state = .pinned(voiceChat, pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
+            if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
+                state = .pinned(voiceChat, pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
+            } else {
+                state = .none(voiceChat)
+            }
         } else if let canAdd = interfaceState.canAddContact, canAdd {
            state = .none(voiceChat)
         } else {
@@ -2384,7 +2388,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if peer.addressName == nil {
                         let state = strongSelf.chatInteraction.presentation.effectiveInput
                         var attributes = state.attributes
-                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id))
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt32Value()))
                         let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
                         strongSelf.chatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
                     }
@@ -3169,7 +3173,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 currentActiveCall = activeCall
             } 
             if let activeCall = currentActiveCall {
-                let join:(PeerId)->Void = { joinAs in
+                let join:(PeerId, Date?)->Void = { joinAs, _ in
                     _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info, joinHash: joinHash), for: context.window).start(next: { result in
                         switch result {
                         case let .samePeer(callContext):
@@ -3185,7 +3189,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                 }
                 if let callJoinPeerId = groupCall?.callJoinPeerId {
-                    join(callJoinPeerId)
+                    join(callJoinPeerId, nil)
                 } else {
                     selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
                 }

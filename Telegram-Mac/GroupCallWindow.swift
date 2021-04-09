@@ -45,10 +45,24 @@ struct GroupCallTheme {
         return grayStatusColor
     }
     
+    static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(.white)
+    static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(.white)
+
+    static let videoBox_muted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let videoBox_unmuted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+
+    
+    static let topSettingsIcon = NSImage(named: "Icon_GroupCall_TopSettings")!.precomposed(.white)
+    
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
-    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white, flipVertical: true)
+    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
     static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
+    
+    static let videoZoomOut = NSImage(named: "Icon_GroupCall_Video_ZoomOut")!.precomposed(.white)
+    static let videoZoomIn = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(.white)
+    
+    
 
     static let small_speaking = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: .clear)
     static let small_unmuted = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
@@ -211,7 +225,6 @@ final class GroupCallContext {
     deinit {
         presentDisposable.dispose()
         removeDisposable.dispose()
-//        self.window.contentView?.removeAllSubviews()
     }
     
     func present() {

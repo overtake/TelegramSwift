@@ -13,6 +13,16 @@ import SwiftSignalKit
 enum CallControllerStatusValue: Equatable {
     case text(String, Int32?)
     case timer(Double, Int32?)
+    case startsIn(Int)
+    
+    var hasTimer: Bool {
+        switch self {
+        case .timer, .startsIn:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 
@@ -100,6 +110,9 @@ class CallStatusView: View {
                 self.receptionView.reception = reception
             }
             self.receptionView.isHidden = reception == nil
+        case let .startsIn(time):
+            statusText = L10n.chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
+            self.receptionView.isHidden = true
         }
         let layout = TextViewLayout.init(.initialize(string: statusText, color: .white, font: .normal(18)), alignment: .center)
         layout.measure(width: .greatestFiniteMagnitude)

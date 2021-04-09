@@ -122,7 +122,7 @@ class Sender: NSObject {
                     if CGImageDestinationFinalize(colorDestination) {
                         let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: []))
+                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil))
                     }
                 }
             }
@@ -152,7 +152,7 @@ class Sender: NSObject {
                         if CGImageDestinationFinalize(colorDestination) {
                             let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                             account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource, progressiveSizes: []))
+                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource, progressiveSizes: [], immediateThumbnailData: nil))
                         }
                     }
                 }
@@ -314,7 +314,7 @@ class Sender: NSObject {
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             }
                             
                         } else {

@@ -30,7 +30,7 @@ final class AnimatedBadgeView : View {
     
     func update(dynamicValue: DynamicCounterTextView.Value, backgroundColor: NSColor, animated: Bool, frame: NSRect) {
         
-        textView.update(dynamicValue.values, animated: animated)
+        textView.update(dynamicValue, animated: animated)
         
         let textFrame = frame.focus(dynamicValue.size)
         

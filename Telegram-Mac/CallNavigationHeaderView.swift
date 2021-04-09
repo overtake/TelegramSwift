@@ -576,7 +576,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     
     fileprivate let callInfo:TitleButton = TitleButton()
     fileprivate let endCall:ImageButton = ImageButton()
-    fileprivate let statusTextView:DynamicCounterTextView = DynamicCounterTextView()
+    fileprivate let statusTextView:TextView = TextView()
     fileprivate let muteControl:ImageButton = ImageButton()
 
     let disposable = MetaDisposable()
@@ -596,7 +596,8 @@ class CallHeaderBasicView : NavigationHeaderView {
         didSet {
             if self.status != oldValue {
                 self.statusTimer?.invalidate()
-                if case .timer = self.status {
+                
+                if self.status.hasTimer == true {
                     self.statusTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
                         self?.updateStatus()
                     }, queue: Queue.mainQueue())
@@ -623,11 +624,12 @@ class CallHeaderBasicView : NavigationHeaderView {
                 durationString = String(format: "%02d:%02d", arguments: [(duration / 60) % 60, duration % 60])
             }
             statusText = durationString
+        case let .startsIn(time):
+            statusText = L10n.chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
         }
-        let dynamicResult = DynamicCounterTextView.make(for: statusText, count: statusText.trimmingCharacters(in: CharacterSet.decimalDigits.inverted), font: .normal(.text), textColor: .white, width: 120, onlyFade: true)
-        self.statusTextView.update(dynamicResult.values, animated: animated)
-        self.statusTextView.change(size: dynamicResult.size, animated: animated)
-
+        let layout = TextViewLayout.init(.initialize(string: statusText, color: .white, font: .normal(13)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        self.statusTextView.update(layout)
         needsLayout = true
     }
     
@@ -738,10 +740,10 @@ class CallHeaderBasicView : NavigationHeaderView {
         muteControl.centerY(x:18)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         endCall.centerY(x: frame.width - endCall.frame.width - 20)
-        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 140 - 20 - endCall.frame.width - 10, callInfo.frame.height), thatFit: false)
+        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - statusTextView.frame.width - 60 - 20 - endCall.frame.width - 10, callInfo.frame.height), thatFit: false)
         
         let rect = container.focus(callInfo.frame.size)
-        callInfo.setFrameOrigin(NSMakePoint(max(140, min(rect.minX, endCall.frame.minX - 10 - callInfo.frame.width)), rect.minY))
+        callInfo.setFrameOrigin(NSMakePoint(max(statusTextView.frame.maxX + 10, min(rect.minX, endCall.frame.minX - 10 - callInfo.frame.width)), rect.minY))
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

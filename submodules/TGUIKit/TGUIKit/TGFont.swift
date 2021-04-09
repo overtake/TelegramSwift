@@ -107,6 +107,20 @@ public extension NSFont {
         }
     }
     
+    static func digitalRound(_ size: FontSize) -> NSFont {
+        if #available(OSX 10.15, *) {
+            if let descriptor = NSFont.monospacedSystemFont(ofSize: size, weight: .bold).fontDescriptor.withDesign(.rounded), let font = NSFont(descriptor: descriptor, size: size) {
+                return font
+            } else {
+                return .systemFont(ofSize: size, weight: .heavy)
+            }
+        } else {
+            return .code(size)
+        }
+        
+        
+    }
+    
     static func code(_ size:FontSize) ->NSFont {
         return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: size)
     }

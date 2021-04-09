@@ -201,12 +201,12 @@ class ChatInvoiceView : ChatRowView {
         
         if let item = item as? ChatInvoiceItem {
             textView.update(item.textLayout)
-            if let photo = item.media.photo, let arguments = item.arguments {
+            if let photo = item.media.photo, let arguments = item.arguments, let message = item.message {
                 addSubview(imageView)
                 imageView.setSignal(chatMessageWebFilePhoto(account: item.context.account, photo: photo, scale: backingScaleFactor))
                 imageView.set(arguments: arguments)
                 imageView.setFrameSize(arguments.boundingSize)
-                _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: photo.resource)).start()
+                _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.media(media: AnyMediaReference.message(message: MessageReference(message), media: photo), resource: photo.resource)).start()
 
             } else {
                 imageView.removeFromSuperview()
