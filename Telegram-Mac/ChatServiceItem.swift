@@ -162,7 +162,7 @@ class ChatServiceItem: ChatRowItem {
                     var pinnedId: MessageId?
                     for attribute in message.attributes {
                         if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                            replyMessageText = pullText(from: message) as String
+                            replyMessageText = message.restrictedText(context.contentSettings) ?? pullText(from: message) as String
                             pinnedId = attribute.messageId
                         }
                     }
@@ -293,11 +293,16 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     
-                    if let message = paymentMessage, let media = message.media.first as? TelegramMediaInvoice, let peer = messageMainPeer(message) {
+                    if let paymentMessage = paymentMessage, let media = paymentMessage.media.first as? TelegramMediaInvoice, let peer = messageMainPeer(paymentMessage) {
                         _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
+                        
+                        attributedString.add(link:inAppLink.callback("", { _ in
+                            showModal(with: PaymentsReceiptController(context: context, messageId: message.id, message: paymentMessage), for: context.window)
+                        }), for: attributedString.range, color: grayTextColor)
+                        
                     } else {
-                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        _ = attributedString.append(string: L10n.chatServicePaymentSent1("", "", ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     }
                 case let .botDomainAccessGranted(domain):
                     _ = attributedString.append(string: L10n.chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -345,7 +350,7 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case let .groupPhoneCall(callId, accessHash, _, duration):
+                case let .groupPhoneCall(callId, accessHash, scheduleDate, duration):
                     let text: String
                     if let duration = duration {
                         if peer.isChannel {
@@ -358,15 +363,27 @@ class ChatServiceItem: ChatRowItem {
                         let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     } else {
                         if peer.isChannel {
-                            text = L10n.chatServiceVoiceChatStartedChannel
+                            if let scheduled = scheduleDate {
+                                text = L10n.chatServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduled))
+                            } else {
+                                text = L10n.chatServiceVoiceChatStartedChannel
+                            }
                         } else if authorId == context.peerId {
-                            text = L10n.chatServiceVoiceChatStartedYou
+                            if let scheduled = scheduleDate {
+                                text = L10n.chatServiceVoiceChatScheduledYou(stringForMediumDate(timestamp: scheduled))
+                            } else {
+                                text = L10n.chatServiceVoiceChatStartedYou
+                            }
                         } else {
-                            text = L10n.chatServiceVoiceChatStarted(authorName)
+                            if let scheduled = scheduleDate {
+                                text = L10n.chatServiceVoiceChatScheduled(authorName, stringForMediumDate(timestamp: scheduled))
+                            } else {
+                                text = L10n.chatServiceVoiceChatStarted(authorName)
+                            }
                         }
                         let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
                             return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                                chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash, title: nil), nil)
+                                chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash, title: nil, scheduleTimestamp: scheduleDate, subscribedToScheduled: false), nil)
                             }))
                         }))
                         attributedString.append(parsed)
@@ -405,7 +422,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                            chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash, title: nil), nil)
+                            chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash, title: nil, scheduleTimestamp: nil, subscribedToScheduled: false), nil)
                         }))
                     }))
                     attributedString.append(parsed)

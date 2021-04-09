@@ -14,7 +14,12 @@ import TelegramCore
 import SyncCore
 import Postbox
 
-func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, PaymentsPaymentMethodAdditionalFields)? {
+enum PaymentProvider : Equatable {
+    case stripe
+    case smartglocal
+}
+
+func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, PaymentsPaymentMethodAdditionalFields, PaymentProvider)? {
         
     if let paymentForm = paymentForm, let nativeProvider = paymentForm.nativeProvider, nativeProvider.name == "stripe" {
                         
@@ -39,30 +44,43 @@ func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, Payme
             additionalFields.insert(.zipCode)
         }
         
-        return (publishableKey, additionalFields)
+        return (publishableKey, additionalFields, .stripe)
+    } else if let paymentForm = paymentForm, let nativeProvider = paymentForm.nativeProvider, nativeProvider.name == "smartglocal" {
+        guard let paramsData = nativeProvider.params.data(using: .utf8) else {
+            return nil
+        }
+        guard let nativeParams = (try? JSONSerialization.jsonObject(with: paramsData)) as? [String: Any] else {
+            return nil
+        }
+        guard let publishableKey = nativeParams["public_token"] as? String else {
+            return nil
+        }
+        
+        return (publishableKey, [], .smartglocal)
     }
     return nil
 }
 
 
 
-private func currentTotalPrice(paymentForm: BotPaymentForm?, validatedFormInfo: BotPaymentValidatedFormInfo?, shippingOption: BotPaymentShippingOption?) -> Int64 {
+private func currentTotalPrice(paymentForm: BotPaymentForm?, validatedFormInfo: BotPaymentValidatedFormInfo?, shippingOption: BotPaymentShippingOption?, tip:Int64? = nil) -> Int64 {
     guard let paymentForm = paymentForm else {
         return 0
     }
     
     var totalPrice: Int64 = 0
     
-    var index = 0
     for price in paymentForm.invoice.prices {
         totalPrice += price.amount
-        index += 1
     }
     
     if let option = shippingOption {
         for price in option.prices {
             totalPrice += price.amount
         }
+    }
+    if let tip = tip {
+        totalPrice += tip
     }
     
     return totalPrice
@@ -101,13 +119,15 @@ private final class Arguments {
     let openForm:(PaymentsShippingInfoFocus?)->Void
     let openShippingMethod:()->Void
     let openPaymentMethod:()->Void
+    let selectTip:(Int64?)->Void
     let pay:(TemporaryTwoStepPasswordToken?)->Void
-    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void) {
+    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void, selectTip:@escaping(Int64?)->Void) {
         self.context = context
         self.openForm = openForm
         self.openShippingMethod = openShippingMethod
         self.openPaymentMethod = openPaymentMethod
         self.pay = pay
+        self.selectTip = selectTip
     }
 }
 
@@ -124,7 +144,7 @@ private struct State : Equatable {
     var savedInfo: BotPaymentRequestedInfo
     var shippingOptionId: BotPaymentShippingOption?
     var paymentMethod: BotCheckoutPaymentMethod?
-    
+    var currentTip: Int64?
     var unfilledInfo: PaymentsShippingInfoFocus? {
         if let form = form {
             if form.invoice.requestedFields.contains(.shippingAddress) {
@@ -164,6 +184,8 @@ private let _id_checkout_flex_shipping = InputDataIdentifier("_id_checkout_flex_
 private let _id_checkout_phone_number = InputDataIdentifier("_id_checkout_phone_number")
 private let _id_checkout_email = InputDataIdentifier("_id_checkout_email")
 
+private let _id_tips = InputDataIdentifier("_id_tips")
+
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -195,11 +217,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let label: String
             let price: String
             let viewType: GeneralViewType
+            let editableTip: PaymentsCheckoutPriceItem.EditableTip?
         }
+        
+        
         
         var prices = form.invoice.prices
         if let shippingOption = state.shippingOptionId {
             prices += shippingOption.prices
+        }
+        
+        if let _ = form.invoice.tip {
+            prices.append(BotPaymentPrice(label: L10n.paymentsTipLabel, amount: state.currentTip ?? 0))
         }
         
         for (i, price) in prices.enumerated() {
@@ -211,12 +240,33 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 viewType = viewType.withUpdatedInsets(insets)
             }
             if price == prices.last {
-                viewType = GeneralViewType.innerItem.withUpdatedInsets(insets)
+                if prices.count > 1 {
+                    viewType = GeneralViewType.innerItem.withUpdatedInsets(insets)
+                } else {
+                    viewType = GeneralViewType.firstItem.withUpdatedInsets(insets)
+                }
             }
-            let tuple = Tuple(label:price.label, price: formatCurrencyAmount(price.amount, currency: form.invoice.currency), viewType: viewType)
+            
+            let editableTip: PaymentsCheckoutPriceItem.EditableTip?
+            
+            if price.label == L10n.paymentsTipLabel, let tip = form.invoice.tip {
+                editableTip = PaymentsCheckoutPriceItem.EditableTip(currency: form.invoice.currency, current: state.currentTip ?? 0, maxValue: tip.max)
+            } else {
+                editableTip = nil
+            }
+            
+            let tuple = Tuple(label:price.label, price: formatCurrencyAmount(price.amount, currency: form.invoice.currency), viewType: viewType, editableTip: editableTip)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(price.label, index: i), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .normal(.text), color: theme.colors.grayText, viewType: tuple.viewType)
+                return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .normal(.text), color: theme.colors.grayText, viewType: tuple.viewType, editableTip: editableTip, updateValue: arguments.selectTip)
+            }))
+            index += 1
+        }
+        
+        
+        if let tip = form.invoice.tip, !prices.isEmpty {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_tips, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                return PaymentsTipsRowItem(initialSize, stableId: stableId, viewType: .innerItem, currency: form.invoice.currency, tips: tip, current: state.currentTip, select: arguments.selectTip)
             }))
             index += 1
         }
@@ -224,7 +274,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if !prices.isEmpty {
             let viewType = GeneralViewType.lastItem.withUpdatedInsets(last)
 
-            let tuple = Tuple(label: L10n.checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: form.invoice.currency), viewType: viewType)
+            let tuple = Tuple(label: L10n.checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: form.invoice.currency), viewType: viewType, editableTip: nil)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(L10n.checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .medium(.text), color: theme.colors.text, viewType: tuple.viewType)
@@ -360,9 +410,8 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         }
     }, openPaymentMethod: {
         if let form = stateValue.with({ $0.form }), let value = parseRequestedPaymentMethod(paymentForm: form) {
-            
             let addPayment:()->Void = {
-                showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, completion: { method in
+                showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
                     updateState { current in
                         var current = current
                         current.paymentMethod = method
@@ -405,36 +454,62 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                 return
             }
             
-            let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: nil, credentials: credentials)
-            
-            _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
+            let pay:()->Void = {
+                let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.currentTip, credentials: credentials)
                 
-                let success:(Bool)->Void = { value in
+                _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
+                    
+                    let success:(Bool)->Void = { value in
+                        if value {
+                            close?()
+                        }
+                    }
+                    switch result {
+                    case .done:
+                        success(true)
+                    case let .externalVerificationRequired(url: url):
+                        showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .externalVerification(success)), for: context.window)
+                    }
+                }, error: { error in
+                    let text: String
+                    switch error {
+                    case .alreadyPaid:
+                        text = L10n.checkoutErrorInvoiceAlreadyPaid
+                    case .generic:
+                        text = L10n.unknownError
+                    case .paymentFailed:
+                        text = L10n.checkoutErrorPaymentFailed
+                    case .precheckoutFailed:
+                        text = L10n.checkoutErrorPrecheckoutFailed
+                    }
+                    alert(for: context.window, info: text)
+                    close?()
+                })
+            }
+            
+            let messageId = message.id
+            let botPeer: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
+                if let message = transaction.getMessage(messageId) {
+                    return message.inlinePeer ?? message.author
+                }
+                return nil
+            }
+
+            let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
+            
+            let _ = checkSignal.start(next: { value, botPeer, providerPeer in
+                if let botPeer = botPeer {
                     if value {
-                        close?()
+                        pay()
+                    } else {
+                        confirm(for: context.window, header: L10n.paymentsWarninTitle, information: L10n.paymentsWarningText(botPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+                            pay()
+                            _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId).start()
+                        })
                     }
                 }
-                switch result {
-                case .done:
-                    success(true)
-                case let .externalVerificationRequired(url: url):
-                    showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .externalVerification(success)), for: context.window)
-                }
-            }, error: { error in
-                let text: String
-                switch error {
-                case .alreadyPaid:
-                    text = L10n.checkoutErrorInvoiceAlreadyPaid
-                case .generic:
-                    text = L10n.unknownError
-                case .paymentFailed:
-                    text = L10n.checkoutErrorPaymentFailed
-                case .precheckoutFailed:
-                    text = L10n.checkoutErrorPrecheckoutFailed
-                }
-                alert(for: context.window, info: text)
-                close?()
             })
+           
         }
         
         switch paymentMethod {
@@ -476,6 +551,12 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             alert(for: context.window, info: "Unsupported")
             return
         }
+    }, selectTip: { value in
+        updateState { current in
+            var current = current
+            current.currentTip = value
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -485,7 +566,16 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     let controller = InputDataController(dataSignal: signal, title: L10n.checkoutTitle)
     
     
-    let formAndMaybeValidatedInfo = fetchBotPaymentForm(postbox: context.account.postbox, network: context.account.network, messageId: messageId)
+    let themeParams: [String: Any] = [
+        "bg_color": Int32(bitPattern: theme.colors.background.argb),
+        "text_color": Int32(bitPattern: theme.colors.text.argb),
+        "link_color": Int32(bitPattern: theme.colors.link.argb),
+        "button_color": Int32(bitPattern: theme.colors.accent.argb),
+        "button_text_color": Int32(bitPattern: theme.colors.underSelectedColor.argb)
+            ]
+
+    
+    let formAndMaybeValidatedInfo = fetchBotPaymentForm(postbox: context.account.postbox, network: context.account.network, messageId: messageId, themeParams: themeParams)
                |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
                    if let current = paymentForm.savedInfo {
                        return validateBotPaymentForm(account: context.account, saveInfo: true, messageId: messageId, formInfo: current)
@@ -577,12 +667,17 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             let state = stateValue.with ({ $0 })
             let text: String
             if let form = state.form {
-                let totalAmount = formatCurrencyAmount(currentTotalPrice(paymentForm: form, validatedFormInfo: state.validatedInfo, shippingOption: state.shippingOptionId), currency: form.invoice.currency)
+                let totalAmount = formatCurrencyAmount(currentTotalPrice(paymentForm: form, validatedFormInfo: state.validatedInfo, shippingOption: state.shippingOptionId, tip: state.currentTip), currency: form.invoice.currency)
                 text = L10n.checkoutPayPrice("\(totalAmount)")
             } else {
                 text = L10n.checkoutPayNone
             }
             button.set(text: text, for: .Normal)
+        }
+        if stateValue.with ({ $0.form != nil }) {
+            DispatchQueue.main.async { [weak controller] in
+                controller?.window?.applyResponderIfNeeded()
+            }
         }
     }
     
@@ -590,42 +685,3 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     
 }
 
-
-
-/*
- switch method {
- case let .webToken(webToken) where webToken.saveOnServer:
-
-     confirm(for: context.window, information: L10n.checkoutNewCardSaveInfoEnableHelp, okTitle: L10n.modalYes, cancelTitle: L10n.modalNotNow, successHandler: { _ in
-         
-         if form.passwordMissing {
-             var updatedToken = webToken
-             updatedToken.saveOnServer = false
-             alert(for: context.window, info: L10n.checkout2FAText)
-             updateState { current in
-                 var current = current
-                 current.paymentMethod = .webToken(updatedToken)
-                 return current
-             }
-         } else {
-             var updatedToken = webToken
-             updatedToken.saveOnServer = true
-             updateState { current in
-                 var current = current
-                 current.paymentMethod = .webToken(updatedToken)
-                 return current
-             }
-         }
-     }, cancelHandler: {
-         var updatedToken = webToken
-         updatedToken.saveOnServer = false
-         updateState { current in
-             var current = current
-             current.paymentMethod = .webToken(updatedToken)
-             return current
-         }
-     })
- default:
-     break
- }
- */

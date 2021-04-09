@@ -423,7 +423,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 return L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
-        case let .groupPhoneCall(_, _, _, duration):
+        case let .groupPhoneCall(_, _, scheduledDate, duration):
             let text: String
             if let duration = duration {
                 if peer.isChannel {
@@ -435,11 +435,23 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             } else {
                 if peer.isChannel {
-                    text = L10n.chatListServiceVoiceChatStartedChannel
+                    if let scheduledDate = scheduledDate {
+                        text = L10n.chatListServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduledDate))
+                    } else {
+                        text = L10n.chatListServiceVoiceChatStartedChannel
+                    }
                 } else if authorId == account.peerId {
-                    text = L10n.chatListServiceVoiceChatStartedYou
+                    if let scheduledDate = scheduledDate {
+                        text = L10n.chatListServiceVoiceChatScheduledYou(stringForMediumDate(timestamp: scheduledDate))
+                    } else {
+                        text = L10n.chatListServiceVoiceChatStartedYou
+                    }
                 } else {
-                    text = L10n.chatListServiceVoiceChatStarted(authorName)
+                    if let scheduledDate = scheduledDate {
+                        text = L10n.chatListServiceVoiceChatScheduled(authorName, stringForMediumDate(timestamp: scheduledDate))
+                    } else {
+                        text = L10n.chatListServiceVoiceChatStarted(authorName)
+                    }
                 }
             }
             return text
@@ -754,19 +766,25 @@ func timeIntervalString( _ value: Int) -> String {
 
 
 
-func timerText(_ duration: Int) -> String {
+func timerText(_ durationValue: Int) -> String {
+    
+    let duration = abs(durationValue)
     let days = Int(duration) / (3600 * 24)
     let hours = (Int(duration) - (days * 3600 * 24)) / 3600
     let minutes = Int(duration) / 60 % 60
     let seconds = Int(duration) % 60
     
+    
+    
     var formatted: String
-    if days != 0 {
+    if days >= 1 {
+        formatted = timeIntervalString(duration)
+    } else if days != 0 {
         formatted = String(format:"%d:%02i:%02i:%02i", days, hours, minutes, seconds)
     } else if hours != 0 {
         formatted = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
     } else {
         formatted = String(format:"%02i:%02i", minutes, seconds)
     }
-    return formatted
+    return durationValue < 0 ? "-" + formatted : formatted
 }

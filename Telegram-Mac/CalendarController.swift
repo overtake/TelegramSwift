@@ -25,6 +25,7 @@ class CalendarController: GenericViewController<CalendarControllerView> {
     private var interactions:CalendarMonthInteractions!
     private let onlyFuture: Bool
     private let current: Date
+    private let limitedBy: Date?
     override func viewDidLoad() {
         super.viewDidLoad()
         addSubview(navigation.view)
@@ -67,9 +68,10 @@ class CalendarController: GenericViewController<CalendarControllerView> {
         self.navigation.viewWillAppear(animated)
     }
     
-    init(_ frameRect:NSRect, _ window: Window, current: Date = Date(), onlyFuture: Bool = false, selectHandler:@escaping (Date)->Void) {
+    init(_ frameRect:NSRect, _ window: Window, current: Date = Date(), onlyFuture: Bool = false, limitedBy: Date? = nil, selectHandler:@escaping (Date)->Void) {
         self.onlyFuture = onlyFuture
         self.current = current
+        self.limitedBy = limitedBy
         super.init(frame: frameRect)
         bar = .init(height: 0)
         self.interactions = CalendarMonthInteractions(selectAction: { [weak self] (selected) in
@@ -95,7 +97,7 @@ class CalendarController: GenericViewController<CalendarControllerView> {
     }
     
     func stepMonth(date:Date) -> CalendarMonthController {
-        return CalendarMonthController(date, onlyFuture: self.onlyFuture, selectDayAnyway: CalendarUtils.isSameDate(current, date: date, checkDay: false), interactions: interactions)
+        return CalendarMonthController(date, onlyFuture: self.onlyFuture, limitedBy: limitedBy, selectDayAnyway: CalendarUtils.isSameDate(current, date: date, checkDay: false), interactions: interactions)
     }
     
     override var isAutoclosePopover: Bool {

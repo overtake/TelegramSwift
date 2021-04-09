@@ -17,8 +17,8 @@ import SyncCore
 
 private final class DisplayMeAsHeaderItem : GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, isGroup: Bool) {
-        textLayout = .init(.initialize(string: isGroup ? L10n.displayMeAsTextGroup : L10n.displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
+    init(_ initialSize: NSSize, stableId: AnyHashable, isAlone: Bool, isGroup: Bool) {
+        textLayout = .init(.initialize(string: isAlone ? L10n.displayMeAsAlone : isGroup ? L10n.displayMeAsTextGroup : L10n.displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize, stableId: stableId)
     }
     override var height: CGFloat {
@@ -68,10 +68,17 @@ private final class DisplayMeAsHeaderView : TableRowView {
 
 private final class Arguments {
     let context: AccountContext
+    let canBeScheduled: Bool
     let select:(PeerId)->Void
-    init(context: AccountContext, select:@escaping(PeerId)->Void) {
+    let toggleSchedule:()->Void
+    let updateScheduleDate:(Date)->Void
+
+    init(context: AccountContext, canBeScheduled: Bool, select:@escaping(PeerId)->Void, toggleSchedule:@escaping()->Void, updateScheduleDate:@escaping(Date)->Void) {
         self.context = context
         self.select = select
+        self.canBeScheduled = canBeScheduled
+        self.toggleSchedule = toggleSchedule
+        self.updateScheduleDate = updateScheduleDate
     }
 }
 
@@ -79,12 +86,16 @@ private struct State : Equatable {
     var peer: PeerEquatable?
     var list: [FoundPeer]?
     var selected: PeerId
+    var schedule: Bool
+    var scheduleDate: Date?
+    var next: Int
 }
 
 private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
 }
-
+private let _id_schedule = InputDataIdentifier("_id_schedule")
+private let _id_schedule_time = InputDataIdentifier("_id_schedule_time")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -96,8 +107,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     let isGroup = state.peer?.peer.isGroup == true || state.peer?.peer.isSupergroup == true
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(isGroup), comparable: nil, item: { initialSize, stableId in
-        return DisplayMeAsHeaderItem(initialSize, stableId: stableId, isGroup: isGroup)
+    let isEmpty = state.list?.isEmpty == true
+
+    struct T : Equatable {
+        let isGroup: Bool
+        let isAlone: Bool
+    }
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(T(isGroup: isGroup, isAlone: isEmpty)), comparable: nil, item: { initialSize, stableId in
+        return DisplayMeAsHeaderItem(initialSize, stableId: stableId, isAlone: isEmpty, isGroup: isGroup)
     }))
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -111,12 +129,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if let peer = state.peer {
-        let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || state.list?.isEmpty == false ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: L10n.displayMeAsPersonalAccount)
+        
+                
+        let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || !isEmpty ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: L10n.displayMeAsPersonalAccount)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                 arguments.select(tuple.peer.peer.id)
             })
         }))
+        
+        if isEmpty {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.displayMeAsAloneDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        }
         index += 1
     }
     
@@ -171,6 +195,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    if arguments.canBeScheduled {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_schedule, data: .init(name: L10n.displayMeAsScheduled, color: theme.colors.text, type: .switchable(state.schedule), viewType: state.schedule ? .firstItem : .singleItem, action: arguments.toggleSchedule)))
+        index += 1
+        if state.schedule, let scheduleDate = state.scheduleDate {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_schedule_time, equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return DatePickerRowItem(initialSize, stableId: stableId, viewType: .lastItem, initialDate: scheduleDate, update: arguments.updateScheduleDate)
+            }))
+            index += 1
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.displayMeAsScheduledDesc(timerText(Int(scheduleDate.timeIntervalSince1970) - Int(Date().timeIntervalSince1970)))), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        }
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+    }
+    
     return entries
 }
 
@@ -179,11 +219,11 @@ enum GroupCallDisplayAsMode {
     case create
 }
 
-func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDisplayAsMode, peerId: PeerId, list:[FoundPeer], completion: @escaping(PeerId)->Void) -> InputDataModalController {
+func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDisplayAsMode, peerId: PeerId, list:[FoundPeer], completion: @escaping(PeerId, Date?)->Void, canBeScheduled: Bool) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
-    let initialState = State(list: list, selected: context.peerId)
+    let initialState = State(list: list, selected: context.peerId, schedule: false, scheduleDate: Date(timeIntervalSinceNow: 1 * 60 * 60), next: 1)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -191,10 +231,22 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
         statePromise.set(stateValue.modify (f))
     }
     
-    let arguments = Arguments(context: context, select: { peerId in
+    let arguments = Arguments(context: context, canBeScheduled: canBeScheduled, select: { peerId in
         updateState { current in
             var current = current
             current.selected = peerId
+            return current
+        }
+    }, toggleSchedule: {
+        updateState { current in
+            var current = current
+            current.schedule = !current.schedule
+            return current
+        }
+    }, updateScheduleDate: { date in
+        updateState { current in
+            var current = current
+            current.scheduleDate = date
             return current
         }
     })
@@ -214,17 +266,36 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
             return current
         }
     }))
-    //TODOLANG
-    let controller = InputDataController(dataSignal: signal, title: L10n.displayMeAsTitle)
+    
+    let timer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: {
+        updateState { current in
+            var current = current
+            current.next += 1
+            return current
+        }
+    }, queue: .mainQueue())
+    
+    timer.start()
+    
+    let controller = InputDataController(dataSignal: signal, title: canBeScheduled ? L10n.displayMeAsNewTitle : L10n.displayMeAsTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    controller.contextOject = timer
 
     
     controller.validateData = { _ in
-        let selected = stateValue.with { $0.selected }
-        completion(selected)
+        let value = stateValue.with { ($0.selected, $0.schedule ? $0.scheduleDate : nil) }
+        
+        if let date = value.1 {
+            if date.timeIntervalSince1970 - Date().timeIntervalSince1970 <= 10 {
+                return .fail(.fields([_id_schedule_time : .shake]))
+            }
+        }
+        
+        completion(value.0, value.1)
         close?()
         return .none
     }
@@ -233,13 +304,24 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     
+    
     controller.afterTransaction = { [weak modalInteractions] _ in
         modalInteractions?.updateDone { button in
             let title: String = stateValue.with { value in
                 let peer = value.list?.first(where: { $0.peer.id == value.selected })?.peer ?? value.peer?.peer
                 return peer?.compactDisplayTitle ?? ""
             }
-            button.set(text: L10n.displayMeAsContinueAs(title), for: .Normal)
+            let state = stateValue.with { $0 }
+            if canBeScheduled {
+                if state.schedule {
+                    button.set(text: L10n.displayMeAsNewScheduleAs(title), for: .Normal)
+                } else {
+                    button.set(text: L10n.displayMeAsNewStartAs(title), for: .Normal)
+                }
+            } else {
+                button.set(text: L10n.displayMeAsContinueAs(title), for: .Normal)
+            }
+            
         }
     }
 
@@ -258,12 +340,12 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 }
 
 
-func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId)->Void) {
+func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId, Date?)->Void, canBeScheduled: Bool = false) {
     _ = showModalProgress(signal: cachedGroupCallDisplayAsAvailablePeers(account: context.account, peerId: peerId), for: context.window).start(next: { displayAsList in
-        if !displayAsList.isEmpty {
-            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion), for: context.window)
+        if !displayAsList.isEmpty || canBeScheduled {
+            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion, canBeScheduled: canBeScheduled), for: context.window)
         } else {
-            completion(context.peerId)
+            completion(context.peerId, nil)
         }
     })
 }

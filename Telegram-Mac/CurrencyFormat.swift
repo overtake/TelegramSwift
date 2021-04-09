@@ -53,6 +53,81 @@ private func loadCurrencyFormatterEntries() -> [String: CurrencyFormatterEntry] 
 
 private let currencyFormatterEntries = loadCurrencyFormatterEntries()
 
+public func setupCurrencyNumberFormatter(currency: String) -> NumberFormatter {
+    guard let entry = currencyFormatterEntries[currency] ?? currencyFormatterEntries["USD"] else {
+        preconditionFailure()
+    }
+
+    var result = ""
+    if entry.symbolOnLeft {
+        result.append("¤")
+        if entry.spaceBetweenAmountAndSymbol {
+            result.append(" ")
+        }
+    }
+
+    result.append("#")
+
+    result.append(entry.decimalSeparator)
+
+    for _ in 0 ..< entry.decimalDigits {
+        result.append("#")
+    }
+    if entry.decimalDigits != 0 {
+        result.append("0")
+    }
+
+    if !entry.symbolOnLeft {
+        if entry.spaceBetweenAmountAndSymbol {
+            result.append(" ")
+        }
+        result.append("¤")
+    }
+
+    let numberFormatter = NumberFormatter()
+
+    numberFormatter.numberStyle = .currency
+
+    numberFormatter.positiveFormat = result
+    numberFormatter.negativeFormat = "-\(result)"
+
+    numberFormatter.currencySymbol = entry.symbol
+    numberFormatter.currencyDecimalSeparator = entry.decimalSeparator
+    numberFormatter.currencyGroupingSeparator = entry.thousandsSeparator
+
+    numberFormatter.minimumFractionDigits = entry.decimalDigits
+    numberFormatter.maximumFractionDigits = entry.decimalDigits
+    numberFormatter.minimumIntegerDigits = 1
+
+    return numberFormatter
+}
+
+public func fractionalToCurrencyAmount(value: Double, currency: String) -> Int64? {
+    guard let entry = currencyFormatterEntries[currency] ?? currencyFormatterEntries["USD"] else {
+        return nil
+    }
+    var factor: Double = 1.0
+    for _ in 0 ..< entry.decimalDigits {
+        factor *= 10.0
+    }
+    if value > Double(Int64.max) / factor {
+        return nil
+    } else {
+        return Int64(value * factor)
+    }
+}
+
+public func currencyToFractionalAmount(value: Int64, currency: String) -> Double? {
+    guard let entry = currencyFormatterEntries[currency] ?? currencyFormatterEntries["USD"] else {
+        return nil
+    }
+    var factor: Double = 1.0
+    for _ in 0 ..< entry.decimalDigits {
+        factor *= 10.0
+    }
+    return Double(value) / factor
+}
+
 public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
     if let entry = currencyFormatterEntries[currency] ?? currencyFormatterEntries["USD"] {
         var result = ""

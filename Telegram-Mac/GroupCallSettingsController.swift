@@ -238,7 +238,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     }
     
     
-    if state.canManageCall {
+    if state.canManageCall && state.scheduleTimestamp == nil {
         if case .sectionId = entries.last {
             
         } else {

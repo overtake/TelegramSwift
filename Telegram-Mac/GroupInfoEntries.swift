@@ -318,7 +318,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         if let activeCall = current {
-            let join:(PeerId)->Void = { joinAs in
+            let join:(PeerId, Date?)->Void = { joinAs, _ in
                 _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
                     switch result {
                     case let .samePeer(callContext):
@@ -331,12 +331,12 @@ final class GroupInfoArguments : PeerInfoArguments {
                 })
             }
             if let callJoinPeerId = callJoinPeerId {
-                join(callJoinPeerId)
+                join(callJoinPeerId, nil)
             } else {
                 selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
             }
         } else {
-            createVoiceChat(context: context, peerId: peerId)
+            createVoiceChat(context: context, peerId: peerId, canBeScheduled: true)
         }
     }
     

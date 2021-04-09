@@ -97,7 +97,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 break
             }
         }
-       
         if previousAccept != accept {
             self.playThrottleDisposable.set(signal.start(next: { [weak self] in
                 guard let `self` = self else {
@@ -185,11 +184,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
 
         let updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
         
+        
         if parent?.stableId != self.parent?.stableId {
             self.sticker = nil
         } else if parent == nil, updated {
             self.sticker = nil
         }
+
+        
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
@@ -262,24 +264,25 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         
         let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 40
-        
-        if hasPlaceholder {
-            let current: StickerShimmerEffectView
-            if let local = self.placeholderView {
-                current = local
-            } else {
-                current = StickerShimmerEffectView()
-                current.frame = bounds
-                self.placeholderView = current
-                addSubview(current, positioned: .below, relativeTo: playerView)
-                if animated {
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        if updated {
+            if hasPlaceholder {
+                let current: StickerShimmerEffectView
+                if let local = self.placeholderView {
+                    current = local
+                } else {
+                    current = StickerShimmerEffectView()
+                    current.frame = bounds
+                    self.placeholderView = current
+                    addSubview(current, positioned: .below, relativeTo: playerView)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
+                current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: file.immediateThumbnailData, size: size)
+                current.updateAbsoluteRect(bounds, within: size)
+            } else {
+                self.removePlaceholder(animated: animated)
             }
-            current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: file.immediateThumbnailData, size: size)
-            current.updateAbsoluteRect(bounds, within: size)
-        } else {
-            self.removePlaceholder(animated: animated)
         }
         
         self.thumbView.imageUpdated = { [weak self] value in
@@ -299,33 +302,30 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             })
         }
         self.thumbView.set(arguments: arguments)
-        self.playerView.removeFromSuperview()
-        addSubview(self.thumbView)
+        if updated {
+            self.playerView.removeFromSuperview()
+            addSubview(self.thumbView)
+        }
 
         
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
-        stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
-            guard let `self` = self else { return }
-            switch state {
-            case .playing:
-                self.addSubview(self.playerView)
-                self.thumbView.removeFromSuperview()
-                self.removePlaceholder(animated: false)
-            case .stoped:
-                self.playerView.removeFromSuperview()
-                self.addSubview(self.thumbView)
-//                if let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters {
-//                    if let hidePlayer = parameters.hidePlayer, !hidePlayer {
-//                        self.addSubview(self.playerView)
-//                        self.thumbView.removeFromSuperview()
-//                    }
-//                }
-            default:
-                break
-            }
-
-            
-        }))
+        if updated {
+            stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
+                guard let `self` = self else { return }
+                switch state {
+                case .playing:
+                    self.addSubview(self.playerView)
+                    self.thumbView.removeFromSuperview()
+                    self.removePlaceholder(animated: false)
+                case .stoped:
+                    self.playerView.removeFromSuperview()
+                    self.addSubview(self.thumbView)
+                default:
+                    break
+                }
+            }))
+        }
+        
     }
     
     private func removePlaceholder(animated: Bool) {

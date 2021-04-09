@@ -853,6 +853,9 @@ public extension CGSize {
         let scale:CGFloat = System.backingScale
         return CGSize(width: self.width / scale, height: self.height / scale)
     }
+    var bounds: CGRect {
+        return NSMakeRect(0, 0, width, height)
+    }
 }
 
 public extension NSImage {

@@ -108,7 +108,7 @@ private final class PaymentsCheckoutPreviewRowView : GeneralContainableRowView {
             
             _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: image.resource)).start()
 
-            imageView?.set(arguments: TransformImageArguments.init(corners: .init(radius: .cornerRadius), imageSize: item.imageSize, boundingSize: item.imageSize, intrinsicInsets: .init()))
+            imageView?.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: item.imageSize, boundingSize: item.imageSize, intrinsicInsets: .init()))
 
         } else {
             imageView?.removeFromSuperview()
@@ -116,6 +116,10 @@ private final class PaymentsCheckoutPreviewRowView : GeneralContainableRowView {
         }
         
         needsLayout = true
+    }
+    
+    override var firstResponder: NSResponder? {
+        return nil
     }
     
     required init?(coder: NSCoder) {
