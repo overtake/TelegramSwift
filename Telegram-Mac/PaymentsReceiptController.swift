@@ -23,10 +23,6 @@ private final class Arguments {
 private struct State : Equatable {
     var message: Message
     var receipt: BotPaymentReceipt?
-    
-    static func ==(lhs: State, rhs: State) -> Bool {
-        return true
-    }
 }
 
 private let _id_loading = InputDataIdentifier("_id_loading")

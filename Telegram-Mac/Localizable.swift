@@ -1833,7 +1833,7 @@ internal final class L10n {
   internal static var chatHeaderPinnedPrevious: String  { return L10n.tr("Localizable", "Chat.Header.PinnedPrevious") }
   /// Report Spam
   internal static var chatHeaderReportSpam: String  { return L10n.tr("Localizable", "Chat.Header.ReportSpam") }
-  /// Starts in: %@
+  /// Starts in %@
   internal static func chatHeaderVoiceChatStartsIn(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Header.VoiceChat.StartsIn", p1)
   }
@@ -5577,6 +5577,10 @@ internal final class L10n {
   internal static var passportResetPasswordConfirmOK: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.OK") }
   /// All documents uploaded to your Telegram Passport will be lost. You will be able to upload new documents.
   internal static var passportResetPasswordConfirmText: String  { return L10n.tr("Localizable", "Passport.ResetPassword.Confirm.Text") }
+  /// You paid %1$@ to %2$@
+  internal static func paymentsPaid(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Payments.Paid", p1, p2)
+  }
   /// Tip (Optional)
   internal static var paymentsTipLabel: String  { return L10n.tr("Localizable", "Payments.TipLabel") }
   /// Sorry, Telegram for macOS doesn't support payments yet. Please use one of our mobile apps to do this.
@@ -9367,6 +9371,8 @@ internal final class L10n {
   internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
+  /// We will notify you when it starts
+  internal static var voiceChatTooltipSubscribe: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Subscribe") }
   /// stream
   internal static var voiceChatVideoStream: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream") }
   /// Video Source

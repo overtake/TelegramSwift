@@ -727,6 +727,9 @@ final class GroupCallUIController : ViewController {
         }, startVoiceChat: { [weak self] in
             self?.data.call.startScheduled()
         }, toggleReminder: { [weak self] subscribe in
+            if subscribe, let window = self?.window {
+                showModalText(for: window, text: L10n.voiceChatTooltipSubscribe)
+            }
             self?.data.call.toggleScheduledSubscription(subscribe)
         })
         

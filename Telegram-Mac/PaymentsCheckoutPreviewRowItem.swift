@@ -28,7 +28,7 @@ final class PaymentsCheckoutPreviewRowItem : GeneralRowItem {
         _ = attr.append(string: "\n")
         _ = attr.append(string: invoice.description, color: theme.colors.text, font: .normal(.text))
         _ = attr.append(string: "\n")
-        _ = attr.append(string: messageMainPeer(message)?.displayTitle ?? "", color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: (message.inlinePeer ?? message.author)?.displayTitle ?? "", color: theme.colors.grayText, font: .normal(.text))
         
         self.textLayout = TextViewLayout(attr)
         super.init(initialSize, viewType: viewType)
