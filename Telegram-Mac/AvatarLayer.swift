@@ -131,7 +131,7 @@ class AvatarControl: NSView {
         } else {
             state = .Empty
         }
-        if self.state != state {
+        if self.state != state || self.layer?.contents == nil {
             self.state = state
             contentScale = 0
             self.viewDidChangeBackingProperties()

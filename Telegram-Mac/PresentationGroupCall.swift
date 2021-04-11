@@ -137,7 +137,8 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 scheduleTimestamp: nil,
                 subscribedToScheduled: false,
                 recordingStartTimestamp: nil,
-                sortAscending: true
+                sortAscending: true,
+                defaultParticipantsAreMuted: nil
             ),
             topParticipants: [],
             participantCount: 0,
@@ -179,7 +180,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, clientParams: nil, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -1577,7 +1578,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         scheduleTimestamp: state.scheduleTimestamp,
                         subscribedToScheduled: state.subscribedToScheduled,
                         recordingStartTimestamp: state.recordingStartTimestamp,
-                        sortAscending: state.sortAscending
+                        sortAscending: state.sortAscending,
+                        defaultParticipantsAreMuted: state.defaultParticipantsAreMuted
                     ))))
                     
                     strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
@@ -1774,7 +1776,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     strongSelf.stateValue = stateValue
                     
                     if state.scheduleTimestamp == nil && !strongSelf.isScheduledStarted {
-                        strongSelf.updateSessionState(internalState: .active(GroupCallInfo(id: callInfo.id, accessHash: callInfo.accessHash, participantCount: state.totalCount, clientParams: callInfo.clientParams, streamDcId: callInfo.streamDcId, title: state.title, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: true)))
+                        strongSelf.updateSessionState(internalState: .active(GroupCallInfo(id: callInfo.id, accessHash: callInfo.accessHash, participantCount: state.totalCount, clientParams: callInfo.clientParams, streamDcId: callInfo.streamDcId, title: state.title, scheduleTimestamp: nil, subscribedToScheduled: false, recordingStartTimestamp: nil, sortAscending: true, defaultParticipantsAreMuted: callInfo.defaultParticipantsAreMuted ?? state.defaultParticipantsAreMuted)))
                     } else if !strongSelf.isScheduledStarted {
                         strongSelf.summaryInfoState.set(.single(SummaryInfoState(info: GroupCallInfo(
                             id: callInfo.id,
@@ -1786,7 +1788,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             scheduleTimestamp: state.scheduleTimestamp,
                             subscribedToScheduled: state.subscribedToScheduled,
                             recordingStartTimestamp: state.recordingStartTimestamp,
-                            sortAscending: state.sortAscending
+                            sortAscending: state.sortAscending,
+                            defaultParticipantsAreMuted: state.defaultParticipantsAreMuted
                         ))))
                         
                         strongSelf.summaryParticipantsState.set(.single(SummaryParticipantsState(
@@ -2271,9 +2274,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     }
     
     func updateTitle(_ title: String, force: Bool) {
-        guard case let .established(callInfo, _, _, _, _) = self.internalState else {
+        guard let callInfo = self.internalState.callInfo else {
             return
         }
+        self.stateValue.title = title.isEmpty ? nil : title
+
         var signal = editGroupCallTitle(account: account, callId: callInfo.id, accessHash: callInfo.accessHash, title: title)
         if !force {
             signal = signal |> delay(0.2, queue: .mainQueue())

@@ -241,10 +241,10 @@ final class GroupCallView : View {
         let duration: Double = 0.3
         
        
-        
+        let previousState = self.state
         peersTable.merge(with: transition)
         
-        if let previousState = self.state {
+        if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
                 if !markWasScheduled {
                     self.markWasScheduled = previousState.state.scheduleState != nil && state.state.scheduleState == nil
@@ -300,9 +300,32 @@ final class GroupCallView : View {
         
         scheduleView?.update(state, arguments: arguments, animated: animated)
 
-        peersTable.change(opacity: state.state.scheduleTimestamp != nil ? 0 : 1, animated: animated)
-        peersTableContainer.change(opacity: state.state.scheduleTimestamp != nil ? 0 : 1, animated: animated)
-
+        if animated {
+            let from: CGFloat = state.state.scheduleTimestamp != nil ? 1 : 0
+            let to: CGFloat = state.state.scheduleTimestamp != nil ? 0 : 1
+            if previousState?.state.scheduleTimestamp != state.state.scheduleTimestamp {
+                let remove: Bool = state.state.scheduleTimestamp != nil
+                if !remove {
+                    self.addSubview(peersTableContainer)
+                    self.addSubview(peersTable)
+                }
+                self.peersTable.layer?.animateAlpha(from: from, to: to, duration: duration, removeOnCompletion: false, completion: { [weak self] _ in
+                    if remove {
+                        self?.peersTable.removeFromSuperview()
+                        self?.peersTableContainer.removeFromSuperview()
+                    }
+                })
+            }
+        } else {
+            if state.state.scheduleState != nil {
+                peersTable.removeFromSuperview()
+                peersTableContainer.removeFromSuperview()
+            } else {
+                addSubview(peersTableContainer)
+                addSubview(peersTable)
+            }
+        }
+        
         if let currentDominantSpeakerWithVideo = state.currentDominantSpeakerWithVideo {
             let mainVideo: MainVideoContainerView
             var isPresented: Bool = false
