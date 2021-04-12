@@ -80,6 +80,10 @@ class ReplyMarkupNode: Node {
                         urlView?.image = theme.chat.chatActionUrl(theme: theme)
                         urlView?.sizeToFit()
                     }
+                case .payment:
+                    urlView = ImageView()
+                    urlView?.image = theme.chat.chatInvoiceAction(theme: theme)
+                    urlView?.sizeToFit()
                 case .switchInline:
                     urlView = ImageView()
                     urlView?.image = theme.chat.chatActionUrl(theme: theme)

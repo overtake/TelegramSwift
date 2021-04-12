@@ -18,7 +18,7 @@ final class PaymentsCheckoutPreviewRowItem : GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     fileprivate let image: TelegramMediaWebFile?
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, message: Message, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, message: Message, botPeer: Peer?, viewType: GeneralViewType) {
         self.invoice = message.media.first as! TelegramMediaInvoice
         self.context = context
         self.image = invoice.photo
@@ -28,7 +28,7 @@ final class PaymentsCheckoutPreviewRowItem : GeneralRowItem {
         _ = attr.append(string: "\n")
         _ = attr.append(string: invoice.description, color: theme.colors.text, font: .normal(.text))
         _ = attr.append(string: "\n")
-        _ = attr.append(string: (message.inlinePeer ?? message.author)?.displayTitle ?? "", color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: botPeer?.displayTitle ?? "", color: theme.colors.grayText, font: .normal(.text))
         
         self.textLayout = TextViewLayout(attr)
         super.init(initialSize, viewType: viewType)

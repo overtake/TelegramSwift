@@ -293,7 +293,7 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     
-                    if let paymentMessage = paymentMessage, let media = paymentMessage.media.first as? TelegramMediaInvoice, let peer = messageMainPeer(paymentMessage) {
+                    if let paymentMessage = paymentMessage, let media = paymentMessage.media.first as? TelegramMediaInvoice, let peer = paymentMessage.peers[paymentMessage.id.peerId] {
                         _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                         

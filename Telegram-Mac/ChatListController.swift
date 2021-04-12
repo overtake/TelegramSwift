@@ -112,9 +112,9 @@ enum UIChatListEntry : Identifiable, Comparable {
         switch self {
         case let .chat(entry, _, additionItem, _):
             if let additionItem = additionItem {
-                var current = MessageIndex.absoluteUpperBound().predecessor()
+                var current = MessageIndex.absoluteUpperBound().globalPredecessor()
                 for _ in 0 ..< additionItem.index {
-                    current = current.predecessor()
+                    current = current.globalPredecessor()
                 }
                 return ChatListIndex(pinningIndex: 0, messageIndex: current)
             }
@@ -127,15 +127,15 @@ enum UIChatListEntry : Identifiable, Comparable {
         case .reveal:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
         case let .group(values):
-            var index = MessageIndex.absoluteUpperBound().predecessor()
+            var index = MessageIndex.absoluteUpperBound().globalPredecessor()
             for _ in 0 ..< values.0 {
-                index = index.predecessor()
+                index = index.peerLocalPredecessor()
             }
             return ChatListIndex(pinningIndex: 0, messageIndex: index)
         case .empty:
-            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor())
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         case .loading:
-            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().predecessor())
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         }
     }
     

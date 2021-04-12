@@ -205,9 +205,15 @@ private final class PaymentsCheckoutPriceView : GeneralContainableRowView, NSTex
         guard let doubleValue = Double(cleanText) else {
             return
         }
+        guard let editableTip = item.editableTip else {
+            return
+        }
 
         if let value = fractionalToCurrencyAmount(value: doubleValue, currency: tip.currency) {
             item.updateValue(value)
+            if value > editableTip.maxValue {
+                self.input.string = self.formatterDelegate?.formatter.formattedStringAdjustedToFitAllowedValues(from: "\(editableTip.maxValue)") ?? ""
+            }
         }
     }
     
