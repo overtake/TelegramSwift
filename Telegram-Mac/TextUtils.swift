@@ -766,7 +766,7 @@ func timeIntervalString( _ value: Int) -> String {
 
 
 
-func timerText(_ durationValue: Int) -> String {
+func timerText(_ durationValue: Int, addminus: Bool = true) -> String {
     
     let duration = abs(durationValue)
     let days = Int(duration) / (3600 * 24)
@@ -786,5 +786,9 @@ func timerText(_ durationValue: Int) -> String {
     } else {
         formatted = String(format:"%02i:%02i", minutes, seconds)
     }
-    return durationValue < 0 ? "-" + formatted : formatted
+    if addminus {
+        return durationValue < 0 ? "-" + formatted : formatted
+    } else {
+        return formatted
+    }
 }

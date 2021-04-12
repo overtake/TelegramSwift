@@ -140,6 +140,7 @@ private struct State : Equatable {
     let mode: PaymentViewMode
     var message: Message
     var form: BotPaymentForm?
+    var botPeer: PeerEquatable?
     var validatedInfo: BotPaymentValidatedFormInfo?
     var savedInfo: BotPaymentRequestedInfo
     var shippingOptionId: BotPaymentShippingOption?
@@ -196,8 +197,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_preview, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, viewType: .singleItem)
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_preview, equatable: InputDataEquatable(state.botPeer), comparable: nil, item: { initialSize, stableId in
+        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, botPeer: state.botPeer?.peer, viewType: .singleItem)
     }))
     index += 1
     
@@ -455,13 +456,20 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             }
             
             let pay:()->Void = {
-                let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.currentTip, credentials: credentials)
+                let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
                 
                 _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
                     
                     let success:(Bool)->Void = { value in
                         if value {
                             close?()
+                            let invoice = state.message.media.first as! TelegramMediaInvoice
+                            //currencyValue: currencyValue, itemTitle: invoice.title
+                            let totalValue = currentTotalPrice(paymentForm: form, validatedFormInfo: state.validatedInfo, shippingOption: state.shippingOptionId)
+                            
+                            let total = formatCurrencyAmount(totalValue, currency: form.invoice.currency)
+                            
+                            showModalText(for: context.window, text: L10n.paymentsPaid(total, invoice.title))
                         }
                     }
                     switch result {
@@ -489,10 +497,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             
             let messageId = message.id
             let botPeer: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
-                if let message = transaction.getMessage(messageId) {
-                    return message.inlinePeer ?? message.author
-                }
-                return nil
+                return transaction.getPeer(form.paymentBotId)
             }
 
             let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
@@ -554,7 +559,11 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     }, selectTip: { value in
         updateState { current in
             var current = current
-            current.currentTip = value
+            if let value = value {
+                current.currentTip = min(value, current.form?.invoice.tip?.max ?? .max)
+            } else {
+                current.currentTip = nil
+            }
             return current
         }
     })
@@ -576,27 +585,39 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
 
     
     let formAndMaybeValidatedInfo = fetchBotPaymentForm(postbox: context.account.postbox, network: context.account.network, messageId: messageId, themeParams: themeParams)
-               |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
-                   if let current = paymentForm.savedInfo {
-                       return validateBotPaymentForm(account: context.account, saveInfo: true, messageId: messageId, formInfo: current)
-                           |> mapError { _ -> BotPaymentFormRequestError in
-                               return .generic
-                           }
-                           |> map { result -> (BotPaymentForm, BotPaymentValidatedFormInfo?) in
-                               return (paymentForm, result)
-                           }
-                           |> `catch` { _ -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
-                               return .single((paymentForm, nil))
-                           }
-                   } else {
-                       return .single((paymentForm, nil))
-                   }
-               } |> deliverOnMainQueue
+           |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
+               if let current = paymentForm.savedInfo {
+                   return validateBotPaymentForm(account: context.account, saveInfo: true, messageId: messageId, formInfo: current)
+                       |> mapError { _ -> BotPaymentFormRequestError in
+                           return .generic
+                       }
+                       |> map { result -> (BotPaymentForm, BotPaymentValidatedFormInfo?) in
+                           return (paymentForm, result)
+                       }
+                       |> `catch` { _ -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
+                           return .single((paymentForm, nil))
+                       }
+               } else {
+                   return .single((paymentForm, nil))
+               }
+        } |> deliverOnMainQueue
 
-    actionsDisposable.add(formAndMaybeValidatedInfo.start(next: { form in
+    let formPromise: Promise<(BotPaymentForm, BotPaymentValidatedFormInfo?)> = Promise()
+    
+    formPromise.set(formAndMaybeValidatedInfo |> `catch` { _ in .complete() })
+    
+    
+    let botPeer: Signal<Peer?, BotPaymentFormRequestError> = formPromise.get() |> mapToSignal { value in
+        return context.account.postbox.transaction {
+            $0.getPeer(value.0.paymentBotId)
+        }
+    } |> castError(BotPaymentFormRequestError.self)
+    
+    actionsDisposable.add(combineLatest(formAndMaybeValidatedInfo, botPeer).start(next: { form, botPeer in
         updateState { current in
             var current = current
             current.form = form.0
+            current.botPeer = botPeer != nil ? PeerEquatable(botPeer!) : nil
             current.validatedInfo = form.1
             if let savedInfo = form.0.savedInfo {
                 current.savedInfo = savedInfo

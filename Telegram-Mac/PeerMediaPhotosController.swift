@@ -135,14 +135,14 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: 0), timestamp: Int32(dateId))
                 var viewType: GeneralViewType = .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))
                 if !entries.isEmpty {
-                    entries.append(.section(index: index.successor()))
+                    entries.append(.section(index: index.peerLocalSuccessor()))
                     entries.append(.date(index: index))
                 } else {
                     if !isExternalSearch {
                         viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))
                     }
                 }
-                entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: viewType))
+                entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
                 temp.removeAll()
             }
         } else {
@@ -154,9 +154,9 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 case let .month(prevIndex, items, galleryType, viewType):
                     let prevDateId = mediaDateId(for: prevIndex.timestamp)
                     if prevDateId != dateId {
-                        entries.append(.section(index: index.successor()))
+                        entries.append(.section(index: index.peerLocalSuccessor()))
                         entries.append(.date(index: index))
-                        entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                        entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                     } else {
                         entries[entries.count - 1] = .month(index: prevIndex, items: items + temp, galleryType: galleryType, viewType: viewType)
                     }
@@ -165,9 +165,9 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                 }
             } else {
                 if isExternalSearch {
-                    entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                 } else {
-                    entries.append(.month(index: index.predecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                 }
             }
             

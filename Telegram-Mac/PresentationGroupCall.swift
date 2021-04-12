@@ -1731,7 +1731,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         let about: String?
                         if let cachedData = cachedData as? CachedUserData {
                             about = cachedData.about
-                        } else if let cachedData = cachedData as? CachedUserData {
+                        } else if let cachedData = cachedData as? CachedChannelData {
                             about = cachedData.about
                         } else {
                             about = nil
@@ -1769,7 +1769,16 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         stateValue.defaultParticipantMuteState = state.defaultParticipantsAreMuted.isMuted ? .muted : .unmuted
                     }
                     stateValue.recordingStartTimestamp = state.recordingStartTimestamp
-                    stateValue.title = state.title
+                    
+                    
+                    if let activeCall = (view.cachedData as? CachedGroupData)?.activeCall {
+                        stateValue.title = activeCall.title
+                    } else if let activeCall = (view.cachedData as? CachedChannelData)?.activeCall {
+                        stateValue.title = activeCall.title
+                    } else {
+                        stateValue.title = state.title
+                    }
+                    
                     
                     stateValue.scheduleTimestamp = strongSelf.isScheduledStarted ? nil : state.scheduleTimestamp
 

@@ -22,6 +22,7 @@ private final class Arguments {
 
 private struct State : Equatable {
     var message: Message
+    var botPeer: PeerEquatable?
     var receipt: BotPaymentReceipt?
 }
 
@@ -49,8 +50,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, viewType: .singleItem)
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state.botPeer), comparable: nil, item: { initialSize, stableId in
+        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, botPeer: state.botPeer?.peer, viewType: .singleItem)
     }))
 
     entries.append(.sectionId(sectionId, type: .normal))
@@ -229,10 +230,22 @@ func PaymentsReceiptController(context: AccountContext, messageId: MessageId, me
         modalController?.modal?.close()
     }
     
-    actionsDisposable.add(requestBotPaymentReceipt(account: context.account, messageId: messageId).start(next: { receipt in
+    
+    //BotPaymentReceipt, RequestBotPaymentReceiptError
+    let receiptPromise: Promise<BotPaymentReceipt> = Promise()
+    
+    receiptPromise.set(requestBotPaymentReceipt(account: context.account, messageId: messageId) |> `catch` { _ in return .complete() })
+    
+    
+    let botPeer = receiptPromise.get() |> mapToSignal { value in
+        return context.account.postbox.transaction { $0.getPeer(value.botPaymentId) }
+    }
+    
+    actionsDisposable.add(combineLatest(receiptPromise.get(), botPeer).start(next: { receipt, botPeer in
         updateState { current in
             var current = current
             current.receipt = receipt
+            current.botPeer = botPeer != nil ? PeerEquatable(botPeer!) : nil
             return current
         }
     }))

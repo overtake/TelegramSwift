@@ -61,7 +61,7 @@ enum PeerMediaSharedEntry : Comparable, Identifiable {
         case let .sectionId(index):
             return index
         case let .messageEntry(message, _, _, _):
-            return MessageIndex(message).predecessor()
+            return MessageIndex(message).peerLocalPredecessor()
         case .emptySearchEntry:
             return MessageIndex.absoluteLowerBound()
         }
@@ -118,13 +118,13 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
             let nextDateId = mediaDateId(for: nextTimestamp)
             if dateId != nextDateId {
                 let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
-                tempItems.append((.date(index), .sectionId(index.successor())))
+                tempItems.append((.date(index), .sectionId(index.peerLocalSuccessor())))
             }
         } else {
             let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
             let dateId = mediaDateId(for: timestamp)
             let index = MessageIndex(id: message.id, timestamp: Int32(dateId))
-            tempItems.append((.date(index), .sectionId(index.successor())))
+            tempItems.append((.date(index), .sectionId(index.peerLocalSuccessor())))
         }
         tempItems.append((.messageEntry(message, isExternalSearch ? update.messages : [], update.automaticDownload, .singleItem), nil))
 
@@ -152,7 +152,7 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
             let item = groupItems.last!
             groupItems[groupItems.count - 1] = Item(item.date, item.section, item.items + current)
         } else {
-            groupItems.append(.init(current.first!, .sectionId(current.first!.index.successor()), current))
+            groupItems.append(.init(current.first!, .sectionId(current.first!.index.peerLocalSuccessor()), current))
         }
     }
     

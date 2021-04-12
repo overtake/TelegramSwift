@@ -758,7 +758,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if let topMessageIndex = topMessageIndex, topMessageIndex == i {
             let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
 
-            entries.append(.commentsHeader(i == messagesEntries.count - 1, MessageIndex(id: message.id, timestamp: timestamp).successor(), renderType))
+            entries.append(.commentsHeader(i == messagesEntries.count - 1, MessageIndex(id: message.id, timestamp: timestamp).peerLocalSuccessor(), renderType))
         }
     }
     
@@ -786,7 +786,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
     if addRepliesHeader {
-        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound().successor(), renderType), at: 0)
+        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound().globalSuccessor(), renderType), at: 0)
     }
     if let addTopThreadInset = addTopThreadInset {
         entries.insert(.topThreadInset(addTopThreadInset, MessageIndex.absoluteLowerBound(), renderType), at: 0)

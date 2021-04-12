@@ -287,6 +287,17 @@ final class TelegramChatColors {
         }
     }
     
+    private var _chatInvoiceAction: CGImage?
+    func chatInvoiceAction(theme: TelegramPresentationTheme) -> CGImage {
+        if let _chatInvoiceAction = _chatInvoiceAction {
+            return _chatInvoiceAction
+        } else {
+            let image = NSImage(named: "Icon_ChatInvoice")!.precomposed(theme.chatServiceItemTextColor)
+            _chatInvoiceAction = image
+            return image
+        }
+    }
+    
     func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
         let minimumFrameDuration = 1.0 / 60
         let numberOfFrames = max(1, Int(duration / minimumFrameDuration))

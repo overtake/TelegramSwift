@@ -223,7 +223,14 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
-    let initialState = State(list: list, selected: context.peerId, schedule: false, scheduleDate: Date(timeIntervalSinceNow: 1 * 60 * 60), next: 1)
+    
+
+    let calendar = NSCalendar.current
+    var components = calendar.dateComponents([.hour, .day, .year, .month], from: Date())
+    
+    components.setValue(components.hour! + 2, for: .hour)
+    
+    let initialState = State(list: list, selected: context.peerId, schedule: false, scheduleDate: calendar.date(from: components), next: 1)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -342,11 +349,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 
 func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId, Date?)->Void, canBeScheduled: Bool = false) {
     _ = showModalProgress(signal: cachedGroupCallDisplayAsAvailablePeers(account: context.account, peerId: peerId), for: context.window).start(next: { displayAsList in
-        if !displayAsList.isEmpty || canBeScheduled {
-            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion, canBeScheduled: canBeScheduled), for: context.window)
-        } else {
-            completion(context.peerId, nil)
-        }
+        showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion, canBeScheduled: canBeScheduled), for: context.window)
     })
 }
 
