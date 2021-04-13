@@ -227,14 +227,14 @@ final class TRLotFileSupplyment {
             shouldWaitToRead[Int(current.frame)] = Int(current.frame)
             queue.async {
                 if !self.data.hasAlreadyFrame(Int(current.frame)) {
-                    let address = current.data.assumingMemoryBound(to: UInt8.self)
+                    let address = current.data!.assumingMemoryBound(to: UInt8.self)
                     
                     let dst: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
                     var length:Int = self.bufferSize
                     if let previous = previous {
                         let uint64Bs = self.bufferSize / 8
                         let dstDelta: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                        memcpy(dstDelta, previous.data.assumingMemoryBound(to: UInt8.self), self.bufferSize)
+                        memcpy(dstDelta, previous.data!.assumingMemoryBound(to: UInt8.self), self.bufferSize)
                         
                         
                         let ui64Dst = dstDelta.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { previousBytes in
@@ -286,7 +286,7 @@ final class TRLotFileSupplyment {
 
                         if let previous = previous {
 
-                            let previousBytes = previous.data.assumingMemoryBound(to: UInt64.self)
+                            let previousBytes = previous.data!.assumingMemoryBound(to: UInt64.self)
 
                             let uint64Bs = self.bufferSize / 8
 

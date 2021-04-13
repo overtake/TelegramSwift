@@ -246,7 +246,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 24 : 30 : 60
                 let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
-                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox)
+                
+                let type: LottieAnimationType
+                if file.mimeType == "image/webp" {
+                    type = .webp
+                } else {
+                    type = .lottie
+                }
+                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox)
                 
                 self.fetchStatus = .Local
             } else {
@@ -294,7 +301,16 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 
         
         if !self.thumbView.isFullyLoaded {
-            self.thumbView.setSignal(chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor, size: size, fetched: false), cacheImage: { [weak file, weak self] result in
+            
+            let signal: Signal<ImageDataTransformation, NoError>
+                
+            switch file.mimeType {
+            case "image/webp":
+                signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width < 120, scale: backingScaleFactor, fetched: true)
+            default:
+                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor, size: size, fetched: true)
+            }
+            self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
                 if let file = file {
                     cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                 }

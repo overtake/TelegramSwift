@@ -422,9 +422,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 let url = URL(fileURLWithPath: path)
                 
                 let colorData = NSMutableData()
-                let umnanaged = convertFromWebP(data)
-                var image = umnanaged?.takeUnretainedValue() ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-                umnanaged?.release()
+                var image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                 
                 if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
                     if let json = String(data: transformedWithFitzModifier(data: data, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
@@ -432,6 +430,10 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                         let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
                         image = unmanaged?.takeRetainedValue()
                     }
+                } else if image != nil {
+                    let webp = WebPImageDecoder(data: data, scale: 2.0)
+                    let fullSizeWebp = webp?.frame(at: 0, decodeForDisplay: true)?.image?._cgImage
+                    image = fullSizeWebp ?? image
                 }
                 
                 if let image = image, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil) {
@@ -469,19 +471,21 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
     return signal |> mapToSignal { resourceData in
         return Signal { subscriber in
             
+            let complete: Bool
             let resourcePath: String?
             if let resourceData = resourceData {
                 resourcePath = resourceData.path
+                complete = resourceData.complete
             } else if let resource = resource as? LocalFileReferenceMediaResource {
                 resourcePath = resource.localFilePath
+                complete = true
             } else {
                 resourcePath = nil
+                complete = false
             }
             
-            if let resourcePath = resourcePath, let data = try? Data(contentsOf: URL(fileURLWithPath: resourcePath), options: [.mappedIfSafe]) {
-                let unmanaged = convertFromWebP(data)
-                let image = unmanaged?.takeUnretainedValue()
-                unmanaged?.release()
+            if let resourcePath = resourcePath, let data = try? Data(contentsOf: URL(fileURLWithPath: resourcePath), options: [.mappedIfSafe]), complete {
+                let image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                 if let image = image, let containerUrl = ApiEnvironment.containerURL {
                     var randomId: Int64 = 0
                     arc4random_buf(&randomId, 8)
