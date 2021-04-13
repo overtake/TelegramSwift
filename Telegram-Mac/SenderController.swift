@@ -286,6 +286,10 @@ class Sender: NSObject {
                     attrs.append(TelegramMediaFileAttribute.Video(duration: Int(container.duration), size: PixelDimensions(container.size), flags: [.instantRoundVideo]))
                     media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: attrs)
 
+                } else if mimeType.hasPrefix("image/webp") {
+                    let resource = LocalFileReferenceMediaResource(localFilePath:path, randomId: randomId, isUniquelyReferencedTemporaryFile: false, size: fs(path))
+                    
+                    media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: resource, previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: mimeType, size: nil, attributes: fileAttributes(for: mimeType, path: path, isMedia: true))
                 } else if mimeType.hasPrefix("image/") && !mimeType.hasSuffix("gif"), let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
                    
                     let options = NSMutableDictionary()

@@ -528,7 +528,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         window.set(handler: { _ -> KeyHandlerResult in
 
-            showModalText(for: context.window, text: "qkwjeh fkqwejfh qkwef hqwkef hqwkef hqwkef hqwkef hqwekf qwhflkj")
+            filePanel(with: ["webp"], allowMultiple: false, for: window, completion: { values in
+                if let first = values?.first {
+                    showModal(with: AnimatedWebpController(context: context, path: first), for: window)
+                }
+            })
+            
+//            showModalText(for: context.window, text: "qkwjeh fkqwejfh qkwef hqwkef hqwkef hqwkef hqwkef hqwekf qwhflkj")
 
 //
 //            _ = presentDesktopCapturerWindow(select: { _ in

@@ -16,4 +16,6 @@ FOUNDATION_EXPORT const unsigned char libwebpVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <libwebp/PublicHeader.h>
 
 
-CGImageRef convertFromWebP(NSData *data);
+NSImage * _Nullable  convertFromWebP(NSData *data);
+
+#import <libwebp/WebPImageCoder.h>

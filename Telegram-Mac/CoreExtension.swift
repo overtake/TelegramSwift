@@ -2566,7 +2566,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
                     return false
                 }
             })
-            if mime == "image/webp", let size = fs(url.path), size < 64 * 1024 {
+            if mime == "image/webp" {
                 return false
             }
             if isMusic {
