@@ -170,7 +170,9 @@ class ChatInputActionsView: View, Notifable {
             if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
                 enabled = sidebarEnabled
             }
-            if !((chatInteraction.context.window.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual) || (mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize)) || !enabled {
+            let window = chatInteraction.context.window
+            let sharedContext = chatInteraction.context.sharedContext
+            if !((window.frame.width >= 1030 && sharedContext.layout == .dual) || (window.frame.width >= 880 && sharedContext.layout == .minimisize)) || !enabled {
                 self.showEntertainment()
             }
         }, for: .Hover)

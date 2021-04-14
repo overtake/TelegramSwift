@@ -527,7 +527,14 @@ private final class PlayerRenderer {
                 
                 let currentFrame = stateValue.with { $0?.currentFrame ?? 0 }
                 
-                let frame: RenderedFrame? = stateValue.with { $0?.renderFrame(at: currentFrame) }
+                let value = stateValue.with { $0 }
+                
+                let frame: RenderedFrame?
+                if let value = value {
+                    frame = value.renderFrame(at: currentFrame)
+                } else {
+                    frame = nil
+                }
                 
                 _ = stateValue.modify { stateValue -> RendererState? in
                     guard let state = stateValue else {
