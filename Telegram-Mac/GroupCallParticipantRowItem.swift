@@ -721,6 +721,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
                 }
             }
         }
+        needsLayout = true
     }
     
     

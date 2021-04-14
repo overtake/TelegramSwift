@@ -68,7 +68,9 @@ public func setupCurrencyNumberFormatter(currency: String) -> NumberFormatter {
 
     result.append("#")
 
-    result.append(entry.decimalSeparator)
+    if entry.decimalDigits > 0 {
+        result.append(entry.decimalSeparator)
+    }
 
     for _ in 0 ..< entry.decimalDigits {
         result.append("#")
@@ -81,7 +83,9 @@ public func setupCurrencyNumberFormatter(currency: String) -> NumberFormatter {
         if entry.spaceBetweenAmountAndSymbol {
             result.append(" ")
         }
-        result.append("¤")
+        if entry.decimalDigits > 0 {
+            result.append("¤")
+        }
     }
 
     let numberFormatter = NumberFormatter()
@@ -95,6 +99,8 @@ public func setupCurrencyNumberFormatter(currency: String) -> NumberFormatter {
     numberFormatter.currencyDecimalSeparator = entry.decimalSeparator
     numberFormatter.currencyGroupingSeparator = entry.thousandsSeparator
 
+    numberFormatter.locale = Locale.current
+    
     numberFormatter.minimumFractionDigits = entry.decimalDigits
     numberFormatter.maximumFractionDigits = entry.decimalDigits
     numberFormatter.minimumIntegerDigits = 1

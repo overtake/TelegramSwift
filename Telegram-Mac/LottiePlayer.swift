@@ -495,12 +495,14 @@ private final class PlayerRenderer {
                         }
                         
                     }
-                    let duration = current?.duration ?? (1.0 / TimeInterval(fps))
-                    renderer.timer = SwiftSignalKit.Timer(timeout: duration, repeat: false, completion: {
-                        renderNext?()
-                    }, queue: runOnQueue)
-                    
-                    renderer.timer?.start()
+                    if !renderer.finished {
+                        let duration = current?.duration ?? (1.0 / TimeInterval(fps))
+                        renderer.timer = SwiftSignalKit.Timer(timeout: duration, repeat: false, completion: {
+                            renderNext?()
+                        }, queue: runOnQueue)
+                        
+                        renderer.timer?.start()
+                    }
                 }
                 
                 
