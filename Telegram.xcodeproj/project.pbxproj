@@ -2215,11 +2215,14 @@
 		276B5978261C77C20029FD3F /* views */ = {
 			isa = PBXGroup;
 			children = (
+				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */,
 				276B597C261C78AD0029FD3F /* GroupCallView.swift */,
 				276B5982261C79250029FD3F /* GroupCallTitleView.swift */,
 				276B5985261C79940029FD3F /* GroupCallControlsView.swift */,
 				276B5988261C7AC60029FD3F /* GroupCallSchedule.swift */,
+				2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */,
+				2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -4760,7 +4763,6 @@
 				D0E7BD78256AE4B00068644D /* GroupCallController.swift */,
 				27335F0225C8295100FD040C /* GroupVideoView.swift */,
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
-				D0E7BD7F256C1FAF0068644D /* GroupCallSpeakButton.swift */,
 				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
 				D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */,
 				D032AFA32578172400E67215 /* PushToTalk.swift */,
@@ -4769,8 +4771,6 @@
 				274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */,
 				A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */,
 				275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */,
-				2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */,
-				2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */,
 				276B597F261C78F40029FD3F /* GroupCallUIState.swift */,
 			);
 			name = "group-calls";

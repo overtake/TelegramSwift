@@ -97,7 +97,7 @@ extension CurrencyUITextFieldDelegate {
         
         let text = textField.string
         if text.isEmpty {
-            updatedText = formatter.initialText + inputString
+            updatedText = formatter.initialText(inputString)
         } else if let range = Range(range, in: text) {
             updatedText = text.replacingCharacters(in: range, with: inputString)
         } else {
