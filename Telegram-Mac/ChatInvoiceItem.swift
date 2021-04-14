@@ -75,11 +75,20 @@ class ChatInvoiceItem: ChatRowItem {
         return super.elementsContentInset
     }
     
+    override var realContentSize: NSSize {
+        var size = super.realContentSize
+        
+        if isBubbleFullFilled {
+            size.width -= bubbleContentInset * 2
+        }
+        return size
+    }
+    
     override var additionalLineForDateInBubbleState: CGFloat? {
         if isForceRightLine {
             return rightSize.height
         }
-        if let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+        if let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate ) {
             return rightSize.height
         }
         if postAuthor != nil {
