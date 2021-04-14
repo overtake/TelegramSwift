@@ -318,7 +318,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
         let tempFilePath = NSTemporaryDirectory() + "\(arc4random()).mov"
         do {
             let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
-            try FileManager.default.createSymbolicLink(atPath: resourceData.path, withDestinationPath: tempFilePath)
+            try FileManager.default.createSymbolicLink(atPath: tempFilePath, withDestinationPath: resourceData.path)
             
             let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
             let imageGenerator = AVAssetImageGenerator(asset: asset)
