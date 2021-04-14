@@ -533,7 +533,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                                     link = links.speakerLink ?? links.listenerLink
                                 }
                                 for peerId in peerIds {
-                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
                                 }
                                 
                                 subscriber.putNext(true)
@@ -542,7 +542,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                             }, appearance: GroupCallTheme.customTheme.appearance)
                         } else {
                             for peerId in peerIds {
-                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
                             }
                             subscriber.putNext(true)
                             subscriber.putCompletion()

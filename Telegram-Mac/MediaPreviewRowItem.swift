@@ -75,7 +75,16 @@ class MediaPreviewRowItem: TableRowItem {
     
     var contentSize: NSSize {
         let contentSize = layoutSize
-        return NSMakeSize(width - (media.isInteractiveMedia ? 20 : 40), overSize ?? contentSize.height)
+        
+        let width = self.width - (media.isInteractiveMedia ? 20 : 40)
+        
+        var height: CGFloat = overSize ?? contentSize.height
+        if let media = media as? TelegramMediaFile {
+            if media.isSticker || media.isAnimatedSticker {
+                height = width
+            }
+        }
+        return NSMakeSize(width, height)
     }
     
     override var layoutSize: NSSize {
