@@ -243,7 +243,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                         soundEffect = LottieSoundEffect(file: file, postbox: context.account.postbox, triggerOn: 1)
                     }
                 }
-                let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 24 : 30 : 60
+                let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 50 : 60 : 60
                 let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
                 
