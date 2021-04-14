@@ -244,7 +244,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     }
                 }
                 let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 50 : 60 : 60
-                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
+                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
                 
                 let type: LottieAnimationType
