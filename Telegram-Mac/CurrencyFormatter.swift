@@ -15,14 +15,12 @@ public protocol CurrencyFormatting {
     var decimalDigits: Int { get set }
     var maxValue: Double? { get set }
     var minValue: Double? { get set }
+    var initialText: String { get }
     var currencySymbol: String { get set }
     
     func string(from double: Double) -> String?
     func unformatted(string: String) -> String?
     func double(from string: String) -> Double?
-    
-    func initialText(_ value: String) -> String
-
 }
 
 public protocol CurrencyAdjusting {
@@ -226,13 +224,8 @@ public class CurrencyFormatter: CurrencyFormatting {
     }
     
     /// The value zero formatted to serve as initial text.
-    public func initialText(_ value: String) -> String {
-        if let value = Int(value) {
-            return numberFormatter.string(from: NSNumber(value: value)) ?? "0.0"
-        } else {
-            return numberFormatter.string(from: 0) ?? "0.0"
-
-        }
+    public var initialText: String {
+        numberFormatter.string(from: 0) ?? "0.0"
     }
     
     //MARK: - INIT

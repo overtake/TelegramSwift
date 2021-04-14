@@ -129,7 +129,7 @@ final class GroupCallControlsView : View {
                 } else {
                     let rect = self.backgroundView.bounds
                     var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
                     fr = CATransform3DScale(fr, to, to, 1)
                     fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
                     self.backgroundView.layer?.transform = fr

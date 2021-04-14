@@ -361,10 +361,11 @@ class GalleryModernControls: GenericViewController<GalleryModernControlsView> {
     
     
     func animateIn() {
+        genericView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         genericView.change(pos: NSMakePoint(0, 0), animated: true, timingFunction: CAMediaTimingFunctionName.spring)
     }
     
     func animateOut() {
-        genericView.change(pos: NSMakePoint(0, -frame.height), animated: true, timingFunction: CAMediaTimingFunctionName.spring)
+        genericView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false)
     }
 }

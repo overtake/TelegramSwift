@@ -691,11 +691,68 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 let node = item.contentNode()
                 self.contentNode = node.init(frame:NSZeroRect)
                 self.addSubview(self.contentNode!)
+                
+//                let magnify = NSMagnificationGestureRecognizer(target: self, action: #selector(zoomIn(_:)))
+//
+//                contentNode?.addGestureRecognizer(magnify)
             }
             
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
         }
         super.set(item: item, animated: animated)
+    }
+    
+    @objc private func zoomIn(_ gesture: NSMagnificationGestureRecognizer) {
+        
+        guard let view = gesture.view, let window = self.window as? Window else {
+            return
+        }
+        
+        let returnView:(Bool)->Void = { [weak view, weak window, weak self] animated in
+            guard let view = view, let window = window, let `self` = self else {
+                return
+            }
+            let toPoint = self.contentView.convert(view.frame.origin, from: window.contentView)
+            let afterPoint = NSZeroPoint
+            
+            view.setFrameOrigin(afterPoint)
+            self.addSubview(view)
+        }
+        
+        switch gesture.state {
+        case .began:
+            var point = window.contentView!.convert(NSZeroPoint, from: view)
+            point = point.offset(dx: 0, dy: -view.frame.height)
+            view.setFrameOrigin(point)
+            
+            window.contentView?.addSubview(view)
+        case .possible:
+            break
+        case .changed:
+            
+            let magnifyValue = 1 + gesture.magnification
+
+            
+            let layer = view.layer
+            
+            let rect = view.bounds
+            var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+            fr = CATransform3DScale(fr, magnifyValue, magnifyValue, 1)
+            fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+            
+            layer?.transform = fr
+            
+            NSLog("\(gesture.location(in: window.contentView))")
+        case .ended:
+            returnView(true)
+        case .cancelled:
+            returnView(true)
+        case .failed:
+            returnView(true)
+        @unknown default:
+            break
+        }
     }
     
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
