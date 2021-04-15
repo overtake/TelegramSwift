@@ -38,6 +38,8 @@ extension NSMutableAttributedString {
                 
                 let range = (value as! NSValue).rangeValue
                 
+                var addLinkAttrs: Bool = false
+                
                 if range.location != NSNotFound {
                     let sublink = (self.string as NSString).substring(with: range)
                     if let context = context {
@@ -49,25 +51,32 @@ extension NSMutableAttributedString {
                                 if let url = URL(string: link) {
                                     if let host = url.host, allowed.contains(host) {
                                         self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                                        addLinkAttrs = true
                                     } else if allowed.contains(link) {
                                         self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                                        addLinkAttrs = true
                                     }
                                 } else {
                                     continue
                                 }
                             default:
                                 self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                                addLinkAttrs = true
                             }
                         } else {
                             self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                            addLinkAttrs = true
                         }
                     } else {
                         if !onlyInApp {
                             self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                            addLinkAttrs = true
                         }
                     }
-                    self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
-                    self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+                    if addLinkAttrs {
+                        self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
+                        self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+                    }
                 }
                 
             }

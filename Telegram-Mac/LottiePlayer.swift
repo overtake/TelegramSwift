@@ -343,9 +343,7 @@ private final class PlayerRenderer {
         let maximum_renderer_frames: Int = Thread.isMainThread ? 2 : maximum_rendered_frames
         
         let fps: Int = player.fps
-        
-        let bufferSize = self.animation.bufferSize
-        
+        let mainFps: Int = player.mainFps
         
         let maxFrames:Int32 = 180
         var currentFrame: Int32 = 0
@@ -497,11 +495,14 @@ private final class PlayerRenderer {
                     }
                     if !renderer.finished {
                         let duration = current?.duration ?? (1.0 / TimeInterval(fps))
-                        renderer.timer = SwiftSignalKit.Timer(timeout: duration, repeat: false, completion: {
-                            renderNext?()
-                        }, queue: runOnQueue)
+                        if duration > 0, (renderer.totalFrames ?? 0) > 1 {
+                            renderer.timer = SwiftSignalKit.Timer(timeout: duration, repeat: false, completion: {
+                                renderNext?()
+                            }, queue: runOnQueue)
+                            
+                            renderer.timer?.start()
+                        }
                         
-                        renderer.timer?.start()
                     }
                 }
                 
@@ -542,7 +543,7 @@ private final class PlayerRenderer {
                     }
                     var currentFrame = state.currentFrame
                     
-                    if currentFrame % Int32(round(Float(fps) / Float(fps))) != 0 {
+                    if currentFrame % Int32(round(Float(mainFps) / Float(fps))) != 0 {
                         currentFrame += 1
                     }
                     if currentFrame >= state.endFrame - 1 {
@@ -722,6 +723,7 @@ private protocol RenderContainer : class {
     var startFrame: Int32 { get }
     
     var fps: Int { get }
+    var mainFps: Int { get }
 
 }
 
@@ -757,7 +759,9 @@ private final class WebPRenderer : RenderContainer {
     var fps: Int {
         return 1
     }
-    
+    var mainFps: Int {
+        return 1
+    }
 }
 
 private final class LottieRenderer : RenderContainer {
@@ -773,6 +777,9 @@ private final class LottieRenderer : RenderContainer {
     }
     var fps: Int {
         return max(min(Int(bridge.fps()), self.animation.maximumFps), 24)
+    }
+    var mainFps: Int {
+        return Int(bridge.fps())
     }
     var endFrame: Int32 {
         return bridge.endFrame()
