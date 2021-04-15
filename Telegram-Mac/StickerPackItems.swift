@@ -78,7 +78,11 @@ class StickerPackRowItem: TableRowItem {
     }
     
     func contentNode()->ChatMediaContentView.Type {
-        return MediaAnimatedStickerView.self
+        if let file = topItem?.file, file.isAnimatedSticker {
+            return MediaAnimatedStickerView.self
+        } else {
+            return ChatStickerContentView.self
+        }
     }
     
     override func viewClass() -> AnyClass {

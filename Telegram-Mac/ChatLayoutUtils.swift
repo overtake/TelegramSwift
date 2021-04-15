@@ -117,12 +117,12 @@ class ChatLayoutUtils: NSObject {
         return size
     }
     
-    static func contentNode(for media:Media) -> ChatMediaContentView.Type {
+    static func contentNode(for media:Media, packs: Bool = false) -> ChatMediaContentView.Type {
         
         if media is TelegramMediaImage {
             return ChatInteractiveContentView.self
         } else if let file = media as? TelegramMediaFile {
-            if file.mimeType == "image/webp" {
+            if file.mimeType == "image/webp" && !packs {
                 return MediaAnimatedStickerView.self
             } else if file.isAnimatedSticker {
                 return MediaAnimatedStickerView.self
