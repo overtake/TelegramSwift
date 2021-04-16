@@ -670,7 +670,7 @@ public class Modal: NSObject {
             background = self.background
         }
         if let controller = controller, controller.contentBelowBackground {
-            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.3, timingFunction: .spring, completion: { [weak self, weak background] _ in
+            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 5, timingFunction: .spring, completion: { [weak self, weak background] _ in
                 background?.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
@@ -680,7 +680,7 @@ public class Modal: NSObject {
             })
 
         } else if animateBackground {
-            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: {[weak self, weak background] complete in
+            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: {[weak self, weak background] complete in
                 if let stongSelf = self {
                     background?.removeFromSuperview()
                     stongSelf.controller?.view.removeFromSuperview()
@@ -702,12 +702,12 @@ public class Modal: NSObject {
         switch animationType {
         case .common:
             break
-        case let .scaleToRect(newRect):
-            let view = self.container!
-            let oldRect = self.container.frame
-            view.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
-            view.layer?.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
-            view.layer?.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+        case let .scaleToRect(newRect, contentView):
+            let oldRect = contentView.convert(contentView.bounds, to: background)
+            background.addSubview(contentView)
+            contentView.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+            contentView.layer?.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
+            contentView.layer?.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: 0.25, timingFunction: .spring, removeOnCompletion: false)
         }
     }
     
@@ -916,7 +916,7 @@ public enum ModalAnimationType {
 }
 public enum ModalAnimationCloseBehaviour {
     case common
-    case scaleToRect(NSRect)
+    case scaleToRect(NSRect, NSView)
 }
 
 public func showModal(with controller:ModalViewController, for window:Window, isOverlay: Bool = false, animated: Bool = true, animationType: ModalAnimationType = .bottomToCenter) -> Void {

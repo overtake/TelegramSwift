@@ -14,7 +14,10 @@ import SyncCore
 import TGUIKit
 
 
-class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvider {
+class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvider, PinchableView {
+
+    
+    
     
     private var acceptDragging:Bool = false
     private var inDragging:Bool = false
@@ -153,6 +156,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.clean()
         dragDisposable.dispose()
     }
+     
+     func update(size: NSSize) {
+         
+     }
     
     func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) -> Void  {
         self.setContent(size: size)
