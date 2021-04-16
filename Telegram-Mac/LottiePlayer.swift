@@ -505,14 +505,13 @@ private final class PlayerRenderer {
                         
                     }
                 }
-                
-                
+                let isRendering = isRendering.with { $0 }
+                if hungry && !isRendering && !cancelled && !askedRender {
+                    askedRender = true
+                    add_frames_impl?()
+                }
             }
-            let isRendering = isRendering.with { $0 }
-            if hungry && !isRendering && !cancelled && !askedRender {
-                askedRender = true
-                add_frames_impl?()
-            }
+            
         }
         
         renderNext = {
@@ -521,7 +520,7 @@ private final class PlayerRenderer {
         
         var firstTimeRendered: Bool = true
         
-        let maximum = Int(initialState.startFrame + initialState.endFrame)
+        let maximum = Int(initialState.endFrame - initialState.startFrame)
         framesTask = ThreadPoolTask { state in
             _ = isRendering.swap(true)
             while !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_renderer_frames, maximum) {
@@ -536,7 +535,7 @@ private final class PlayerRenderer {
                 } else {
                     frame = nil
                 }
-                
+                                
                 _ = stateValue.modify { stateValue -> RendererState? in
                     guard let state = stateValue else {
                         return stateValue
@@ -582,8 +581,6 @@ private final class PlayerRenderer {
             add_frames()
         }
         add_frames()
-
-        self.timer?.start()
         
     }
     
