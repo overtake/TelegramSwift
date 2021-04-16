@@ -1992,9 +1992,12 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     }))
                 }
                 if canRestrict {
-                    menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuRestrict, handler: {
-                        arguments.restrict(sortedParticipants[i].participant)
-                    }))
+                    if let group = group as? TelegramChannel, group.flags.contains(.isGigagroup) {
+                    } else {
+                        menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuRestrict, handler: {
+                            arguments.restrict(sortedParticipants[i].participant)
+                        }))
+                    }
                     menuItems.append(ContextMenuItem(L10n.peerInfoGroupMenuDelete, handler: {
                         arguments.removePeer(sortedParticipants[i].peer.id)
                     }))

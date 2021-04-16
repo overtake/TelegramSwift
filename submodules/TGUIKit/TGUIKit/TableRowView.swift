@@ -197,12 +197,15 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         if event.stage >= 1 && event.stage != lastPressureEventStage {
             longDisposable.set(delaySignal(0.25).start(completed: { [weak self] in
                 if let strongSelf = self {
-                    if strongSelf.window?.mouseLocationOutsideOfEventStream == event.locationInWindow {
-                        strongSelf.forceClick(in: strongSelf.convert(event.locationInWindow, from: nil))
+                    if NSEvent.pressedMouseButtons & (1 << 0) != 0 {
+                        if strongSelf.window?.mouseLocationOutsideOfEventStream == event.locationInWindow {
+                            strongSelf.forceClick(in: strongSelf.convert(event.locationInWindow, from: nil))
+                        }
                     }
                 }
             }))
         }
+        
         if event.stage < 1 {
             longDisposable.set(nil)
         }
