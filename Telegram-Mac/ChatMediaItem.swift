@@ -566,12 +566,25 @@ class ChatMediaItem: ChatRowItem {
         return ChatMediaView.self
     }
     
+    var isPinchable: Bool {
+        return contentNode() == ChatInteractiveContentView.self || contentNode() == ChatGIFContentView.self
+    }
 }
 
 
 
 class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     
+    private var pinchToZoom: PinchToZoom?
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        pinchToZoom = PinchToZoom(parentView: contentView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
@@ -590,6 +603,9 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 if let image = contentNode.media as? TelegramMediaImage {
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
+                } else if let file = contentNode.media as? TelegramMediaFile {
+                    let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                    return (.file(reference, VideoPreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatFileContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
@@ -692,69 +708,19 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 self.contentNode = node.init(frame:NSZeroRect)
                 self.addSubview(self.contentNode!)
                 
-//                let magnify = NSMagnificationGestureRecognizer(target: self, action: #selector(zoomIn(_:)))
-//
-//                contentNode?.addGestureRecognizer(magnify)
             }
-            
+           
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
+            
+            if item.isPinchable {
+                self.pinchToZoom?.add(to: contentNode!, size: item.contentSize)
+            } else {
+                self.pinchToZoom?.remove()
+            }
         }
         super.set(item: item, animated: animated)
     }
-    
-    @objc private func zoomIn(_ gesture: NSMagnificationGestureRecognizer) {
         
-        guard let view = gesture.view, let window = self.window as? Window else {
-            return
-        }
-        
-        let returnView:(Bool)->Void = { [weak view, weak window, weak self] animated in
-            guard let view = view, let window = window, let `self` = self else {
-                return
-            }
-            let toPoint = self.contentView.convert(view.frame.origin, from: window.contentView)
-            let afterPoint = NSZeroPoint
-            
-            view.setFrameOrigin(afterPoint)
-            self.addSubview(view)
-        }
-        
-        switch gesture.state {
-        case .began:
-            var point = window.contentView!.convert(NSZeroPoint, from: view)
-            point = point.offset(dx: 0, dy: -view.frame.height)
-            view.setFrameOrigin(point)
-            
-            window.contentView?.addSubview(view)
-        case .possible:
-            break
-        case .changed:
-            
-            let magnifyValue = 1 + gesture.magnification
-
-            
-            let layer = view.layer
-            
-            let rect = view.bounds
-            var fr = CATransform3DIdentity
-            fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
-            fr = CATransform3DScale(fr, magnifyValue, magnifyValue, 1)
-            fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-            
-            layer?.transform = fr
-            
-            NSLog("\(gesture.location(in: window.contentView))")
-        case .ended:
-            returnView(true)
-        case .cancelled:
-            returnView(true)
-        case .failed:
-            returnView(true)
-        @unknown default:
-            break
-        }
-    }
-    
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
          if let content = self.contentNode?.interactionContentView(for: innerId, animateIn: animateIn) {
             return content

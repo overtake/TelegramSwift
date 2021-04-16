@@ -97,8 +97,9 @@ protocol ModalPreviewProtocol {
     
 }
 
-protocol ModalPreviewControllerView : class {
+protocol ModalPreviewControllerView : NSView {
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool)
+    func getContentView() -> NSView
 }
 
 fileprivate var handler:ModalPreviewHandler?
@@ -142,7 +143,7 @@ class ModalPreviewHandler : NSObject {
                     strongSelf.modal.update(with: reference.0)
                 }
                 return .invoked
-                }, with: self, for: .leftMouseDragged, priority: .modal)
+            }, with: self, for: .leftMouseDragged, priority: .modal)
             
             window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
                 self?.stopHandler()
@@ -155,9 +156,9 @@ class ModalPreviewHandler : NSObject {
     func stopHandler() {
         window.removeAllHandlers(for: self)
         if let view = self.global.fileAtLocationInWindow(self.window.mouseLocationOutsideOfEventStream)?.1 {
-            var rect = view.convert(view.bounds, to: nil)
-            rect.origin.y = window.contentView!.frame.maxY - rect.maxY
-            modal.close(animationType: .scaleToRect(rect))
+            let content = modal.genericView.contentView?.getContentView() ?? modal.genericView
+            let rect = view.convert(view.bounds, to: modal.genericView.superview?.superview)
+            modal.close(animationType: .scaleToRect(rect, content))
         } else {
             modal.close()
         }
@@ -172,7 +173,7 @@ class ModalPreviewHandler : NSObject {
 
 
 private final class PreviewModalView: View {
-    private var contentView: NSView?
+    fileprivate var contentView: ModalPreviewControllerView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
     }
@@ -203,12 +204,12 @@ private final class PreviewModalView: View {
                 self.contentView?.removeFromSuperview()
             }
             
-            self.contentView = (viewType as! NSView.Type).init(frame:NSZeroRect)
+            self.contentView = viewType.init(frame:NSZeroRect)
             self.addSubview(self.contentView!)
             changed = true
         }
         contentView?.frame = bounds
-        (contentView as? ModalPreviewControllerView)?.update(with: preview, context: context, animated: animated && !changed)
+        contentView?.update(with: preview, context: context, animated: animated && !changed)
         
         if animated {
             contentView?.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)

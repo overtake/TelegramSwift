@@ -97,6 +97,7 @@
 		27D1D62E2611FB0D00684DEA /* rnnoise.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D1D62D2611FB0D00684DEA /* rnnoise.framework */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
+		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
 		27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E59979261B3F5800228411 /* CurrencyFormatter.swift */; };
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
@@ -1163,6 +1164,7 @@
 		27D1D62D2611FB0D00684DEA /* rnnoise.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = rnnoise.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
+		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
 		27E59979261B3F5800228411 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
@@ -3598,6 +3600,7 @@
 				C241025C1FD5702D00DB8625 /* ChatMessageBubbleImages.swift */,
 				C251FB4B1FEDCC750035E5D7 /* ChatPresentationUtils.swift */,
 				A7E831F2255041020095A167 /* IsEqualMessages.swift */,
+				27E001B426285AC8008786D3 /* PinchToZoom.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -5501,6 +5504,7 @@
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
 				27200F1B257C256E00574365 /* DevicesContext.swift in Sources */,
 				D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */,
+				27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
