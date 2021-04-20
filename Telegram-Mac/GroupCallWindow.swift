@@ -106,6 +106,13 @@ struct GroupCallTheme {
     static let invite_link = NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
 
     
+    static var minSize:NSSize {
+        return NSMakeSize(380, 600)
+    }
+    static var minFullScreenSize:NSSize {
+        return NSMakeSize(fullScreenThreshold, minSize.height)
+    }
+    
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
     
     static let customTheme: GeneralRowItem.Theme = GeneralRowItem.Theme(backgroundColor:                                            GroupCallTheme.membersColor,
@@ -135,7 +142,7 @@ final class GroupCallWindow : Window {
     var navigation: NavigationViewController?
     
     init() {
-        let size = NSMakeSize(380, 600)
+        let size = GroupCallTheme.minSize
         var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
         if let screen = NSScreen.main {
             let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
@@ -143,9 +150,9 @@ final class GroupCallWindow : Window {
             rect = .init(origin: .init(x: x, y: y), size: size)
         }
 
-        //.resizable
-        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled], backing: .buffered, defer: true)
-        self.minSize = NSMakeSize(380, 600)
+        //
+        super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled, .resizable], backing: .buffered, defer: true)
+        self.minSize = GroupCallTheme.minSize
         self.name = "GroupCallWindow5"
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .hidden

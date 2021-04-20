@@ -16,12 +16,17 @@ import SwiftSignalKit
 
 final class GroupCallInviteRowItem : GeneralRowItem {
     fileprivate let videoMode: Bool
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void) {
+    private let futureWidth:()->CGFloat?
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void, futureWidth:@escaping()->CGFloat?) {
         self.videoMode = videoMode
+        self.futureWidth = futureWidth
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType, action: action, inset: NSEdgeInsets())
     }
     
     override var width: CGFloat {
+        if let futureWidth = self.futureWidth() {
+            return futureWidth
+        }
         if let superview = table?.superview {
             return superview.frame.width
         } else {
@@ -30,7 +35,7 @@ final class GroupCallInviteRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return videoMode && (width == 80 || width > fullScreenThreshold)
+        return videoMode && (width == 80 || width >= fullScreenThreshold)
     }
     
     override var hasBorder: Bool {

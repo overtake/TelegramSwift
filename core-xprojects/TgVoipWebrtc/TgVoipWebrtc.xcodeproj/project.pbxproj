@@ -21,6 +21,8 @@
 		2767ADFD25D6DDDC00717AA1 /* DesktopCaptureSourceView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF325D6DDDC00717AA1 /* DesktopCaptureSourceView.h */; };
 		2767ADFE25D6DDDC00717AA1 /* DesktopCaptureSourceView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2767ADF425D6DDDC00717AA1 /* DesktopCaptureSourceView.mm */; };
 		2767ADFF25D6DDDC00717AA1 /* DesktopSharingCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF525D6DDDC00717AA1 /* DesktopSharingCapturer.h */; };
+		2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */; };
+		2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 2774C564262F19F4006E6F26 /* SignalingEncryption.h */; };
 		27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A0A4DF25F764FA00B789AF /* ffmpeg.framework */; };
 		27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167F926203A56000B8449 /* NativeNetworkingImpl.h */; };
 		27C1680026203A56000B8449 /* Signaling.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167FA26203A56000B8449 /* Signaling.h */; };
@@ -88,6 +90,8 @@
 		2767ADF325D6DDDC00717AA1 /* DesktopCaptureSourceView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceView.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceView.h; sourceTree = "<group>"; };
 		2767ADF425D6DDDC00717AA1 /* DesktopCaptureSourceView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DesktopCaptureSourceView.mm; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceView.mm; sourceTree = "<group>"; };
 		2767ADF525D6DDDC00717AA1 /* DesktopSharingCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopSharingCapturer.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopSharingCapturer.h; sourceTree = "<group>"; };
+		2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SignalingEncryption.cpp; sourceTree = "<group>"; };
+		2774C564262F19F4006E6F26 /* SignalingEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalingEncryption.h; sourceTree = "<group>"; };
 		27A0A4DF25F764FA00B789AF /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C167F926203A56000B8449 /* NativeNetworkingImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeNetworkingImpl.h; sourceTree = "<group>"; };
 		27C167FA26203A56000B8449 /* Signaling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Signaling.h; sourceTree = "<group>"; };
@@ -188,6 +192,8 @@
 		27C167F826203A56000B8449 /* v2 */ = {
 			isa = PBXGroup;
 			children = (
+				2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */,
+				2774C564262F19F4006E6F26 /* SignalingEncryption.h */,
 				27C167F926203A56000B8449 /* NativeNetworkingImpl.h */,
 				27C167FA26203A56000B8449 /* Signaling.h */,
 				27C167FB26203A56000B8449 /* NativeNetworkingImpl.cpp */,
@@ -313,6 +319,7 @@
 				D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
+				2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */,
 				27C1680226203A56000B8449 /* InstanceV2Impl.h in Headers */,
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
 				2767ADFD25D6DDDC00717AA1 /* DesktopCaptureSourceView.h in Headers */,
@@ -405,6 +412,7 @@
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
 				27C1680326203A56000B8449 /* InstanceV2Impl.cpp in Sources */,
+				2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				2767ADF925D6DDDC00717AA1 /* DesktopCaptureSourceManager.mm in Sources */,

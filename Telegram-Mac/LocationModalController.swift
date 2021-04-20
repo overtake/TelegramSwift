@@ -579,7 +579,10 @@ class LocationModalController: ModalViewController {
         
         var cachedData:[String : ChatContextResultCollection] = [:]
         let previousResult:Atomic<ChatContextResultCollection?> = Atomic(value: nil)
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(resolvePeerByName(account: context.account, name: "foursquare") )
+        
+        
+        
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare"))
         let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
             |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {

@@ -103,4 +103,8 @@ final class GroupCallUIState : Equatable {
         }
         return true
     }
+    
+    func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen)
+    }
 }

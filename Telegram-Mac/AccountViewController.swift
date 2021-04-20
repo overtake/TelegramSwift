@@ -486,7 +486,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     switch result {
                     case .basic:
                         
-                        _ = showModalProgress(signal: arguments.context.engine.peerNames.supportPeerId(), for: mainWindow).start(next: {  peerId in
+                        _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: mainWindow).start(next: {  peerId in
                             if let peerId = peerId {
                                 arguments.presentController(ChatController(context: arguments.context, chatLocation: .peer(peerId)), true)
                             }

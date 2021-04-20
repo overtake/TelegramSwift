@@ -1167,7 +1167,7 @@
     }
     
     private func searchGroupUsers() {
-        _ = (selectModalPeers(window: context.window, account: context.account, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }

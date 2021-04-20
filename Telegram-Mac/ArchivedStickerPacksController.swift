@@ -234,8 +234,10 @@ class ArchivedStickerPacksController: TableViewController {
         let removePackDisposables = DisposableDict<ItemCollectionId>()
         actionsDisposable.add(removePackDisposables)
         
+        
+        
         let stickerPacks = Promise<[ArchivedStickerPackItem]?>()
-        stickerPacks.set(.single(archived) |> then(archivedStickerPacks(account: context.account) |> map { Optional($0) }))
+        stickerPacks.set(.single(archived) |> then(context.engine.stickers.archivedStickerPacks() |> map { Optional($0) }))
         
         let installedStickerPacks = Promise<CombinedView>()
         installedStickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
@@ -278,7 +280,8 @@ class ArchivedStickerPacksController: TableViewController {
                             
                             return .complete()
                     }
-                    removePackDisposables.set((removeArchivedStickerPack(account: context.account, info: info) |> then(applyPacks) |> deliverOnMainQueue).start(completed: {
+                    
+                    removePackDisposables.set((context.engine.stickers.removeArchivedStickerPack(info: info) |> then(applyPacks) |> deliverOnMainQueue).start(completed: {
                         updateState { state in
                             var removingPackIds = state.removingPackIds
                             removingPackIds.remove(info.id)

@@ -1379,7 +1379,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let historyViewUpdate = historyViewUpdate1
 
         
-        let animatedEmojiStickers = loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: .animatedEmoji, forceActualized: false)
+        let animatedEmojiStickers = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
             |> map { result -> [String: StickerPackItem] in
                 switch result {
                 case let .result(_, items, _):
@@ -2051,6 +2051,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     showModal(with: ModalOptionSetController(context: chatInteraction.context, options: options, actionText: (L10n.blockContactOptionsAction(peer.compactDisplayTitle), theme.colors.redUI), desc: L10n.blockContactTitle(peer.compactDisplayTitle), title: L10n.blockContactOptionsTitle, result: { result in
                         
                         var signals:[Signal<Never, NoError>] = []
+                        
                         
                         signals.append(context.blockedPeersContext.add(peerId: peer.id) |> `catch` { _ in return .complete() })
                         

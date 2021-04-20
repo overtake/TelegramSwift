@@ -340,7 +340,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             if state.request.isEmpty {
                 return .single(nil)
             } else {
-                return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init) |> delay(0.2, queue: .concurrentDefaultQueue())
+                return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init) |> delay(0.2, queue: .concurrentDefaultQueue())
             }
         }) |> deliverOnMainQueue
         

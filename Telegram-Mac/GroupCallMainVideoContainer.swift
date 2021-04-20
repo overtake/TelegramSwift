@@ -40,7 +40,6 @@ final class MainVideoContainerView: Control {
     var currentResizeMode: CALayerContentsGravity = .resizeAspect {
         didSet {
             self.currentVideoView?.setVideoContentMode(currentResizeMode, animated: true)
-            gravityButton.set(image:  currentResizeMode == .resizeAspectFill ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
         }
     }
     
@@ -57,7 +56,6 @@ final class MainVideoContainerView: Control {
         
         addSubview(gravityButton)
         
-        gravityButton.set(image:  resizeMode == .resizeAspectFill ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
         gravityButton.sizeToFit()
         gravityButton.scaleOnClick = true
         gravityButton.autohighlight = false
@@ -75,10 +73,15 @@ final class MainVideoContainerView: Control {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func updateMode(controlsMode: GroupCallView.ControlsMode, animated: Bool) {
+    func updateMode(controlsMode: GroupCallView.ControlsMode, controlsState: GroupCallControlsView.Mode, animated: Bool) {
         shadowView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         gravityButton.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
+        
+        gravityButton.set(image:  controlsState == .fullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
+        gravityButton.sizeToFit()
     }
+    
+    
     
     func updatePeer(peer: DominantVideo?, transition: ContainedViewLayoutTransition, controlsMode: GroupCallView.ControlsMode) {
         

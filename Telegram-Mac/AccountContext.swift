@@ -191,7 +191,7 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
        // self.tonContext = tonContext
         #if !SHARE
-        self.diceCache = DiceCache(postbox: account.postbox, network: account.network)
+        self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManager(postbox: account.postbox)
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.activeSessionsContext = ActiveSessionsContext(account: account)
@@ -200,6 +200,8 @@ final class AccountContext {
      //   self.walletPasscodeTimeoutContext = WalletPasscodeTimeoutContext(postbox: account.postbox)
         #endif
         
+        
+        let engine = self.engine
         
         repliesPeerId = account.testingEnvironment ? test_repliesPeerId : prod_repliesPeerId
         
@@ -224,9 +226,9 @@ final class AccountContext {
             } |> mapToSignal { configuration in
                 let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
                 var signals = value.emojis.map {
-                    searchGifs(account: account, query: $0)
+                    engine.stickers.searchGifs(query: $0)
                 }
-                signals.insert(searchGifs(account: account, query: ""), at: 0)
+                signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
                 return combineLatest(signals) |> ignoreValues
             }
             
@@ -471,7 +473,7 @@ final class AccountContext {
             }
             return confirmSignal(for: window, information: L10n.peerInfoConfirmAddMembers1Countable(peerIds.count))
         }
-        let select = selectModalPeers(window: window, account: self.account, title: L10n.composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
+        let select = selectModalPeers(window: window, context: self, title: L10n.composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
         let create = select |> map { $0.first! } |> mapToSignal { peerId in
             return createSecretChat(account: account, peerId: peerId) |> `catch` {_ in .complete()}

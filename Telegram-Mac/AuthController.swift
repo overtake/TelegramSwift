@@ -673,6 +673,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
     private let configurationDisposable = MetaDisposable()
     private var account:UnauthorizedAccount
     private let sharedContext: SharedAccountContext
+    private let engine: TelegramEngineUnauthorized
     #if !APP_STORE
     private let updateController: UpdateTabController
     #endif
@@ -700,6 +701,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
     init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
         self.account = account
         self.sharedContext = sharedContext
+        self.engine = .init(account: account)
         self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
         #if !APP_STORE
         updateController = UpdateTabController(sharedContext)
@@ -1072,10 +1074,10 @@ class AuthController : GenericViewController<AuthHeaderView> {
     private func refreshQrToken(_ showProgress: Bool = false) {
         
         let sharedContext = self.sharedContext
-        let account = self.account
+        let engine = self.engine
         
         var tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> mapToSignal { accounts in
-            return exportAuthTransferToken(accountManager: sharedContext.accountManager, account: account, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
+            return engine.auth.exportAuthTransferToken(accountManager: sharedContext.accountManager, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
         }
         
         if showProgress {
