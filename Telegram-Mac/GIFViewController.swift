@@ -522,7 +522,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
             
             switch search.state {
             case .Focus:
-                let searchSignal = searchGifs(account: context.account, query: search.request, nextOffset: searchState.with { $0.nextOffset })
+                let searchSignal = context.engine.stickers.searchGifs(query: search.request, nextOffset: searchState.with { $0.nextOffset })
                 return searchSignal |> map { result in
                     _ = searchState.modify { current -> SearchGifsState in
                         var current = current
@@ -545,7 +545,8 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
                     request = value
                 }
                 if let request = request {
-                    let searchSignal = searchGifs(account: context.account, query: request, nextOffset: searchState.with { $0.nextOffset })
+                    
+                    let searchSignal = context.engine.stickers.searchGifs(query: request, nextOffset: searchState.with { $0.nextOffset })
                     return searchSignal |> map { result in
                         _ = searchState.modify { current -> SearchGifsState in
                             var current = current

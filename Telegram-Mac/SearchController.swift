@@ -706,7 +706,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 } else {
                     location = globalTags.location
                     if globalTags.isEmpty {
-                        foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: context.account, query: query)
+                        
+                        
+                        
+                        foundRemotePeers = .single(([], [], true)) |> then(context.engine.peers.searchPeers(query: query)
                             |> delay(0.2, queue: prepareQueue)
                             |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                 

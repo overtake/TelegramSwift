@@ -842,7 +842,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
             }
         }, addPack: { [weak self] reference in
-            _ = showModalProgress(signal: loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: false)
+            
+            
+            
+            _ = showModalProgress(signal: context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: false)
                 |> filter { result in
                     switch result {
                     case .result:
@@ -855,7 +858,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 |> mapToSignal { result -> Signal<ItemCollectionId, NoError> in
                     switch result {
                     case let .result(info, items, _):
-                        return addStickerPackInteractively(postbox: context.account.postbox, info: info, items: items) |> map { info.id }
+                        return context.engine.stickers.addStickerPackInteractively(info: info, items: items) |> map { info.id }
                     default:
                         return .complete()
                     }
@@ -878,7 +881,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             })
         }, removePack: { collectionId in
             if let id = collectionId.itemCollectionId {
-                _ = showModalProgress(signal: removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: .delete), for: context.window).start()
+                _ = showModalProgress(signal: context.engine.stickers.removeStickerPackInteractively(id: id, option: .delete), for: context.window).start()
             }
         })
         
@@ -1014,13 +1017,16 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                     
                 } else {
-                    let searchLocal = searchStickerSets(postbox: context.account.postbox, query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
-                    let searchRemote = searchStickerSetsRemotely(network: context.account.network, query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
                     
-                    let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
+                    context.engine.stickers.searchStickerSetsRemotely(query: searchText)
+                    
+                    let searchLocal = context.engine.stickers.searchStickerSets(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
+                    let searchRemote = context.engine.stickers.searchStickerSetsRemotely(query: searchText) |> delay(0.2, queue: prepareQueue) |> map(Optional.init)
+                    
+                    let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
                         
                         let signals = emojis.map {
-                            searchStickers(account: context.account, query: $0, scope: [.installed])
+                            context.engine.stickers.searchStickers(query: $0, scope: [.installed])
                         }
                         return combineLatest(signals) |> map {
                             $0.reduce([], { current, value in

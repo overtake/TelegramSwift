@@ -33,7 +33,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return context.engine.peerNames.findChannelById(channelId: peerId.id._internalGetInt32Value())
+                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt32Value())
                     }
             }
             
@@ -51,7 +51,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
             return .single(nil)
         }
     } else {
-        return resolvePeerByName(account: context.account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
+        return context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
             if let peerId = peerId {
                 return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
             }
@@ -336,7 +336,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return context.engine.peerNames.findChannelById(channelId: peerId.id._internalGetInt32Value())
+                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt32Value())
                             |> mapToSignalPromotingError { value in
                                 if let value = value {
                                     return .single(value)
@@ -349,7 +349,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
             }
         } else {
-            peerSignal = resolvePeerByName(account: context.account, name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
+            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
                 if let peerId = peerId {
                     return context.account.postbox.loadedPeerWithId(peerId) |> mapError { _ in
                         return .doesntExists
@@ -424,7 +424,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let peer = peer {
                             return .single(peer)
                         } else {
-                            return context.engine.peerNames.findChannelById(channelId: peerId.id._internalGetInt32Value())
+                            return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt32Value())
                         }
                 }
                 
@@ -451,7 +451,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
             }
         } else {
-            let _ = showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
+            let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
                 if let peerId = peerId {
                     return context.account.postbox.loadedPeerWithId(peerId) |> map {Optional($0)}
                 }
@@ -473,9 +473,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         afterComplete(true)
     case let .inviteBotToGroup(_, username, context, action, callback):
-        let _ = showModalProgress(signal: resolvePeerByName(account: context.account, name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
+        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
             
-            let selectedPeer = selectModalPeers(window: context.window, account: context.account, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let selectedPeer = selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
                         return confirmSignal(for: context.window, information: L10n.confirmAddBotToGroup(peer.displayTitle))

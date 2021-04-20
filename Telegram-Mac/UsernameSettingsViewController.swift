@@ -121,7 +121,7 @@ class UsernameSettingsViewController: TableViewController {
     func saveUsername() {
         if let item = genericView.item(stableId: AnyHashable(UsernameEntryId.inputEntry)) as? InputDataRowItem, let window = window {
             
-            updateDisposable.set(showModalProgress(signal: context.engine.peerNames.updateAddressName(domain: .account, name: item.currentText.string), for: window).start(error: { error in
+            updateDisposable.set(showModalProgress(signal: context.engine.peers.updateAddressName(domain: .account, name: item.currentText.string), for: window).start(error: { error in
                 switch error {
                 case .generic:
                     alert(for: mainWindow, info: L10n.unknownError)
@@ -180,7 +180,7 @@ class UsernameSettingsViewController: TableViewController {
             |> distinctUntilChanged)
             |> mapToSignal { (value,username) -> Signal<(AddressNameAvailabilityState,String), NoError> in
                 
-                return context.engine.peerNames.validateAddressNameInteractive(domain: .account, name: value) |> map { state in
+                return context.engine.peers.validateAddressNameInteractive(domain: .account, name: value) |> map { state in
                     switch state {
                     case let .availability(availability):
                         switch availability {

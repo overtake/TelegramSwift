@@ -99,8 +99,7 @@ private final class DiceSideDataContext {
 
 class DiceCache {
     private let postbox: Postbox
-    private let network: Network
-    
+    private let engine: TelegramEngine
     private var dataContexts: [String : DiceSideDataContext] = [:]
 
     
@@ -108,10 +107,9 @@ class DiceCache {
     private let loadDataDisposable = MetaDisposable()
     private let emojiesSoundDisposable = MetaDisposable()
     
-    init(postbox: Postbox, network: Network) {
+    init(postbox: Postbox, engine: TelegramEngine) {
         self.postbox = postbox
-        self.network = network
-        
+        self.engine = engine
         
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
@@ -138,7 +136,7 @@ class DiceCache {
         let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [StickerPackItem])], NoError> in
             var signals: [Signal<(String, [StickerPackItem]), NoError>] = []
             for emoji in config.emojis {
-                signals.append(loadedStickerPack(postbox: postbox, network: network, reference: .dice(emoji), forceActualized: true)
+                signals.append(engine.stickers.loadedStickerPack(reference: .dice(emoji), forceActualized: true)
                     |> map { result -> (String, [StickerPackItem]) in
                         switch result {
                         case let .result(_, items, _):

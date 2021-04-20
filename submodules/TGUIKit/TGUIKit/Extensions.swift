@@ -2090,3 +2090,6 @@ extension NSEdgeInsets : Equatable {
 }
 
 
+public func arc4random64() -> Int64 {
+    return Int64.random(in: Int64.min ... Int64.max)
+}

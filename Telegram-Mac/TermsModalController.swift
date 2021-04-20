@@ -84,15 +84,17 @@ class TermsModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         let network = self.context.account.network
         let terms = self.terms
-        let account = self.context.account
+        let context = self.context
         let accept:()->Void = { [weak self] in
             guard let `self` = self else {return}
             
-            _ = showModalProgress(signal: acceptTermsOfService(account: account, id: terms.id) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] in
+            
+            
+            _ = showModalProgress(signal: context.engine.accountData.acceptTermsOfService(id: terms.id) |> deliverOnMainQueue, for: context.window).start(next: { [weak self] in
                 self?.close()
             })
             if let botname = self.proceedBotAfterAgree {
-                _ = (resolvePeerByName(account: self.context.account, name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
+                _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
                     guard let `self` = self else {return}
                     if let peerId = peerId {
                         self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId)))
@@ -109,9 +111,9 @@ class TermsModalController: ModalViewController {
                 accept()
             }
         }, cancelTitle: L10n.termsOfServiceDisagree, cancel: {
-            confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeText, okTitle: L10n.termsOfServiceDisagreeOK, successHandler: { _ in
-                confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeTextLast, okTitle: L10n.termsOfServiceDisagreeTextLastOK, successHandler: { _ in
-                     _ = resetAccountDueTermsOfService(network: network).start()
+            confirm(for: context.window, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeText, okTitle: L10n.termsOfServiceDisagreeOK, successHandler: { _ in
+                confirm(for: context.window, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeTextLast, okTitle: L10n.termsOfServiceDisagreeTextLastOK, successHandler: { _ in
+                    context.engine.accountData.resetAccountDueTermsOfService().start()
                 })
             })
         }, drawBorder: true, height: 50, alignCancelLeft: true)

@@ -156,4 +156,12 @@ final class GroupVideoView: View {
         let transition: ContainedViewLayoutTransition = .immediate
     }
     
+    override func viewDidMoveToSuperview() {
+        if superview == nil {
+            didRemoveFromSuperview?()
+        } 
+    }
+    
+    var didRemoveFromSuperview: (()->Void)? = nil
+    
 }

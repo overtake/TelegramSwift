@@ -126,7 +126,7 @@ final class GroupCallView : View {
         if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: animated)
             titleView.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: animated)
-            mainVideoView?.updateMode(controlsMode: mode, animated: animated)
+            mainVideoView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
         }
     }
     
@@ -139,7 +139,7 @@ final class GroupCallView : View {
         if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: true)
             titleView.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: true)
-            mainVideoView?.updateMode(controlsMode: mode, animated: true)
+            mainVideoView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: true)
         }
     }
     
@@ -180,7 +180,7 @@ final class GroupCallView : View {
         let width = min(frame.width - 40, 600)
         if let state = state, state.currentDominantSpeakerWithVideo != nil {
             if isFullScreen {
-                size = NSMakeSize(80, frame.height - 40 - 10)
+                size = NSMakeSize(80, frame.height - 54)
             } else {
                 size = NSMakeSize(width, frame.height - round(width * 0.4) - 271 )
             }
@@ -212,7 +212,10 @@ final class GroupCallView : View {
     }
     
     var isFullScreen: Bool {
-        if frame.width > fullScreenThreshold {
+        if let tempVertical = tempFullScreen {
+            return tempVertical
+        }
+        if frame.width >= fullScreenThreshold {
             return true
         }
         return false
@@ -236,13 +239,17 @@ final class GroupCallView : View {
     
     var markWasScheduled: Bool? = false
     
+    var tempFullScreen: Bool? = nil
+    
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
                 
         let duration: Double = 0.3
         
        
         let previousState = self.state
-        peersTable.merge(with: transition)
+        if !transition.isEmpty {
+            peersTable.merge(with: transition)
+        }
         
         if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
@@ -320,7 +327,7 @@ final class GroupCallView : View {
             if state.state.scheduleState != nil {
                 peersTable.removeFromSuperview()
                 peersTableContainer.removeFromSuperview()
-            } else {
+            } else if peersTable.superview == nil {
                 addSubview(peersTableContainer)
                 addSubview(peersTable)
             }
@@ -352,14 +359,7 @@ final class GroupCallView : View {
                     guard let `self` = self else {
                         return
                     }
-                    switch self.resizeMode {
-                    case .resizeAspect:
-                        self.resizeMode = .resizeAspectFill
-                    case .resizeAspectFill:
-                        self.resizeMode = .resizeAspect
-                    default:
-                        break
-                    }
+                    self.arguments?.toggleScreenMode()
                 }, for: .Click)
                 
                 self.mainVideoView = mainVideo
@@ -396,6 +396,8 @@ final class GroupCallView : View {
                 }
             }
         }
+
+        self.mainVideoView?.updateMode(controlsMode: controlsMode, controlsState: controlsContainer.mode, animated: animated)
         
         updateLayout(size: frame.size, transition: transition)
         updateUIAfterFullScreenUpdated(state, reloadTable: false)

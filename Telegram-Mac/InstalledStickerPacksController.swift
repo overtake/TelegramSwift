@@ -365,7 +365,7 @@ class InstalledStickerPacksController: TableViewController {
         }
         
         let archivedPromise = Promise<[ArchivedStickerPackItem]?>()
-        archivedPromise.set(.single(nil) |> then(archivedStickerPacks(account: context.account) |> map(Optional.init)))
+        archivedPromise.set(.single(nil) |> then(context.engine.stickers.archivedStickerPacks() |> map(Optional.init)))
         
 
         
@@ -381,14 +381,14 @@ class InstalledStickerPacksController: TableViewController {
             confirm(for: context.window, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
                 switch result {
                 case .basic:
-                    _ = removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
+                    _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: .archive).start()
                 case .thrid:
                     break
                 }
             })
             
         }, openStickersBot: {
-            resolveDisposable.set((resolvePeerByName(account: context.account, name: "stickers") |> deliverOnMainQueue).start(next: { peerId in
+            resolveDisposable.set((context.engine.peers.resolvePeerByName(name: "stickers") |> deliverOnMainQueue).start(next: { peerId in
                 if let peerId = peerId {
                    // navigateToChatControllerImpl?(peerId)
                 }

@@ -432,6 +432,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     var barInset: CGFloat {
         var barInset:CGFloat = 0
+        if let header = header, header.needShown {
+            barInset += header.height
+        }
         if let header = callHeader, header.needShown {
             barInset += header.height
         }
@@ -463,13 +466,6 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         navigationBar.frame = NSMakeRect(0, navigationBar.frame.minY, containerSize.width, controller.bar.height)
         navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
         
-        var controllerInset: CGFloat = 0
-        if let header = header, header.needShown {
-            controllerInset += header.height
-        }
-        if let header = callHeader, header.needShown {
-            controllerInset += header.height
-        }
         if let header = callHeader, header.needShown {
             header.view.setFrameSize(NSMakeSize(containerSize.width, header.realHeight))
         }
@@ -478,7 +474,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
         
         if controller.isLoaded() {
-            controller.frame = NSMakeRect(0, barInset + controller.bar.height + controllerInset, containerSize.width, containerSize.height - barInset - controller.bar.height - controllerInset)
+            controller.frame = NSMakeRect(0, barInset + controller.bar.height, containerSize.width, containerSize.height - barInset - controller.bar.height)
         }
     }
     

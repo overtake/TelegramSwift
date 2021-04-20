@@ -187,6 +187,8 @@ struct PresentationGroupCallMembers: Equatable {
 
 protocol PresentationGroupCall: class {
     var account: Account { get }
+    var engine: TelegramEngine { get }
+    var accountContext: AccountContext { get }
     var sharedContext: SharedAccountContext { get }
     var internalId: CallSessionInternalId { get }
     var peerId: PeerId { get }

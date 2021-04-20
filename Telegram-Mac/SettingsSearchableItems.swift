@@ -731,7 +731,7 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
                 confirm(for: context.window, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
-                        _ = showModalProgress(signal: context.engine.peerNames.supportPeerId(), for: context.window).start(next: {  peerId in
+                        _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: {  peerId in
                             if let peerId = peerId {
                                 present(.push, ChatController(context: context, chatLocation: .peer(peerId)))
                             }

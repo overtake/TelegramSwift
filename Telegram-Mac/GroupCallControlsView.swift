@@ -100,8 +100,10 @@ final class GroupCallControlsView : View {
             self.speakText?.change(opacity: mode == .fullscreen ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
             
-            let videoStreamIcon = GroupCallTheme.settingsIcon // hasOutgoingVideo ? GroupCallTheme.video_off : GroupCallTheme.video_on
-            let videoStreamText = L10n.voiceChatSettings //L10n.voiceChatVideoStream
+            let videoStreamIcon = hasOutgoingVideo ? GroupCallTheme.video_off : GroupCallTheme.video_on
+            //GroupCallTheme.settingsIcon
+            let videoStreamText = L10n.voiceChatVideoStream
+            //L10n.voiceChatSettings
             switch mode {
             case .fullscreen:
                 end.updateWithData(CallControlData(text: nil, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
@@ -202,12 +204,12 @@ final class GroupCallControlsView : View {
         }
         
         videoStreamToken = videoStream.set(handler: { [weak self] _ in
-            self?.arguments?.settings()
-//            if !hasOutgoingVideo {
-//                self?.arguments?.shareSource()
-//            } else {
-//                self?.arguments?.cancelSharing()
-//            }
+//            self?.arguments?.settings()
+            if !hasOutgoingVideo {
+                self?.arguments?.shareSource()
+            } else {
+                self?.arguments?.cancelSharing()
+            }
         }, for: .Click)
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State

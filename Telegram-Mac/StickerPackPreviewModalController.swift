@@ -232,14 +232,14 @@ class StickerPackPreviewModalController: ModalViewController {
             self?.close()
             self?.disposable.dispose()
             if !installed {
-                _ = addStickerPackInteractively(postbox: context.account.postbox, info: info, items: items).start()
+                _ = context.engine.stickers.addStickerPackInteractively(info: info, items: items).start()
             } else {
-                _ = removeStickerPackInteractively(postbox: context.account.postbox, id: info.id, option: .archive).start()
+                _ = context.engine.stickers.removeStickerPackInteractively(id: info.id, option: .archive).start()
             }
             
         }, share: { [weak self] link in
             self?.close()
-            showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
         }, close: { [weak self] in
             self?.close()
         })
@@ -268,7 +268,8 @@ class StickerPackPreviewModalController: ModalViewController {
         super.viewDidLoad()
         
         
-        disposable.set((loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: reference, forceActualized: true) |> deliverOnMainQueue).start(next: { [weak self] result in
+        
+        disposable.set((context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: true) |> deliverOnMainQueue).start(next: { [weak self] result in
             guard let `self` = self else {return}
             switch result {
             case .none:

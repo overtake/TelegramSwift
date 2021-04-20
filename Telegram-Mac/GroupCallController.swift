@@ -40,6 +40,8 @@ final class GroupCallUIArguments {
     let audioLevel:(PeerId)->Signal<Float?, NoError>?
     let startVoiceChat:()->Void
     let toggleReminder:(Bool)->Void
+    let toggleScreenMode:()->Void
+    let futureWidth:()->CGFloat?
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -62,7 +64,9 @@ final class GroupCallUIArguments {
     recordClick:@escaping(PresentationGroupCallState)->Void,
     audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?,
     startVoiceChat:@escaping()->Void,
-    toggleReminder:@escaping(Bool)->Void) {
+    toggleReminder:@escaping(Bool)->Void,
+    toggleScreenMode:@escaping()->Void,
+    futureWidth:@escaping()->CGFloat?) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -86,6 +90,8 @@ final class GroupCallUIArguments {
         self.audioLevel = audioLevel
         self.startVoiceChat = startVoiceChat
         self.toggleReminder = toggleReminder
+        self.toggleScreenMode = toggleScreenMode
+        self.futureWidth = futureWidth
     }
 }
 
@@ -260,7 +266,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         let tuple = Tuple(viewType: viewType, videoMode: state.currentDominantSpeakerWithVideo != nil)
         
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("invite"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return GroupCallInviteRowItem(initialSize, height: 42, stableId: stableId, videoMode: tuple.videoMode, viewType: viewType, action: arguments.inviteMembers)
+            return GroupCallInviteRowItem(initialSize, height: 42, stableId: stableId, videoMode: tuple.videoMode, viewType: viewType, action: arguments.inviteMembers, futureWidth: arguments.futureWidth)
         }))
         index += 1
 
@@ -419,9 +425,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     }
                 }
                 return .single(items)
-            }, takeVideo: {
-                return arguments.takeVideo(data.peer.id)
-            }, audioLevel: arguments.audioLevel)
+            }, takeVideo: arguments.takeVideo, audioLevel: arguments.audioLevel, futureWidth: arguments.futureWidth)
         }))
 //        index += 1
 
@@ -471,13 +475,13 @@ final class GroupCallUIController : ViewController {
         self.data = data
         super.init(frame: NSMakeRect(0, 0, size.width, size.height))
         bar = .init(height: 0)
-        isFullScreen.set(size.width > fullScreenThreshold)
+        isFullScreen.set(size.width >= fullScreenThreshold)
     }
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
         
-        self.isFullScreen.set(size.width > fullScreenThreshold)
+        self.isFullScreen.set(size.width >= fullScreenThreshold)
     }
     
     override func viewDidLoad() {
@@ -577,6 +581,8 @@ final class GroupCallUIController : ViewController {
             
             
         }
+        
+        var futureWidth: CGFloat? = nil
         
         
         let arguments = GroupCallUIArguments(leave: { [weak self] in
@@ -731,6 +737,41 @@ final class GroupCallUIController : ViewController {
                 showModalText(for: window, text: L10n.voiceChatTooltipSubscribe)
             }
             self?.data.call.toggleScheduledSubscription(subscribe)
+        }, toggleScreenMode: { [weak self, weak window] in
+            guard let strongSelf = self, let window = window else {
+                return
+            }
+            let isFullScreen = strongSelf.genericView.isFullScreen && strongSelf.genericView.state?.currentDominantSpeakerWithVideo != nil
+            
+            let rect: CGRect
+            if isFullScreen {
+                rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
+            } else {
+                rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
+            }
+            strongSelf.genericView.tempFullScreen = !isFullScreen
+            futureWidth = rect.width
+            let state = strongSelf.genericView.state!.withUpdatedFullScreen(!isFullScreen)
+            
+            
+            strongSelf.isFullScreen.set(!isFullScreen)
+
+            strongSelf.genericView.peersTable.enumerateItems(with: { item in
+
+                _ = item.makeSize()
+                item.redraw(animated: true, options: .effectFade)
+                return true
+            })
+
+
+            strongSelf.applyUpdates(state, .init(deleted: [], inserted: [], updated: [], animated: true), strongSelf.data.call, animated: true)
+            window.setFrame(rect, display: true, animate: true)
+            strongSelf.genericView.tempFullScreen = nil
+            futureWidth = nil
+            
+            
+        }, futureWidth: {
+            return futureWidth
         })
         
 
@@ -846,7 +887,7 @@ final class GroupCallUIController : ViewController {
 //        }
 //
         let initialSize = self.atomicSize
-        var previousIsFullScreen: Bool = initialSize.with { $0.width > fullScreenThreshold }
+        var previousIsFullScreen: Bool = initialSize.with { $0.width >= fullScreenThreshold }
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         let animated: Atomic<Bool> = Atomic(value: false)

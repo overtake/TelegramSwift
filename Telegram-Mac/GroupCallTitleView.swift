@@ -90,7 +90,7 @@ final class GroupCallTitleView : Control {
         addSubview(backgroundView)
         backgroundView.addSubview(titleView)
         backgroundView.addSubview(statusView)
-        //backgroundView.addSubview(settings)
+        backgroundView.addSubview(settings)
         titleView.isSelectable = false
         titleView.userInteractionEnabled = false
         statusView.userInteractionEnabled = false
