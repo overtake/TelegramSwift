@@ -670,7 +670,7 @@ public class Modal: NSObject {
             background = self.background
         }
         if let controller = controller, controller.contentBelowBackground {
-            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 5, timingFunction: .spring, completion: { [weak self, weak background] _ in
+            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.25, timingFunction: .spring, completion: { [weak self, weak background] _ in
                 background?.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
