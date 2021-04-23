@@ -109,11 +109,9 @@ final class MainVideoContainerView: Control {
             self.participant = participant
             let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.text)), maximumNumberOfLines: 1)
             self.nameView.update(nameLayout)
-            
-            let color = participant.status.1 == GroupCallTheme.grayStatusColor ? .white : participant.status.1
-            
+                        
             if self.statusView.layout?.attributedString.string != participant.status.0 {
-                let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: color.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
+                let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
                 
                 statusLayout.measure(width: frame.width / 2)
                 
@@ -121,6 +119,8 @@ final class MainVideoContainerView: Control {
                 statusView.update(statusLayout)
                 statusView.userInteractionEnabled = false
                 statusView.isSelectable = false
+                statusView.layer?.opacity = controlsMode == .normal ? 1 : 0
+                
                 statusView.frame = CGRect(origin: NSMakePoint(45, frame.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size)
                 self.addSubview(statusView)
                 
