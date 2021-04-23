@@ -164,8 +164,8 @@ final class MainVideoContainerView: Control {
         transition.updateFrame(view: gravityButton, frame: CGRect(origin: NSMakePoint(size.width - 10 - gravityButton.frame.width, size.height - 10 - gravityButton.frame.height), size: gravityButton.frame.size))
         
         
-        self.nameView.resize(size.width - 80)
-        self.statusView.resize(size.width - 80)
+        self.nameView.resize(size.width / 2)
+        self.statusView.resize(size.width / 2)
 
         
         transition.updateFrame(view: self.pinnedImage, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.pinnedImage.frame.height), size: self.pinnedImage.frame.size))
