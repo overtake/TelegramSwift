@@ -33,7 +33,7 @@ final class MainVideoContainerView: Control {
     private var validLayout: CGSize?
     
     private let nameView: TextView = TextView()
-    private let statusView: TextView = TextView()
+    private var statusView: TextView = TextView()
     private let pinnedImage = ImageView()
     let gravityButton = ImageButton()
 
@@ -97,7 +97,7 @@ final class MainVideoContainerView: Control {
     private var participant: PeerGroupCallData?
     
     
-    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, controlsMode: GroupCallView.ControlsMode) {
+    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
         
         
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
@@ -107,13 +107,38 @@ final class MainVideoContainerView: Control {
         transition.updateAlpha(view: pinnedImage, alpha: controlsMode == .normal ? 1 : 0)
         if participant != self.participant, let participant = participant {
             self.participant = participant
-            let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: .white, font: .medium(.text)))
+            let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.text)), maximumNumberOfLines: 1)
             self.nameView.update(nameLayout)
             
             let color = participant.status.1 == GroupCallTheme.grayStatusColor ? .white : participant.status.1
             
-            let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: color, font: .normal(.short)))
-            self.statusView.update(statusLayout)
+            if self.statusView.layout?.attributedString.string != participant.status.0 {
+                let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: color.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
+                
+                statusLayout.measure(width: frame.width / 2)
+                
+                let statusView = TextView()
+                statusView.update(statusLayout)
+                statusView.userInteractionEnabled = false
+                statusView.isSelectable = false
+                statusView.frame = CGRect(origin: NSMakePoint(45, frame.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size)
+                self.addSubview(statusView)
+                
+                let previous = self.statusView
+                self.statusView = statusView
+                if animated {
+                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
+                        previous?.removeFromSuperview()
+                    })
+                    statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    statusView.layer?.animatePosition(from: statusView.frame.origin - NSMakePoint(0, 10), to: statusView.frame.origin)
+
+                    previous.layer?.animatePosition(from: previous.frame.origin, to: previous.frame.origin + NSMakePoint(0, 10))
+                } else {
+                    previous.removeFromSuperview()
+                }
+            }
+            
             
             self.pinnedImage.image = GroupCallTheme.pinned_video
             self.pinnedImage.sizeToFit()

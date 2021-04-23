@@ -366,7 +366,7 @@ final class GroupCallView : View {
                 addSubview(mainVideo, positioned: .below, relativeTo: titleView)
                 isPresented = true
             }
-            mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId}), transition: .immediate, controlsMode: self.controlsMode)
+            mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId}), transition: .immediate, animated: animated, controlsMode: self.controlsMode)
             
             if isPresented && animated {
                 mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)

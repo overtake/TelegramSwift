@@ -12,7 +12,7 @@ public extension NSTextView {
     // MARK: Public
 
     var selectedTextRangeOffsetFromEnd: Int {
-        return selectedRange.max
+        return self.string.length - selectedRange.min
     }
 
     /// Sets the selected text range when the text field is starting to be edited.

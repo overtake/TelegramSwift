@@ -704,6 +704,7 @@ final class GroupCallUIController : ViewController {
                 self?.currentDominantSpeakerWithVideo = video
                 self?.data.call.setFullSizeVideo(ssrc: video.ssrc)
             }
+            self?.genericView.peersTable.scroll(to: .up(true))
         }, unpinVideo: { [weak self] in
             self?.pinnedDominantSpeaker = nil
             selectBestDominantSpeakerWithVideo()

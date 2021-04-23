@@ -116,6 +116,8 @@ final class DevicesContext : NSObject {
     
     init(_ accountManager: AccountManager ) {
         super.init()
+        
+
     
         NotificationCenter.default.addObserver(forName: NSNotification.Name.AVCaptureDeviceWasConnected, object: nil, queue: nil, using: { [weak self] _ in
             self?.update()
@@ -125,7 +127,14 @@ final class DevicesContext : NSObject {
         })
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
         
+        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.inputDevice, AudioListener.input, nil)
+
+        
         NotificationCenter.default.addObserver(forName: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil, queue: nil, using: { [weak self] _ in
+            self?.update()
+        })
+        
+        NotificationCenter.default.addObserver(forName: AudioNotification.audioInputDeviceDidChange.notificationName, object: nil, queue: nil, using: { [weak self] _ in
             self?.update()
         })
         
@@ -233,6 +242,7 @@ final class DevicesContext : NSObject {
     deinit {
         NotificationCenter.default.removeObserver(self)
         AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
+        AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.inputDevice, AudioListener.input, nil)
         disposable.dispose()
     }
 }

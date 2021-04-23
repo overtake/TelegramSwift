@@ -648,6 +648,11 @@ struct AudioAddress {
     static var outputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultOutputDevice,
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
+    
+    static var inputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
+                                                         mScope: kAudioObjectPropertyScopeGlobal,
+                                                         mElement: kAudioObjectPropertyElementMaster)
+
 }
 
 enum AudioNotification: String {
@@ -667,6 +672,10 @@ enum AudioNotification: String {
 struct AudioListener {
     static var output: AudioObjectPropertyListenerProc = { _, _, _, _ in
         NotificationCenter.default.post(name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
+        return 0
+    }
+    static var input: AudioObjectPropertyListenerProc = { _, _, _, _ in
+        NotificationCenter.default.post(name: AudioNotification.audioInputDeviceDidChange.notificationName, object: nil)
         return 0
     }
 }
