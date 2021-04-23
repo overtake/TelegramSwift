@@ -143,7 +143,7 @@ private final class PaymentsCheckoutPriceView : GeneralContainableRowView, NSTex
             if editableTip.current == 0 {
                 text = ""
             } else {
-                text = self.formatterDelegate?.formatter.formattedStringWithAdjustedDecimalSeparator(from: formatCurrencyAmount(editableTip.current, currency: editableTip.currency)) ?? ""
+                text = formatCurrencyAmount(editableTip.current, currency: editableTip.currency)
             }
 
             if input.string != text {
@@ -184,7 +184,7 @@ private final class PaymentsCheckoutPriceView : GeneralContainableRowView, NSTex
         let text = input.string
         self.price.change(opacity: !text.isEmpty ? 0 : 1, animated: false)
 
-        guard let item = self.item as? PaymentsCheckoutPriceItem, let tip = item.editableTip else {
+        guard let item = self.item as? PaymentsCheckoutPriceItem else {
             return
         }
 
@@ -192,28 +192,22 @@ private final class PaymentsCheckoutPriceView : GeneralContainableRowView, NSTex
             item.updateValue(0)
             return
         }
-
-        var cleanText = ""
-        for c in text {
-            if c.isNumber {
-                cleanText.append(c)
-            } else if c == "," {
-                cleanText.append(".")
-            }
-        }
-
-        guard let doubleValue = Double(cleanText) else {
-            return
-        }
         guard let editableTip = item.editableTip else {
             return
         }
+        
+        guard let unformatted = self.formatterDelegate?.formatter.unformatted(string: text) else {
+            return
+        }
 
-        if let value = fractionalToCurrencyAmount(value: doubleValue, currency: tip.currency) {
-            item.updateValue(value)
-            if value > editableTip.maxValue {
-                self.input.string = self.formatterDelegate?.formatter.formattedStringAdjustedToFitAllowedValues(from: "\(editableTip.maxValue)") ?? ""
-            }
+        guard let value = Int64(unformatted) else {
+            return
+        }
+
+        
+        item.updateValue(value)
+        if value > editableTip.maxValue {
+            self.input.string = self.formatterDelegate?.formatter.formattedStringAdjustedToFitAllowedValues(from: "\(editableTip.maxValue)") ?? ""
         }
     }
     

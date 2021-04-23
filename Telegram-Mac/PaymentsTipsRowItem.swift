@@ -80,6 +80,9 @@ final class PaymentsTipsRowItem : GeneralRowItem {
             let tip = Tip(text: tip.0, value: tip.1, size: minSize)
             
             var i: Int = 0
+            
+            row.append(tip)
+            
             let row_w: CGFloat = row.reduce(0, { current, value in
                 var current = current
                 current += tip.size.width + insetBetween.right
@@ -90,8 +93,8 @@ final class PaymentsTipsRowItem : GeneralRowItem {
                 return current
             })
             if row_w > width {
+                row.removeLast()
                 layoutRow()
-            } else {
                 row.append(tip)
             }
         }
