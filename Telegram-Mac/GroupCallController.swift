@@ -830,7 +830,7 @@ final class GroupCallUIController : ViewController {
         
             if let members = members {
                 sources = sources.filter { key, value in
-                    members.participants.contains { !$0.isVideoMuted || key != $0.peer.id }
+                    return members.participants.first(where: { $0.peer.id == key })?.isVideoMuted == false
                 }
             }
         

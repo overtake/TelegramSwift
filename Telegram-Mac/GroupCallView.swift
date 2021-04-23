@@ -131,8 +131,14 @@ final class GroupCallView : View {
     }
     
     func idleHide() {
+        
+        guard let window = self.window else {
+            return
+        }
+        let location = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+
         let isVertical = state?.currentDominantSpeakerWithVideo != nil
-        let mode: ControlsMode = isVertical ? .invisible :.normal
+        let mode: ControlsMode = isVertical && !NSPointInRect(location, controlsContainer.frame) ? .invisible :.normal
         let previousMode = self.controlsMode
         self.controlsMode = mode
         
@@ -412,6 +418,9 @@ final class GroupCallView : View {
         
         mainVideoView?.layer?.cornerRadius = isVertical ? 0 : 10
         
+        if let event = NSApp.currentEvent {
+            updateMouse(event: event, animated: false)
+        }
     }
 
     required init?(coder: NSCoder) {
