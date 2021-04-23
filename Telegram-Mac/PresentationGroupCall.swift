@@ -636,11 +636,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var outgoingVideoSourceValue: [PeerId: UInt32] = [:] {
         didSet {
             outgoingVideoSourceValuePromise.set(outgoingVideoSourceValue)
-            if let _ = outgoingVideoSourceValue.first {
-                participantsContext?.updateMuteState(peerId: joinAsPeerId, muteState: nil, isVideoMuted: false, volume: nil, raiseHand: nil)
-            } else {
-                participantsContext?.updateMuteState(peerId: joinAsPeerId, muteState: nil, isVideoMuted: true, volume: nil, raiseHand: nil)
-            }
+            participantsContext?.updateMuteState(peerId: joinAsPeerId, muteState: nil, isVideoMuted: outgoingVideoSourceValue.first == nil, volume: nil, raiseHand: nil)
         }
     }
     var outgoingVideoSource: Signal<[PeerId: UInt32], NoError> {
