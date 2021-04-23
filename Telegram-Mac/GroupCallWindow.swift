@@ -106,6 +106,8 @@ struct GroupCallTheme {
     static let invite_link = NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
 
     
+    static let pinned_video = NSImage(named: "Icon_VoiceChat_PinnedVideo")!.precomposed(.white)
+    
     static var minSize:NSSize {
         return NSMakeSize(380, 600)
     }

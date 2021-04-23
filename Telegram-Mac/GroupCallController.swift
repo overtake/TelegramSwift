@@ -141,6 +141,42 @@ struct PeerGroupCallData : Equatable, Comparable {
         }
     }
     
+    var status: (String, NSColor) {
+        var string:String = L10n.peerStatusRecently
+        var color:NSColor = GroupCallTheme.grayStatusColor
+        if let state = state {
+            if wantsToSpeak, let _ = state.muteState {
+                string = L10n.voiceChatStatusWantsSpeak
+                color = GroupCallTheme.blueStatusColor
+            } else if let muteState = state.muteState, muteState.mutedByYou {
+                string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
+                color = GroupCallTheme.speakLockedColor
+            } else if isSpeaking {
+                string = L10n.voiceChatStatusSpeaking
+                color = GroupCallTheme.greenStatusColor
+            } else {
+                if let about = about {
+                    string = about
+                    color = GroupCallTheme.grayStatusColor
+                } else {
+                    string = L10n.voiceChatStatusListening
+                    color = GroupCallTheme.grayStatusColor
+                }
+            }
+        } else if peer.id == accountPeerId {
+            if let about = about {
+                string = about
+                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
+            } else {
+                string = L10n.voiceChatStatusConnecting.lowercased()
+                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
+            }
+        } else if isInvited {
+            string = L10n.voiceChatStatusInvited
+        }
+        return (string, color)
+    }
+    
     static func ==(lhs: PeerGroupCallData, rhs: PeerGroupCallData) -> Bool {
         if !lhs.peer.isEqual(rhs.peer) {
             return false
@@ -487,6 +523,7 @@ final class GroupCallUIController : ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         let actionsDisposable = self.actionsDisposable
                 
         let peerId = self.data.call.peerId
@@ -743,32 +780,37 @@ final class GroupCallUIController : ViewController {
             }
             let isFullScreen = strongSelf.genericView.isFullScreen && strongSelf.genericView.state?.currentDominantSpeakerWithVideo != nil
             
-            let rect: CGRect
+            var rect: CGRect
             if isFullScreen {
                 rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
             } else {
                 rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
             }
+            rect.size.height = window.frame.height
+
+            
             strongSelf.genericView.tempFullScreen = !isFullScreen
             futureWidth = rect.width
             let state = strongSelf.genericView.state!.withUpdatedFullScreen(!isFullScreen)
             
             
-            strongSelf.isFullScreen.set(!isFullScreen)
 
             strongSelf.genericView.peersTable.enumerateItems(with: { item in
-
                 _ = item.makeSize()
                 item.redraw(animated: true, options: .effectFade)
                 return true
             })
+            strongSelf.genericView.peersTable.beginTableUpdates()
 
+            strongSelf.isFullScreen.set(!isFullScreen)
 
             strongSelf.applyUpdates(state, .init(deleted: [], inserted: [], updated: [], animated: true), strongSelf.data.call, animated: true)
             window.setFrame(rect, display: true, animate: true)
             strongSelf.genericView.tempFullScreen = nil
             futureWidth = nil
             
+            strongSelf.genericView.peersTable.endTableUpdates()
+
             
         }, futureWidth: {
             return futureWidth
@@ -777,54 +819,64 @@ final class GroupCallUIController : ViewController {
 
         genericView.arguments = arguments
         
-        self.voiceSourcesDisposable.set((self.data.call.incomingVideoSources |> deliverOnMainQueue).start(next: { [weak self] sources in
-                    guard let strongSelf = self else {
-                        return
-                    }
-                    var updated = false
-                    var validSources = Set<UInt32>()
-                    for (peerId, source) in sources {
-                        validSources.insert(source)
-                        if !strongSelf.requestedVideoSources.contains(source) {
-                            strongSelf.requestedVideoSources.insert(source)
-                            strongSelf.data.call.makeVideoView(source: source, completion: { videoView in
-                                Queue.mainQueue().async {
-                                    guard let strongSelf = self, let videoView = videoView else {
-                                        return
-                                    }
-                                    let videoViewValue = GroupVideoView(videoView: videoView)
-                                    videoView.setVideoContentMode(.resizeAspectFill)
+        
+        
+        self.voiceSourcesDisposable.set((combineLatest(self.data.call.incomingVideoSources, self.data.call.members) |> deliverOnMainQueue).start(next: { [weak self] sources, members in
+            guard let strongSelf = self else {
+                return
+            }
+            var sources = sources
+        
+            if let members = members {
+                sources = sources.filter { key, value in
+                    members.participants.contains { !$0.isVideoMuted || key != $0.peer.id }
+                }
+            }
+        
+            var updated = false
+            var validSources = Set<UInt32>()
+            for (peerId, source) in sources {
+                validSources.insert(source)
+                if !strongSelf.requestedVideoSources.contains(source) {
+                    strongSelf.requestedVideoSources.insert(source)
+                    strongSelf.data.call.makeVideoView(source: source, completion: { videoView in
+                        Queue.mainQueue().async {
+                            guard let strongSelf = self, let videoView = videoView else {
+                                return
+                            }
+                            let videoViewValue = GroupVideoView(videoView: videoView)
+                            videoView.setVideoContentMode(.resizeAspectFill)
 
-                                    strongSelf.videoViews.append((DominantVideo(peerId, source), videoViewValue))
-                                    strongSelf.genericView.peersTable.enumerateItems(with: { item in
-                                        item.redraw(animated: true)
-                                        return true
-                                    })
-                                }
+                            strongSelf.videoViews.append((DominantVideo(peerId, source), videoViewValue))
+                            strongSelf.genericView.peersTable.enumerateItems(with: { item in
+                                item.redraw(animated: true)
+                                return true
                             })
                         }
-                    }
+                    })
+                }
+            }
 
-                    for i in (0 ..< strongSelf.videoViews.count).reversed() {
-                        if !validSources.contains(strongSelf.videoViews[i].0.ssrc) {
-                            let ssrc = strongSelf.videoViews[i].0.ssrc
-                            strongSelf.videoViews.remove(at: i)
-                            strongSelf.requestedVideoSources.remove(ssrc)
-                            updated = true
-                       }
-                   }
+            for i in (0 ..< strongSelf.videoViews.count).reversed() {
+                if !validSources.contains(strongSelf.videoViews[i].0.ssrc) {
+                    let ssrc = strongSelf.videoViews[i].0.ssrc
+                    strongSelf.videoViews.remove(at: i)
+                    strongSelf.requestedVideoSources.remove(ssrc)
+                    updated = true
+               }
+           }
 
 
-                    if updated {
-                        DispatchQueue.main.async {
-                            selectBestDominantSpeakerWithVideo()
-                        }
-                        strongSelf.genericView.peersTable.enumerateItems(with: { item in
-                            item.redraw(animated: true)
-                            return true
-                        })
-                    }
-                }))
+            if updated {
+                DispatchQueue.main.async {
+                    selectBestDominantSpeakerWithVideo()
+                }
+                strongSelf.genericView.peersTable.enumerateItems(with: { item in
+                    item.redraw(animated: true)
+                    return true
+                })
+            }
+        }))
 
         
         
@@ -943,11 +995,17 @@ final class GroupCallUIController : ViewController {
             case .connecting:
                 break
             }
-            currentState = value.0.state
             
+            if currentState == nil {
+                _ = strongSelf.disableScreenSleep()
+            }
+            
+            currentState = value.0.state
             
             strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call, animated: animated.swap(true))
             strongSelf.readyOnce()
+            
+            
             
             for member in value.0.memberDatas {
                 if member.isRaisedHand {
@@ -1141,14 +1199,14 @@ final class GroupCallUIController : ViewController {
         canManageCall = state.state.canManageCall
         
        // if genericView.inLiveResize {
-            for view in genericView.peersTable.view.subviews {
-                if let view = view as? TableRowView {
-                    let rowIndex = genericView.peersTable.view.row(for: view)
-                    if rowIndex < 0 {
-                        view.removeFromSuperview()
-                    }
-                }
-            }
+//            for view in genericView.peersTable.view.subviews {
+//                if let view = view as? TableRowView {
+//                    let rowIndex = genericView.peersTable.view.row(for: view)
+//                    if rowIndex < 0 {
+//                        view.removeFromSuperview()
+//                    }
+//                }
+//            }
       //  }
     }
     
@@ -1160,6 +1218,7 @@ final class GroupCallUIController : ViewController {
         connecting.dispose()
         sharing?.orderOut(nil)
         idleTimer?.invalidate()
+        _ = enableScreenSleep()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -1182,4 +1241,27 @@ final class GroupCallUIController : ViewController {
     override func viewClass() -> AnyClass {
         return GroupCallView.self
     }
+    
+    private var assertionID: IOPMAssertionID = 0
+    private var success: IOReturn?
+    
+    private func disableScreenSleep() -> Bool? {
+        guard success == nil else { return nil }
+        success = IOPMAssertionCreateWithName( kIOPMAssertionTypeNoDisplaySleep as CFString,
+                                               IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                                               "Group Call" as CFString,
+                                               &assertionID )
+        return success == kIOReturnSuccess
+    }
+    
+    private func enableScreenSleep() -> Bool {
+        if success != nil {
+            success = IOPMAssertionRelease(assertionID)
+            success = nil
+            return true
+        }
+        return false
+    }
+
+    
 }

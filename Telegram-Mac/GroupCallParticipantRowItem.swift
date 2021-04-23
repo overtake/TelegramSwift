@@ -23,7 +23,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
     
-    fileprivate let titleLayout: TextViewLayout
+    fileprivate private(set) var titleLayout: TextViewLayout!
     fileprivate let statusLayout: TextViewLayout
     fileprivate let account: Account
     fileprivate let isLastItem: Bool
@@ -49,47 +49,10 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self.drawLine = drawLine
         self.takeVideo = takeVideo
         self.futureWidth = futureWidth
-        
-        let isVertical = initialSize.width > (fullScreenThreshold - 40) && data.videoMode
-        
-        if isVertical {
-            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .normal(.text)), maximumNumberOfLines: 1)
-        } else {
-            self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
-        }
+                
         self.isLastItem = isLastItem
-        var string:String = L10n.peerStatusRecently
-        var color:NSColor = GroupCallTheme.grayStatusColor
-        if let state = data.state {
-            if data.wantsToSpeak, let _ = state.muteState {
-                string = L10n.voiceChatStatusWantsSpeak
-                color = GroupCallTheme.blueStatusColor
-            } else if let muteState = state.muteState, muteState.mutedByYou {
-                string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
-                color = GroupCallTheme.speakLockedColor
-            } else if data.isSpeaking {
-                string = L10n.voiceChatStatusSpeaking
-                color = GroupCallTheme.greenStatusColor
-            } else {
-                if let about = data.about {
-                    string = about
-                    color = GroupCallTheme.grayStatusColor
-                } else {
-                    string = L10n.voiceChatStatusListening
-                    color = GroupCallTheme.grayStatusColor
-                }
-            }
-        } else if data.peer.id == data.accountPeerId {
-            if let about = data.about {
-                string = about
-                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
-            } else {
-                string = L10n.voiceChatStatusConnecting.lowercased()
-                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
-            }
-        } else if isInvited {
-            string = L10n.voiceChatStatusInvited
-        }
+        let (string, color) = data.status
+        
         if let volume = data.unsyncVolume ?? data.state?.volume, volume != 10000 {
             if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
                 self.volume = nil
@@ -107,8 +70,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
 
-        
-        
         self.statusLayout = TextViewLayout(.initialize(string: string, color: color, font: .normal(.short)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 0, stableId: stableId, type: .none, viewType: viewType, action: action, inset: .init(), enabled: true)
         
@@ -227,6 +188,13 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             inset = volume.layoutSize.width + 28
         } else {
             inset = 0
+        }
+        
+        
+        if isVertical {
+            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .normal(.text)), maximumNumberOfLines: 1)
+        } else {
+            self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
         
         if isVertical {
@@ -438,12 +406,6 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
             didSet {
                 if let view = view {
                     addSubview(view, positioned: .below, relativeTo: shadowView)
-                    (view as? GroupVideoView)?.didRemoveFromSuperview = {
-                        var bp = 0
-                        bp += 1
-                    }
-                } else {
-                    (oldValue as? GroupVideoView)?.didRemoveFromSuperview = nil
                 }
                 needsLayout = true
             }
@@ -488,17 +450,15 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     private var videoContainer: VideoContainer?
     private let titleView = TextView()
     private let statusView = ImageView()
-    private let pinnedFrameView: View = View()
+    private var pinnedFrameView: View?
     private let button: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(photoView)
-        addSubview(pinnedFrameView)
         addSubview(titleView)
         addSubview(button)
         addSubview(statusView)
-        pinnedFrameView.layer?.cornerRadius = 10
-        pinnedFrameView.layer?.borderWidth = 2
+       
         
         button.animates = true
         
@@ -568,7 +528,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         button.setFrameOrigin(NSMakePoint(titleView.frame.minX - button.frame.width, containerView.frame.height - titleView.frame.height - 7))
 
         
-        pinnedFrameView.frame = containerView.bounds
+        pinnedFrameView?.frame = containerView.bounds
     }
 
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -582,18 +542,37 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
         
         
-        pinnedFrameView.layer?.borderColor = item.activityColor.cgColor
-        if animated {
-            pinnedFrameView.layer?.animateBorderColor()
+        if item.data.isPinned {
+            let current: View
+            if let pinnedView = self.pinnedFrameView {
+                current = pinnedView
+            } else {
+                current = View()
+                self.pinnedFrameView = current
+                addSubview(current)
+                current.layer?.cornerRadius = 10
+                current.layer?.borderWidth = 2
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.layer?.borderColor = item.activityColor.cgColor
+        } else {
+            if let pinnedView = self.pinnedFrameView {
+                self.pinnedFrameView = nil
+                if animated {
+                    pinnedView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pinnedView] _ in
+                        pinnedView?.removeFromSuperview()
+                    })
+                } else {
+                    pinnedView.removeFromSuperview()
+                }
+            }
         }
-        
-        
+        button.animates = animated
         button.image = item.videoBoxImage
         button.sizeToFit()
 
-        
-        pinnedFrameView.change(opacity: item.data.isPinned ? 1 : 0)
-        
         titleView.update(item.titleLayout)
         
         let videoView = item.takeVideo(item.peer.id)
@@ -601,17 +580,8 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         
         if let videoView = videoView {
             
-            let previous = self.videoContainer?.view
             var isPresented: Bool = false
-            if previous != videoView, let previous = previous {
-                if animated {
-                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
-                        previous?.removeFromSuperview()
-                    })
-                } else {
-                    previous.removeFromSuperview()
-                }
-            }
+            
             let videoContainer: VideoContainer
             if let current = self.videoContainer {
                 videoContainer = current
@@ -623,7 +593,6 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
                 isPresented = true
             }
             videoContainer.view = videoView
-            photoView._change(opacity: 0, animated: animated)
 
             if animated && isPresented {
                 videoContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
@@ -634,10 +603,8 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
                 
                 videoContainer.layer?.animatePosition(from: NSMakePoint(0, -photoView.frame.minY), to: videoContainer.frame.origin, duration: 0.3)
                 
-                photoView.layer?.animateScaleCenter(from: 1, to: videoContainer.frame.width / photoView.frame.height, duration: 0.3)
             }
         } else {
-            photoView._change(opacity: 1, animated: animated)
             if let first = self.videoContainer {
                 self.videoContainer = nil
                 if animated {
@@ -652,7 +619,6 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
                     
                     first.layer?.animatePosition(from: first.frame.origin, to: NSMakePoint(0, -photoView.frame.minY), duration: 0.3, removeOnCompletion: false)
                     
-                    photoView.layer?.animateScaleCenter(from:  first.frame.width / photoView.frame.height, to: 1, duration: 0.2)
                 } else {
                     first.removeFromSuperview()
                 }
@@ -847,21 +813,11 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         
         if let videoView = videoView {
             let previous = self.videoContainer.view
-            var isPresented: Bool = false
-            if previous != videoView, let previous = previous {
-                if animated {
-                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
-                        previous?.removeFromSuperview()
-                    })
-                } else {
-                    previous.removeFromSuperview()
-                }
-                isPresented = true
-            }
+            
             videoView.frame = self.videoContainer.bounds
             self.videoContainer.view = videoView
             
-            if animated && isPresented {
+            if animated && previous == nil {
                 videoView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
         } else {

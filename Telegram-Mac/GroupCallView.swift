@@ -150,7 +150,7 @@ final class GroupCallView : View {
         transition.updateFrame(view: peersTable, frame: tableRect)
         transition.updateFrame(view: peersTableContainer, frame: substrateRect())
         if isVertical {
-            transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 100, addition: peersTable.frame.width / 2))
+            transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2))
         } else {
             transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
         }
@@ -366,7 +366,7 @@ final class GroupCallView : View {
                 addSubview(mainVideo, positioned: .below, relativeTo: titleView)
                 isPresented = true
             }
-            mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, transition: .immediate, controlsMode: self.controlsMode)
+            mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId}), transition: .immediate, controlsMode: self.controlsMode)
             
             if isPresented && animated {
                 mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)

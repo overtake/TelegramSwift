@@ -24,14 +24,14 @@ struct DesktopCapturerObjectWrapper : Equatable {
         return true
     }
 
-    let source: VideoSource
+    let source: VideoSourceMac
     let isAvailableToStream: Bool
 }
 
 
-final class CameraCaptureDevice : VideoSource, Equatable {
+final class CameraCaptureDevice : VideoSourceMac, Equatable {
     func isEqual(_ another: Any) -> Bool {
-        if let another = another as? VideoSource {
+        if let another = another as? VideoSourceMac {
             return another.uniqueKey() == self.uniqueKey()
         } else {
             return false
@@ -57,10 +57,10 @@ final class CameraCaptureDevice : VideoSource, Equatable {
 }
 
 private final class DesktopCaptureListArguments {
-    let selectDesktop:(DesktopCaptureSource, DesktopCaptureSourceManager)->Void
+    let selectDesktop:(DesktopCaptureSourceMac, DesktopCaptureSourceManagerMac)->Void
     let selectCamera:(CameraCaptureDevice)->Void
 
-    init(selectDesktop:@escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void, selectCamera:@escaping(CameraCaptureDevice)->Void) {
+    init(selectDesktop:@escaping(DesktopCaptureSourceMac, DesktopCaptureSourceManagerMac)->Void, selectCamera:@escaping(CameraCaptureDevice)->Void) {
         self.selectDesktop = selectDesktop
         self.selectCamera = selectCamera
     }
@@ -74,11 +74,11 @@ private struct DesktopCaptureListState : Equatable {
     }
 
     var cameras:[CameraCaptureDevice]
-    var screens: [DesktopCaptureSource]
-    var windows: [DesktopCaptureSource]
-    var selected: VideoSource?
+    var screens: [DesktopCaptureSourceMac]
+    var windows: [DesktopCaptureSourceMac]
+    var selected: VideoSourceMac?
     var access:Access
-    init(cameras: [CameraCaptureDevice], screens: [DesktopCaptureSource], windows: [DesktopCaptureSource], selected: VideoSource?, access: Access) {
+    init(cameras: [CameraCaptureDevice], screens: [DesktopCaptureSourceMac], windows: [DesktopCaptureSourceMac], selected: VideoSourceMac?, access: Access) {
         self.cameras = cameras
         self.screens = screens
         self.windows = windows
@@ -105,12 +105,12 @@ private struct DesktopCaptureListState : Equatable {
     }
 }
 
-private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSourceManager?, windows: DesktopCaptureSourceManager?, excludeWindowNumber: Int = 0, arguments: DesktopCaptureListArguments) -> [InputDataEntry] {
+private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSourceManagerMac?, windows: DesktopCaptureSourceManagerMac?, excludeWindowNumber: Int = 0, arguments: DesktopCaptureListArguments) -> [InputDataEntry] {
         
     var entries:[InputDataEntry] = []
     
     struct DesktopTuple : Equatable {
-        let source: DesktopCaptureSource
+        let source: DesktopCaptureSourceMac
         let selected: Bool
         let isAvailable: Bool
     }
@@ -170,13 +170,13 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
 
 final class DesktopCapturerListController: GenericViewController<HorizontalTableView> {
     
-    private let windows = DesktopCaptureSourceManager(_w: ())
-    private let screens = DesktopCaptureSourceManager(_s: ())
+    private let windows = DesktopCaptureSourceManagerMac(_w: ())
+    private let screens = DesktopCaptureSourceManagerMac(_s: ())
 
     private var updateDisposable: Disposable?
     private let disposable: MetaDisposable = MetaDisposable()
     private let devicesDisposable = MetaDisposable()
-    var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManager)->Void)? = nil
+    var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManagerMac)->Void)? = nil
     var updateCameraSelected:((DesktopCapturerObjectWrapper)->Void)? = nil
 
     private let devices: DevicesContext
@@ -188,8 +188,8 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
     
     var excludeWindowNumber: Int = 0
     
-    private var getCurrentlySelected: (()->VideoSource?)? = nil
-    var selected: VideoSource? {
+    private var getCurrentlySelected: (()->VideoSourceMac?)? = nil
+    var selected: VideoSourceMac? {
         return self.getCurrentlySelected?()
     }
     
@@ -289,7 +289,7 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
             return EmptyDisposable
         }
         
-        let updateSelected: Signal<VideoSource?, NoError> = statePromise.get() |> map { $0.selected } |> distinctUntilChanged(isEqual:  { lhs, rhs in
+        let updateSelected: Signal<VideoSourceMac?, NoError> = statePromise.get() |> map { $0.selected } |> distinctUntilChanged(isEqual:  { lhs, rhs in
             if let lhs = lhs, let rhs = rhs {
                 return lhs.isEqual(rhs)
             } else if (lhs != nil) != (rhs != nil) {
@@ -299,7 +299,7 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
         })
         
         actionsDisposable.add(updateSelected.start(next: { [weak self, weak screens] selected in
-            if let selected = selected as? DesktopCaptureSource, let screens = screens {
+            if let selected = selected as? DesktopCaptureSourceMac, let screens = screens {
                 self?.updateDesktopSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.sharing }), screens)
             } else if let selected = selected as? CameraCaptureDevice {
                 self?.updateCameraSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.camera }))
