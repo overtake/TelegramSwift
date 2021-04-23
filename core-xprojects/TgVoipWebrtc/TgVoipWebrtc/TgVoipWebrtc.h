@@ -18,5 +18,5 @@ FOUNDATION_EXPORT const unsigned char TgVoipWebrtcVersionString[];
 
 
 #import "OngoingCallThreadLocalContext.h"
-#import "DesktopCaptureSourceManager.h"
-#import "DesktopCaptureSource.h"
+//#import "DesktopCaptureSourceManager.h"
+#import "DesktopCaptureSourceViewMac.h"

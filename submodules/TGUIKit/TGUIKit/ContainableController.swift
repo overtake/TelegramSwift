@@ -96,7 +96,7 @@ public extension ContainedViewLayoutTransition {
 
     
 
-    func updateAlpha(view: View, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
+    func updateAlpha(view: NSView, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
         switch self {
         case .immediate:
             view.alphaValue = alpha

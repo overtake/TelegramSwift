@@ -32,9 +32,9 @@ final class MainVideoContainerView: Control {
     
     private var validLayout: CGSize?
     
-    private var nameView: TextView?
-    private var statusView: TextView?
-    
+    private let nameView: TextView = TextView()
+    private let statusView: TextView = TextView()
+    private let pinnedImage = ImageView()
     let gravityButton = ImageButton()
 
     var currentResizeMode: CALayerContentsGravity = .resizeAspect {
@@ -59,6 +59,14 @@ final class MainVideoContainerView: Control {
         gravityButton.sizeToFit()
         gravityButton.scaleOnClick = true
         gravityButton.autohighlight = false
+        addSubview(nameView)
+        addSubview(statusView)
+        addSubview(pinnedImage)
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        
+        statusView.userInteractionEnabled = false
+        statusView.isSelectable = false
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -77,17 +85,41 @@ final class MainVideoContainerView: Control {
         shadowView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         gravityButton.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         
+        nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
+        statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
+        pinnedImage.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
+
+        
         gravityButton.set(image:  controlsState == .fullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
         gravityButton.sizeToFit()
     }
     
+    private var participant: PeerGroupCallData?
     
     
-    func updatePeer(peer: DominantVideo?, transition: ContainedViewLayoutTransition, controlsMode: GroupCallView.ControlsMode) {
+    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, controlsMode: GroupCallView.ControlsMode) {
         
         
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: gravityButton, alpha: controlsMode == .normal ? 1 : 0)
+        transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
+        transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
+        transition.updateAlpha(view: pinnedImage, alpha: controlsMode == .normal ? 1 : 0)
+        if participant != self.participant, let participant = participant {
+            self.participant = participant
+            let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: .white, font: .medium(.text)))
+            self.nameView.update(nameLayout)
+            
+            let color = participant.status.1 == GroupCallTheme.grayStatusColor ? .white : participant.status.1
+            
+            let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: color, font: .normal(.short)))
+            self.statusView.update(statusLayout)
+            
+            self.pinnedImage.image = GroupCallTheme.pinned_video
+            self.pinnedImage.sizeToFit()
+            
+            self.updateLayout(size: self.frame.size, transition: transition)
+        }
 
         
         if self.currentPeer == peer {
@@ -129,7 +161,20 @@ final class MainVideoContainerView: Control {
             currentVideoView.updateLayout(size: size, transition: transition)
         }
         transition.updateFrame(view: shadowView, frame: CGRect(origin: NSMakePoint(0, size.height - 50), size: NSMakeSize(size.width, 50)))
-        transition.updateFrame(view: gravityButton, frame: CGRect.init(origin: NSMakePoint(size.width - 15 - gravityButton.frame.width, size.height - 15 - gravityButton.frame.height), size: gravityButton.frame.size))
+        transition.updateFrame(view: gravityButton, frame: CGRect(origin: NSMakePoint(size.width - 10 - gravityButton.frame.width, size.height - 10 - gravityButton.frame.height), size: gravityButton.frame.size))
+        
+        
+        self.nameView.resize(size.width - 80)
+        self.statusView.resize(size.width - 80)
+
+        
+        transition.updateFrame(view: self.pinnedImage, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.pinnedImage.frame.height), size: self.pinnedImage.frame.size))
+        
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(45, size.height - 10 - self.nameView.frame.height - self.statusView.frame.height), size: self.nameView.frame.size))
+        transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(45, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
+        
+
+        
     }
     
     override func layout() {
