@@ -192,7 +192,16 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         
         if isVertical {
-            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .normal(.text)), maximumNumberOfLines: 1)
+            
+//            var (_, color) = data.status
+//
+//            if color == GroupCallTheme.grayStatusColor {
+//                color = NSColor.white.withAlphaComponent(0.8)
+//            } else {
+//                color = color.withAlphaComponent(0.8)
+//            }
+            
+            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
@@ -371,7 +380,7 @@ private final class GroupCallAvatarView : View {
                 }
                 let rect = self.photoView.bounds
                 var fr = CATransform3DIdentity
-                fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
                 fr = CATransform3DScale(fr, value, value, 1)
                 fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
                 self.photoView.layer?.transform = fr
@@ -448,17 +457,22 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     }
     
     private var videoContainer: VideoContainer?
+    private let nameContainer = View()
     private let titleView = TextView()
     private let statusView = ImageView()
     private var pinnedFrameView: View?
     private let button: ImageView = ImageView()
+    
+    private let audioLevelDisposable = MetaDisposable()
+    private var scaleAnimator: DisplayLinkAnimator?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(photoView)
-        addSubview(titleView)
-        addSubview(button)
+        nameContainer.addSubview(titleView)
+        nameContainer.addSubview(button)
         addSubview(statusView)
        
+        addSubview(nameContainer)
         
         button.animates = true
         
@@ -523,10 +537,13 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoSize.height) / 2)
         videoContainer?.frame = containerView.bounds
         
-        titleView.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (containerView.frame.width - titleView.frame.width + button.frame.width) / 2), containerView.frame.height - titleView.frame.height - 7))
         
-        button.setFrameOrigin(NSMakePoint(titleView.frame.minX - button.frame.width, containerView.frame.height - titleView.frame.height - 7))
+        
+        button.setFrameOrigin(NSMakePoint(0, 4))
+        titleView.setFrameOrigin(NSMakePoint(button.frame.maxX, 4))
 
+        nameContainer.frame = NSMakeRect(0, 0, titleView.frame.width + button.frame.width, max(button.frame.height, titleView.frame.height) + 8)
+        nameContainer.centerX(y: containerView.frame.height - nameContainer.frame.height - 3)
         
         pinnedFrameView?.frame = containerView.bounds
     }
@@ -540,8 +557,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         
         photoView.update(item, animated: animated)
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
-        
-        
+                
         if item.data.isPinned {
             let current: View
             if let pinnedView = self.pinnedFrameView {
@@ -556,7 +572,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            current.layer?.borderColor = item.activityColor.cgColor
+            current.layer?.borderColor = item.activityColor.withAlphaComponent(0.7).cgColor
         } else {
             if let pinnedView = self.pinnedFrameView {
                 self.pinnedFrameView = nil
@@ -624,8 +640,63 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
                 }
             }
         }
+        self.update(item, animated: animated)
+        
         needsLayout = true
     }
+    
+    private func update(_ item: GroupCallParticipantRowItem, animated: Bool) {
+        if let audioLevel = item.audioLevel(item.data.peer.id) {
+            self.audioLevelDisposable.set(audioLevel.start(next: { [weak item, weak self] value in
+                if let item = item {
+                    self?.updateAudioLevel(value, item: item, animated: animated)
+                }
+            }))
+        } else {
+            self.audioLevelDisposable.set(nil)
+            self.updateAudioLevel(nil, item: item, animated: animated)
+        }
+    }
+    
+    private func updateAudioLevel(_ value: Float?, item: GroupCallParticipantRowItem, animated: Bool) {
+        
+        
+        let audioLevel = value ?? 0
+        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
+        let avatarScale: CGFloat
+        if audioLevel > 0.0 {
+            avatarScale = 1.1 + level * 0.07
+        } else {
+            avatarScale = 1.0
+        }
+
+        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+
+        let t = button.layer!.transform
+        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+
+        if animated {
+            if scale != value {
+                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+                    guard let `self` = self else {
+                        return
+                    }
+                    let rect = self.button.bounds
+                    var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+                    fr = CATransform3DScale(fr, value, value, 1)
+                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                    self.button.layer?.transform = fr
+                }, completion: {
+
+                })
+            }
+        } else {
+            self.scaleAnimator = nil
+            self.button.layer?.transform = CATransform3DIdentity
+        }
+    }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

@@ -166,8 +166,7 @@ public func formatCurrencyAmount(_ amount: Int64, currency: String) -> String {
             }
             result.append(entry.symbol)
         }
-        
-        return result
+        return CurrencyFormatter(currency: currency).formattedStringWithAdjustedDecimalSeparator(from: result) ?? result
     } else {
         assertionFailure()
         let formatter = NumberFormatter()

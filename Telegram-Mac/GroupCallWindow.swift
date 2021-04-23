@@ -45,8 +45,9 @@ struct GroupCallTheme {
         return grayStatusColor
     }
     
-    static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(.white)
-    static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(.white)
+    static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoBox_speaking = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor.withAlphaComponent(0.8))
 
     static let videoBox_muted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
     static let videoBox_unmuted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
@@ -59,8 +60,6 @@ struct GroupCallTheme {
     static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
     static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
     
-    static let videoZoomOut = NSImage(named: "Icon_GroupCall_Video_ZoomOut")!.precomposed(.white)
-    static let videoZoomIn = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(.white)
     
     
 
@@ -106,7 +105,10 @@ struct GroupCallTheme {
     static let invite_link = NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
 
     
-    static let pinned_video = NSImage(named: "Icon_VoiceChat_PinnedVideo")!.precomposed(.white)
+    static let pinned_video = NSImage(named: "Icon_VoiceChat_PinnedVideo")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoZoomOut = NSImage(named: "Icon_GroupCall_Video_ZoomOut")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoZoomIn = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+
     
     static var minSize:NSSize {
         return NSMakeSize(380, 600)

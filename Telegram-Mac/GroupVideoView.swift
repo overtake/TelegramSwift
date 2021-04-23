@@ -93,67 +93,22 @@ final class GroupVideoView: View {
         transition.updateFrame(view: self.videoViewContainer, frame: focus(size))
         let aspect = videoView.getAspect()
         
+        var videoRect: CGRect = .zero
         switch gravity {
         case .resizeAspect:
-            transition.updateFrame(view: self.videoView.view, frame: focus(size))
+            videoRect = focus(size)
         case .resizeAspectFill:
             var boundingSize = size
             boundingSize = NSMakeSize(max(size.width, size.height) * aspect, max(size.width, size.height))
             boundingSize = boundingSize.aspectFilled(size)
-            transition.updateFrame(view: self.videoView.view, frame: focus(boundingSize))
+            videoRect = focus(boundingSize)
         default:
             break
         }
-        
-
-        
-        let orientation = self.videoView.getOrientation()
-//        if aspect <= 0.01 {
-//            aspect = 3.0 / 4.0
-//        }
-        
-        let rotatedAspect: CGFloat
-        let angle: CGFloat
-        let switchOrientation: Bool
-        switch orientation {
-        case .rotation0:
-            angle = 0.0
-            rotatedAspect = 1 / aspect
-            switchOrientation = false
-        case .rotation90:
-            angle = CGFloat.pi / 2.0
-            rotatedAspect = aspect
-            switchOrientation = true
-        case .rotation180:
-            angle = CGFloat.pi
-            rotatedAspect = 1 / aspect
-            switchOrientation = false
-        case .rotation270:
-            angle = CGFloat.pi * 3.0 / 2.0
-            rotatedAspect = aspect
-            switchOrientation = true
+        transition.updateFrame(view: self.videoView.view, frame: videoRect)
+        for subview in self.videoView.view.subviews {
+            transition.updateFrame(view: subview, frame: videoRect.size.bounds)
         }
-        
-        var rotatedVideoSize = CGSize(width: 100.0, height: rotatedAspect * 100.0)
-        
-        if size.width < 100.0 || true {
-            rotatedVideoSize = rotatedVideoSize.aspectFilled(size)
-        } else {
-            rotatedVideoSize = rotatedVideoSize.aspectFitted(size)
-        }
-        
-        if switchOrientation {
-            rotatedVideoSize = CGSize(width: rotatedVideoSize.height, height: rotatedVideoSize.width)
-        }
-        var rotatedVideoFrame = CGRect(origin: CGPoint(x: floor((size.width - rotatedVideoSize.width) / 2.0), y: floor((size.height - rotatedVideoSize.height) / 2.0)), size: rotatedVideoSize)
-        rotatedVideoFrame.origin.x = floor(rotatedVideoFrame.origin.x)
-        rotatedVideoFrame.origin.y = floor(rotatedVideoFrame.origin.y)
-        rotatedVideoFrame.size.width = ceil(rotatedVideoFrame.size.width)
-        rotatedVideoFrame.size.height = ceil(rotatedVideoFrame.size.height)
-      //  self.videoView.view.center = rotatedVideoFrame.center
-//        self.videoView.view.frame = bounds
-        
-        let transition: ContainedViewLayoutTransition = .immediate
     }
     
     override func viewDidMoveToSuperview() {
