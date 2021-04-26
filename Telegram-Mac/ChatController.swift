@@ -1902,7 +1902,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return
                         } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                             setNextToTransaction = true
-                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId ?? threadId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, secretMediaPreview: presentation.urlPreview?.1) |> deliverOnMainQueue |> ignoreValues
+                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId ?? threadId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, secretMediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
+                                strongSelf?.nextTransaction.execute()
+                            }) |> deliverOnMainQueue |> ignoreValues
                             
                         }
                         
@@ -1952,7 +1954,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, silent: silent, atDate: atDate)
                             }
                             
-                            invokeSignal = invokeSignal |> then( fwd |> ignoreValues)
+                            invokeSignal = invokeSignal |> then(fwd |> ignoreValues)
                             
                         }
                         
