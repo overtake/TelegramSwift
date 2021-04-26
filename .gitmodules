@@ -12,7 +12,7 @@ url=git@github.com:overtake/Telegram-iOS.git
 url=git@github.com:overtake/rlottie.git
 [submodule "submodules/tgcalls"]
 	path = submodules/tgcalls
-url=git@github.com:overtake/tgcalls.git
+	url = git@github.com:john-preston/tgcalls.git
 [submodule "submodules/tg_owt"]
 	path = submodules/tg_owt
 	url = git@github.com:desktop-app/tg_owt.git
