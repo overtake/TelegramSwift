@@ -98,7 +98,6 @@ private final class LocationMapView : View {
         mapView.mapType = .standard
         mapView.isZoomEnabled = true
         mapView.isScrollEnabled = true
-        mapView.showsUserLocation = true
         mapView.showsZoomControls = true
         mapView.wantsLayer = true
         header.addSubview(headerTextView)
@@ -429,11 +428,14 @@ private class MapDelegate : NSObject, MKMapViewDelegate {
     
     func mapView(_ mapView: MKMapView, didFailToLocateUserWithError error: Error) {
         if "\(error)".contains("Code=1") {
-            self.location.set(.single(nil))
-            isPinRaised = true
-            didChangeRegion()
-            mapView.showsUserLocation = false
+            cancelRequestLocation()
         }
+    }
+
+    func cancelRequestLocation() {
+        self.location.set(.single(nil))
+        isPinRaised = true
+        didChangeRegion()
     }
     
     
@@ -460,6 +462,7 @@ class LocationModalController: ModalViewController {
     private let delegate: MapDelegate = MapDelegate()
     private let disposable = MetaDisposable()
     private let sendDisposable = MetaDisposable()
+    private let requestDisposable = MetaDisposable()
     private let statePromise:Promise<LocationViewState> = Promise()
     init(_ chatInteraction: ChatInteraction) {
         self.chatInteraction = chatInteraction
@@ -640,7 +643,7 @@ class LocationModalController: ModalViewController {
             return .single(state)
         } |> distinctUntilChanged
         
-        let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), NoError> = combineLatest(signal |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, stateModified |> deliverOnPrepareQueue) |> map { data, appearance, state in
+        let transition:Signal<(TableUpdateTransition, Bool, LocationViewState, Bool), NoError> = combineLatest(queue: prepareQueue, signal, appearanceSignal, stateModified) |> map { data, appearance, state in
             let results:[ChatContextResult] = data.0?.results ?? []
             let entries = mapEntries(result: results, loading: data.2, location: data.1, state: state).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), data.2, state, !results.isEmpty || data.3)
@@ -664,12 +667,19 @@ class LocationModalController: ModalViewController {
             })
             self.readyOnce()
         }))
-        
+
+        let request = requestUserLocation() |> deliverOnMainQueue
+        requestDisposable.set(request.start(next: { [weak self] result in
+            self?.genericView.mapView.showsUserLocation = true
+        }, error: { [weak self] error in
+            self?.delegate.cancelRequestLocation()
+        }))
     }
     
     deinit {
         disposable.dispose()
         sendDisposable.dispose()
+        requestDisposable.dispose()
     }
     
     private var genericView: LocationMapView {

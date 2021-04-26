@@ -171,7 +171,7 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: InputDataEquatable(state), item: { size, stableId -> TableRowItem in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: InputDataEquatable(state), comparable: nil, item: { size, stableId -> TableRowItem in
         return EditAccountInfoItem(size, stableId: stableId, account: arguments.context.account, state: state, viewType: .singleItem, updateText: { firstName, lastName in
             updateState { current in
                 return current.withUpdatedFirstName(firstName).withUpdatedLastName(lastName).withUpdatedInited(true)
@@ -424,6 +424,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }
                     close?()
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                 }))
             }
             })

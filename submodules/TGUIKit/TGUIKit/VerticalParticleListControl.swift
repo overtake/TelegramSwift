@@ -76,16 +76,16 @@ public class VerticalParticleListControl: Control {
         addSubview(selected)
         addSubview(unselectedMask)
     }
+        
     
-    
-    public func update(count: Int, selectedIndex: Int, animated: Bool) {
+    public func update(count: Int, selectedIndex: Int, animated: Bool, force: Bool = false) {
         var itemSize = NSMakeSize(frame.width, 12)
         if count <= 3 {
             itemSize.height = floor((frame.height - (CGFloat(count - 1) * frame.width)) / CGFloat(count))
         }
         
         
-        if self.count != count {
+        if self.count != count || force {
             self.unselected.image = generateList(count, itemSize: itemSize, backgroundColor: presentation.colors.background, foregroundColor: presentation.colors.accentIcon.withAlphaComponent(0.2), mask: false)
             self.unselected.sizeToFit()
             
@@ -93,7 +93,7 @@ public class VerticalParticleListControl: Control {
             self.unselectedMask.sizeToFit()
             
         }
-        if self.itemSize != itemSize {
+        if self.itemSize != itemSize || force {
             selected.image = generateParticle(itemSize, foregroundColor: presentation.colors.accentIcon)
             selected.sizeToFit()
         }
@@ -132,6 +132,10 @@ public class VerticalParticleListControl: Control {
         self.selectedIndex = selectedIndex
     }
     
+    public override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.update(count: self.count, selectedIndex: selectedIndex, animated: false, force: true)
+    }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

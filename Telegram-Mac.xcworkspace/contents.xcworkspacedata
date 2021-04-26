@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:core-xprojects/rnnoise/rnnoise.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:core-xprojects/Stripe/Stripe.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:core-xprojects/Reachability/Reachability.xcodeproj">
    </FileRef>
    <FileRef

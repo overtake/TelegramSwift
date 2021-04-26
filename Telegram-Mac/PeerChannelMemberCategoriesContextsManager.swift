@@ -320,7 +320,7 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func updateMemberAdminRights(account: Account, peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights, rank: String?) -> Signal<Void, NoError> {
+    func updateMemberAdminRights(account: Account, peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<Void, NoError> {
         return updateChannelAdminRights(account: account, peerId: peerId, adminId: memberId, rights: adminRights, rank: rank)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, NoError> in
@@ -371,7 +371,11 @@ final class PeerChannelMemberCategoriesContextsManager {
             return addChannelMember(account: account, peerId: peerId, memberId: memberId)
                 |> map(Optional.init)
                 |> `catch` { error -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError> in
-                    return .fail(error)
+                    if memberIds.count == 1 {
+                        return .fail(error)
+                    } else {
+                        return .single(nil)
+                    }
             }
         })
         return combineLatest(signals)

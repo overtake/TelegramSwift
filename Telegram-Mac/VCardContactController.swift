@@ -84,14 +84,14 @@ import SwiftSignalKit
 //        }
 //    }
 //    
-//    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("header"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("header"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //        return VCardHeaderItem(initialSize, stableId: stableId, account: arguments.account, vCard: vCard, contact: contact)
 //    }))
 //    index += 1
 //    
 //    for phoneNumber in vCard.phoneNumbers {
 //        if let label = phoneNumber.label {
-//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("phone_\(phoneNumber.identifier)"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("phone_\(phoneNumber.identifier)"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //                return TextAndLabelItem(initialSize, stableId: stableId, label: getLabel(label), text: phoneNumber.value.stringValue, account: arguments.account)
 //            }))
 //        }
@@ -100,7 +100,7 @@ import SwiftSignalKit
 //    
 //    for email in vCard.emailAddresses {
 //        if let label = email.label {
-//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("email_\(email.identifier)"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("email_\(email.identifier)"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //                return TextAndLabelItem(initialSize, stableId: stableId, label: getLabel(label), text: email.value as String, account: arguments.account)
 //            }))
 //        }
@@ -109,7 +109,7 @@ import SwiftSignalKit
 //    
 //    for address in vCard.urlAddresses {
 //        if let label = address.label {
-//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("url_\(address.identifier)"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("url_\(address.identifier)"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //                return TextAndLabelItem(initialSize, stableId: stableId, label: getLabel(label), text: address.value as String, account: arguments.account)
 //            }))
 //        }
@@ -119,7 +119,7 @@ import SwiftSignalKit
 //    for address in vCard.postalAddresses {
 //        if let label = address.label {
 //            let text: String = address.value.street + "\n" + address.value.city + "\n" + address.value.country
-//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("url_\(address.identifier)"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("url_\(address.identifier)"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //                return TextAndLabelItem(initialSize, stableId: stableId, label: getLabel(label), text: text, account: arguments.account)
 //            }))
 //        }
@@ -132,20 +132,20 @@ import SwiftSignalKit
 //        let dateFormatter = DateFormatter()
 //        dateFormatter.dateStyle = .long
 //        
-//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("birthday"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("birthday"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //            return TextAndLabelItem(initialSize, stableId: stableId, label: L10n.contactInfoBirthdayLabel, text: dateFormatter.string(from: date), account: arguments.account)
 //        }))
 //        index += 1
 //    }
 //    
 //    for social in vCard.socialProfiles {
-//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("social_\(social.identifier)"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("social_\(social.identifier)"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //            return TextAndLabelItem(initialSize, stableId: stableId, label: social.value.service, text: social.value.urlString, account: arguments.account)
 //        }))
 //    }
 //    
 //    for social in vCard.instantMessageAddresses {
-//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("instant_\(social.identifier)"), equatable: nil, item: { initialSize, stableId -> TableRowItem in
+//        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("instant_\(social.identifier)"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
 //            return TextAndLabelItem(initialSize, stableId: stableId, label: social.value.service, text: social.value.username, account: arguments.account)
 //        }))
 //    }

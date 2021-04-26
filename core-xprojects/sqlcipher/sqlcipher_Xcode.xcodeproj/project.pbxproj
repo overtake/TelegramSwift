@@ -9,11 +9,8 @@
 /* Begin PBXBuildFile section */
 		A701F902236B2EF8002ABF81 /* sqlcipher.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F900236B2EF8002ABF81 /* sqlcipher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A701F911236B2F01002ABF81 /* sqlite3.c in Sources */ = {isa = PBXBuildFile; fileRef = A701F909236B2F01002ABF81 /* sqlite3.c */; };
-		A701F912236B2F01002ABF81 /* SQLite-Bridging.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F90A236B2F01002ABF81 /* SQLite-Bridging.h */; };
-		A701F918236B2F01002ABF81 /* fts3_tokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F910236B2F01002ABF81 /* fts3_tokenizer.h */; };
 		A7918DBA240CEDE5002011CA /* sqlite3.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB7240CEDE5002011CA /* sqlite3.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A7918DBB240CEDE5002011CA /* sqlite3ext.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB8240CEDE5002011CA /* sqlite3ext.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		A7918DBC240CEDE5002011CA /* sqlcipher_config.h in Headers */ = {isa = PBXBuildFile; fileRef = A7918DB9240CEDE5002011CA /* sqlcipher_config.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -108,9 +105,6 @@
 			files = (
 				A7918DBA240CEDE5002011CA /* sqlite3.h in Headers */,
 				A7918DBB240CEDE5002011CA /* sqlite3ext.h in Headers */,
-				A7918DBC240CEDE5002011CA /* sqlcipher_config.h in Headers */,
-				A701F918236B2F01002ABF81 /* fts3_tokenizer.h in Headers */,
-				A701F912236B2F01002ABF81 /* SQLite-Bridging.h in Headers */,
 				A701F902236B2EF8002ABF81 /* sqlcipher.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

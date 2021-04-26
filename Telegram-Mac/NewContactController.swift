@@ -39,7 +39,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_contact_info, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_contact_info, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         return EditAccountInfoItem(initialSize, stableId: stableId, account: arguments.context.account, state: state, viewType: .singleItem, updateText: arguments.updateText)
     }))
     index += 1
@@ -47,7 +47,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_phone_number, equatable: InputDataEquatable(state.phone), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_phone_number, equatable: InputDataEquatable(state.phone), comparable: nil, item: { initialSize, stableId in
         return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.newContactPhone, description: state.phone == nil ? L10n.newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.accent, type: .none, viewType: .singleItem, action: {
             
         })

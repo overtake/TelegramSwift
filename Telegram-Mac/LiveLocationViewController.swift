@@ -62,7 +62,7 @@ private func entries(_ state:LocationPreviewState, arguments: LocationPreviewArg
     var index: Int32 = 0
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map, equatable: InputDataEquatable(state.map), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map, equatable: InputDataEquatable(state.map), comparable: nil, item: { initialSize, stableId in
         return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, map: state.map, peer: state.peer, viewType: .legacy)
     }))
     index += 1

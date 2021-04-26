@@ -55,7 +55,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let hour: Int32 = 60 * 60
         let day: Int32 = hour * 24 * 1
         var sizes:[Int32] = [hour, day, day * 7, Int32.max]
@@ -99,7 +99,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     dateFormatter.timeStyle = .short
     let dateString = state.date == .max ? L10n.editInvitationNever : dateFormatter.string(from: Date(timeIntervalSinceNow: TimeInterval(state.date)))
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_period_precise, data: .init(name: L10n.editInvitationExpiryDate, color: theme.colors.text, type: .context(dateString), viewType: .lastItem, action: {
-        showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
+        showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date == .max ? Int32.secondsInWeek : state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
             arguments.limitDate(Int32(date.timeIntervalSinceNow))
             arguments.tempDate(Int32(date.timeIntervalSinceNow))
             
@@ -116,7 +116,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         var sizes:[Int32] = [1, 10, 50, 100, Int32.max]
         
         if let temp = state.tempCount {
@@ -210,19 +210,23 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     let week: Int32 = 60 * 60 * 24 * 1 * 7
     switch mode {
     case .new:
-        initialState.date = week
-        initialState.count = 50
+        initialState.date = .max
+        initialState.count = .max
     case let .edit(invitation):
-        initialState.date = invitation.isExpired ? week : Int32(TimeInterval(invitation.expireDate!) - Date().timeIntervalSince1970)
+        if let expireDate = invitation.expireDate {
+            initialState.date = invitation.isExpired ? week : Int32(TimeInterval(expireDate) - Date().timeIntervalSince1970)
+        } else {
+            initialState.date = week
+        }
         initialState.tempDate = initialState.date
         if let alreadyCount = invitation.count, let usageLimit = invitation.usageLimit {
             initialState.count = usageLimit - alreadyCount
         } else if let usageLimit = invitation.usageLimit {
             initialState.count = usageLimit
         } else {
-            initialState.count = 50
+            initialState.count = .max
         }
-        if initialState.count != 50 {
+        if initialState.count != .max {
             initialState.tempCount = initialState.count
         }
     }

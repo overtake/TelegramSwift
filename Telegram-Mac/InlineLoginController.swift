@@ -70,7 +70,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("title"), equatable: nil, item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("title"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         
         let attributedString = NSMutableAttributedString()
         let string = L10n.botInlineAuthTitle(url)
@@ -88,7 +88,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     let loginEnabled = state.options.contains(.login)
     let allowMessagesEnabled = state.options.contains(.allowMessages)
 
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_login, equatable: InputDataEquatable(loginEnabled), item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_login, equatable: InputDataEquatable(loginEnabled), comparable: nil, item: { initialSize, stableId in
         
         let attributeString = NSMutableAttributedString()
         let string = L10n.botInlineAuthOptionLogin(host, accountPeer.displayTitle)
@@ -105,7 +105,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     
     
     if writeAllowed {
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_allow_send_messages, equatable: InputDataEquatable(allowMessagesEnabled), item: { initialSize, stableId in
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_allow_send_messages, equatable: InputDataEquatable(allowMessagesEnabled), comparable: nil, item: { initialSize, stableId in
             
             let attributeString = NSMutableAttributedString()
             let string = L10n.botInlineAuthOptionAllowSendMessages(botPeer.displayTitle)

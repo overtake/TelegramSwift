@@ -16,8 +16,21 @@ import TGUIKit
 
 func CallSettingsModalController(_ sharedContext: SharedAccountContext) -> InputDataModalController {
     
-    let modalController = InputDataModalController(CallSettingsController(sharedContext: sharedContext))
+    var close: (()->Void)? = nil
 
+    
+    let controller = CallSettingsController(sharedContext: sharedContext)
+    
+    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
+        close?()
+    })
+
+    let modalController = InputDataModalController(controller)
+
+    close = { [weak modalController] in
+        modalController?.close()
+    }
+    
     return modalController
     
 }

@@ -90,9 +90,17 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         
         
 
-        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members in
-            if let peer = peer {
-                self?.setInfo(peer.displayTitle)
+        disposable.set(combineLatest(queue: .mainQueue(), context.call.state, context.call.isMuted, data, signal, accountPeer, appearanceSignal, context.call.members, context.call.summaryState).start(next: { [weak self] state, isMuted, data, peer, accountPeer, _, members, summary in
+            
+            let title: String?
+            if let custom = state.title, !custom.isEmpty {
+                title = custom
+            } else {
+                title = peer?.displayTitle
+            }
+            
+            if let title = title {
+                self?.setInfo(title)
             }
             self?.updateState(state, isMuted: isMuted, data: data, members: members, accountPeer: accountPeer, animated: false)
             self?.needsLayout = true
@@ -104,20 +112,21 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 self?.hide(true)
             }
         }))
-
-        self.audioLevelDisposable.set((combineLatest(context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted, context.call.state)
-           |> deliverOnMainQueue).start(next: { [weak self] myAudioLevel, audioLevels, isMuted, state in
-                guard let strongSelf = self else {
-                    return
-                }
-                var effectiveLevel: Float = 0.0
+        let isVisible = context.window.takeOcclusionState |> map { $0.contains(.visible) }
+        self.audioLevelDisposable.set((combineLatest(isVisible, context.call.myAudioLevel, .single([]) |> then(context.call.audioLevels), context.call.isMuted, context.call.state)
+        |> deliverOnMainQueue).start(next: { [weak self] isVisible, myAudioLevel, audioLevels, isMuted, state in
+            guard let strongSelf = self else {
+                return
+            }
+            var effectiveLevel: Float = 0.0
+            if isVisible {
                 switch state.networkState {
                 case .connected:
                     if !isMuted {
                         effectiveLevel = myAudioLevel
                     } else {
                         effectiveLevel = audioLevels.reduce(0, { current, value in
-                            return current + value.1
+                            return current + value.2
                         })
                         if !audioLevels.isEmpty {
                             effectiveLevel = effectiveLevel / Float(audioLevels.count)
@@ -126,8 +135,9 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 case .connecting:
                     effectiveLevel = 0
                 }
-                strongSelf.backgroundView.audioLevel = effectiveLevel
-           }))
+            }
+            strongSelf.backgroundView.audioLevel = effectiveLevel
+        }))
     }
 
     deinit {
@@ -139,8 +149,13 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
         let isConnected: Bool
         switch state.networkState {
         case .connecting:
-            self.status = .text(L10n.voiceChatStatusConnecting, nil)
-            isConnected = false
+            if let scheduleTimestamp = state.scheduleTimestamp {
+                self.status = .startsIn(Int(scheduleTimestamp))
+                isConnected = true
+            } else {
+                self.status = .text(L10n.voiceChatStatusConnecting, nil)
+                isConnected = false
+            }
         case .connected:
             
             if let first = data.topParticipants.first(where: { members?.speakingParticipants.contains($0.peer.id) ?? false }) {
@@ -150,9 +165,11 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             }
             isConnected = true
         }
-
-        self.backgroundView.speaking = (isConnected && !isMuted, isConnected, state.muteState?.canUnmute ?? true)
-
+        if state.scheduleTimestamp != nil {
+            self.backgroundView.speaking = (true, true, false)
+        } else {
+            self.backgroundView.speaking = (isConnected && !isMuted, isConnected, state.muteState?.canUnmute ?? true)
+        }
 
         setMicroIcon(isMuted ? theme.icons.callInlineMuted : theme.icons.callInlineUnmuted)
         needsLayout = true

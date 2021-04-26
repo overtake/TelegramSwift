@@ -71,7 +71,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
     
     
     if state.stats == nil {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
         }))
     } else if let stats = state.stats  {
@@ -97,7 +97,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             overviewItems.append(ChannelOverviewItem(title: L10n.channelStatsOverviewSharesPerPost, value: stats.sharesPerPost.attributedString))
         }
 
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
         index += 1
@@ -162,7 +162,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             switch graph.graph {
             case let .Loaded(_, string):                
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticRowItem(initialSize, stableId: stableId, context: accountContext, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
                             detailedDisposable.set(context.loadDetailedGraph(graph.graph, x: Int64(date.timeIntervalSince1970) * 1000).start(next: { graph in
                                 if let graph = graph, case let .Loaded(_, data) = graph {
@@ -172,7 +172,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
                         })
                     }))
                 }, failure: { error in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error.localizedDescription)
                     }))
                 })
@@ -181,7 +181,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
                 
                 index += 1
             case .OnDemand:
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: nil)
                 }))
                 index += 1
@@ -189,7 +189,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
                     graph.load(graph.identifier)
                 }
             case let .Failed(error):
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error)
                 }))
                 index += 1
@@ -208,7 +208,7 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             index += 1
             
             for (i, message) in messages.enumerated() {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), comparable: nil, item: { initialSize, stableId in
                     return ChannelRecentPostRowItem(initialSize, stableId: stableId, context: accountContext, message: message, interactions: interactions[message.id], viewType: bestGeneralViewType(messages, for: i), action: {
                         openMessage(message.id)
                     })

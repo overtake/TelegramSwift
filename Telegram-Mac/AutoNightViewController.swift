@@ -170,7 +170,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
             }
         }
         
-         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_list, equatable: InputDataEquatable(settings), item: { initialSize, stableId in
+         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_list, equatable: InputDataEquatable(settings), comparable: nil, item: { initialSize, stableId in
             return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local:  [LocalPaletteWithReference(palette: nightAccentPalette, cloud: nil), LocalPaletteWithReference(palette: systemPalette, cloud: nil)], cloudThemes: cloudThemes, viewType: .singleItem, togglePalette: arguments.selectTheme, menuItems: { source in
                 return []
             })

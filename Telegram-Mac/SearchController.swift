@@ -726,10 +726,28 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 return combineLatest(all.map { context.account.viewTracker.peerView($0.peer.id) |> take(1) }) |> mapToSignal { peerViews in
                                     return context.account.postbox.unreadMessageCountsView(items: all.map {.peer($0.peer.id)}) |> take(1) |> map { values in
                                         var unread:[PeerId: UnreadSearchBadge] = [:]
-                                        for peerView in peerViews {
+                                        outer: for peerView in peerViews {
                                             let isMuted = peerView.isMuted
                                             let unreadCount = values.count(for: .peer(peerView.peerId))
                                             if let unreadCount = unreadCount, unreadCount > 0 {
+                                                if let peer = peerViewMainPeer(peerView) {
+                                                    if let peer = peer as? TelegramChannel {
+                                                        inner: switch peer.participationStatus {
+                                                        case .member:
+                                                            break inner
+                                                        default:
+                                                            continue outer
+                                                        }
+                                                    }
+                                                    if let peer = peer as? TelegramGroup {
+                                                        inner: switch peer.membership {
+                                                        case .Member:
+                                                            break inner
+                                                        default:
+                                                            continue outer
+                                                        }
+                                                    }
+                                                }
                                                 unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                                             }
                                         }
@@ -1180,7 +1198,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         var peer:Peer?
         var peerId:PeerId?
         var messageId:MessageId?
-        
+        var isGlobal = false
         let context = self.context
         
         if let item = item as? ChatListMessageRowItem {
@@ -1190,7 +1208,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         } else if let item = item as? ShortPeerRowItem {
             if let stableId = item.stableId.base as? ChatListSearchEntryStableId {
                 switch stableId {
-                case let .localPeerId(pId), let .recentSearchPeerId(pId), let .secretChat(pId), let .globalPeerId(pId):
+                case let .localPeerId(pId), let .recentSearchPeerId(pId), let .secretChat(pId):
+                    peerId = pId
+                case let .globalPeerId(pId):
+                    isGlobal = true
                     peerId = pId
                 case .savedMessages:
                     peerId = context.peerId
@@ -1278,7 +1299,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         marked = true
         
         if let peerId = peerId {
-            self.open(peerId, messageId, self.closeNext || messageId == nil)
+            self.open(peerId, messageId, self.closeNext || (messageId == nil && !isGlobal))
         }
         
     }

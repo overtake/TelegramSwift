@@ -106,14 +106,14 @@ private func editThemeEntries(state: EditThemeState, chatInteraction: ChatIntera
     entries.append(.sectionId(sectionId, type: .custom(10)))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview1, equatable: InputDataEquatable(state.presentation), item: { size, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview1, equatable: InputDataEquatable(state.presentation), comparable: nil, item: { size, stableId in
         let item = ChatRowItem.item(size, from: firstEntry, interaction: chatInteraction, theme: previewTheme)
         _ = item.makeSize(size.width, oldWidth: 0)
         return item
     }))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview2, equatable: InputDataEquatable(state.presentation), item: { size, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview2, equatable: InputDataEquatable(state.presentation), comparable: nil, item: { size, stableId in
         let item = ChatRowItem.item(size, from: secondEntry, interaction: chatInteraction, theme: previewTheme)
         _ = item.makeSize(size.width, oldWidth: 0)
         return item

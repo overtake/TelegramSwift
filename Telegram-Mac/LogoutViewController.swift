@@ -118,7 +118,8 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
             closeAllModals()
             switch result {
             case .basic:
-                _ = showModalProgress(signal: supportPeerId(account: context.account), for: mainWindow).start(next: { peerId in
+                
+                _ = showModalProgress(signal: context.engine.peerNames.supportPeerId(), for: mainWindow).start(next: { peerId in
                     if let peerId = peerId {
                         f(ChatController(context: context, chatLocation: .peer(peerId)))
                     }

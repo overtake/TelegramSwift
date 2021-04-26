@@ -20,6 +20,7 @@ public enum ControlEvent {
     case Down
     case Up
     case Click
+    case DoubleClick
     case SingleClick
     case RightClick
     case RightDown
@@ -385,7 +386,14 @@ open class Control: View {
                     if event.clickCount == 1  {
                         send(event: .SingleClick)
                     }
+                    if event.clickCount == 2 {
+                        send(event: .DoubleClick)
+                    }
                     send(event: .Click)
+                }
+            } else {
+                if mouseInside() && !longInvoked {
+                    NSSound.beep()
                 }
             }
             
@@ -551,8 +559,8 @@ open class Control: View {
         return false
     }
  
-    
-//    open override var mouseDownCanMoveWindow: Bool {
-//        return !self.userInteractionEnabled
-//    }
+    public var forceMouseDownCanMoveWindow: Bool = false
+    open override var mouseDownCanMoveWindow: Bool {
+        return !self.userInteractionEnabled || forceMouseDownCanMoveWindow
+    }
 }

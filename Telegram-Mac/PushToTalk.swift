@@ -86,7 +86,7 @@ final class KeyboardGlobalHandler {
     private let disposable = MetaDisposable()
     
     enum Mode {
-        case local(Window)
+        case local(WeakReference<Window>)
         case global
     }
     private let mode: Mode
@@ -196,7 +196,7 @@ final class KeyboardGlobalHandler {
         case .global:
             break
         case let .local(window):
-            if window.windowNumber != event.windowNumber {
+            if window.value?.windowNumber != event.windowNumber {
                 return false
             }
         }
@@ -419,7 +419,7 @@ final class PushToTalk {
 
     init(sharedContext: SharedAccountContext, window: Window) {
         self.monitor = KeyboardGlobalHandler(mode: .global)
-        self.spaceMonitor = KeyboardGlobalHandler(mode: .local(window))
+        self.spaceMonitor = KeyboardGlobalHandler(mode: .local(WeakReference(value: window)))
         let settings = voiceCallSettings(sharedContext.accountManager) |> deliverOnMainQueue
         
         disposable.set(settings.start(next: { [weak self] settings in

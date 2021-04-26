@@ -94,8 +94,16 @@ class WPLayout: Equatable {
         self.fontSize = fontSize
         self._approximateSynchronousValue = approximateSynchronousValue
         if let websiteName = content.websiteName {
-            let websiteName = content.type == "telegram_background" ? L10n.chatWPBackgroundTitle : websiteName
-            _siteNameAttr = .initialize(string: websiteName, color: presentation.activity, font: .medium(.text))
+            let siteName: String
+            switch content.type {
+            case "telegram_background":
+                siteName = L10n.chatWPBackgroundTitle
+            case "telegram_voicechat":
+                siteName = L10n.chatWPVoiceChatTitle
+            default:
+                siteName = websiteName
+            }
+            _siteNameAttr = .initialize(string: siteName, color: presentation.activity, font: .medium(.text))
             _nameNode = TextNode()
         }
         

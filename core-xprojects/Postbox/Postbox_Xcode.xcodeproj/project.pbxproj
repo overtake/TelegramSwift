@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		2744AE6725B434A100E8849F /* TopChatMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6625B434A100E8849F /* TopChatMessageView.swift */; };
 		2744AE6A25B434CD00E8849F /* HistoryTagInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6925B434CD00E8849F /* HistoryTagInfoView.swift */; };
-		9F291C9B2264CFCC00C66267 /* (null) in Sources */ = {isa = PBXBuildFile; };
 		9F5B6E762011449F00C58B2A /* PostboxLogging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0ECCB8E1FE9EB5500609802 /* PostboxLogging.swift */; };
 		A701F925236B3350002ABF81 /* sqlcipher.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F924236B3350002ABF81 /* sqlcipher.framework */; };
 		A701F92C236C1B66002ABF81 /* SwiftSignalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A701F92B236C1B66002ABF81 /* SwiftSignalKit.framework */; };
@@ -39,7 +38,6 @@
 		D01C7F081EFC1ED3008305F1 /* UnorderedItemListTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01C7F061EFC1ED3008305F1 /* UnorderedItemListTable.swift */; };
 		D01E79E92248F661005237FE /* PostboxUpgrade_19to20.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01E79E72248F661005237FE /* PostboxUpgrade_19to20.swift */; };
 		D021FC272024B83700C34AB7 /* FileSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = D021FC252024B83700C34AB7 /* FileSize.swift */; };
-		D03229EF1E6B33FD0000AF9C /* SqliteInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03229ED1E6B33FD0000AF9C /* SqliteInterface.swift */; };
 		D03387532242E32B007A2CE4 /* PostboxUpgrade_18to19.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03387512242E32A007A2CE4 /* PostboxUpgrade_18to19.swift */; };
 		D037178C20D923CA004773C8 /* CachedItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D037178A20D923CA004773C8 /* CachedItemView.swift */; };
 		D039FB1C21714D9800BD1BAD /* PeerPresencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D039FB1A21714D9800BD1BAD /* PeerPresencesView.swift */; };
@@ -868,14 +866,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9F291C9B2264CFCC00C66267 /* (null) in Sources */,
 				D0B36A5D23E173CF00745212 /* AllChatListHolesView.swift in Sources */,
 				9F5B6E762011449F00C58B2A /* PostboxLogging.swift in Sources */,
 				C20EB2A31F7179DC00DD3A57 /* PeerNotificationSettingsView.swift in Sources */,
 				C25B56FE1F431C3300581D02 /* MessageHistoryTagsSummaryTable.swift in Sources */,
 				D0633D08225B98FC003DD95F /* MessageHistoryViewEntryAttributes.swift in Sources */,
 				D050F2661E4A5B5A00988324 /* MessageGloballyUniqueIdTable.swift in Sources */,
-				D03229EF1E6B33FD0000AF9C /* SqliteInterface.swift in Sources */,
 				D0AA55141FB4C6AB00C2AB58 /* BinarySearch.swift in Sources */,
 				D01C7F081EFC1ED3008305F1 /* UnorderedItemListTable.swift in Sources */,
 				D050F2671E4A5B5A00988324 /* TimestampBasedMessageAttributesTable.swift in Sources */,

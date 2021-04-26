@@ -50,7 +50,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     sectionId += 1
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, item: { initialSize, stableId in
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
         
         let attributedString = NSMutableAttributedString()
         
@@ -112,7 +112,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             
             var suggeted_index:Int32 = 0
             for filter in filtered {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recommended(suggeted_index), equatable: InputDataEquatable(filter), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recommended(suggeted_index), equatable: InputDataEquatable(filter), comparable: nil, item: { initialSize, stableId in
                     return ChatListFilterRecommendedItem(initialSize, stableId: stableId, title: filter.title, description: filter.description, viewType: bestGeneralViewType(filtered, for: filter), add: {
                         arguments.addFeatured(filter)
                     })
@@ -134,7 +134,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterTabBarHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("sidebar"), equatable: InputDataEquatable(sidebar), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("sidebar"), equatable: InputDataEquatable(sidebar), comparable: nil, item: { initialSize, stableId in
             return ChatListFilterVisibilityItem(initialSize, stableId: stableId, sidebar: sidebar, viewType: .singleItem, toggle: { sidebar in
                 arguments.toggleSidebar(sidebar)
             })

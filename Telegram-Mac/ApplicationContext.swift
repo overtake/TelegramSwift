@@ -527,8 +527,19 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { _ -> KeyHandlerResult in
+
+//            filePanel(with: ["webp"], allowMultiple: false, for: window, completion: { values in
+//                if let first = values?.first {
+//                    showModal(with: AnimatedWebpController(context: context, path: first), for: window)
+//                }
+//            })
             
-            showDesktopCapturerWindow()
+//            showModalText(for: context.window, text: "qkwjeh fkqwejfh qkwef hqwkef hqwkef hqwkef hqwkef hqwekf qwhflkj")
+
+//
+//            _ = presentDesktopCapturerWindow(select: { _ in
+//
+//            }, devices: context.sharedContext.devicesContext)
             
 //            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
 //                if let first = values?.first {
@@ -865,6 +876,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if rightController.stackCount == 1, previousState != .none {
                 leftController.viewDidAppear(false)
             }
+            
         case .dual:
             rightController.empty = emptyController
             if rightController.controller is ForwardChatListController {

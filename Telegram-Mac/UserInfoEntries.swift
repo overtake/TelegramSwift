@@ -136,7 +136,7 @@ class UserInfoArguments : PeerInfoArguments {
             if let peer = peer {
                 confirm(for: mainWindow, information: L10n.peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
                     let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
-                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId)
+                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId)
                         return signal  |> map { _ in}
                     }
                     self?.shareDisposable.set(showModalProgress(signal: signal, for: mainWindow).start())
@@ -329,15 +329,17 @@ class UserInfoArguments : PeerInfoArguments {
     func updateBlocked(peer: Peer,_ blocked:Bool, _ isBot: Bool) {
         let context = self.context
         if blocked {
-            let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
-            blockDisposable.set(signal.start(error: { error in
-                switch error {
-                case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
-                }
-            }, completed: {
-                
-            }))
+            confirm(for: context.window, header: L10n.peerInfoBlockHeader, information: L10n.peerInfoBlockText(peer.displayTitle), okTitle: L10n.peerInfoBlockOK, successHandler: { [weak self] _ in
+                let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
+                self?.blockDisposable.set(signal.start(error: { error in
+                    switch error {
+                    case .generic:
+                        alert(for: context.window, info: L10n.unknownError)
+                    }
+                }, completed: {
+                    
+                }))
+            })
         } else {
             let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
             blockDisposable.set(signal.start(error: { error in

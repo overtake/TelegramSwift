@@ -239,7 +239,7 @@ class ChatListRowItem: TableRowItem {
         if case .ad = pinnedType {
             return false
         }
-        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 777000)
+        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(777000))
         if self.peer?.id == supportId {
             return false
         }
@@ -477,7 +477,8 @@ class ChatListRowItem: TableRowItem {
                 embeddedState = nil
             }
         }
-        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 777000)
+        
+        let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(777000))
 
         if let peerPresence = peerPresence, context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
             if let peerPresence = peerPresence as? TelegramUserPresence {
@@ -578,20 +579,23 @@ class ChatListRowItem: TableRowItem {
                 if let peer = info.author {
                     author = peer
                 } else if let signature = info.authorSignature {
-                    author = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                                        
+                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 }
             } else {
                 author = message.author
             }
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
-                let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
-                
-                let attr = NSMutableAttributedString()
-                _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                
-                self.chatTitleAttributed = attr
+                if !(message.media.first is TelegramMediaAction) {
+                    let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
+                    
+                    let attr = NSMutableAttributedString()
+                    _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                    attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                    
+                    self.chatTitleAttributed = attr
+                }
             }
             
             let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
@@ -1004,39 +1008,15 @@ class ChatListRowItem: TableRowItem {
         let chatLocation = self.chatLocation
         let associatedGroupId = self.associatedGroupId
         
-        if let peer = peer {
+        if let mainPeer = peer, let peerId = self.peerId, let peer = renderedPeer?.peers[peerId] {
             
             let deleteChat:()->Void = { [weak self] in
                 self?.delete()
             }
             
             
-            guard let peerId = self.peerId else {
-                return .single([])
-            }
-            
-            let clearHistory = {
-                var thridTitle: String? = nil
-                
-                var canRemoveGlobally: Bool = false
-                if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
-                    if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                        canRemoveGlobally = true
-                    }
-                }
-                
-                if canRemoveGlobally {
-                    thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
-                }
-                modernConfirm(for: mainWindow, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peerId == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-                    
-                    context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
-
-               })
-            }
-            
             let call:()->Void = {
-                _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: mainPeer.id) |> deliverOnMainQueue).start(next: { result in
                     applyUIPCallResult(context.sharedContext, result)
                 })
             }
@@ -1075,11 +1055,13 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
             }
             
-            if peer is TelegramUser {
-                if peer.canCall && peer.id != context.peerId {
+            if mainPeer is TelegramUser {
+                if mainPeer.canCall && mainPeer.id != context.peerId {
                     items.append(ContextMenuItem(tr(L10n.chatListContextCall), handler: call))
                 }
-                items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: clearHistory))
+                items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: {
+                    clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                }))
                 items.append(ContextMenuItem(L10n.chatListContextDeleteChat, handler: deleteChat))
             }
             
@@ -1105,7 +1087,9 @@ class ChatListRowItem: TableRowItem {
            
 
             if let peer = peer as? TelegramGroup, !isAd {
-                items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: clearHistory))
+                items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: {
+                    clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                }))
                 switch peer.membership {
                 case .Member:
                     items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: leaveGroup))
@@ -1121,7 +1105,9 @@ class ChatListRowItem: TableRowItem {
                      items.append(ContextMenuItem(L10n.chatListContextLeaveChannel, handler: deleteChat))
                 } else if !isAd {
                     if peer.addressName == nil {
-                        items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: clearHistory))
+                        items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: {
+                            clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                        }))
                     }
                     items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: deleteChat))
                 }

@@ -18,7 +18,7 @@ private class TitledContainerView : View {
         }
     }
     
-    var inset:CGFloat = 50
+    var inset:()->CGFloat = { 50 }
     
     var text:NSAttributedString? {
         didSet {
@@ -64,12 +64,12 @@ private class TitledContainerView : View {
                 additionalInset += image.backingSize.width + 5
             }
             
-            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(frame.width - inset - additionalInset, frame.height), nil,false, .left)
+            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
             var tY = focus(textLayout.size).minY
             
             if let status = status {
                 
-                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset - additionalInset, frame.height), nil,false, .left)
+                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
                 tY = floorToScreenPixels(backingScaleFactor, (frame.height - t) / 2.0)
@@ -122,7 +122,6 @@ open class TitledBarView: BarView {
     public var text:NSAttributedString? {
         didSet {
             if text != oldValue {
-                _containerView.inset = inset
                 _containerView.text = text
             }
         }
@@ -131,7 +130,6 @@ open class TitledBarView: BarView {
     public var status:NSAttributedString? {
         didSet {
             if status != oldValue {
-                _containerView.inset = inset
                 _containerView.status = status
             }
         }
@@ -172,6 +170,10 @@ open class TitledBarView: BarView {
         _containerView.text = text
         _containerView.status = status
         _containerView.textInset = textInset
+        
+        _containerView.inset = { [weak self] in
+            return self?.inset ?? 50
+        }
     }
     
     open override func draw(_ dirtyRect: NSRect) {

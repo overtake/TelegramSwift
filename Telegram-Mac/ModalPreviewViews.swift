@@ -59,6 +59,10 @@ class StickerPreviewModalView : View, ModalPreviewControllerView {
         }
     }
     
+    func getContentView() -> NSView {
+        return imageView
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -79,6 +83,10 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
         super.layout()
         player.center()
         
+    }
+    
+    func getContentView() -> NSView {
+        return player
     }
     
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
@@ -104,13 +112,6 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
             let iconSignal: Signal<ImageDataTransformation, NoError>
             iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
 
-//            if let value = reference.media.videoThumbnails.first {
-//                let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: value.resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: [])
-//                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.standalone(media: file), scale: backingScaleFactor)
-//            } else {
-//                iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
-//            }
-            
             player.update(with: reference, size: size, viewSize: size, context: context, table: nil, iconSignal: iconSignal)
             player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
             if animated {
@@ -136,6 +137,10 @@ class ImagePreviewModalView : View, ModalPreviewControllerView {
     override func layout() {
         super.layout()
         imageView.center()
+    }
+    
+    func getContentView() -> NSView {
+        return imageView
     }
     
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
@@ -181,6 +186,62 @@ class ImagePreviewModalView : View, ModalPreviewControllerView {
 }
 
 
+class VideoPreviewModalView : View, ModalPreviewControllerView {
+    fileprivate var playerView:ChatVideoAutoplayView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.background = .clear
+    }
+    
+    override func layout() {
+        super.layout()
+        playerView?.view.center()
+    }
+    
+    func getContentView() -> NSView {
+        return playerView?.view ?? self
+    }
+    
+    func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
+        if let reference = reference.fileReference {
+            let currentView = self.playerView?.view
+            if animated {
+                currentView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak currentView] completed in
+                    if completed {
+                        currentView?.removeFromSuperview()
+                    }
+                })
+            } else {
+                currentView?.removeFromSuperview()
+            }
+                        
+            self.playerView = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, volume: 1.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+
+            guard let playerView = self.playerView else {
+                return
+            }
+            
+            addSubview(playerView.view)
+            
+            let size = frame.size
+            
+            let dimensions = reference.media.dimensions?.size ?? size
+            
+            playerView.view.setFrameSize(dimensions.fitted(size))
+            playerView.mediaPlayer.attachPlayerView(playerView.view)
+
+            playerView.mediaPlayer.play()
+            
+            needsLayout = true
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 
 class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
     private let loadResourceDisposable = MetaDisposable()
@@ -200,11 +261,12 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
         //player.center()
     }
     
+    func getContentView() -> NSView {
+        return player ?? self
+    }
+    
     override func viewDidMoveToWindow() {
-        if window == nil {
-            player?.set(nil)
-            player = nil
-        }
+        
     }
     
     deinit {
@@ -249,7 +311,15 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                 return nil
             } |> deliverOnMainQueue).start(next: { [weak self] data in
                 if let data = data {
-                    self?.player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), cachePurpose: .none))
+                    
+                    let type: LottieAnimationType
+                    if reference.media.mimeType == "image/webp" {
+                        type = .webp
+                    } else {
+                        type = .lottie
+                    }
+                    
+                    self?.player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), type: type, cachePurpose: .none))
                 } else {
                     self?.player?.set(nil)
                 }

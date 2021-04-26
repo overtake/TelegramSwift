@@ -13,6 +13,16 @@ import SwiftSignalKit
 enum CallControllerStatusValue: Equatable {
     case text(String, Int32?)
     case timer(Double, Int32?)
+    case startsIn(Int)
+    
+    var hasTimer: Bool {
+        switch self {
+        case .timer, .startsIn:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 
@@ -38,20 +48,13 @@ class CallStatusView: View {
         }
     }
     
-    private let statusTextView:NSTextField = NSTextField()
+    private let statusTextView:TextView = TextView()
     private let receptionView = CallReceptionControl(frame: NSMakeRect(0, 0, 24, 10))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
-        statusTextView.font = .normal(18)
-        statusTextView.drawsBackground = false
-        statusTextView.backgroundColor = .random
-        statusTextView.textColor = nightAccentPalette.text
+        statusTextView.userInteractionEnabled = false
         statusTextView.isSelectable = false
-        statusTextView.isEditable = false
-        statusTextView.isBordered = false
-        statusTextView.focusRingType = .none
-        
+        statusTextView.disableBackgroundDrawing = true
         addSubview(statusTextView)
         addSubview(receptionView)
     }
@@ -68,9 +71,12 @@ class CallStatusView: View {
     }
     
     func sizeThatFits(_ size: NSSize) -> NSSize {
-        let textSize = statusTextView.sizeThatFits(size)
-        statusTextView.setFrameSize(textSize)
-        return NSMakeSize(max(textSize.width, 60) + 28, size.height)
+        if let layout = self.statusTextView.layout {
+            layout.measure(width: size.width)
+            statusTextView.update(layout)
+            return NSMakeSize(max(layout.layoutSize.width, 60) + 28, size.height)
+        }
+        return size
     }
     
     required init?(coder: NSCoder) {
@@ -104,10 +110,13 @@ class CallStatusView: View {
                 self.receptionView.reception = reception
             }
             self.receptionView.isHidden = reception == nil
+        case let .startsIn(time):
+            statusText = L10n.chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
+            self.receptionView.isHidden = true
         }
-        statusTextView.stringValue = statusText
-        statusTextView.sizeToFit()
-        statusTextView.alignment = .center
+        let layout = TextViewLayout.init(.initialize(string: statusText, color: .white, font: .normal(18)), alignment: .center)
+        layout.measure(width: .greatestFiniteMagnitude)
+        self.statusTextView.update(layout)
         needsLayout = true
     }
    

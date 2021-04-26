@@ -73,6 +73,11 @@ open class BackgroundView: ImageView {
         return _customHandler!
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     private let gradient: BackgroundGradientView
 
     public override init(frame frameRect: NSRect) {
@@ -250,9 +255,7 @@ public class ControllerToaster {
     
     deinit {
         let view = self.view
-        view?.layer?.animatePosition(from: NSZeroPoint, to: NSMakePoint(0, -height), duration: 0.2, removeOnCompletion:false, completion:{ (completed) in
-            view?.removeFromSuperview()
-        })
+        view?.removeFromSuperview()
         disposable.dispose()
     }
     
@@ -401,6 +404,7 @@ open class ViewController : NSObject {
             NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
             
             _ = atomicSize.swap(_view!.frame.size)
+            viewDidLoad()
         }
     }
     
@@ -436,6 +440,7 @@ open class ViewController : NSObject {
     
     open func requestUpdateCenterBar() {
         setCenterTitle(defaultBarTitle)
+        setCenterStatus(defaultBarStatus)
     }
     
     open func dismiss() {
@@ -482,7 +487,7 @@ open class ViewController : NSObject {
         
     }
     
-    open func focusSearch(animated: Bool) {
+    open func focusSearch(animated: Bool, text: String? = nil) {
         
     }
     
@@ -503,6 +508,10 @@ open class ViewController : NSObject {
     open var defaultBarTitle:String {
         return localizedString(self.className)
     }
+    open var defaultBarStatus:String? {
+        return nil
+    }
+
     
     open func getCenterBarViewOnce() -> TitledBarView {
         return TitledBarView(controller: self, .initialize(string: defaultBarTitle, color: presentation.colors.text, font: .medium(.title)))
@@ -511,7 +520,13 @@ open class ViewController : NSObject {
     public func setCenterTitle(_ text:String) {
         self.centerBarView.text = .initialize(string: text, color: presentation.colors.text, font: .medium(.title))
     }
-    
+    public func setCenterStatus(_ text: String?) {
+        if let text = text {
+            self.centerBarView.status = .initialize(string: text, color: presentation.colors.grayText, font: .normal(.text))
+        } else {
+            self.centerBarView.status = nil
+        }
+    }
     open func getRightBarViewOnce() -> BarView {
         return BarView(controller: self)
     }
@@ -818,6 +833,11 @@ open class GenericViewController<T> : ViewController where T:NSView {
         genericView.background = presentation.colors.background
     }
     
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
+    
     override open func loadView() -> Void {
         if(_view == nil) {
             
@@ -873,11 +893,15 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let grayText: NSColor
         let background: NSColor
         let border: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border) {
+        let accent: NSColor
+        let grayForeground: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground) {
             self.text = text
             self.grayText = grayText
             self.background = background
             self.border = border
+            self.accent = accent
+            self.grayForeground = grayForeground
         }
     }
     

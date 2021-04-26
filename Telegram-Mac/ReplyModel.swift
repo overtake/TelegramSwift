@@ -14,7 +14,7 @@ import SwiftSignalKit
 import Postbox
 class ReplyModel: ChatAccessoryModel {
 
-    private let account:Account
+    private let context:AccountContext
     private(set) var replyMessage:Message?
     private var disposable:MetaDisposable = MetaDisposable()
     private let isPinned:Bool
@@ -25,9 +25,9 @@ class ReplyModel: ChatAccessoryModel {
     private let autodownload: Bool
     private let headerAsName: Bool
     private let customHeader: String?
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil) {
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil) {
         self.isPinned = isPinned
-        self.account = account
+        self.context = context
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
@@ -35,11 +35,11 @@ class ReplyModel: ChatAccessoryModel {
         self.customHeader = customHeader
         super.init(presentation: presentation, drawLine: drawLine)
         
-        let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
+        let messageViewSignal = context.account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
             if let message = view.message {
                 return .single(message)
             }
-            return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network, accountPeerId: account.peerId) |> map {$0.first}
+            return getMessagesLoadIfNecessary([view.messageId], postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId) |> map {$0.first}
         }
         
         if let replyMessage = replyMessage {
@@ -169,17 +169,17 @@ class ReplyModel: ChatAccessoryModel {
                 var updateImageSignal: Signal<ImageDataTransformation, NoError>?
                 if mediaUpdated {
                     if let image = updatedMedia as? TelegramMediaImage {
-                        updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
+                        updateImageSignal = chatMessagePhotoThumbnail(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
                     } else if let file = updatedMedia as? TelegramMediaFile {
                         if file.isVideo {
-                            updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
+                            updateImageSignal = chatMessageVideoThumbnail(account: self.context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
                         } else if file.isAnimatedSticker {
-                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true)
+                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true)
                         } else if file.isSticker {
-                            updateImageSignal = chatMessageSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
+                            updateImageSignal = chatMessageSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
                             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-                            updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
+                            updateImageSignal = chatWebpageSnippetPhoto(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
                         }
                     }
                 }
@@ -197,7 +197,7 @@ class ReplyModel: ChatAccessoryModel {
                     })
                     
                     if let media = media as? TelegramMediaImage {
-                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
+                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
                     
                     view.imageView?.set(arguments: arguments)
@@ -240,9 +240,9 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
-            var text = pullText(from:message, mediaViewType: .text) as String
+            var text = message.restrictedText(context.contentSettings) ?? pullText(from:message, mediaViewType: .text) as String
             if text.isEmpty {
-                text = serviceMessageText(message, account: account, isReplied: true)
+                text = serviceMessageText(message, account: context.account, isReplied: true)
             }
             if let header = customHeader {
                 self.headerAttr = .initialize(string: header, color: presentation.title, font: .medium(.text))

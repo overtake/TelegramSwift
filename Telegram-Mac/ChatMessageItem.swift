@@ -94,7 +94,19 @@ class ChatMessageItem: ChatRowItem {
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
-            case let .followResolvedName(_, _, postId, _, _, _):
+            case let .followResolvedName(_, _, postId, _, action, _):
+                if let action = action {
+                    inner: switch action {
+                    case let .joinVoiceChat(hash):
+                        if hash != nil {
+                            return L10n.chatMessageJoinVoiceChatAsSpeaker
+                        } else {
+                            return L10n.chatMessageJoinVoiceChatAsListener
+                        }
+                    default:
+                        break inner
+                    }
+                }
                 if let postId = postId, postId > 0 {
                     return L10n.chatMessageActionShowMessage
                 }
@@ -285,8 +297,11 @@ class ChatMessageItem: ChatRowItem {
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)
             }
-           
-            self.messageText = copy
+            if let text = message.restrictedText(context.contentSettings) {
+                self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
+            } else {
+                self.messageText = copy
+            }
            
            
             

@@ -38,6 +38,8 @@ extension NSMutableAttributedString {
                 
                 let range = (value as! NSValue).rangeValue
                 
+                var addLinkAttrs: Bool = false
+                
                 if range.location != NSNotFound {
                     let sublink = (self.string as NSString).substring(with: range)
                     if let context = context {
@@ -49,25 +51,32 @@ extension NSMutableAttributedString {
                                 if let url = URL(string: link) {
                                     if let host = url.host, allowed.contains(host) {
                                         self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                                        addLinkAttrs = true
                                     } else if allowed.contains(link) {
                                         self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                                        addLinkAttrs = true
                                     }
                                 } else {
                                     continue
                                 }
                             default:
                                 self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                                addLinkAttrs = true
                             }
                         } else {
                             self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                            addLinkAttrs = true
                         }
                     } else {
                         if !onlyInApp {
                             self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                            addLinkAttrs = true
                         }
                     }
-                    self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
-                    self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+                    if addLinkAttrs {
+                        self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
+                        self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+                    }
                 }
                 
             }
@@ -2278,6 +2287,12 @@ extension Date {
         
         return Int32(bootTime.tv_sec)
     }
+    var isToday: Bool {
+        return CalendarUtils.isSameDate(self, date: Date(), checkDay: true)
+    }
+    var isTomorrow: Bool {
+        return Calendar.current.isDateInTomorrow(self)
+    }
 }
 
 
@@ -2358,6 +2373,34 @@ func transformedWithFitzModifier(data: Data, fitzModifier: EmojiFitzModifier?) -
         return data
     }
 }
+
+func applyLottieColor(data: Data, color: NSColor) -> Data {
+    if var string = String(data: data, encoding: .utf8) {
+        func colorToString(_ color: NSColor) -> String {
+            var r: CGFloat = 0.0
+            var g: CGFloat = 0.0
+            var b: CGFloat = 0.0
+            color.getRed(&r, green: &g, blue: &b, alpha: nil)
+            return "\"k\":[\(r),\(g),\(b),1]"
+        }
+        var replacements: [(NSTextCheckingResult, String)] = []
+        if let colorKeyRegex = colorKeyRegex {
+            let results = colorKeyRegex.matches(in: string, range: NSRange(string.startIndex..., in: string))
+            for result in results.reversed()  {
+                replacements.append((result, colorToString(color)))
+            }
+        }
+        for (result, text) in replacements {
+            if let range = Range(result.range, in: string) {
+                string = string.replacingCharacters(in: range, with: text)
+            }
+        }
+        return string.data(using: .utf8) ?? data
+    } else {
+        return data
+    }
+}
+
 
 
 extension Double {
@@ -2536,5 +2579,58 @@ struct DateSelectorUtil {
         timeFormatter.timeStyle = .medium
        // timeFormatter.timeZone = TimeZone(abbreviation: "UTC")!
         return timeFormatter.string(from: date)
+    }
+}
+
+
+extension Int32 {
+    static var secondsInDay: Int32 {
+        return 60 * 60 * 24
+    }
+    static var secondsInWeek: Int32 {
+        return secondsInDay * 7
+    }
+}
+
+
+func smartTimeleftText( _ left: Int) -> String {
+    if left <= Int(Int32.secondsInDay) {
+        let minutes = left / 60 % 60
+        let seconds = left % 60
+        let hours = left / 60 / 60
+        let string = String(format: "%@:%@:%@", hours < 10 ? "0\(hours)" : "\(hours)", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
+        return string
+    } else {
+        return autoremoveLocalized(left, roundToCeil: true)
+    }
+}
+
+
+public typealias UIImage = NSImage
+
+extension NSImage {
+    
+    enum Orientation {
+        case up
+        case down
+    }
+    
+    convenience init(cgImage: CGImage, scale: CGFloat, orientation: UIImage.Orientation) {
+        self.init(cgImage: cgImage, size: cgImage.systemSize)
+    }
+}
+
+public extension DataSizeStringFormatting {
+    
+    static var current: DataSizeStringFormatting {
+        return DataSizeStringFormatting.init(decimalSeparator: NumberFormatter().decimalSeparator, byte: { value in
+            return (L10n.fileSizeB(value), [])
+        }, kilobyte: { value in
+            return (L10n.fileSizeKB(value), [])
+        }, megabyte: { value in
+            return (L10n.fileSizeMB(value), [])
+        }, gigabyte: { value in
+            return (L10n.fileSizeGB(value), [])
+        })
     }
 }

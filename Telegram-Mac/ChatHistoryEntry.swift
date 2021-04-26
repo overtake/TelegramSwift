@@ -297,7 +297,14 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return self
         }
     }
-
+    func withUpdatedMessageMedia(_ media: Media) -> ChatHistoryEntry {
+        switch self {
+        case let .MessageEntry(values):
+            return .MessageEntry(values.0.withUpdatedMedia([media]), values.1, values.2, values.3, values.4, values.5, values.6)
+        default:
+            return self
+        }
+    }
 }
 
 func isEqualMessageList(lhs:[Message], rhs:[Message]) -> Bool {
@@ -543,6 +550,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         var itemType:ChatItemType = .Full(rank: rank)
         var fwdType:ForwardItemType? = nil
         
+        if message.itHasRestrictedContent {
+            message = message.withUpdatedMedia([]).withUpdatedText(" ")
+        }
         
         if renderType == .list {
             if let prev = prev {
@@ -748,7 +758,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if let topMessageIndex = topMessageIndex, topMessageIndex == i {
             let timestamp = Int32(min(TimeInterval(message.timestamp) - timeDifference, TimeInterval(Int32.max)))
 
-            entries.append(.commentsHeader(i == messagesEntries.count - 1, MessageIndex(id: message.id, timestamp: timestamp).successor(), renderType))
+            entries.append(.commentsHeader(i == messagesEntries.count - 1, MessageIndex(id: message.id, timestamp: timestamp).peerLocalSuccessor(), renderType))
         }
     }
     
@@ -776,7 +786,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
     if addRepliesHeader {
-        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound().successor(), renderType), at: 0)
+        entries.insert(.repliesHeader(true, MessageIndex.absoluteLowerBound().globalSuccessor(), renderType), at: 0)
     }
     if let addTopThreadInset = addTopThreadInset {
         entries.insert(.topThreadInset(addTopThreadInset, MessageIndex.absoluteLowerBound(), renderType), at: 0)

@@ -76,6 +76,8 @@ class ChatRowItem: TableRowItem {
     private(set) var entry:ChatHistoryEntry
     private(set) var message:Message?
     
+    private var updateCountDownTimer: SwiftSignalKit.Timer?
+    var updateTooltip:((String)->Void)? = nil
     var firstMessage: Message? {
         return messages.first
     }
@@ -861,7 +863,15 @@ class ChatRowItem: TableRowItem {
                     canFillAuthorName = false
                 }
                 if message.isAnonymousMessage, !isIncoming {
-                    canFillAuthorName = true
+                    var disable: Bool = false
+                    if let media = message.media.first as? TelegramMediaFile {
+                        if media.isSticker || media.isAnimatedSticker {
+                            disable = true
+                        }
+                    }
+                    if !disable {
+                        canFillAuthorName = true
+                    }
                 }
             }
         }
@@ -895,6 +905,10 @@ class ChatRowItem: TableRowItem {
     
     var isPsa: Bool {
         return message?.forwardInfo?.psaType != nil
+    }
+    
+    var hasHeader: Bool {
+        return !(hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil)
     }
     
     var hasBubble: Bool 
@@ -1395,13 +1409,14 @@ class ChatRowItem: TableRowItem {
                 if let author = info.author {
                     self.peer = author
                 } else if let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: 0, id: 0), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -1626,7 +1641,7 @@ class ChatRowItem: TableRowItem {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
                                 nameColor = presentation.colors.accentIconBubble_outgoing
                             } else {
-                                let value = abs(Int(peer.id.id) % 7)
+                                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                                 nameColor = presentation.chat.peerName(value)
                             }
                         }
@@ -1638,7 +1653,7 @@ class ChatRowItem: TableRowItem {
                     
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
-                        if peer.id.id != 0 {
+                        if peer.id.id._internalGetInt32Value() != 0 {
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId:peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo), range: range)
                         } else {
                             nameHide = L10n.chatTooltipHiddenForwardName
@@ -1753,17 +1768,28 @@ class ChatRowItem: TableRowItem {
                 formatter.timeStyle = .short
                 formatter.timeZone = NSTimeZone.local
                 formatter.doesRelativeDateFormatting = true
-                let text = L10n.chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                let text: String
+                if forwardInfo.date == message.timestamp {
+                    text = L10n.chatMessageImportedShort
+                } else {
+                   text  = L10n.chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                }
                 editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 
                 fullDate = L10n.chatMessageImportedText + "\n\n" + fullDate
+            } else if let forwardInfo = message.forwardInfo {
+                let formatterEdited = DateFormatter()
+                formatterEdited.dateStyle = .medium
+                formatterEdited.timeStyle = .medium
+                formatterEdited.timeZone = NSTimeZone.local
+                fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
             
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, account: context.account, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
+                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
                         guard let `self` = self else {return}
                         _ = self.makeSize(self.oldWidth, oldWidth: 0)
                         Queue.mainQueue().async { [weak self] in
@@ -1795,9 +1821,16 @@ class ChatRowItem: TableRowItem {
 //                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
 //                }
                 
-                
+                let paid: Bool
+                if let invoice = message.media.first as? TelegramMediaInvoice {
+                    paid = invoice.receiptMessageId != nil
+                } else {
+                    paid = false
+                }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
-                    replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message))
+                    if message.restrictedText(context.contentSettings) == nil {
+                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
+                    }
                 }
 //                else if let attribute = attribute as? ReactionsMessageAttribute {
 //                    var buttons:[ReplyMarkupButton] = []
@@ -1841,6 +1874,21 @@ class ChatRowItem: TableRowItem {
               
             }
 
+            if let attr = message.autoremoveAttribute, let begin = attr.countdownBeginTime {
+                self.updateCountDownTimer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
+                    let left = Int(begin + attr.timeout - context.timestamp)
+                    if left >= 0 {
+                        let leftText = "\n\n" + L10n.chatContextMenuAutoDelete(smartTimeleftText(left))
+                        self?.fullDate = fullDate + leftText
+                        self?.updateTooltip?(fullDate + leftText)
+                    } else {
+                        self?.updateCountDownTimer = nil
+                    }
+                }, queue: .mainQueue())
+                self.updateCountDownTimer?.start()
+            } else {
+                updateCountDownTimer = nil
+            }
             
             self.fullDate = fullDate
         }
@@ -1888,9 +1936,14 @@ class ChatRowItem: TableRowItem {
             if message.media.count == 0 || message.media.first is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
-                if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                    return ChatServiceItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
-                } else if let file = message.media[0] as? TelegramMediaFile {
+                if let action = message.media[0] as? TelegramMediaAction {
+                   switch action.action {
+                   case .phoneCall:
+                       return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                   default:
+                       return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                   }
+               } else if let file = message.media[0] as? TelegramMediaFile {
                     if file.isInstantVideo {
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
@@ -1909,14 +1962,6 @@ class ChatRowItem: TableRowItem {
                         return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                     }
                     return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if let action = message.media[0] as? TelegramMediaAction {
-                    switch action.action {
-                    case .phoneCall:
-                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                    default:
-                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                    }
-                    
                 } else if message.media[0] is TelegramMediaMap {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
@@ -2444,7 +2489,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 case .thrid:
                     let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: author.id) |> `catch` { _ in return .complete() }
                     
-                    _ = showModalProgress(signal: combineLatest(reportPeerMessages(account: account, messageIds: [message.id], reason: .spam), block), for: context.window).start()
+                    _ = showModalProgress(signal: combineLatest(reportPeerMessages(account: account, messageIds: [message.id], reason: .spam, message: ""), block), for: context.window).start()
                 case .basic:
                     _ = showModalProgress(signal: context.blockedPeersContext.add(peerId: author.id), for: context.window).start()
                 }
@@ -2780,8 +2825,8 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         var items = items
         if canReportMessage(message, account), chatInteraction.mode != .pinned {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
-                _ = reportReasonSelector(context: context).start(next: { reason in
-                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: reason), for: mainWindow).start(completed: {
+                _ = reportReasonSelector(context: context).start(next: { value in
+                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: value.reason, message: value.comment), for: context.window).start(completed: {
                         alert(for: context.window, info: L10n.messageContextReportAlertOK)
                     })
                 })

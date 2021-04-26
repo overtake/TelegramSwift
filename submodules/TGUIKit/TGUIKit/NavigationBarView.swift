@@ -119,6 +119,10 @@ public class NavigationBarView: View {
         layout(left: leftView, center: centerView, right: rightView)
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     func startMoveViews(left:BarView, center:BarView, right:BarView, direction: SwipeDirection) {
         addSubview(left)
         addSubview(center)

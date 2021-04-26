@@ -47,7 +47,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     case peer(Int32, Int32, Peer, String, GeneralViewType)
     case section(Int32)
 
-    var stableId: Int32 {
+    var stableId: Int64 {
         switch self {
         case .keepMedia:
             return 0
@@ -70,9 +70,9 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case .peersHeader:
             return 9
         case let .peer(_, _, peer, _, _):
-            return Int32(peer.id.hashValue)
+            return peer.id.toInt64()
         case .section(let sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+            return Int64((sectionId + 1) * 1000 - sectionId)
         }
     }
     
@@ -349,7 +349,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             
             for (i, value) in filtered.enumerated() {
                 let peer = stats.peers[value.0]!
-                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1)), bestGeneralViewType(filtered, for: i)))
+                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1), formatting: DataSizeStringFormatting.current), bestGeneralViewType(filtered, for: i)))
                 index += 1
             }
         } else {

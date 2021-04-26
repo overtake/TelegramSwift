@@ -160,7 +160,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
             signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
         }
         if options.contains(.reportSpam) {
-            signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
+            signals.append(reportPeerMessages(account: context.account, messageIds: messageIds, reason: .spam, message: ""))
         }
         if options.contains(.deleteAllMessages) {
             signals.append(clearAuthorHistory(account: context.account, peerId: peerId, memberId: memberId))

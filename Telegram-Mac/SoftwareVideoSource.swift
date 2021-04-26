@@ -245,7 +245,7 @@ public final class SoftwareVideoSource {
                 let (decodableFrame, loop) = self.readDecodableFrame()
                 if let decodableFrame = decodableFrame {
                     if let renderedFrame = videoStream.decoder.render(frame: decodableFrame) {
-                        return (renderedFrame, CGFloat(videoStream.rotationAngle), CGFloat(videoStream.aspect), loop)
+                        return (renderedFrame._cgImage, CGFloat(videoStream.rotationAngle), CGFloat(videoStream.aspect), loop)
                     }
                 }
             }

@@ -59,7 +59,7 @@ final class ApiEnvironment {
     }
     
     static var prefixList:[String] {
-        return ["debug", "stable", "appstore", "alpha", "github", "beta"]
+        return ["debug", "stable", "appstore", "beta"]
     }
     
     static var prefix: String {
@@ -70,10 +70,6 @@ final class ApiEnvironment {
         prefix = "stable"
         #elseif APP_STORE
         prefix = "appstore"
-        #elseif ALPHA
-        prefix = "alpha"
-        #elseif GITHUB
-        prefix = "github"
         #else
         prefix = "beta"
         #endif

@@ -87,7 +87,7 @@ private func globalSearchEntries(state: GlobalSearchState, arguments: GlobalSear
             }
             
             for entry in _messageEntries {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(entry.index), equatable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(entry.index), equatable: nil, comparable: nil, item: { initialSize, stableId in
                     let item:TableRowItem
                     switch entry {
                     case .DateEntry:

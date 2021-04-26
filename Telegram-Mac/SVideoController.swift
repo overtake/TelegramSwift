@@ -379,7 +379,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             mediaPlayer.actionAtEnd = .loop({ [weak self] in
                 Queue.mainQueue().async {
                     self?.updateIdleTimer()
-                    self?.hideControls.set(false)
                 }
             })
         } else {

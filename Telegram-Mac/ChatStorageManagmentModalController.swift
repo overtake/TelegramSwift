@@ -82,7 +82,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                         if filteredSize == 0 {
                             title = L10n.storageUsageClear
                         } else {
-                            title = "\(L10n.storageUsageClear) (\(dataSizeString(Int(filteredSize))))"
+                            title = "\(L10n.storageUsageClear) (\(dataSizeString(Int(filteredSize), formatting: DataSizeStringFormatting.current)))"
                         }
                         strongSelf.modal?.interactions?.updateDone( { button in
                             button.set(text: title, for: .Normal)
@@ -91,7 +91,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                     }
                     
                 }
-                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize))))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), viewType: bestGeneralViewType(validCategories, for: i), action: {
+                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize), formatting: DataSizeStringFormatting.current)))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), viewType: bestGeneralViewType(validCategories, for: i), action: {
                     toggleCheck(categoryId, index)
                 }))
                 
@@ -133,7 +133,9 @@ class ChatStorageManagmentModalController: ModalViewController {
             totalSize += categorySize
         }
 
-        return ModalInteractions(acceptTitle: tr(L10n.storageClear(dataSizeString(Int(totalSize)))), accept: { [weak self] in
+        
+        
+        return ModalInteractions(acceptTitle: tr(L10n.storageClear(dataSizeString(Int(totalSize), formatting: DataSizeStringFormatting.current))), accept: { [weak self] in
             if let strongSelf = self {
                 self?.clear(strongSelf.sizeIndex)
             }

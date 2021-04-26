@@ -66,7 +66,11 @@ class ChatMusicRowItem: ChatMediaItem {
                 return rightSize.height
             }
         }
-        
+        if let caption = captionLayouts.last?.layout {
+            if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
+                return rightSize.height
+            }
+        }
         return super.additionalLineForDateInBubbleState
     }
     
@@ -76,8 +80,19 @@ class ChatMusicRowItem: ChatMediaItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            parameters.makeLabelsForWidth(width)
-            return NSMakeSize(max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width) + 50, 40)
+            
+            
+            let width = min(320, width - 80)
+            
+            for layout in captionLayouts {
+                if layout.layout.layoutSize == .zero {
+                    layout.layout.measure(width: width)
+                }
+            }
+            let captionsWidth = captionLayouts.max(by: { $0.layout.layoutSize.width < $1.layout.layoutSize.width }).map { $0.layout.layoutSize.width }
+            
+            let labelsWidth = parameters.makeLabelsForWidth(width)
+            return NSMakeSize(max(captionsWidth ?? 0, labelsWidth) + 50, 40)
         }
         return NSZeroSize
     }

@@ -72,6 +72,8 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
                     text = tr(L10n.changeNumberSendDataErrorPhoneNumberOccupied(phoneNumber))
                 case .generic:
                     text = tr(L10n.changeNumberSendDataErrorGeneric)
+                case .phoneBanned:
+                    text = tr(L10n.changeNumberSendDataErrorGeneric)
                 }
 
                 alert(for: mainWindow, info: text)

@@ -128,6 +128,25 @@ extension ChatTextInputAttribute {
             return range
         }
     }
+    
+    func updateRange(_ range: Range<Int>) -> ChatTextInputAttribute {
+        switch self {
+        case .bold:
+            return .bold(range)
+        case .italic:
+            return .italic(range)
+        case .pre:
+            return .pre(range)
+        case .code:
+            return .code(range)
+        case .strikethrough:
+            return .strikethrough(range)
+        case let .uid(_, uid):
+            return .uid(range, uid)
+        case let .url(_, url):
+            return .url(range, url)
+        }
+    }
 }
 
 
@@ -144,7 +163,7 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
         case .Pre:
             inputAttributes.append(.pre(entity.range))
         case let .TextMention(peerId: peerId):
-            inputAttributes.append(.uid(entity.range, peerId.id))
+            inputAttributes.append(.uid(entity.range, peerId.id._internalGetInt32Value()))
         case let .TextUrl(url):
             inputAttributes.append(.url(entity.range, url))
         case .Strikethrough:
@@ -458,9 +477,9 @@ final class ChatTextInputState: PostboxCoding, Equatable {
                 if offsetRange.location < newRange.location {
                     newRange.location -= offsetRange.length
                 }
-                if newRange.intersection(offsetRange) != nil {
-                    newRange.length -= offsetRange.length
-                }
+//                if newRange.intersection(offsetRange) != nil {
+//                    newRange.length -= offsetRange.length
+//                }
             }
             
             
@@ -484,6 +503,45 @@ final class ChatTextInputState: PostboxCoding, Equatable {
           //  }
         }
         
+        let charset = CharacterSet.whitespacesAndNewlines
+        
+        while !appliedText.isEmpty, let range = appliedText.rangeOfCharacter(from: charset), range.lowerBound == appliedText.startIndex {
+            
+            let oldLength = appliedText.length
+            appliedText.removeSubrange(range)
+            let newLength = appliedText.length
+
+            let symbolLength = oldLength - newLength
+            
+            for (i, attr) in attributes.enumerated() {
+                let updated: ChatTextInputAttribute
+                if attr.range.lowerBound == 0 {
+                    updated = attr.updateRange(0 ..< attr.range.upperBound - symbolLength)
+                } else {
+                    updated = attr.updateRange(attr.range.lowerBound - symbolLength ..< attr.range.upperBound - symbolLength)
+                }
+                attributes[i] = updated
+            }
+        }
+        
+        
+        
+        while !appliedText.isEmpty, let range = appliedText.rangeOfCharacter(from: charset, options: [], range: appliedText.index(before: appliedText.endIndex) ..< appliedText.endIndex), range.upperBound == appliedText.endIndex {
+            
+            let oldLength = appliedText.length
+            appliedText.removeSubrange(range)
+            let newLength = appliedText.length
+
+            let symbolLength = oldLength - newLength
+            
+            for (i, attr) in attributes.enumerated() {
+                let updated: ChatTextInputAttribute
+                updated = attr.updateRange(attr.range.lowerBound ..< attr.range.upperBound - symbolLength)
+                attributes[i] = updated
+            }
+        }
+    
+        
         return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)
     }
 
@@ -503,7 +561,7 @@ final class ChatTextInputState: PostboxCoding, Equatable {
             case let .code(range):
                 entities.append(.init(range: range, type: .Code))
             case let .uid(range, uid):
-                entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: uid))))
+                entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(uid)))))
             case let .url(range, url):
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
             }

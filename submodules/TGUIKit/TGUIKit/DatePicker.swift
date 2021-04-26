@@ -59,7 +59,11 @@ public class DatePicker<T>: Control where T: Equatable {
     
     public override func layout() {
         super.layout()
-        self.updateSelected(animated: false)
+        
+        let layout = TextViewLayout(.initialize(string: self.selected.name, color: presentation.colors.text, font: self.font), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        layout.measure(width: frame.width - 8)
+        self.selectedText.update(layout)
+        
         self.borderView.frame = bounds
         self.activeBorderView.frame = bounds
         self.selectedText.center()
@@ -89,9 +93,6 @@ public class DatePicker<T>: Control where T: Equatable {
     }
     
     private func updateSelected(animated: Bool) {
-        let layout = TextViewLayout(.initialize(string: self.selected.name, color: presentation.colors.text, font: self.font), maximumNumberOfLines: 1, alwaysStaticItems: true)
-        layout.measure(width: frame.width - 8)
-        self.selectedText.update(layout)
         if controlState == .Highlight || isSelected {
             self.borderView.change(opacity: 0, animated: animated)
             self.activeBorderView.change(opacity: 1, animated: animated)
@@ -99,6 +100,7 @@ public class DatePicker<T>: Control where T: Equatable {
             self.borderView.change(opacity: 1, animated: animated)
             self.activeBorderView.change(opacity: 0, animated: animated)
         }
+        needsLayout = true
     }
     
     

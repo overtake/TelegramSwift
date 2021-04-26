@@ -14,6 +14,7 @@ import Postbox
 import TGUIKit
 import TgVoipWebrtc
 import CoreGraphics
+import TelegramVoip
 
 enum CallTone {
     case undefined
@@ -925,7 +926,7 @@ class PCallSession {
             self.ongoingContext?.requestVideo(videoCapturer)
         }
         if !requestVideo {
-            self.videoCapturer?.enableScreenCapture()
+            self.videoCapturer?.switchVideoInput("screen_capture")
         }
 //        setRequestedVideoAspect(Float(System.aspectRatio))
         
@@ -1099,11 +1100,11 @@ class PCallSession {
         player = nil
     }
     
-    func makeIncomingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
+    func makeIncomingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
         self.ongoingContext?.makeIncomingVideoView(completion: completion)
     }
     
-    func makeOutgoingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
+    func makeOutgoingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
         self.videoCapturer?.makeOutgoingVideoView(completion: completion)
     }
     
@@ -1164,8 +1165,12 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
             }
         }
         if microAccess {
-            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .call) |> mapToSignal { _ in
-                return sharedContext.endCurrentCall()
+            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .call, ignoreSame: ignoreSame) |> mapToSignal { value -> Signal<Bool, NoError> in
+                if ignoreSame {
+                    return .single(value)
+                } else {
+                    return sharedContext.endCurrentCall()
+                }
             } |> mapToSignal { _ in
                 return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
             }
@@ -1192,7 +1197,7 @@ enum CallConfirmationType {
     case voiceChat
 }
 
-func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountContext, newPeerId: PeerId, newCallType: CallConfirmationType) -> Signal<Bool, NoError> {
+func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountContext, newPeerId: PeerId, newCallType: CallConfirmationType, ignoreSame: Bool = false) -> Signal<Bool, NoError> {
     if sharedContext.hasActiveCall {
         let currentCallType: CallConfirmationType
         let currentPeerId: PeerId
@@ -1207,6 +1212,9 @@ func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountConte
             currentCallType = .voiceChat
         } else {
             fatalError("wtf")
+        }
+        if ignoreSame, newPeerId == currentPeerId {
+            return .single(true)
         }
         let from = currentAccount.postbox.transaction {
             return $0.getPeer(currentPeerId)

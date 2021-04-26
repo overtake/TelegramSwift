@@ -948,7 +948,7 @@
                                         signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peer.id, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
                                     }
                                     if result[2] == .selected {
-                                        signals.append(reportSupergroupPeer(account: context.account, peerId: memberId, memberId: memberId, messageIds: messageIds))
+                                        signals.append(reportPeerMessages(account: context.account, messageIds: messageIds, reason: .spam, message: ""))
                                     }
                                     if result[3] == .selected {
                                         signals.append(clearAuthorHistory(account: context.account, peerId: peer.id, memberId: memberId))

@@ -12,11 +12,11 @@ import SyncCore
 import Postbox
 import SyncCore
 
-let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
-let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 708513)
+let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(1271266957))
+let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(708513))
 
 
-var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
+var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(1271266957))
 
 
 extension ChatListFilterPeerCategories {
@@ -51,7 +51,7 @@ final class TelegramFilterCategory : Peer {
     let category: ChatListFilterPeerCategories
     
     init(category: ChatListFilterPeerCategories) {
-        self.id = PeerId(namespace: 10, id: category.rawValue)
+        self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt32Value(category.rawValue))
         self.indexName = .title(title: "", addressName: "")
         self.notificationSettingsPeerId = nil
         self.category = category
@@ -145,7 +145,7 @@ extension Peer {
     
     
     
-    func canSendMessage(_ isisThreadMode: Bool = false) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
@@ -157,7 +157,7 @@ extension Peer {
                 case .member:
                     return !channel.hasBannedRights(.banSendMessages)
                 case .left:
-                    if isisThreadMode {
+                    if isThreadMode {
                         return !channel.hasBannedRights(.banSendMessages)
                     }
                     return false

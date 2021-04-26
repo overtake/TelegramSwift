@@ -96,6 +96,14 @@ public class DraggingView: SplitView {
         self.registerForDraggedTypes([.string, .tiff, .kUrl, .kFilenames])
     }
     
+    public override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+    }
+    
+    deinit {
+        self.unregisterDraggedTypes()
+    }
+    
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         
         for itemView in container.subviews as! [DragView] {

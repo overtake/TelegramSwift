@@ -1831,7 +1831,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(""), identifier: _id_phone_new, equatable: nil, item: { initialSize, stableId -> TableRowItem in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(""), identifier: _id_phone_new, equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
         return PassportNewPhoneNumberRowItem(initialSize, stableId: stableId, action: {
             
         })
@@ -1912,7 +1912,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, viewType: .legacy, values: countries))
         index += 1
         
         entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressPostcodePlaceholder), inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { text in
@@ -1945,7 +1945,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         if let accessContext = state.accessContext {
             for file in files {
                 let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier:  InputDataIdentifier("_file_\(fileIndex)"), equatable: InputDataEquatable(file), item: { initialSize, stableId -> TableRowItem in
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier:  InputDataIdentifier("_file_\(fileIndex)"), equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[file.errorIdentifier], header: header, removeAction: { value in
                         updateState { current in
                             return current.withRemovedFile(value, for: relative.valueKey)
@@ -2000,7 +2000,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             if let accessContext = state.accessContext {
                 for translation in translations {
                     let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), item: { initialSize, stableId -> TableRowItem in
+                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: translation, context: accessContext, stableId: stableId), error: rErrors?[translation.errorIdentifier], header: header, removeAction: { value in
                             updateState { current in
                                 return current.withRemovedTranslation(value, for: relative.valueKey)
@@ -2151,7 +2151,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         
         let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: L10n.secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: L10n.secureIdGenderFemale, value: .gender(.female))]
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, values: genders))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, viewType: .legacy, values: genders))
         index += 1
         
         entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.birthday ?? personalDetails?.birthdate.inputDataValue ?? .date(nil, nil, nil), error: pdErrors?[_id_birthday], identifier: _id_birthday, placeholder: L10n.secureIdIdentityPlaceholderBirthday))
@@ -2168,12 +2168,12 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCitizenship, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCitizenship, viewType: .legacy, values: countries))
         index += 1
         
         let residence = state.detailsIntermediateState?.residence ?? .string(personalDetails?.residenceCountryCode)
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: residence, error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: L10n.secureIdIdentityPlaceholderResidence, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: residence, error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: L10n.secureIdIdentityPlaceholderResidence, viewType: .legacy, values: countries))
         index += 1
         
         if let _ = relative {
@@ -2255,7 +2255,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         if let accessContext = state.accessContext {
             let isMainNotFront: Bool = !relative.hasBacksideDocument
             if let file = state.frontSideFile[relative.valueKey] {
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_frontside, equatable: InputDataEquatable(file), item: { initialSize, stableId -> TableRowItem in
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_frontside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_frontside], header: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleFrontSide, removeAction: { value in
                         modernConfirm(for: mainWindow, account: state.context.account, peerId: nil, information: L10n.secureIdConfirmDeleteDocument, successHandler: { _ in
                             updateState { current in
@@ -2278,7 +2278,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             
             if relative.hasBacksideDocument {
                 if let file = state.backSideFile[relative.valueKey] {
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_backside, equatable: InputDataEquatable(file), item: { initialSize, stableId -> TableRowItem in
+                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_backside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_backside], header: L10n.secureIdUploadTitleReverseSide, removeAction: { value in
                             updateState { current in
                                 return current.withUpdatedBackSide(nil, for: relative.valueKey)
@@ -2320,7 +2320,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         if relative.hasSelfie, let accessContext = state.accessContext {
             let rErrors = state.errors[relative.valueKey]
             if let selfie = state.selfies[relative.valueKey] {
-                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(selfie), identifier: _id_selfie, equatable: InputDataEquatable(selfie), item: { initialSize, stableId -> TableRowItem in
+                entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(selfie), identifier: _id_selfie, equatable: InputDataEquatable(selfie), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: selfie, context: accessContext, stableId: stableId), error: rErrors?[_id_selfie], header: L10n.secureIdIdentitySelfie, removeAction: { value in
                         updateState { current in
                             return current.withUpdatedSelfie(nil, for: relative.valueKey)
@@ -2367,7 +2367,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             if let accessContext = state.accessContext {
                 for translation in translations {
                     let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
-                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), item: { initialSize, stableId -> TableRowItem in
+                    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: translation, context: accessContext, stableId: stableId), error: rErrors?[translation.errorIdentifier], header: header, removeAction: { value in
                             updateState { current in
                                 return current.withRemovedTranslation(value, for: relative.valueKey)
@@ -2655,7 +2655,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                             switch config {
                                             case .set:
                                                 if let encryptedForm = encryptedForm {
-                                                    return accessSecureId(network: context.account.network, password: password) |> map { values in
+                                                    return context.engine.secureId.accessSecureId(password: password) |> map { values in
                                                         return (decryptedSecureIdForm(context: values.context, form: encryptedForm), values.context, values.settings)
                                                         } |> deliverOnMainQueue |> map { form, ctx, settings in
                                                             
@@ -2674,7 +2674,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                                             return Optional(config)
                                                         } |> `catch` { _ in return .single(nil) }
                                                 } else {
-                                                    let signal = accessSecureId(network: context.account.network, password: password) |> mapToSignal { values in
+                                                    let signal = context.engine.secureId.accessSecureId(password: password) |> mapToSignal { values in
                                                         return getAllSecureIdValues(network: context.account.network)
                                                             |> map { encryptedValues in
                                                                 return decryptedAllSecureIdValues(context: values.context, encryptedValues: encryptedValues)
@@ -2741,7 +2741,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 return
             }
             if let encryptedForm = encryptedForm {
-                checkPassword.set((accessSecureId(network: context.account.network, password: value) |> map { data in
+                checkPassword.set((context.engine.secureId.accessSecureId(password: value) |> map { data in
                     return (decryptedSecureIdForm(context: data.context, form: encryptedForm), data.context, data.settings)
                     } |> deliverOnMainQueue).start(next: { form, ctx, settings in
                         
@@ -2842,7 +2842,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         
                     }))
             } else {
-                let signal = accessSecureId(network: context.account.network, password: value) |> mapToSignal { data in
+                let signal = context.engine.secureId.accessSecureId(password: value) |> mapToSignal { data in
                     return getAllSecureIdValues(network: context.account.network)
                         |> map { encryptedValues in
                             return decryptedAllSecureIdValues(context: data.context, encryptedValues: encryptedValues)

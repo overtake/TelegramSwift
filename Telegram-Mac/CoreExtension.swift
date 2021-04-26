@@ -486,6 +486,35 @@ public extension Message {
         }
         return false
     }
+    var itHasRestrictedContent: Bool {
+        #if APP_STORE || DEBUG
+        for attr in attributes {
+            if let attr = attr as? RestrictedContentMessageAttribute {
+                for rule in attr.rules {
+                    if rule.platform == "ios" || rule.platform == "macos" {
+                        return true
+                    }
+                }
+            }
+        }
+        #endif
+       
+        return false
+    }
+    func restrictedText(_ contentSettings: ContentSettings) -> String? {
+        #if APP_STORE || DEBUG
+        for attr in attributes {
+            if let attr = attr as? RestrictedContentMessageAttribute {
+                for rule in attr.rules {
+                    if rule.platform == "ios" || rule.platform == "all" {
+                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) ? rule.text : nil
+                    }
+                }
+            }
+        }
+        #endif
+        return nil
+    }
     
     var textEntities: TextEntitiesMessageAttribute? {
         for attr in attributes {
@@ -762,7 +791,7 @@ extension SuggestedLocalizationInfo {
 
 public extension MessageId {
     func toInt64() -> Int64 {
-        return (Int64(id) << 32) | Int64(peerId.id)
+        return (Int64(id) << 32) | Int64(peerId.id._internalGetInt32Value())
     }
 }
 
@@ -985,7 +1014,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
                 if peer.hasPermission(.pinMessages) {
                     return true
                 }
-                return Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > Int(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                return Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
             }
         }
     }
@@ -1000,7 +1029,7 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
     }
     
     
-    if Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) < Int(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970) {
+    if Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) < context.account.network.getApproximateRemoteTimestamp() {
         return false
     }
     
@@ -1148,6 +1177,43 @@ extension Peer {
     }
     var isGroup:Bool {
         return self is TelegramGroup
+    }
+    var canManageDestructTimer: Bool {
+        if self is TelegramSecretChat {
+            return true
+        }
+        if self.isUser && !self.isBot {
+            return true
+        }
+        if let peer = self as? TelegramChannel {
+            if let adminRights = peer.adminRights, adminRights.rights.contains(.canDeleteMessages) {
+                return true
+            } else if peer.groupAccess.isCreator {
+                return true
+            }
+            return false
+        }
+        if let peer = self as? TelegramGroup {
+            switch peer.role {
+            case .admin, .creator:
+                return true
+            default:
+                break
+            }
+        }
+        return false
+    }
+
+    var canClearHistory: Bool {
+        if self.isGroup || self.isUser || (self.isSupergroup && self.addressName == nil) {
+            if let peer = self as? TelegramChannel, peer.flags.contains(.hasGeo) {} else {
+                return true
+            }
+        }
+        if self is TelegramSecretChat {
+            return true
+        }
+        return false
     }
     
     func isRestrictedChannel(_ contentSettings: ContentSettings) -> Bool {
@@ -2264,7 +2330,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             }
         }
         if peerId.namespace == Namespaces.Peer.SecretChat {
-            canRemoveGlobally = true
+            canRemoveGlobally = false
         }
         
         if canRemoveGlobally {
@@ -2279,7 +2345,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         }
 
         
-        return combineLatest(modernConfirmSignal(for: mainWindow, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get()) |> mapToSignal { result, location -> Signal<Bool, NoError> in
+        return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> mapToSignal { result, location -> Signal<Bool, NoError> in
             
             context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
             if peer.isBot && result == .thrid {
@@ -2500,7 +2566,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
                     return false
                 }
             })
-            if mime == "image/webp", let size = fs(url.path), size < 64 * 1024 {
+            if mime == "image/webp" {
                 return false
             }
             if isMusic {
@@ -2721,7 +2787,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
     }
 }
 
@@ -2818,6 +2884,14 @@ func screenCaptureAvailable() -> Bool {
     })
     let result = stream != nil
     return result
+}
+
+func requestScreenCaptureAccess() -> Bool {
+    if #available(OSX 10.15, *) {
+        return CGRequestScreenCaptureAccess()
+    } else {
+        return screenCaptureAvailable()
+    }
 }
 
 
@@ -3196,5 +3270,48 @@ func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<Exp
         } else {
             return .single(invitation)
         }
+    }
+}
+
+
+
+
+extension CachedPeerAutoremoveTimeout {
+    var timeout: CachedPeerAutoremoveTimeout.Value? {
+        switch self {
+        case let .known(timeout):
+            return timeout
+        case .unknown:
+            return nil
+        }
+    }
+
+}
+
+
+
+func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
+    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) && !peer.isSecretChat {
+        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
+    } else if peer.canClearHistory {
+        var thridTitle: String? = nil
+        var canRemoveGlobally: Bool = false
+        if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
+            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+                canRemoveGlobally = true
+            }
+        }
+        if canRemoveGlobally {
+            thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        }
+        
+        
+        let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup
+        
+        modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+            context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
+        })
+    } else {
+        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     }
 }

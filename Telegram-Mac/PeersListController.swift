@@ -735,8 +735,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    override func focusSearch(animated: Bool) {
+    override func focusSearch(animated: Bool, text: String? = nil) {
         genericView.searchView.change(state: .Focus, animated)
+        if let text = text {
+            genericView.searchView.setString(text)
+         //   self?.searchController?.updateSearchTags(tag)
+            //genericView.searchView.updateTags(<#T##tags: [String]##[String]#>, <#T##image: CGImage##CGImage#>)
+        }
     }
     
     override func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {

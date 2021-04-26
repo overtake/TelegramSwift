@@ -11,11 +11,67 @@ import TGUIKit
 import TgVoipWebrtc
 
 
+private final class UnavailableToStreamView : View {
+    let text: TextView = TextView()
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(text)
+        backgroundColor = .black
+        self.text.isSelectable = false
+
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func update(isScreen: Bool) {
+        let text: String
+        //TODOLANG
+        if isScreen {
+            text = "Unavailable to share your screen, please grant access is [System Settings](screen)."
+        } else {
+            text = "Unavailable to share your camera, please grant access is [System Settings](camera)."
+        }
+        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.grayStatusColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: GroupCallTheme.grayStatusColor), link: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.accent), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
+        }))
+        let layout = TextViewLayout(attr)
+        let executor = globalLinkExecutor
+        executor.processURL = { value in
+            if let value = value as? inAppLink {
+                switch value.link {
+                case "screen":
+                    openSystemSettings(.sharing)
+                case "camera":
+                    openSystemSettings(.camera)
+                default:
+                    break
+                }
+            }
+        }
+        layout.interactions = executor
+        layout.measure(width: frame.width)
+        self.text.update(layout)
+    }
+
+    override func layout() {
+        super.layout()
+        self.text.center()
+    }
+}
+
 private final class DesktopCapturerView : View {
     private let listContainer = View()
     private let previewContainer = View()
     private let titleView = TextView()
     private let titleContainer = View()
+    private let controls = View()
+    
+    let cancel = TitleButton()
+    let share = TitleButton()
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(listContainer)
@@ -23,7 +79,7 @@ private final class DesktopCapturerView : View {
         
         addSubview(titleContainer)
         titleContainer.addSubview(titleView)
-        
+        addSubview(controls)
         previewContainer.layer?.cornerRadius = 10
         previewContainer.backgroundColor = .black
         backgroundColor = GroupCallTheme.windowBackground
@@ -34,29 +90,105 @@ private final class DesktopCapturerView : View {
         let titleLayout = TextViewLayout.init(.initialize(string: L10n.voiceChatVideoVideoSource, color: GroupCallTheme.titleColor, font: .medium(.title)))
         titleLayout.measure(width: frameRect.width)
         titleView.update(titleLayout)
+        
+        cancel.set(text: L10n.voiceChatVideoVideoSourceCancel, for: .Normal)
+        cancel.set(color: .white, for: .Normal)
+        cancel.set(background: GroupCallTheme.speakDisabledColor, for: .Normal)
+        cancel.set(background: GroupCallTheme.speakDisabledColor.withAlphaComponent(0.8), for: .Highlight)
+        cancel.sizeToFit(.zero, NSMakeSize(100, 30), thatFit: true)
+        cancel.layer?.cornerRadius = .cornerRadius
+        
+        share.set(text: L10n.voiceChatVideoVideoSourceShare, for: .Normal)
+        share.set(color: .white, for: .Normal)
+        share.set(background: GroupCallTheme.accent, for: .Normal)
+        share.set(background: GroupCallTheme.accent.withAlphaComponent(0.8), for: .Highlight)
+        share.sizeToFit(.zero, NSMakeSize(100, 30), thatFit: true)
+        share.layer?.cornerRadius = .cornerRadius
+        
+        controls.addSubview(cancel)
+        controls.addSubview(share)
+        
+        cancel.scaleOnClick = true
+        share.scaleOnClick = true
+
     }
     
-    private var previous: (DesktopCaptureSourceScope, DesktopCaptureSourceManager)?
+    private var previousDesktop: (DesktopCaptureSourceScope, DesktopCaptureSourceManager)?
     
-    func updatePreview(_ source: DesktopCaptureSource, manager: DesktopCaptureSourceManager, animated: Bool) {
-        
-        if let previous = previous {
+    func updatePreview(_ source: DesktopCaptureSource, isAvailable: Bool, manager: DesktopCaptureSourceManager, animated: Bool) {
+        if let previous = previousDesktop {
             previous.1.stop(previous.0)
         }
-        
-        let size = previewContainer.frame.size.multipliedByScreenScale()
+        if isAvailable {
+            let size = NSMakeSize(previewContainer.frame.width * 2.5, previewContainer.frame.size.height * 2.5)
 
-        let scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: size, fps: 30))
-        
-        
-        let view = manager.create(for: scope)
-        view.frame = previewContainer.bounds
-        let previewView = animated ? previewContainer.animator() : previewContainer
-        previewView.subviews = [view]
+            let scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: size, fps: 24, captureMouse: true))
 
-        manager.start(scope)
-        
-        self.previous = (scope, manager)
+            let view = manager.create(for: scope)
+            manager.start(scope)
+            self.previousDesktop = (scope, manager)
+            swapView(view, animated: animated)
+
+        } else {
+            let view = UnavailableToStreamView(frame: previewContainer.bounds)
+            view.update(isScreen: true)
+            swapView(view, animated: animated)
+        }
+
+        share.isEnabled = isAvailable
+    }
+    
+    private func swapView(_ view: NSView, animated: Bool) {
+        let previewView = previewContainer
+        view.frame = previewView.bounds
+
+        for previous in previewView.subviews {
+            if animated {
+                previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
+                    previous?.removeFromSuperview()
+                })
+            } else {
+                previous.removeFromSuperview()
+            }
+        }
+        previewView.addSubview(view)
+        if animated {
+            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        }
+
+    }
+    
+    func updatePreview(_ source: CameraCaptureDevice, isAvailable: Bool, animated: Bool) {
+        if let previous = previousDesktop {
+            previous.1.stop(previous.0)
+        }
+
+        if isAvailable {
+            let view: View = View()
+            let session: AVCaptureSession = AVCaptureSession()
+            let input = try? AVCaptureDeviceInput(device: source.device)
+            if let input = input {
+                session.addInput(input)
+            }
+            let captureLayer = AVCaptureVideoPreviewLayer(session: session)
+            captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
+            captureLayer.connection?.isVideoMirrored = true
+            captureLayer.videoGravity = .resizeAspectFill
+            view.layer = captureLayer
+
+
+            swapView(view, animated: animated)
+
+            session.startRunning()
+
+        } else {
+            let view = UnavailableToStreamView(frame: previewContainer.bounds)
+            view.update(isScreen: false)
+            swapView(view, animated: animated)
+
+        }
+        previousDesktop = nil
+        share.isEnabled = isAvailable
     }
     
     required init?(coder: NSCoder) {
@@ -75,22 +207,28 @@ private final class DesktopCapturerView : View {
     override func layout() {
         super.layout()
         previewContainer.frame = .init(origin: .init(x: 20, y: 53), size: .init(width: 660, height: 360))
-        listContainer.frame = .init(origin: .init(x: 0, y: frame.height - 90 - 70), size: .init(width: frame.width, height: 90))
+        listContainer.frame = .init(origin: .init(x: 0, y: frame.height - 90 - 80), size: .init(width: frame.width, height: 90))
         if let listView = listView {
             listView.frame = listContainer.bounds
         }
         titleContainer.frame = NSMakeRect(0, 0, frame.width, 53)
         titleView.center()
+        
+        controls.frame = NSMakeRect(0, frame.height - 80, frame.width, 80)
+        
+        cancel.centerY(x: frame.midX - cancel.frame.width - 5)
+        share.centerY(x: frame.midX + 5)
+
     }
 }
 
 final class DesktopCapturerWindow : Window {
     
     private let listController: DesktopCapturerListController
-    init() {
+    init(select: @escaping(VideoSource)->Void, devices: DevicesContext) {
         
         let size = NSMakeSize(700, 600)
-        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90))
+        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90), devices: devices)
         
         var rect: NSRect = .init(origin: .zero, size: size)
         if let screen = NSScreen.main {
@@ -108,19 +246,35 @@ final class DesktopCapturerWindow : Window {
         self.animationBehavior = .alertPanel
         self.isReleasedWhenClosed = false
         self.isMovableByWindowBackground = true
-        
+        self.level = .normal
         self.toolbar = NSToolbar(identifier: "window")
         self.toolbar?.showsBaselineSeparator = false
         
         var first: Bool = true
-        listController.updateSelected = { [weak self] source, manager in
-            self?.genericView.updatePreview(source, manager: manager, animated: !first)
+        listController.updateDesktopSelected = { [weak self] wrap, manager in
+            self?.genericView.updatePreview(wrap.source as! DesktopCaptureSource, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
+            first = false
+        }
+        
+        listController.updateCameraSelected = { [weak self] wrap in
+            self?.genericView.updatePreview(wrap.source as! CameraCaptureDevice, isAvailable: wrap.isAvailableToStream, animated: !first)
             first = false
         }
         
         self.listController.excludeWindowNumber = self.windowNumber
         self.genericView.listView = listController.genericView
 
+        
+        self.genericView.cancel.set(handler: { [weak self] _ in
+            self?.orderOut(nil)
+        }, for: .Click)
+        
+        self.genericView.share.set(handler: { [weak self] _ in
+            self?.orderOut(nil)
+            if let source = self?.listController.selected {
+                select(source)
+            }
+        }, for: .Click)
         
         initSaver()
     }
@@ -148,7 +302,9 @@ final class DesktopCapturerWindow : Window {
 }
 
 
-func showDesktopCapturerWindow() {
-    let window = DesktopCapturerWindow()
+func presentDesktopCapturerWindow(select: @escaping(VideoSource)->Void, devices: DevicesContext) -> DesktopCapturerWindow {
+    let window = DesktopCapturerWindow(select: select, devices: devices)
     window.makeKeyAndOrderFront(nil)
+    
+    return window
 }

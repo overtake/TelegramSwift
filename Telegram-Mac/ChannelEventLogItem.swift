@@ -241,7 +241,7 @@ class ServiceEventLogItem: TableRowItem {
             if chatInteraction.context.peerId == peer.id {
                 nameColor = theme.colors.link
             } else {
-                let value = abs(Int(peer.id.id) % 7)
+                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
                 nameColor = theme.chat.peerName(value)
             }
             
@@ -332,11 +332,11 @@ class ServiceEventLogItem: TableRowItem {
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                    
-                            var addedRights = newAdminInfo?.rights.flags ?? []
+                            var addedRights = newAdminInfo?.rights.rights ?? []
                             var removedRights:TelegramChatAdminRightsFlags = []
                             if let prevAdminInfo = prevAdminInfo {
-                                addedRights = addedRights.subtracting(prevAdminInfo.rights.flags)
-                                removedRights = prevAdminInfo.rights.flags.subtracting(newAdminInfo?.rights.flags ?? [])
+                                addedRights = addedRights.subtracting(prevAdminInfo.rights.rights)
+                                removedRights = prevAdminInfo.rights.rights.subtracting(newAdminInfo?.rights.rights ?? [])
                             }
                             
                             var justRankUpdated: Bool = false
@@ -405,11 +405,11 @@ class ServiceEventLogItem: TableRowItem {
                         if let memberPeer = result.peers[memberId] {
                             let message = NSMutableAttributedString()
                             
-                            var addedRights = newAdminInfo?.rights.flags ?? []
+                            var addedRights = newAdminInfo?.rights.rights ?? []
                             var removedRights:TelegramChatAdminRightsFlags = []
                             if let prevAdminInfo = prevAdminInfo {
-                                addedRights = addedRights.subtracting(prevAdminInfo.rights.flags)
-                                removedRights = prevAdminInfo.rights.flags.subtracting(newAdminInfo?.rights.flags ?? [])
+                                addedRights = addedRights.subtracting(prevAdminInfo.rights.rights)
+                                removedRights = prevAdminInfo.rights.rights.subtracting(newAdminInfo?.rights.rights ?? [])
                             }
                             
                             var justRankUpdated: Bool = false
@@ -470,7 +470,7 @@ class ServiceEventLogItem: TableRowItem {
                     }
                 } else if let media = new.media.first as? TelegramMediaAction {
                     switch media.action {
-                    case let .groupPhoneCall(_, _, duration):
+                    case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {
                             let text: String
                             if new.author?.id == chatInteraction.context.peerId {
@@ -637,6 +637,26 @@ class ServiceEventLogItem: TableRowItem {
                     text = L10n.channelAdminLogMutedNewMembers(peer.displayTitle)
                 } else {
                     text = L10n.channelAdminLogAllowedNewMembersToSpeak(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .deleteExportedInvitation(invite):
+                let text = L10n.channelAdminLogDeletedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .editExportedInvitation(_, invite):
+                let text = L10n.channelAdminLogEditedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .revokeExportedInvitation(invite):
+                let text = L10n.channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .participantJoinedViaInvite(invite):
+                let text = L10n.channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .changeHistoryTTL(_, updatedValue):
+                let text: String
+                if let updatedValue = updatedValue, updatedValue > 0 {
+                    text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutSet(peer.displayTitle, timeIntervalString(Int(updatedValue)))
+                } else {
+                    text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutRemove(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:

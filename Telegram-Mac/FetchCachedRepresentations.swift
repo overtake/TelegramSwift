@@ -296,7 +296,6 @@ private func videoFirstFrameData(account: Account, resource: MediaResource, chun
             |> mapToSignal { _ -> Signal<CachedMediaResourceRepresentationResult, NoError> in
                  return account.postbox.mediaBox.resourceData(resource, option: .incremental(waitUntilFetchStatus: false), attemptSynchronously: false)
                     |> mapToSignal { data -> Signal<CachedMediaResourceRepresentationResult, NoError> in
-                        
                         return fetchCachedVideoFirstFrameRepresentation(account: account, resource: resource, resourceData: data)
                             |> `catch` { _ -> Signal<CachedMediaResourceRepresentationResult, NoError> in
                                 if chunkSize > size {
@@ -319,7 +318,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
         let tempFilePath = NSTemporaryDirectory() + "\(arc4random()).mov"
         do {
             let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
-            try FileManager.default.linkItem(atPath: resourceData.path, toPath: tempFilePath)
+            try FileManager.default.createSymbolicLink(atPath: tempFilePath, withDestinationPath: resourceData.path)
             
             let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
             let imageGenerator = AVAssetImageGenerator(asset: asset)
@@ -352,9 +351,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
             subscriber.putError(.generic)
             subscriber.putCompletion()
         }
-        
         let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
-        
         return EmptyDisposable
     } |> runOn(cacheThreadPool)
 }
@@ -425,9 +422,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 let url = URL(fileURLWithPath: path)
                 
                 let colorData = NSMutableData()
-                let umnanaged = convertFromWebP(data)
-                var image = umnanaged?.takeUnretainedValue() ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-                umnanaged?.release()
+                var image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                 
                 if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
                     if let json = String(data: transformedWithFitzModifier(data: data, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
@@ -435,6 +430,10 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                         let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
                         image = unmanaged?.takeRetainedValue()
                     }
+                } else if image != nil {
+                    let webp = WebPImageDecoder(data: data, scale: 2.0)
+                    let fullSizeWebp = webp?.frame(at: 0, decodeForDisplay: true)?.image?._cgImage
+                    image = fullSizeWebp ?? image
                 }
                 
                 if let image = image, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil) {
@@ -472,19 +471,21 @@ private func fetchCachedStickerAJpegRepresentation(account: Account, resource: M
     return signal |> mapToSignal { resourceData in
         return Signal { subscriber in
             
+            let complete: Bool
             let resourcePath: String?
             if let resourceData = resourceData {
                 resourcePath = resourceData.path
+                complete = resourceData.complete
             } else if let resource = resource as? LocalFileReferenceMediaResource {
                 resourcePath = resource.localFilePath
+                complete = true
             } else {
                 resourcePath = nil
+                complete = false
             }
             
-            if let resourcePath = resourcePath, let data = try? Data(contentsOf: URL(fileURLWithPath: resourcePath), options: [.mappedIfSafe]) {
-                let unmanaged = convertFromWebP(data)
-                let image = unmanaged?.takeUnretainedValue()
-                unmanaged?.release()
+            if let resourcePath = resourcePath, let data = try? Data(contentsOf: URL(fileURLWithPath: resourcePath), options: [.mappedIfSafe]), complete {
+                let image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                 if let image = image, let containerUrl = ApiEnvironment.containerURL {
                     var randomId: Int64 = 0
                     arc4random_buf(&randomId, 8)
@@ -589,7 +590,7 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
     } |> runOn(cacheThreadPool) |> mapToSignal { resourceData in
         let tempFilePath = NSTemporaryDirectory() + "\(resourceData.path.nsstring.lastPathComponent).mp4"
         let _ = try? FileManager.default.removeItem(atPath: tempFilePath)
-        try? FileManager.default.linkItem(atPath: resourceData.path, toPath: tempFilePath)
+        try? FileManager.default.createSymbolicLink(atPath: resourceData.path, withDestinationPath: tempFilePath)
         
         let asset = AVAsset(url: URL(fileURLWithPath: tempFilePath))
         let imageGenerator = AVAssetImageGenerator(asset: asset)
@@ -621,44 +622,41 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
 
 
 private func fetchCachedScaledVideoFirstFrameRepresentation(account: Account, resource: MediaResource, representation: CachedScaledVideoFirstFrameRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
-    return account.postbox.mediaBox.resourceData(resource) |> mapToSignal { resourceData in
-        return account.postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedVideoFirstFrameRepresentation(), complete: true) |> mapToSignal { firstFrame -> Signal<CachedMediaResourceRepresentationResult, NoError> in
-            return Signal({ subscriber in
-                if let data = try? Data(contentsOf: URL(fileURLWithPath: firstFrame.path), options: [.mappedIfSafe]) {
-                    if let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                        var randomId: Int64 = 0
-                        arc4random_buf(&randomId, 8)
-                        let path = NSTemporaryDirectory() + "\(randomId)"
-                        let url = URL(fileURLWithPath: path)
+    return account.postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedVideoFirstFrameRepresentation(), complete: true) |> mapToSignal { firstFrame -> Signal<CachedMediaResourceRepresentationResult, NoError> in
+        return Signal({ subscriber in
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: firstFrame.path), options: [.mappedIfSafe]) {
+                if let image = NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                    var randomId: Int64 = 0
+                    arc4random_buf(&randomId, 8)
+                    let path = NSTemporaryDirectory() + "\(randomId)"
+                    let url = URL(fileURLWithPath: path)
+                    
+                    let size = representation.size
+                    
+                    let colorImage = generateImage(size, contextGenerator: { size, context in
+                        context.setBlendMode(.copy)
+                        context.draw(image, in: CGRect(origin: CGPoint(), size: size))
+                    })!
+                    
+                    if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                        CGImageDestinationSetProperties(colorDestination, nil)
                         
-                        let size = representation.size
+                        let colorQuality: Float = 0.5
                         
-                        let colorImage = generateImage(size, contextGenerator: { size, context in
-                            context.setBlendMode(.copy)
-                            context.draw(image, in: CGRect(origin: CGPoint(), size: size))
-                        })!
+                        let options = NSMutableDictionary()
+                        options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
                         
-                        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
-                            CGImageDestinationSetProperties(colorDestination, nil)
-                            
-                            let colorQuality: Float = 0.5
-                            
-                            let options = NSMutableDictionary()
-                            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                            
-                            CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
-                            if CGImageDestinationFinalize(colorDestination) {
-                                subscriber.putNext(.temporaryPath(path))
-                                subscriber.putCompletion()
-                            }
+                        CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
+                        if CGImageDestinationFinalize(colorDestination) {
+                            subscriber.putNext(.temporaryPath(path))
+                            subscriber.putCompletion()
                         }
                     }
                 }
-                return EmptyDisposable
-            }) |> runOn(cacheThreadPool)
-        }
+            }
+            return EmptyDisposable
+        }) |> runOn(cacheThreadPool)
     }
-    
 }
 
 

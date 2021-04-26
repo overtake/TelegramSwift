@@ -68,6 +68,16 @@ class FireTimerControl: Control {
     deinit {
         self.animator?.invalidate()
     }
+
+    func updateColor(_ color: NSColor) {
+        if let params = self.currentParams {
+            self.currentParams = Params(
+                color: color,
+                timeout: params.timeout,
+                deadlineTimestamp: params.deadlineTimestamp
+            )
+        }
+    }
     
     func update(color: NSColor, timeout: Int32, deadlineTimestamp: Int32?) {
         let params = Params(
@@ -125,8 +135,8 @@ class FireTimerControl: Control {
             self.currentContentState = contentState
             let image: CGImage?
             
-            let diameter: CGFloat = 24
-            let inset: CGFloat = 16
+            let diameter: CGFloat = 42
+            let inset: CGFloat = 7
             let lineWidth: CGFloat = 2
             
             switch contentState {
@@ -218,9 +228,9 @@ class FireTimerControl: Control {
                         context.fillEllipse(in: CGRect(origin: CGPoint(x: particle.position.x - size / 2.0, y: particle.position.y - size / 2.0), size: CGSize(width: size, height: size)))
                     }
                     
-                    let image = NSImage(named: "Icon_ExportedInvitation_Fire")!.precomposed(color, flipVertical: true)
+                 //   let image = NSImage(named: "Icon_ExportedInvitation_Fire")!.precomposed(color, flipVertical: true)
                     
-                    context.draw(image, in: rect.focus(image.size.aspectFitted(NSMakeSize(30, 30))))
+                 //   context.draw(image, in: rect.focus(image.size.aspectFitted(NSMakeSize(30, 30))))
                 })
             }
             
