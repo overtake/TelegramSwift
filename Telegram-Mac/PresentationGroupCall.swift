@@ -1091,7 +1091,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, enableVideo: true, enableNoiseSuppression: true)
+                }, outgoingAudioBitrateKbit: nil, enableVideo: true, enableNoiseSuppression: false)
                 self.incomingVideoSourcePromise.set(callContext.videoSources
                 |> deliverOnMainQueue
                 |> map { [weak self] sources -> [PeerId: UInt32] in
