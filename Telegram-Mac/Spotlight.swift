@@ -167,7 +167,7 @@ final class SpotlightContext {
 }
 
 func parseSpotlightIdentifier(_ unique: String) -> SpotlightIdentifier? {
-    let vars = urlVars(with: unique)
+    let (vars, _) = urlVars(with: unique)
     
     if let source = vars["source"], let rawAccountId = vars["accountId"], let int64AccountId = Int64(rawAccountId)  {
         let accountId = AccountRecordId(rawValue: int64AccountId)

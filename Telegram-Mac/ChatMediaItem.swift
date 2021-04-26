@@ -566,12 +566,25 @@ class ChatMediaItem: ChatRowItem {
         return ChatMediaView.self
     }
     
+    var isPinchable: Bool {
+        return contentNode() == ChatInteractiveContentView.self || contentNode() == ChatGIFContentView.self
+    }
 }
 
 
 
 class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     
+    private var pinchToZoom: PinchToZoom?
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        pinchToZoom = PinchToZoom(parentView: contentView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
@@ -590,12 +603,15 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 if let image = contentNode.media as? TelegramMediaImage {
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
+                } else if let file = contentNode.media as? TelegramMediaFile {
+                    let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
+                    return (.file(reference, VideoPreviewModalView.self), contentNode)
                 }
             } else if contentNode is ChatFileContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: []))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -691,13 +707,20 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 let node = item.contentNode()
                 self.contentNode = node.init(frame:NSZeroRect)
                 self.addSubview(self.contentNode!)
+                
             }
-            
+           
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
+            
+            if item.isPinchable {
+                self.pinchToZoom?.add(to: contentNode!, size: item.contentSize)
+            } else {
+                self.pinchToZoom?.remove()
+            }
         }
         super.set(item: item, animated: animated)
     }
-    
+        
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
          if let content = self.contentNode?.interactionContentView(for: innerId, animateIn: animateIn) {
             return content

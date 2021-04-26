@@ -12,7 +12,7 @@
 #if TARGET_OS_OSX
 #import <AppKit/AppKit.h>
 #else
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 #endif
 
 #import <sys/sysctl.h>

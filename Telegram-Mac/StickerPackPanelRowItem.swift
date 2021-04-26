@@ -90,7 +90,7 @@ class StickerPackPanelRowItem: TableRowItem {
 
         var point: NSPoint = NSMakePoint(5, title == nil ? 5 : !packInfo.featured ? 35 : 55)
         for (i, file) in files.enumerated() {
-            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file), point))
+            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), point))
             point.x += size.width + 10
             if (i + 1) % 5 == 0 {
                 point.y += size.height + 5

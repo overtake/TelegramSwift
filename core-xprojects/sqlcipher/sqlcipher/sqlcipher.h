@@ -17,7 +17,6 @@ FOUNDATION_EXPORT const unsigned char sqlcipherVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <sqlcipher/PublicHeader.h>
 
 
-#import <sqlcipher/sqlcipher_config.h>
 #import <sqlcipher/sqlite3.h>
 #import <sqlcipher/sqlite3ext.h>
 

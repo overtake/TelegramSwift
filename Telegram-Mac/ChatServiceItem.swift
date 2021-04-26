@@ -47,7 +47,7 @@ class ChatServiceItem: ChatRowItem {
                 if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                     return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
                 } else if context.peerId != peerId {
-                    let value = abs(Int(peerId.id) % 7)
+                    let value = abs(Int(peerId.id._internalGetInt32Value()) % 7)
                     return theme.chat.peerName(value)
                 }
             }
@@ -162,7 +162,7 @@ class ChatServiceItem: ChatRowItem {
                     var pinnedId: MessageId?
                     for attribute in message.attributes {
                         if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                            replyMessageText = pullText(from: message) as String
+                            replyMessageText = message.restrictedText(context.contentSettings) ?? pullText(from: message) as String
                             pinnedId = attribute.messageId
                         }
                     }
@@ -202,19 +202,36 @@ class ChatServiceItem: ChatRowItem {
                     if let authorId = authorId {
                         if authorId == context.peerId {
                             if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimerSelf(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimerSelf1(autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             } else {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf1), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                         } else {
-                            if seconds > 0 {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                            } else {
-                                let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer(authorName)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                            if let peer = messageMainPeer(message) {
+                                if peer.isGroup || peer.isSupergroup {
+                                    if seconds > 0 {
+                                        let _ =  attributedString.append(string: L10n.chatServiceGroupSetTimer(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                    } else {
+                                        let _ =  attributedString.append(string: tr(L10n.chatServiceGroupDisabledTimer), color: grayTextColor, font: .normal(theme.fontSize))
+                                    }
+                                } else if peer.isChannel {
+                                    if seconds > 0 {
+                                        let _ =  attributedString.append(string: L10n.chatServiceChannelSetTimer(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                    } else {
+                                        let _ =  attributedString.append(string: L10n.chatServiceChannelDisabledTimer, color: grayTextColor, font: .normal(theme.fontSize))
+                                    }
+                                } else {
+                                    if seconds > 0 {
+                                        let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))), color: grayTextColor, font: .normal(theme.fontSize))
+                                    } else {
+                                        let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimer1(authorName)), color: grayTextColor, font: .normal(theme.fontSize))
+                                    }
+                                }
+                                let range = attributedString.string.nsstring.range(of: authorName)
+                                attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                                attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
                             }
-                            let range = attributedString.string.nsstring.range(of: authorName)
-                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                            attributedString.addAttribute(NSAttributedString.Key.font, value: NSFont.medium(theme.fontSize), range: range)
+
                         }
                     }
                 case .historyScreenshot:
@@ -276,11 +293,16 @@ class ChatServiceItem: ChatRowItem {
                         }
                     }
                     
-                    if let message = paymentMessage, let media = message.media.first as? TelegramMediaInvoice, let peer = messageMainPeer(message) {
+                    if let paymentMessage = paymentMessage, let media = paymentMessage.media.first as? TelegramMediaInvoice, let peer = paymentMessage.peers[paymentMessage.id.peerId] {
                         _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title)), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
+                        
+                        attributedString.add(link:inAppLink.callback("", { _ in
+                            showModal(with: PaymentsReceiptController(context: context, messageId: message.id, message: paymentMessage), for: context.window)
+                        }), for: attributedString.range, color: grayTextColor)
+                        
                     } else {
-                        _ = attributedString.append(string: tr(L10n.chatServicePaymentSent1("", "", "")), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        _ = attributedString.append(string: L10n.chatServicePaymentSent1("", "", ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     }
                 case let .botDomainAccessGranted(domain):
                     _ = attributedString.append(string: L10n.chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))
@@ -328,24 +350,40 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
-                case let .groupPhoneCall(callId, accessHash, duration):
+                case let .groupPhoneCall(callId, accessHash, scheduleDate, duration):
                     let text: String
                     if let duration = duration {
-                        if authorId == context.peerId {
+                        if peer.isChannel {
+                            text = L10n.chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                        } else if authorId == context.peerId {
                             text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                         } else {
                             text = L10n.chatServiceVoiceChatFinished(authorName, autoremoveLocalized(Int(duration)))
                         }
                         let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     } else {
-                        if authorId == context.peerId {
-                            text = L10n.chatServiceVoiceChatStartedYou
+                        if peer.isChannel {
+                            if let scheduled = scheduleDate {
+                                text = L10n.chatServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduled))
+                            } else {
+                                text = L10n.chatServiceVoiceChatStartedChannel
+                            }
+                        } else if authorId == context.peerId {
+                            if let scheduled = scheduleDate {
+                                text = L10n.chatServiceVoiceChatScheduledYou(stringForMediumDate(timestamp: scheduled))
+                            } else {
+                                text = L10n.chatServiceVoiceChatStartedYou
+                            }
                         } else {
-                            text = L10n.chatServiceVoiceChatStarted(authorName)
+                            if let scheduled = scheduleDate {
+                                text = L10n.chatServiceVoiceChatScheduled(authorName, stringForMediumDate(timestamp: scheduled))
+                            } else {
+                                text = L10n.chatServiceVoiceChatStarted(authorName)
+                            }
                         }
                         let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
                             return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                                chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash), true)
+                                chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash, title: nil, scheduleTimestamp: scheduleDate, subscribedToScheduled: false), nil)
                             }))
                         }))
                         attributedString.append(parsed)
@@ -384,7 +422,7 @@ class ChatServiceItem: ChatRowItem {
                     
                     let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { [weak chatInteraction] link in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
-                            chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash), true)
+                            chatInteraction?.joinGroupCall(CachedChannelData.ActiveCall(id: callId, accessHash: accessHash, title: nil, scheduleTimestamp: nil, subscribedToScheduled: false), nil)
                         }))
                     }))
                     attributedString.append(parsed)
@@ -505,6 +543,24 @@ class ChatServiceRowView: TableRowView {
         super.init(frame: frameRect)
         //layerContentsRedrawPolicy = .onSetNeedsDisplay
         addSubview(textView)
+
+
+        textView.set(handler: { [weak self] control in
+            if let item = self?.item as? ChatServiceItem {
+                if let message = item.message, let action = message.media.first as? TelegramMediaAction {
+                    switch action.action {
+                    case let .messageAutoremoveTimeoutUpdated(timeout):
+                        if let peer = item.chatInteraction.peer {
+                            if peer.canManageDestructTimer, timeout > 0 {
+                                item.chatInteraction.showDeleterSetup(control)
+                            }
+                        }
+                    default:
+                        break
+                    }
+                }
+            }
+        }, for: .Click)
     }
     
     override var backdorColor: NSColor {
@@ -617,9 +673,26 @@ class ChatServiceRowView: TableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated:animated)
         textView.disableBackgroundDrawing = true
-        
+
+
+        var interactiveTextView: Bool = false
+
+        if let item = item as? ChatServiceItem, let message = item.message, let action = message.media.first as? TelegramMediaAction {
+            switch action.action {
+            case let .messageAutoremoveTimeoutUpdated(timeout):
+                if let peer = item.chatInteraction.peer {
+                    interactiveTextView = peer.canManageDestructTimer && timeout > 0
+                }
+            default:
+                break
+            }
+        }
+        textView.scaleOnClick = interactiveTextView
+
+
         if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
-            
+
+
             if let image = item.image {
                 if imageView == nil {
                     self.imageView = TransformImageView()

@@ -47,7 +47,7 @@ private func commonGroupsEntries(state: GroupsInCommonState, arguments: GroupsIn
                 viewType = .innerItem
             }
         }
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(PeerEquatable(peer)), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(PeerEquatable(peer)), comparable: nil, item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsetsZero, viewType: viewType, action: {
                 arguments.open(peer.id)
             })

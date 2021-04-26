@@ -32,10 +32,10 @@ private func generate(_ color: NSColor) -> CGImage {
 }
 
 private var menuIcon: CGImage {
-    return generate(theme.colors.grayForeground.darker())
+    return generate(theme.colors.grayIcon.darker())
 }
 private var menuIconActive: CGImage {
-    return generate(theme.colors.grayForeground.darker().highlighted)
+    return generate(theme.colors.grayIcon.darker().highlighted)
 }
 
 class ExportedInvitationRowItem: GeneralRowItem {
@@ -55,11 +55,13 @@ class ExportedInvitationRowItem: GeneralRowItem {
     fileprivate let mode: Mode
     fileprivate let open:(ExportedInvitation)->Void
     fileprivate let copyLink:(String)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
+    fileprivate let publicAddress: String?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, publicAddress: String? = nil, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
         self.context = context
         self.exportedLink = exportedLink
         self._menuItems = menuItems
         self.lastPeers = lastPeers
+        self.publicAddress = publicAddress
         self.shareLink = share
         self.open = open
         self.mode = enableBetaFeatures ? mode : .short
@@ -72,24 +74,29 @@ class ExportedInvitationRowItem: GeneralRowItem {
             text = exportedLink.link.replacingOccurrences(of: "https://", with: "")
             color = theme.colors.text
             if let count = exportedLink.count {
-                usageText = L10n.inviteLinkPeopleJoinedCountable(Int(count))
+                usageText = L10n.inviteLinkJoinedCountable(Int(count))
                 if count > 0 {
                     usageColor = theme.colors.link
                 } else {
                     usageColor = theme.colors.grayText
                 }
             } else {
-                usageText = L10n.inviteLinkPeopleJoinedZero
+                usageText = L10n.inviteLinkJoinedZero
                 usageColor = theme.colors.grayText
             }
+        } else if let publicAddress = publicAddress {
+            text = "t.me/\(publicAddress)"
+            color = theme.colors.text
+            usageText = L10n.inviteLinkJoinedZero
+            usageColor = theme.colors.grayText
         } else {
             text = L10n.channelVisibilityLoading
             color = theme.colors.grayText
-            usageText = L10n.inviteLinkPeopleJoinedZero
+            usageText = L10n.inviteLinkJoinedZero
             usageColor = theme.colors.grayText
         }
         
-        linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), alignment: .center)
+        linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), truncationType: .start, alignment: .center)
         
 
         usageTextLayout = TextViewLayout(.initialize(string: usageText, color: usageColor, font: .normal(.text)))
@@ -99,25 +106,43 @@ class ExportedInvitationRowItem: GeneralRowItem {
     
     override var height: CGFloat {
         var height: CGFloat = viewType.innerInset.top + 40 + viewType.innerInset.top
-        
-        if let link = exportedLink, !link.isExpired && !link.isRevoked {
-            height += 40 + viewType.innerInset.top
-        }
-        
+                
         switch mode {
         case .normal:
+            if let link = exportedLink, !link.isExpired && !link.isRevoked {
+                height += 40 + viewType.innerInset.top
+            } else if exportedLink == nil && publicAddress == nil {
+                height += 40
+            }
             height += 30 + viewType.innerInset.bottom
+            if exportedLink == nil {
+                height += viewType.innerInset.bottom
+            }
         case .short:
             break
         }
         
         return height
     }
+
+    var copyItem: String? {
+        if let exportedLink = exportedLink {
+            if !exportedLink.isExpired && !exportedLink.isRevoked {
+                return exportedLink.link
+            } else {
+                return nil
+            }
+        } else if let publicAddress = publicAddress {
+            return publicAddress
+        } else {
+            return nil
+        }
+    }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
-        linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 120)
+        linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 50)
         usageTextLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
         return result
     }
@@ -160,6 +185,7 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
     private let linkContainer: Control = Control()
     private let linkView: TextView = TextView()
     private let share: TitleButton = TitleButton()
+    private let copy: TitleButton = TitleButton()
     private let actions: ImageButton = ImageButton()
     private let usageTextView = TextView()
     private let usageContainer = Control()
@@ -178,6 +204,11 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         addSubview(share)
         share.layer?.cornerRadius = 10
         share._thatFit = true
+
+        addSubview(copy)
+        copy.layer?.cornerRadius = 10
+        copy._thatFit = true
+
         linkView.userInteractionEnabled = false
         linkView.isSelectable = false
         
@@ -218,8 +249,17 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
             guard let item = self?.item as? ExportedInvitationRowItem else {
                 return
             }
-            if let link = item.exportedLink {
-                item.shareLink(link.link)
+            if let link = item.copyItem {
+                item.shareLink(link)
+            }
+        }, for: .Click)
+
+        copy.set(handler: { [weak self] _ in
+            guard let item = self?.item as? ExportedInvitationRowItem else {
+                return
+            }
+            if let link = item.copyItem {
+                item.copyLink(link)
             }
         }, for: .Click)
         
@@ -242,10 +282,11 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         let innerBlockSize = item.blockWidth - item.viewType.innerInset.left - item.viewType.innerInset.right
         
         linkContainer.frame = NSMakeRect(item.viewType.innerInset.left, item.viewType.innerInset.top, innerBlockSize, 40)
-        linkView.center()
+        linkView.centerY(x: item.viewType.innerInset.left)
         
-        
-        share.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize, 40)
+        copy.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 10, 40)
+        share.frame = NSMakeRect(copy.frame.maxX + 20, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 10, 40)
+
         actions.centerY(x: linkContainer.frame.width - actions.frame.width - item.viewType.innerInset.right)
         
         usageContainer.frame = NSMakeRect(item.viewType.innerInset.left, share.frame.maxY + item.viewType.innerInset.top, innerBlockSize, 30)
@@ -273,6 +314,9 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         share.set(background: theme.colors.accent, for: .Normal)
         share.set(background: theme.colors.accent.highlighted, for: .Highlight)
         share.set(color: theme.colors.underSelectedColor, for: .Normal)
+        copy.set(background: theme.colors.accent, for: .Normal)
+        copy.set(background: theme.colors.accent.highlighted, for: .Highlight)
+        copy.set(color: theme.colors.underSelectedColor, for: .Normal)
         actions.set(image: menuIcon, for: .Normal)
         actions.set(image: menuIconActive, for: .Highlight)
         actions.sizeToFit()
@@ -355,12 +399,15 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         }
                 
         share.set(font: .medium(.text), for: .Normal)
-        share.set(text: L10n.inviteLinkShareLink, for: .Normal)
-        if let link = item.exportedLink {
-            share.userInteractionEnabled = !link.isExpired && !link.isRevoked
-        } else {
-            share.userInteractionEnabled = item.exportedLink != nil
-        }
+        share.set(text: L10n.manageLinksContextShare, for: .Normal)
+        share.userInteractionEnabled = item.copyItem != nil
+
+
+
+        copy.set(font: .medium(.text), for: .Normal)
+        copy.set(text: L10n.manageLinksContextCopy, for: .Normal)
+        copy.userInteractionEnabled = item.copyItem != nil
+
         linkView.update(item.linkTextLayout)
      
         usageTextView.update(item.usageTextLayout)

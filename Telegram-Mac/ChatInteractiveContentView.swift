@@ -109,7 +109,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     override func previewMediaIfPossible() -> Bool {
-        guard let context = self.context, let window = self.kitWindow, let table = self.table, media is TelegramMediaImage, parent == nil || parent?.containsSecretMedia == false, fetchStatus == .Local else {return false}
+        guard let context = self.context, let window = self.kitWindow, let table = self.table, parent == nil || parent?.containsSecretMedia == false, fetchStatus == .Local else {return false}
         _ = startModalPreviewHandle(table, window: window, context: context)
         return true
     }
@@ -202,6 +202,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     @objc func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
+        
+                
         if let autoplayView = autoplayVideoView {
             if accept {
                 autoplayView.mediaPlayer.play()
@@ -233,16 +235,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func viewDidMoveToWindow() {
         updateListeners()
-        DispatchQueue.main.async { [weak self] in
-            self?.updatePlayerIfNeeded()
-        }
+        self.updatePlayerIfNeeded()
     }
 
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
-        if superview == nil {
-            self.autoplayVideoView = nil
-        }
+        self.updatePlayerIfNeeded()
     }
     
     override func layout() {
@@ -373,6 +371,45 @@ class ChatInteractiveContentView: ChatMediaContentView {
         return (parent != nil && parent?.groupingKey == nil) || parent == nil
     }
 
+    override func update(size: NSSize) {
+        
+        var topLeftRadius: CGFloat = .cornerRadius
+        var bottomLeftRadius: CGFloat = .cornerRadius
+        var topRightRadius: CGFloat = .cornerRadius
+        var bottomRightRadius: CGFloat = .cornerRadius
+        
+        
+        if let positionFlags = positionFlags {
+            if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                topLeftRadius = topLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                topRightRadius = topRightRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                bottomLeftRadius = bottomLeftRadius * 3 + 2
+            }
+            if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                bottomRightRadius = bottomRightRadius * 3 + 2
+            }
+        }
+        
+        var dimensions: NSSize = size
+        
+        if let image = media as? TelegramMediaImage {
+            dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+        } else if let file = media as? TelegramMediaFile {
+            dimensions = file.dimensions?.size ?? size
+        }
+        
+        let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
+        
+        self.image.set(arguments: arguments)
+        
+        if self.image.isFullyLoaded {
+            
+        }
+    }
 
     override func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
@@ -429,6 +466,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
 
 
+        
 
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         var updatedStatusSignal: Signal<(MediaResourceStatus, MediaResourceStatus), NoError>?
@@ -519,7 +557,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
             
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
-            if let updateImageSignal = updateImageSignal, !self.image.isFullyLoaded {
+            if let updateImageSignal = updateImageSignal {
+                self.image.ignoreFullyLoad = true
                 self.image.setSignal( updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)

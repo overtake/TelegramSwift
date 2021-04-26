@@ -249,12 +249,16 @@ class ColdStartPasslockController: ModalViewController {
             })
         }
         
+        var locked = false
+        
         valueDisposable.set((genericView.value.get() |> deliverOnMainQueue).start(next: { [weak self] value in
-            guard let `self` = self else {
+            guard let `self` = self, !locked else {
                 return
             }
             if !self.checkNextValue(value) {
                 self.genericView.input.shake()
+            } else {
+                locked = true
             }
         }))
         

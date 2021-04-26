@@ -81,7 +81,7 @@ private final class ValuesSelectorModalView : View {
         addSubview(separator)
         addSubview(searchView)
         tableView.getBackgroundColor = {
-            return theme.colors.listBackground
+            return .clear
         }
         separator.backgroundColor = theme.colors.border
     }
@@ -224,15 +224,15 @@ class ValuesSelectorModalController<T>: ModalViewController where T : Equatable 
             var index: Int32 = 0
             var sectionId: Int32 = 0
             
-            entries.append(.sectionId(sectionId: sectionId))
-            sectionId += 1
+//            entries.append(.sectionId(sectionId: sectionId))
+//            sectionId += 1
             
             let values = state.values.filter { value in
                 let result = value.localized.split(separator: " ").filter({$0.lowercased().hasPrefix(search.request.lowercased())})
                 return search.request.isEmpty || !result.isEmpty
             }
             for value in values {
-                entries.append(ValuesSelectorEntry.value(sectionId: sectionId, index: index, value: value, selected: state.selected == value, viewType: bestGeneralViewType(values, for: value)))
+                entries.append(ValuesSelectorEntry.value(sectionId: sectionId, index: index, value: value, selected: state.selected == value, viewType: .legacy))
                 index += 1
             }
             entries.append(.sectionId(sectionId: sectionId))

@@ -13,12 +13,17 @@ import Postbox
 import TelegramCore
 import SyncCore
 
+struct ReportReasonValue : Equatable {
+    let reason: ReportReason
+    let comment: String
+}
 
-func reportReasonSelector(context: AccountContext) -> Signal<ReportReason, NoError> {
-    let promise: ValuePromise<ReportReason> = ValuePromise()
+
+func reportReasonSelector(context: AccountContext, buttonText: String = L10n.reportReasonReport) -> Signal<ReportReasonValue, NoError> {
+    let promise: ValuePromise<ReportReasonValue> = ValuePromise()
     let controller = ReportReasonController(callback: { reason in
         promise.set(reason)
-    })
+    }, buttonText: buttonText)
     showModal(with: controller, for: context.window)
     
     return promise.get() |> take(1)
@@ -28,20 +33,20 @@ func reportReasonSelector(context: AccountContext) -> Signal<ReportReason, NoErr
 
 
 private final class ReportReasonArguments {
-    let toggleReason:(ReportReason)->Void
-    init(toggleReason:@escaping(ReportReason)->Void) {
-        self.toggleReason = toggleReason
+    let selectReason:(ReportReason)->Void
+    init(selectReason:@escaping(ReportReason)->Void) {
+        self.selectReason = selectReason
     }
 }
 
 private struct ReportReasonState : Equatable {
-    let reason: ReportReason
-    init(reason: ReportReason) {
-        self.reason = reason
+    let value: ReportReasonValue
+    init(value: ReportReasonValue) {
+        self.value = value
     }
     
-    func withUpdatedReason(_ reason: ReportReason) -> ReportReasonState {
-        return ReportReasonState(reason: reason)
+    func withUpdatedReason(_ value: ReportReasonValue) -> ReportReasonState {
+        return ReportReasonState(value: value)
     }
 }
 
@@ -142,35 +147,29 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .custom("")]
+    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright]
     
     for (i, reason) in reasons.enumerated() {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .selectable(state.reason.isEqual(to: reason)), viewType: bestGeneralViewType(reasons, for: i), action: {
-            arguments.toggleReason(reason)
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .none, viewType: bestGeneralViewType(reasons, for: i), action: {
+            arguments.selectReason(reason)
         })))
-           index += 1
-    }
-    
-    switch state.reason {
-    case let .custom(text):
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
         index += 1
-        
-    default:
-        break
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+
+//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
+//    index += 1
+//
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
     
     return entries
 }
 
-func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDataModalController {
-    let initialState = ReportReasonState(reason: .spam)
+func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, buttonText: String = L10n.reportReasonReport) -> InputDataModalController {
+    let initialState = ReportReasonState(value: .init(reason: .spam, comment: ""))
     let state: ValuePromise<ReportReasonState> = ValuePromise(initialState)
     let stateValue: Atomic<ReportReasonState> = Atomic(value: initialState)
     
@@ -178,14 +177,11 @@ func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDat
         state.set(stateValue.modify(f))
     }
     
-    let arguments = ReportReasonArguments(toggleReason: { reason in
-        updateState { current in
-            if !current.reason.isEqual(to: reason) {
-                return current.withUpdatedReason(reason)
-            } else {
-                return current
-            }
-        }
+    var getModalController:(()->InputDataModalController?)? = nil
+    
+    let arguments = ReportReasonArguments(selectReason: { reason in
+        callback(.init(reason: reason, comment: ""))
+        getModalController?()?.close()
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in
@@ -194,7 +190,6 @@ func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDat
         return InputDataSignalValue(entries: entries)
     }
     
-    var getModalController:(()->InputDataModalController?)? = nil
 
     
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.peerInfoReport)
@@ -205,18 +200,13 @@ func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDat
     
     controller.updateDatas = { data in
         updateState { current in
-            switch current.reason {
-            case .custom:
-                return current.withUpdatedReason(.custom(data[_id_custom_input]?.stringValue ?? ""))
-            default:
-                return current
-            }
+            return current.withUpdatedReason(.init(reason: current.value.reason, comment: data[_id_custom_input]?.stringValue ?? ""))
         }
         return .none
     }
     
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.reportReasonReport, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: buttonText, accept: { [weak controller] in
           controller?.validateInputValues()
     }, drawBorder: true, singleButton: true)
     
@@ -230,7 +220,7 @@ func ReportReasonController(callback: @escaping(ReportReason)->Void) -> InputDat
     
     controller.validateData = { data in
         return .success(.custom {
-            callback(stateValue.with { $0.reason })
+            callback(stateValue.with { $0.value })
             getModalController?()?.close()
         })
     }

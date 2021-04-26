@@ -52,8 +52,10 @@ open class ImageButton: Button {
     }
     
     public func set(image:CGImage, for state:ControlState) -> Void {
-        images[state] = image
-        apply(state: self.controlState)
+        if images[state] != image {
+            images[state] = image
+            apply(state: self.controlState)
+        }
     }
     
     open override func viewDidChangeBackingProperties() {
@@ -120,41 +122,41 @@ open class ImageButton: Button {
         if imageView.image != updated {
             self.imageView.image = updated
         }
-        
-        self.imageView.animator().alphaValue = isEnabled ? 1 : 0.8
-        
-        if let policy = self.hoverAdditionPolicy[state], previous != state {
-            switch policy {
-            case .none:
-                break
-            case let .enlarge(value):
-                let current = additionBackgroundView.layer?.presentation()?.value(forKeyPath: "transform.scale") as? CGFloat ?? 1.0
-                additionBackgroundView.layer?.animateScaleSpring(from: current, to: value, duration: 0.35, removeOnCompletion: false)
+       // if state != previousState {
+            self.imageView.animator().alphaValue = isEnabled ? 1 : 0.8
+            
+            if let policy = self.hoverAdditionPolicy[state], previous != state {
+                switch policy {
+                case .none:
+                    break
+                case let .enlarge(value):
+                    let current = additionBackgroundView.layer?.presentation()?.value(forKeyPath: "transform.scale") as? CGFloat ?? 1.0
+                    additionBackgroundView.layer?.animateScaleSpring(from: current, to: value, duration: 0.35, removeOnCompletion: false)
+                }
             }
-        }
-        
-        if let color = self.additionStateBackground[state] ?? self.additionStateBackground[.Normal] {
-            additionBackgroundView.backgroundColor = color
-        } else {
-            additionBackgroundView.backgroundColor = .clear
-        }
+            
+            if let color = self.additionStateBackground[state] ?? self.additionStateBackground[.Normal] {
+                additionBackgroundView.backgroundColor = color
+            } else {
+                additionBackgroundView.backgroundColor = .clear
+            }
 
-        updateLayout()
-        
-        if let cornerRadius = self.cornerRadius[state] {
-            switch cornerRadius {
-            case .none:
-                self.layer?.cornerRadius = 0
-                self.additionBackgroundView.layer?.cornerRadius = 0
-            case .appSpecific:
-                self.layer?.cornerRadius = .cornerRadius
-                self.additionBackgroundView.layer?.cornerRadius = .cornerRadius
-            case .half:
-                self.layer?.cornerRadius = max(frame.width, frame.height) / 2
-                self.additionBackgroundView.layer?.cornerRadius = max(additionBackgroundView.frame.width, additionBackgroundView.frame.height) / 2
+            updateLayout()
+            
+            if let cornerRadius = self.cornerRadius[state] {
+                switch cornerRadius {
+                case .none:
+                    self.layer?.cornerRadius = 0
+                    self.additionBackgroundView.layer?.cornerRadius = 0
+                case .appSpecific:
+                    self.layer?.cornerRadius = .cornerRadius
+                    self.additionBackgroundView.layer?.cornerRadius = .cornerRadius
+                case .half:
+                    self.layer?.cornerRadius = max(frame.width, frame.height) / 2
+                    self.additionBackgroundView.layer?.cornerRadius = max(additionBackgroundView.frame.width, additionBackgroundView.frame.height) / 2
+                }
             }
-        }
-        
+        //}
     }
     
     public func applyAnimation(from: CGImage, to: CGImage, animation: ImageButtonAnimationPolicy) {

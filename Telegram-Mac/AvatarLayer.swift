@@ -91,7 +91,6 @@ class AvatarControl: NSView {
         self.font = font
         super.init(frame: NSZeroRect)
         wantsLayer = true
-        layerContentsRedrawPolicy = .never
     }
     
 
@@ -132,7 +131,7 @@ class AvatarControl: NSView {
         } else {
             state = .Empty
         }
-        if self.state != state {
+        if self.state != state || self.layer?.contents == nil {
             self.state = state
             contentScale = 0
             self.viewDidChangeBackingProperties()
@@ -212,7 +211,7 @@ class AvatarControl: NSView {
                         photo = nil
                         self.setState(account: account, state: .Empty)
                         let icon = theme.icons.deletedAccount
-                        self.setSignal(generateEmptyPhoto(updatedSize, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, updatedSize.width - 20), min(updatedSize.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
+                        self.setSignal(generateEmptyPhoto(updatedSize, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id._internalGetInt32Value() % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, updatedSize.width - 20), min(updatedSize.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
                         return
                     } else {
                         photo = .peer(peer, representation, letters, message)

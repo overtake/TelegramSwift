@@ -204,7 +204,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
                 }
                 startDragPosition = nil
                 if let opacity = strongSelf.view.layer?.opacity, opacity < 0.5 {
-                    globalAudio?.notifyCompleteQueue()
+                    globalAudio?.notifyCompleteQueue(animated: true)
                     globalAudio?.cleanup()
                 } else {
                     strongSelf.findCorner()
@@ -323,7 +323,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     
     
     
-    func songDidChanged(song:APSongItem, for controller:APController) {
+    func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
         var msg:Message? = nil
         switch song.entry {
         case let .song(message):
@@ -350,31 +350,31 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         }
         updateScrolled()
     }
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
         switch song.state {
-        case let .playing(data):
-            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
+        case let .playing(_, _, progress):
+            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(progress), force: false)
         case .stoped, .waiting, .fetching:
             genericView.playingProgressView.state = .None
-        case let .paused(data):
-            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: true)
+        case let .paused(_, _, progress):
+            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(progress), force: true)
         }
     }
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         if song.stableId == currentMessage?.chatStableId {
             //self.timebase = nil
         }
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         if song.stableId == currentMessage?.chatStableId {
             self.timebase = controller.timebase
         }
     }
 
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         hide()
     }
     

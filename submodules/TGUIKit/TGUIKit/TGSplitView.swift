@@ -221,11 +221,11 @@ public class SplitView : View {
     public weak var delegate:SplitViewDelegate?
     
     
-    private var _proportions:[Int:SplitProportion] = [Int:SplitProportion]()
+    private var _proportions:[Int:SplitProportion] = [:]
     private var _startSize:[Int:NSSize] = [Int:NSSize]()
-    fileprivate var _controllers:[ViewController] = [ViewController]()
+    fileprivate var _controllers:[WeakReference<ViewController>] = []
     private var _issingle:Bool?
-    private var _layoutProportions:[SplitViewState:SplitProportion] = [SplitViewState:SplitProportion]()
+    private var _layoutProportions:[SplitViewState:SplitProportion] = [:]
     
     private var _splitIdx:Int?
     
@@ -253,6 +253,10 @@ public class SplitView : View {
         }
     }
 
+    deinit {
+        var bp:Int = 0
+        bp += 1
+    }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -263,7 +267,7 @@ public class SplitView : View {
         controller._frameRect = NSMakeRect(0, 0, proportion.min, frame.height)
         container.addSubview(controller.view);
         controller.viewWillAppear(false)
-        _controllers.append(controller);
+        _controllers.append(WeakReference(value: controller));
         _startSize.updateValue(controller.view.frame.size, forKey: controller.internalId);
         _proportions.updateValue(proportion, forKey: controller.internalId)
         controller.viewDidAppear(false)
@@ -272,12 +276,13 @@ public class SplitView : View {
     func removeController(controller:ViewController) -> Void {
         
         controller.viewWillDisappear(false)
-        let idx = _controllers.firstIndex(of: controller)!;
-        container.subviews[idx].removeFromSuperview();
-        _controllers.remove(at: idx);
-        _startSize.removeValue(forKey: controller.internalId);
-        _proportions.removeValue(forKey: controller.internalId);
-        
+        let idx = _controllers.firstIndex(where: { $0.value == controller });
+        if let idx = idx {
+            container.subviews[idx].removeFromSuperview();
+            _controllers.remove(at: idx);
+            _startSize.removeValue(forKey: controller.internalId);
+            _proportions.removeValue(forKey: controller.internalId);
+        }
         controller.viewDidDisappear(false)
     }
     
@@ -287,7 +292,9 @@ public class SplitView : View {
         
         
         for controller in _controllers {
-            copy.append(controller)
+            if let value = controller.value {
+                copy.append(value)
+            }
         }
         
         for controller in copy {
@@ -405,37 +412,39 @@ public class SplitView : View {
         var x:CGFloat = 0;
         
         for (index, obj) in _controllers.enumerated() {
-            
-            let proportion:SplitProportion = _proportions[obj.internalId]!;
-            let startSize:NSSize = _startSize[obj.internalId]!;
-            var size:NSSize = NSMakeSize(x, frame.height);
-            var _min:CGFloat  = startSize.width;
-            _min = proportion.min;
-            if(proportion.max == CGFloat.greatestFiniteMagnitude && index != _controllers.count-1) {
-                var m2:CGFloat = 0;
-                for i:Int in index + 1 ..< _controllers.count - index  {
-                    let split:ViewController = _controllers[i];
-                    let proportion:SplitProportion = _proportions[split.internalId]!;
-                    m2+=proportion.min;
+            if let obj = obj.value {
+                let proportion:SplitProportion = _proportions[obj.internalId]!;
+                let startSize:NSSize = _startSize[obj.internalId]!;
+                var size:NSSize = NSMakeSize(x, frame.height);
+                var _min:CGFloat  = startSize.width;
+                _min = proportion.min;
+                if(proportion.max == CGFloat.greatestFiniteMagnitude && index != _controllers.count-1) {
+                    var m2:CGFloat = 0;
+                    for i:Int in index + 1 ..< _controllers.count - index  {
+                        let split:ViewController? = _controllers[i].value;
+                        if let split = split {
+                            let proportion:SplitProportion = _proportions[split.internalId]!;
+                            m2+=proportion.min;
+                        }
+                    }
+                    _min = frame.width - x - m2;
                 }
-                _min = frame.width - x - m2;
+                if index < _controllers.count - 1, state != .minimisize {
+                    _min = min(_min, frame.width - 350)
+                }
+                if(index == _controllers.count - 1) {
+                    _min = frame.width - x;
+                }
+                
+                size = NSMakeSize(x + _min > frame.width ? (frame.width - x) : _min, frame.height);
+                let rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
+                
+                if(!NSEqualRects(rect, obj.view.frame)) {
+                    obj.view.frame = rect;
+                }
+                
+                x+=size.width;
             }
-            if index < _controllers.count - 1, state != .minimisize {
-                _min = min(_min, frame.width - 350)
-            }
-            if(index == _controllers.count - 1) {
-                _min = frame.width - x;
-            }
-            
-            size = NSMakeSize(x + _min > frame.width ? (frame.width - x) : _min, frame.height);
-            let rect:NSRect = NSMakeRect(x, 0, size.width, size.height);
-            
-            if(!NSEqualRects(rect, obj.view.frame)) {
-                obj.view.frame = rect;
-            }
-            
-            x+=size.width;
-            
         }
         
         //assert(state != .none)

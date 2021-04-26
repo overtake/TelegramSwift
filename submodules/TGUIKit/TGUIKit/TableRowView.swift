@@ -15,6 +15,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     private var animatedView: RowAnimateView?
 
+    private let longDisposable = MetaDisposable()
+    
     public internal(set) var isResorting: Bool = false {
         didSet {
             updateIsResorting()
@@ -190,7 +192,26 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func pressureChange(with event: NSEvent) {
         super.pressureChange(with: event)
+        
+        
+        if event.stage >= 1 && event.stage != lastPressureEventStage {
+            longDisposable.set(delaySignal(0.25).start(completed: { [weak self] in
+                if let strongSelf = self {
+                    if NSEvent.pressedMouseButtons & (1 << 0) != 0 {
+                        if strongSelf.window?.mouseLocationOutsideOfEventStream == event.locationInWindow {
+                            strongSelf.forceClick(in: strongSelf.convert(event.locationInWindow, from: nil))
+                        }
+                    }
+                }
+            }))
+        }
+        
+        if event.stage < 1 {
+            longDisposable.set(nil)
+        }
+        
         if event.stage == 2 && lastPressureEventStage < 2 {
+            longDisposable.set(nil)
             forceClick(in: convert(event.locationInWindow, from: nil))
         }
         lastPressureEventStage = event.stage
@@ -296,10 +317,12 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open func onShowContextMenu() ->Void {
         self.layer?.setNeedsDisplay()
+        updateColors()
     }
     
     open func onCloseContextMenu() ->Void {
         self.layer?.setNeedsDisplay()
+        updateColors()
     }
     
     required public init?(coder: NSCoder) {
@@ -378,6 +401,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     deinit {
+        longDisposable.dispose()
         menuDisposable.dispose()
     }
     

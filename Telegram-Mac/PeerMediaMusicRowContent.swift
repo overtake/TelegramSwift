@@ -17,7 +17,7 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate let textLayout:TextViewLayout
     fileprivate let descLayout:TextViewLayout?
     fileprivate let file:TelegramMediaFile
-    fileprivate let thumbResource: ExternalMusicAlbumArtResource
+    fileprivate let thumbResource: TelegramMediaResource?
     fileprivate let isCompactPlayer: Bool
     fileprivate let messages: [Message]
     init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, viewType: GeneralViewType = .legacy) {
@@ -36,14 +36,29 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
         self.textLayout = TextViewLayout(.initialize(string: music.0, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
 
         if !music.1.isEmpty {
-            self.descLayout = TextViewLayout(.initialize(string: music.1, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
+            let text: String
+            if let duration = file.duration {
+                text = timerText(Int(duration)) + " • " + music.1
+            } else {
+                text = music.1
+            }
+            self.descLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
         } else if let size = file.size {
             self.descLayout = TextViewLayout(.initialize(string: String.prettySized(with: size), color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
         } else {
             descLayout = nil
         }
-        thumbResource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
-
+        let resource: TelegramMediaResource?
+        if file.previewRepresentations.isEmpty {
+            if !file.mimeType.contains("ogg")  {
+                resource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+            } else {
+                resource = nil
+            }
+        } else {
+            resource = file.previewRepresentations.first!.resource
+        }
+        self.thumbResource = resource
         
         
         super.init(initialSize, interface, object, viewType: viewType)
@@ -137,41 +152,29 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
         }
     }
     
-    func songDidChanged(song: APSongItem, for controller: APController) {
+    func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
         checkState()
     }
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
         checkState()
     }
     
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         checkState()
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         checkState()
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         //checkState()
     }
     
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         checkState()
     }
     
     func executeInteraction(_ isControl:Bool) -> Void {
-        if let fetchStatus = self.fetchStatus {
-            switch fetchStatus {
-            case .Fetching:
-                if isControl {
-                    cancelFetching()
-                }
-            case .Remote:
-                fetch()
-            case .Local:
-                open()
-                break
-            }
-        }
+        open()
     }
     
     func checkState() {
@@ -219,12 +222,13 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             
             thumbView.layer?.contents = theme.icons.playerMusicPlaceholder
             thumbView.layer?.cornerRadius = .cornerRadius
-            
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: item.thumbResource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-            
-            thumbView.setSignal(chatMessagePhotoThumbnail(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
-            
-            thumbView.set(arguments: arguments)
+            if let resource = item.thumbResource {
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                
+                thumbView.setSignal(chatMessagePhotoThumbnail(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image)))
+                
+                thumbView.set(arguments: arguments)
+            }
 
             
             if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
@@ -253,8 +257,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func open() {
         if let item = item as? PeerMediaMusicRowItem  {
-            if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: item.message) {
-                controller.playOrPause()
+            if let controller = globalAudio, controller.playOrPause(item.message.id) {
             } else {
                 let controller = APChatMusicController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message), messages: item.messages)
                 item.interface.inlineAudioPlayer(controller)

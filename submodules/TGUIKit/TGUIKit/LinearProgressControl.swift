@@ -272,7 +272,7 @@ public class LinearProgressControl: Control {
         
         progressView.change(size: size, animated: animated, duration: duration, timingFunction: timingFunction)
         if let scrubber = scrubber {
-            scrubber.change(pos: NSMakePoint(containerView.frame.minX + size.width - scrubber.frame.width / 2, scrubber.frame.minY), animated: animated, timingFunction: timingFunction)
+            scrubber.change(pos: NSMakePoint(max(0, min(containerView.frame.minX + size.width - scrubber.frame.width / 2, containerView.frame.maxX - scrubber.frame.width)), scrubber.frame.minY), animated: animated, timingFunction: timingFunction)
         }
         progressView.centerY(x: 0)
         
@@ -347,7 +347,7 @@ public class LinearProgressControl: Control {
         
         
         if let scrubber = scrubber {
-            scrubber.centerY(x: containerView.frame.minX + size.width - scrubber.frame.width / 2)
+            scrubber.centerY(x: max(0, min(containerView.frame.minX + size.width - scrubber.frame.width / 2, containerView.frame.maxX - scrubber.frame.width)))
         }
 
     }

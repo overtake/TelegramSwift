@@ -47,22 +47,29 @@ final class InviteLinkPeerManager {
         
         var list: [ExportedInvitation]?
         var next: ExportedInvitation?
+        var creators:[ExportedInvitationCreator]?
         var totalCount: Int32
         var activeLoaded: Bool
         var revokedList: [ExportedInvitation]?
         var nextRevoked: ExportedInvitation?
         var totalRevokedCount: Int32
         var revokedLoaded: Bool
+        var effectiveCount: Int32 {
+            return totalCount + (self.creators?.reduce(0, { current, value in
+                return current + value.count
+            }) ?? 0)
+        }
+
         static var `default`: State {
-            return State(list: nil, next: nil, totalCount: 0, activeLoaded: false, revokedList: nil, nextRevoked: nil, totalRevokedCount: 0, revokedLoaded: false)
+            return State(list: nil, next: nil, creators: nil, totalCount: 0, activeLoaded: false, revokedList: nil, nextRevoked: nil, totalRevokedCount: 0, revokedLoaded: false)
         }
     }
     
     let context: AccountContext
     let peerId: PeerId
-    
+    let adminId: PeerId?
     private let listDisposable = DisposableDict<Bool>()
-        
+    private let loadCreatorsDisposable = MetaDisposable()
     private let stateValue: Atomic<State> = Atomic(value: State.default)
     private let statePromise = ValuePromise(State.default, ignoreRepeated: true)
     private func updateState(_ f: (State) -> State) {
@@ -75,12 +82,25 @@ final class InviteLinkPeerManager {
     
     deinit {
         listDisposable.dispose()
+        loadCreatorsDisposable.dispose()
+        updateAdminsDisposable.dispose()
     }
     
-    init(context: AccountContext, peerId: PeerId) {
+    private let updateAdminsDisposable = MetaDisposable()
+    init(context: AccountContext, peerId: PeerId, adminId: PeerId? = nil) {
         self.context = context
         self.peerId = peerId
+        self.adminId = adminId
         self.loadNext()
+        self.loadNext(true)
+        if adminId == nil {
+            self.loadCreators()
+            let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { [weak self] _ in
+                self?.loadCreators()
+            })
+            updateAdminsDisposable.set(disposable)
+        }
+        
     }
     
     func createPeerExportedInvitation(expireDate: Int32?, usageLimit: Int32?) -> Signal<NoValue, NoError> {
@@ -131,22 +151,29 @@ final class InviteLinkPeerManager {
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
             
-            let signal: Signal<ExportedInvitation?, RevokePeerExportedInvitationError>
-            if !link.isPermanent {
-                signal = TelegramCore.revokePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
-            } else {
-                signal = revokePersistentPeerExportedInvitation(account: account, peerId: peerId) |> mapError { _ in .generic }
-            }
+            let signal: Signal<RevokeExportedInvitationResult?, RevokePeerExportedInvitationError>
+            signal = TelegramCore.revokePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
                     state.list = state.list ?? []
-                    if let _ = value {
-                        state.revokedList = state.revokedList ?? []
-                        state.list!.removeAll(where: { $0.link == link.link})
-                        state.revokedList?.append(link.withUpdatedIsRevoked(true))
-                        state.revokedList?.sort(by: { $0.date < $1.date })
-                        state.totalCount -= 1
+                    if let value = value {
+                        switch value {
+                        case let .update(link):
+                            state.revokedList = state.revokedList ?? []
+                            state.list!.removeAll(where: { $0.link == link.link})
+                            state.revokedList?.append(link)
+                            state.revokedList?.sort(by: { $0.date < $1.date })
+                            state.totalCount -= 1
+                        case let .replace(link, new):
+                            let link = link.withUpdatedIsRevoked(true)
+                            state.revokedList = state.revokedList ?? []
+                            state.list!.removeAll(where: { $0.link == link.link})
+                            state.list!.insert(new, at: 0)
+                            state.revokedList?.insert(link, at: 0)
+                            state.revokedList?.sort(by: { $0.date > $1.date })
+                        }
+
                     }
                     
                     return state
@@ -184,7 +211,7 @@ final class InviteLinkPeerManager {
         let account = self.context.account
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = TelegramCore.deleteAllRevokedPeerExportedInvitations(account: account, peerId: peerId)
+            let signal = TelegramCore.deleteAllRevokedPeerExportedInvitations(account: account, peerId: peerId, adminId: self?.adminId ?? account.peerId)
             let disposable = signal.start(completed: {
                 self?.updateState { state in
                     var state = state
@@ -200,14 +227,23 @@ final class InviteLinkPeerManager {
         }
     }
 
+    func loadCreators() {
+        let signal = peerExportedInvitationsCreators(account: context.account, peerId: peerId) |> deliverOnMainQueue
+        loadCreatorsDisposable.set(signal.start(next: { [weak self] creators in
+            self?.updateState { state in
+                var state = state
+                state.creators = creators
+                return state
+            }
+        }))
+    }
 
     
-    func loadNext() {
+    func loadNext(_ forceLoadRevoked: Bool = false) {
         
-        let revoked = stateValue.with { $0.activeLoaded }
+        let revoked = forceLoadRevoked ? true : stateValue.with { $0.activeLoaded }
         
         if stateValue.with({ revoked ? !$0.revokedLoaded : !$0.activeLoaded }) {
-            
             let offsetLink: ExportedInvitation? = stateValue.with { state in
                 if revoked {
                     return state.nextRevoked
@@ -216,7 +252,7 @@ final class InviteLinkPeerManager {
                 }
             }
             
-            let signal = TelegramCore.peerExportedInvitations(account: context.account, peerId: peerId, revoked: revoked, offsetLink: offsetLink) |> deliverOnMainQueue
+            let signal = TelegramCore.peerExportedInvitations(account: context.account, peerId: peerId, revoked: revoked, adminId: self.adminId, offsetLink: offsetLink) |> deliverOnMainQueue
             self.listDisposable.set(signal.start(next: { [weak self] list in
                 self?.updateState { state in
                     var state = state
@@ -264,7 +300,8 @@ private final class InviteLinksArguments {
     let deleteAll:()->Void
     let newLink:()->Void
     let open:(ExportedInvitation)->Void
-    init(context: AccountContext, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink:@escaping(ExportedInvitation)->Void, newLink:@escaping()->Void, deleteLink:@escaping(ExportedInvitation)->Void, deleteAll:@escaping()->Void, open:@escaping(ExportedInvitation)->Void) {
+    let openAdminLinks:(ExportedInvitationCreator)->Void
+    init(context: AccountContext, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink:@escaping(ExportedInvitation)->Void, newLink:@escaping()->Void, deleteLink:@escaping(ExportedInvitation)->Void, deleteAll:@escaping()->Void, open:@escaping(ExportedInvitation)->Void, openAdminLinks: @escaping(ExportedInvitationCreator)->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
@@ -274,6 +311,7 @@ private final class InviteLinksArguments {
         self.deleteLink = deleteLink
         self.deleteAll = deleteAll
         self.open = open
+        self.openAdminLinks = openAdminLinks
     }
 }
 
@@ -282,6 +320,11 @@ private struct InviteLinksState : Equatable {
     var permanentImporterState: PeerInvitationImportersState?
     var list: [ExportedInvitation]?
     var revokedList: [ExportedInvitation]?
+    var creators:[ExportedInvitationCreator]?
+    var isAdmin: Bool
+    var totalCount: Int
+    var peer: PeerEquatable?
+    var adminPeer: PeerEquatable?
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -299,6 +342,9 @@ private func _id_links_revoked(_ links:[ExportedInvitation]) -> InputDataIdentif
         return current + value.link
     }))
 }
+private func _id_creator(_ peerId: PeerId) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_creator_\(peerId.toInt64())")
+}
 
 private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments) -> [InputDataEntry] {
     
@@ -309,135 +355,170 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, item: { initialSize, stableId in
-        let text:String = L10n.manageLinksHeaderDesc
-        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
-    }))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksPermanent), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
-    var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
-    peers = Array(peers.prefix(3))
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-        return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, lastPeers: peers, viewType: .singleItem, menuItems: {
-            
-            var items:[ContextMenuItem] = []
-            if let permanent = state.permanent {
-                items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
-                    arguments.copyLink(permanent.link)
-                }))
-                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
-                    arguments.revokeLink(permanent)
-                }))
-            }
-            
-            return .single(items)
-        }, share: arguments.shareLink, open: arguments.open, copyLink: arguments.copyLink)
-    }))
-    
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
-    
-    let viewType: GeneralViewType = state.list == nil || !state.list!.isEmpty ? .firstItem : .singleItem
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: L10n.manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink, disableBorder: true)))
-    index += 1
-    if let list = state.list {
-        let chunks = list.chunks(2)
-        struct Tuple : Equatable {
-            let links:[ExportedInvitation]
-            let viewType: GeneralViewType
-        }
-        for (i, chunk) in chunks.enumerated() {
-            
-            var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
-            var topInset: CGFloat = 5
-            if i == 0 {
-                if chunks.count == 1 {
-                    viewType = .lastItem
-                } else {
-                    viewType = .innerItem
-                }
-                topInset = 1
-            }
-            viewType = viewType.withUpdatedInsets(NSEdgeInsets(top: viewType.position == .first || viewType.position == .single ? 10 : topInset, left: 10, bottom: viewType.position == .last || viewType.position == .single ? 10 : 5, right: 10))
 
-            let tuple = Tuple(links: chunk, viewType: viewType)
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links(chunk), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
-                return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, links: tuple.links, action: arguments.open, menuItems: { link in
-                    
-                    var items:[ContextMenuItem] = []
-                    items.append(ContextMenuItem.init(L10n.manageLinksContextCopy, handler: {
-                        arguments.copyLink(link.link)
+    if !state.isAdmin {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
+            let text:String = state.peer?.peer.isChannel == true ? L10n.manageLinksHeaderChannelDesc :  L10n.manageLinksHeaderGroupDesc
+            return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
+        }))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
+
+   // if !state.isAdmin || state.peer?.peer.addressName == nil {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+
+        var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
+        peers = Array(peers.prefix(3))
+
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_permanent, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: state.permanent, publicAddress: state.isAdmin ? nil : state.peer?.peer.addressName, lastPeers: peers, viewType: .singleItem, menuItems: {
+
+                var items:[ContextMenuItem] = []
+                if let permanent = state.permanent {
+                    items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                        arguments.copyLink(permanent.link)
                     }))
-                    if !link.isRevoked {
-                        if !link.isExpired {
-                            items.append(ContextMenuItem(L10n.manageLinksContextShare, handler: {
-                                arguments.shareLink(link.link)
-                            }))
-                        }
+                    if state.adminPeer?.peer.isBot == true {
                         
-                        items.append(ContextMenuItem.init(L10n.manageLinksContextEdit, handler: {
-                            arguments.editLink(link)
-                        }))
+                    } else {
                         items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
-                            arguments.revokeLink(link)
+                            arguments.revokeLink(permanent)
                         }))
                     }
                     
-                    return .single(items)
-                })
-            }))
+                } else if let addressName = state.peer?.peer.addressName {
+                    items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                        arguments.copyLink(addressName)
+                    }))
+                }
+
+                return .single(items)
+            }, share: arguments.shareLink, open: arguments.open, copyLink: arguments.copyLink)
+        }))
+
+        if state.isAdmin, let peer = state.peer, let adminPeer = state.adminPeer {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdminPermanentDesc(adminPeer.peer.displayTitle, peer.peer.displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
         }
-        
-        if let list = state.revokedList, list.count > 0 {
-            
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-            index += 1
 
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: L10n.manageLinksDeleteAll, color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll, disableBorder: true)))
-            index += 1
-            
-            let chunks = list.chunks(2)
-            struct Tuple : Equatable {
-                let links:[ExportedInvitation]
-                let viewType: GeneralViewType
-            }
-            for (i, chunk) in chunks.enumerated() {
-                
-                var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
-                var topInset: CGFloat = 5
-                if i == 0 {
-                    if chunks.count == 1 {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+ //   }
+
+    
+
+    if !state.isAdmin || (state.list != nil && !state.list!.isEmpty) {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+    }
+
+    struct Tuple : Equatable {
+        let link:ExportedInvitation
+        let viewType: GeneralViewType
+    }
+
+    let viewType: GeneralViewType = state.list == nil || !state.list!.isEmpty ? .firstItem : .singleItem
+    if !state.isAdmin {
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: InputDataEquatable(viewType), comparable: nil, item: { initialSize, stableId in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.manageLinksCreateNew, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.newLink, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 43, thumbInset: 0))
+        }))
+        index += 1
+
+        
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: L10n.manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink)))
+//        index += 1
+    }
+    if let list = state.list {
+        if !list.isEmpty {
+            for (i, link) in list.enumerated() {
+                var viewType: GeneralViewType = bestGeneralViewType(list, for: i)
+                if i == 0, !state.isAdmin {
+                    if list.count == 1 {
                         viewType = .lastItem
                     } else {
                         viewType = .innerItem
                     }
-                    topInset = 1
                 }
-                viewType = viewType.withUpdatedInsets(NSEdgeInsets(top: viewType.position == .first || viewType.position == .single ? 10 : topInset, left: 10, bottom: viewType.position == .last || viewType.position == .single ? 10 : 5, right: 10))
+
+                let tuple = Tuple(link: link, viewType: viewType)
+
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links([link]), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
+
+                        var items:[ContextMenuItem] = []
+                        items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                            arguments.copyLink(link.link)
+                        }))
+                        if !link.isRevoked {
+                            if !link.isExpired {
+                                items.append(ContextMenuItem(L10n.manageLinksContextShare, handler: {
+                                    arguments.shareLink(link.link)
+                                }))
+                            }
+                            if !link.isPermanent {
+                                items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
+                                    arguments.editLink(link)
+                                }))
+                            }
+                           
+                            if state.adminPeer?.peer.isBot == true {
+                                
+                            } else {
+                                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                                    arguments.revokeLink(link)
+                                }))
+                            }
+                        }
+
+                        return .single(items)
+                    })
+                }))
+                index += 1
+            }
+        } else {
+            if !state.isAdmin {
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksEmptyDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                index += 1
+            }
+        }
+
+        
+        if let list = state.revokedList, list.count > 0 {
+            
+            if state.list?.isEmpty == false || !state.isAdmin {
+                entries.append(.sectionId(sectionId, type: .normal))
+                sectionId += 1
+            }
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+
+          // if !state.isAdmin {
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: L10n.manageLinksDeleteAll, color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll)))
+                index += 1
+         //   }
+
+            
+            for (i, link) in list.enumerated() {
                 
-                let tuple = Tuple(links: chunk, viewType: viewType)
+                var viewType: GeneralViewType = bestGeneralViewType(list, for: i)
+                if i == 0 {
+                    if list.count == 1 {
+                        viewType = .lastItem
+                    } else {
+                        viewType = .innerItem
+                    }
+                }
+
+                let tuple = Tuple(link: link, viewType: viewType)
                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links_revoked(chunk), equatable: InputDataEquatable(tuple), item: { initialSize, stableId in
-                    return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, links: tuple.links, action: arguments.open, menuItems: { link in
-                        
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links_revoked([link]), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
                         var items:[ContextMenuItem] = []
                         items.append(ContextMenuItem(L10n.manageLinksDelete, handler: {
                             arguments.deleteLink(link)
@@ -451,12 +532,35 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         }
         
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, item: { initialSize, stableId in
-            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: !state.isAdmin ? .lastItem : .singleItem)
         }))
         index += 1
     }
     
+
+
+    if let creators = state.creators, !creators.isEmpty {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksOtherAdmins), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+
+        let creators = creators.filter { $0.peer.peer != nil }
+        for (i, creator) in creators.enumerated() {
+
+            let viewType = bestGeneralViewType(creators, for: i)
+
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), comparable: nil, item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: L10n.manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                    arguments.openAdminLinks(creator)
+                })
+            }))
+        }
+    }
+
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
@@ -466,7 +570,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 func InviteLinksController(context: AccountContext, peerId: PeerId, manager: InviteLinkPeerManager?) -> InputDataController {
 
     
-    let initialState = InviteLinksState(permanent: nil, permanentImporterState: nil, list: nil)
+    let initialState = InviteLinksState(permanent: nil, permanentImporterState: nil, list: nil, creators: nil, isAdmin: manager?.adminId != nil, totalCount: 0)
     
     let statePromise = ValuePromise<InviteLinksState>(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -514,39 +618,56 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         
     }, open: { [weak manager] invitation in
         if let manager = manager {
-            showModal(with: ExportedInvitationController(invitation: invitation, accountContext: context, context: manager.importer(for: invitation)), for: context.window)
+            showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
         }
+    }, openAdminLinks: { creator in
+        let manager = InviteLinkPeerManager(context: context, peerId: peerId, adminId: creator.peer.peerId)
+        getController?()?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: manager))
     })
-    
-    let peerView = context.account.viewTracker.peerView(peerId)
-
-    let permanentLink = peerView |> map {
-        ($0.cachedData as? CachedChannelData)?.exportedInvitation ?? ($0.cachedData as? CachedGroupData)?.exportedInvitation
-    }
-    
+        
     let actionsDisposable = DisposableSet()
-    
-    context.account.viewTracker.forceUpdateCachedPeerData(peerId: peerId)
-    
-    let importers: Signal<PeerInvitationImportersState?, NoError> = permanentLink |> deliverOnMainQueue |> mapToSignal { [weak manager] permanent in
-        if let permanent = permanent {
-            if let state = manager?.importer(for: permanent).state {
-                return state |> map(Optional.init)
+
+
+    let importers: Signal<(PeerInvitationImportersState?, InviteLinkPeerManager.State), NoError> = manager.state |> deliverOnMainQueue |> mapToSignal { [weak manager] state in
+        if let permanent = state.list?.first(where: { $0.isPermanent }) {
+            if let importer = manager?.importer(for: permanent).state {
+                return importer |> map(Optional.init) |> map { ($0, state) }
             } else {
-                return .single(nil)
+                return .single((nil, state))
             }
         } else {
-            return .single(nil)
+            return .single((nil, state))
         }
     }
-        
-    actionsDisposable.add(combineLatest(permanentLink, manager.state, importers).start(next: { permanent, state, permanentImporterState in
+
+    var peers: [Signal<PeerEquatable, NoError>] = []
+
+    peers.append(context.account.postbox.loadedPeerWithId(peerId) |> map { PeerEquatable($0) })
+
+    if let adminId = manager.adminId {
+        peers.append(context.account.postbox.loadedPeerWithId(adminId) |> map { PeerEquatable($0) })
+    }
+
+    actionsDisposable.add(combineLatest(manager.state, importers, combineLatest(peers)).start(next: { state, permanentImporterState, peers in
         updateState { current in
             var current = current
-            current.permanent = permanent
-            current.permanentImporterState = permanentImporterState
-            current.list = state.list?.filter({ $0.link != permanent?.link })
+            current.peer = peers.first
+            if peers.count == 2 {
+                current.adminPeer = peers.last
+            }
+            if current.peer?.peer.addressName != nil && !current.isAdmin {
+                current.permanent = nil
+            } else {
+                current.permanent = state.list?.first(where: { $0.isPermanent })
+            }
+            current.permanentImporterState = permanentImporterState.0
+            current.list = state.list?.filter({ $0.link != current.permanent?.link })
             current.revokedList = state.revokedList
+            current.creators = state.creators
+            current.totalCount = Int(state.totalCount)
+
+
+
             return current
         }
     }))
@@ -555,12 +676,29 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         return InputDataSignalValue(entries: entries($0, arguments: arguments), animated: true)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.manageLinksTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: L10n.manageLinksTitleNew, removeAfterDisappear: false, hasDone: false)
         
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
-    
+
+
+    controller.getTitle = {
+        let peer = stateValue.with { $0.adminPeer?.peer }
+        if let peer = peer {
+            return peer.displayTitle
+        } else {
+            return L10n.manageLinksTitleNew
+        }
+    }
+    controller.getStatus = {
+        let isAdmin = stateValue.with { $0.isAdmin }
+        if isAdmin {
+            return L10n.manageLinksTitleCountCountable(stateValue.with { $0.totalCount })
+        } else {
+            return nil
+        }
+    }
     
     controller.didLoaded = { [weak manager] controller, _ in
         controller.tableView.setScrollHandler { position in
@@ -572,7 +710,11 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             }
         }
     }
-    
+
+    controller.afterTransaction = { controller in
+        controller.requestUpdateCenterBar()
+    }
+
     controller.contextOject = manager
     
     

@@ -446,17 +446,31 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
     })!
 }
 
-private func generateDialogVerify(background: NSColor, foreground: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(24, 24), rotatedContext: { size, ctx in
-        ctx.clear(CGRect(origin: CGPoint(), size: size))
+func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bool = false) -> CGImage {
+    if reversed {
+        return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
 
-        let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
-        
-        ctx.setFillColor(background.cgColor)
-        ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
-        
-        ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
-    })!
+            let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    } else {
+        return generateImage(NSMakeSize(24, 24), rotatedContext: { size, ctx in
+            ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+            let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
+            
+            ctx.setFillColor(background.cgColor)
+            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            
+            ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
+        })!
+    }
+    
 }
 
 private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
@@ -494,7 +508,7 @@ private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColo
     })!
 }
 
-private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
+func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
     let textNode = TextNode.layoutText(.initialize(string: text, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     
     let draw: (CGSize, CGContext) -> Void = { size, ctx in
@@ -518,14 +532,14 @@ private func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor
     }
 }
 
-private func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, isReversed: true)
 }
 
-private func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
+func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
     return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: isReversed)
 }
-private func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: true)
 }
 
@@ -855,7 +869,7 @@ private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSC
     })!
 }
 
-private func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width + 2, icon.backingSize.height + 2), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
@@ -879,7 +893,7 @@ private func generateChatGroupToggleSelectionForeground(foregroundColor: NSColor
     }, scale: 2)!
 }
 
-private func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width, icon.backingSize.height), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
@@ -1884,16 +1898,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                dismissAccessory: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.grayIcon) },
                                                chatScrollUp: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, arrowColor: palette.grayIcon) },
                                                chatScrollUpActive: { generateChatScrolldownImage(backgroundColor: palette.background, borderColor: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, arrowColor: palette.accentIcon) },
-                                               audioPlayerPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.accentIcon) },
-                                               audioPlayerPause: { #imageLiteral(resourceName: "Icon_InlinePlayerPause").precomposed(palette.accentIcon) },
-                                               audioPlayerNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.accentIcon) },
-                                               audioPlayerPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.accentIcon) },
-                                               auduiPlayerDismiss: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
-                                               audioPlayerRepeat: { #imageLiteral(resourceName: "Icon_RepeatAudio").precomposed(palette.grayIcon) },
-                                               audioPlayerRepeatActive: { #imageLiteral(resourceName: "Icon_RepeatAudio").precomposed(palette.accentIcon) },
-                                               audioPlayerLockedPlay: { #imageLiteral(resourceName: "Icon_InlinePlayerPlay").precomposed(palette.grayIcon) },
-                                               audioPlayerLockedNext: { #imageLiteral(resourceName: "Icon_InlinePlayerNext").precomposed(palette.grayIcon) },
-                                               audioPlayerLockedPrev: { #imageLiteral(resourceName: "Icon_InlinePlayerPrevious").precomposed(palette.grayIcon) },
                                                chatSendMessage: { #imageLiteral(resourceName: "Icon_SendMessage").precomposed(palette.accentIcon) },
                                                chatSaveEditedMessage: { generateSendIcon(NSImage(named: "Icon_SaveEditedMessage")!, palette.accentIcon) },
                                                chatRecordVoice: { #imageLiteral(resourceName: "Icon_RecordVoice").precomposed(palette.grayIcon) },
@@ -2156,8 +2160,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                galleryMore: { #imageLiteral(resourceName: "Icon_GalleryMore").precomposed(.white) },
                                                galleryShare: { #imageLiteral(resourceName: "Icon_GalleryShare").precomposed(.white) },
                                                galleryFastSave: { NSImage(named: "Icon_Gallery_FastSave")!.precomposed(.white) },
-                                               playingVoice1x: { #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.grayIcon) },
-                                               playingVoice2x: { #imageLiteral(resourceName: "Icon_PlayingVoice2x").precomposed(palette.accentIcon) },
                                                galleryRotate: {NSImage(named: "Icon_GalleryRotate")!.precomposed(.white) },
                                                galleryZoomIn: {NSImage(named: "Icon_GalleryZoomIn")!.precomposed(.white) },
                                                galleryZoomOut: { NSImage(named: "Icon_GalleryZoomOut")!.precomposed(.white) },
@@ -2337,8 +2339,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_like_inside_empty_bubble_overlay: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(.white, flipVertical: true) },
                                                gif_trending: { NSImage(named: "Icon_GifTrending")!.precomposed(palette.grayIcon) },
                                                chat_list_thumb_play: { NSImage(named: "Icon_ChatListThumbPlay")!.precomposed() },
-                                               inline_audio_volume: { NSImage(named: "Icon_InlinePlayer_VolumeOn")!.precomposed(palette.accent) },
-                                               inline_audio_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) },
                                                call_tooltip_battery_low: { NSImage(named: "Icon_Call_BatteryLow")!.precomposed(.white) },
                                                call_tooltip_camera_off: { NSImage(named: "Icon_Call_CameraOff")!.precomposed(.white) },
                                                call_tooltip_micro_off: { NSImage(named: "Icon_Call_MicroOff")!.precomposed(.white) },
@@ -2379,7 +2379,39 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                editor_draw: { NSImage(named: "Icon_Editor_Paint")!.precomposed(.white) },
                                                editor_delete: { NSImage(named: "Icon_Editor_Delete")!.precomposed(.white) },
                                                editor_crop: { NSImage(named: "Icon_Editor_Crop")!.precomposed(.white) },
-                                               fast_copy_link: { NSImage(named: "Icon_FastCopyLink")!.precomposed(palette.accent)}
+                                               fast_copy_link: { NSImage(named: "Icon_FastCopyLink")!.precomposed(palette.accent) },
+                                               profile_channel_sign: {NSImage(named: "Icon_Profile_ChannelSign")!.precomposed(flipVertical: true)},
+                                               profile_channel_type: {NSImage(named: "Icon_Profile_ChannelType")!.precomposed(flipVertical: true)},
+                                               profile_group_type: {NSImage(named: "Icon_Profile_GroupType")!.precomposed(flipVertical: true)},
+                                               profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
+                                               profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
+                                               profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
+                                               profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)},
+                                               destruct_clear_history: { NSImage(named: "Icon_ClearChat")!.precomposed(palette.redUI, flipVertical: true) },
+                                               chat_gigagroup_info: { NSImage(named: "Icon_GigagroupInfo")!.precomposed(palette.accent) },
+                                               playlist_next: { NSImage(named: "Icon_PlayList_Next")!.precomposed(palette.text) },
+                                               playlist_prev: { NSImage(named: "Icon_PlayList_Next")!.precomposed(palette.text, flipHorizontal: true) },
+                                               playlist_next_locked: { NSImage(named: "Icon_PlayList_Next")!.precomposed(palette.text.withAlphaComponent(0.6)) },
+                                               playlist_prev_locked: { NSImage(named: "Icon_PlayList_Next")!.precomposed(palette.text.withAlphaComponent(0.6), flipHorizontal: true) },
+                                               playlist_random: { NSImage(named: "Icon_PlayList_Random")!.precomposed(palette.text) },
+                                               playlist_order_normal: { NSImage(named: "Icon_PlayList_Order")!.precomposed(palette.text) },
+                                               playlist_order_reversed: { NSImage(named: "Icon_PlayList_Order")!.precomposed(palette.accent) },
+                                               playlist_order_random: { NSImage(named: "Icon_PlayList_Random")!.precomposed(palette.accent) },
+                                               playlist_repeat_none: { NSImage(named: "Icon_PlayList_Repeat")!.precomposed(palette.text) },
+                                               playlist_repeat_circle: { NSImage(named: "Icon_PlayList_Repeat")!.precomposed(palette.accent) },
+                                               playlist_repeat_one: { NSImage(named: "Icon_PlayList_RepeatOne")!.precomposed(palette.accent) },
+                                               audioplayer_next: { NSImage(named: "Icon_InlinePlayerNext")!.precomposed(palette.accent) },
+                                               audioplayer_prev: { NSImage(named: "Icon_InlinePlayerNext")!.precomposed(palette.accent, flipHorizontal: true) },
+                                               audioplayer_dismiss: { NSImage(named: "Icon_ChatSearchCancel")!.precomposed(palette.accentIcon) },
+                                               audioplayer_repeat_none: { NSImage(named: "Icon_InlinePlayer_Repeat")!.precomposed(palette.grayIcon) },
+                                               audioplayer_repeat_circle: { NSImage(named: "Icon_InlinePlayer_Repeat")!.precomposed(palette.accent) },
+                                               audioplayer_repeat_one: { NSImage(named: "Icon_InlinePlayer_RepeatOne")!.precomposed(palette.accentIcon) },
+                                               audioplayer_locked_next: { NSImage(named: "Icon_InlinePlayerNext")!.precomposed(palette.grayIcon) },
+                                               audioplayer_locked_prev: { NSImage(named: "Icon_InlinePlayerNext")!.precomposed(palette.grayIcon, flipHorizontal: true) },
+                                               audioplayer_volume: { NSImage(named: "Icon_InlinePlayer_VolumeOn")!.precomposed(palette.accent) },
+                                               audioplayer_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) },
+                                               audioplayer_speed_x1: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.grayIcon) },
+                                               audioplayer_speed_x2: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.accentIcon) }
 
     )
 

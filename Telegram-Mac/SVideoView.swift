@@ -293,7 +293,12 @@ private final class SVideoControlsView : Control {
         volumeSlider.setFrameSize(NSMakeSize(60, 12))
         volumeContainer.setFrameSize(NSMakeSize(volumeToggle.frame.width + 60 + 16, volumeToggle.frame.height))
         
-        volumeSlider.scrubberImage = theme.icons.videoPlayerSliderInteractor
+        volumeSlider.scrubberImage = generateImage(NSMakeSize(8, 8), contextGenerator: { size, ctx in
+            let rect = CGRect(origin: .zero, size: size)
+            ctx.clear(rect)
+            ctx.setFillColor(NSColor.white.cgColor)
+            ctx.fillEllipse(in: rect)
+        })
         volumeSlider.roundCorners = true
         volumeSlider.alignment = .center
         volumeSlider.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
@@ -330,7 +335,12 @@ private final class SVideoControlsView : Control {
         _ = togglePip.sizeToFit()
 
         progress.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
-        progress.scrubberImage = theme.icons.videoPlayerSliderInteractor
+        progress.scrubberImage = generateImage(NSMakeSize(8, 8), contextGenerator: { size, ctx in
+            let rect = CGRect(origin: .zero, size: size)
+            ctx.clear(rect)
+            ctx.setFillColor(NSColor.white.cgColor)
+            ctx.fillEllipse(in: rect)
+        })
         progress.roundCorners = true
         progress.alignment = .center
         progress.liveScrobbling = false
@@ -537,11 +547,12 @@ class SVideoView: NSView {
         let oldSize = mediaPlayer.frame.size
         mediaPlayer.frame = bounds
         mediaPlayer.updateLayout()
+        let previousIsCompact: Bool = self.controlsStyle.isCompact
         self.controlsStyle = self.controlsStyle.withUpdatedStyle(compact: frame.width < 300).withUpdatedHideRewind(hideRewind: frame.width < 400)
         controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), 94)
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus
-        if controls.frame.origin == .zero {
+        if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact {
             controls.centerX(y: frame.height - controls.frame.height - 24)
         } else if oldSize != frame.size {
             let dif = oldSize - frame.size

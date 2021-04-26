@@ -47,9 +47,32 @@ open class ImageView: NSView {
             setFrameSize(image.backingSize)
         }
     }
+    
+    open override func hitTest(_ point: NSPoint) -> NSView? {
+        if isEventLess {
+            let view = super.hitTest(point)
+            if let view = view as? View {
+                if view.isEventLess || view === self {
+                    return nil
+                }
+            }
+            if let view = view as? ImageView {
+                if view.isEventLess || view === self {
+                    return nil
+                }
+            }
+            return view
+        } else {
+            return super.hitTest(point)
+        }
+    }
 
     open override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         return true
+    }
+
+    open override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
     }
     
     override public init(frame frameRect: NSRect) {
@@ -89,5 +112,7 @@ open class ImageView: NSView {
     open func change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
         super._change(opacity: to, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
     }
+
+
     
 }

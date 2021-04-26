@@ -82,13 +82,12 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func open() {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters, let context = context, let parent = parent  {
-            if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: parent) {
-                controller.playOrPause()
+            if let controller = globalAudio, controller.playOrPause(parent.id) {
             } else {               
                 let controller:APController
 
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, id: parent.chatStableId), streamable: true, volume: FastSettings.volumeRate)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, mimeType: parameters.file.mimeType, name: parameters.title, performer: parameters.performer, duration: parameters.file.duration, id: parent.chatStableId), streamable: true, volume: FastSettings.volumeRate)
                 } else {
                     controller = APChatMusicController(context: context, chatLocationInput: parameters.chatLocationInput(), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                 }
@@ -109,29 +108,29 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     
     
-    func songDidChanged(song: APSongItem, for controller: APController) {
-        checkState()
+    func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
+        checkState(animated: animated)
     }
-    func songDidChangedState(song: APSongItem, for controller: APController) {
-        checkState()
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
+        checkState(animated: animated)
     }
     
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
-        checkState()
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
+        checkState(animated: animated)
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
-        checkState()
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
+        checkState(animated: animated)
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
     
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         
     }
     
     
-    func checkState() {
+    func checkState(animated: Bool) {
         
         let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
@@ -180,7 +179,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         self.fetchStatus = .Local
         progressView.state = .Play
-        checkState()
+        checkState(animated: animated)
 
     }
     

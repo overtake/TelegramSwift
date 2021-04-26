@@ -363,7 +363,7 @@ class ShareLinkObject : ShareObject {
             if FastSettings.isChannelMessagesMuted(peerId) {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
         }
         return .complete()
     }
@@ -395,7 +395,7 @@ class ShareUrlObject : ShareObject {
             
             let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)])
                         
-            _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: nil, localGroupingKey: nil)]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
         }
         return .complete()
     }
@@ -415,7 +415,7 @@ class ShareContactObject : ShareObject {
                 if FastSettings.isChannelMessagesMuted(peerId) {
                     attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
                 }
-                _ = enqueueMessages(context: context, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)]).start()
+                _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
             }
             _ = Sender.shareContact(context: context, peerId: peerId, contact: user).start()
         }
@@ -500,7 +500,7 @@ class ShareMessageObject : ShareObject {
                     parsingUrlType = [.Links, .Hashtags]
                 }
                 let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId).start()
+                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId).start()
             }
             
             _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId).start()
@@ -567,7 +567,7 @@ final class ForwardMessagesObject : ShareObject {
                                 parsingUrlType = [.Links, .Hashtags]
                             }
                             let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                            _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil), context: context, peerId: peerId).start()
+                            _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId).start()
                         }
                         _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId).start()
                         if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
@@ -751,7 +751,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
 
             
             let selected = value.selected.filter {
-                $0.namespace != ChatListFilterPeerCategories.Namespace
+                $0.namespace._internalGetInt32Value() != ChatListFilterPeerCategories.Namespace
             }
             
             if let limit = self.share.limit, selected.count > limit {
@@ -1622,7 +1622,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     if peer.addressName == nil {
                         let state = strongSelf.contextChatInteraction.presentation.effectiveInput
                         var attributes = state.attributes
-                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id))
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt32Value()))
                         let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
                         strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
                     }

@@ -37,12 +37,17 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
     private let previous:ImageButton = ImageButton()
     private let next:ImageButton = ImageButton()
-    private let playOrPause:ImageButton = ImageButton()
+    
+    private let playPause = Button()
+    private let playPauseView = LottiePlayerView()
+
     private let dismiss:ImageButton = ImageButton()
     private let repeatControl:ImageButton = ImageButton()
     private let volumeControl: ImageButton = ImageButton()
-    private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: .borderSize)
-    private let textView:TextView = TextView()
+    private let progressView:LinearProgressControl = LinearProgressControl(progressHeight: 2)
+    private var artistNameView:TextView?
+    private let trackNameView:TextView = TextView()
+    private let textViewContainer = Control()
     private let containerView:Control
     private let separator:View = View()
     private let playingSpeed: ImageButton = ImageButton()
@@ -63,9 +68,9 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         dismiss.disableActions()
         repeatControl.disableActions()
-        repeatControl.autohighlight = false
-        volumeControl.autohighlight = false
-        textView.isSelectable = false
+        
+        trackNameView.isSelectable = false
+        trackNameView.userInteractionEnabled = false
         containerView = Control(frame: NSMakeRect(0, 0, 0, header.height))
         
         super.init(header)
@@ -82,15 +87,13 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             self?.controller?.next()
         }, for: .Click)
         
-        playOrPause.set(handler: { [weak self] _ in
+        playPause.set(handler: { [weak self] _ in
             self?.controller?.playOrPause()
         }, for: .Click)
         
-        repeatControl.set(handler: { [weak self] control in
-            let control = control as! ImageButton
+        repeatControl.set(handler: { [weak self] _ in
             if let controller = self?.controller {
-                controller.toggleRepeat()
-                control.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
+                controller.nextRepeatState()
             }
         }, for: .Click)
         
@@ -103,13 +106,22 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         var paused: Bool = false
         
         progressView.startScrobbling = { [weak self]  in
-            _ = self?.controller?.pause()
-            paused = true
+            guard let controller = self?.controller else {
+                return
+            }
+            if controller.isPlaying {
+                _ = self?.controller?.pause()
+                paused = true
+            } else {
+                paused = false
+            }
         }
         
         progressView.endScrobbling = { [weak self]  in
             if paused {
-                _ = self?.controller?.play()
+                DispatchQueue.main.async {
+                    _ = self?.controller?.play()
+                }
             }
         }
         
@@ -121,38 +133,56 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }, for: .Click)
         
+        previous.autohighlight = false
+        next.autohighlight = false
+        playPause.autohighlight = false
+        repeatControl.autohighlight = false
+        volumeControl.autohighlight = false
         playingSpeed.autohighlight = false
+        
+        previous.scaleOnClick = true
+        next.scaleOnClick = true
+        playPause.scaleOnClick = true
+        repeatControl.scaleOnClick = true
+        volumeControl.scaleOnClick = true
+        playingSpeed.scaleOnClick = true
+        
+        
         
         containerView.addSubview(previous)
         containerView.addSubview(next)
-        containerView.addSubview(playOrPause)
+        
+        playPause.addSubview(playPauseView)
+        playPause.setFrameSize(NSMakeSize(34, 34))
+        playPauseView.setFrameSize(playPause.frame.size)
+        containerView.addSubview(playPause)
+        
         containerView.addSubview(dismiss)
         containerView.addSubview(repeatControl)
-        containerView.addSubview(textView)
+        containerView.addSubview(textViewContainer)
         containerView.addSubview(playingSpeed)
         containerView.addSubview(volumeControl)
         addSubview(containerView)
         addSubview(separator)
         addSubview(progressView)
         
-        textView.userInteractionEnabled = false
-        textView.isEventLess = true
+        textViewContainer.addSubview(trackNameView)
+
+        trackNameView.userInteractionEnabled = false
+        trackNameView.isEventLess = true
         
-        updateLocalizationAndTheme(theme: theme)
         
-        containerView.set(handler: { [weak self] _ in
+        textViewContainer.set(handler: { [weak self] _ in
             self?.showAudioPlayerList()
         }, for: .LongOver)
         
-        containerView.set(handler: { [weak self] _ in
+        textViewContainer.set(handler: { [weak self] _ in
             self?.gotoMessage()
         }, for: .SingleClick)
         
         playingSpeed.set(handler: { [weak self] control in
             FastSettings.setPlayingRate(FastSettings.playingRate == 1.7 ? 1.0 : 1.7)
             self?.controller?.baseRate = FastSettings.playingRate
-            (control as! ImageButton).set(image: FastSettings.playingRate == 1.7 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
-
         }, for: .Click)
         
         
@@ -161,28 +191,29 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                 showPopover(for: control, with: VolumeControllerPopover(initialValue: CGFloat(FastSettings.volumeRate), updatedValue: { updatedVolume in
                     FastSettings.setVolumeRate(Float(updatedVolume))
                     self?.controller?.volume = FastSettings.volumeRate
-                    self?.updateLocalizationAndTheme(theme: theme)
                 }), edge: .maxY, inset: NSMakePoint(-5, -50))
             }
         }, for: .Hover)
         
-        volumeControl.set(handler: { [weak self] control in
+        volumeControl.set(handler: { control in
             FastSettings.setVolumeRate(FastSettings.volumeRate > 0 ? 0 : 1.0)
             if let popover = control.popover?.controller as? VolumeControllerPopover {
                 popover.value = CGFloat(FastSettings.volumeRate)
             }
-            self?.updateLocalizationAndTheme(theme: theme)
         }, for: .Up)
+        
+        updateLocalizationAndTheme(theme: theme)
+
     }
     
     private func showAudioPlayerList() {
         guard let window = kitWindow, let context = self.context else {return}
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-        if NSPointInRect(point, textView.frame) {
+        if NSPointInRect(point, textViewContainer.frame) {
             if let controller = controller as? APChatMusicController, let song = controller.currentSong {
                 switch song.stableId {
                 case let .message(message):
-                    showPopover(for: textView, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), edge: .minX, inset: NSMakePoint((300 - textView.frame.width) / 2, -60))
+                    showPopover(for: textViewContainer, with: PlayerListController(audioPlayer: self, context: controller.context, currentContext: context, messageIndex: MessageIndex(message), messages: controller.messages), edge: .minX, inset: NSMakePoint(-130, -60))
                 default:
                     break
                 }
@@ -206,51 +237,26 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     
     
     private var playProgressStyle:ControlStyle {
-        return ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear)
+        return ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
     }
     private var fetchProgressStyle:ControlStyle {
-        return ControlStyle(foregroundColor: theme.colors.grayTransparent, backgroundColor: .clear)
+        return ControlStyle(foregroundColor: theme.colors.grayTransparent, backgroundColor: .clear, highlightColor: .clear)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        playingSpeed.set(image: FastSettings.playingRate != 1.0 ? theme.icons.playingVoice2x : theme.icons.playingVoice1x, for: .Normal)
-        previous.set(image: theme.icons.audioPlayerPrev, for: .Normal)
-        next.set(image: theme.icons.audioPlayerNext, for: .Normal)
-        playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
-        dismiss.set(image: theme.icons.auduiPlayerDismiss, for: .Normal)
-        
-        volumeControl.set(image: FastSettings.volumeRate == 0 ? theme.icons.inline_audio_volume_off : theme.icons.inline_audio_volume, for: .Normal)
         
         progressView.fetchingColor = theme.colors.accent.withAlphaComponent(0.5)
-        
-        if let controller = controller {
-            repeatControl.set(image: controller.needRepeat ? theme.icons.audioPlayerRepeatActive : theme.icons.audioPlayerRepeat, for: .Normal)
-            if let song = controller.currentSong {
-                songDidChanged(song: song, for: controller)
-                songDidChangedState(song: song, for: controller)
-            }
-        } else {
-            repeatControl.set(image: theme.icons.audioPlayerRepeat, for: .Normal)
-        }
-        
-        _ = previous.sizeToFit()
-        _ = next.sizeToFit()
-        _ = playOrPause.sizeToFit()
-        _ = dismiss.sizeToFit()
-        _ = repeatControl.sizeToFit()
-        _ = playingSpeed.sizeToFit()
-        _ = volumeControl.sizeToFit()
-        
-        previous.centerY(x: 17)
-        playOrPause.centerY(x: previous.frame.maxX + 5)
-        next.centerY(x: playOrPause.frame.maxX + 5)
+
         
         backgroundColor = theme.colors.background
         containerView.backgroundColor = theme.colors.background
-        textView.backgroundColor = theme.colors.background
+        artistNameView?.backgroundColor = theme.colors.background
         separator.backgroundColor = theme.colors.border
+        
+        controller?.notifyGlobalStateChanged(animated: false)
+        
     }
     
     private func gotoMessage() {
@@ -283,7 +289,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         controller.add(listener: self)
         self.ready.set(controller.ready.get())
 
-        repeatControl.isHidden = !(controller is APChatMusicController)
+        repeatControl.isHidden = !controller.canMakeRepeat
         if let tableView = contextObject.tableView {
             if self.instantVideoPip == nil {
                 self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: mainWindow)
@@ -295,7 +301,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             addGlobalAudioToVisible(tableView: supportTableView)
         }
         if let song = controller.currentSong {
-            songDidChanged(song: song, for: controller)
+            songDidChanged(song: song, for: controller, animated: true)
         }
     }
 
@@ -326,7 +332,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                 }
                 return true
             })
-            controller.notifyGlobalStateChanged()
+            controller.notifyGlobalStateChanged(animated: false)
         }
     }
     
@@ -334,84 +340,204 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         bufferingStatusDisposable.dispose()
     }
     
-    func attributedTitle(for song:APSongItem) -> NSAttributedString {
-        let attributed:NSMutableAttributedString = NSMutableAttributedString()
-        if !song.performerName.isEmpty {
-            _ = attributed.append(string: song.performerName, color: theme.colors.text, font: .normal(.text))
-            _ = attributed.append(string: "\n")
-        }
-        _ = attributed.append(string: song.songName, color: theme.colors.grayText, font: .normal(.text))
+    func attributedTitle(for song:APSongItem) -> (NSAttributedString, NSAttributedString?) {
+        let trackName:NSAttributedString
+        let artistName:NSAttributedString?
 
-        return attributed
+        if song.songName.isEmpty {
+            trackName = .initialize(string: song.performerName, color: theme.colors.text, font: .normal(.text))
+            artistName = nil
+        } else {
+            trackName = .initialize(string: song.songName, color: theme.colors.text, font: .normal(.text))
+            if !song.performerName.isEmpty {
+                artistName = .initialize(string: song.performerName, color: theme.colors.grayText, font: .normal(.text))
+            } else {
+                artistName = nil
+            }
+        }
+
+        return (trackName, artistName)
     }
     
-    func songDidChanged(song:APSongItem, for controller:APController) {
-        next.set(image: controller.nextEnabled ? theme.icons.audioPlayerNext : theme.icons.audioPlayerLockedNext, for: .Normal)
-        previous.set(image: controller.prevEnabled ? theme.icons.audioPlayerPrev : theme.icons.audioPlayerLockedPrev, for: .Normal)
-        let layout = TextViewLayout(attributedTitle(for: song), maximumNumberOfLines:2, alignment: .left)
-        self.textView.update(layout)
-        self.needsLayout = true
+    private func update(_ song: APSongItem, controller: APController, animated: Bool) {
         
+        
+        dismiss.set(image: theme.icons.audioplayer_dismiss, for: .Normal)
+
         switch song.entry {
         case let .song(message):
             self.message = message
         default:
-            break
+            self.message = nil
         }
-    }
-    
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+        
+        next.userInteractionEnabled = controller.nextEnabled
+        previous.userInteractionEnabled = controller.prevEnabled
+
+        switch controller.nextEnabled {
+        case true:
+            next.set(image: theme.icons.audioplayer_next, for: .Normal)
+        case false:
+            next.set(image: theme.icons.audioplayer_locked_next, for: .Normal)
+        }
+        
+        switch controller.prevEnabled {
+        case true:
+            previous.set(image: theme.icons.audioplayer_prev, for: .Normal)
+        case false:
+            previous.set(image: theme.icons.audioplayer_locked_prev, for: .Normal)
+        }
+                
+        let attr = attributedTitle(for: song)
+        
+        if trackNameView.layout?.attributedString != attr.0 {
+            let artist = TextViewLayout(attr.0, maximumNumberOfLines:1, alignment: .left)
+            self.trackNameView.update(artist)
+        }
+        if let attr = attr.1 {
+            let current: TextView
+            if self.artistNameView == nil {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isEventLess = true
+                self.artistNameView = current
+                textViewContainer.addSubview(current)
+            } else {
+                current = self.artistNameView!
+            }
+            if current.layout?.attributedString != attr {
+                let artist = TextViewLayout(attr, maximumNumberOfLines:1, alignment: .left)
+                current.update(artist)
+            }
+            
+        } else {
+            if let view = self.artistNameView {
+                self.artistNameView = nil
+                if animated {
+                    view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                        view?.removeFromSuperview()
+                    })
+                } else {
+                    view.removeFromSuperview()
+                }
+            }
+        }
+        
+        switch FastSettings.playingRate {
+        case 1.0:
+            playingSpeed.set(image: theme.icons.audioplayer_speed_x1, for: .Normal)
+        default:
+            playingSpeed.set(image: theme.icons.audioplayer_speed_x2, for: .Normal)
+        }
+        
+        switch FastSettings.volumeRate {
+        case 0:
+            volumeControl.set(image: theme.icons.audioplayer_volume_off, for: .Normal)
+        default:
+            volumeControl.set(image: theme.icons.audioplayer_volume, for: .Normal)
+        }
+        
+        
+        switch controller.state.repeatState {
+        case .circle:
+            repeatControl.set(image: theme.icons.audioplayer_repeat_circle, for: .Normal)
+        case .one:
+            repeatControl.set(image: theme.icons.audioplayer_repeat_one, for: .Normal)
+        case .none:
+            repeatControl.set(image: theme.icons.audioplayer_repeat_none, for: .Normal)
+        }
+        
+       
+        
         switch song.state {
-        case .waiting, .paused:
+        case .waiting:
             progressView.style = playProgressStyle
-            playOrPause.set(image: theme.icons.audioPlayerPlay, for: .Normal)
         case .stoped:
-            playOrPause.set(image: theme.icons.audioPlayerPlay, for: .Normal)
-            progressView.set(progress: 0, animated:true)
-        case let .playing(data):
+            progressView.set(progress: 0, animated: animated)
+        case let .playing(_, _, progress), let .paused(_, _, progress):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(data.progress == .nan ? 0 : data.progress), animated: data.animated, duration: 0.2)
-            playOrPause.set(image: theme.icons.audioPlayerPause, for: .Normal)
-            break
-        case let .fetching(progress, animated):
-            playOrPause.set(image: theme.icons.audioPlayerLockedPlay, for: .Normal)
+            progressView.set(progress: CGFloat(progress == .nan ? 0 : progress), animated: animated, duration: 0.2)
+        case let .fetching(progress):
             progressView.style = fetchProgressStyle
             progressView.set(progress: CGFloat(progress), animated:animated)
+        }
+        
+        switch controller.state.status {
+        case .playing:
+            play(animated: animated, sticker: LocalAnimatedSticker.playlist_play_pause)
+        case .paused:
+            play(animated: animated, sticker: LocalAnimatedSticker.playlist_pause_play)
+        default:
             break
         }
+        
+        _ = previous.sizeToFit()
+        _ = next.sizeToFit()
+        _ = dismiss.sizeToFit()
+        _ = repeatControl.sizeToFit()
+        _ = playingSpeed.sizeToFit()
+        _ = volumeControl.sizeToFit()
+        
+        needsLayout = true
     }
     
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
-        
-    }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
-        
-    }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
-        
+    func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
+        self.update(song, controller: controller, animated: animated)
     }
     
-    func audioDidCompleteQueue(for controller:APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
+        self.update(song, controller: controller, animated: animated)
+    }
+    
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
+        self.update(song, controller: controller, animated: animated)
+    }
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
+        self.update(song, controller: controller, animated: animated)
+    }
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
+        self.update(song, controller: controller, animated: animated)
+    }
+    
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         stopAndHide(true)
     }
     
     override func layout() {
         super.layout()
         containerView.frame = bounds
+        
+        previous.centerY(x: 17)
+        playPause.centerY(x: previous.frame.maxX + 5)
+        next.centerY(x: playPause.frame.maxX + 5)
+
 
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
         repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
         
        
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
-        textView.layout?.measure(width: frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10) + volumeControl.frame.width + 50))
-        textView.update(textView.layout)
+        
+        
+        let textWidth = frame.width - (next.frame.maxX + dismiss.frame.width + repeatControl.frame.width + (playingSpeed.isHidden ? 0 : playingSpeed.frame.width + 10) + volumeControl.frame.width + 70)
+        
+        artistNameView?.resize(textWidth)
+        trackNameView.resize(textWidth)
+        
+        let effectiveWidth = [artistNameView, trackNameView].compactMap { $0?.frame.width }.max(by: { $0 < $1 }) ?? 0
+        
+        textViewContainer.setFrameSize(NSMakeSize(effectiveWidth, 40))
+        textViewContainer.centerY(x: next.frame.maxX + 20)
         
         playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 10)
-
-
-        textView.centerY(x: next.frame.maxX + 10)
         
+        
+        if let artistNameView = artistNameView {
+            trackNameView.setFrameOrigin(NSMakePoint(0, 4))
+            artistNameView.setFrameOrigin(NSMakePoint(0, textViewContainer.frame.height - artistNameView.frame.height - 4))
+        } else {
+            trackNameView.centerY(x: 0)
+        }
         
         if repeatControl.isHidden {
             volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
@@ -421,6 +547,24 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
+    }
+    
+    private func play(animated: Bool, sticker: LocalAnimatedSticker) {
+        let data = sticker.data
+        if let data = data {
+            
+            let current: Int32
+            let total: Int32
+            if playPauseView.animation?.key.key != LottieAnimationKey.bundle(sticker.rawValue) {
+                current = playPauseView.currentFrame ?? 0
+                total = playPauseView.totalFrames ?? 0
+            } else {
+                current = 0
+                total = playPauseView.currentFrame ?? 0
+            }
+            let animation = LottieAnimation(compressed: data, key: .init(key: .bundle(sticker.rawValue), size: NSMakeSize(34, 34)), cachePurpose: .none, playPolicy: .toEnd(from: animated ? total - current : .max), colors: [.init(keyPath: "", color: theme.colors.accent)], runOnQueue: .mainQueue())
+            playPauseView.set(animation)
+        }
     }
     
     func stopAndHide(_ animated:Bool) -> Void {

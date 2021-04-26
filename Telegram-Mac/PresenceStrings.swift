@@ -266,6 +266,55 @@ func stringForFullDate(timestamp: Int32) -> String {
         return ""
     }
 }
+
+func stringForMediumDate(timestamp: Int32) -> String {
+    var t: time_t = Int(timestamp)
+    var timeinfo = tm()
+    localtime_r(&t, &timeinfo);
+    let formatter = DateFormatter()
+    formatter.timeStyle = .short
+
+    let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+    let time = formatter.string(from: date)
+
+    if date.isToday || date.timeIntervalSince1970 < Date().timeIntervalSince1970 {
+        return DateUtils.string(forLastSeen: timestamp)
+    } else if date.isTomorrow {
+        return L10n.timeTomorrowAt(time)
+    }
+    
+    
+    
+    switch timeinfo.tm_mon + 1 {
+    case 1:
+        return L10n.timePreciseMediumDateM1("\(timeinfo.tm_mday)", time)
+    case 2:
+        return L10n.timePreciseMediumDateM2("\(timeinfo.tm_mday)", time)
+    case 3:
+        return L10n.timePreciseMediumDateM3("\(timeinfo.tm_mday)", time)
+    case 4:
+        return L10n.timePreciseMediumDateM4("\(timeinfo.tm_mday)", time)
+    case 5:
+        return L10n.timePreciseMediumDateM5("\(timeinfo.tm_mday)", time)
+    case 6:
+        return L10n.timePreciseMediumDateM6("\(timeinfo.tm_mday)", time)
+    case 7:
+        return L10n.timePreciseMediumDateM7("\(timeinfo.tm_mday)", time)
+    case 8:
+        return L10n.timePreciseMediumDateM8("\(timeinfo.tm_mday)", time)
+    case 9:
+        return L10n.timePreciseMediumDateM9("\(timeinfo.tm_mday)", time)
+    case 10:
+        return L10n.timePreciseMediumDateM10("\(timeinfo.tm_mday)", time)
+    case 11:
+        return L10n.timePreciseMediumDateM11("\(timeinfo.tm_mday)", time)
+    case 12:
+        return L10n.timePreciseMediumDateM12("\(timeinfo.tm_mday)", time)
+    default:
+        return ""
+    }
+}
+
 private var sharedDistanceFormatter: MKDistanceFormatter?
 func stringForDistance(distance: CLLocationDistance) -> String {
     let distanceFormatter: MKDistanceFormatter

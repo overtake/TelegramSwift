@@ -22,8 +22,33 @@ private let purple =  NSColor(rgb: 0x766EE9)
 private let lightPurple =  NSColor(rgb: 0xF05459)
 
 
+class CallStatusBarBackgroundViewLegacy : View, CallStatusBarBackground {
+    var audioLevel: Float = 0
+    var speaking:(Bool, Bool, Bool)? = nil {
+        didSet {
+            if let speaking = self.speaking, (speaking.0 != oldValue?.0 || speaking.1 != oldValue?.1 || speaking.2 != oldValue?.2) {
+                let targetColors: [NSColor]
+                if speaking.1 {
+                    if speaking.2 {
+                        if speaking.0 {
+                            targetColors = [green, blue]
+                        } else {
+                            targetColors = [blue, lightBlue]
+                        }
+                    } else {
+                        targetColors = [purple, lightPurple]
+                    }
 
-class CallStatusBarBackgroundView: View {
+                } else {
+                    targetColors = [theme.colors.grayIcon, theme.colors.grayIcon.lighter()]
+                }
+                self.backgroundColor = targetColors.first ?? theme.colors.accent
+            }
+        }
+    }
+}
+
+class CallStatusBarBackgroundView: View, CallStatusBarBackground {
     private let foregroundView: View
     private let foregroundGradientLayer: CAGradientLayer
     private let maskCurveLayer: VoiceCurveLayer
@@ -106,12 +131,27 @@ class CallStatusBarBackgroundView: View {
         self.maskCurveLayer.frame = NSMakeRect(0, 0, frame.width, frame.height)
         CATransaction.commit()
     }
-
-    private var isCurrentlyInHierarchy: Bool = false
+    private let occlusionDisposable = MetaDisposable()
+    private var isCurrentlyInHierarchy: Bool = false {
+        didSet {
+            updateAnimations()
+        }
+    }
+    
+    deinit {
+        occlusionDisposable.dispose()
+    }
+    
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        isCurrentlyInHierarchy = window != nil
-        updateAnimations()
+        if let window = window as? Window {
+            occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
+                self?.isCurrentlyInHierarchy = value.contains(.visible)
+            }))
+        } else {
+            occlusionDisposable.set(nil)
+            isCurrentlyInHierarchy = false
+        }
     }
 
     func updateAnimations() {
@@ -195,6 +235,43 @@ private final class VoiceCurveLayer: CALayer {
             strongSelf.mediumCurve.level = strongSelf.presentationAudioLevel
             strongSelf.bigCurve.level = strongSelf.presentationAudioLevel
         }
+    }
+    
+    override init(layer: Any) {
+        let maxLevel: CGFloat = 2.5
+        let smallCurveRange:CurveRange = (0.0, 0.0)
+        let mediumCurveRange:CurveRange = (0.1, 0.55)
+        let bigCurveRange:CurveRange = (0.1, 1.0)
+        self.maxLevel = maxLevel
+
+        self.smallCurve = CurveLayer(
+            pointsCount: 7,
+            minRandomness: 1,
+            maxRandomness: 1.3,
+            minSpeed: 0.9,
+            maxSpeed: 3.2,
+            minOffset: smallCurveRange.min,
+            maxOffset: smallCurveRange.max
+        )
+        self.mediumCurve = CurveLayer(
+            pointsCount: 7,
+            minRandomness: 1.2,
+            maxRandomness: 1.5,
+            minSpeed: 1.0,
+            maxSpeed: 4.4,
+            minOffset: mediumCurveRange.min,
+            maxOffset: mediumCurveRange.max
+        )
+        self.bigCurve = CurveLayer(
+            pointsCount: 7,
+            minRandomness: 1.2,
+            maxRandomness: 1.7,
+            minSpeed: 1.0,
+            maxSpeed: 5.8,
+            minOffset: bigCurveRange.min,
+            maxOffset: bigCurveRange.max
+        )
+        super.init(layer: layer)
     }
 
     required init?(coder: NSCoder) {
@@ -392,6 +469,7 @@ final class CurveLayer: CAShapeLayer {
     func stopAnimating() {
         fromPoints = currentPoints
         toPoints = nil
+        self.curveAnimation?.invalidate()
         curveAnimation = nil
     }
 
@@ -479,14 +557,18 @@ final class CurveLayer: CAShapeLayer {
 }
 
 
+protocol CallStatusBarBackground : View {
+    var audioLevel: Float { get set }
+    var speaking:(Bool, Bool, Bool)? { get set }
+}
 
 
 class CallHeaderBasicView : NavigationHeaderView {
 
     
-    private let _backgroundView: CallStatusBarBackgroundView = CallStatusBarBackgroundView()
+    private let _backgroundView: CallStatusBarBackground
 
-    var backgroundView: CallStatusBarBackgroundView {
+    var backgroundView: CallStatusBarBackground {
         return _backgroundView
     }
     
@@ -494,7 +576,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     
     fileprivate let callInfo:TitleButton = TitleButton()
     fileprivate let endCall:ImageButton = ImageButton()
-    fileprivate let statusTextView:DynamicCounterTextView = DynamicCounterTextView()
+    fileprivate let statusTextView:TextView = TextView()
     fileprivate let muteControl:ImageButton = ImageButton()
 
     let disposable = MetaDisposable()
@@ -514,7 +596,8 @@ class CallHeaderBasicView : NavigationHeaderView {
         didSet {
             if self.status != oldValue {
                 self.statusTimer?.invalidate()
-                if case .timer = self.status {
+                
+                if self.status.hasTimer == true {
                     self.statusTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
                         self?.updateStatus()
                     }, queue: Queue.mainQueue())
@@ -541,11 +624,12 @@ class CallHeaderBasicView : NavigationHeaderView {
                 durationString = String(format: "%02d:%02d", arguments: [(duration / 60) % 60, duration % 60])
             }
             statusText = durationString
+        case let .startsIn(time):
+            statusText = L10n.chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
         }
-        let dynamicResult = DynamicCounterTextView.make(for: statusText, count: statusText.trimmingCharacters(in: CharacterSet.decimalDigits.inverted), font: .normal(.text), textColor: .white, width: 120)
-        self.statusTextView.update(dynamicResult.values, animated: animated)
-        self.statusTextView.change(size: dynamicResult.size, animated: animated)
-
+        let layout = TextViewLayout.init(.initialize(string: statusText, color: .white, font: .normal(13)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        self.statusTextView.update(layout)
         needsLayout = true
     }
     
@@ -555,6 +639,11 @@ class CallHeaderBasicView : NavigationHeaderView {
     }
     
     override init(_ header: NavigationHeader) {
+        if #available(OSX 10.12, *) {
+            self._backgroundView = CallStatusBarBackgroundView()
+        } else {
+            self._backgroundView = CallStatusBarBackgroundViewLegacy()
+        }
         super.init(header)
         
         backgroundView.frame = bounds
@@ -651,8 +740,10 @@ class CallHeaderBasicView : NavigationHeaderView {
         muteControl.centerY(x:18)
         statusTextView.centerY(x: muteControl.frame.maxX + 6)
         endCall.centerY(x: frame.width - endCall.frame.width - 20)
-        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 100 - 30 - endCall.frame.width - 100, callInfo.frame.height), thatFit: true)
-        callInfo.center()
+        _ = callInfo.sizeToFit(NSZeroSize, NSMakeSize(frame.width - statusTextView.frame.width - 60 - 20 - endCall.frame.width - 10, callInfo.frame.height), thatFit: false)
+        
+        let rect = container.focus(callInfo.frame.size)
+        callInfo.setFrameOrigin(NSMakePoint(max(statusTextView.frame.maxX + 10, min(rect.minX, endCall.frame.minX - 10 - callInfo.frame.width)), rect.minY))
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

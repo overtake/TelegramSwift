@@ -256,7 +256,7 @@ private final class UniversalSoftwareVideoSourceImpl {
             if let decodableFrame = decodableFrame {
                 if let renderedFrame = videoStream.decoder.render(frame: decodableFrame) {
                     //print("Frame rendered in \(self.currentNumberOfReads) reads, \(self.currentReadBytes) bytes, total frames read: \(i + 1)")
-                    return (renderedFrame, CGFloat(videoStream.rotationAngle), CGFloat(videoStream.aspect), loop)
+                    return (renderedFrame._cgImage, CGFloat(videoStream.rotationAngle), CGFloat(videoStream.aspect), loop)
                 }
             }
         }

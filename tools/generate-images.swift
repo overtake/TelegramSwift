@@ -84,16 +84,6 @@ func initialize() -> [String] {
     array.append("dismissAccessory")
     array.append("chatScrollUp")
     array.append("chatScrollUpActive")
-    array.append("audioPlayerPlay")
-    array.append("audioPlayerPause")
-    array.append("audioPlayerNext")
-    array.append("audioPlayerPrev")
-    array.append("auduiPlayerDismiss")
-    array.append("audioPlayerRepeat")
-    array.append("audioPlayerRepeatActive")
-    array.append("audioPlayerLockedPlay")
-    array.append("audioPlayerLockedNext")
-    array.append("audioPlayerLockedPrev")
     array.append("chatSendMessage")
     array.append("chatSaveEditedMessage")
     array.append("chatRecordVoice")
@@ -356,8 +346,6 @@ func initialize() -> [String] {
     array.append("galleryMore")
     array.append("galleryShare")
     array.append("galleryFastSave")
-    array.append("playingVoice1x")
-    array.append("playingVoice2x")
     array.append("galleryRotate")
     array.append("galleryZoomIn")
     array.append("galleryZoomOut")
@@ -566,8 +554,6 @@ func initialize() -> [String] {
     array.append("chat_list_thumb_play")
 
     
-    array.append("inline_audio_volume")
-    array.append("inline_audio_volume_off")
     
     
     array.append("call_tooltip_battery_low")
@@ -629,6 +615,49 @@ func initialize() -> [String] {
     array.append("editor_crop")
 
     array.append("fast_copy_link")
+
+    array.append("profile_channel_sign")
+    array.append("profile_channel_type")
+    array.append("profile_group_type")
+    array.append("profile_group_destruct")
+    array.append("profile_group_discussion")
+
+    array.append("profile_removed")
+    array.append("profile_links")
+
+    array.append("destruct_clear_history")
+
+    array.append("chat_gigagroup_info")
+    
+    
+    array.append("playlist_next")
+    array.append("playlist_prev")
+    array.append("playlist_next_locked")
+    array.append("playlist_prev_locked")
+
+    array.append("playlist_random")
+    array.append("playlist_order_normal")
+    array.append("playlist_order_reversed")
+    array.append("playlist_order_random")
+
+    array.append("playlist_repeat_none")
+    array.append("playlist_repeat_circle")
+    array.append("playlist_repeat_one")
+    
+    array.append("audioplayer_next")
+    array.append("audioplayer_prev")
+    array.append("audioplayer_dismiss")
+    array.append("audioplayer_repeat_none")
+    array.append("audioplayer_repeat_circle")
+    array.append("audioplayer_repeat_one")
+    array.append("audioplayer_locked_next")
+    array.append("audioplayer_locked_prev")
+    array.append("audioplayer_volume")
+    array.append("audioplayer_volume_off")
+    array.append("audioplayer_speed_x1")
+    array.append("audioplayer_speed_x2")
+
+    
     
     return array
 }

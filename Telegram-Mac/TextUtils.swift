@@ -315,9 +315,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .messageAutoremoveTimeoutUpdated(seconds):
             if seconds > 0 {
-                return L10n.chatServiceSecretChatSetTimer(authorName, autoremoveLocalized(Int(seconds)))
+                return L10n.chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))
             } else {
-                return L10n.chatServiceSecretChatDisabledTimer(authorName)
+                return L10n.chatServiceSecretChatDisabledTimer1(authorName)
             }
         case let .photoUpdated(image: image):
             if let image = image {
@@ -423,19 +423,35 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 return L10n.notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
-        case let .groupPhoneCall(_, _, duration):
+        case let .groupPhoneCall(_, _, scheduledDate, duration):
             let text: String
             if let duration = duration {
-                if authorId == account.peerId {
+                if peer.isChannel {
+                    text = L10n.chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                } else if authorId == account.peerId {
                     text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                 } else {
                     text = L10n.chatServiceVoiceChatFinished(authorName, autoremoveLocalized(Int(duration)))
                 }
             } else {
-                if authorId == account.peerId {
-                    text = L10n.chatListServiceVoiceChatStartedYou
+                if peer.isChannel {
+                    if let scheduledDate = scheduledDate {
+                        text = L10n.chatListServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduledDate))
+                    } else {
+                        text = L10n.chatListServiceVoiceChatStartedChannel
+                    }
+                } else if authorId == account.peerId {
+                    if let scheduledDate = scheduledDate {
+                        text = L10n.chatListServiceVoiceChatScheduledYou(stringForMediumDate(timestamp: scheduledDate))
+                    } else {
+                        text = L10n.chatListServiceVoiceChatStartedYou
+                    }
                 } else {
-                    text = L10n.chatListServiceVoiceChatStarted(authorName)
+                    if let scheduledDate = scheduledDate {
+                        text = L10n.chatListServiceVoiceChatScheduled(authorName, stringForMediumDate(timestamp: scheduledDate))
+                    } else {
+                        text = L10n.chatListServiceVoiceChatStarted(authorName)
+                    }
                 }
             }
             return text
@@ -615,7 +631,7 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
     return PeerStatusStringResult(NSAttributedString(), NSAttributedString())
 }
 
- func autoremoveLocalized(_ ttl: Int) -> String {
+func autoremoveLocalized(_ ttl: Int, roundToCeil: Bool = false) -> String {
     var localized: String = ""
      if ttl <= 59 {
         localized = L10n.timerSecondsCountable(ttl)
@@ -623,10 +639,18 @@ func stringStatus(for peerView:PeerView, context: AccountContext, theme:PeerStat
         localized = L10n.timerMinutesCountable(ttl / 60)
     } else if ttl <= 86399 {
         localized = L10n.timerHoursCountable(ttl / 60 / 60)
-    } else if ttl <= 604799 {
-        localized = L10n.timerDaysCountable(ttl / 60 / 60 / 24)
+    } else if ttl <= 604800 {
+        if roundToCeil {
+            localized = L10n.timerDaysCountable(Int(ceil(Float(ttl) / 60 / 60 / 24)))
+        } else {
+            localized = L10n.timerDaysCountable(ttl / 60 / 60 / 24)
+        }
     } else {
-        localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
+        if roundToCeil {
+            localized = L10n.timerWeeksCountable(Int(ceil(Float(ttl) / 60 / 60 / 24 / 7)))
+        } else {
+            localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
+        }
     }
     return localized
 }
@@ -638,7 +662,7 @@ public func shortTimeIntervalString(value: Int32) -> String {
         return L10n.messageTimerShortMinutes("\(max(1, value / 60))")
     } else if value < 60 * 60 * 24 {
         return L10n.messageTimerShortHours("\(max(1, value / (60 * 60)))")
-    } else if value < 60 * 60 * 24 * 7 {
+    } else if value <= 60 * 60 * 24 * 7 {
         return L10n.messageTimerShortDays("\(max(1, value / (60 * 60 * 24)))")
     } else {
         return L10n.messageTimerShortWeeks("\(max(1, value / (60 * 60 * 24 * 7)))")
@@ -740,3 +764,31 @@ func timeIntervalString( _ value: Int) -> String {
     }
 }
 
+
+
+func timerText(_ durationValue: Int, addminus: Bool = true) -> String {
+    
+    let duration = abs(durationValue)
+    let days = Int(duration) / (3600 * 24)
+    let hours = (Int(duration) - (days * 3600 * 24)) / 3600
+    let minutes = Int(duration) / 60 % 60
+    let seconds = Int(duration) % 60
+    
+    
+    
+    var formatted: String
+    if days >= 1 {
+        formatted = timeIntervalString(duration)
+    } else if days != 0 {
+        formatted = String(format:"%d:%02i:%02i:%02i", days, hours, minutes, seconds)
+    } else if hours != 0 {
+        formatted = String(format:"%02i:%02i:%02i", hours, minutes, seconds)
+    } else {
+        formatted = String(format:"%02i:%02i", minutes, seconds)
+    }
+    if addminus {
+        return durationValue < 0 ? "-" + formatted : formatted
+    } else {
+        return formatted
+    }
+}

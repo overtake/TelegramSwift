@@ -272,6 +272,10 @@ class ChatHeaderController {
 
         }
     }
+
+    func applySearchResponder() {
+         (primaryView as? ChatSearchHeader)?.applySearchResponder(true)
+    }
     
     private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, animated: Bool, p_v: View?, s_v: View?) -> (primary: View?, secondary: View?) {
         let primary:View?
@@ -560,7 +564,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
             
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, account: chatInteraction.context.account, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? L10n.chatHeaderPinnedPrevious : L10n.chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
+            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? L10n.chatHeaderPinnedPrevious : L10n.chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
             
             newNode.view = newContainer
             
@@ -1157,7 +1161,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         if searchView.state == .Focus && window?.firstResponder != searchView.input {
             _ = window?.makeFirstResponder(searchView.input)
         }
-        searchView.change(state: .Focus, false)
+        searchView.change(state: .Focus, animated)
     }
     
     private var calendarAbility: Bool {
@@ -1582,6 +1586,53 @@ private final class FakeAudioLevelGenerator {
     }
 }
 
+private final class TimerButtonView : Control {
+    private var nextTimer: SwiftSignalKit.Timer?
+    private let counter = DynamicCounterTextView(frame: .zero)
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(counter)
+        scaleOnClick = true
+    }
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        
+        let purple = NSColor(rgb: 0x3252ef)
+        let pink = NSColor(rgb: 0xef436c)
+        
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        var locations:[CGFloat] = [0.0, 0.85, 1.0]
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: [pink.cgColor, purple.cgColor, purple.cgColor] as CFArray, locations: &locations)!
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 0.0), end: CGPoint(x: frame.width, y: frame.height), options: [])
+    }
+    
+    func setTime(_ timeValue: Int32, animated: Bool, layout: @escaping(NSSize, NSView)->Void) {
+        let time = Int(timeValue - Int32(Date().timeIntervalSince1970))
+        
+        let text = timerText(time)
+        let value = DynamicCounterTextView.make(for: text, count: text, font: .avatar(13), textColor: .white, width: .greatestFiniteMagnitude)
+        
+        counter.update(value, animated: animated)
+        counter.change(size: value.size, animated: animated)
+
+        layout(value.size, self)
+        var point = focus(value.size).origin
+        point = point.offset(dx: 2, dy: 0)
+        counter.change(pos: point, animated: animated)
+        
+        
+        self.nextTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: false, completion: { [weak self] in
+            self?.setTime(timeValue, animated: true, layout: layout)
+        }, queue: .mainQueue())
+        
+        nextTimer?.start()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
 
 private final class ChatGroupCallView : Control, ChatHeaderProtocol {
@@ -1617,6 +1668,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
     private let membersCountView = DynamicCounterTextView()
     private let button = Control()
 
+    private var scheduleButton: TimerButtonView?
 
     private var audioLevelGenerators: [PeerId: FakeAudioLevelGenerator] = [:]
     private var audioLevelGeneratorTimer: SwiftSignalKit.Timer?
@@ -1639,13 +1691,14 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, false)
+                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
+        
         button.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, false)
+                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
@@ -1804,21 +1857,65 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
                 self.avatarsContainer.change(pos: pos, animated: animated)
             }
         }
-
         let participantsCount = data.data?.participantCount ?? 0
 
+        var text: String
+        let pretty: String
+        if let scheduledDate = data.activeCall.scheduleTimestamp, participantsCount == 0 {
+            text = L10n.chatGroupCallScheduledStatus(stringForMediumDate(timestamp: scheduledDate))
+            pretty = ""
+            var presented = false
+            let current: TimerButtonView
+            if let button = self.scheduleButton {
+                current = button
+            } else {
+                current = TimerButtonView(frame: NSMakeRect(0, 0, 60, 24))
+                self.scheduleButton = current
+                current.layer?.cornerRadius = current.frame.height / 2
+                addSubview(current)
+                presented = true
+                
+                current.set(handler: { [weak self] _ in
+                    if let `self` = self, let data = self.data {
+                        self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                    }
+                }, for: .SingleClick)
 
-        var text = L10n.chatGroupCallMembersCountable(participantsCount)
-        let pretty = "\(Int(participantsCount).formattedWithSeparator)"
-        text = text.replacingOccurrences(of: "\(participantsCount)", with: pretty)
+            }
+            current.setTime(scheduledDate, animated: animated, layout: { [weak self] size, button in
+                guard let strongSelf = self else {
+                    return
+                }
+                let animated = animated && !presented
+                let size = NSMakeSize(size.width + 10, button.frame.height)
+                button._change(size: size, animated: animated)
+                button._change(pos: button.centerFrameY(x: strongSelf.frame.width - button.frame.width - 23).origin, animated: animated)
+                presented = false
+            })
+            joinButton.isHidden = true
+        } else {
+            text = L10n.chatGroupCallMembersCountable(participantsCount)
+            pretty = "\(Int(participantsCount).formattedWithSeparator)"
+            text = text.replacingOccurrences(of: "\(participantsCount)", with: pretty)
+            joinButton.isHidden = false
+            
+            self.scheduleButton?.removeFromSuperview()
+            self.scheduleButton = nil
+        }
         let dynamicValues = DynamicCounterTextView.make(for: text, count: pretty, font: .normal(.short), textColor: theme.colors.grayText, width: frame.midX)
 
-        self.membersCountView.update(dynamicValues.values, animated: animated)
+        self.membersCountView.update(dynamicValues, animated: animated)
         self.membersCountView.change(size: dynamicValues.size, animated: animated)
 
 
         self.topPeers = topPeers
         self.data = data
+        
+        let headerLayout = TextViewLayout(.initialize(string: data.activeCall.scheduleTimestamp != nil ? L10n.chatGroupCallScheduledTitle : L10n.chatGroupCallTitle, color: theme.colors.text, font: .medium(.text)))
+        headerLayout.measure(width: frame.width - 100)
+        headerView.update(headerLayout)
+
+        needsLayout = true
 
     }
 
@@ -1851,15 +1948,15 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.set(background: theme.colors.accent, for: .Normal)
         joinButton.set(background: theme.colors.accent.highlighted, for: .Highlight)
         
-        let headerLayout = TextViewLayout(.initialize(string: L10n.chatGroupCallTitle, color: theme.colors.text, font: .medium(.text)))
-        headerLayout.measure(width: frame.width - 100)
-        headerView.update(headerLayout)
 
-        needsLayout = true
     }
     
     override func layout() {
         super.layout()
+        
+        if let scheduleButton = scheduleButton {
+            scheduleButton.centerY(x: frame.width - scheduleButton.frame.width - 23)
+        }
         joinButton.centerY(x: frame.width - joinButton.frame.width - 23)
         
         let subviewsCount = max(avatarsContainer.subviews.filter { $0.layer?.opacity == 1.0 }.count, 1)

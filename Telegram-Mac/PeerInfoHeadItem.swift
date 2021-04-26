@@ -250,12 +250,16 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
+            if peer.groupAccess.canMakeVoiceChat {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                    arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
+                }))
             }
         } else if let cachedData = item.peerView.cachedData as? CachedGroupData {
-            if peer.groupAccess.canMakeVoiceChat, cachedData.activeCall == nil {
-                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: arguments.makeVoiceChat))
+            if peer.groupAccess.canMakeVoiceChat {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                    arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
+                }))
             }
         }
         
@@ -266,7 +270,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
-        
+        if access.canReport {
+            items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: false, action: arguments.report))
+        }
         if let group = peer as? TelegramGroup {
             if case .Member = group.membership {
                 items.append(ActionItem(text: L10n.peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
@@ -278,9 +284,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         
         
-        if access.canReport {
-            items.append(ActionItem(text: L10n.peerInfoActionReport, image: theme.icons.profile_report, destruct: true, action: arguments.report))
-        }
+        
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
             items.append(ActionItem(text: value ? L10n.peerInfoActionUnmute : L10n.peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
@@ -308,7 +312,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
-        
+        if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            if peer.groupAccess.canMakeVoiceChat {
+                items.append(ActionItem(text: L10n.peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                    arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
+                }))
+            }
+        }
         if let address = peer.addressName, !address.isEmpty {
             items.append(ActionItem(text: L10n.peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
         }

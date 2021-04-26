@@ -13,7 +13,7 @@ import SyncCore
 import Postbox
 import SwiftSignalKit
 import TgVoipWebrtc
-
+import TelegramVoip
 
 private let defaultWindowSize = NSMakeSize(720, 560)
 
@@ -141,8 +141,9 @@ private class PhoneCallWindowView : View {
         
         addSubview(backgroundView)
         
-        
+        backgroundView.forceMouseDownCanMoveWindow = true
         addSubview(outgoingVideoView)
+        
         
         
         controls.isEventLess = true
@@ -569,7 +570,12 @@ private class PhoneCallWindowView : View {
         default:
             break
         }
-        self.outgoingVideoView.videoView?.0?.setForceMirrored(!state.isScreenCapture)
+        
+//        let isMirrored = !state.isScreenCapture
+//        
+//        self.outgoingVideoView.videoView?.0?.setOnIsMirroredUpdated = { f in
+//            f(isMirrored)
+//        }
         
         let inputCameraIsActive: Bool
         switch state.videoState {
@@ -715,10 +721,7 @@ private class PhoneCallWindowView : View {
             }
         }
         
-        if let peer = peer {
-            updatePeerUI(peer, session: session)
-            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
-        }
+        
         
         var point = outgoingVideoView.frame.origin
         var size = outgoingVideoView.frame.size
@@ -742,6 +745,11 @@ private class PhoneCallWindowView : View {
         let videoFrame = CGRect(origin: point, size: size)
         if !outgoingVideoView.isViewHidden {
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
+        }
+        
+        if let peer = peer {
+            updatePeerUI(peer, session: session)
+            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
         }
         
         if videoFrame == bounds {
@@ -864,7 +872,7 @@ private class PhoneCallWindowView : View {
         
         self.tooltips = sorted
         
-        if !outgoingVideoView.isMoved && outgoingVideoView.frame != bounds {
+        if !outgoingVideoView.isMoved && outgoingVideoView.savedFrame != bounds {
             let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
             let size = self.outgoingVideoView.frame.size
             let point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
@@ -972,10 +980,12 @@ class PhoneCallWindowController {
             }
         }))
         
-        //        view.updateIncomingAspectRatio = { [weak self] aspectRatio in
-        //            self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
-        //            self?.updateOutgoingAspectRatio(max(0.7, aspectRatio))
-        //        }
+        let signal = session.canBeRemoved |> deliverOnMainQueue
+        closeDisposable.set(signal.start(next: { value in
+            if value {
+                closeCall()
+            }
+        }))
     }
     private var state:CallState? = nil
     private let disposable:MetaDisposable = MetaDisposable()
@@ -1038,7 +1048,7 @@ class PhoneCallWindowController {
                 switch callState.videoState {
                 case let .active(available), let .paused(available), let .inactive(available):
                     if available {
-                        if callState.isOutgoingVideoPaused || callState.isScreenCapture {
+                        if callState.isOutgoingVideoPaused || callState.isScreenCapture || callState.videoState == .inactive(available) {
                             self.session.requestVideo()
                         } else {
                             self.session.disableVideo()
@@ -1084,7 +1094,7 @@ class PhoneCallWindowController {
             if let session = self?.session {
                 session.toggleMute()
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         view.declineControl.set(handler: { [weak self] _ in
@@ -1260,6 +1270,11 @@ class PhoneCallWindowController {
                 self?.session.setToRemovableState()
                 return true
             }
+        case .waiting, .ringing:
+            self.window.closeInterceptor = { [weak self] in
+                self?.session.setToRemovableState()
+                return true
+            }
         default:
             self.window.styleMask.remove(.closable)
         }
@@ -1339,7 +1354,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 func showCallWindow(_ session:PCallSession) {
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
-            controller?.session.hangUpCurrentCall().start()
+            _ = controller?.session.hangUpCurrentCall().start()
             if let controller = controller {
                 controller.session = session
                 return controller
@@ -1351,12 +1366,6 @@ func showCallWindow(_ session:PCallSession) {
     }
     controller.with { $0?.show() }
     
-    let signal = session.canBeRemoved |> deliverOnMainQueue
-    closeDisposable.set(signal.start(next: { value in
-        if value {
-            closeCall()
-        }
-    }))
 }
 
 func closeCall(minimisize: Bool = false) {

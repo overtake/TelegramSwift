@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_leave.png",
+      "filename" : "ic_fullscreen_leave.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_leave@2x.png",
+      "filename" : "ic_fullscreen_leave@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

@@ -13,14 +13,16 @@ import SwiftSignalKit
 
 final class DesktopCapturePreviewItem : GeneralRowItem {
     fileprivate let scope: DesktopCaptureSourceScope
-    fileprivate let selectedSource: DesktopCaptureSource?
+    fileprivate let selected: Bool
     fileprivate let select: (DesktopCaptureSource, DesktopCaptureSourceManager)->Void
     fileprivate private(set) weak var manager: DesktopCaptureSourceManager?
-    init(_ initialSize: NSSize, stableId: AnyHashable, source: DesktopCaptureSource, selectedSource: DesktopCaptureSource?, manager: DesktopCaptureSourceManager?, select: @escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void) {
+    fileprivate let isAvailable: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, source: DesktopCaptureSource, isAvailable: Bool, isSelected: Bool, manager: DesktopCaptureSourceManager?, select: @escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void) {
         self.manager = manager
-        self.scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: CGSize(width: 135, height: 90).multipliedByScreenScale(), fps: 10))
+        self.scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: CGSize(width: 135, height: 90).multipliedByScreenScale(), fps: 0.5, captureMouse: false))
         self.select = select
-        self.selectedSource = selectedSource
+        self.isAvailable = isAvailable
+        self.selected = isSelected
         super.init(initialSize, stableId: stableId)
     }
     
@@ -35,6 +37,37 @@ final class DesktopCapturePreviewItem : GeneralRowItem {
         return DesktopCapturePreviewView.self
     }
 }
+
+
+class DesktopCameraCapturerRowItem: GeneralRowItem {
+    fileprivate let source: CameraCaptureDevice
+    fileprivate let selected: Bool
+    fileprivate let select:(CameraCaptureDevice)->Void
+    fileprivate let isAvailable: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, device: CameraCaptureDevice, isAvailable: Bool, isSelected: Bool, select:@escaping(CameraCaptureDevice)->Void) {
+        self.source = device
+        self.selected = isSelected
+        self.select = select
+        self.isAvailable = isAvailable
+        super.init(initialSize, stableId: stableId)
+
+    }
+    
+    override var height:CGFloat {
+        return 145
+    }
+    override var width: CGFloat {
+        return 90
+    }
+    
+
+    
+    override func viewClass() -> AnyClass {
+        return DesktopCapturePreviewView.self
+    }
+}
+
+
  
 private final class DesktopCaptureSourceView : Control {
     
@@ -46,7 +79,6 @@ private final class DesktopCaptureSourceView : Control {
     private let picture: ImageView = ImageView()
 
     private var callback:(()->Void)?
-    private var scope: DesktopCaptureSourceScope?
     private var selected: Bool = false
     
     
@@ -117,20 +149,19 @@ private final class DesktopCaptureSourceView : Control {
         return rect
     }
     
-    
-    func update(view: NSView, scope: DesktopCaptureSourceScope, selected: Bool, animated: Bool, callback:@escaping()->Void) {
+    private var source: VideoSource?
+    func update(view: NSView, source: VideoSource, selected: Bool, animated: Bool, callback:@escaping()->Void) {
         self.callback = callback
+        self.source = source
         view.frame = bounds
         self.view = view
-        if scope != self.scope {
-            self.contentView.subviews = [self.backgroundView, view, self.shadowView, self.textView]
-        }
+        self.contentView.subviews = [self.backgroundView, view, self.shadowView, self.textView]
+
         
-        let layout = TextViewLayout(.initialize(string: scope.source.title(), color: theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
+        let layout = TextViewLayout(.initialize(string: source.title(), color: .white, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle)
         layout.measure(width: frame.width - 20)
         textView.update(layout)
       
-        self.scope = scope
         self.selected = selected
         backgroundView.backgroundColor = NSColor.black.withAlphaComponent(0.9)
         
@@ -162,7 +193,21 @@ private final class DesktopCaptureSourceView : Control {
         needsLayout = true
     }
 
+    func viewFor(_ other: VideoSource) -> NSView? {
+        if let source = self.source {
+            if source.isEqual(other) {
+                return self.view
+            }
+        }
+        return nil
+    }
     
+    deinit {
+        if let layer = self.view?.layer as? AVCaptureVideoPreviewLayer {
+            layer.session?.stopRunning()
+            layer.session = nil
+        }
+    }
     
     override func layout() {
         super.layout()
@@ -178,10 +223,10 @@ private final class DesktopCaptureSourceView : Control {
     }
 }
 
-private final class DesktopCapturePreviewView : HorizontalRowView {
+final class DesktopCapturePreviewView : HorizontalRowView {
         
-    private let disposable = MetaDisposable()
     private let contentView = DesktopCaptureSourceView(frame: NSMakeRect(5, 0, 135, 90))
+    private let disposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -197,6 +242,7 @@ private final class DesktopCapturePreviewView : HorizontalRowView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         updateListeners()
+        update()
     }
     
     deinit {
@@ -210,22 +256,39 @@ private final class DesktopCapturePreviewView : HorizontalRowView {
         NotificationCenter.default.addObserver(self, selector: #selector(update), name: NSView.frameDidChangeNotification, object: enclosingScrollView)
     }
     @objc private func update() {
-        guard let item = item as? DesktopCapturePreviewItem else {
-            return
-        }
-        if let manager = item.manager {
-            if visibleRect != .zero {
-                disposable.set(delaySignal(0.01).start(completed: { [weak manager, weak item] in
-                    if let item = item {
-                        manager?.start(item.scope)
-                    }
-                }))
-            } else {
-                disposable.set(nil)
-                manager.stop(item.scope)
+        if let item = item as? DesktopCapturePreviewItem {
+            if let manager = item.manager {
+                if visibleRect != .zero, item.isAvailable, window != nil {
+                    disposable.set(delaySignal(0.1).start(completed: { [weak manager, weak item] in
+                        if let item = item {
+                            manager?.start(item.scope)
+                        }
+                    }))
+                } else {
+                    disposable.set(nil)
+                    manager.stop(item.scope)
+                }
             }
-            
         }
+        if let item = item as? DesktopCameraCapturerRowItem {
+            if item.isAvailable {
+                if let session = (contentView.viewFor(item.source)?.layer as? AVCaptureVideoPreviewLayer)?.session {
+                    if visibleRect != .zero {
+                        disposable.set(delaySignal(0.07).start(completed: { [weak session] in
+                            DispatchQueue.global().async { [weak session] in
+                                session?.startRunning()
+                            }
+                        }))
+                    } else {
+                        disposable.set(nil)
+                        DispatchQueue.global().async { [weak session] in
+                            session?.stopRunning()
+                        }
+                    }
+                }
+            }
+        }
+        
     }
     
     override var backdorColor: NSColor {
@@ -242,24 +305,69 @@ private final class DesktopCapturePreviewView : HorizontalRowView {
         contentView.updateState()
     }
     
+    
+    
     override func set(item: TableRowItem, animated: Bool = false) {
+                
+        let previous = self.item as? DesktopCapturePreviewItem
+        
         super.set(item: item, animated: animated)
         
-        guard let item = item as? DesktopCapturePreviewItem else {
-            return
+        if let previous = previous {
+            if let manager = previous.manager {
+                manager.stop(previous.scope)
+            }
         }
         
-        let size = contentView.frame.size.multipliedByScreenScale()
+        if let item = item as? DesktopCapturePreviewItem {
+            if let manager = item.manager {
+                let view: NSView
+                if item.isAvailable {
+                    view = contentView.viewFor(item.scope.source) ?? manager.create(for: item.scope)
+                } else {
+                    view = View()
+                }
+                contentView.update(view: view, source: item.scope.source, selected: item.selected, animated: animated, callback: { [weak item] in
+                    if let item = item, let manager = item.manager {
+                        item.select(item.scope.source, manager)
+                    }
+                })
+            }
+        }
         
-        if let manager = item.manager {
-            let view = manager.create(for: item.scope)
-            contentView.update(view: view, scope: item.scope, selected: item.scope.source == item.selectedSource, animated: animated, callback: { [weak item] in
-                if let item = item, let manager = item.manager {
-                    item.select(item.scope.source, manager)
+        if let item = item as? DesktopCameraCapturerRowItem {
+            if item.isAvailable {
+
+            }
+            let view: View
+            if item.isAvailable {
+                if let exist = contentView.viewFor(item.source) as? View  {
+                    view = exist
+                } else {
+                    let session: AVCaptureSession = AVCaptureSession()
+                    let input = try? AVCaptureDeviceInput(device: item.source.device)
+                    if let input = input {
+                        session.addInput(input)
+                    }
+                    let captureLayer = AVCaptureVideoPreviewLayer()
+                    captureLayer.session = session
+                    captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
+                    captureLayer.connection?.isVideoMirrored = true
+                    captureLayer.videoGravity = .resizeAspectFill
+                    view = View()
+                    view.layer = captureLayer
+                }
+            } else {
+                view = View()
+            }
+
+            
+            contentView.update(view: view, source: item.source, selected: item.selected, animated: animated, callback: { [weak item] in
+                if let item = item {
+                    item.select(item.source)
                 }
             })
         }
-        
         
         
         update()

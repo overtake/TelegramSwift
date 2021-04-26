@@ -66,7 +66,7 @@ class CachedAdminIds: NSObject {
                 
                 self.disposableTokens[peerId] = signal.start(next: { ids in
                     idsContexts.ids = ids
-                    idsContexts.hash = hashForIdsReverse(ids.map({$0.id}))
+                    idsContexts.hash = hashForIdsReverse(ids.map { $0.id._internalGetInt32Value() } )
                     for subscriber in idsContexts.subscribers.copyItems() {
                         subscriber(idsContexts.ids)
                     }

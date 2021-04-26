@@ -231,6 +231,7 @@ class GeneralRowItem: TableRowItem {
     struct Theme : Equatable {
         let backgroundColor: NSColor
         let grayBackground: NSColor
+        let grayForeground: NSColor
         let highlightColor: NSColor
         let borderColor: NSColor
         let accentColor: NSColor
@@ -240,28 +241,36 @@ class GeneralRowItem: TableRowItem {
         let underSelectedColor: NSColor
         let accentSelectColor: NSColor
         let redColor: NSColor
-        
+        let indicatorColor: NSColor
         let appearance: NSAppearance
         
         let switchAppearance: SwitchViewAppearance?
         
-        init(backgroundColor: NSColor = presentation.colors.background,
-             grayBackground: NSColor = presentation.colors.grayBackground,
-             highlightColor: NSColor  = presentation.colors.accentSelect,
-             borderColor: NSColor = presentation.colors.border,
-             accentColor: NSColor = presentation.colors.accent,
-             secondaryColor: NSColor = presentation.colors.grayUI,
-             textColor: NSColor = presentation.colors.text,
-             grayTextColor: NSColor = presentation.colors.grayText,
-             underSelectedColor: NSColor = presentation.colors.underSelectedColor,
-             accentSelectColor: NSColor = presentation.colors.accentSelect,
-             redColor: NSColor = presentation.colors.redUI,
-             appearance: NSAppearance = presentation.colors.appearance,
-             switchAppearance: SwitchViewAppearance? = nil) {
+        let unselectedImage: CGImage
+        let selectedImage: CGImage
+
+        init(backgroundColor: NSColor = theme.colors.background,
+             grayBackground: NSColor = theme.colors.grayBackground,
+             grayForeground: NSColor = theme.colors.grayForeground,
+             highlightColor: NSColor = theme.colors.grayHighlight,
+             borderColor: NSColor = theme.colors.border,
+             accentColor: NSColor = theme.colors.accent,
+             secondaryColor: NSColor = theme.colors.grayUI,
+             textColor: NSColor = theme.colors.text,
+             grayTextColor: NSColor = theme.colors.grayText,
+             underSelectedColor: NSColor = theme.colors.underSelectedColor,
+             accentSelectColor: NSColor = theme.colors.accentSelect,
+             redColor: NSColor = theme.colors.redUI,
+             indicatorColor: NSColor = theme.colors.indicatorColor,
+             appearance: NSAppearance = theme.colors.appearance,
+             switchAppearance: SwitchViewAppearance? = nil,
+             unselectedImage: CGImage = theme.icons.chatToggleUnselected,
+             selectedImage: CGImage = theme.icons.chatToggleSelected) {
             
             
             self.backgroundColor = backgroundColor
             self.grayBackground = grayBackground
+            self.grayForeground = grayForeground
             self.highlightColor = highlightColor
             self.borderColor = borderColor
             self.accentColor = accentColor
@@ -271,8 +280,11 @@ class GeneralRowItem: TableRowItem {
             self.underSelectedColor = underSelectedColor
             self.redColor = redColor
             self.accentSelectColor = accentSelectColor
+            self.indicatorColor = indicatorColor
             self.appearance = appearance
             self.switchAppearance = switchAppearance
+            self.unselectedImage = unselectedImage
+            self.selectedImage = selectedImage
         }
     }
     

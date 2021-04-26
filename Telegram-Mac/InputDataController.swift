@@ -18,10 +18,10 @@ public class InputDataModalController : ModalViewController {
     private let _modalInteractions: ModalInteractions?
     private let closeHandler: (@escaping()-> Void) -> Void
     private let themeDisposable = MetaDisposable()
-    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(350, 300)) {
+    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(380, 300)) {
         self.controller = controller
         self._modalInteractions = modalInteractions
-        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 350), size.height)
+        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 330), size.height)
         self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
@@ -63,6 +63,7 @@ public class InputDataModalController : ModalViewController {
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        modal?.updateLocalizationAndTheme(theme: theme)
     }
     
     public override var containerBackground: NSColor {
@@ -216,7 +217,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
         
         let cancelled: Atomic<Bool> = Atomic(value: false)
         
-        if Thread.isMainThread {
+        if Thread.isMainThread && left.isEmpty {
             var initialIndex:Int = 0
             var height:CGFloat = 0
             var firstInsertion:[(Int, TableRowItem)] = []
@@ -235,45 +236,40 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             initialIndex = firstInsertion.count
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchState))
             
-            queue.async {
-                if !cancelled.with({ $0 }) {
-                    
-                    var insertions:[(Int, TableRowItem)] = []
-                    let updates:[(Int, TableRowItem)] = []
-                    
-                    for i in initialIndex ..< entries.count {
-                        let item:TableRowItem
-                        item = makeItem(entries[i].entry)
-                        insertions.append((i, item))
-                        if cancelled.with({ $0 }) {
-                            break
-                        }
-                    }
-                    if !cancelled.with({ $0 }) {
-                        applyQueue.async {
-                            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchState))
-                            subscriber.putCompletion()
-                        }
+            if !cancelled.with({ $0 }) {
+                
+                var insertions:[(Int, TableRowItem)] = []
+                let updates:[(Int, TableRowItem)] = []
+                
+                for i in initialIndex ..< entries.count {
+                    let item:TableRowItem
+                    item = makeItem(entries[i].entry)
+                    insertions.append((i, item))
+                    if cancelled.with({ $0 }) {
+                        break
                     }
                 }
-            }
-        } else {
-            queue.async {
-                let (deleted,inserted,updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
-                    if !cancelled.with({ $0 }) {
-                        return makeItem(entry.entry)
-                    } else {
-                        return TableRowItem(.zero)
-                    }
-                })
                 if !cancelled.with({ $0 }) {
                     applyQueue.async {
-                        subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), searchState: searchState))
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchState))
                         subscriber.putCompletion()
                     }
                 }
             }
-            
+        } else {
+            let (deleted,inserted,updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
+                if !cancelled.with({ $0 }) {
+                    return makeItem(entry.entry)
+                } else {
+                    return TableRowItem(.zero)
+                }
+            })
+            if !cancelled.with({ $0 }) {
+                applyQueue.async {
+                    subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), searchState: searchState))
+                    subscriber.putCompletion()
+                }
+            }
         }
         
         return ActionDisposable {
@@ -366,8 +362,12 @@ class InputDataController: GenericViewController<InputDataView> {
     var ignoreRightBarHandler: Bool = false
     
     var contextOject: Any?
+    var didAppear: ((InputDataController)->Void)?
     
     var _abolishWhenNavigationSame: Bool = false
+
+    var getTitle:(()->String)? = nil
+    var getStatus:(()->String?)? = nil
     
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
         self.title = title
@@ -394,7 +394,7 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        
+
         self.genericView.updateLocalizationAndTheme(theme: theme)
         requestUpdateBackBar()
         requestUpdateCenterBar()
@@ -405,11 +405,12 @@ class InputDataController: GenericViewController<InputDataView> {
         super.requestUpdateRightBar()
         self.updateRightBarView?(self.rightBarView)
     }
-    
-    
-    
+
     override var defaultBarTitle: String {
-        return title
+        return getTitle?() ?? title
+    }
+    override var defaultBarStatus: String? {
+        return getStatus?()
     }
     
     override func getRightBarViewOnce() -> BarView {
@@ -636,7 +637,21 @@ class InputDataController: GenericViewController<InputDataView> {
     private var firstTake: Bool = true
     
     override func firstResponder() -> NSResponder? {
-        if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView {
+        
+        let responder = window?.firstResponder as? NSView
+        
+        var responderInController: Bool = false
+        var superview = responder?.superview
+        while superview != nil {
+            if superview == self.genericView {
+                responderInController = true
+                break
+            } else {
+                superview = superview?.superview
+            }
+        }
+        
+        if self.window?.firstResponder == self.window || self.window?.firstResponder == tableView.documentView || !responderInController {
             var first: NSResponder? = nil
             tableView.enumerateViews { view -> Bool in
                 first = view.firstResponder
@@ -704,6 +719,8 @@ class InputDataController: GenericViewController<InputDataView> {
     override func viewDidAppear(_ animated: Bool) {
         _ = self.window?.makeFirstResponder(nil)
         super.viewDidAppear(animated)
+        
+        didAppear?(self)
         
         window?.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}

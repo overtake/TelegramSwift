@@ -52,7 +52,7 @@ final class AccountContextBindings {
     let displayUpgradeProgress:(CGFloat)->Void
     let callSession: ()->PCallSession?
     let groupCall: ()->GroupCallContext?
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }, callSession: @escaping()->PCallSession? = { fatalError() }, groupCall: @escaping()->GroupCallContext? = { fatalError() }) {
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }, callSession: @escaping()->PCallSession? = { return nil }, groupCall: @escaping()->GroupCallContext? = { return nil }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -180,13 +180,15 @@ final class AccountContext {
     public var closeFolderFirst: Bool = false
     
     private let preloadGifsDisposable = MetaDisposable()
-    
+    let engine: TelegramEngine
+
     
     //, tonContext: StoredTonContext?
     init(sharedContext: SharedAccountContext, window: Window, account: Account) {
         self.sharedContext = sharedContext
         self.account = account
         self.window = window
+        self.engine = TelegramEngine(account: account)
        // self.tonContext = tonContext
         #if !SHARE
         self.diceCache = DiceCache(postbox: account.postbox, network: account.network)

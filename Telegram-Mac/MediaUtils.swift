@@ -38,7 +38,8 @@ final class ImageRenderData {
 private let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
     (400, [1]),
-    (600, [2, 3]),
+    (400, [3]),
+    (600, [4]),
     (Int(Int32.max), [2, 3, 4])
 ]
 
@@ -76,11 +77,11 @@ func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentat
     return representation.first
 }
 
-public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int) -> Range<Int>? {
-    if representation.progressiveSizes.count > 1 {
+public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int?) -> Range<Int>? {
+    if representation.progressiveSizes.count > 1, let dimension = dimension {
         var largestByteSize = Int(representation.progressiveSizes[0])
         for (maxDimension, byteSizes) in progressiveRangeMap {
-            largestByteSize = Int(representation.progressiveSizes[byteSizes.last!])
+            largestByteSize = Int(representation.progressiveSizes[min(representation.progressiveSizes.count - 1, byteSizes.last!)])
             if maxDimension >= dimension {
                 break
             }
@@ -92,7 +93,7 @@ public func representationFetchRangeForDisplayAtSize(representation: TelegramMed
 
 func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false) -> Signal<ImageRenderData, NoError> {
     
-    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count >= 5 {
+    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count > 1 {
         enum SizeSource {
             case miniThumbnail(data: Data)
             case image(size: Int)
@@ -108,14 +109,19 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
             if Int(fullRepresentationSize.width) > 100 && maxDimension <= 100 {
                 continue
             }
-            sources.append(contentsOf: byteSizes.map { sizeIndex -> SizeSource in
+            sources.append(contentsOf: byteSizes.compactMap { sizeIndex -> SizeSource? in
+                if progressiveRepresentation.progressiveSizes.count - 1 < sizeIndex {
+                    return nil
+                }
                 return .image(size: Int(progressiveRepresentation.progressiveSizes[sizeIndex]))
             })
-            largestByteSize = Int(progressiveRepresentation.progressiveSizes[byteSizes.last!])
+            largestByteSize = Int(progressiveRepresentation.progressiveSizes[min(progressiveRepresentation.progressiveSizes.count - 1, byteSizes.last!)])
             if maxDimension >= Int(fullRepresentationSize.width) {
                 break
             }
         }
+
+
         
         return Signal { subscriber in
             let signals: [Signal<(SizeSource, Data?), NoError>] = sources.map { source -> Signal<(SizeSource, Data?), NoError> in
@@ -405,7 +411,7 @@ func chatGalleryPhoto(account: Account, imageReference: ImageMediaReference, toR
             
             
             if let fullSizeData = fullSizeData {
-                if data.fullSizeComplete {
+                if data.fullSizeData != nil {
                     if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
                         return generateImage(image.size, contextGenerator: { (size, ctx) in
                             ctx.setFillColor(theme.colors.transparentBackground.cgColor)
@@ -536,7 +542,7 @@ func chatMessagePhoto(account: Account, imageReference: ImageMediaReference, toR
             }
             
             
-            context.withContext(isHighQuality: data.fullSizeData != nil, { c in
+            context.withContext(isHighQuality: data.fullSizeComplete, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
                     switch arguments.resizeMode {
@@ -980,7 +986,7 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
             
             var fullSizeImage: CGImage?
             if let fullSizeData = data.fullSizeData, data.fullSizeComplete {
-                if let image = NSImage(data: fullSizeData)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                if let image = NSImage(data: fullSizeData)?._cgImage {
                     fullSizeImage = image
                 }
             }
@@ -1602,8 +1608,6 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
                 loadedData = try? Data(contentsOf: URL(fileURLWithPath: maybeData.path), options: [])
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
-                
-                
                 let decodedThumbnailData = fileReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail)
                 let fetchedThumbnail: Signal<FetchResourceSourceType, NoError>
                 if let smallestRepresentation = smallestImageRepresentation(fileReference.media.previewRepresentations) {
@@ -1611,8 +1615,6 @@ private func chatMessageVideoDatas(postbox: Postbox, fileReference: FileMediaRef
                 } else {
                     fetchedThumbnail = .complete()
                 }
-                
-                
                 
                 let mainThumbnail = Signal<ImageRenderData, NoError> { subscriber in
                     if let decodedThumbnailData = decodedThumbnailData {

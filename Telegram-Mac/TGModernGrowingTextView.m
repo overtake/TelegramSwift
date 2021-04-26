@@ -684,8 +684,12 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(NSMenu *)menuForEvent:(NSEvent *)event {
     return [self.superview menuForEvent:event];
 }
+
+-(void)mouseDown:(NSEvent *)event {
+    [super mouseDown:event];
+}
     
-    @end
+@end
 
 
 @interface TGModernGrowingTextView () <NSTextViewDelegate,CAAnimationDelegate> {

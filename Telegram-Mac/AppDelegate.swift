@@ -19,7 +19,8 @@ import AppCenterCrashes
 #endif
 
 
-let enableBetaFeatures = false
+
+let enableBetaFeatures = true
 
 private(set) var appDelegate: AppDelegate?
 
@@ -32,6 +33,41 @@ extension Account {
 #endif
 
 
+
+private struct AutologinToken : Equatable {
+
+
+    private let token: String
+    private let domains:[String]
+
+    fileprivate init(token: String, domains: [String]) {
+        self.token = token
+        self.domains = domains
+    }
+
+    static func with(appConfiguration: AppConfiguration) -> AutologinToken? {
+        if let data = appConfiguration.data, let value = data["autologin_token"] as? String {
+            let dict:[String] = data["autologin_domains"] as? [String] ?? []
+            return AutologinToken(token: value, domains: dict)
+        } else {
+            return nil
+        }
+    }
+
+    func applyTo(_ link: String, isTestServer: Bool) -> String? {
+        let url = URL(string: link)
+        if let url = url, let host = url.host, domains.contains(host) {
+            var queryItems = [URLQueryItem(name: "autologin_token", value: self.token)]
+            if isTestServer {
+                queryItems.append(URLQueryItem(name: "_test", value: "1"))
+            }
+            var urlComps = URLComponents(string: link)!
+            urlComps.queryItems = (urlComps.queryItems ?? []) + queryItems
+            return urlComps.url?.absoluteString
+        }
+        return nil
+    }
+}
 
 
 private final class SharedApplicationContext {
@@ -213,17 +249,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         #endif
         
         
-        
-      //  Timer.scheduledTimer(timeInterval: 60 * 60, target: self, selector: #selector(checkUpdates), userInfo: nil, repeats: true)
-        
         Timer.scheduledTimer(timeInterval: 10, target: self, selector: #selector(saveIntermediateDate), userInfo: nil, repeats: true)
-        
-        
-//        let test = View()
-//        test.backgroundColor = NSColor.black.withAlphaComponent(0.87)
-//        test.frame = NSMakeRect(0, 0, leftSidebarWidth, Window.statusBarHeight)
-//        window.titleView?.addSubview(test, positioned: .below, relativeTo: window.titleView?.subviews.first)
-        
+
         telegramUIDeclareEncodables()
         
         MTLogSetEnabled(UserDefaults.standard.bool(forKey: "enablelogs"))
@@ -261,9 +288,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchInterface() {
         initializeAccountManagement()
-
-        let indexes = stringIndexTokens("new moon", transliteration: .none)
-
         
         let rootPath = containerUrl!
         let window = self.window!
@@ -272,7 +296,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
 
-        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata")
+        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
 
         if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
@@ -319,7 +343,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     subscriber.putCompletion()
                     DispatchQueue.main.async {
                         let appEncryption = AppEncryptionParameters(path: rootPath)
-                        let accountManager = AccountManager(basePath: self.containerUrl + "/accounts-metadata")
+                        let accountManager = AccountManager(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
                         if let params = appEncryption.decrypt() {
                             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
                             self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
@@ -910,6 +934,15 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .profile(peerId, necessary: true))
         }
     }
+    func navigateChat(_ peerId: PeerId, account: Account) {
+        if let context = self.contextValue?.context, context.peerId == account.peerId {
+            context.sharedContext.bindings.rootNavigation().push(ChatAdditionController.init(context: context, chatLocation: .peer(peerId)))
+            context.window.makeKeyAndOrderFront(nil)
+            context.window.orderFrontRegardless()
+        } else {
+            sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .chat(peerId, necessary: true))
+        }
+    }
     
     
     private func updatePeerPresence() {
@@ -1044,7 +1077,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         updatePeerPresence()
     }
     
-
+    func tryApplyAutologinToken(_ url: String) -> String? {
+        if let config = contextValue?.context.appConfiguration {
+            if let value = AutologinToken.with(appConfiguration: config) {
+                return value.applyTo(url, isTestServer: contextValue?.context.account.testingEnvironment ?? false)
+            }
+        }
+        return nil
+    }
     
     func applicationDidHide(_ notification: Notification) {
         updatePeerPresence()
@@ -1061,9 +1101,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             passport.window.makeKeyAndOrderFront(nil)
         } else if !makeKeyAndOrderFrontCallWindow() {
             window.makeKeyAndOrderFront(nil)
-        } else if let groupCallWindow = sharedApplicationContextValue?.sharedContext.bindings.groupCall()?.window {
-            groupCallWindow.makeKeyAndOrderFront(nil)
-            groupCallWindow.orderFrontRegardless()
         }
         
         return true
@@ -1110,8 +1147,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 viewer?.windowDidResignKey()
             } else if let passport = passport {
                 passport.window.makeKeyAndOrderFront(nil)
-            } else {
-               // window.makeKeyAndOrderFront(nil)
+            } else if let groupCallWindow = sharedApplicationContextValue?.sharedContext.bindings.groupCall()?.window {
+                groupCallWindow.makeKeyAndOrderFront(nil)
             }
             self.activeValue.set(true)
             

@@ -14,114 +14,7 @@ import SyncCore
 import Postbox
 import TgVoipWebrtc
 import TGUIKit
-
-public enum OngoingCallVideoOrientation {
-    case rotation0
-    case rotation90
-    case rotation180
-    case rotation270
-}
-
-private extension OngoingCallVideoOrientation {
-    init(_ orientation: OngoingCallVideoOrientationWebrtc) {
-        switch orientation {
-        case .orientation0:
-            self = .rotation0
-        case .orientation90:
-            self = .rotation90
-        case .orientation180:
-            self = .rotation180
-        case .orientation270:
-            self = .rotation270
-        @unknown default:
-            self = .rotation0
-        }
-    }
-}
-
-
-
-public final class OngoingCallContextVideoView {
-    public let view: NSView
-    public let setOnFirstFrameReceived: (((Float) -> Void)?) -> Void
-    public let getOrientation: () -> OngoingCallVideoOrientation
-    public let getAspect: () -> CGFloat
-    public let setOnOrientationUpdated: (((OngoingCallVideoOrientation, CGFloat) -> Void)?) -> Void
-    public let setVideoContentMode: (CALayerContentsGravity) -> Void
-    public let setForceMirrored: (Bool) -> Void
-
-    public init(
-        view: NSView,
-        setOnFirstFrameReceived: @escaping (((Float) -> Void)?) -> Void,
-        getOrientation: @escaping () -> OngoingCallVideoOrientation,
-        getAspect: @escaping () -> CGFloat,
-        setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation, CGFloat) -> Void)?) -> Void,
-        setVideoContentMode: @escaping(CALayerContentsGravity) -> Void,
-        setForceMirrored: @escaping(Bool) -> Void
-        ) {
-        self.view = view
-        self.setOnFirstFrameReceived = setOnFirstFrameReceived
-        self.getOrientation = getOrientation
-        self.getAspect = getAspect
-        self.setOnOrientationUpdated = setOnOrientationUpdated
-        self.setVideoContentMode = setVideoContentMode
-        self.setForceMirrored = setForceMirrored
-    }
-}
-
-
-
-final class OngoingCallVideoCapturer {
-    fileprivate let impl: OngoingCallThreadLocalContextVideoCapturer
-    
-    public init(_ deviceId: String = "") {
-        self.impl = OngoingCallThreadLocalContextVideoCapturer(deviceId: deviceId)
-    }
-    
-    public func makeOutgoingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
-        self.impl.makeOutgoingVideoView { view in
-            if let view = view {
-                completion(OngoingCallContextVideoView(
-                    view: view, setOnFirstFrameReceived: { [weak view] f in
-                        view?.setOnFirstFrameReceived(f)
-                    }, getOrientation: {
-                        return .rotation90
-                    },
-                    getAspect: { [weak view] in
-                        if let view = view {
-                            return view.aspect
-                        } else {
-                            return 0.0
-                        }
-                    },
-                    setOnOrientationUpdated: { [weak view] f in
-                        
-                    },
-                    setVideoContentMode: { [weak view] mode in
-                        view?.setVideoContentMode(mode)
-                    },
-                    setForceMirrored: { [weak view] mirrored in
-                        view?.setForceMirrored(mirrored)
-                    }
-                ))
-            } else {
-                completion(nil)
-            }
-        }
-    }
-    
-    public func setIsVideoEnabled(_ value: Bool) {
-        self.impl.setIsVideoEnabled(value)
-    }
-
-    public func enableScreenCapture() {
-        self.impl.switchVideoInput("screen_capture")
-    }
-    public func switchVideoInput(_ deviceId: String) {
-        self.impl.switchVideoInput(deviceId)
-    }
-}
-
+import TelegramVoip
 
 private func callConnectionDescription(_ connection: CallSessionConnection) -> OngoingCallConnectionDescription? {
     switch connection {
@@ -910,12 +803,12 @@ final class OngoingCallContext {
         return (poll |> then(.complete() |> delay(0.5, queue: Queue.concurrentDefaultQueue()))) |> restart
     }
     
-    func makeIncomingVideoView(completion: @escaping (OngoingCallContextVideoView?) -> Void) {
+    func makeIncomingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
         self.withContext { context in
             if let context = context as? OngoingCallThreadLocalContextWebrtc {
                 context.makeIncomingVideoView { view in
                     if let view = view {
-                        completion(OngoingCallContextVideoView(
+                        completion(OngoingCallContextPresentationCallVideoView(
                             view: view,
                             setOnFirstFrameReceived: { [weak view] f in
                                 view?.setOnFirstFrameReceived(f)
@@ -940,8 +833,10 @@ final class OngoingCallContext {
                                 }
                             }, setVideoContentMode: { [weak view] mode in
                                 view?.setVideoContentMode(mode)
-                            }, setForceMirrored: { [weak view] mirrored in
-                                view?.setForceMirrored(mirrored)
+                            }, setOnIsMirroredUpdated: { [weak view] f in
+                                view?.setOnIsMirroredUpdated { value in
+                                    f?(value)
+                                }
                             }
                         ))
                     } else {

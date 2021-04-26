@@ -37,7 +37,7 @@ private class CallRatingModalView: View {
         var x:CGFloat = 0
         for i in 0 ..< 5 {
             let star = ImageButton()
-            star.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(), for: .Normal)
+            star.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(theme.colors.accent), for: .Normal)
             star.sizeToFit()
             star.setFrameOrigin(x, 0)
             rating.addSubview(star)
@@ -45,10 +45,10 @@ private class CallRatingModalView: View {
             
             star.set(handler: { [weak self] current in
                 for j in 0 ... i {
-                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar_Highlighted").precomposed(), for: .Normal)
+                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar_Highlighted").precomposed(theme.colors.accent), for: .Normal)
                 }
                 for j in i + 1 ..< 5 {
-                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(), for: .Normal)
+                    (self?.rating.subviews[j] as? ImageButton)?.set(image: #imageLiteral(resourceName: "Icon_CallStar").precomposed(theme.colors.accent), for: .Normal)
                 }
                 self?.state = .stars
                 delay(0.15, closure: {
@@ -157,7 +157,7 @@ class CallRatingModalViewController: ModalViewController {
 
 
 func rateCallAndSendLogs(account: Account, callId: CallId, starsCount: Int, comment: String, userInitiated: Bool, includeLogs: Bool) -> Signal<Void, NoError> {
-    let peerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 4244000)
+    let peerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(4244000))
     
     let rate = rateCall(account: account, callId: callId, starsCount: Int32(starsCount), comment: comment, userInitiated: userInitiated)
     if includeLogs {
@@ -165,7 +165,7 @@ func rateCallAndSendLogs(account: Account, callId: CallId, starsCount: Int, comm
         let name = "\(callId.id)_\(callId.accessHash).log.json"
         let path = callLogsPath(account: account) + "/" + name
         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
-        let message = EnqueueMessage.message(text: comment, attributes: [], mediaReference: .standalone(media: file), replyToMessageId: nil, localGroupingKey: nil)
+        let message = EnqueueMessage.message(text: comment, attributes: [], mediaReference: .standalone(media: file), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)
         return rate
             |> then(enqueueMessages(account: account, peerId: peerId, messages: [message])
                 |> mapToSignal({ _ -> Signal<Void, NoError> in
@@ -173,7 +173,7 @@ func rateCallAndSendLogs(account: Account, callId: CallId, starsCount: Int, comm
                 }))
     } else if !comment.isEmpty {
         return rate
-            |> then(enqueueMessages(account: account, peerId: peerId, messages: [.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil)])
+            |> then(enqueueMessages(account: account, peerId: peerId, messages: [.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
                 |> mapToSignal({ _ -> Signal<Void, NoError> in
                     return .single(Void())
                 }))
