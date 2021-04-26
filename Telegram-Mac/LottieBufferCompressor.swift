@@ -140,13 +140,13 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v6-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v7-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v6-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v7-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
     init(_ animation: LottieAnimation, endFrame: Int, bufferSize: Int, queue: Queue) {
