@@ -542,7 +542,7 @@ private final class PlayerRenderer {
                     }
                     var currentFrame = state.currentFrame
                     
-                    if mainFps > fps {
+                    if mainFps >= fps {
                         if currentFrame % Int32(round(Float(mainFps) / Float(fps))) != 0 {
                             currentFrame += 1
                         }
