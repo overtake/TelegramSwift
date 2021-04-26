@@ -6,7 +6,7 @@ url=git@github.com:telegramdesktop/libtgvoip
 url=https://github.com/overtake/Sparkle
 [submodule "submodules/telegram-ios"]
 	path = submodules/telegram-ios
-url=git@github.com:TelegramMessenger/Telegram-iOS.git
+url=git@github.com:overtake/Telegram-iOS.git
 [submodule "submodules/rlottie"]
 	path = submodules/rlottie
 url=git@github.com:overtake/rlottie.git
