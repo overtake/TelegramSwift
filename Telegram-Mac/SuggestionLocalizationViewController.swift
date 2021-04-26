@@ -79,8 +79,9 @@ class SuggestionLocalizationViewController: ModalViewController {
         return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
-                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.context.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
-                _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: strongSelf.context.sharedContext.accountManager, postbox: strongSelf.context.account.postbox, network: strongSelf.context.account.network, languageCode: strongSelf.languageCode), for: mainWindow).start()
+                let engine = strongSelf.context.engine.localization
+                _ = engine.markSuggestedLocalizationAsSeenInteractively(languageCode: strongSelf.suggestionInfo.languageCode).start()
+                _ = showModalProgress(signal: engine.downloadAndApplyLocalization(accountManager: strongSelf.context.sharedContext.accountManager, languageCode: strongSelf.languageCode), for: strongSelf.context.window).start()
             }
         }, drawBorder: true, height: 40)
     }
@@ -150,7 +151,8 @@ class SuggestionLocalizationViewController: ModalViewController {
             if let strongSelf = self {
                 strongSelf.close()
                 strongSelf.context.sharedContext.bindings.rootNavigation().push(LanguageViewController(strongSelf.context))
-                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.context.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
+                let engine = strongSelf.context.engine.localization
+                _ = engine.markSuggestedLocalizationAsSeenInteractively(languageCode: strongSelf.suggestionInfo.languageCode).start()
             }
         }, reversed: true))
     

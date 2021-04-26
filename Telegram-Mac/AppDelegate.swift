@@ -625,6 +625,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 if let contextValue = self.contextValue {
                     contextValue.context.sharedContext.bindings.rootNavigation().controller.updateController()
                 }
+            }, applyMaxReadIndexInteractively: { index in
+                if let context = self.contextValue?.context {
+                    _ = context.engine.messages.applyMaxReadIndexInteractively(index: index).start()
+                }
+
             })
             
             let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, appEncryption: appEncryption, accountManager: accountManager, window: window, bindings: notificationsBindings)

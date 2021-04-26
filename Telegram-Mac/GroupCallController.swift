@@ -120,6 +120,7 @@ struct PeerGroupCallData : Equatable, Comparable {
     let firstTimestamp: Int32
     let videoMode: Bool
     let isVertical: Bool
+    let hasVideo: Bool
     var isRaisedHand: Bool {
         return self.state?.hasRaiseHand == true
     }
@@ -217,6 +218,9 @@ struct PeerGroupCallData : Equatable, Comparable {
         if lhs.isVertical != rhs.isVertical {
             return false
         }
+        if lhs.hasVideo != rhs.hasVideo {
+            return false
+        }
         return true
     }
     
@@ -255,7 +259,7 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
         
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], isPinned: currentDominantSpeakerWithVideo?.peerId == accountPeerId, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isFullScreen && currentDominantSpeakerWithVideo != nil))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], isPinned: currentDominantSpeakerWithVideo?.peerId == accountPeerId, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isFullScreen && currentDominantSpeakerWithVideo != nil, hasVideo: activeVideoSources[accountPeerId] != nil))
         index += 1
     } 
 
@@ -270,13 +274,13 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
         if accountPeerId == value.peer.id, isMuted {
             isSpeaking = false
         }
-        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], isPinned: currentDominantSpeakerWithVideo?.peerId == value.peer.id, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isFullScreen && currentDominantSpeakerWithVideo != nil))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], isPinned: currentDominantSpeakerWithVideo?.peerId == value.peer.id, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isFullScreen && currentDominantSpeakerWithVideo != nil, hasVideo: activeVideoSources[value.peer.id] != nil))
         index += 1
     }
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, isPinned: false, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isFullScreen && currentDominantSpeakerWithVideo != nil))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, isPinned: false, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isFullScreen && currentDominantSpeakerWithVideo != nil, hasVideo: false))
             index += 1
         }
     }
@@ -583,7 +587,7 @@ final class GroupCallUIController : ViewController {
             
             for member in members {
                 if let state = member.state, let ssrc = state.ssrc {
-                    let hasVideo = strongSelf.videoViews.contains(where: { $0.0.peerId == member.peer.id })
+                    let hasVideo = member.hasVideo
                     if hasVideo && member.peer.id == member.accountPeerId, strongSelf.videoViews.count > 1 {
                         continue
                     }
@@ -829,6 +833,8 @@ final class GroupCallUIController : ViewController {
             var sources = sources
         
             if let members = members {
+                
+                let muted = members.participants.filter({ $0.isVideoMuted })
                 sources = sources.filter { key, value in
                     return members.participants.first(where: { $0.peer.id == key })?.isVideoMuted == false
                 }

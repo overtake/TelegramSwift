@@ -604,7 +604,7 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     let icon: SettingsSearchableItemIcon = .language
     
     let applyLocalization: (AccountContext, @escaping (SettingsSearchableItemPresentation, ViewController?) -> Void, String) -> Void = { context, present, languageCode in
-        _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: languageCode), for: context.window).start()
+        _ = showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: languageCode), for: context.window).start()
     }
     
     var items: [SettingsSearchableItem] = []

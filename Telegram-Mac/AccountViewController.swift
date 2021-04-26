@@ -771,7 +771,7 @@ class LayoutAccountController : TableViewController {
         }, passportPromise.get()))
         
         
-        syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
+        syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
         
         self.hasWallet.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
         |> map { view -> Bool in
@@ -957,7 +957,7 @@ class LayoutAccountController : TableViewController {
         }, passportPromise.get()))
         
 
-        syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
+        syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
         
     }
     

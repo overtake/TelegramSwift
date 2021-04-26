@@ -626,7 +626,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         afterComplete(true)
     case let .applyLocalization(_, context, value):
-        _ = showModalProgress(signal: requestLocalizationPreview(network: context.account.network, identifier: value) |> deliverOnMainQueue, for: context.window).start(next: { info in
+        _ = showModalProgress(signal: context.engine.localization.requestLocalizationPreview(identifier: value) |> deliverOnMainQueue, for: context.window).start(next: { info in
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
                 alert(for: context.window, info: L10n.applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {

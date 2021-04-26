@@ -233,8 +233,7 @@ func PaymentsReceiptController(context: AccountContext, messageId: MessageId, me
     
     //BotPaymentReceipt, RequestBotPaymentReceiptError
     let receiptPromise: Promise<BotPaymentReceipt> = Promise()
-    
-    receiptPromise.set(requestBotPaymentReceipt(account: context.account, messageId: messageId) |> `catch` { _ in return .complete() })
+    receiptPromise.set(context.engine.payments.requestBotPaymentReceipt(messageId: messageId) |> `catch` { _ in return .complete() })
     
     
     let botPeer = receiptPromise.get() |> mapToSignal { value in

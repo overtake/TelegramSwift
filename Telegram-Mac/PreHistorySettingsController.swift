@@ -203,7 +203,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                 }
                 if let value = value, value != defaultValue {
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
-                        let signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                        let signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                             |> map(Optional.init)
                             |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                 guard let upgradedPeerId = upgradedPeerId else {

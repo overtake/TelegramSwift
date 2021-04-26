@@ -52,7 +52,8 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
         guard let segment = sender as? NSSegmentedControl else {return}
         switch segment.selectedSegment {
         case 0:
-            _ = showModalProgress(signal: createSecretChat(account: chatInteraction.context.account, peerId: chatInteraction.peerId) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] peerId in
+            
+            _ = showModalProgress(signal: chatInteraction.context.engine.peers.createSecretChat(peerId: chatInteraction.peerId) |> deliverOnMainQueue, for: chatInteraction.context.window).start(next: { [weak self] peerId in
                 if let strongSelf = self {
                     strongSelf.chatInteraction.push(ChatController(context: strongSelf.chatInteraction.context, chatLocation: .peer(peerId)))
                 }

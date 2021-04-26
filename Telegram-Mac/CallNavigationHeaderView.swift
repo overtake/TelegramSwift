@@ -651,7 +651,8 @@ class CallHeaderBasicView : NavigationHeaderView {
         addSubview(backgroundView)
         addSubview(container)
         statusTextView.backgroundColor = .clear
-
+        statusTextView.userInteractionEnabled = false
+        statusTextView.isSelectable = false
 
         callInfo.set(font: .medium(.text), for: .Normal)
         callInfo.disableActions()
