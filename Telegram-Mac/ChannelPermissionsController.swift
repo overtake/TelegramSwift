@@ -518,7 +518,7 @@ final class ChannelPermissionsController : TableViewController {
                     
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
                         stopMerging = true
-                        signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                        signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                             |> map(Optional.init)
                             |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                 guard let upgradedPeerId = upgradedPeerId else {
@@ -717,7 +717,7 @@ final class ChannelPermissionsController : TableViewController {
             
             if peerId.namespace == Namespaces.Peer.CloudGroup {
                 stopMerging = true
-                signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                     |> map(Optional.init)
                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                         guard let upgradedPeerId = upgradedPeerId else {

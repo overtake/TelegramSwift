@@ -423,8 +423,8 @@ final class ChatUndoManager  {
         return status
     }
     
-    func clearHistoryInteractively(postbox: Postbox, peerId: PeerId, type: InteractiveHistoryClearingType = .forLocalPeer) {
-        _ = TelegramCore.clearHistoryInteractively(postbox: postbox, peerId: peerId, type: type).start()
+    func clearHistoryInteractively(engine: TelegramEngine, peerId: PeerId, type: InteractiveHistoryClearingType = .forLocalPeer) {
+        _ = engine.messages.clearHistoryInteractively(peerId: peerId, type: type).start()
     }
     func removePeerChat(account: Account, peerId: PeerId, type: ChatUndoActionType, reportChatSpam: Bool, deleteGloballyIfPossible: Bool = false) {
         _ = TelegramCore.removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: deleteGloballyIfPossible).start()

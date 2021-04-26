@@ -388,11 +388,11 @@ class ChatGroupedItem: ChatRowItem {
         
         if chatInteraction.mode == .scheduled, let peer = chatInteraction.peer {
             items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
-                _ = sendScheduledMessageNowInteractively(postbox: context.account.postbox, messageId: message.id).start()
+                _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: message.id).start()
             }))
             items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
                 showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                    _ = showModalProgress(signal: requestEditMessage(account: context.account, messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)), for: context.window).start()
+                    _ = context.engine.messages.requestEditMessage(messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)).start()
                 }), for: context.window)
             }))
             items.append(ContextSeparatorItem())

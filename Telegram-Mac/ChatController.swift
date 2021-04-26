@@ -277,7 +277,7 @@ class ChatControllerView : View, ChatInputDelegate {
             case let .replyThread(data):
                 location = .peer(peerId: data.messageId.peerId, fromId: fromId, tags: nil, topMsgId: data.messageId, minDate: nil, maxDate: nil)
             }
-            return searchMessages(account: context.account, location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.media.first is TelegramMediaAction) }), $0.1)}
+            return context.engine.messages.searchMessages(location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.media.first is TelegramMediaAction) }), $0.1)}
         })
         
         
@@ -1790,7 +1790,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 switch strongSelf.mode {
                 case .history, .replyThread:
-                    let signal = searchMessageIdByTimestamp(account: context.account, peerId: peerId, threadId: strongSelf.mode.threadId64, timestamp: Int32(date.timeIntervalSince1970))
+                    let signal = context.engine.messages.searchMessageIdByTimestamp(peerId: peerId, threadId: strongSelf.mode.threadId64, timestamp: Int32(date.timeIntervalSince1970))
                     
                     self?.dateDisposable.set(showModalProgress(signal: signal, for: window).start(next: { messageId in
                         if let messageId = messageId {
@@ -1861,7 +1861,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
                 
-                self.chatInteraction.editDisposable.set((requestEditMessage(account: context.account, messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
+                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
                     switch progress {
                     case let .progress(progress):
@@ -2247,7 +2247,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     
                                     var index:Int = 0
                                     if result[index] == .selected {
-                                        signals.append(deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: .forEveryone))
+                                        signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forEveryone))
                                     }
                                     index += 1
                                     
@@ -2264,7 +2264,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     index += 1
 
                                     if result[index] == .selected {
-                                        signals.append(clearAuthorHistory(account: context.account, peerId: peerId, memberId: memberId))
+                                        signals.append(context.engine.messages.clearAuthorHistory(peerId: peerId, memberId: memberId))
                                     }
                                     index += 1
 
@@ -2291,7 +2291,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                             strongSelf.chatInteraction.cancelEditing()
                                         }
                                     }
-                                    _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: type).start()
+                                    _ = context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: type).start()
                                     strongSelf.chatInteraction.update({$0.withoutSelectionState()})
                                 })
                             }
@@ -2521,7 +2521,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     strongSelf.botCallbackAlertMessage.set(.single((L10n.chatInlineRequestLoading, false)))
-                    strongSelf.messageActionCallbackDisposable.set((requestMessageActionCallback(account: context.account, messageId: messageId, isGame:isGame, password: nil, data: data?.data) |> deliverOnMainQueue).start(next: applyResult, error: { [weak strongSelf] error in
+                    strongSelf.messageActionCallbackDisposable.set((context.engine.messages.requestMessageActionCallback(messageId: messageId, isGame:isGame, password: nil, data: data?.data) |> deliverOnMainQueue).start(next: applyResult, error: { [weak strongSelf] error in
                         
                         strongSelf?.botCallbackAlertMessage.set(.single(("", false)))
                         if let data = data, data.requiresPassword {
@@ -2530,7 +2530,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             switch error {
                             case .invalidPassword:
                                 showModal(with: InputPasswordController(context: context, title: L10n.botTransferOwnershipPasswordTitle, desc: L10n.botTransferOwnershipPasswordDesc, checker: { pwd in
-                                    return requestMessageActionCallback(account: context.account, messageId: messageId, isGame: isGame, password: pwd, data: data.data)
+                                    return context.engine.messages.requestMessageActionCallback(messageId: messageId, isGame: isGame, password: pwd, data: data.data)
                                         |> deliverOnMainQueue
                                         |> beforeNext { result in
                                             applyResult(result)
@@ -3778,7 +3778,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let cachedData = peerView?.cachedData as? CachedChannelData {
                         let onlineMemberCount:Signal<Int32?, NoError>
                         if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(engine: context.engine, accountPeerId: context.peerId, peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                         } else {
                             onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                         }
@@ -4648,7 +4648,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .scheduled:
                         items.append(SPopoverItem(L10n.chatContextClearScheduled, {
                             confirm(for: context.window, header: L10n.chatContextClearScheduledConfirmHeader, information: L10n.chatContextClearScheduledConfirmInfo, okTitle: L10n.chatContextClearScheduledConfirmOK, successHandler: { _ in
-                                _ = clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: .scheduledMessages).start()
+                                _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, type: .scheduledMessages).start()
                             })
                         }, theme.icons.chatActionClearHistory))
                     case .history:

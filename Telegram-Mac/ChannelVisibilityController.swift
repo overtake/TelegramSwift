@@ -946,7 +946,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                             }
                             
                             if peer.isGroup {
-                                signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                                
+                                signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return csignal
                                             |> mapToSignal {

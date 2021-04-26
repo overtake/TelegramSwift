@@ -298,7 +298,6 @@
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
-		A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */; };
 		A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */; };
 		A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */; };
 		A76C8AA224221D3000FDB071 /* graph_loading.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A76C8AA124221D2800FDB071 /* graph_loading.tgs */; };
@@ -1373,7 +1372,6 @@
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
-		A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchModalController.swift; sourceTree = "<group>"; };
 		A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_empty.tgs; sourceTree = "<group>"; };
 		A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalTabsView.swift; sourceTree = "<group>"; };
 		A76C8AA124221D2800FDB071 /* graph_loading.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = graph_loading.tgs; sourceTree = "<group>"; };
@@ -4438,7 +4436,6 @@
 				27CD09752624D33100ECB8EF /* animated-webp */,
 				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
 				A7F28336239A808500742C20 /* TemplateController.swift */,
-				A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -5158,7 +5155,6 @@
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C24FD4101F20FBFB00A97196 /* RecentUsedEmoji.swift in Sources */,
-				A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */,
 				A76C8AA424221F5400FDB071 /* StatisticsLoadingRowItem.swift in Sources */,

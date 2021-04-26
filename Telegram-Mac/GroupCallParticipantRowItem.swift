@@ -226,10 +226,10 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     
     var statusImage: CGImage? {
         assertOnMainThread()
-        let videoView = self.takeVideo(data.peer.id)
-        if videoView != nil || volume != nil, let state = data.state {
+        let hasVideo = data.hasVideo
+        if hasVideo || volume != nil, let state = data.state {
             var statusImage: CGImage
-            if videoView != nil {
+            if hasVideo {
                 if let muteState = state.muteState, muteState.mutedByYou {
                     statusImage = GroupCallTheme.status_video_red
                 } else {

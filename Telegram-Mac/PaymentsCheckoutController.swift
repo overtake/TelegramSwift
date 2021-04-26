@@ -456,7 +456,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             }
             
             let pay:()->Void = {
-                let paySignal = sendBotPaymentForm(account: context.account, messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
+                let paySignal = context.engine.payments.sendBotPaymentForm(messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
                 
                 _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
                     
@@ -584,10 +584,10 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             ]
 
     
-    let formAndMaybeValidatedInfo = fetchBotPaymentForm(postbox: context.account.postbox, network: context.account.network, messageId: messageId, themeParams: themeParams)
+    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(messageId: messageId, themeParams: themeParams)
            |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
                if let current = paymentForm.savedInfo {
-                   return validateBotPaymentForm(account: context.account, saveInfo: true, messageId: messageId, formInfo: current)
+                return context.engine.payments.validateBotPaymentForm(saveInfo: true, messageId: messageId, formInfo: current)
                        |> mapError { _ -> BotPaymentFormRequestError in
                            return .generic
                        }

@@ -351,7 +351,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 default:
                     type = .forLocalPeer
                 }
-                _ = deleteMessagesInteractively(account: context.account, messageIds: messageIds, type: type).start()
+                _ = context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: type).start()
                 updateState({$0.withAdditionalIgnoringIds(messageIds)})
                 
                 self?.againDisposable.set((Signal<()->Void, NoError>.single({ [weak self] in

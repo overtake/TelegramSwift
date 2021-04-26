@@ -807,7 +807,7 @@ class ChannelAdminController: TableModalViewController {
                             })
                         } else {
                             if convert {
-                                actionsDisposable.add(showModalProgress(signal: convertGroupToSupergroup(account: context.account, peerId: peer.id), for: context.window).start(next: { upgradedPeerId in
+                                actionsDisposable.add(showModalProgress(signal: context.engine.peers.convertGroupToSupergroup(peerId: peer.id), for: context.window).start(next: { upgradedPeerId in
                                     upgradedToSupergroup(upgradedPeerId, {
                                         peerId = upgradedPeerId
                                         combinedPromise.set(context.account.postbox.combinedView(keys: [.peer(peerId: upgradedPeerId, components: .all), .peer(peerId: adminId, components: .all)]))
@@ -1016,7 +1016,7 @@ class ChannelAdminController: TableModalViewController {
                                     dismissImpl()
                                 }))
                         } else if updateFlags != defaultFlags || stateValue.with ({ $0.rank != $0.initialRank }) {
-                            let signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                            let signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                                 |> map(Optional.init)
                                 |> deliverOnMainQueue
                                 |> `catch` { error -> Signal<PeerId?, NoError> in

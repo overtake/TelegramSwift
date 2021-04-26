@@ -444,7 +444,7 @@ final class AccountContext {
     func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
         switch location {
         case .peer:
-            let _ = applyMaxReadIndexInteractively(postbox: self.account.postbox, stateManager: self.account.stateManager, index: messageIndex).start()
+            let _ = self.engine.messages.applyMaxReadIndexInteractively(index: messageIndex).start()
         case let .replyThread(data):
             let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
             context.applyMaxReadIndex(messageIndex: messageIndex)
@@ -465,6 +465,7 @@ final class AccountContext {
     func composeCreateSecretChat() {
         let account = self.account
         let window = self.window
+        let engine = self.engine
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
@@ -476,7 +477,7 @@ final class AccountContext {
         let select = selectModalPeers(window: window, context: self, title: L10n.composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
         let create = select |> map { $0.first! } |> mapToSignal { peerId in
-            return createSecretChat(account: account, peerId: peerId) |> `catch` {_ in .complete()}
+            return engine.peers.createSecretChat(peerId: peerId) |> `catch` {_ in .complete()}
             } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
                 return showModalProgress(signal: .single(peerId), for: mainWindow)
         }

@@ -434,7 +434,7 @@
                 if let cachedData = peerView.cachedData as? CachedChannelData {
                     let onlineMemberCount:Signal<Int32?, NoError>
                     if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(engine: context.engine, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                     } else {
                         onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                     }
@@ -930,6 +930,8 @@
                             return
                         }
                         
+                        let context = strongSelf.context
+                        
                         if canDelete {
                             let isAdmin = admins?.filter({$0.peerId == messages[0].author?.id}).first != nil
                             if mustManageDeleteMessages(messages, for: peer, account: strongSelf.context.account), let memberId = messages[0].author?.id, !isAdmin {
@@ -942,7 +944,7 @@
                                     
                                     var signals:[Signal<Void, NoError>] = []
                                     if result[0] == .selected {
-                                        signals.append(deleteMessagesInteractively(account: context.account, messageIds: messages.map {$0.id}, type: .forEveryone))
+                                        signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messages.map {$0.id}, type: .forEveryone))
                                     }
                                     if result[1] == .selected {
                                         signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peer.id, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
@@ -951,7 +953,7 @@
                                         signals.append(reportPeerMessages(account: context.account, messageIds: messageIds, reason: .spam, message: ""))
                                     }
                                     if result[3] == .selected {
-                                        signals.append(clearAuthorHistory(account: context.account, peerId: peer.id, memberId: memberId))
+                                        signals.append(context.engine.messages.clearAuthorHistory(peerId: peer.id, memberId: memberId))
                                     }
                                     
                                     _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
@@ -973,7 +975,7 @@
                                     case .thrid:
                                         type = .forEveryone
                                     }
-                                    _ = deleteMessagesInteractively(account: strongSelf.context.account, messageIds: messageIds, type: type).start()
+                                    _ = context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: type).start()
                                     strongSelf.interactions.update({$0.withoutSelectionState()})
                                 })
                             }

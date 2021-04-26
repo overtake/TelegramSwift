@@ -319,7 +319,10 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
             if let externalSearch = externalSearch {
                 return .single((nil, SearchResult(result: externalSearch.messages), search))
             } else if !search.request.isEmpty {
-                return .single((nil, SearchResult(result: nil), search)) |> then(searchMessages(account: context.account, location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, topMsgId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil) |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search) })
+                
+                let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, topMsgId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
+                
+                return .single((nil, SearchResult(result: nil), search)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search) })
             } else {
                 return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags) |> map { ($0, nil, search) }
             }
