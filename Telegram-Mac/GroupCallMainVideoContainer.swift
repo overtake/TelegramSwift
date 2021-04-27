@@ -126,7 +126,7 @@ final class MainVideoContainerView: Control {
                 
                 let previous = self.statusView
                 self.statusView = statusView
-                if animated {
+                if animated, controlsMode == .normal {
                     previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
                         previous?.removeFromSuperview()
                     })
