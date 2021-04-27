@@ -273,6 +273,12 @@ final class GroupCallTitleView : Control {
         if updated {
             needsLayout = true
         }
+        switch state.mode {
+        case .video:
+            self.settings.isHidden = false
+        case .voice:
+            self.settings.isHidden = true
+        }
     }
     
     required init?(coder: NSCoder) {

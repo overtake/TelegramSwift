@@ -162,7 +162,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, secretMediaPreview: TelegramMediaWebpage? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, secretMediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         
@@ -201,7 +201,7 @@ class Sender: NSObject {
             parsingUrlType = [.Links, .Hashtags]
         }
 
-        let mapped = cut_long_message( input.inputText, 4096).map { message -> EnqueueMessage in
+        let mapped = cut_long_message( input.inputText, 4096).compactMap { message -> EnqueueMessage? in
             let subState = input.subInputState(from: NSMakeRange(inset, message.length))
             inset += message.length
             
@@ -216,18 +216,28 @@ class Sender: NSObject {
             if FastSettings.isChannelMessagesMuted(peerId) || silent {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
+            if !subState.inputText.isEmpty {
+                return .message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
+            } else {
+                return nil
+            }
         }
         
-        return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
-            if !emojis.isEmpty {
-                return saveUsedEmoji(emojis, postbox: context.account.postbox) |> map {
-                    return value
+        if !mapped.isEmpty {
+            return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
+                if !emojis.isEmpty {
+                    return saveUsedEmoji(emojis, postbox: context.account.postbox) |> map {
+                        return value
+                    }
                 }
+                return .single(value)
+            } |> deliverOnMainQueue
+        } else {
+            DispatchQueue.main.async {
+                emptyHandler?()
             }
-            return .single(value)
-        } |> deliverOnMainQueue
-        
+            return .complete()
+        }
     }
     
     public static func enqueue(message:EnqueueMessage, context: AccountContext, peerId:PeerId) ->Signal<[MessageId?],NoError> {
