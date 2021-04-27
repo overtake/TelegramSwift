@@ -115,6 +115,9 @@ final class GroupCallUIState : Equatable {
         if lhs.hasVideo != rhs.hasVideo {
             return false
         }
+        if lhs.isMuted != rhs.isMuted {
+            return false
+        }
         return true
     }
     
