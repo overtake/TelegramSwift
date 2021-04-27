@@ -21,10 +21,12 @@ final class GroupCallControlsView : View {
     }
     
     private(set) var mode: Mode = .normal
-    private(set) var hasOutgoingVideo: Bool = false
+    private(set) var callMode: GroupCallUIState.Mode = .voice
+    
+    private(set) var hasVideo: Bool = false
     
     private let speak: GroupCallSpeakButton = GroupCallSpeakButton(frame: NSMakeRect(0, 0, 140, 140))
-    private let videoStream: CallControl = CallControl(frame: .zero)
+    private let leftButton: CallControl = CallControl(frame: .zero)
     private let end: CallControl = CallControl(frame: .zero)
     private var speakText: TextView?
     var arguments: GroupCallUIArguments?
@@ -49,24 +51,18 @@ final class GroupCallControlsView : View {
         addSubview(backgroundView)
         addSubview(speak)
 
-        addSubview(videoStream)
+        addSubview(leftButton)
         addSubview(end)
         
-        
-
-
         backgroundView.isEventLess = true
         backgroundView.userInteractionEnabled = false
         
         self.isEventLess = true
 
-
         end.set(handler: { [weak self] _ in
             self?.arguments?.leave()
         }, for: .Click)
-        
-
-        
+                
         speak.set(handler: { [weak self] _ in
             if let state = self?.currentState {
                 if let _ = state.state.scheduleTimestamp {
@@ -89,30 +85,39 @@ final class GroupCallControlsView : View {
 
         self.backgroundView.update(state: .connecting, animated: false)
 
-        self.updateMode(self.mode, hasOutgoingVideo: false, animated: false, force: true)
+        self.updateMode(self.mode, callMode: self.callMode, hasVideo: false, animated: false, force: true)
     }
     
-    private func updateMode(_ mode: Mode, hasOutgoingVideo: Bool, animated: Bool, force: Bool = false) {
+    private func updateMode(_ mode: Mode, callMode: GroupCallUIState.Mode, hasVideo: Bool, animated: Bool, force: Bool = false) {
         let previous = self.mode
        
-        
-        if previous != mode || hasOutgoingVideo != self.hasOutgoingVideo || force {
+        if previous != mode || hasVideo != self.hasVideo || self.callMode != callMode || force {
             self.speakText?.change(opacity: mode == .fullscreen ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
             
-            let videoStreamIcon = hasOutgoingVideo ? GroupCallTheme.video_off : GroupCallTheme.video_on
-            //GroupCallTheme.settingsIcon
-            let videoStreamText = L10n.voiceChatVideoStream
-            //L10n.voiceChatSettings
+            let leftButtonText: String
+            let leftBg: CallControlData.Mode
+            switch callMode {
+            case .voice:
+                if hasVideo {
+                    leftButtonText = L10n.voiceChatVideoStream
+                    leftBg = .animated(.screenoff, GroupCallTheme.settingsColor)
+                } else {
+                    leftButtonText = L10n.voiceChatSettings
+                    leftBg = .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon)
+                }
+            case .video:
+                leftButtonText = L10n.voiceChatVideoStream
+                leftBg = .animated(!hasVideo ? .screenoff : .screenon, GroupCallTheme.settingsColor)
+            }
+            
             switch mode {
             case .fullscreen:
-                end.updateWithData(CallControlData(text: nil, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
-                
-                videoStream.updateWithData(CallControlData(text: nil, isVisualEffect: false, icon: videoStreamIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+                end.updateWithData(CallControlData(text: nil, mode: .normal(GroupCallTheme.declineColor, GroupCallTheme.declineIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
+                leftButton.updateWithData(CallControlData(text: nil, mode: leftBg, iconSize: NSMakeSize(48, 48)), animated: animated)
             case .normal:
-                end.updateWithData(CallControlData(text: L10n.voiceChatLeave, isVisualEffect: false, icon: GroupCallTheme.declineIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.declineColor), animated: animated)
-                
-                videoStream.updateWithData(CallControlData(text: videoStreamText, isVisualEffect: false, icon: videoStreamIcon, iconSize: NSMakeSize(48, 48), backgroundColor: GroupCallTheme.settingsColor), animated: animated)
+                end.updateWithData(CallControlData(text: L10n.voiceChatLeave, mode: .normal(GroupCallTheme.declineColor, GroupCallTheme.declineIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
+                leftButton.updateWithData(CallControlData(text: leftButtonText, mode: leftBg, iconSize: NSMakeSize(48, 48)), animated: animated)
             }
             if previous != mode {
                 let from: CGFloat
@@ -140,7 +145,8 @@ final class GroupCallControlsView : View {
             }
         }
         self.mode = mode
-        self.hasOutgoingVideo = hasOutgoingVideo
+        self.callMode = callMode
+        self.hasVideo = hasVideo
     }
     
     
@@ -155,7 +161,7 @@ final class GroupCallControlsView : View {
         case .normal:
             speak.update(size: NSMakeSize(140, 140), transition: transition)
             transition.updateFrame(view: speak, frame: focus(NSMakeSize(140, 140)))
-            transition.updateFrame(view: videoStream, frame: videoStream.centerFrameY(x: 30))
+            transition.updateFrame(view: leftButton, frame: leftButton.centerFrameY(x: 30))
             transition.updateFrame(view: end, frame: end.centerFrameY(x: frame.width - end.frame.width - 30))
             if let speakText = speakText {
                 let speakFrame = speakText.centerFrameX(y: speak.frame.maxY + floorToScreenPixels(backingScaleFactor, ((frame.height - speak.frame.maxY) - speakText.frame.height) / 2 - 33))
@@ -168,7 +174,7 @@ final class GroupCallControlsView : View {
             
             speak.update(size: NSMakeSize(86, 86), transition: transition)
             transition.updateFrame(view: speak, frame: focus(NSMakeSize(86, 86)))
-            transition.updateFrame(view: videoStream, frame: videoStream.centerFrameY(x: bgRect.minX + 10))
+            transition.updateFrame(view: leftButton, frame: leftButton.centerFrameY(x: bgRect.minX + 10))
             transition.updateFrame(view: end, frame: end.centerFrameY(x: bgRect.maxX - end.frame.width - 10))
             transition.updateFrame(view: self.backgroundView, frame: focus(.init(width: 360, height: 360)))
             transition.updateFrame(view: self.fullscreenBackgroundView, frame: bgRect)
@@ -179,37 +185,41 @@ final class GroupCallControlsView : View {
         
     
     fileprivate private(set) var currentState: GroupCallUIState?
-    private var videoStreamToken: UInt32?
+    private var leftToken: UInt32?
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
 
 
         let mode: Mode = callState.isFullScreen && callState.currentDominantSpeakerWithVideo != nil ? .fullscreen : .normal
         
-        let hasOutgoingVideo: Bool
-        if let arguments = arguments, let peerId = arguments.getAccountPeerId() {
-            hasOutgoingVideo = callState.activeVideoSources[peerId] != nil
-        } else {
-            hasOutgoingVideo = false
-        }
         
-        self.updateMode(mode, hasOutgoingVideo: hasOutgoingVideo, animated: animated)
+        self.updateMode(mode, callMode: callState.mode, hasVideo: callState.hasVideo, animated: animated)
 
         let state = callState.state
         speak.update(with: state, isMuted: callState.isMuted, animated: animated)
 
         
-
-        if let videoStreamToken = videoStreamToken {
-            videoStream.removeHandler(videoStreamToken)
+        if let leftToken = leftToken {
+            leftButton.removeHandler(leftToken)
         }
         
-        videoStreamToken = videoStream.set(handler: { [weak self] _ in
-//            self?.arguments?.settings()
-            if !hasOutgoingVideo {
-                self?.arguments?.shareSource()
-            } else {
-                self?.arguments?.cancelSharing()
+        leftToken = leftButton.set(handler: { [weak self, weak callState] _ in
+            if let callState = callState {
+                switch callState.mode {
+                case .video:
+                    if !callState.hasVideo {
+                        self?.arguments?.shareSource()
+                    } else {
+                        self?.arguments?.cancelSharing()
+                    }
+                case .voice:
+                    if callState.hasVideo {
+                        self?.arguments?.cancelSharing()
+                    } else {
+                        self?.arguments?.settings()
+                    }
+                }
             }
+
         }, for: .Click)
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State
