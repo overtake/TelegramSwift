@@ -5767,6 +5767,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         guard let strongSelf = self else {
                             return
                         }
+                        NSApp.activate(ignoringOtherApps: true)
                         _ = (Sender.generateMedia(for: MediaSenderContainer(path: list[0], isFile: false), account: strongSelf.chatInteraction.context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> deliverOnMainQueue).start(next: { media, _ in
                             self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                         })
@@ -5778,6 +5779,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     
                     let asMediaItem = DragItem(title:tr(L10n.chatDropTitle), desc: tr(L10n.chatDropQuickDesc), handler:{ [weak self] in
+                        NSApp.activate(ignoringOtherApps: true)
                         let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
                         if shift {
                             self?.chatInteraction.sendMedia(list.map{MediaSenderContainer(path: $0, caption: "", isFile: false)})
@@ -5796,6 +5798,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         fileDesc = L10n.chatDropAsFilesDesc
                     }
                     let asFileItem = DragItem(title: fileTitle, desc: fileDesc, handler: { [weak self] in
+                        NSApp.activate(ignoringOtherApps: true)
                         let shift = NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false
                         if shift {
                             self?.chatInteraction.sendMedia(list.map{MediaSenderContainer(path: $0, caption: "", isFile: true)})
@@ -5833,6 +5836,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         guard let strongSelf = self else {
                             return
                         }
+                        NSApp.activate(ignoringOtherApps: true)
                         _ = (putToTemp(image: image) |> mapToSignal {Sender.generateMedia(for: MediaSenderContainer(path: $0, isFile: false), account: strongSelf.chatInteraction.context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) } |> deliverOnMainQueue).start(next: { media, _ in
                             self?.chatInteraction.update({$0.updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedMedia(media)})})})
                         })
@@ -5842,6 +5846,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var items:[DragItem] = []
 
                 let asMediaItem = DragItem(title:tr(L10n.chatDropTitle), desc: tr(L10n.chatDropQuickDesc), handler:{ [weak self] in
+                    NSApp.activate(ignoringOtherApps: true)
                     _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak self] path in
                         self?.chatInteraction.showPreviewSender([URL(fileURLWithPath: path)], true, nil)
                     })
@@ -5849,6 +5854,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
                 
                 let asFileItem = DragItem(title:tr(L10n.chatDropTitle), desc: tr(L10n.chatDropAsFilesDesc), handler:{ [weak self] in
+                    NSApp.activate(ignoringOtherApps: true)
                     _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak self] path in
                         self?.chatInteraction.showPreviewSender([URL(fileURLWithPath: path)], false, nil)
                     })
