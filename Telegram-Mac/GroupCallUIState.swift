@@ -101,6 +101,9 @@ final class GroupCallUIState : Equatable {
         if lhs.isFullScreen != rhs.isFullScreen {
             return false
         }
+        if lhs.isMuted != rhs.isMuted {
+            return false
+        }
         return true
     }
 }
