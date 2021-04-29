@@ -299,6 +299,20 @@ final class DesktopCapturerWindow : Window {
     }
 }
 
+enum VideoSourceMacMode {
+    case video
+    case screencast
+}
+extension VideoSourceMac {
+    
+    var mode: VideoSourceMacMode {
+        if self is DesktopCaptureSourceMac {
+            return .screencast
+        } else {
+            return .video
+        }
+    }
+}
 
 func presentDesktopCapturerWindow(select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) -> DesktopCapturerWindow {
     let window = DesktopCapturerWindow(select: select, devices: devices)

@@ -12,7 +12,7 @@ import SwiftSignalKit
 import Postbox
 import SyncCore
 import TelegramCore
-
+import TgVoipWebrtc
 
 final class GroupCallUIState : Equatable {
 
@@ -40,7 +40,8 @@ final class GroupCallUIState : Equatable {
     let isFullScreen: Bool
     let mode: Mode
     let hasVideo: Bool
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: [PeerId: UInt32], isFullScreen: Bool, mode: Mode, hasVideo: Bool) {
+    let videoSource: VideoSourceMac?
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: [PeerId: UInt32], isFullScreen: Bool, mode: Mode, hasVideo: Bool, videoSource: VideoSourceMac?) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -55,6 +56,7 @@ final class GroupCallUIState : Equatable {
         self.isFullScreen = isFullScreen
         self.mode = mode
         self.hasVideo = hasVideo
+        self.videoSource = videoSource
     }
     
     deinit {
@@ -118,10 +120,17 @@ final class GroupCallUIState : Equatable {
         if lhs.isMuted != rhs.isMuted {
             return false
         }
+        if let lhsSource = lhs.videoSource, let rhsSource = rhs.videoSource {
+            if !lhsSource.isEqual(rhsSource) {
+                return false
+            }
+        } else if (lhs.videoSource != nil) != (rhs.videoSource != nil) {
+            return false
+        }
         return true
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, hasVideo: self.hasVideo)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, hasVideo: self.hasVideo, videoSource: self.videoSource)
     }
 }
