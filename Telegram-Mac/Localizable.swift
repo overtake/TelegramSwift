@@ -9371,6 +9371,14 @@ internal final class L10n {
   internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
+  /// You screen are being broarcast
+  internal static var voiceChatTooltipShareScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareScreen") }
+  /// You video are being broarcast
+  internal static var voiceChatTooltipShareVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareVideo") }
+  /// You screen are being broarcast
+  internal static var voiceChatTooltipStopScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopScreen") }
+  /// You video are being broarcast
+  internal static var voiceChatTooltipStopVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopVideo") }
   /// We will notify you when it starts
   internal static var voiceChatTooltipSubscribe: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Subscribe") }
   /// stream

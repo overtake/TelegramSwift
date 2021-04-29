@@ -231,14 +231,30 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             var statusImage: CGImage
             if hasVideo {
                 if let muteState = state.muteState, muteState.mutedByYou {
-                    statusImage = GroupCallTheme.status_video_red
+                    if data.isPinned {
+                        statusImage = GroupCallTheme.status_pinned_red
+                    } else {
+                        statusImage = GroupCallTheme.status_video_red
+                    }
                 } else {
                     if data.isSpeaking {
-                        statusImage = GroupCallTheme.status_video_green
+                        if data.isPinned {
+                            statusImage = GroupCallTheme.status_pinned_red
+                        } else {
+                            statusImage = GroupCallTheme.status_video_green
+                        }
                     } else if data.wantsToSpeak {
-                        statusImage = GroupCallTheme.status_video_accent
+                        if data.isPinned {
+                            statusImage = GroupCallTheme.status_pinned_accent
+                        } else {
+                            statusImage = GroupCallTheme.status_video_accent
+                        }
                     } else {
-                        statusImage = GroupCallTheme.status_video_gray
+                        if data.isPinned {
+                            statusImage = GroupCallTheme.status_pinned_gray
+                        } else {
+                            statusImage = GroupCallTheme.status_video_gray
+                        }
                     }
                 }
             } else {

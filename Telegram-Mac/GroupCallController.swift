@@ -13,6 +13,7 @@ import Postbox
 import SyncCore
 import TelegramCore
 import HotKey
+import TgVoipWebrtc
 
 let fullScreenThreshold: CGFloat = 500
 
@@ -243,7 +244,7 @@ private func _id_peer_id(_ id: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_peer_id_\(id.toInt64())")
 }
 
-private func makeState(peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: [PeerId: UInt32], hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, mode: GroupCallUIState.Mode) -> GroupCallUIState {
+private func makeState(peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: [PeerId: UInt32], hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, mode: GroupCallUIState.Mode, videoSource: VideoSourceMac?) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -285,7 +286,7 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideoSources: activeVideoSources, isFullScreen: isFullScreen, mode: mode, hasVideo: activeVideoSources[accountPeerId] != nil)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideoSources: activeVideoSources, isFullScreen: isFullScreen, mode: mode, hasVideo: activeVideoSources[accountPeerId] != nil, videoSource: videoSource)
 }
 
 
@@ -534,6 +535,7 @@ final class GroupCallUIController : ViewController {
         let account = self.data.call.account
         
         let mode = ValuePromise<GroupCallUIState.Mode>(.video, ignoreRepeated: true)
+        let videoSource = Promise<VideoSourceMac?>(nil)
 
                 
         let displayedRaisedHandsPromise = ValuePromise<Set<PeerId>>([], ignoreRepeated: true)
@@ -688,7 +690,10 @@ final class GroupCallUIController : ViewController {
                 sharing.orderFront(nil)
             } else {
                 self?.sharing = presentDesktopCapturerWindow(select: { [weak self] source in
-                    self?.data.call.requestVideo(deviceId: source.deviceIdKey())
+                    if let window = self?.window {
+                        self?.data.call.requestVideo(deviceId: source.deviceIdKey())
+                        videoSource.set(.single(source))
+                    }
                 }, devices: sharedContext.devicesContext)
             }
         }, takeVideo: { [weak self] peerId in
@@ -728,6 +733,7 @@ final class GroupCallUIController : ViewController {
         }, getAccountPeerId:{ [weak self] in
             return self?.data.call.joinAsPeerId
         }, cancelSharing: { [weak self] in
+            videoSource.set(.single(nil))
             self?.data.call.disableVideo()
         }, toggleRaiseHand: { [weak self] in
             if let strongSelf = self, let state = self?.genericView.state {
@@ -904,8 +910,6 @@ final class GroupCallUIController : ViewController {
         }
         
                
-        let queue = Queue(name: "voicechat.ui")
-
         let joinAsPeer:Signal<(Peer, String?), NoError> = self.data.call.joinAsPeerIdValue |> mapToSignal {
             return account.postbox.peerView(id: $0) |> map { view in
                 if let cachedData = view.cachedData as? CachedChannelData {
@@ -921,7 +925,7 @@ final class GroupCallUIController : ViewController {
         let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), self.data.call.incomingVideoSources, isFullScreen.get())
 
 
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)), account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), mode.get()) |> mapToQueue { values in
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)), account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), mode.get(), videoSource.get()) |> mapToQueue { values in
             return .single(makeState(peerView: values.3,
                                      state: values.0,
                                      isMuted: values.7.0,
@@ -937,7 +941,8 @@ final class GroupCallUIController : ViewController {
                                      activeVideoSources: values.7.5,
                                      hideWantsToSpeak: values.8,
                                      isFullScreen: values.7.6,
-                                     mode: values.9))
+                                     mode: values.9,
+                                     videoSource: values.10))
         } |> distinctUntilChanged
         
         
@@ -965,12 +970,14 @@ final class GroupCallUIController : ViewController {
             return combineLatest(.single(state), signal)
         } |> deliverOnMainQueue
         
-        var currentState: PresentationGroupCallState?
+        var currentState: GroupCallUIState?
         
         self.disposable.set(transition.start { [weak self] value in
             guard let strongSelf = self else {
                 return
             }
+            
+            let state = value.0
             
             switch value.0.state.networkState {
             case .connected:
@@ -978,13 +985,32 @@ final class GroupCallUIController : ViewController {
                 var notifyStartRecording: Bool = false
                 
                 if let previous = currentState {
-                    if previous.muteState != value.0.state.muteState {
-                        if askedForSpeak, let muteState = value.0.state.muteState, muteState.canUnmute {
+                    if previous.state.muteState != value.0.state.muteState {
+                        if askedForSpeak, let muteState = state.state.muteState, muteState.canUnmute {
                             notifyCanSpeak = true
                         }
                     }
-                    if previous.recordingStartTimestamp == nil && value.0.state.recordingStartTimestamp != nil {
+                    if previous.state.recordingStartTimestamp == nil && state.state.recordingStartTimestamp != nil {
                         notifyStartRecording = true
+                    }
+                    if let window = strongSelf.window {
+                        if (previous.videoSource != nil) != (state.videoSource != nil) {
+                            if let source = state.videoSource {
+                                switch source.mode {
+                                case .screencast:
+                                    showModalText(for: window, text: L10n.voiceChatTooltipShareScreen)
+                                case .video:
+                                    showModalText(for: window, text: L10n.voiceChatTooltipShareVideo)
+                                }
+                            } else if let source = previous.videoSource {
+                                switch source.mode {
+                                case .screencast:
+                                    showModalText(for: window, text: L10n.voiceChatTooltipStopScreen)
+                                case .video:
+                                    showModalText(for: window, text: L10n.voiceChatTooltipStopVideo)
+                                }
+                            }
+                        }
                     }
                 }
                 if notifyCanSpeak {
@@ -1008,7 +1034,7 @@ final class GroupCallUIController : ViewController {
                 _ = strongSelf.disableScreenSleep()
             }
             
-            currentState = value.0.state
+            currentState = state
             
             strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call, animated: animated.swap(true))
             strongSelf.readyOnce()

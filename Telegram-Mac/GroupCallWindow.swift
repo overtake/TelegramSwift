@@ -85,6 +85,14 @@ struct GroupCallTheme {
     static let big_unmuted = NSImage(named: "Icon_GroupCall_Big_Unmuted")!.precomposed(.white)
     static let big_muted = NSImage(named: "Icon_GroupCall_Big_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
     
+    
+    
+    static let status_pinned_gray = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let status_pinned_accent = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.blueStatusColor)
+    static let status_pinned_green = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.greenStatusColor)
+    static let status_pinned_red = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.speakLockedColor)
+
+    
     static let status_video_gray = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.grayStatusColor)
     static let status_video_accent = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.blueStatusColor)
     static let status_video_green = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.greenStatusColor)

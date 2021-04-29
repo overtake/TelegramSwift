@@ -34,20 +34,20 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                     let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
                     let imageData = resourceData
                         |> take(1)
-                        |> mapToSignal { maybeData -> Signal<(Data?, Bool), NoError> in
+                        |> mapToSignal { maybeData -> Signal<(Data?, Bool, Bool), NoError> in
                             return autoreleasepool {
                                if maybeData.complete {
-                                   return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false))
+                                   return .single((try? Data(contentsOf: URL(fileURLWithPath: maybeData.path)), false, false))
                                } else {
                                    return Signal { subscriber in
                                                 
                                        if let data = representation.immediateThumbnailData {
-                                           subscriber.putNext((decodeTinyThumbnail(data: data), false))
+                                           subscriber.putNext((decodeTinyThumbnail(data: data), false, true))
                                        }
                                     
                                        let resourceDataDisposable = resourceData.start(next: { data in
                                            if data.complete {
-                                               subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true))
+                                               subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true, false))
                                                subscriber.putCompletion()
                                            }
                                        }, error: { error in
@@ -86,21 +86,34 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                     
                     let loadDataSignal = synchronousLoad ? imageData : imageData |> deliverOn(graphicsThreadPool)
                     
-                    let img = loadDataSignal |> mapToSignal { data, animated -> Signal<(CGImage?, Bool), NoError> in
+                    let img = loadDataSignal |> mapToSignal { data, animated, tiny -> Signal<(CGImage?, Bool), NoError> in
                             
-                            let image:CGImage?
-                            if let data = data {
-                                image = roundImage(data, displayDimensions, scale:scale)
-                            } else {
-                                image = nil
+                        var image:CGImage?
+                        if let data = data {
+                            image = roundImage(data, displayDimensions, scale: scale)
+                        } else {
+                            image = nil
+                        }
+                        #if !SHARE
+                        if tiny, let img = image {
+                            let size = img.size
+                            let ctx = DrawingContext(size: img.size, scale: 1.0)
+                            ctx.withContext { ctx in
+                                ctx.clear(size.bounds)
+                                ctx.draw(img, in: size.bounds)
                             }
-                            if let image = image {
-                                return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
-                                    return (image, animated)
-                                }
-                            } else {
-                                return .single((image, animated))
+                            telegramFastBlurMore(Int32(size.width), Int32(size.height), Int32(ctx.bytesPerRow), ctx.bytes)
+                            
+                            image = ctx.generateImage()
+                        }
+                        #endif
+                        if let image = image {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
+                                return (image, animated)
                             }
+                        } else {
+                            return .single((image, animated))
+                        }
                             
                     }
                     if genCap {
