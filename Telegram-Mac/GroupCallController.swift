@@ -610,7 +610,7 @@ final class GroupCallUIController : ViewController {
             }
             if !ignorePinned {
                 if let pinned = strongSelf.pinnedDominantSpeaker {
-                    if state.activeVideoSources.contains(pinned.endpointId), members.contains(where: { $0.peer.id == pinned.peerId }) {
+                    if state.activeVideoSources.contains(pinned.endpointId), members.contains(where: { $0.peer.id == pinned.peerId && $0.effectiveVideoEndpointId == pinned.endpointId }) {
                         return pinned
                     }
                 }
