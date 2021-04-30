@@ -101,14 +101,14 @@ final class GroupCallControlsView : View {
             case .voice:
                 if hasVideo {
                     leftButtonText = L10n.voiceChatVideoStream
-                    leftBg = .animated(.screenoff, GroupCallTheme.settingsColor)
+                    leftBg = .animated(.screenon, GroupCallTheme.settingsColor)
                 } else {
                     leftButtonText = L10n.voiceChatSettings
                     leftBg = .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon)
                 }
             case .video:
                 leftButtonText = L10n.voiceChatVideoStream
-                leftBg = .animated(!hasVideo ? .screenoff : .screenon, GroupCallTheme.settingsColor)
+                leftBg = .animated(hasVideo ? .screenoff : .screenon, GroupCallTheme.settingsColor)
             }
             
             switch mode {

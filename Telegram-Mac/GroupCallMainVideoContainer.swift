@@ -15,10 +15,10 @@ import Postbox
 
 struct DominantVideo : Equatable {
     let peerId: PeerId
-    let ssrc: UInt32
-    init(_ peerId: PeerId, _ ssrc: UInt32) {
+    let endpointId: String
+    init(_ peerId: PeerId, _ endpointId: String) {
         self.peerId = peerId
-        self.ssrc = ssrc
+        self.endpointId = endpointId
     }
 }
 
@@ -153,7 +153,7 @@ final class MainVideoContainerView: Control {
         
         self.currentPeer = peer
         if let peer = peer {
-            self.call.makeVideoView(source: peer.ssrc, completion: { [weak self] videoView in
+            self.call.makeVideoView(endpointId: peer.endpointId, videoMode: .screencast, completion: { [weak self] videoView in
                 guard let strongSelf = self, let videoView = videoView else {
                     return
                 }
