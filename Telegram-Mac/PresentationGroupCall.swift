@@ -1158,7 +1158,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .screencast, enableNoiseSuppression: true)
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: true)
                 self.incomingVideoSourcePromise.set(genericCallContext.videoSources
                 |> deliverOnMainQueue
                 |> map { sources -> Set<String> in
