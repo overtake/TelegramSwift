@@ -153,7 +153,17 @@ final class MainVideoContainerView: Control {
         
         self.currentPeer = peer
         if let peer = peer {
-            self.call.makeVideoView(endpointId: peer.endpointId, videoMode: .screencast, completion: { [weak self] videoView in
+            
+            var videoMode: GroupCallVideoMode = .video
+            if peer.peerId == participant?.accountPeerId {
+                if participant?.state?.presentationEndpointId != nil {
+                    videoMode = .screencast
+                } else {
+                    videoMode = .video
+                }
+            }
+            
+            self.call.makeVideoView(endpointId: peer.endpointId, videoMode: videoMode, completion: { [weak self] videoView in
                 guard let strongSelf = self, let videoView = videoView else {
                     return
                 }
