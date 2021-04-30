@@ -36,12 +36,12 @@ final class GroupCallUIState : Equatable {
     let voiceSettings: VoiceCallSettings
     let isWindowVisible: Bool
     let currentDominantSpeakerWithVideo: DominantVideo?
-    let activeVideoSources: [PeerId: UInt32]
+    let activeVideoSources: Set<String>
     let isFullScreen: Bool
     let mode: Mode
     let hasVideo: Bool
     let videoSource: VideoSourceMac?
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: [PeerId: UInt32], isFullScreen: Bool, mode: Mode, hasVideo: Bool, videoSource: VideoSourceMac?) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: Set<String>, isFullScreen: Bool, mode: Mode, hasVideo: Bool, videoSource: VideoSourceMac?) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer

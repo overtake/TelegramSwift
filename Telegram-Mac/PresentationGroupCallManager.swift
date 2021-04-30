@@ -183,9 +183,15 @@ struct PresentationGroupCallMembers: Equatable {
 }
 
 
-
+enum GroupCallVideoMode {
+    case video
+    case screencast
+}
 
 protocol PresentationGroupCall: class {
+    
+
+    
     var account: Account { get }
     var engine: TelegramEngine { get }
     var accountContext: AccountContext { get }
@@ -203,8 +209,8 @@ protocol PresentationGroupCall: class {
     var invitedPeers: Signal<[PeerId], NoError> { get }
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
-    
-    var outgoingVideoSource: Signal<[PeerId: UInt32], NoError> { get }
+    var incomingVideoSources: Signal<Set<String>, NoError> { get }
+
 //    var activeCall: CachedChannelData.ActiveCall? { get }
     var inviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
 
@@ -224,12 +230,13 @@ protocol PresentationGroupCall: class {
     func invitePeer(_ peerId: PeerId) -> Bool
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
-    func setFullSizeVideo(ssrc: UInt32?)
-    func makeVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void)
-    var incomingVideoSources: Signal<[PeerId: UInt32], NoError> { get }
-    
+    func setFullSizeVideo(endpointId: String?)
+    func makeVideoView(endpointId: String, videoMode: GroupCallVideoMode, completion: @escaping (PresentationCallVideoView?) -> Void)
     func requestVideo(deviceId: String)
     func disableVideo()
+    func requestScreencast(deviceId: String)
+    func disableScreencast()
+
     func loadMore()
 
     func joinAsSpeakerIfNeeded(_ joinHash: String)

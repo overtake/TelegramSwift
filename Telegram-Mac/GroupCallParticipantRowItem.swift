@@ -231,30 +231,30 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             var statusImage: CGImage
             if hasVideo {
                 if let muteState = state.muteState, muteState.mutedByYou {
-                    if data.isPinned {
-                        statusImage = GroupCallTheme.status_pinned_red
-                    } else {
+//                    if data.isPinned {
+//                        statusImage = GroupCallTheme.status_pinned_red
+//                    } else {
                         statusImage = GroupCallTheme.status_video_red
-                    }
+//                    }
                 } else {
                     if data.isSpeaking {
-                        if data.isPinned {
-                            statusImage = GroupCallTheme.status_pinned_red
-                        } else {
+//                        if data.isPinned {
+//                            statusImage = GroupCallTheme.status_pinned_red
+//                        } else {
                             statusImage = GroupCallTheme.status_video_green
-                        }
+//                        }
                     } else if data.wantsToSpeak {
-                        if data.isPinned {
-                            statusImage = GroupCallTheme.status_pinned_accent
-                        } else {
+//                        if data.isPinned {
+//                            statusImage = GroupCallTheme.status_pinned_accent
+//                        } else {
                             statusImage = GroupCallTheme.status_video_accent
-                        }
+//                        }
                     } else {
-                        if data.isPinned {
-                            statusImage = GroupCallTheme.status_pinned_gray
-                        } else {
+//                        if data.isPinned {
+//                            statusImage = GroupCallTheme.status_pinned_gray
+//                        } else {
                             statusImage = GroupCallTheme.status_video_gray
-                        }
+//                        }
                     }
                 }
             } else {
