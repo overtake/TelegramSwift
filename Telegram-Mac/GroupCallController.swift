@@ -15,7 +15,7 @@ import TelegramCore
 import HotKey
 import TgVoipWebrtc
 
-let fullScreenThreshold: CGFloat = 500
+let fullScreenThreshold: CGFloat = 550
 
 final class GroupCallUIArguments {
     let leave:()->Void
@@ -841,12 +841,15 @@ final class GroupCallUIController : ViewController {
                     }
                 }
             }
-            let view = self?.videoViews.first(where: { $0.0.peerId == peerId && $0.0.mode == mode })?.1
-            if let view = view {
-                return view
-            } else {
-                return nil
+            let views = self?.videoViews.filter { $0.0.peerId == peerId }
+            if let views = views {
+                if let mode = mode {
+                    return views.first(where: { $0.0.mode == mode })?.1
+                } else {
+                    return views.first(where: { $0.0.mode == .video })?.1 ?? views.first?.1
+                }
             }
+            return nil
         }, isStreamingVideo: { [weak self] peerId in
             return self?.videoViews.first(where: { $0.0.peerId == peerId }) != nil
         }, canUnpinVideo: { peerId, mode in
@@ -1357,19 +1360,19 @@ final class GroupCallUIController : ViewController {
         }
         
         window.set(mouseHandler: { [weak self] event in
-            self?.genericView.updateMouse(event: event, animated: true)
+            self?.genericView.updateMouse(event: event, animated: true, isReal: true)
             launchIdleTimer()
             return .rejected
         }, with: self, for: .mouseEntered, priority: .modal)
         
         window.set(mouseHandler: { [weak self]  event in
-            self?.genericView.updateMouse(event: event, animated: true)
+            self?.genericView.updateMouse(event: event, animated: true, isReal: true)
             launchIdleTimer()
             return .rejected
         }, with: self, for: .mouseMoved, priority: .modal)
         
         window.set(mouseHandler: { [weak self]  event in
-            self?.genericView.updateMouse(event: event, animated: true)
+            self?.genericView.updateMouse(event: event, animated: true, isReal: true)
             launchIdleTimer()
             return .rejected
         }, with: self, for: .mouseExited, priority: .modal)
