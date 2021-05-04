@@ -592,8 +592,8 @@ final class GroupCallUIController : ViewController {
             videoSources.set(videoSourcesValue.modify(f))
         }
         
-        let mode: Signal<GroupCallUIState.Mode, NoError> = combineLatest(videoSources.get(), self.data.call.summaryState) |> map { videoSources, summary in
-            let isVideoEnabled = summary?.info?.isVideoEnabled ?? false
+        let mode: Signal<GroupCallUIState.Mode, NoError> = combineLatest(videoSources.get(), self.data.call.callInfo) |> map { videoSources, info in
+            let isVideoEnabled = info?.isVideoEnabled ?? false
             switch isVideoEnabled || !videoSources.isEmpty {
             case true:
                 return .video

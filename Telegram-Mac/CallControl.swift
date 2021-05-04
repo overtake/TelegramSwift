@@ -180,19 +180,17 @@ final class CallControl : Control {
             
             self.imageBackgroundView?.background = color
         case let .animated(value, color):
-            var isNew = false
             if !data.isProperView(self.imageBackgroundView) {
                 self.imageBackgroundView?.removeFromSuperview()
                 self.imageBackgroundView = LottiePlayerView(frame: NSMakeRect(0, 0, data.iconSize.width, data.iconSize.height))
                 self.imageBackgroundView?.wantsLayer = true
                 self.addSubview(self.imageBackgroundView!)
-                isNew = true
             }
             imageView.isHidden = true
             let player = self.imageBackgroundView as? LottiePlayerView
             if let animationData = value.data {
                 let policy: LottiePlayPolicy
-                if animated && !isNew {
+                if animated {
                     policy = .toEnd(from: 1)
                 } else {
                     policy = .toEnd(from: .max)
