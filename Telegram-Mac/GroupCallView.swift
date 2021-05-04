@@ -160,7 +160,7 @@ final class GroupCallView : View {
         } else {
             transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
         }
-        let titleRect = NSMakeRect(isVertical ? 100 : 0, 0, frame.width - (isVertical ? 100 : 0), isVertical ? 54 : 54)
+        let titleRect = NSMakeRect(isVertical ? 140 : 0, 0, frame.width - (isVertical ? 140 : 0), isVertical ? 54 : 54)
         transition.updateFrame(view: titleView, frame: titleRect)
         titleView.updateLayout(size: titleRect.size, transition: transition)
         
@@ -170,7 +170,7 @@ final class GroupCallView : View {
             mainVideoView.updateLayout(size: mainVideoRect.size, transition: transition)
         }
         
-        transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, 100, 54))
+        transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, 140, 54))
         
         if let scheduleView = self.scheduleView {
             let rect = tableRect
@@ -186,7 +186,7 @@ final class GroupCallView : View {
         let width = min(frame.width - 40, 600)
         if let state = state, state.currentDominantSpeakerWithVideo != nil {
             if isFullScreen {
-                size = NSMakeSize(80, frame.height - 54)
+                size = NSMakeSize(120, frame.height - 54)
             } else {
                 size = NSMakeSize(width, frame.height - round(width * 0.4) - 271 )
             }
@@ -230,9 +230,9 @@ final class GroupCallView : View {
     private var mainVideoRect: NSRect {
         var rect: CGRect
         if isFullScreen {
-            let width = frame.width - 100
+            let width = frame.width - 140
             let height = frame.height
-            rect = CGRect(origin: .init(x: 100, y: 0), size: .init(width: width, height: height))
+            rect = CGRect(origin: .init(x: 140, y: 0), size: .init(width: width, height: height))
         } else {
             let width = min(frame.width - 40, 600)
             rect = focus(NSMakeSize(width, width * 0.4))

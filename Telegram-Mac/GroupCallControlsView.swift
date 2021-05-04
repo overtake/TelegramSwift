@@ -97,7 +97,6 @@ final class GroupCallControlsView : View {
         if previous != mode || hasVideo != self.hasVideo  || hasScreencast != self.hasScreencast || self.callMode != callMode || force {
             self.speakText?.change(opacity: mode == .fullscreen ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
-            
             let leftButton1Text: String
             let leftBg: CallControlData.Mode
             let hasText: Bool = mode != .fullscreen
@@ -105,7 +104,6 @@ final class GroupCallControlsView : View {
             case .voice:
                 leftButton1Text = L10n.voiceChatSettings
                 leftBg = .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon)
-                
                 if let view = leftButton2 {
                     self.leftButton2 = nil
                     if animated {
@@ -116,7 +114,6 @@ final class GroupCallControlsView : View {
                         view.removeFromSuperview()
                     }
                 }
-                
                 if let view = rightButton1 {
                     self.rightButton1 = nil
                     if animated {
@@ -127,7 +124,6 @@ final class GroupCallControlsView : View {
                         view.removeFromSuperview()
                     }
                 }
-                
             case .video:
                 leftButton1Text = L10n.voiceChatVideoStreamVideo
                 leftBg = .animated(hasVideo ? .cameraoff : .cameraon, GroupCallTheme.settingsColor)
