@@ -121,11 +121,9 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var width: CGFloat {
-        
         if let futureWidth = futureWidth() {
             return futureWidth - 40
         }
-        
         if let superview = table?.superview {
             return superview.frame.width - 40
         } else {
@@ -134,7 +132,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return data.videoMode && (width == 80 || width >= fullScreenThreshold - 40)
+        return data.videoMode && (width == 120 || width >= fullScreenThreshold - 40)
     }
     
     
@@ -207,7 +205,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
         if isVertical {
-            titleLayout.measure(width: 80 - 16 - 10)
+            titleLayout.measure(width: 120 - 16 - 10)
         } else {
             titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
             statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
@@ -534,7 +532,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     }
     
     override var maxBlockWidth: CGFloat {
-        return 80
+        return 120
     }
     
     override func layout() {
@@ -1175,7 +1173,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             if self.container is VerticalContainerView {
                 current = self.container!
             } else {
-                current = VerticalContainerView(frame: NSMakeRect(0, 0, 80, 80))
+                current = VerticalContainerView(frame: NSMakeRect(0, 0, 120, 80))
                 previous = self.container
                 self.container = current
                 addSubview(current)
