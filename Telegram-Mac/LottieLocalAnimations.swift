@@ -68,6 +68,9 @@ enum LocalAnimatedSticker : String {
     
     case screenoff
     case screenon
+    
+    case cameraon
+    case cameraoff
 
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

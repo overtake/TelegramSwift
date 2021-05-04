@@ -31,14 +31,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let drawLine: Bool
     fileprivate let invite:(PeerId)->Void
     fileprivate let canManageCall:Bool
-    fileprivate let takeVideo:(PeerId)->NSView?
+    fileprivate let takeVideo:(PeerId, VideoSourceMacMode?)->NSView?
     fileprivate let volume: TextViewLayout?
     fileprivate let audioLevel:(PeerId)->Signal<Float?, NoError>?
     fileprivate private(set) var buttonImage: (CGImage, CGImage?)? = nil
     
     var futureWidth:()->CGFloat?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, futureWidth:@escaping()->CGFloat?) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, futureWidth:@escaping()->CGFloat?) {
         self.data = data
         self.audioLevel = audioLevel
         self.account = account
@@ -574,7 +574,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         photoView.update(item, animated: animated)
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
                 
-        if item.data.isPinned {
+        if item.data.pinnedMode != nil {
             let current: View
             if let pinnedView = self.pinnedFrameView {
                 current = pinnedView
@@ -607,7 +607,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
 
         titleView.update(item.titleLayout)
         
-        let videoView = item.takeVideo(item.peer.id)
+        let videoView = item.takeVideo(item.peer.id, item.data.pinnedMode?.viceVersa)
         
         
         if let videoView = videoView {
@@ -896,7 +896,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             return
         }
         
-        let videoView = item.takeVideo(item.peer.id)
+        let videoView = item.takeVideo(item.peer.id, item.data.pinnedMode?.viceVersa)
         
         if let videoView = videoView {
             let previous = self.videoContainer.view

@@ -25,6 +25,33 @@ final class GroupCallUIState : Equatable {
         case voice
         case video
     }
+    
+    struct VideoSources : Equatable {
+        static func == (lhs: GroupCallUIState.VideoSources, rhs: GroupCallUIState.VideoSources) -> Bool {
+            if let lhsVideo = lhs.video, let rhsVideo = rhs.video {
+                if !lhsVideo.isEqual(rhsVideo) {
+                    return false
+                }
+            } else if (lhs.video != nil) != (rhs.video != nil) {
+                return false
+            }
+            if let lhsScreencast = lhs.screencast, let rhsScreencast = rhs.screencast {
+                if !lhsScreencast.isEqual(rhsScreencast) {
+                    return false
+                }
+            } else if (lhs.screencast != nil) != (rhs.screencast != nil) {
+                return false
+            }
+            return true
+        }
+        
+        var video: VideoSourceMac? = nil
+        var screencast: VideoSourceMac? = nil
+        
+        var isEmpty: Bool {
+            return video == nil && screencast == nil
+        }
+    }
 
     let memberDatas:[PeerGroupCallData]
     let isMuted: Bool
@@ -39,9 +66,8 @@ final class GroupCallUIState : Equatable {
     let activeVideoSources: Set<String>
     let isFullScreen: Bool
     let mode: Mode
-    let hasVideo: Bool
-    let videoSource: VideoSourceMac?
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: Set<String>, isFullScreen: Bool, mode: Mode, hasVideo: Bool, videoSource: VideoSourceMac?) {
+    let videoSources: VideoSources
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: Set<String>, isFullScreen: Bool, mode: Mode, videoSources: VideoSources) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -55,8 +81,14 @@ final class GroupCallUIState : Equatable {
         self.activeVideoSources = activeVideoSources
         self.isFullScreen = isFullScreen
         self.mode = mode
-        self.hasVideo = hasVideo
-        self.videoSource = videoSource
+        self.videoSources = videoSources
+    }
+    
+    var hasVideo: Bool {
+        return videoSources.video != nil
+    }
+    var hasScreencast: Bool {
+        return videoSources.screencast != nil
     }
     
     deinit {
@@ -120,17 +152,13 @@ final class GroupCallUIState : Equatable {
         if lhs.isMuted != rhs.isMuted {
             return false
         }
-        if let lhsSource = lhs.videoSource, let rhsSource = rhs.videoSource {
-            if !lhsSource.isEqual(rhsSource) {
-                return false
-            }
-        } else if (lhs.videoSource != nil) != (rhs.videoSource != nil) {
+        if lhs.videoSources != rhs.videoSources {
             return false
         }
         return true
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, hasVideo: self.hasVideo, videoSource: self.videoSource)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources)
     }
 }

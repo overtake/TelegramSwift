@@ -277,9 +277,7 @@ final class GroupCallView : View {
         self.state = state
 
         
-        titleView.update(state.peer, state, call.account, settingsClick: { [weak self] in
-            self?.arguments?.settings()
-        }, recordClick: { [weak self, weak state] in
+        titleView.update(state.peer, state, call.account, recordClick: { [weak self, weak state] in
             if let state = state {
                 self?.arguments?.recordClick(state.state)
             }

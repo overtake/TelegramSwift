@@ -9063,6 +9063,8 @@ internal final class L10n {
   internal static var voiceChatMutePeer: String  { return L10n.tr("Localizable", "VoiceChat.MutePeer") }
   /// Open Profile
   internal static var voiceChatOpenProfile: String  { return L10n.tr("Localizable", "VoiceChat.OpenProfile") }
+  /// Pin Screencast
+  internal static var voiceChatPinScreencast: String  { return L10n.tr("Localizable", "VoiceChat.PinScreencast") }
   /// Pin Video
   internal static var voiceChatPinVideo: String  { return L10n.tr("Localizable", "VoiceChat.PinVideo") }
   /// Remove
@@ -9089,6 +9091,8 @@ internal final class L10n {
   internal static var voiceChatUnmuteForMe: String  { return L10n.tr("Localizable", "VoiceChat.UnmuteForMe") }
   /// Allow To Speak
   internal static var voiceChatUnmutePeer: String  { return L10n.tr("Localizable", "VoiceChat.UnmutePeer") }
+  /// Unpin Screencast
+  internal static var voiceChatUnpinScreencast: String  { return L10n.tr("Localizable", "VoiceChat.UnpinScreencast") }
   /// Unpin Video
   internal static var voiceChatUnpinVideo: String  { return L10n.tr("Localizable", "VoiceChat.UnpinVideo") }
   /// You invited **%@** to the voice chat
@@ -9371,20 +9375,26 @@ internal final class L10n {
   internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
-  /// You screen are being broarcast
+  /// No active and connected camera was found.
+  internal static var voiceChatTooltipNoCameraFound: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.NoCameraFound") }
+  /// Your screen are being broadcast.
   internal static var voiceChatTooltipShareScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareScreen") }
-  /// You video are being broarcast
+  /// Your video are being broadcast.
   internal static var voiceChatTooltipShareVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareVideo") }
-  /// You screen are being broarcast
+  /// You have stopped broadcasting screen.
   internal static var voiceChatTooltipStopScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopScreen") }
-  /// You video are being broarcast
+  /// You have stopped broadcasting video.
   internal static var voiceChatTooltipStopVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopVideo") }
   /// We will notify you when it starts
   internal static var voiceChatTooltipSubscribe: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Subscribe") }
-  /// stream
-  internal static var voiceChatVideoStream: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream") }
   /// Video Source
   internal static var voiceChatVideoVideoSource: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource") }
+  /// more
+  internal static var voiceChatVideoStreamMore: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.More") }
+  /// screen
+  internal static var voiceChatVideoStreamScreencast: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.Screencast") }
+  /// video
+  internal static var voiceChatVideoStreamVideo: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.Video") }
   /// Cancel
   internal static var voiceChatVideoVideoSourceCancel: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Cancel") }
   /// Share

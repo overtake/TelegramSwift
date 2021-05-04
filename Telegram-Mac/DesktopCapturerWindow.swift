@@ -223,10 +223,11 @@ private final class DesktopCapturerView : View {
 final class DesktopCapturerWindow : Window {
     
     private let listController: DesktopCapturerListController
-    init(select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) {
-        
+    let mode: VideoSourceMacMode
+    init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) {
+        self.mode = mode
         let size = NSMakeSize(700, 600)
-        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90), devices: devices)
+        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90), devices: devices, mode: mode)
         
         var rect: NSRect = .init(origin: .zero, size: size)
         if let screen = NSScreen.main {
@@ -302,6 +303,15 @@ final class DesktopCapturerWindow : Window {
 enum VideoSourceMacMode {
     case video
     case screencast
+    
+    var viceVersa: VideoSourceMacMode {
+        switch self {
+        case .video:
+            return .screencast
+        case .screencast:
+            return .video
+        }
+    }
 }
 extension VideoSourceMac {
     
@@ -314,8 +324,19 @@ extension VideoSourceMac {
     }
 }
 
-func presentDesktopCapturerWindow(select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) -> DesktopCapturerWindow {
-    let window = DesktopCapturerWindow(select: select, devices: devices)
+func presentDesktopCapturerWindow(mode: VideoSourceMacMode,select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) -> DesktopCapturerWindow? {
+    
+    switch mode {
+    case .video:
+        let devices = AVCaptureDevice.devices(for: .video).filter({ $0.isConnected && !$0.isSuspended })
+        if devices.isEmpty {
+            return nil
+        }
+    case .screencast:
+        break
+    }
+    
+    let window = DesktopCapturerWindow(mode: mode, select: select, devices: devices)
     window.makeKeyAndOrderFront(nil)
     
     return window
