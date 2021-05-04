@@ -209,6 +209,7 @@ protocol PresentationGroupCall: class {
     var invitedPeers: Signal<[PeerId], NoError> { get }
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
+    var callInfo: Signal<GroupCallInfo?, NoError> { get }
     var incomingVideoSources: Signal<Set<String>, NoError> { get }
 
 //    var activeCall: CachedChannelData.ActiveCall? { get }

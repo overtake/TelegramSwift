@@ -559,6 +559,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var requestedSsrcs = Set<UInt32>()
     
     private var summaryInfoState = Promise<SummaryInfoState?>(nil)
+    
+    var callInfo: Signal<GroupCallInfo?, NoError> {
+        return summaryInfoState.get() |> map { $0?.info }
+    }
+    
     private var summaryParticipantsState = Promise<SummaryParticipantsState?>(nil)
     
     private let summaryStatePromise = Promise<PresentationGroupCallSummaryState?>(nil)
@@ -726,7 +731,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         internalId: CallSessionInternalId,
         peerId: PeerId,
         invite: String?,
-        joinAsPeerId: PeerId?
+        joinAsPeerId: PeerId?,
+        initialInfo: GroupCallInfo?
     ) {
         self.account = accountContext.account
         self.accountContext = accountContext
@@ -899,6 +905,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
       //  if initialCall?.scheduleTimestamp == nil {
             self.requestCall(movingFromBroadcastToRtc: false)
       //  }
+        if let initialInfo = initialInfo {
+            summaryInfoState.set(.single(.init(info: initialInfo)))
+        }
     }
     
     deinit {
@@ -1758,7 +1767,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         scheduleTimestamp: self.stateValue.scheduleTimestamp,
                         subscribedToScheduled: self.stateValue.subscribedToScheduled,
                         totalCount: 0,
-                        isVideoEnabled: false,
+                        isVideoEnabled: callInfo.isVideoEnabled,
                         version: 0
                     ),
                     previousServiceState: nil
@@ -2689,7 +2698,7 @@ private func startGroupCall(context: AccountContext, peerId: PeerId, joinAs: Pee
     
     
     
-    return GroupCallContext(call: PresentationGroupCallImpl(accountContext: context, initialCall: initialCall, internalId: internalId, peerId: peerId, invite: joinHash, joinAsPeerId: joinAs), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
+    return GroupCallContext(call: PresentationGroupCallImpl(accountContext: context, initialCall: initialCall, internalId: internalId, peerId: peerId, invite: joinHash, joinAsPeerId: joinAs, initialInfo: initialInfo), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
 }
 
 func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [FoundPeer]? = nil, canBeScheduled: Bool = false) {
