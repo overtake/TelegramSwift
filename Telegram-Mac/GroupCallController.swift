@@ -135,7 +135,7 @@ struct PeerGroupCallData : Equatable, Comparable {
     var videoEndpoint: String? {
         return state?.videoEndpointId
     }
-    var screencastEndPoint: String? {
+    var screencastEndpoint: String? {
         return state?.presentationEndpointId
     }
     
@@ -441,7 +441,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                             }))
                         }
                     }
-                    if let endpointId = data.screencastEndPoint {
+                    if let endpointId = data.screencastEndpoint {
                         if !arguments.isPinnedVideo(data.peer.id, .screencast) {
                             items.append(ContextMenuItem(L10n.voiceChatPinScreencast, handler: {
                                 arguments.pinVideo(.init(data.peer.id, endpointId, .screencast))
@@ -583,9 +583,6 @@ final class GroupCallUIController : ViewController {
         let peerId = self.data.call.peerId
         let account = self.data.call.account
                 
-       
-        
-        
         let videoSources = ValuePromise<GroupCallUIState.VideoSources>(.init())
         let videoSourcesValue: Atomic<GroupCallUIState.VideoSources> = Atomic(value: .init())
         let updateVideoSources:(@escaping(GroupCallUIState.VideoSources)->GroupCallUIState.VideoSources)->Void = { f in
@@ -680,7 +677,7 @@ final class GroupCallUIController : ViewController {
                             if value.videoEndpoint == pinned.endpointId {
                                 return true
                             }
-                            if value.screencastEndPoint == pinned.endpointId {
+                            if value.screencastEndpoint == pinned.endpointId {
                                 return true
                             }
                         }
@@ -704,7 +701,7 @@ final class GroupCallUIController : ViewController {
                         return DominantVideo(member.peer.id, endpointId, .video)
                     }
                 }
-                if let endpointId = member.screencastEndPoint {
+                if let endpointId = member.screencastEndpoint {
                     let hasVideo = member.hasVideo
                     if hasVideo && member.peer.id == member.accountPeerId, members.count > 1 {
                         continue

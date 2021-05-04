@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_videobox_unmuted.png",
+      "filename" : "ic_voicemicroon.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_videobox_unmuted@2x.png",
+      "filename" : "ic_voicemicroon@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

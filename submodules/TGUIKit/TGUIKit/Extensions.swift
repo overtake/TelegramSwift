@@ -389,6 +389,14 @@ public extension NSView {
         }
         return size
     }
+    var subviewsWidthSize: NSSize {
+        var size: NSSize = NSZeroSize
+        for subview in subviews {
+            size.width += subview.frame.width
+            size.height = max(subview.frame.height, size.height)
+        }
+        return size
+    }
     private func isInSuperclassView(_ superclass: AnyClass, view: NSView) -> Bool {
         if view.isKind(of: superclass) {
             return true

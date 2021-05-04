@@ -222,55 +222,55 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return GroupCallParticipantRowView.self
     }
     
-    var statusImage: CGImage? {
+    var statusImage: [CGImage] {
         assertOnMainThread()
         let hasVideo = data.hasVideo
+        
+        var images:[CGImage] = []
+        
         if hasVideo || volume != nil, let state = data.state {
-            var statusImage: CGImage
             if hasVideo {
-                if let muteState = state.muteState, muteState.mutedByYou {
-//                    if data.isPinned {
-//                        statusImage = GroupCallTheme.status_pinned_red
-//                    } else {
-                        statusImage = GroupCallTheme.status_video_red
-//                    }
-                } else {
-                    if data.isSpeaking {
-//                        if data.isPinned {
-//                            statusImage = GroupCallTheme.status_pinned_red
-//                        } else {
-                            statusImage = GroupCallTheme.status_video_green
-//                        }
-                    } else if data.wantsToSpeak {
-//                        if data.isPinned {
-//                            statusImage = GroupCallTheme.status_pinned_accent
-//                        } else {
-                            statusImage = GroupCallTheme.status_video_accent
-//                        }
+                if let _ = data.videoEndpoint {
+                    if let muteState = state.muteState, muteState.mutedByYou {
+                        images.append(GroupCallTheme.status_video_red)
                     } else {
-//                        if data.isPinned {
-//                            statusImage = GroupCallTheme.status_pinned_gray
-//                        } else {
-                            statusImage = GroupCallTheme.status_video_gray
-//                        }
+                        if data.isSpeaking {
+                            images.append(GroupCallTheme.status_video_green)
+                        } else if data.wantsToSpeak {
+                            images.append(GroupCallTheme.status_video_accent)
+                        } else {
+                            images.append(GroupCallTheme.status_video_gray)
+                        }
+                    }
+                }
+                if let _ = data.screencastEndpoint {
+                    if let muteState = state.muteState, muteState.mutedByYou {
+                        images.append(GroupCallTheme.status_screencast_red)
+                    } else {
+                        if data.isSpeaking {
+                            images.append(GroupCallTheme.status_screencast_green)
+                        } else if data.wantsToSpeak {
+                            images.append(GroupCallTheme.status_screencast_accent)
+                        } else {
+                            images.append(GroupCallTheme.status_screencast_gray)
+                        }
                     }
                 }
             } else {
                 if let muteState = state.muteState, muteState.mutedByYou {
-                    statusImage = GroupCallTheme.status_muted
+                    images.append(GroupCallTheme.status_muted)
                 } else {
                     if data.isSpeaking {
-                        statusImage = GroupCallTheme.status_unmuted_green
+                        images.append(GroupCallTheme.status_unmuted_green)
                     } else if data.wantsToSpeak {
-                        statusImage = GroupCallTheme.status_unmuted_accent
+                        images.append(GroupCallTheme.status_unmuted_accent)
                     } else {
-                        statusImage = GroupCallTheme.status_unmuted_gray
+                        images.append(GroupCallTheme.status_unmuted_gray)
                     }
                 }
             }
-            return statusImage
         }
-        return nil
+        return images
     }
     
     var videoBoxImage: CGImage {
@@ -758,7 +758,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
     private let separator: View = View()
     private let videoContainer: VideoContainer = VideoContainer(frame: .zero)
     private var volumeView: TextView?
-    private var statusImageView: ImageView?
+    private var statusImageContainer: View = View()
     private var supplementImageView: ImageView?
     private let audioLevelDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
@@ -767,6 +767,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         addSubview(titleView)
         addSubview(separator)
         addSubview(button)
+        addSubview(statusImageContainer)
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
 
@@ -844,9 +845,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         if let volumeView = volumeView {
             transition.updateFrame(view: volumeView, frame: CGRect(origin: volumeViewPoint, size: volumeView.frame.size))
         }
-        if let statusImageView = statusImageView {
-            transition.updateFrame(view: statusImageView, frame: CGRect(origin: statusImageViewViewPoint, size: statusImageView.frame.size))
-        }
+        transition.updateFrame(view: statusImageContainer, frame: CGRect(origin: statusImageViewViewPoint, size: statusImageContainer.frame.size))
         
         if item.isVertical {
             transition.updateFrame(view: videoContainer, frame: frame)
@@ -954,32 +953,28 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         titleView.update(item.titleLayout)
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
-
-        if let statusImage = item.statusImage {
-            if statusImageView == nil {
-                statusImageView = ImageView()
-                addSubview(statusImageView!)
-            }
-            guard let statusImageView = statusImageView else {
-                return
-            }
+        
+        while statusImageContainer.subviews.count > item.statusImage.count {
+            statusImageContainer.subviews.last?.removeFromSuperview()
+        }
+        while statusImageContainer.subviews.count < item.statusImage.count {
+            let statusImageView = ImageView()
+            statusImageContainer.addSubview(statusImageView)
+        }
+        
+        for (i, statusImage) in item.statusImage.enumerated() {
+            let statusImageView = statusImageContainer.subviews[i] as! ImageView
             if statusImageView.image != statusImage {
                 statusImageView.image = statusImage
                 statusImageView.sizeToFit()
-                statusImageView.setFrameOrigin(statusImageViewViewPoint)
             }
-        } else {
-            if let statusImageView = self.statusImageView {
-                self.statusImageView = nil
-                if animated {
-                    statusImageView.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak statusImageView] _ in
-                        statusImageView?.removeFromSuperview()
-                    })
-                } else {
-                    statusImageView.removeFromSuperview()
-                }
-                
-            }
+        }
+        
+        statusImageContainer.setFrameSize(statusImageContainer.subviewsWidthSize)
+        var x: CGFloat = 0
+        for subview in statusImageContainer.subviews {
+            subview.setFrameOrigin(NSMakePoint(x, 0))
+            x += subview.frame.width
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
@@ -1072,8 +1067,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         if let volume = item.volume {
             point.x += volume.layoutSize.width + 3
         }
-        if let statusImageView = statusImageView {
-            point.x += statusImageView.frame.width + 3
+        if !statusImageContainer.subviews.isEmpty {
+            point.x += statusImageContainer.frame.width + 3
         }
         
         return point
@@ -1087,8 +1082,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         if let volumeView = volumeView {
             point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - volumeView.frame.height - 6)
         }
-        if let statusImageView = statusImageView {
-            point.x += statusImageView.frame.width + 3
+        if !statusImageContainer.subviews.isEmpty {
+            point.x += statusImageContainer.frame.width + 3
         }
         return point
     }
@@ -1099,9 +1094,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         }
         var point: NSPoint = .zero
         
-        if let statusImageView = statusImageView {
-            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusImageView.frame.height - 6)
-        }
+        point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, containerView.frame.height - statusImageContainer.frame.height - 5)
         return point
     }
 
