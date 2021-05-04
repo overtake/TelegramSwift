@@ -179,9 +179,11 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
     var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManagerMac)->Void)? = nil
     var updateCameraSelected:((DesktopCapturerObjectWrapper)->Void)? = nil
 
+    private let mode: VideoSourceMacMode
     private let devices: DevicesContext
-    init(size: NSSize, devices: DevicesContext) {
+    init(size: NSSize, devices: DevicesContext, mode: VideoSourceMacMode) {
         self.devices = devices
+        self.mode = mode
         super.init(frame: .init(origin: .zero, size: size))
         self.bar = .init(height: 0)
     }
@@ -213,7 +215,7 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
             hasCameraAccess = true
         }
 
-        let initialState = DesktopCaptureListState(cameras: [], screens: screens.list(), windows: windows.list(), selected: nil, access: .init(sharing: requestScreenCaptureAccess(), camera: hasCameraAccess))
+        let initialState = DesktopCaptureListState(cameras: [], screens: mode == .screencast ? screens.list() : [], windows: mode == .screencast ? windows.list() : [], selected: nil, access: .init(sharing: mode == .screencast ? requestScreenCaptureAccess() : false, camera: hasCameraAccess))
 
 
 
@@ -238,7 +240,7 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
             actionsDisposable.dispose()
         }
 
-        if requestCamera {
+        if requestCamera && mode == .video {
             actionsDisposable.add(requestCameraPermission().start(next: { access in
                 updateState { state in
                     var state = state
@@ -306,19 +308,19 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
             }
         }))
         
-        devicesDisposable.set((devices.signal |> deliverOnMainQueue).start(next: { devices in
-            updateState { current in
-                var current = current
-                current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected }.map { CameraCaptureDevice($0) }
-                return current
-            }
-            checkSelected()
-        }))
-        
-        
-
-        
-        self.updateDisposable = ((updateSignal |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart).start()
+        switch mode {
+        case .screencast:
+            self.updateDisposable = ((updateSignal |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart).start()
+        case .video:
+            devicesDisposable.set((devices.signal |> deliverOnMainQueue).start(next: { devices in
+                updateState { current in
+                    var current = current
+                    current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected }.map { CameraCaptureDevice($0) }
+                    return current
+                }
+                checkSelected()
+            }))
+        }
         
         let arguments = DesktopCaptureListArguments(selectDesktop: { source, manager in
             updateState { current in

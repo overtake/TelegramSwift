@@ -16,9 +16,11 @@ import Postbox
 struct DominantVideo : Equatable {
     let peerId: PeerId
     let endpointId: String
-    init(_ peerId: PeerId, _ endpointId: String) {
+    let mode: VideoSourceMacMode
+    init(_ peerId: PeerId, _ endpointId: String, _ mode: VideoSourceMacMode) {
         self.peerId = peerId
         self.endpointId = endpointId
+        self.mode = mode
     }
 }
 
@@ -153,13 +155,13 @@ final class MainVideoContainerView: Control {
         
         self.currentPeer = peer
         if let peer = peer {
-            
             var videoMode: GroupCallVideoMode = .video
             if peer.peerId == participant?.accountPeerId {
-                if participant?.state?.presentationEndpointId != nil {
-                    videoMode = .screencast
-                } else {
+                switch peer.mode {
+                case .video:
                     videoMode = .video
+                case .screencast:
+                    videoMode = .screencast
                 }
             }
             
