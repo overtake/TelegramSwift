@@ -589,37 +589,16 @@ final class GroupCallUIController : ViewController {
             videoSources.set(videoSourcesValue.modify(f))
         }
         
-        let mode: Signal<GroupCallUIState.Mode, NoError> = combineLatest(videoSources.get(), self.data.call.callInfo) |> map { videoSources, info in
+        let mode: Signal<GroupCallUIState.Mode, NoError> = combineLatest(videoSources.get(), self.data.call.callInfo, currentDominantSpeakerWithVideoSignal.get()) |> map { videoSources, info, pinned in
             let isVideoEnabled = info?.isVideoEnabled ?? false
-            switch isVideoEnabled || !videoSources.isEmpty {
+            switch isVideoEnabled || !videoSources.isEmpty || pinned != nil {
             case true:
                 return .video
             case false:
                 return .voice
             }
         } |> distinctUntilChanged
-        
-//
-//        actionsDisposable.add((mode |> deliverOnMainQueue).start(next: { [weak self] mode in
-//            switch mode {
-//            case .voice:
-//                if videoSourcesValue.with ({ $0.screencast != nil }) {
-//                    self?.data.call.disableScreencast()
-//                }
-//                if videoSourcesValue.with ({ $0.video != nil }) {
-//                    self?.data.call.disableVideo()
-//                }
-//                updateVideoSources { current in
-//                    var current = current
-//                    current.screencast = nil
-//                    current.video = nil
-//                    return current
-//                }
-//            default:
-//                break
-//            }
-//        }))
-                
+     
         let displayedRaisedHandsPromise = ValuePromise<Set<PeerId>>([], ignoreRepeated: true)
         let displayedRaisedHands: Atomic<Set<PeerId>> = Atomic(value: [])
         

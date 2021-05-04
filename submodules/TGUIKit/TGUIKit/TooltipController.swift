@@ -189,9 +189,12 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
         
     }
     
-    let updatePosition:(Bool)->Void = { [weak tooltip, weak view] animated in
-        if let tooltip = tooltip, let view = view {
+    let updatePosition:(Bool)->Void = { [weak tooltip, weak view, weak window] animated in
+        if let tooltip = tooltip, let view = view, let window = window {
             var point = view.convert(NSZeroPoint, to: nil)
+            if window.contentView!.isFlipped {
+                point.y = window.contentView!.frame.height - point.y - view.frame.height / 2 - 10
+            }
             point.y += offset.y
             let pos = NSMakePoint(min(max(floorToScreenPixels(System.backingScale, point.x - (tooltip.frame.width - view.frame.width) / 2), 10), window.frame.width - tooltip.frame.width - 10), point.y)
             if view.visibleRect.height != view.frame.height {

@@ -970,11 +970,11 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             }
         }
         
-        statusImageContainer.setFrameSize(statusImageContainer.subviewsWidthSize)
+        statusImageContainer.setFrameSize(statusImageContainer.subviewsWidthSize + NSMakeSize((2 * CGFloat(statusImageContainer.subviews.count) - 1), 0))
         var x: CGFloat = 0
         for subview in statusImageContainer.subviews {
             subview.setFrameOrigin(NSMakePoint(x, 0))
-            x += subview.frame.width
+            x += subview.frame.width + 2
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
