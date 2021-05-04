@@ -52,9 +52,7 @@ struct GroupCallTheme {
     static let videoBox_muted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
     static let videoBox_unmuted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
 
-    
-    static let topSettingsIcon = NSImage(named: "Icon_GroupCall_TopSettings")!.precomposed(.white)
-    
+        
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
     static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
@@ -77,26 +75,22 @@ struct GroupCallTheme {
     static let small_raised_hand = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: .clear)
     static let small_raised_hand_active = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
 
-    
-    static let big_raised_hand = NSImage(named: "Icon_GroupCall_RaiseHand_Big")!.precomposed(.white, flipVertical: true)
 
     
     
-    static let big_unmuted = NSImage(named: "Icon_GroupCall_Big_Unmuted")!.precomposed(.white)
-    static let big_muted = NSImage(named: "Icon_GroupCall_Big_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
-    
-    
-    
-    static let status_pinned_gray = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.grayStatusColor)
-    static let status_pinned_accent = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.blueStatusColor)
-    static let status_pinned_green = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let status_pinned_red = NSImage(named: "Icon_GroupCall_Status_Pinned")!.precomposed(GroupCallTheme.speakLockedColor)
-
     
     static let status_video_gray = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.grayStatusColor)
     static let status_video_accent = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.blueStatusColor)
     static let status_video_green = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.greenStatusColor)
     static let status_video_red = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.speakLockedColor)
+    
+    
+    static let status_screencast_gray = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let status_screencast_accent = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.blueStatusColor)
+    static let status_screencast_green = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.greenStatusColor)
+    static let status_screencast_red = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.speakLockedColor)
+
+    
 
     static let status_muted = NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
     
