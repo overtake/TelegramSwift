@@ -61,6 +61,7 @@ final class GroupCallControlsView : View {
         backgroundView.userInteractionEnabled = false
         
         self.isEventLess = true
+        
 
         end.set(handler: { [weak self] _ in
             self?.arguments?.leave()
@@ -158,6 +159,17 @@ final class GroupCallControlsView : View {
                 rightButton1.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamMore : nil, mode: .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             }
             
+            //TODOLANG
+//            end.appTooltip = "Leave Voice Chat"
+//            rightButton1?.appTooltip = "Open Settings"
+//            leftButton2?.appTooltip = hasScreencast ? "Stop Screencast" : "Start Screencast"
+//            switch callMode {
+//            case .voice:
+//                leftButton1.appTooltip = "Open Settings"
+//            case .video:
+//                leftButton1.appTooltip = hasVideo ? "Share Video" : "Stop Video"
+//            }
+
             
             end.updateWithData(CallControlData(text: hasText ? L10n.voiceChatLeave : nil, mode: .normal(GroupCallTheme.declineColor, GroupCallTheme.declineIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             leftButton1.updateWithData(CallControlData(text: hasText ? leftButton1Text : nil, mode: leftBg, iconSize: NSMakeSize(48, 48)), animated: animated)
