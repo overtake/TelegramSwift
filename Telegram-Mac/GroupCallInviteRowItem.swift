@@ -35,7 +35,7 @@ final class GroupCallInviteRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return videoMode && (width == 120 || width >= fullScreenThreshold)
+        return videoMode && (width == 160 || width >= fullScreenThreshold)
     }
     
     override var hasBorder: Bool {
@@ -116,7 +116,7 @@ private final class GroupCallInviteRowView : GeneralContainableRowView {
         self.layout()
         
         if item.isVertical {
-            thumbView.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (120 - thumbView.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (containerView.frame.height - thumbView.frame.height) / 2)), animated: animated)
+            thumbView.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (160 - thumbView.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (containerView.frame.height - thumbView.frame.height) / 2)), animated: animated)
         } else {
             thumbView.change(pos: NSMakePoint(item.viewType.innerInset.left, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - thumbView.frame.height) / 2)), animated: animated)
             textView.change(pos: NSMakePoint(thumbView.frame.maxX + 20, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - textView.frame.height) / 2)), animated: animated)

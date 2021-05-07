@@ -17,10 +17,12 @@ struct DominantVideo : Equatable {
     let peerId: PeerId
     let endpointId: String
     let mode: VideoSourceMacMode
-    init(_ peerId: PeerId, _ endpointId: String, _ mode: VideoSourceMacMode) {
+    let temporary: Bool
+    init(_ peerId: PeerId, _ endpointId: String, _ mode: VideoSourceMacMode, _ temporary: Bool) {
         self.peerId = peerId
         self.endpointId = endpointId
         self.mode = mode
+        self.temporary = temporary
     }
 }
 
@@ -89,7 +91,7 @@ final class MainVideoContainerView: Control {
         
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
-        pinnedImage.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
+        pinnedImage.change(opacity: controlsMode == .normal && currentPeer?.temporary == false ? 1 : 0, animated: animated)
 
         
         gravityButton.set(image:  controlsState == .fullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
@@ -101,12 +103,12 @@ final class MainVideoContainerView: Control {
     
     func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
         
-        
+                
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: gravityButton, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
-        transition.updateAlpha(view: pinnedImage, alpha: controlsMode == .normal ? 1 : 0)
+        transition.updateAlpha(view: pinnedImage, alpha: controlsMode == .normal && peer?.temporary == false ? 1 : 0)
         if participant != self.participant, let participant = participant {
             self.participant = participant
             let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.text)), maximumNumberOfLines: 1)
@@ -115,7 +117,7 @@ final class MainVideoContainerView: Control {
             if self.statusView.layout?.attributedString.string != participant.status.0 {
                 let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
                 
-                statusLayout.measure(width: frame.width / 2)
+                statusLayout.measure(width: frame.width - 100)
                 
                 let statusView = TextView()
                 statusView.update(statusLayout)
@@ -207,8 +209,8 @@ final class MainVideoContainerView: Control {
         
         transition.updateFrame(view: self.pinnedImage, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.pinnedImage.frame.height), size: self.pinnedImage.frame.size))
         
-        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(45, size.height - 10 - self.nameView.frame.height - self.statusView.frame.height), size: self.nameView.frame.size))
-        transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(45, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(currentPeer?.temporary == false ? 45 : 20, size.height - 10 - self.nameView.frame.height - self.statusView.frame.height), size: self.nameView.frame.size))
+        transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(currentPeer?.temporary == false ? 45 : 20, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
         
 
         

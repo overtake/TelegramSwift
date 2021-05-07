@@ -13,8 +13,6 @@ import SyncCore
 import Postbox
 import TelegramCore
 
-private let photoSize: NSSize = NSMakeSize(35, 35)
-
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let verifyIcon = NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
@@ -107,7 +105,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return isVertical ? 80 : 48
+        return isVertical ? 100 : 48
     }
     
     override var inset: NSEdgeInsets {
@@ -132,7 +130,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return data.videoMode && (width == 120 || width >= fullScreenThreshold - 40)
+        return data.videoMode && (width == 160 || width >= fullScreenThreshold - 40)
     }
     
     
@@ -191,21 +189,13 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         if isVertical {
             
-//            var (_, color) = data.status
-//
-//            if color == GroupCallTheme.grayStatusColor {
-//                color = NSColor.white.withAlphaComponent(0.8)
-//            } else {
-//                color = color.withAlphaComponent(0.8)
-//            }
-            
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
         
         if isVertical {
-            titleLayout.measure(width: 120 - 16 - 10)
+            titleLayout.measure(width: 160 - 16 - 10)
         } else {
             titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
             statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
@@ -273,17 +263,27 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return images
     }
     
-    var videoBoxImage: CGImage {
+    var videoBoxImage: [CGImage] {
         if isInvited {
-            return GroupCallTheme.videoBox_muted_locked
+            return [GroupCallTheme.videoBox_muted_locked]
         }
+        var images:[CGImage] = []
+
+        if data.videoEndpoint != nil {
+            images.append(GroupCallTheme.videoBox_video)
+        }
+        if data.screencastEndpoint != nil {
+            images.append(GroupCallTheme.videoBox_screencast)
+        }
+        
         if let _ = data.state?.muteState {
-            return GroupCallTheme.videoBox_muted
+            images.append(GroupCallTheme.videoBox_muted)
         } else if data.state == nil {
-            return GroupCallTheme.videoBox_muted
+            images.append(GroupCallTheme.videoBox_muted)
         } else {
-            return GroupCallTheme.videoBox_unmuted
+            images.append(GroupCallTheme.videoBox_unmuted)
         }
+        return images
     }
     
     var actionInteractionEnabled: Bool {
@@ -324,14 +324,16 @@ private final class GroupCallAvatarView : View {
     private var scaleAnimator: DisplayLinkAnimator?
     private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
     private let audioLevelDisposable = MetaDisposable()
-    required init(frame frameRect: NSRect) {
+    let photoSize: NSSize
+    init(frame frameRect: NSRect, photoSize: NSSize) {
         playbackAudioLevelView = VoiceBlobView(
-            frame: NSMakeRect(0, 0, 55, 55),
+            frame: frameRect.size.bounds,
             maxLevel: 0.3,
             smallBlobRange: (0, 0),
             mediumBlobRange: (0.7, 0.8),
             bigBlobRange: (0.8, 0.9)
         )
+        self.photoSize = photoSize
         super.init(frame: frameRect)
         photoView.setFrameSize(photoSize)
         addSubview(playbackAudioLevelView)
@@ -417,11 +419,15 @@ private final class GroupCallAvatarView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
 }
 
 
 final class VerticalContainerView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
-    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55))
+    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 68, 68), photoSize: NSMakeSize(48, 48))
 
     private final class VideoContainer : View {
         private let shadowView = ShadowView()
@@ -475,7 +481,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     private let titleView = TextView()
     private let statusView = ImageView()
     private var pinnedFrameView: View?
-    private let button: ImageView = ImageView()
+    private let imagesView: View = View()
     
     private let audioLevelDisposable = MetaDisposable()
     private var scaleAnimator: DisplayLinkAnimator?
@@ -483,20 +489,19 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         super.init(frame: frameRect)
         addSubview(photoView)
         nameContainer.addSubview(titleView)
-        nameContainer.addSubview(button)
+        nameContainer.addSubview(imagesView)
         addSubview(statusView)
        
         addSubview(nameContainer)
         
-        button.animates = true
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         photoView.userInteractionEnabled = false
     
         containerView.set(handler: { [weak self] _ in
-            if let event = NSApp.currentEvent {
-                self?.showContextMenu(event)
+            if let item = self?.item as? GroupCallParticipantRowItem {
+                item.action()
             }
         }, for: .Click)
         
@@ -532,7 +537,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     }
     
     override var maxBlockWidth: CGFloat {
-        return 120
+        return 160
     }
     
     override func layout() {
@@ -548,16 +553,15 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         self.containerView.setCorners(item.viewType.corners)
 
         
-        photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoSize.height) / 2)
+        photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoView.photoSize.height) / 2)
         videoContainer?.frame = containerView.bounds
         
+        nameContainer.frame = NSMakeRect(0, 0, containerView.frame.width, max(imagesView.frame.height, titleView.frame.height))
+        nameContainer.centerX(y: containerView.frame.height - nameContainer.frame.height - 8)
         
-        
-        button.setFrameOrigin(NSMakePoint(0, 4))
-        titleView.setFrameOrigin(NSMakePoint(button.frame.maxX, 4))
+        imagesView.setFrameOrigin(NSMakePoint(nameContainer.frame.width - imagesView.frame.width - 8, 0))
+        titleView.setFrameOrigin(NSMakePoint(8, 0))
 
-        nameContainer.frame = NSMakeRect(0, 0, titleView.frame.width + button.frame.width, max(button.frame.height, titleView.frame.height) + 8)
-        nameContainer.centerX(y: containerView.frame.height - nameContainer.frame.height - 3)
         
         pinnedFrameView?.frame = containerView.bounds
     }
@@ -599,9 +603,28 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
                 }
             }
         }
-        button.animates = animated
-        button.image = item.videoBoxImage
-        button.sizeToFit()
+        
+        
+        let videoBoxImages = item.videoBoxImage
+        
+        while imagesView.subviews.count > videoBoxImages.count {
+            imagesView.subviews.removeLast()
+        }
+        while imagesView.subviews.count < videoBoxImages.count {
+            imagesView.addSubview(ImageView())
+        }
+        for (i, image) in videoBoxImages.enumerated() {
+            let view = (imagesView.subviews[i] as? ImageView)
+            view?.image = image
+            view?.sizeToFit()
+        }
+        imagesView.setFrameSize(imagesView.subviewsWidthSize)
+        
+        var x: CGFloat = 0
+        for view in imagesView.subviews {
+            view.centerY(x: x)
+            x += view.frame.width + 2
+        }
 
         titleView.update(item.titleLayout)
         
@@ -627,27 +650,27 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
             if animated && isPresented {
                 videoContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
                 let from = Float(videoContainer.frame.height / 2)
-                videoContainer.layer?.animate(from: NSNumber(value: from), to: NSNumber(value: 0), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.3, forKey: "cornerRadius")
+                videoContainer.layer?.animate(from: NSNumber(value: from), to: NSNumber(value: 0), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.2, forKey: "cornerRadius")
                 
-                videoContainer.layer?.animateScaleCenter(from: photoView.frame.height / videoContainer.frame.width, to: 1, duration: 0.3)
+                videoContainer.layer?.animateScaleCenter(from: photoView.frame.height / videoContainer.frame.width, to: 1, duration: 0.2)
                 
-                videoContainer.layer?.animatePosition(from: NSMakePoint(0, -photoView.frame.minY), to: videoContainer.frame.origin, duration: 0.3)
+                videoContainer.layer?.animatePosition(from: NSMakePoint(0, -photoView.frame.minY - 10), to: videoContainer.frame.origin, duration: 0.2)
                 
             }
         } else {
             if let first = self.videoContainer {
                 self.videoContainer = nil
                 if animated {
-                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak first] _ in
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first] _ in
                         first?.removeFromSuperview()
                     })
                     
                     let to = Float(first.frame.height / 2)
-                    first.layer?.animate(from: NSNumber(value: 0), to: NSNumber(value: to), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.3, removeOnCompletion: false, forKey: "cornerRadius")
+                    first.layer?.animate(from: NSNumber(value: 0), to: NSNumber(value: to), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.2, removeOnCompletion: false, forKey: "cornerRadius")
                     
                     first.layer?.animateScaleCenter(from: 1, to: photoView.frame.height / first.frame.width, duration: 0.3, removeOnCompletion: false)
                     
-                    first.layer?.animatePosition(from: first.frame.origin, to: NSMakePoint(0, -photoView.frame.minY), duration: 0.3, removeOnCompletion: false)
+                    first.layer?.animatePosition(from: first.frame.origin, to: NSMakePoint(0, -photoView.frame.minY - 10), duration: 0.2, removeOnCompletion: false)
                     
                 } else {
                     first.removeFromSuperview()
@@ -660,55 +683,55 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     }
     
     private func update(_ item: GroupCallParticipantRowItem, animated: Bool) {
-        if let audioLevel = item.audioLevel(item.data.peer.id) {
-            self.audioLevelDisposable.set(audioLevel.start(next: { [weak item, weak self] value in
-                if let item = item {
-                    self?.updateAudioLevel(value, item: item, animated: animated)
-                }
-            }))
-        } else {
-            self.audioLevelDisposable.set(nil)
-            self.updateAudioLevel(nil, item: item, animated: animated)
-        }
+//        if let audioLevel = item.audioLevel(item.data.peer.id) {
+//            self.audioLevelDisposable.set(audioLevel.start(next: { [weak item, weak self] value in
+//                if let item = item {
+//                    self?.updateAudioLevel(value, item: item, animated: animated)
+//                }
+//            }))
+//        } else {
+//            self.audioLevelDisposable.set(nil)
+//            self.updateAudioLevel(nil, item: item, animated: animated)
+//        }
     }
     
     private func updateAudioLevel(_ value: Float?, item: GroupCallParticipantRowItem, animated: Bool) {
         
         
-        let audioLevel = value ?? 0
-        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
-        let avatarScale: CGFloat
-        if audioLevel > 0.0 {
-            avatarScale = 1.1 + level * 0.07
-        } else {
-            avatarScale = 1.0
-        }
-
-        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
-
-        let t = button.layer!.transform
-        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
-
-        if animated {
-            if scale != value {
-                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
-                    guard let `self` = self else {
-                        return
-                    }
-                    let rect = self.button.bounds
-                    var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
-                    fr = CATransform3DScale(fr, value, value, 1)
-                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                    self.button.layer?.transform = fr
-                }, completion: {
-
-                })
-            }
-        } else {
-            self.scaleAnimator = nil
-            self.button.layer?.transform = CATransform3DIdentity
-        }
+//        let audioLevel = value ?? 0
+//        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
+//        let avatarScale: CGFloat
+//        if audioLevel > 0.0 {
+//            avatarScale = 1.1 + level * 0.07
+//        } else {
+//            avatarScale = 1.0
+//        }
+//
+//        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+//
+//        let t = button.layer!.transform
+//        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+//
+//        if animated {
+//            if scale != value {
+//                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+//                    guard let `self` = self else {
+//                        return
+//                    }
+//                    let rect = self.button.bounds
+//                    var fr = CATransform3DIdentity
+//                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+//                    fr = CATransform3DScale(fr, value, value, 1)
+//                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+//                    self.button.layer?.transform = fr
+//                }, completion: {
+//
+//                })
+//            }
+//        } else {
+//            self.scaleAnimator = nil
+//            self.button.layer?.transform = CATransform3DIdentity
+//        }
     }
 
     
@@ -751,7 +774,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
     }
 
     
-    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55))
+    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55), photoSize: NSMakeSize(35, 35))
     private let titleView: TextView = TextView()
     private var statusView: TextView?
     private let button = ImageButton()
@@ -774,8 +797,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         photoView.userInteractionEnabled = false
 
         addSubview(videoContainer)
-        videoContainer.frame = .init(origin: .zero, size: photoSize)
-        videoContainer.layer?.cornerRadius = photoSize.height / 2
+        videoContainer.frame = .init(origin: .zero, size: photoView.photoSize)
+        videoContainer.layer?.cornerRadius = photoView.photoSize.height / 2
         
         button.animates = true
 
@@ -799,8 +822,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         }, for: .SingleClick)
         
         containerView.set(handler: { [weak self] _ in
-            if let event = NSApp.currentEvent {
-                self?.showContextMenu(event)
+            if let item = self?.item as? GroupCallParticipantRowItem {
+                item.action()
             }
         }, for: .Click)
         
@@ -850,9 +873,9 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         if item.isVertical {
             transition.updateFrame(view: videoContainer, frame: frame)
         } else {
-            transition.updateFrame(view: self.photoView, frame: self.photoView.centerFrameY(x: item.itemInset.left - (self.photoView.frame.width - photoSize.width) / 2))
+            transition.updateFrame(view: self.photoView, frame: self.photoView.centerFrameY(x: item.itemInset.left - (self.photoView.frame.width - photoView.photoSize.width) / 2))
 
-            transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, 6), size: titleView.frame.size))
+            transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, 6), size: titleView.frame.size))
                         
             if let imageView = self.supplementImageView {
                 transition.updateFrame(view: imageView, frame: CGRect.init(origin: NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)), size: imageView.frame.size))
@@ -1062,7 +1085,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         var point: NSPoint = .zero
         
         if let statusView = statusView {
-            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6)
+            point = NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6)
         }
         if let volume = item.volume {
             point.x += volume.layoutSize.width + 3
@@ -1080,7 +1103,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         var point: NSPoint = .zero
         
         if let volumeView = volumeView {
-            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - volumeView.frame.height - 6)
+            point = NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, frame.height - volumeView.frame.height - 6)
         }
         if !statusImageContainer.subviews.isEmpty {
             point.x += statusImageContainer.frame.width + 3
@@ -1094,7 +1117,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         }
         var point: NSPoint = .zero
         
-        point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, containerView.frame.height - statusImageContainer.frame.height - 5)
+        point = NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, containerView.frame.height - statusImageContainer.frame.height - 5)
         return point
     }
 
@@ -1145,7 +1168,9 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         
     override func layout() {
         super.layout()
-        container?.frame = containerView.bounds
+        if let container = container as? HorizontalContainerView {
+            container.frame = containerView.bounds
+        }
     }
     
     override func updateColors() {
@@ -1166,7 +1191,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             if self.container is VerticalContainerView {
                 current = self.container!
             } else {
-                current = VerticalContainerView(frame: NSMakeRect(0, 0, 120, 80))
+                current = VerticalContainerView(frame: NSMakeRect(0, 0, 160, 95))
                 previous = self.container
                 self.container = current
                 addSubview(current)

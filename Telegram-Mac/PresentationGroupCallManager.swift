@@ -211,6 +211,9 @@ protocol PresentationGroupCall: class {
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
     var callInfo: Signal<GroupCallInfo?, NoError> { get }
     var incomingVideoSources: Signal<Set<String>, NoError> { get }
+    
+    var mustStopSharing:(()->Void)? { get set }
+    var mustStopVideo:(()->Void)? { get set }
 
 //    var activeCall: CachedChannelData.ActiveCall? { get }
     var inviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
