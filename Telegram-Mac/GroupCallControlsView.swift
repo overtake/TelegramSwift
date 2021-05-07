@@ -96,7 +96,7 @@ final class GroupCallControlsView : View {
         let previous = self.mode
         let previousCallMode = self.callMode
         if previous != mode || hasVideo != self.hasVideo  || hasScreencast != self.hasScreencast || self.callMode != callMode || force {
-            self.speakText?.change(opacity: mode == .fullscreen ? 0 : 1, animated: animated)
+            self.speakText?.change(opacity: mode == .fullscreen || callMode == .video ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
             let leftButton1Text: String
             let leftBg: CallControlData.Mode
@@ -258,9 +258,13 @@ final class GroupCallControlsView : View {
     private var leftToken: UInt32?
     func update(_ callState: GroupCallUIState, voiceSettings: VoiceCallSettings, audioLevel: Float?, animated: Bool) {
 
+        
 
         let mode: Mode = callState.isFullScreen && callState.currentDominantSpeakerWithVideo != nil ? .fullscreen : .normal
         
+        
+        let hidden: Bool = mode == .fullscreen || callState.mode == .video
+
         
         self.updateMode(mode, callMode: callState.mode, hasVideo: callState.hasVideo, hasScreencast: callState.hasScreencast, animated: animated)
 
@@ -402,14 +406,13 @@ final class GroupCallControlsView : View {
             layout.measure(width: frame.width - 60)
             speakText.update(layout)
 
-            switch mode {
-            case .fullscreen:
+            if hidden {
                 speakText.layer?.opacity = 0
-            case .normal:
+            } else {
                 speakText.layer?.opacity = 1
             }
             
-            let animated = animated && mode == .normal
+            let animated = animated && !hidden
             
             if let speakText = self.speakText {
                 self.speakText = nil

@@ -42,11 +42,16 @@ final class GroupCallUIState : Equatable {
             } else if (lhs.screencast != nil) != (rhs.screencast != nil) {
                 return false
             }
+            if lhs.failed != rhs.failed {
+                return false
+            }
             return true
         }
         
         var video: VideoSourceMac? = nil
         var screencast: VideoSourceMac? = nil
+        
+        var failed: Bool = false
         
         var isEmpty: Bool {
             return video == nil && screencast == nil

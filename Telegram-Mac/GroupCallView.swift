@@ -159,14 +159,20 @@ final class GroupCallView : View {
         
         let isVertical = isFullScreen && state?.currentDominantSpeakerWithVideo != nil
         
+        let isVideo = state?.mode == .video
+        
         transition.updateFrame(view: peersTable, frame: tableRect)
         transition.updateFrame(view: peersTableContainer, frame: substrateRect())
         if isVertical {
             transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2))
         } else {
-            transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
+            if isVideo {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 110))
+            } else {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
+            }
         }
-        let titleRect = NSMakeRect(isVertical ? 140 : 0, 0, frame.width - (isVertical ? 140 : 0), isVertical ? 54 : 54)
+        let titleRect = NSMakeRect(isVertical ? (160 + 20) : 0, 0, frame.width - (isVertical ? (160 + 20) : 0), isVertical ? 54 : 54)
         transition.updateFrame(view: titleView, frame: titleRect)
         titleView.updateLayout(size: titleRect.size, transition: transition)
         
@@ -176,7 +182,7 @@ final class GroupCallView : View {
             mainVideoView.updateLayout(size: mainVideoRect.size, transition: transition)
         }
         
-        transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, 140, 54))
+        transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, isVertical ? (160 + 20) : 0, 54))
         
         if let scheduleView = self.scheduleView {
             let rect = tableRect
@@ -192,9 +198,9 @@ final class GroupCallView : View {
         let width = min(frame.width - 40, 600)
         if let state = state, state.currentDominantSpeakerWithVideo != nil {
             if isFullScreen {
-                size = NSMakeSize(120, frame.height - 54)
+                size = NSMakeSize(160, frame.height - 54)
             } else {
-                size = NSMakeSize(width, frame.height - round(width * 0.4) - 271 )
+                size = NSMakeSize(width, max(200, frame.height - 180 - 200))
             }
         } else {
             size = NSMakeSize(width, frame.height - 271)
@@ -236,12 +242,12 @@ final class GroupCallView : View {
     private var mainVideoRect: NSRect {
         var rect: CGRect
         if isFullScreen {
-            let width = frame.width - 140
+            let width = frame.width - (160 + 20)
             let height = frame.height
-            rect = CGRect(origin: .init(x: 140, y: 0), size: .init(width: width, height: height))
+            rect = CGRect(origin: .init(x: (160 + 20), y: 0), size: .init(width: width, height: height))
         } else {
             let width = min(frame.width - 40, 600)
-            rect = focus(NSMakeSize(width, width * 0.4))
+            rect = focus(NSMakeSize(width, max(200, frame.height - 180 - 200)))
             rect.origin.y = 54
         }
         return rect

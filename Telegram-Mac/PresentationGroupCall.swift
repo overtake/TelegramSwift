@@ -2182,6 +2182,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.participantsContext?.lowerHand()
     }
     
+    var mustStopSharing:(()->Void)?
+    var mustStopVideo:(()->Void)?
+    
     public func requestScreencast(deviceId: String) {
         if self.screencastCallContext != nil {
             return
@@ -2197,6 +2200,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             let screenCapturer = OngoingCallVideoCapturer(deviceId)
             self.screenCapturer = screenCapturer
         }
+        
+        self.screenCapturer?.setOnFatalError({ [weak self] in
+            self?.mustStopSharing?()
+        })
 
         let screencastCallContext = OngoingGroupCallContext(
             video: self.screenCapturer,
@@ -2289,6 +2296,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             let videoCapturer = OngoingCallVideoCapturer(deviceId)
             self.videoCapturer = videoCapturer
         }
+        
+        self.videoCapturer?.setOnFatalError({ [weak self] in
+            self?.mustStopVideo?()
+        })
         self.hasVideo = true
         if let videoCapturer = self.videoCapturer {
             self.genericCallContext?.requestVideo(videoCapturer)

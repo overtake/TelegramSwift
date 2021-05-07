@@ -9377,6 +9377,8 @@ internal final class L10n {
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
   /// No active and connected camera was found.
   internal static var voiceChatTooltipNoCameraFound: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.NoCameraFound") }
+  /// An error occured. Screencast has stopped.
+  internal static var voiceChatTooltipScreencastFailed: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ScreencastFailed") }
   /// Your screen are being broadcast.
   internal static var voiceChatTooltipShareScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareScreen") }
   /// Your video are being broadcast.
@@ -9387,6 +9389,8 @@ internal final class L10n {
   internal static var voiceChatTooltipStopVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopVideo") }
   /// We will notify you when it starts
   internal static var voiceChatTooltipSubscribe: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Subscribe") }
+  /// An error occured. Video stream has stopped.
+  internal static var voiceChatTooltipVideoFailed: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.VideoFailed") }
   /// Video Source
   internal static var voiceChatVideoVideoSource: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource") }
   /// more
