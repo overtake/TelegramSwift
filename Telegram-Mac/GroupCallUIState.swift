@@ -25,6 +25,19 @@ final class GroupCallUIState : Equatable {
         case voice
         case video
     }
+    enum LayoutMode: Equatable {
+        case classic
+        case tile
+        
+        var viceVerse: LayoutMode {
+            switch self {
+            case .classic:
+                return .tile
+            case .tile:
+                return .classic
+            }
+        }
+    }
     
     struct VideoSources : Equatable {
         static func == (lhs: GroupCallUIState.VideoSources, rhs: GroupCallUIState.VideoSources) -> Bool {
@@ -72,7 +85,9 @@ final class GroupCallUIState : Equatable {
     let isFullScreen: Bool
     let mode: Mode
     let videoSources: VideoSources
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: Set<String>, isFullScreen: Bool, mode: Mode, videoSources: VideoSources) {
+    let layoutMode: LayoutMode
+    let version: Int
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: Set<String>, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -87,6 +102,8 @@ final class GroupCallUIState : Equatable {
         self.isFullScreen = isFullScreen
         self.mode = mode
         self.videoSources = videoSources
+        self.layoutMode = layoutMode
+        self.version = version
     }
     
     var hasVideo: Bool {
@@ -160,10 +177,31 @@ final class GroupCallUIState : Equatable {
         if lhs.videoSources != rhs.videoSources {
             return false
         }
+        if lhs.layoutMode != rhs.layoutMode {
+            return false
+        }
+        if lhs.version != rhs.version {
+            return false
+        }
         return true
     }
     
+    var videoActive: [PeerGroupCallData] {
+        return memberDatas.filter { peer in
+            if version == 0 {
+                return false
+            }
+            if let endpointId = peer.videoEndpoint {
+                return true
+            }
+            if let endpointId = peer.screencastEndpoint {
+                return true
+            }
+            return false
+        }
+    }
+    
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version)
     }
 }

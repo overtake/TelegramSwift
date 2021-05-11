@@ -35,7 +35,7 @@ final class GroupCallInviteRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return videoMode && (width == 160 || width >= fullScreenThreshold)
+        return videoMode && (width == GroupCallTheme.smallTableWidth || width >= GroupCallTheme.fullScreenThreshold)
     }
     
     override var hasBorder: Bool {
