@@ -179,11 +179,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         let width = super.width
         
         self.volume?.measure(width: .greatestFiniteMagnitude)
-        let inset: CGFloat
+        var inset: CGFloat
         if let volume = self.volume {
             inset = volume.layoutSize.width + 28
         } else {
             inset = 0
+        }
+        for image in statusImage {
+            inset += image.backingSize.width + 3
         }
         
         
@@ -213,7 +216,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var statusImage: [CGImage] {
-        assertOnMainThread()
         let hasVideo = data.hasVideo
         
         var images:[CGImage] = []
@@ -822,8 +824,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         }, for: .SingleClick)
         
         containerView.set(handler: { [weak self] _ in
-            if let item = self?.item as? GroupCallParticipantRowItem {
-                item.action()
+            if let event = NSApp.currentEvent {
+                self?.showContextMenu(event)
             }
         }, for: .Click)
         
