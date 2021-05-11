@@ -48,6 +48,8 @@ final class GroupCallMainVideoContainerView: Control {
     
     private let speakingView: View = View()
     
+    private let audioLevelDisposable = MetaDisposable()
+    
     init(call: PresentationGroupCall, resizeMode: CALayerContentsGravity) {
         self.call = call
         self.currentResizeMode = resizeMode
@@ -57,6 +59,7 @@ final class GroupCallMainVideoContainerView: Control {
         speakingView.layer?.cornerRadius = 10
         speakingView.layer?.borderWidth = 2
         speakingView.layer?.borderColor = GroupCallTheme.speakActiveColor.cgColor
+        
         
         self.backgroundColor =  GroupCallTheme.membersColor
         addSubview(shadowView)
@@ -109,7 +112,7 @@ final class GroupCallMainVideoContainerView: Control {
     
     
     
-    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
+    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, arguments: GroupCallUIArguments?) {
         
         
         transition.updateAlpha(view: speakingView, alpha: participant?.isSpeaking == true ? 1 : 0)
@@ -163,6 +166,18 @@ final class GroupCallMainVideoContainerView: Control {
         
         if self.currentPeer == peer {
             return
+        }
+        
+        if let peer = peer, let arguments = arguments, let audioLevel = arguments.audioLevel(peer.peerId) {
+            audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
+                if let value = value {
+                    self?.speakingView.animator().alphaValue = CGFloat(min(value, 6) / 6)
+                } else {
+                    self?.speakingView.layer?.opacity = 0
+                }
+            }))
+        } else {
+            audioLevelDisposable.set(nil)
         }
         
         self.currentPeer = peer
@@ -222,6 +237,10 @@ final class GroupCallMainVideoContainerView: Control {
         
 
         transition.updateFrame(view: speakingView, frame: bounds)
+    }
+    
+    deinit {
+        audioLevelDisposable.dispose()
     }
     
     override func layout() {

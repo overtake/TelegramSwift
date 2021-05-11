@@ -301,19 +301,28 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
             if participant.peer.id != peerId {
                 return false
             }
-            if let endpoint = participant.presentationEndpointId {
-                if activeVideoSources.contains(endpoint) {
-                    return true
-                }
+            if let _ = participant.presentationEndpointId {
+                return true
             }
-            if let endpoint = participant.videoEndpointId {
-                if activeVideoSources.contains(endpoint) {
-                    return true
-                }
+            if let _ = participant.videoEndpointId {
+                return true
             }
             return false
         }) != nil
     }
+    
+    let videoActive = activeParticipants.filter({ participant in
+        if version == 0 {
+            return false
+        }
+        if let _ = participant.presentationEndpointId {
+            return true
+        }
+        if let _ = participant.videoEndpointId {
+            return true
+        }
+        return false
+    })
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
         let pinnedMode: PeerGroupCallData.PinnedMode?
@@ -322,7 +331,7 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
         } else {
             pinnedMode = nil
         }
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isVertical, hasVideo: hasVideo(accountPeerId)))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !videoActive.isEmpty, isVertical: isVertical, hasVideo: hasVideo(accountPeerId)))
         index += 1
     } 
 
@@ -343,13 +352,13 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
         } else {
             pinnedMode = nil
         }
-        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isVertical, hasVideo: hasVideo(value.peer.id)))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: !videoActive.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id)))
         index += 1
     }
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, pinnedMode: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: currentDominantSpeakerWithVideo != nil, isVertical: isVertical, hasVideo: false))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, pinnedMode: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !videoActive.isEmpty, isVertical: isVertical, hasVideo: false))
             index += 1
         }
     }
@@ -873,7 +882,7 @@ final class GroupCallUIController : ViewController {
             return self?.videoViews.first(where: { $0.0.peerId == peerId && $0.0.mode == .screencast }) != nil
         }, canUnpinVideo: { [weak self] peerId, mode in
             let dominant = self?.currentDominantSpeakerWithVideo
-            return dominant?.peerId == peerId && dominant?.temporary == false
+            return dominant?.peerId == peerId
 //            if let current = bestDominantSpeakerWithVideo(true) {
 //                return current.peerId != peerId
 //            }
@@ -1172,6 +1181,14 @@ final class GroupCallUIController : ViewController {
                     strongSelf.videoViews.remove(at: i)
                     strongSelf.requestedVideoSources.remove(ssrc)
                     updated = true
+                }
+            }
+            
+            if let domaint = strongSelf.currentDominantSpeakerWithVideo {
+                let contains = items.contains(where: { $0.endpointId == domaint.endpointId })
+                if !contains {
+                    strongSelf.currentDominantSpeakerWithVideo = nil
+                    strongSelf.pinnedDominantSpeaker = nil
                 }
             }
 
@@ -1529,6 +1546,8 @@ final class GroupCallUIController : ViewController {
 //
         window.set(handler: { [weak self] event in
             if let state = self?.genericView.state {
+                self?.pinnedDominantSpeaker = nil
+                self?.currentDominantSpeakerWithVideo = nil
                 layoutMode.set(state.layoutMode.viceVerse)
             }
             return .invokeNext
