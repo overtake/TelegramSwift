@@ -117,6 +117,11 @@ struct GroupCallTheme {
     static let videoZoomIn = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(NSColor.white.withAlphaComponent(0.8))
 
     
+    static let smallTableWidth: CGFloat = 160
+    static let fullScreenThreshold: CGFloat = 590
+
+    static let tileTableWidth: CGFloat = 200
+    
     static var minSize:NSSize {
         return NSMakeSize(380, 600)
     }

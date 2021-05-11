@@ -130,7 +130,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return data.videoMode && (width == 160 || width >= fullScreenThreshold - 40)
+        return data.isVertical && (width == GroupCallTheme.smallTableWidth || width >= GroupCallTheme.fullScreenThreshold - 40)
     }
     
     
@@ -176,7 +176,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
                 
-        let width = self.width
+        let width = super.width
         
         self.volume?.measure(width: .greatestFiniteMagnitude)
         let inset: CGFloat
@@ -188,15 +188,15 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         
         if isVertical {
-            
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
         
         if isVertical {
-            titleLayout.measure(width: 160 - 16 - 10)
+            titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
         } else {
+            let width = data.videoMode ? GroupCallTheme.tileTableWidth : width
             titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
             statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
         }
@@ -537,7 +537,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
     }
     
     override var maxBlockWidth: CGFloat {
-        return 160
+        return GroupCallTheme.smallTableWidth
     }
     
     override func layout() {
@@ -1191,7 +1191,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             if self.container is VerticalContainerView {
                 current = self.container!
             } else {
-                current = VerticalContainerView(frame: NSMakeRect(0, 0, 160, 95))
+                current = VerticalContainerView(frame: NSMakeRect(0, 0, GroupCallTheme.smallTableWidth, 95))
                 previous = self.container
                 self.container = current
                 addSubview(current)

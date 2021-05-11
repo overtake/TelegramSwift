@@ -35,7 +35,7 @@ final class GroupCallControlsView : View {
     var arguments: GroupCallUIArguments?
 
     private let backgroundView = VoiceChatActionButtonBackgroundView()
-    private let fullscreenBackgroundView = NSVisualEffectView(frame: .zero)
+    let fullscreenBackgroundView = NSVisualEffectView(frame: .zero)
 
     required init(frame frameRect: NSRect) {
 
@@ -260,12 +260,10 @@ final class GroupCallControlsView : View {
 
         
 
-        let mode: Mode = callState.isFullScreen && callState.currentDominantSpeakerWithVideo != nil ? .fullscreen : .normal
-        
+        let mode: Mode = callState.isFullScreen && !callState.videoActive.isEmpty ? .fullscreen : .normal
         
         let hidden: Bool = mode == .fullscreen || callState.mode == .video
 
-        
         self.updateMode(mode, callMode: callState.mode, hasVideo: callState.hasVideo, hasScreencast: callState.hasScreencast, animated: animated)
 
         let state = callState.state

@@ -390,7 +390,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }
         }, completed: {
             
-            
             let passcodeSemaphore = DispatchSemaphore(value: 0)
             
             _ = accountManager.transaction { modifier -> Void in
@@ -1102,10 +1101,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if viewer != nil {
             viewer?.windowDidResignKey()
-        } else if let passport = passport {
-            passport.window.makeKeyAndOrderFront(nil)
-        } else if !makeKeyAndOrderFrontCallWindow() {
-            window.makeKeyAndOrderFront(nil)
         }
         
         return true

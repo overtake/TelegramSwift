@@ -171,7 +171,7 @@ final class GroupCallTitleView : Control {
     func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, animated: Bool) {
         
         let oldMode = self.mode
-        let mode: Mode = state.isFullScreen && state.currentDominantSpeakerWithVideo != nil ? .transparent : .normal
+        let mode: Mode = .normal//state.isFullScreen && state.currentDominantSpeakerWithVideo != nil & ? .transparent : .normal
         
         self.updateMode(mode, animated: animated)
                 

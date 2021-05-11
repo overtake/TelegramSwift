@@ -26,7 +26,7 @@ struct DominantVideo : Equatable {
     }
 }
 
-final class MainVideoContainerView: Control {
+final class GroupCallMainVideoContainerView: Control {
     private let call: PresentationGroupCall
     
     private(set) var currentVideoView: GroupVideoView?
@@ -38,7 +38,6 @@ final class MainVideoContainerView: Control {
     
     private let nameView: TextView = TextView()
     private var statusView: TextView = TextView()
-    private let pinnedImage = ImageView()
     let gravityButton = ImageButton()
 
     var currentResizeMode: CALayerContentsGravity = .resizeAspect {
@@ -47,30 +46,40 @@ final class MainVideoContainerView: Control {
         }
     }
     
+    private let speakingView: View = View()
+    
     init(call: PresentationGroupCall, resizeMode: CALayerContentsGravity) {
         self.call = call
         self.currentResizeMode = resizeMode
         super.init()
         
-        self.backgroundColor = .black
+        
+        speakingView.layer?.cornerRadius = 10
+        speakingView.layer?.borderWidth = 2
+        speakingView.layer?.borderColor = GroupCallTheme.speakActiveColor.cgColor
+        
+        self.backgroundColor =  GroupCallTheme.membersColor
         addSubview(shadowView)
         
-        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.6)
+        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.3)
         shadowView.direction = .vertical(true)
         
-        addSubview(gravityButton)
+        self.layer?.cornerRadius = 10
+        
+        //addSubview(gravityButton)
         
         gravityButton.sizeToFit()
         gravityButton.scaleOnClick = true
         gravityButton.autohighlight = false
         addSubview(nameView)
         addSubview(statusView)
-        addSubview(pinnedImage)
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         
         statusView.userInteractionEnabled = false
         statusView.isSelectable = false
+        
+        addSubview(speakingView)
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -91,9 +100,7 @@ final class MainVideoContainerView: Control {
         
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
-        pinnedImage.change(opacity: controlsMode == .normal && currentPeer?.temporary == false ? 1 : 0, animated: animated)
 
-        
         gravityButton.set(image:  controlsState == .fullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
         gravityButton.sizeToFit()
     }
@@ -101,23 +108,26 @@ final class MainVideoContainerView: Control {
     private var participant: PeerGroupCallData?
     
     
+    
     func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
         
+        
+        transition.updateAlpha(view: speakingView, alpha: participant?.isSpeaking == true ? 1 : 0)
                 
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: gravityButton, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
-        transition.updateAlpha(view: pinnedImage, alpha: controlsMode == .normal && peer?.temporary == false ? 1 : 0)
         if participant != self.participant, let participant = participant {
             self.participant = participant
-            let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.text)), maximumNumberOfLines: 1)
+            let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short)), maximumNumberOfLines: 1)
+            nameLayout.measure(width: frame.width - 20)
             self.nameView.update(nameLayout)
                         
             if self.statusView.layout?.attributedString.string != participant.status.0 {
                 let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
                 
-                statusLayout.measure(width: frame.width - 100)
+                statusLayout.measure(width: frame.width - nameView.frame.width - 30)
                 
                 let statusView = TextView()
                 statusView.update(statusLayout)
@@ -125,7 +135,7 @@ final class MainVideoContainerView: Control {
                 statusView.isSelectable = false
                 statusView.layer?.opacity = controlsMode == .normal ? 1 : 0
                 
-                statusView.frame = CGRect(origin: NSMakePoint(45, frame.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size)
+                statusView.frame = CGRect(origin: NSMakePoint(nameView.frame.width + 20, frame.height - statusView.frame.height - 10), size: self.statusView.frame.size)
                 self.addSubview(statusView)
                 
                 let previous = self.statusView
@@ -135,18 +145,15 @@ final class MainVideoContainerView: Control {
                         previous?.removeFromSuperview()
                     })
                     statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    statusView.layer?.animatePosition(from: statusView.frame.origin - NSMakePoint(0, 10), to: statusView.frame.origin)
+                    statusView.layer?.animatePosition(from: statusView.frame.origin - NSMakePoint(10, 0), to: statusView.frame.origin)
 
-                    previous.layer?.animatePosition(from: previous.frame.origin, to: previous.frame.origin + NSMakePoint(0, 10))
+                    previous.layer?.animatePosition(from: previous.frame.origin, to: previous.frame.origin + NSMakePoint(10, 0))
                 } else {
                     previous.removeFromSuperview()
                 }
             }
             
-            
-            self.pinnedImage.image = GroupCallTheme.pinned_video
-            self.pinnedImage.sizeToFit()
-            
+                        
             self.updateLayout(size: self.frame.size, transition: transition)
         }
 
@@ -203,17 +210,15 @@ final class MainVideoContainerView: Control {
         transition.updateFrame(view: gravityButton, frame: CGRect(origin: NSMakePoint(size.width - 10 - gravityButton.frame.width, size.height - 10 - gravityButton.frame.height), size: gravityButton.frame.size))
         
         
-        self.nameView.resize(size.width / 2)
-        self.statusView.resize(size.width / 2)
+        self.nameView.resize(size.width - 20)
+        self.statusView.resize(size.width - 30 - self.nameView.frame.width)
 
         
-        transition.updateFrame(view: self.pinnedImage, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.pinnedImage.frame.height), size: self.pinnedImage.frame.size))
-        
-        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(currentPeer?.temporary == false ? 45 : 20, size.height - 10 - self.nameView.frame.height - self.statusView.frame.height), size: self.nameView.frame.size))
-        transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(currentPeer?.temporary == false ? 45 : 20, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
+        transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(self.nameView.frame.maxX + 10, self.nameView.frame.minY), size: self.statusView.frame.size))
         
 
-        
+        transition.updateFrame(view: speakingView, frame: bounds)
     }
     
     override func layout() {

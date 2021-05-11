@@ -146,26 +146,6 @@ private extension GroupCallParticipantsContext.Participant {
     }
 }
 
-extension GroupCallParticipantsContext.Participant {
-    var videoEndpointId: String? {
-        if let jsonParams = self.videoJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let endpoint = json["endpoint"] as? String {
-                return endpoint
-            }
-        }
-        return nil
-    }
-
-    var presentationEndpointId: String? {
-        if let jsonParams = self.presentationJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let endpoint = json["endpoint"] as? String {
-                return endpoint
-            }
-        }
-        return nil
-    }
-}
-
 
 final class AccountGroupCallContextImpl: AccountGroupCallContext {
     final class Proxy {
@@ -632,6 +612,19 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         return self.statePromise.get()
     }
     
+    private var stateVersionValue: Int = 0 {
+        didSet {
+            if self.stateVersionValue != oldValue {
+                self.stateVersionPromise.set(self.stateVersionValue)
+            }
+        }
+    }
+    private let stateVersionPromise = ValuePromise<Int>(0)
+    public var stateVersion: Signal<Int, NoError> {
+        return self.stateVersionPromise.get()
+    }
+
+    
     private var membersValue: PresentationGroupCallMembers? {
         didSet {
             if self.membersValue != oldValue {
@@ -701,16 +694,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var videoCapturer: OngoingCallVideoCapturer?
     
     private var screenCapturer: OngoingCallVideoCapturer?
-    private let incomingVideoSourcePromise = Promise<Set<String>>(Set())
-    public var incomingVideoSources: Signal<Set<String>, NoError> {
-        return combineLatest(self.incomingVideoSourcePromise.get(), screencastEndpointIdValue.get()) |> map { ids, screencastId in
-            var ids = ids
-            if let screencastId = screencastId {
-                ids.insert(screencastId)
-            }
-            return ids
-        }
-    }
     private let screencastEndpointIdValue: ValuePromise<String?> = ValuePromise(nil, ignoreRepeated: true)
     private var screencastEndpointId: String? = nil {
         didSet {
@@ -1168,12 +1151,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         }
                     }
                 }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: true)
-                self.incomingVideoSourcePromise.set(genericCallContext.videoSources
-                |> deliverOnMainQueue
-                |> map { sources -> Set<String> in
-                    return Set(sources)
-                })
+                
                 self.genericCallContext = genericCallContext
+                self.stateVersionValue += 1
             }
             self.joinDisposable.set((genericCallContext.joinPayload
             |> distinctUntilChanged(isEqual: { lhs, rhs in
@@ -2254,8 +2234,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 screencastCallContext.setJoinResponse(payload: clientParams)
                 
                 strongSelf.screencastEndpointId = joinCallResult.endpointId
-                
-                strongSelf.genericCallContext?.setIgnoreVideoEndpointIds(endpointIds: [joinCallResult.endpointId])
+
             }, error: { error in
                 guard let _ = self else {
                     return
@@ -2330,9 +2309,25 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
     }
 
-    public func setFullSizeVideo(endpointId: String?) {
-        self.genericCallContext?.setFullSizeVideo(endpointId: endpointId)
+    func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo]) {
+        self.genericCallContext?.setRequestedVideoChannels(items.compactMap { item -> OngoingGroupCallContext.VideoChannel in
+            let mappedQuality: OngoingGroupCallContext.VideoChannel.Quality
+            switch item.quality {
+            case .thumbnail:
+                mappedQuality = .thumbnail
+            case .medium:
+                mappedQuality = .medium
+            case .full:
+                mappedQuality = .full
+            }
+            return OngoingGroupCallContext.VideoChannel(
+                audioSsrc: item.audioSsrc,
+                videoDescription: item.videoInformation,
+                quality: mappedQuality
+            )
+        })
     }
+
 
     
     public func updateMuteState(peerId: PeerId, isMuted: Bool) -> GroupCallParticipantsContext.Participant.MuteState? {
