@@ -176,18 +176,18 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
                 
-        let width = super.width
+        let width = self.width
         
         self.volume?.measure(width: .greatestFiniteMagnitude)
-        var inset: CGFloat
+        var inset: CGFloat = 0
         if let volume = self.volume {
-            inset = volume.layoutSize.width + 28
+            inset = volume.layoutSize.width + 25
         } else {
-            inset = 0
+            for image in statusImage {
+                inset += image.backingSize.width + 3
+            }
         }
-        for image in statusImage {
-            inset += image.backingSize.width + 3
-        }
+
         
         
         if isVertical {
@@ -199,9 +199,9 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         if isVertical {
             titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
         } else {
-            let width = data.videoMode ? GroupCallTheme.tileTableWidth : width
-            titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
-            statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
+            let width = data.videoMode ? GroupCallTheme.tileTableWidth - 25 : width - 40
+            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
+            statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
         }
         
         return true
@@ -1210,13 +1210,13 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
         
         if let previous = previous {
-            if animated {
-                previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak previous] _ in
-                    previous?.removeFromSuperview()
-                })
-            } else {
+//            if animated {
+//                previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak previous] _ in
+//                    previous?.removeFromSuperview()
+//                })
+//            } else {
                 previous.removeFromSuperview()
-            }
+//            }
             if animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
             }

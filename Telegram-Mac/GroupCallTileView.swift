@@ -56,25 +56,32 @@ private func tileViews(_ count: Int, window: Window, frameSize: NSSize) -> [Tile
     var point: CGPoint = .zero
     var index: Int = 0
     
+    let inset: CGFloat = 5
+    
+    let insetSize = NSMakeSize(CGFloat((data.rows - 1) * 5) / CGFloat(data.rows), CGFloat((data.cols - 1) * 5) / CGFloat(data.cols))
+
+    
     if data.cols * data.rows > count && data.rows == 2 {
-        tiles.append(.init(rect: CGRect(origin: point, size: CGSize.init(width: frameSize.width, height: data.size.height)), index: index))
-        point.y += data.size.height
+        tiles.append(.init(rect: CGRect(origin: point, size: CGSize(width: frameSize.width, height: data.size.height - insetSize.height)), index: index))
+        point.y += (data.size.height - insetSize.height) + inset
         index += 1
     }
     
-    let insetSize = NSMakeSize(CGFloat((data.rows - 1) * 5), CGFloat((data.cols - 1) * 5))
-    
+
     for _ in 0 ..< data.cols {
         for _ in 0 ..< data.rows {
             if index < count {
-                                
-                tiles.append(.init(rect: CGRect(origin: point, size: data.size - insetSize), index: index))
-                point.x += data.size.width + 5
+                
+                let size = (data.size - insetSize)
+                
+                tiles.append(.init(rect: CGRect(origin: point, size: size), index: index))
+                point.x += size.width + inset
                 index += 1
             }
         }
+                        
         point.x = 0
-        point.y += data.size.height + 5
+        point.y += data.size.height - insetSize.height + inset
     }
 
     return tiles
@@ -121,11 +128,17 @@ final class GroupCallTileView: View {
     private var views: [GroupCallMainVideoContainerView] = []
     private var items:[TileEntry] = []
     private let call: PresentationGroupCall
-    init(call: PresentationGroupCall, frame: NSRect) {
+    private var controlsMode: GroupCallView.ControlsMode = .normal
+    private var arguments: GroupCallUIArguments? = nil
+    init(call: PresentationGroupCall, arguments: GroupCallUIArguments?, frame: NSRect) {
         self.call = call
+        self.arguments = arguments
         super.init(frame: frame)
     }
-    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, animated: Bool) {
+    
+    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
+        
+        self.controlsMode = controlsMode
         
         var items:[TileEntry] = []
         var index: Int = 0
@@ -165,16 +178,7 @@ final class GroupCallTileView: View {
             self.insertItem(item, at: idx, frame: tiles[idx].rect, animated: animated)
             self.items.insert(item, at: idx)
         }
-//        for tile in tiles {
-//            let prev = views[tile.index].frame
-//            views[tile.index].frame = tile.rect
-//            if animated && tile.rect != prev {
-//                views[tile.index].layer?.animatePosition(from: prev.origin, to: tile.rect.origin, duration: 5, additive: true)
-//                views[tile.index].layer?.animateBounds(from: prev, to: tile.rect, duration: 5)
-//
-//            }
-//        }
-        
+
         
         for (idx, item, _) in updateIndices {
             let item =  item
@@ -209,7 +213,7 @@ final class GroupCallTileView: View {
             addSubview(view, positioned: .above, relativeTo: self.subviews[index - 1])
         }
         
-        view.updatePeer(peer: item.video, participant: item.member, transition: .immediate, animated: animated, controlsMode: .normal)
+        view.updatePeer(peer: item.video, participant: item.member, transition: .immediate, animated: animated, controlsMode: .normal, arguments: arguments)
         
         self.views.insert(view, at: index)
         
@@ -219,7 +223,7 @@ final class GroupCallTileView: View {
         }
     }
     private func updateItem(_ item: TileEntry, at index: Int, animated: Bool) {
-        self.views[index].updatePeer(peer: item.video, participant: item.member, transition: .immediate, animated: animated, controlsMode: .normal)
+        self.views[index].updatePeer(peer: item.video, participant: item.member, transition: .immediate, animated: animated, controlsMode: self.controlsMode, arguments: arguments)
     }
     
     

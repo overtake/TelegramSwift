@@ -122,7 +122,11 @@ final class GroupCallView : View {
                     mode = .invisible
                 }
             } else {
-                mode = self.controlsMode
+                if !isFullScreen {
+                    mode = .normal
+                } else {
+                    mode = self.controlsMode
+                }
             }
         } else {
             mode = .normal
@@ -173,7 +177,12 @@ final class GroupCallView : View {
         
         let isVideo = state?.mode == .video
         
+        
+        peersTableContainer.setFrameSize(NSMakeSize(substrateRect().width, peersTableContainer.frame.height))
+        peersTable.setFrameSize(NSMakeSize(tableRect.width, peersTable.frame.height))
+        
         transition.updateFrame(view: peersTable, frame: tableRect)
+
         transition.updateFrame(view: peersTableContainer, frame: substrateRect())
         if hasVideo {
             transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2))
@@ -397,6 +406,7 @@ final class GroupCallView : View {
                     mainVideo = video
                 } else {
                     mainVideo = GroupCallMainVideoContainerView(call: call, resizeMode: self.resizeMode)
+                    mainVideo.frame = mainVideoRect
                     
                     mainVideo.set(handler: { [weak self] control in
                         guard let `self` = self else {
@@ -423,7 +433,7 @@ final class GroupCallView : View {
                     addSubview(mainVideo, positioned: .below, relativeTo: titleView)
                     isPresented = true
                 }
-                mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId}), transition: .immediate, animated: animated, controlsMode: self.controlsMode)
+                mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId}), transition: .immediate, animated: animated, controlsMode: self.controlsMode, arguments: arguments)
                 
                 if isPresented && animated {
                     mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
@@ -470,14 +480,14 @@ final class GroupCallView : View {
                 if let tileView = self.tileView {
                     current = tileView
                 } else {
-                    current = GroupCallTileView(call: call, frame: mainVideoRect)
+                    current = GroupCallTileView(call: call, arguments: arguments, frame: mainVideoRect)
                     self.tileView = current
                     addSubview(current, positioned: .below, relativeTo: titleView)
                     if animated {
                         current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                     }
                 }
-                current.update(state: state, transition: transition, animated: animated)
+                current.update(state: state, transition: transition, animated: animated, controlsMode: self.controlsMode)
             } else {
                 if let tileView = self.tileView {
                     self.tileView = nil
