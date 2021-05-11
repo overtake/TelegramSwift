@@ -118,14 +118,17 @@ final class GroupCallMainVideoContainerView: Control {
         transition.updateAlpha(view: gravityButton, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
-        if participant != self.participant, let participant = participant {
+        if participant != self.participant, let participant = participant, let peer = peer {
             self.participant = participant
             let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short)), maximumNumberOfLines: 1)
             nameLayout.measure(width: frame.width - 20)
             self.nameView.update(nameLayout)
                         
-            if self.statusView.layout?.attributedString.string != participant.status.0 {
-                let statusLayout = TextViewLayout(.initialize(string: participant.status.0, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
+            
+            let status = participant.videoStatus(peer.mode)
+            
+            if self.statusView.layout?.attributedString.string != status {
+                let statusLayout = TextViewLayout(.initialize(string: status, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
                 
                 statusLayout.measure(width: frame.width - nameView.frame.width - 30)
                 

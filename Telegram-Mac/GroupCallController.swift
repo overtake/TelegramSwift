@@ -168,6 +168,18 @@ struct PeerGroupCallData : Equatable, Comparable {
         }
     }
     
+    
+    func videoStatus(_ mode: VideoSourceMacMode) -> String {
+        var string:String = L10n.peerStatusRecently
+        switch mode {
+        case .video:
+            string = self.status.0
+        case .screencast:
+            string = L10n.voiceChatStatusScreensharing
+        }
+        return string
+    }
+    
     var status: (String, NSColor) {
         var string:String = L10n.peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
@@ -662,7 +674,7 @@ final class GroupCallUIController : ViewController {
             }
             switch state.layoutMode {
             case .tile:
-                return nil
+                return strongSelf.currentDominantSpeakerWithVideo
             case .classic:
                 break
             }
@@ -831,7 +843,9 @@ final class GroupCallUIController : ViewController {
             }
         }, takeVideo: { [weak self] peerId, mode in
             if self?.genericView.state?.layoutMode == .tile {
-                return nil
+                if self?.currentDominantSpeakerWithVideo == nil {
+                    return nil
+                }
             }
             if let dominant = self?.currentDominantSpeakerWithVideo {
                 if dominant.peerId == peerId {
@@ -875,6 +889,7 @@ final class GroupCallUIController : ViewController {
             self?.genericView.peersTable.scroll(to: .up(true))
         }, unpinVideo: { [weak self] mode in
             self?.pinnedDominantSpeaker = nil
+            self?.currentDominantSpeakerWithVideo = nil
             selectBestDominantSpeakerWithVideo()
         }, isPinnedVideo: { [weak self] peerId, mode in
             if let current = self?.currentDominantSpeakerWithVideo {

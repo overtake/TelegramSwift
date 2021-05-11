@@ -9357,6 +9357,8 @@ internal final class L10n {
   internal static var voiceChatStatusMuted: String  { return L10n.tr("Localizable", "VoiceChat.Status.Muted") }
   /// muted for you
   internal static var voiceChatStatusMutedForYou: String  { return L10n.tr("Localizable", "VoiceChat.Status.MutedForYou") }
+  /// sharing screen
+  internal static var voiceChatStatusScreensharing: String  { return L10n.tr("Localizable", "VoiceChat.Status.Screensharing") }
   /// speaking
   internal static var voiceChatStatusSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Status.Speaking") }
   /// wants to speak

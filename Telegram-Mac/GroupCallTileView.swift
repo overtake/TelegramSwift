@@ -136,23 +136,26 @@ final class GroupCallTileView: View {
         for member in state.videoActive {
             let endpoints:[String] = [member.videoEndpoint, member.screencastEndpoint].compactMap { $0 }
             for endpointId in endpoints {
-                let source: VideoSourceMacMode?
-                if member.videoEndpoint == endpointId {
-                    source = .video
-                } else if member.screencastEndpoint == endpointId {
-                    source = .screencast
-                } else {
-                    source = nil
-                }
-                if let source = source {
-                    items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, index))
-                    index += 1
+                let dominant = state.currentDominantSpeakerWithVideo
+                if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
+                    let source: VideoSourceMacMode?
+                    if member.videoEndpoint == endpointId {
+                        source = .video
+                    } else if member.screencastEndpoint == endpointId {
+                        source = .screencast
+                    } else {
+                        source = nil
+                    }
+                    if let source = source {
+                        items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, index))
+                        index += 1
+                    }
                 }
             }
         }
         
         
-        let tiles = tileViews(items.count, window: window, frameSize: bounds.size)
+        let tiles = tileViews(items.count, window: window, frameSize: frame.size)
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
         for rdx in deleteIndices.reversed() {
             self.deleteItem(at: rdx, animated: animated)
@@ -162,23 +165,25 @@ final class GroupCallTileView: View {
             self.insertItem(item, at: idx, frame: tiles[idx].rect, animated: animated)
             self.items.insert(item, at: idx)
         }
-        for tile in tiles {
-            let prev = views[tile.index].frame
-            let newPoint = tile.rect.origin - prev.origin
-            let newSize = (prev.size - tile.rect.size)
-            if animated && (newSize != .zero || newPoint != .zero) {
-                views[tile.index].layer?.animatePosition(from: newPoint, to: .zero, duration: 0.2, additive: true)
-                views[tile.index].layer?.animateBounds(from: newSize.bounds, to: .zero, duration: 0.2, additive: true)
-
-            }
-            views[tile.index].frame = tile.rect
-        }
+//        for tile in tiles {
+//            let prev = views[tile.index].frame
+//            views[tile.index].frame = tile.rect
+//            if animated && tile.rect != prev {
+//                views[tile.index].layer?.animatePosition(from: prev.origin, to: tile.rect.origin, duration: 5, additive: true)
+//                views[tile.index].layer?.animateBounds(from: prev, to: tile.rect, duration: 5)
+//
+//            }
+//        }
+        
         
         for (idx, item, _) in updateIndices {
             let item =  item
             updateItem(item, at: idx, animated: animated)
             self.items[idx] = item
         }
+        
+        updateLayout(size: frame.size, transition: transition)
+
     }
     
     private func deleteItem(at index: Int, animated: Bool) {
@@ -188,7 +193,7 @@ final class GroupCallTileView: View {
             view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
                 view?.removeFromSuperview()
             })
-            view.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.4, removeOnCompletion: false, bounce: false)
+//            view.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.4, removeOnCompletion: false, bounce: false)
         } else {
             view.removeFromSuperview()
         }
@@ -198,7 +203,11 @@ final class GroupCallTileView: View {
         
         let view = GroupCallMainVideoContainerView(call: self.call, resizeMode: .resizeAspect)
         view.frame = frame
-        addSubview(view)
+        if index == 0 {
+            addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+        } else {
+            addSubview(view, positioned: .above, relativeTo: self.subviews[index - 1])
+        }
         
         view.updatePeer(peer: item.video, participant: item.member, transition: .immediate, animated: animated, controlsMode: .normal)
         
@@ -206,7 +215,7 @@ final class GroupCallTileView: View {
         
         if animated {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4, bounce: false)
+//            view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4, bounce: false)
         }
     }
     private func updateItem(_ item: TileEntry, at index: Int, animated: Bool) {
