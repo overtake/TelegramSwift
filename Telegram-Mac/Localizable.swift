@@ -9363,6 +9363,8 @@ internal final class L10n {
   internal static var voiceChatStatusSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Status.Speaking") }
   /// wants to speak
   internal static var voiceChatStatusWantsSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Status.WantsSpeak") }
+  /// This is you
+  internal static var voiceChatStatusYou: String  { return L10n.tr("Localizable", "VoiceChat.Status.You") }
   /// Leave
   internal static var voiceChatTitleEnd: String  { return L10n.tr("Localizable", "VoiceChat.Title.End") }
   /// invited
