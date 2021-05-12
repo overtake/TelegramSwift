@@ -149,19 +149,21 @@ final class GroupCallTileView: View {
         for member in state.videoActive {
             let endpoints:[String] = [member.videoEndpoint, member.screencastEndpoint].compactMap { $0 }
             for endpointId in endpoints {
-                let dominant = state.currentDominantSpeakerWithVideo
-                if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
-                    let source: VideoSourceMacMode?
-                    if member.videoEndpoint == endpointId {
-                        source = .video
-                    } else if member.screencastEndpoint == endpointId {
-                        source = .screencast
-                    } else {
-                        source = nil
-                    }
-                    if let source = source {
-                        items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, index))
-                        index += 1
+                if state.activeVideoViews.contains(endpointId) {
+                    let dominant = state.currentDominantSpeakerWithVideo
+                    if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
+                        let source: VideoSourceMacMode?
+                        if member.videoEndpoint == endpointId {
+                            source = .video
+                        } else if member.screencastEndpoint == endpointId {
+                            source = .screencast
+                        } else {
+                            source = nil
+                        }
+                        if let source = source {
+                            items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, index))
+                            index += 1
+                        }
                     }
                 }
             }

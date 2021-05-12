@@ -81,13 +81,13 @@ final class GroupCallUIState : Equatable {
     let voiceSettings: VoiceCallSettings
     let isWindowVisible: Bool
     let currentDominantSpeakerWithVideo: DominantVideo?
-    let activeVideoSources: Set<String>
     let isFullScreen: Bool
     let mode: Mode
     let videoSources: VideoSources
     let layoutMode: LayoutMode
     let version: Int
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, activeVideoSources: Set<String>, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int) {
+    let activeVideoViews: Set<String>
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: Set<String>) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -98,12 +98,12 @@ final class GroupCallUIState : Equatable {
         self.voiceSettings = voiceSettings
         self.isWindowVisible = isWindowVisible
         self.currentDominantSpeakerWithVideo = currentDominantSpeakerWithVideo
-        self.activeVideoSources = activeVideoSources
         self.isFullScreen = isFullScreen
         self.mode = mode
         self.videoSources = videoSources
         self.layoutMode = layoutMode
         self.version = version
+        self.activeVideoViews = activeVideoViews
     }
     
     var hasVideo: Bool {
@@ -159,9 +159,6 @@ final class GroupCallUIState : Equatable {
         if lhs.currentDominantSpeakerWithVideo != rhs.currentDominantSpeakerWithVideo {
             return false
         }
-        if lhs.activeVideoSources != rhs.activeVideoSources {
-            return false
-        }
         if lhs.isFullScreen != rhs.isFullScreen {
             return false
         }
@@ -183,6 +180,9 @@ final class GroupCallUIState : Equatable {
         if lhs.version != rhs.version {
             return false
         }
+        if lhs.activeVideoViews != rhs.activeVideoViews {
+            return false
+        }
         return true
     }
     
@@ -191,17 +191,21 @@ final class GroupCallUIState : Equatable {
             if version == 0 {
                 return false
             }
-            if let _ = peer.videoEndpoint {
-                return true
+            if let endpoint = peer.videoEndpoint {
+                if activeVideoViews.contains(endpoint) {
+                    return true
+                }
             }
-            if let _ = peer.screencastEndpoint {
-                return true
+            if let endpoint = peer.screencastEndpoint {
+                if activeVideoViews.contains(endpoint) {
+                    return true
+                }
             }
             return false
         }
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, activeVideoSources: self.activeVideoSources, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version, activeVideoViews: self.activeVideoViews)
     }
 }

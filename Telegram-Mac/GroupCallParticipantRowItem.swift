@@ -146,6 +146,29 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return data.peer
     }
     
+    func takeCurrentVideo() -> NSView? {
+        if self.data.layoutMode == .tile {
+            if data.dominantSpeakerWithVideo == nil {
+                return nil
+            }
+        }
+        if let dominant = data.dominantSpeakerWithVideo {
+            if dominant.peerId == data.peer.id {
+                if let mode = data.pinnedMode?.viceVersa {
+                    if dominant.mode == mode {
+                        return nil
+                    }
+                } else {
+                    return nil
+                }
+            }
+        }
+        
+        let videoView = self.takeVideo(peer.id, data.pinnedMode?.viceVersa) as? GroupVideoView
+        videoView?.videoView.setVideoContentMode(.resizeAspectFill)
+
+        return videoView
+    }
     
     var supplementIcon: (CGImage, NSSize)? {
         
@@ -630,7 +653,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
 
         titleView.update(item.titleLayout)
         
-        let videoView = item.takeVideo(item.peer.id, item.data.pinnedMode?.viceVersa)
+        let videoView = item.takeCurrentVideo()
         
         
         if let videoView = videoView {
@@ -663,8 +686,10 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
             if let first = self.videoContainer {
                 self.videoContainer = nil
                 if animated {
-                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first] _ in
-                        first?.removeFromSuperview()
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first, weak self] _ in
+                        if first?.superview == self?.videoContainer {
+                            first?.removeFromSuperview()
+                        }
                     })
                     
                     let to = Float(first.frame.height / 2)
@@ -750,7 +775,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
 private final class HorizontalContainerView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
     
     private final class VideoContainer : View {
-        var view: NSView? {
+        weak var view: NSView? {
             didSet {
                 if let view = view {
                     addSubview(view)
@@ -918,7 +943,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             return
         }
         
-        let videoView = item.takeVideo(item.peer.id, item.data.pinnedMode?.viceVersa)
+        let videoView = item.takeCurrentVideo()
         
         if let videoView = videoView {
             let previous = self.videoContainer.view
@@ -933,8 +958,10 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             if let first = self.videoContainer.view {
                 self.videoContainer.view = nil
                 if animated {
-                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first] _ in
-                        first?.removeFromSuperview()
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first, weak self] _ in
+                        if first?.superview == self?.videoContainer {
+                            first?.removeFromSuperview()
+                        }
                     })
                 } else {
                     first.removeFromSuperview()

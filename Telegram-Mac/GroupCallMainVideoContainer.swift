@@ -123,7 +123,13 @@ final class GroupCallMainVideoContainerView: Control {
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
         if participant != self.participant, let participant = participant, let peer = peer {
             self.participant = participant
-            let nameLayout = TextViewLayout(.initialize(string: participant.peer.displayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short)), maximumNumberOfLines: 1)
+            let text: String
+            if participant.peer.id == participant.accountPeerId {
+                text = L10n.voiceChatStatusYou
+            } else {
+                text = participant.peer.displayTitle
+            }
+            let nameLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short)), maximumNumberOfLines: 1)
             nameLayout.measure(width: frame.width - 20)
             self.nameView.update(nameLayout)
                         
@@ -171,7 +177,7 @@ final class GroupCallMainVideoContainerView: Control {
         if let peer = peer, let arguments = arguments, let audioLevel = arguments.audioLevel(peer.peerId) {
             audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
                 if let value = value {
-                    self?.speakingView.animator().alphaValue = CGFloat(min(value, 6) / 6)
+                    self?.speakingView.layer?.opacity = Float(min(value, 6) / 6)
                 } else {
                     self?.speakingView.layer?.opacity = 0
                 }
@@ -182,34 +188,31 @@ final class GroupCallMainVideoContainerView: Control {
         
         self.currentPeer = peer
         if let peer = peer {
-            var videoMode: GroupCallVideoMode = .video
-            if peer.peerId == participant?.accountPeerId {
-                switch peer.mode {
-                case .video:
-                    videoMode = .video
-                case .screencast:
-                    videoMode = .screencast
-                }
-            }
+           
             
-            self.call.makeVideoView(endpointId: peer.endpointId, videoMode: videoMode, completion: { [weak self] videoView in
-                guard let strongSelf = self, let videoView = videoView else {
-                    return
-                }
-                
-                videoView.setVideoContentMode(strongSelf.currentResizeMode)
+            guard let videoView = arguments?.takeVideo(peer.peerId, peer.mode) as? GroupVideoView else {
+                return
+            }
+            videoView.videoView.setVideoContentMode(self.currentResizeMode)
 
-                
-                let videoViewValue = GroupVideoView(videoView: videoView)
-                if let currentVideoView = strongSelf.currentVideoView {
-                    currentVideoView.removeFromSuperview()
-                    strongSelf.currentVideoView = nil
-                }
-                videoViewValue.initialGravity = strongSelf.currentResizeMode
-                strongSelf.currentVideoView = videoViewValue
-                strongSelf.addSubview(videoViewValue, positioned: .below, relativeTo: strongSelf.shadowView)
-                strongSelf.updateLayout(size: strongSelf.frame.size, transition: transition)
-            })
+            if let currentVideoView = self.currentVideoView {
+                currentVideoView.removeFromSuperview()
+                self.currentVideoView = nil
+            }
+            videoView.initialGravity = self.currentResizeMode
+            self.currentVideoView = videoView
+            self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
+            self.updateLayout(size: self.frame.size, transition: transition)
+            
+
+            
+//            self.call.makeVideoView(endpointId: peer.endpointId, videoMode: videoMode, completion: { [weak self] videoView in
+//                guard let strongSelf = self, let videoView = videoView else {
+//                    return
+//                }
+//
+//
+//            })
         } else {
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()
