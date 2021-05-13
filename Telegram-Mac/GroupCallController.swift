@@ -744,16 +744,13 @@ final class GroupCallUIController : ViewController {
                 if strongSelf.currentDominantSpeakerWithVideo != current {
                     if current.peerId == strongSelf.data.call.joinAsPeerId {
                         strongSelf.currentDominantSpeakerWithVideo = current
-//                        strongSelf.data.call.setFullSizeVideo(endpointId: nil)
                     } else {
                         strongSelf.currentDominantSpeakerWithVideo = current
-//                        strongSelf.data.call.setFullSizeVideo(endpointId: current.endpointId)
                     }
                 }
             } else {
                 strongSelf.pinnedDominantSpeaker = nil
                 strongSelf.currentDominantSpeakerWithVideo = nil
-//                strongSelf.data.call.setFullSizeVideo(endpointId: nil)
             }
         }
         var futureWidth: CGFloat? = nil
@@ -869,11 +866,6 @@ final class GroupCallUIController : ViewController {
 //            }
 //            return false
         }, pinVideo: { [weak self] video in
-            if video.peerId == self?.data.call.joinAsPeerId {
-//                self?.data.call.setFullSizeVideo(endpointId: nil)
-            } else {
-//                self?.data.call.setFullSizeVideo(endpointId: video.endpointId)
-            }
             self?.pinnedDominantSpeaker = video
             self?.currentDominantSpeakerWithVideo = video
             self?.genericView.peersTable.scroll(to: .up(true))
@@ -966,30 +958,43 @@ final class GroupCallUIController : ViewController {
             guard let strongSelf = self, let window = window else {
                 return
             }
-            let isFullScreen = strongSelf.genericView.isFullScreen && strongSelf.genericView.state?.currentDominantSpeakerWithVideo != nil
-            var rect: CGRect
-            if isFullScreen {
-                rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
-            } else {
-                rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
-            }
-            rect.size.height = window.frame.height
-            strongSelf.genericView.tempFullScreen = !isFullScreen
-            futureWidth = rect.width
-            let state = strongSelf.genericView.state!.withUpdatedFullScreen(!isFullScreen)
             
-            strongSelf.genericView.peersTable.enumerateItems(with: { item in
-                _ = item.makeSize()
-                item.redraw(animated: true, options: .effectFade)
-                return true
-            })
-            strongSelf.genericView.peersTable.beginTableUpdates()
-            strongSelf.isFullScreen.set(!isFullScreen)
-            strongSelf.applyUpdates(state, .init(deleted: [], inserted: [], updated: [], animated: true), strongSelf.data.call, animated: true)
-            window.setFrame(rect, display: true, animate: true)
-            strongSelf.genericView.tempFullScreen = nil
-            futureWidth = nil
-            strongSelf.genericView.peersTable.endTableUpdates()
+            let invoke:()->Void = { [weak strongSelf, weak window] in
+                guard let strongSelf = strongSelf, let window = window else {
+                    return
+                }
+                let isFullScreen = strongSelf.genericView.isFullScreen
+                var rect: CGRect
+                if isFullScreen {
+                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
+                } else {
+                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
+                }
+                rect.size.height = window.frame.height
+                strongSelf.genericView.tempFullScreen = !isFullScreen
+                futureWidth = rect.width
+                let state = strongSelf.genericView.state!.withUpdatedFullScreen(!isFullScreen)
+                
+                strongSelf.genericView.peersTable.enumerateItems(with: { item in
+                    _ = item.makeSize()
+                    item.redraw(animated: true, options: .effectFade)
+                    return true
+                })
+                strongSelf.genericView.peersTable.beginTableUpdates()
+                strongSelf.isFullScreen.set(!isFullScreen)
+                strongSelf.applyUpdates(state, .init(deleted: [], inserted: [], updated: [], animated: true), strongSelf.data.call, animated: true)
+                window.setFrame(rect, display: true, animate: true)
+                strongSelf.genericView.tempFullScreen = nil
+                futureWidth = nil
+                strongSelf.genericView.peersTable.endTableUpdates()
+            }
+            if window.isFullScreen {
+                window.toggleFullScreen(nil)
+                window._windowDidExitFullScreen = invoke
+            } else {
+                invoke()
+            }
+            
         }, futureWidth: {
             return futureWidth
         }, switchCamera: { [weak self] peer in
@@ -1014,11 +1019,6 @@ final class GroupCallUIController : ViewController {
             }
             guard let _video = video else {
                 return
-            }
-            if _video.peerId == peer.accountPeerId {
-//                self?.data.call.setFullSizeVideo(endpointId: nil)
-            } else {
-//                self?.data.call.setFullSizeVideo(endpointId: _video.endpointId)
             }
             self?.pinnedDominantSpeaker = _video
             self?.currentDominantSpeakerWithVideo = _video
@@ -1064,9 +1064,6 @@ final class GroupCallUIController : ViewController {
         
         genericView.arguments = arguments
         let members = data.call.members
-        
-        
-        
         
         
         let videoData = combineLatest(queue: .mainQueue(), members, layoutMode.get(), currentDominantSpeakerWithVideoSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 })

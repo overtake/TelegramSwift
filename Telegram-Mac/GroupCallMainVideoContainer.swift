@@ -12,6 +12,87 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+private final class PinView : Control {
+    private let imageView:ImageView = ImageView()
+    private var textView: TextView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(0.9)
+        imageView.isEventLess = true
+        scaleOnClick = true
+        set(background: GroupCallTheme.windowBackground.withAlphaComponent(0.7), for: .Highlight)
+    }
+    
+    func update(_ isPinned: Bool, animated: Bool) {
+        if isPinned {
+            var isNew: Bool = false
+            let current: TextView
+            if let c = self.textView {
+                current = c
+            } else {
+                current = TextView()
+                self.textView = current
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                addSubview(current, positioned: .below, relativeTo: imageView)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                isNew = true
+            }
+            
+            let textLayout = TextViewLayout(.initialize(string: L10n.voiceChatVideoShortUnpin, color: GroupCallTheme.customTheme.textColor, font: .medium(.title)))
+            textLayout.measure(width: .greatestFiniteMagnitude)
+            current.update(textLayout)
+            
+            if isNew {
+                textView?.centerY(x: 10, addition: -1)
+            }
+        } else {
+            if let textView = textView {
+                self.textView = nil
+                if animated {
+                    textView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak textView] _ in
+                        textView?.removeFromSuperview()
+                    })
+                } else {
+                    textView.removeFromSuperview()
+                }
+            }
+        }
+        imageView.animates = true
+        imageView.image = !isPinned ? GroupCallTheme.pin_video :GroupCallTheme.unpin_video
+        imageView.sizeToFit()
+        layer?.cornerRadius = (imageView.frame.height + 10) / 2
+    }
+    
+    func size(_ isPinned: Bool) -> NSSize {
+        if let textView = textView {
+            return imageView.frame.size + NSMakeSize(textView.frame.width, 0) + NSMakeSize(20, 10)
+        } else {
+            return imageView.frame.size + NSMakeSize(10, 10)
+        }
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: frame.width - imageView.frame.width - 5))
+        if let textView = textView {
+            let textFrame = textView.centerFrameY(x: 10, addition: -1)
+            transition.updateFrame(view: textView, frame: textFrame)
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 
 struct DominantVideo : Equatable {
     let peerId: PeerId
@@ -33,26 +114,19 @@ final class GroupCallMainVideoContainerView: Control {
     private(set) var currentPeer: DominantVideo?
     
     let shadowView: ShadowView = ShadowView()
+    private let pinView: PinView = PinView(frame: .zero)
     
     private var validLayout: CGSize?
     
     private let nameView: TextView = TextView()
     private var statusView: TextView = TextView()
-    let gravityButton = ImageButton()
 
-    var currentResizeMode: CALayerContentsGravity = .resizeAspect {
-        didSet {
-            self.currentVideoView?.setVideoContentMode(currentResizeMode, animated: true)
-        }
-    }
-    
     private let speakingView: View = View()
-    
     private let audioLevelDisposable = MetaDisposable()
     
-    init(call: PresentationGroupCall, resizeMode: CALayerContentsGravity) {
+    private var arguments: GroupCallUIArguments?
+    init(call: PresentationGroupCall) {
         self.call = call
-        self.currentResizeMode = resizeMode
         super.init()
         
         
@@ -69,13 +143,10 @@ final class GroupCallMainVideoContainerView: Control {
         
         self.layer?.cornerRadius = 10
         
-        //addSubview(gravityButton)
-        
-        gravityButton.sizeToFit()
-        gravityButton.scaleOnClick = true
-        gravityButton.autohighlight = false
         addSubview(nameView)
         addSubview(statusView)
+        
+        
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         
@@ -83,6 +154,18 @@ final class GroupCallMainVideoContainerView: Control {
         statusView.isSelectable = false
         
         addSubview(speakingView)
+        
+        addSubview(pinView)
+        
+        pinView.set(handler: { [weak self] _ in
+            if let strongSelf = self, let dominant = strongSelf.currentPeer {
+                if !strongSelf.isPinned {
+                    self?.arguments?.pinVideo(dominant)
+                } else {
+                    self?.arguments?.unpinVideo(dominant.mode)
+                }
+            }
+        }, for: .Click)
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -99,26 +182,27 @@ final class GroupCallMainVideoContainerView: Control {
     
     func updateMode(controlsMode: GroupCallView.ControlsMode, controlsState: GroupCallControlsView.Mode, animated: Bool) {
         shadowView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
-        gravityButton.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
-
-        gravityButton.set(image:  controlsState == .fullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
-        gravityButton.sizeToFit()
+        pinView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
     }
     
     private var participant: PeerGroupCallData?
     
+    private var isPinned: Bool = false
     
-    
-    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, arguments: GroupCallUIArguments?) {
+    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, resizeMode: CALayerContentsGravity, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, isFullScreen: Bool, isPinned: Bool, arguments: GroupCallUIArguments?) {
         
+        self.isPinned = isPinned
+        self.arguments = arguments
+        
+        self.pinView.update(isPinned, animated: animated)
         
         transition.updateAlpha(view: speakingView, alpha: participant?.isSpeaking == true ? 1 : 0)
                 
+        transition.updateAlpha(view: pinView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
-        transition.updateAlpha(view: gravityButton, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
         if participant != self.participant, let participant = participant, let peer = peer {
@@ -129,7 +213,7 @@ final class GroupCallMainVideoContainerView: Control {
             } else {
                 text = participant.peer.displayTitle
             }
-            let nameLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short)), maximumNumberOfLines: 1)
+            let nameLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(1), font: .medium(.short)), maximumNumberOfLines: 1)
             nameLayout.measure(width: frame.width - 20)
             self.nameView.update(nameLayout)
                         
@@ -137,7 +221,7 @@ final class GroupCallMainVideoContainerView: Control {
             let status = participant.videoStatus(peer.mode)
             
             if self.statusView.layout?.attributedString.string != status {
-                let statusLayout = TextViewLayout(.initialize(string: status, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.short)), maximumNumberOfLines: 1)
+                let statusLayout = TextViewLayout(.initialize(string: status, color: NSColor.white.withAlphaComponent(0.7), font: .normal(.short)), maximumNumberOfLines: 1)
                 
                 statusLayout.measure(width: frame.width - nameView.frame.width - 30)
                 
@@ -164,15 +248,9 @@ final class GroupCallMainVideoContainerView: Control {
                     previous.removeFromSuperview()
                 }
             }
-            
                         
-            self.updateLayout(size: self.frame.size, transition: transition)
         }
 
-        
-        if self.currentPeer == peer {
-            return
-        }
         
         if let peer = peer, let arguments = arguments, let audioLevel = arguments.audioLevel(peer.peerId) {
             audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
@@ -189,36 +267,30 @@ final class GroupCallMainVideoContainerView: Control {
         self.currentPeer = peer
         if let peer = peer {
            
-            
             guard let videoView = arguments?.takeVideo(peer.peerId, peer.mode) as? GroupVideoView else {
                 return
             }
-            videoView.videoView.setVideoContentMode(self.currentResizeMode)
+            videoView.videoView.setVideoContentMode(resizeMode)
 
-            if let currentVideoView = self.currentVideoView {
-                currentVideoView.removeFromSuperview()
-                self.currentVideoView = nil
+            if self.currentVideoView != videoView || videoView.superview != self {
+                if let currentVideoView = self.currentVideoView {
+                    currentVideoView.removeFromSuperview()
+                    self.currentVideoView = nil
+                }
+                videoView.initialGravity = resizeMode
+                self.currentVideoView = videoView
+                self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
+                self.updateLayout(size: self.frame.size, transition: transition)
             }
-            videoView.initialGravity = self.currentResizeMode
-            self.currentVideoView = videoView
-            self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
-            self.updateLayout(size: self.frame.size, transition: transition)
             
-
-            
-//            self.call.makeVideoView(endpointId: peer.endpointId, videoMode: videoMode, completion: { [weak self] videoView in
-//                guard let strongSelf = self, let videoView = videoView else {
-//                    return
-//                }
-//
-//
-//            })
         } else {
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()
                 self.currentVideoView = nil
             }
         }
+        
+        self.updateLayout(size: self.frame.size, transition: transition)
     }
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
@@ -228,7 +300,6 @@ final class GroupCallMainVideoContainerView: Control {
             currentVideoView.updateLayout(size: size, transition: transition)
         }
         transition.updateFrame(view: shadowView, frame: CGRect(origin: NSMakePoint(0, size.height - 50), size: NSMakeSize(size.width, 50)))
-        transition.updateFrame(view: gravityButton, frame: CGRect(origin: NSMakePoint(size.width - 10 - gravityButton.frame.width, size.height - 10 - gravityButton.frame.height), size: gravityButton.frame.size))
         
         
         self.nameView.resize(size.width - 20)
@@ -238,8 +309,16 @@ final class GroupCallMainVideoContainerView: Control {
         transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
         transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(self.nameView.frame.maxX + 10, self.nameView.frame.minY), size: self.statusView.frame.size))
         
+        
 
         transition.updateFrame(view: speakingView, frame: bounds)
+        
+        
+        let pinnedSize = pinView.size(self.isPinned)
+        
+        let pinRect = CGRect(origin: CGPoint(x: frame.width - pinnedSize.width - 10, y: 10), size: pinnedSize)
+        transition.updateFrame(view: pinView, frame: pinRect)
+        pinView.updateLayout(size: pinRect.size, transition: transition)
     }
     
     deinit {
