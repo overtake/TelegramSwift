@@ -9395,6 +9395,10 @@ internal final class L10n {
   internal static var voiceChatTooltipSubscribe: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Subscribe") }
   /// An error occured. Video stream has stopped.
   internal static var voiceChatTooltipVideoFailed: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.VideoFailed") }
+  /// Pin
+  internal static var voiceChatVideoShortPin: String  { return L10n.tr("Localizable", "VoiceChat.Video.ShortPin") }
+  /// Unpin
+  internal static var voiceChatVideoShortUnpin: String  { return L10n.tr("Localizable", "VoiceChat.Video.ShortUnpin") }
   /// Video Source
   internal static var voiceChatVideoVideoSource: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource") }
   /// more

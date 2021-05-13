@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_pinvideo (2).png",
+      "filename" : "ic_pin.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_pinvideo@2x (2).png",
+      "filename" : "ic_pin@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

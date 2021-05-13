@@ -74,6 +74,7 @@ final class GroupCallTitleView : Control {
     fileprivate let titleView: TextView = TextView()
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     private var recordingView: GroupCallRecordingView?
+    let resize = ImageButton()
     private let backgroundView: View = View()
     enum Mode {
         case normal
@@ -88,6 +89,7 @@ final class GroupCallTitleView : Control {
         addSubview(backgroundView)
         backgroundView.addSubview(titleView)
         backgroundView.addSubview(statusView)
+        backgroundView.addSubview(resize)
         titleView.isSelectable = false
         titleView.userInteractionEnabled = false
         statusView.userInteractionEnabled = false
@@ -157,6 +159,7 @@ final class GroupCallTitleView : Control {
             transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(max(100, rect.minX), backgroundView.frame.midY - titleView.frame.height), size: titleView.frame.size))
         }
         
+        transition.updateFrame(view: resize, frame: resize.centerFrameY(x: frame.width - resize.frame.width - 10))
     }
     
     
@@ -168,7 +171,7 @@ final class GroupCallTitleView : Control {
     
     private var currentState: GroupCallUIState?
     private var currentPeer: Peer?
-    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, animated: Bool) {
+    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, animated: Bool) {
         
         let oldMode = self.mode
         let mode: Mode = .normal//state.isFullScreen && state.currentDominantSpeakerWithVideo != nil & ? .transparent : .normal
@@ -183,13 +186,33 @@ final class GroupCallTitleView : Control {
         let recordingUpdated = state.state.recordingStartTimestamp != currentState?.state.recordingStartTimestamp
         let participantsUpdated = state.summaryState?.participantCount != currentState?.summaryState?.participantCount || state.state.scheduleTimestamp != currentState?.state.scheduleTimestamp
         
-        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode
+       
+        
+        let hideResize = state.mode != .video || state.activeVideoViews.isEmpty
+        let oldHideResize = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true
+        
+        let isFullscreen = state.isFullScreen
+        let oldFullscreen = currentState?.isFullScreen == true
+        
+        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hideResize != oldHideResize || isFullscreen != oldFullscreen
                 
         guard updated else {
             self.currentState = state
             self.currentPeer = peer
             return
         }
+        
+        resize.isHidden = hideResize
+        resize.set(image: isFullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
+        resize.sizeToFit()
+        resize.autohighlight = false
+        resize.scaleOnClick = true
+        
+        resize.removeAllHandlers()
+        resize.set(handler: { _ in
+            resizeClick()
+        }, for: .Click)
+
         
         if titleUpdated {
             let layout = TextViewLayout(.initialize(string: title, color: GroupCallTheme.titleColor, font: .medium(.title)), maximumNumberOfLines: 1)
@@ -256,6 +279,7 @@ final class GroupCallTitleView : Control {
         if updated {
             needsLayout = true
         }
+        
     }
     
     required init?(coder: NSCoder) {

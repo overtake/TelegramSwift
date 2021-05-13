@@ -22,11 +22,11 @@ final class GroupCallView : View {
     }
     
     private var controlsMode: ControlsMode = .normal
-    private var resizeMode: CALayerContentsGravity = .resizeAspect {
-        didSet {
-            mainVideoView?.currentResizeMode = resizeMode
-        }
-    }
+//    private var resizeMode: CALayerContentsGravity = .resizeAspect {
+//        didSet {
+//            mainVideoView?.currentResizeMode = resizeMode
+//        }
+//    }
     private let titleHeaderCap = View()
     let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 340, 329))
     
@@ -165,8 +165,21 @@ final class GroupCallView : View {
         
         if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: true)
-            mainVideoView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: true)
-            tileView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: true)
+            
+            
+            var videosMode: ControlsMode
+            if !isFullScreen {
+                if NSPointInRect(location, frame) && mouseInside() {
+                    videosMode = .normal
+                } else {
+                    videosMode = .invisible
+                }
+            } else {
+                videosMode = mode
+            }
+            mainVideoView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
+            tileView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
+
         }
     }
     
@@ -331,6 +344,8 @@ final class GroupCallView : View {
             if let state = state {
                 self?.arguments?.recordClick(state.state)
             }
+        }, resizeClick: { [weak self] in
+            self?.arguments?.toggleScreenMode()
         }, animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
@@ -405,48 +420,39 @@ final class GroupCallView : View {
                 if let video = self.mainVideoView {
                     mainVideo = video
                 } else {
-                    mainVideo = GroupCallMainVideoContainerView(call: call, resizeMode: self.resizeMode)
+                    mainVideo = GroupCallMainVideoContainerView(call: call)
                     mainVideo.frame = mainVideoRect
                     
-                    mainVideo.set(handler: { [weak self] control in
-                        guard let `self` = self else {
-                            return
-                        }
-                        switch self.resizeMode {
-                        case .resizeAspect:
-                            self.resizeMode = .resizeAspectFill
-                        case .resizeAspectFill:
-                            self.resizeMode = .resizeAspect
-                        default:
-                            break
-                        }
-                    }, for: .DoubleClick)
+//                    mainVideo.set(handler: { [weak self] control in
+//                        guard let `self` = self else {
+//                            return
+//                        }
+//                        switch self.resizeMode {
+//                        case .resizeAspect:
+//                            self.resizeMode = .resizeAspectFill
+//                        case .resizeAspectFill:
+//                            self.resizeMode = .resizeAspect
+//                        default:
+//                            break
+//                        }
+//                    }, for: .DoubleClick)
                     
-                    mainVideo.gravityButton.set(handler: { [weak self] control in
-                        guard let `self` = self else {
-                            return
-                        }
-                        self.arguments?.toggleScreenMode()
-                    }, for: .Click)
+
                     
                     self.mainVideoView = mainVideo
                     addSubview(mainVideo, positioned: .below, relativeTo: titleView)
                     isPresented = true
                 }
-                mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId}), transition: .immediate, animated: animated, controlsMode: self.controlsMode, arguments: arguments)
+                
+                let member = state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId})
+                
+                mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: member, resizeMode: .resizeAspect, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: state.isFullScreen, isPinned: true, arguments: arguments)
                 
                 if isPresented && animated {
                     mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
-                     
                     mainVideo.updateLayout(size: mainVideoRect.size, transition: .immediate)
                     mainVideo.frame = mainVideoRect
-                    
                     mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
-                    
-//
-//                    peersTable.change(size: tableRect.size, animated: animated)
-//                    peersTableContainer.change(size: substrateRect().size, animated: animated)
-
                 }
             } else {
                 if let mainVideo = self.mainVideoView{
@@ -455,9 +461,6 @@ final class GroupCallView : View {
                         mainVideo.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak mainVideo] _ in
                             mainVideo?.removeFromSuperview()
                         })
-//                        peersTable.change(size: tableRect.size, animated: animated)
-//                        peersTableContainer.change(size: substrateRect().size, animated: animated)
-
                     } else {
                         mainVideo.removeFromSuperview()
                     }

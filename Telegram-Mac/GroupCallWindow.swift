@@ -112,9 +112,12 @@ struct GroupCallTheme {
     static let invite_link = NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
 
     
-    static let pinned_video = NSImage(named: "Icon_VoiceChat_PinnedVideo")!.precomposed(NSColor.white.withAlphaComponent(0.8))
     static let videoZoomOut = NSImage(named: "Icon_GroupCall_Video_ZoomOut")!.precomposed(NSColor.white.withAlphaComponent(0.8))
     static let videoZoomIn = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+
+    
+    static let pin_video = NSImage(named: "Icon_VoiceChat_PinVideo")!.precomposed(.white)
+    static let unpin_video = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(.white)
 
     
     static let smallTableWidth: CGFloat = 160
