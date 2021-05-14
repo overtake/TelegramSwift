@@ -218,7 +218,11 @@ final class GroupCallMainVideoContainerView: Control {
             self.nameView.update(nameLayout)
                         
             
-            let status = participant.videoStatus(peer.mode)
+            var status = participant.videoStatus(peer.mode)
+            
+            if frame.width - 20 - nameLayout.layoutSize.width - 20 < 100 {
+                status = ""
+            }
             
             if self.statusView.layout?.attributedString.string != status {
                 let statusLayout = TextViewLayout(.initialize(string: status, color: NSColor.white.withAlphaComponent(0.7), font: .normal(.short)), maximumNumberOfLines: 1)

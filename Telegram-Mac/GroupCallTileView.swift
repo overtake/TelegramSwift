@@ -166,7 +166,7 @@ final class GroupCallTileView: View {
             return
         }
         for member in state.videoActive {
-            let endpoints:[String] = [member.videoEndpoint, member.screencastEndpoint].compactMap { $0 }
+            let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
                 if state.activeVideoViews.contains(endpointId) {
                     let dominant = state.currentDominantSpeakerWithVideo
