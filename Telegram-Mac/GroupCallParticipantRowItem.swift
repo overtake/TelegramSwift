@@ -29,14 +29,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let drawLine: Bool
     fileprivate let invite:(PeerId)->Void
     fileprivate let canManageCall:Bool
-    fileprivate let takeVideo:(PeerId, VideoSourceMacMode?)->NSView?
+    fileprivate let takeVideo:(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?
     fileprivate let volume: TextViewLayout?
     fileprivate let audioLevel:(PeerId)->Signal<Float?, NoError>?
     fileprivate private(set) var buttonImage: (CGImage, CGImage?)? = nil
     
     var futureWidth:()->CGFloat?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, futureWidth:@escaping()->CGFloat?) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, futureWidth:@escaping()->CGFloat?) {
         self.data = data
         self.audioLevel = audioLevel
         self.account = account
@@ -164,7 +164,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             }
         }
         
-        let videoView = self.takeVideo(peer.id, data.pinnedMode?.viceVersa) as? GroupVideoView
+        let videoView = self.takeVideo(peer.id, data.pinnedMode?.viceVersa, .list) as? GroupVideoView
         videoView?.videoView.setVideoContentMode(.resizeAspectFill)
 
         return videoView

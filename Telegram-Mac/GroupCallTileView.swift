@@ -162,13 +162,17 @@ final class GroupCallTileView: View {
         var items:[TileEntry] = []
         var index: Int = 0
         
+        
         guard let window = self.window as? Window else {
             return
         }
-        for member in state.videoActive {
+        
+        let prevTiles = tileViews(self.items.count, window: window, frameSize: frame.size)
+
+        for member in state.videoActive(.main) {
             let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
-                if state.activeVideoViews.contains(endpointId) {
+                if state.activeVideoViews.contains(where: { $0.mode == .main && $0.endpointId == endpointId }) {
                     let dominant = state.currentDominantSpeakerWithVideo
                     if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
                         let source: VideoSourceMacMode?
@@ -195,8 +199,12 @@ final class GroupCallTileView: View {
             self.deleteItem(at: rdx, animated: animated)
             self.items.remove(at: rdx)
         }
-        for (idx, item, _) in indicesAndItems {
-            self.insertItem(item, at: idx, frame: tiles[idx].rect, animated: animated)
+        for (idx, item, pix) in indicesAndItems {
+            var prevFrame: NSRect? = nil
+            if let pix = pix {
+                prevFrame = prevTiles[pix].rect
+            }
+            self.insertItem(item, at: idx, prevFrame: prevFrame, frame: tiles[idx].rect, animated: animated)
             self.items.insert(item, at: idx)
         }
 
@@ -224,10 +232,10 @@ final class GroupCallTileView: View {
         }
         
     }
-    private func insertItem(_ item: TileEntry, at index: Int, frame: NSRect, animated: Bool) {
+    private func insertItem(_ item: TileEntry, at index: Int, prevFrame: NSRect?, frame: NSRect, animated: Bool) {
         
         let view = GroupCallMainVideoContainerView(call: self.call)
-        view.frame = frame
+        view.frame = prevFrame ?? frame
         if index == 0 {
             addSubview(view, positioned: .below, relativeTo: self.subviews.first)
         } else {
@@ -238,7 +246,7 @@ final class GroupCallTileView: View {
         
         self.views.insert(view, at: index)
         
-        if animated {
+        if animated && prevFrame == nil {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
          }
     }

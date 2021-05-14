@@ -195,7 +195,11 @@ final class GroupCallView : View {
 
         transition.updateFrame(view: peersTableContainer, frame: substrateRect())
         if hasVideo {
-            transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2))
+            if isFullScreen, state?.hideParticipants == true {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75))
+            } else {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2 + 5))
+            }
         } else {
             if isVideo {
                 transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 110))
@@ -232,7 +236,7 @@ final class GroupCallView : View {
         var size = peersTable.frame.size
         let width = min(frame.width - 40, 600)
         
-        if let state = state, !state.videoActive.isEmpty {
+        if let state = state, !state.videoActive(.main).isEmpty {
             if isFullScreen {
                 switch state.layoutMode {
                 case .classic:
@@ -241,7 +245,7 @@ final class GroupCallView : View {
                     size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 10)
                 }
             } else {
-                size = NSMakeSize(width, max(200, frame.height - 180 - 200))
+                size = NSMakeSize(width, frame.height - 180 - mainVideoRect.height)
             }
         } else {
             size = NSMakeSize(width, frame.height - 271)
@@ -249,7 +253,7 @@ final class GroupCallView : View {
         var rect = focus(size)
         rect.origin.y = 54
         
-        if let state = state, !state.videoActive.isEmpty {
+        if let state = state, !state.videoActive(.main).isEmpty {
             if !isFullScreen {
                 rect.origin.y = mainVideoRect.maxY + 10
             } else {
@@ -490,7 +494,7 @@ final class GroupCallView : View {
                 }
             }
             
-            if !state.videoActive.isEmpty {
+            if !state.videoActive(.main).isEmpty {
                 let current: GroupCallTileView
                 if let tileView = self.tileView {
                     current = tileView

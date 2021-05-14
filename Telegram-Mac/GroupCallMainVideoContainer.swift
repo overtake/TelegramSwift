@@ -110,6 +110,10 @@ struct DominantVideo : Equatable {
 final class GroupCallMainVideoContainerView: Control {
     private let call: PresentationGroupCall
     
+    private(set) var backstageView: GroupVideoView?
+    private let backstage: NSVisualEffectView = NSVisualEffectView(frame: .zero)
+
+    
     private(set) var currentVideoView: GroupVideoView?
     private(set) var currentPeer: DominantVideo?
     
@@ -125,6 +129,9 @@ final class GroupCallMainVideoContainerView: Control {
     private let audioLevelDisposable = MetaDisposable()
     
     private var arguments: GroupCallUIArguments?
+    
+    
+    
     init(call: PresentationGroupCall) {
         self.call = call
         super.init()
@@ -145,6 +152,11 @@ final class GroupCallMainVideoContainerView: Control {
         
         addSubview(nameView)
         addSubview(statusView)
+        
+        backstage.wantsLayer = true
+        backstage.material = .dark
+        backstage.blendingMode = .withinWindow
+        backstage.state = .active
         
         
         nameView.userInteractionEnabled = false
@@ -255,38 +267,42 @@ final class GroupCallMainVideoContainerView: Control {
                         
         }
 
-        
-        if let peer = peer, let arguments = arguments, let audioLevel = arguments.audioLevel(peer.peerId) {
-            audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
-                if let value = value {
-                    self?.speakingView.layer?.opacity = Float(min(value, 6) / 6)
-                } else {
-                    self?.speakingView.layer?.opacity = 0
-                }
-            }))
-        } else {
-            audioLevelDisposable.set(nil)
-        }
-        
         self.currentPeer = peer
         if let peer = peer {
            
-            guard let videoView = arguments?.takeVideo(peer.peerId, peer.mode) as? GroupVideoView else {
+            guard let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView else {
                 return
             }
+            
+            guard let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView else {
+                return
+            }
+            
+            
+            
+            
+
             videoView.videoView.setVideoContentMode(resizeMode)
 
             
             if self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {
                     currentVideoView.removeFromSuperview()
-                    self.currentVideoView = nil
                 }
                 videoView.initialGravity = resizeMode
                 self.currentVideoView = videoView
                 self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
             }
             
+            if self.backstageView != backstageView || backstageVideo.superview != self {
+                if let backstageVideo = self.backstageView {
+                    backstageVideo.removeFromSuperview()
+                }
+                backstageVideo.videoView.setVideoContentMode(.resizeAspectFill)
+                self.backstageView = backstageVideo
+                self.addSubview(backstageVideo, positioned: .below, relativeTo: self.currentVideoView)
+                self.addSubview(backstage, positioned: .above, relativeTo: backstageVideo)
+            }
         } else {
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()
@@ -298,11 +314,24 @@ final class GroupCallMainVideoContainerView: Control {
     }
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+        
+        guard let window = window else {
+            return
+        }
         self.validLayout = size
         if let currentVideoView = self.currentVideoView {
-            transition.updateFrame(view: currentVideoView, frame: bounds)
+            transition.updateFrame(view: currentVideoView, frame: size.bounds)
             currentVideoView.updateLayout(size: size, transition: transition)
         }
+        
+        if let backstageView = self.backstageView {
+            transition.updateFrame(view: backstageView, frame: size.bounds)
+            backstageView.updateLayout(size: size, transition: transition)
+        }
+        transition.updateFrame(view: backstage, frame: window.frame.size.bounds)
+        
+
+        
         transition.updateFrame(view: shadowView, frame: CGRect(origin: NSMakePoint(0, size.height - 50), size: NSMakeSize(size.width, 50)))
         
         
