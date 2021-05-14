@@ -45,6 +45,7 @@ final class GroupCallUIArguments {
     let toggleScreenMode:()->Void
     let futureWidth:()->CGFloat?
     let switchCamera:(PeerGroupCallData)->Void
+    let togglePeersHidden:()->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -72,7 +73,8 @@ final class GroupCallUIArguments {
     toggleReminder:@escaping(Bool)->Void,
     toggleScreenMode:@escaping()->Void,
     futureWidth:@escaping()->CGFloat?,
-    switchCamera:@escaping(PeerGroupCallData)->Void) {
+    switchCamera:@escaping(PeerGroupCallData)->Void,
+    togglePeersHidden: @escaping()->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -101,6 +103,7 @@ final class GroupCallUIArguments {
         self.toggleScreenMode = toggleScreenMode
         self.futureWidth = futureWidth
         self.switchCamera = switchCamera
+        self.togglePeersHidden = togglePeersHidden
     }
 }
 
@@ -989,7 +992,7 @@ final class GroupCallUIController : ViewController {
                 strongSelf.genericView.peersTable.beginTableUpdates()
                 strongSelf.isFullScreen.set(!isFullScreen)
                 strongSelf.applyUpdates(state, .init(deleted: [], inserted: [], updated: [], animated: true), strongSelf.data.call, animated: true)
-                window.setFrame(rect, display: true, animate: true)
+                window.setFrame(rect, display: false, animate: true)
                 strongSelf.genericView.tempFullScreen = nil
                 futureWidth = nil
                 strongSelf.genericView.peersTable.endTableUpdates()
@@ -1029,6 +1032,10 @@ final class GroupCallUIController : ViewController {
             self?.pinnedDominantSpeaker = _video
             self?.currentDominantSpeakerWithVideo = _video
             self?.genericView.peersTable.scroll(to: .up(true))
+        }, togglePeersHidden: {
+            updateHideParticipants {
+                !$0
+            }
         })
         
         self.data.call.mustStopVideo = { [weak arguments, weak window] in
@@ -1121,14 +1128,8 @@ final class GroupCallUIController : ViewController {
                             if let item = member.requestedVideoChannel(quality: .full) {
                                 items.append(item)
                             }
-                            if let item = member.requestedPresentationVideoChannel(quality: isFullScreen ? .medium : .thumbnail) {
-                                items.append(item)
-                            }
                         } else if dominant?.endpointId == member.presentationEndpointId {
-                            if let item = member.requestedVideoChannel(quality: .full) {
-                                items.append(item)
-                            }
-                            if let item = member.requestedVideoChannel(quality: isFullScreen ? .medium : .thumbnail) {
+                            if let item = member.requestedPresentationVideoChannel(quality: isFullScreen ? .medium : .thumbnail) {
                                 items.append(item)
                             }
                         }
@@ -1539,19 +1540,11 @@ final class GroupCallUIController : ViewController {
         
         window.set(handler: { [weak self] event in
             if let state = self?.genericView.state {
-                self?.pinnedDominantSpeaker = nil
-                self?.currentDominantSpeakerWithVideo = nil
                 layoutMode.set(state.layoutMode.viceVerse)
             }
             return .invokeNext
         }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] event in
-            updateHideParticipants { current in
-                return !current
-            }
-            return .invokeNext
-        }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
     }
     
     override func readyOnce() {

@@ -120,6 +120,9 @@ struct GroupCallTheme {
     static let unpin_video = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(.white)
 
     
+    static let unhide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(.white)
+    static let hide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
+
     static let smallTableWidth: CGFloat = 160
     static let fullScreenThreshold: CGFloat = 590
 

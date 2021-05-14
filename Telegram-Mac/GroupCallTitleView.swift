@@ -75,6 +75,7 @@ final class GroupCallTitleView : Control {
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     private var recordingView: GroupCallRecordingView?
     let resize = ImageButton()
+    let hidePeers = ImageButton()
     private let backgroundView: View = View()
     enum Mode {
         case normal
@@ -90,6 +91,7 @@ final class GroupCallTitleView : Control {
         backgroundView.addSubview(titleView)
         backgroundView.addSubview(statusView)
         backgroundView.addSubview(resize)
+        backgroundView.addSubview(hidePeers)
         titleView.isSelectable = false
         titleView.userInteractionEnabled = false
         statusView.userInteractionEnabled = false
@@ -160,6 +162,8 @@ final class GroupCallTitleView : Control {
         }
         
         transition.updateFrame(view: resize, frame: resize.centerFrameY(x: frame.width - resize.frame.width - 10))
+        
+        transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: frame.width - resize.frame.width - 10 - 10 - hidePeers.frame.width))
     }
     
     
@@ -171,7 +175,7 @@ final class GroupCallTitleView : Control {
     
     private var currentState: GroupCallUIState?
     private var currentPeer: Peer?
-    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, animated: Bool) {
+    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, hidePeersClick: @escaping()->Void, animated: Bool) {
         
         let oldMode = self.mode
         let mode: Mode = .normal//state.isFullScreen && state.currentDominantSpeakerWithVideo != nil & ? .transparent : .normal
@@ -194,7 +198,17 @@ final class GroupCallTitleView : Control {
         let isFullscreen = state.isFullScreen
         let oldFullscreen = currentState?.isFullScreen == true
         
-        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hideResize != oldHideResize || isFullscreen != oldFullscreen
+        let hidePeers = state.hideParticipants
+        let oldHidePeers = currentState?.hideParticipants == true
+        
+        
+        let hidePeersButtonHide = state.mode != .video || state.activeVideoViews.isEmpty || !state.isFullScreen
+        
+        let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false
+
+        
+        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hideResize != oldHideResize || isFullscreen != oldFullscreen || hidePeers != oldHidePeers || oldHidePeersButtonHide != hidePeersButtonHide
+                
                 
         guard updated else {
             self.currentState = state
@@ -211,6 +225,17 @@ final class GroupCallTitleView : Control {
         resize.removeAllHandlers()
         resize.set(handler: { _ in
             resizeClick()
+        }, for: .Click)
+        
+        self.hidePeers.isHidden = hidePeersButtonHide
+        self.hidePeers.set(image: hidePeers ?  GroupCallTheme.unhide_peers : GroupCallTheme.hide_peers, for: .Normal)
+        self.hidePeers.sizeToFit()
+        self.hidePeers.autohighlight = false
+        self.hidePeers.scaleOnClick = true
+        
+        self.hidePeers.removeAllHandlers()
+        self.hidePeers.set(handler: { _ in
+            hidePeersClick()
         }, for: .Click)
 
         
