@@ -35,10 +35,8 @@ You can also [download the beta version](https://telegram.org/dl/macos/beta) if 
 ### Contributors on GitHub
 See [this repository’s contributors graph](https://github.com/overtake/TelegramSwift/graphs/contributors).
 
-
 ### Bugs and Suggestions
 You can report bug or suggestions feature for Telegram for macOS on [Telegram’s Bugs & Suggestions platform](https://bugs.telegram.org). Read [the platform tip](https://bugs.telegram.org/c/746) before creating first card.
-
 
 ### Translations
 You can help translate Telegram for macOS on [Telegram’s translations platform](https://translations.telegram.org). Pick your language, then look for the macOS translation set.
@@ -74,4 +72,4 @@ You can fork this application and make something awesome! Make sure that your fo
 
 ## How to Build
 
-Instructions for building Telegram for macOS are in [wiki page](https://github.com/zweeltow/TelegramSwift/wiki/How-to-Build-Telegram-for-macOS).
+Instructions for building Telegram for macOS are in [INSTALL.md](INSTALL.md).
