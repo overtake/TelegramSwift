@@ -272,6 +272,7 @@ final class GroupCallMainVideoContainerView: Control {
             }
             videoView.videoView.setVideoContentMode(resizeMode)
 
+            
             if self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {
                     currentVideoView.removeFromSuperview()
@@ -280,7 +281,6 @@ final class GroupCallMainVideoContainerView: Control {
                 videoView.initialGravity = resizeMode
                 self.currentVideoView = videoView
                 self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
-                self.updateLayout(size: self.frame.size, transition: transition)
             }
             
         } else {

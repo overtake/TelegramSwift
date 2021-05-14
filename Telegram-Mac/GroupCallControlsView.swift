@@ -95,6 +95,7 @@ final class GroupCallControlsView : View {
     private func updateMode(_ mode: Mode, callMode: GroupCallUIState.Mode, hasVideo: Bool, hasScreencast: Bool, animated: Bool, force: Bool = false) {
         let previous = self.mode
         let previousCallMode = self.callMode
+        
         if previous != mode || hasVideo != self.hasVideo  || hasScreencast != self.hasScreencast || self.callMode != callMode || force {
             self.speakText?.change(opacity: mode == .fullscreen || callMode == .video ? 0 : 1, animated: animated)
             self.fullscreenBackgroundView._change(opacity: mode == .fullscreen ? 1 : 0, animated: animated)
@@ -159,18 +160,6 @@ final class GroupCallControlsView : View {
                 rightButton1.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamMore : nil, mode: .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             }
             
-            //TODOLANG
-//            end.appTooltip = "Leave Voice Chat"
-//            rightButton1?.appTooltip = "Open Settings"
-//            leftButton2?.appTooltip = hasScreencast ? "Stop Screencast" : "Start Screencast"
-//            switch callMode {
-//            case .voice:
-//                leftButton1.appTooltip = "Open Settings"
-//            case .video:
-//                leftButton1.appTooltip = hasVideo ? "Share Video" : "Stop Video"
-//            }
-
-            
             end.updateWithData(CallControlData(text: hasText ? L10n.voiceChatLeave : nil, mode: .normal(GroupCallTheme.declineColor, GroupCallTheme.declineIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             leftButton1.updateWithData(CallControlData(text: hasText ? leftButton1Text : nil, mode: leftBg, iconSize: NSMakeSize(48, 48)), animated: animated)
 
@@ -182,17 +171,14 @@ final class GroupCallControlsView : View {
                     from = 1.0
                     to = 0.5
                 case .voice:
-                    from = 0.5
-                    to = 1.0
+                    if mode == .fullscreen {
+                        from = 1.0
+                        to = 0.5
+                    } else {
+                        from = 0.5
+                        to = 1.0
+                    }
                 }
-//                switch mode {
-//                case .fullscreen:
-//                    from = 1.0
-//                    to = 0.5
-//                case .normal:
-//                    from = 0.5
-//                    to = 1.0
-//                }
                 if animated {
                     self.backgroundView.layer?.transform = CATransform3DIdentity
                     self.backgroundView.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false)

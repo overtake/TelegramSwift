@@ -27,7 +27,6 @@ final class GroupCallView : View {
 //            mainVideoView?.currentResizeMode = resizeMode
 //        }
 //    }
-    private let titleHeaderCap = View()
     let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 340, 329))
     
     let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 380, 54))
@@ -64,7 +63,6 @@ final class GroupCallView : View {
         addSubview(peersTableContainer)
         addSubview(peersTable)
         addSubview(titleView)
-        addSubview(titleHeaderCap)
         addSubview(controlsContainer)
                 
         peersTableContainer.layer?.cornerRadius = 10
@@ -103,7 +101,6 @@ final class GroupCallView : View {
         peersTableContainer.backgroundColor = GroupCallTheme.membersColor
         backgroundColor = GroupCallTheme.windowBackground
         titleView.backgroundColor = .clear
-        titleHeaderCap.backgroundColor = GroupCallTheme.windowBackground
     }
     
     func updateMouse(event: NSEvent, animated: Bool, isReal: Bool) {
@@ -221,7 +218,6 @@ final class GroupCallView : View {
             tileView.updateLayout(size: mainVideoRect.size, transition: transition)
         }
         
-        transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, hasVideo ? (tableRect.width + 20) : 0, 54))
         
         if let scheduleView = self.scheduleView {
             let rect = tableRect
@@ -300,7 +296,7 @@ final class GroupCallView : View {
                 tableWidth = (GroupCallTheme.tileTableWidth + 20)
             }
             
-            if state.hideParticipants, isFullScreen, state.layoutMode == .tile {
+            if state.hideParticipants, isFullScreen {
                 let width = frame.width - 20
                 let height = frame.height - 54 - 10
                 rect = CGRect(origin: .init(x: 10, y: 54), size: .init(width: width, height: height))
@@ -360,10 +356,12 @@ final class GroupCallView : View {
             }
         }, resizeClick: { [weak self] in
             self?.arguments?.toggleScreenMode()
-        }, animated: animated)
+        }, hidePeersClick: { [weak self] in
+            self?.arguments?.togglePeersHidden()
+        } , animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeInOut) : .immediate
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: tempFullScreen != nil ? .legacy : .easeInOut) : .immediate
         
         if let _ = state.state.scheduleTimestamp {
             let current: GroupCallScheduleView

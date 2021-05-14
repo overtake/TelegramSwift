@@ -11,6 +11,7 @@ import Cocoa
 public enum ContainedViewLayoutTransitionCurve {
     case easeInOut
     case spring
+    case legacy
 }
 
 public extension ContainedViewLayoutTransitionCurve {
@@ -20,6 +21,8 @@ public extension ContainedViewLayoutTransitionCurve {
             return CAMediaTimingFunctionName.easeInEaseOut
         case .spring:
             return CAMediaTimingFunctionName.spring
+        case .legacy:
+            return CAMediaTimingFunctionName.easeInEaseOut
         }
     }
     
@@ -39,13 +42,26 @@ public extension ContainedViewLayoutTransition {
                 completion(true)
             }
         case let .animated(duration, curve):
-            let previousFrame = view.frame
-            
-            view._change(size: frame.size, animated: true, duration: duration, timingFunction: .easeInEaseOut)
-            view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: .easeInEaseOut, completion: { completed in
-                completion?(true)
-            })
 
+            switch curve {
+            case .legacy:
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    ctx.duration = duration
+                    ctx.timingFunction = .init(name: curve.timingFunction)
+                    view.animator().frame = frame
+                }, completionHandler: {
+                    completion?(true)
+                })
+            default:
+                view._change(size: frame.size, animated: true, duration: duration, timingFunction: .easeInEaseOut)
+                view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: .easeInEaseOut, completion: { completed in
+                    completion?(true)
+                })
+            }
+            
+            
+           
+            view.animator().frame = frame
         }
     }
     
