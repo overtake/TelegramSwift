@@ -1145,10 +1145,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         if contextValue != nil {
             if viewer != nil {
                 viewer?.windowDidResignKey()
-            } else if let passport = passport {
-                passport.window.makeKeyAndOrderFront(nil)
-            } else if let groupCallWindow = sharedApplicationContextValue?.sharedContext.bindings.groupCall()?.window {
-                groupCallWindow.makeKeyAndOrderFront(nil)
             }
             self.activeValue.set(true)
             

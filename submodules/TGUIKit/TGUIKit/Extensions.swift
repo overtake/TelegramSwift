@@ -625,6 +625,13 @@ public extension NSView {
 
     
     func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
+        
+        
+        if position == frame.origin {
+            completion?(true)
+            return
+        }
+        
         if animated || (forceAnimateIfHasAnimation && self.layer?.animation(forKey:"position") != nil) {
             
             var presentX = NSMinX(self.frame)
@@ -659,6 +666,12 @@ public extension NSView {
     }
     
     func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
+        
+        if size == frame.size {
+            completion?(true)
+            return
+        }
+        
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()

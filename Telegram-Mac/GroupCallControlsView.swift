@@ -246,7 +246,7 @@ final class GroupCallControlsView : View {
 
         
 
-        let mode: Mode = callState.isFullScreen && !callState.videoActive.isEmpty ? .fullscreen : .normal
+        let mode: Mode = callState.isFullScreen && !callState.videoActive(.main).isEmpty ? .fullscreen : .normal
         
         let hidden: Bool = mode == .fullscreen || callState.mode == .video
 
