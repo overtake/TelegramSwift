@@ -218,6 +218,7 @@ final class GroupCallView : View {
         }
         if let tileView = tileView {
             transition.updateFrame(view: tileView, frame: mainVideoRect)
+            tileView.updateLayout(size: mainVideoRect.size, transition: transition)
         }
         
         transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, hasVideo ? (tableRect.width + 20) : 0, 54))
@@ -258,8 +259,13 @@ final class GroupCallView : View {
             } else {
                 rect.origin.x = 10
                 rect.origin.y = 54
+                
+                if state.hideParticipants {
+                    rect.origin.x = -(rect.width + 10)
+                }
             }
         }
+        
         return rect
     }
     
@@ -293,9 +299,17 @@ final class GroupCallView : View {
             case .tile:
                 tableWidth = (GroupCallTheme.tileTableWidth + 20)
             }
-            let width = frame.width - tableWidth - 10
-            let height = frame.height - 54 - 10
-            rect = CGRect(origin: .init(x: tableWidth, y: 54), size: .init(width: width, height: height))
+            
+            if state.hideParticipants, isFullScreen, state.layoutMode == .tile {
+                let width = frame.width - 20
+                let height = frame.height - 54 - 10
+                rect = CGRect(origin: .init(x: 10, y: 54), size: .init(width: width, height: height))
+            } else {
+                let width = frame.width - tableWidth - 10
+                let height = frame.height - 54 - 10
+                rect = CGRect(origin: .init(x: tableWidth, y: 54), size: .init(width: width, height: height))
+            }
+            
         } else {
             let width = min(frame.width - 40, 600)
             rect = focus(NSMakeSize(width, max(200, frame.height - 180 - 200)))

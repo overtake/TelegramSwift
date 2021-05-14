@@ -41,22 +41,11 @@ public extension ContainedViewLayoutTransition {
         case let .animated(duration, curve):
             let previousFrame = view.frame
             
-            NSAnimationContext.runAnimationGroup({ ctx in
-                ctx.duration = duration
-                ctx.timingFunction = .init(name: curve.timingFunction)
-                view.animator().frame = frame
-            }, completionHandler: {
+            view._change(size: frame.size, animated: true, duration: duration, timingFunction: .easeInEaseOut)
+            view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: .easeInEaseOut, completion: { completed in
                 completion?(true)
             })
-            view.animator().frame = frame
-            
-//
-//
-//            view.layer?.animateFrame(from: previousFrame, to: frame, duration: duration, timingFunction: curve.timingFunction, completion: { result in
-//                if let completion = completion {
-//                    completion(result)
-//                }
-//            })
+
         }
     }
     

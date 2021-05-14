@@ -289,7 +289,7 @@ private func _id_peer_id(_ id: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_peer_id_\(id.toInt64())")
 }
 
-private func makeState(peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: DominantVideo?, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, mode: GroupCallUIState.Mode, videoSources: GroupCallUIState.VideoSources, layoutMode: GroupCallUIState.LayoutMode, activeVideoViews:Set<String>, version: Int) -> GroupCallUIState {
+private func makeState(peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], currentDominantSpeakerWithVideo: DominantVideo?, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, mode: GroupCallUIState.Mode, videoSources: GroupCallUIState.VideoSources, layoutMode: GroupCallUIState.LayoutMode, activeVideoViews:Set<String>, hideParticipants: Bool, version: Int) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -369,7 +369,7 @@ private func makeState(peerView: PeerView, state: PresentationGroupCallState, is
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews, hideParticipants: hideParticipants)
 }
 
 
@@ -621,6 +621,12 @@ final class GroupCallUIController : ViewController {
         
         let layoutMode: ValuePromise<GroupCallUIState.LayoutMode> = ValuePromise(.tile, ignoreRepeated: true)
         
+        
+        let hideParticipantsValue:Atomic<Bool> = Atomic(value: false)
+        let hideParticipants:Promise<Bool> = Promise(false)
+        let updateHideParticipants:((Bool)->Bool)->Void = { f in
+            hideParticipants.set(.single(hideParticipantsValue.modify(f)))
+        }
         
         let activeVideoViewsValue:Atomic<Set<String>> = Atomic(value: Set())
         let activeVideoViews = ValuePromise(Set<String>(), ignoreRepeated: true)
@@ -1236,7 +1242,7 @@ final class GroupCallUIController : ViewController {
             }
         }
         
-        let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), activeVideoViews.get(), isFullScreen.get(), layoutMode.get(), self.data.call.stateVersion)
+        let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), activeVideoViews.get(), isFullScreen.get(), layoutMode.get(), self.data.call.stateVersion, hideParticipants.get())
 
 
         let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)), account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), mode, videoSources.get()) |> mapToQueue { values in
@@ -1258,6 +1264,7 @@ final class GroupCallUIController : ViewController {
                                      videoSources: values.10,
                                      layoutMode: values.7.7,
                                      activeVideoViews: values.7.5,
+                                     hideParticipants: values.7.9,
                                      version: values.7.8))
         } |> distinctUntilChanged
         
@@ -1538,6 +1545,13 @@ final class GroupCallUIController : ViewController {
             }
             return .invokeNext
         }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] event in
+            updateHideParticipants { current in
+                return !current
+            }
+            return .invokeNext
+        }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
     }
     
     override func readyOnce() {
