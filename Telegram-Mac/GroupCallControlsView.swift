@@ -171,25 +171,17 @@ final class GroupCallControlsView : View {
                     from = 1.0
                     to = 0.5
                 case .voice:
-                    if mode == .fullscreen {
-                        from = 1.0
-                        to = 0.5
-                    } else {
-                        from = 0.5
-                        to = 1.0
-                    }
+                    from = 0.5
+                    to = 1.0
                 }
+                let rect = self.backgroundView.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+                fr = CATransform3DScale(fr, to, to, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                self.backgroundView.layer?.transform = fr
                 if animated {
-                    self.backgroundView.layer?.transform = CATransform3DIdentity
                     self.backgroundView.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false)
-                } else {
-                    let rect = self.backgroundView.bounds
-                    var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
-                    fr = CATransform3DScale(fr, to, to, 1)
-                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                    self.backgroundView.layer?.transform = fr
-                    self.backgroundView.layer?.removeAnimation(forKey: "transform")
                 }
             }
         }

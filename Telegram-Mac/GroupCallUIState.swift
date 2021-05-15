@@ -103,7 +103,8 @@ final class GroupCallUIState : Equatable {
     let version: Int
     let activeVideoViews: Set<ActiveVideo>
     let hideParticipants: Bool
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: Set<ActiveVideo>, hideParticipants: Bool) {
+    let isVideoEnabled: Bool
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: Set<ActiveVideo>, hideParticipants: Bool, isVideoEnabled: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -121,6 +122,7 @@ final class GroupCallUIState : Equatable {
         self.version = version
         self.activeVideoViews = activeVideoViews
         self.hideParticipants = hideParticipants
+        self.isVideoEnabled = isVideoEnabled
     }
     
     var hasVideo: Bool {
@@ -203,6 +205,9 @@ final class GroupCallUIState : Equatable {
         if lhs.hideParticipants != rhs.hideParticipants {
             return false
         }
+        if lhs.isVideoEnabled != rhs.isVideoEnabled {
+            return false
+        }
         return true
     }
     
@@ -226,6 +231,6 @@ final class GroupCallUIState : Equatable {
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, currentDominantSpeakerWithVideo: self.currentDominantSpeakerWithVideo, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled)
     }
 }
