@@ -267,9 +267,6 @@ public class LinearProgressControl: Control {
             progressView.layer?.animateBounds(from: CGRect(origin: .zero, size: size), to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
         }
         
-        progressView.setFrameSize(size)
-
-        
         progressView.change(size: size, animated: animated, duration: duration, timingFunction: timingFunction)
         if let scrubber = scrubber {
             scrubber.change(pos: NSMakePoint(max(0, min(containerView.frame.minX + size.width - scrubber.frame.width / 2, containerView.frame.maxX - scrubber.frame.width)), scrubber.frame.minY), animated: animated, timingFunction: timingFunction)

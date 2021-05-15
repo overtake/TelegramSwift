@@ -178,6 +178,10 @@ final class GroupCallMainVideoContainerView: Control {
                 }
             }
         }, for: .Click)
+        
+        self.set(handler: { [weak self] _ in
+            self?.pinView.send(event: .Click)
+        }, for: .DoubleClick)
     }
     
     override var mouseDownCanMoveWindow: Bool {

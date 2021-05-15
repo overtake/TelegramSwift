@@ -112,18 +112,10 @@ final class GroupCallView : View {
         var mode: ControlsMode
         let videoView = self.mainVideoView ?? self.tileView
         if let videoView = videoView {
-            if isReal {
-                if NSPointInRect(location, videoView.frame) && mouseInside() {
-                    mode = .normal
-                } else {
-                    mode = .invisible
-                }
+            if NSPointInRect(location, videoView.frame) && mouseInside() {
+                mode = .normal
             } else {
-                if !isFullScreen {
-                    mode = .normal
-                } else {
-                    mode = self.controlsMode
-                }
+                mode = .invisible
             }
         } else {
             mode = .normal
@@ -289,7 +281,7 @@ final class GroupCallView : View {
         return false
     }
     
-    private var mainVideoRect: NSRect {
+    var mainVideoRect: NSRect {
         var rect: CGRect
         if isFullScreen, let state = state {
             let tableWidth: CGFloat
@@ -365,7 +357,7 @@ final class GroupCallView : View {
         } , animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: tempFullScreen != nil ? .legacy : .easeInOut) : .immediate
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeInOut) : .immediate
         
         if let _ = state.state.scheduleTimestamp {
             let current: GroupCallScheduleView

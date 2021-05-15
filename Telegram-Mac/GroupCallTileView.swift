@@ -9,17 +9,26 @@
 import Foundation
 import TGUIKit
 
-private struct Tile {
+struct VoiceChatTile {
     let rect: NSRect
     let index: Int
+    
+    var bestQuality: PresentationGroupCallRequestedVideo.Quality {
+        if rect.width > 480 || rect.height > 480 {
+            return .full
+        } else if rect.width > 160 || rect.height > 160 {
+            return .medium
+        } else {
+            return .thumbnail
+        }
+    }
 }
 
 
-private func tileViews(_ count: Int, window: Window, frameSize: NSSize) -> [Tile] {
+func tileViews(_ count: Int, windowSize: NSSize, frameSize: NSSize) -> [VoiceChatTile] {
     
-    var tiles:[Tile] = []
-    
-    let minSize: NSSize = NSMakeSize(160, 100)
+    var tiles:[VoiceChatTile] = []
+//    let minSize: NSSize = NSMakeSize(160, 100)
     
     func optimalCellSize(_ size: NSSize, count: Int) -> (size: NSSize, rows: Int, cols: Int) {
         var size: NSSize = frameSize
@@ -30,7 +39,7 @@ private func tileViews(_ count: Int, window: Window, frameSize: NSSize) -> [Tile
             } else if count == 1 {
                 return (size: size, rows: 1, cols: 1)
             } else if count == 2 {
-                if window.frame.width < GroupCallTheme.fullScreenThreshold {
+                if windowSize.width < GroupCallTheme.fullScreenThreshold {
                     return (size: NSMakeSize(frameSize.width / 2, frameSize.height), rows: 2, cols: 1)
                 } else {
                     return (size: NSMakeSize(frameSize.width, frameSize.height / 2), rows: 1, cols: 2)
@@ -167,7 +176,7 @@ final class GroupCallTileView: View {
             return
         }
         
-        let prevTiles = tileViews(self.items.count, window: window, frameSize: frame.size)
+        let prevTiles = tileViews(self.items.count, windowSize: window.frame.size, frameSize: frame.size)
 
         for member in state.videoActive(.main) {
             let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
@@ -193,7 +202,7 @@ final class GroupCallTileView: View {
         }
         
         
-        let tiles = tileViews(items.count, window: window, frameSize: frame.size)
+        let tiles = tileViews(items.count, windowSize: window.frame.size, frameSize: frame.size)
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
         for rdx in deleteIndices.reversed() {
             self.deleteItem(at: rdx, animated: animated)
@@ -266,7 +275,7 @@ final class GroupCallTileView: View {
             return
         }
         
-        let tiles = tileViews(items.count, window: window, frameSize: size)
+        let tiles = tileViews(items.count, windowSize: window.frame.size, frameSize: size)
         for tile in tiles {
             transition.updateFrame(view: views[tile.index], frame: tile.rect)
             views[tile.index].updateLayout(size: tile.rect.size, transition: transition)
