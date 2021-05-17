@@ -28,16 +28,6 @@ final class GroupVideoView: View {
         self.videoViewContainer.addSubview(self.videoView.view)
         self.addSubview(self.videoViewContainer)
         
-        videoView.setOnFirstFrameReceived({ [weak self] _ in
-            Queue.mainQueue().async {
-                guard let strongSelf = self else {
-                    return
-                }
-                if let size = strongSelf.validLayout {
-                    strongSelf.updateLayout(size: size, transition: .immediate)
-                }
-            }
-        })
         
         videoView.setOnOrientationUpdated({ [weak self] _, _ in
             Queue.mainQueue().async {
@@ -61,19 +51,7 @@ final class GroupVideoView: View {
     
     func setVideoContentMode(_ contentMode: CALayerContentsGravity, animated: Bool) {
 
-        if let gravity = initialGravity {
-            switch gravity {
-            case .resizeAspectFill:
-                self.videoView.setVideoContentMode(.resizeAspect)
-                self.validLayout = nil
-                let transition: ContainedViewLayoutTransition = .immediate
-                self.gravity = .resizeAspectFill
-                self.updateLayout(size: frame.size, transition: transition)
-                self.initialGravity = nil
-            default:
-                break
-            }
-        }
+
         self.gravity = contentMode
         self.validLayout = nil
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate

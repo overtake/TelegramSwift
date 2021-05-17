@@ -286,17 +286,19 @@ final class GroupCallMainVideoContainerView: Control {
             
             
 
-            videoView.videoView.setVideoContentMode(resizeMode)
+//            videoView.videoView.setVideoContentMode(resizeMode)
 
             
             if self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {
                     currentVideoView.removeFromSuperview()
                 }
-                videoView.initialGravity = resizeMode
                 self.currentVideoView = videoView
                 self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
             }
+            
+            self.currentVideoView?.gravity = resizeMode
+
             
             if self.backstageView != backstageView || backstageVideo.superview != self {
                 if let backstageVideo = self.backstageView {

@@ -268,7 +268,11 @@ final class GroupCallView : View {
         if prevFullScreen != self.isFullScreen, let state = self.state {
             updateUIAfterFullScreenUpdated(state, reloadTable: false)
         }
-        updateLayout(size: newSize, transition: .immediate)
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
     }
     
     var isFullScreen: Bool {
@@ -431,21 +435,6 @@ final class GroupCallView : View {
                     mainVideo = GroupCallMainVideoContainerView(call: call)
                     mainVideo.frame = mainVideoRect
                     
-//                    mainVideo.set(handler: { [weak self] control in
-//                        guard let `self` = self else {
-//                            return
-//                        }
-//                        switch self.resizeMode {
-//                        case .resizeAspect:
-//                            self.resizeMode = .resizeAspectFill
-//                        case .resizeAspectFill:
-//                            self.resizeMode = .resizeAspect
-//                        default:
-//                            break
-//                        }
-//                    }, for: .DoubleClick)
-                    
-
                     
                     self.mainVideoView = mainVideo
                     addSubview(mainVideo, positioned: .below, relativeTo: titleView)
