@@ -780,6 +780,8 @@ final class GroupCallUIController : ViewController {
                             }, cancelHandler: {
                                 f(false)
                             })
+                        } else {
+                            f(true)
                         }
                     case .video:
                         f(true)
