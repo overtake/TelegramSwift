@@ -165,7 +165,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
         let videoView = self.takeVideo(peer.id, data.pinnedMode?.viceVersa, .list) as? GroupVideoView
-        videoView?.videoView.setVideoContentMode(.resizeAspectFill)
 
         return videoView
     }

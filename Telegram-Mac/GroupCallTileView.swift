@@ -104,6 +104,7 @@ final class GroupCallTileView: View {
         static func < (lhs: TileEntry, rhs: TileEntry) -> Bool {
             return lhs.index < rhs.index
         }
+        
         case video(DominantVideo, PeerGroupCallData, Bool, Bool, CALayerContentsGravity, Int)
         var index: Int {
             switch self {
@@ -169,8 +170,6 @@ final class GroupCallTileView: View {
         self.controlsMode = controlsMode
         
         var items:[TileEntry] = []
-        var index: Int = 0
-        
         
         guard let window = self.window as? Window else {
             return
@@ -178,6 +177,16 @@ final class GroupCallTileView: View {
         
         let prevTiles = tileViews(self.items.count, windowSize: window.frame.size, frameSize: frame.size)
 
+        var stableIndexes:[String: Int] = [:]
+        var index = 0
+        for member in state.videoActive(.main) {
+            let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
+            for endpoint in endpoints {
+                stableIndexes[endpoint] = index
+                index += 1
+            }
+        }
+        
         for member in state.videoActive(.main) {
             let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
@@ -193,8 +202,7 @@ final class GroupCallTileView: View {
                             source = nil
                         }
                         if let source = source {
-                            items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, index))
-                            index += 1
+                            items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, stableIndexes[endpointId] ?? 0))
                         }
                     }
                 }
@@ -251,7 +259,7 @@ final class GroupCallTileView: View {
             addSubview(view, positioned: .above, relativeTo: self.subviews[index - 1])
         }
         
-        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: arguments)
+        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
         
         self.views.insert(view, at: index)
         
@@ -260,7 +268,7 @@ final class GroupCallTileView: View {
          }
     }
     private func updateItem(_ item: TileEntry, at index: Int, animated: Bool) {
-        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: arguments)
+        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
     }
     
     
