@@ -33,7 +33,7 @@ class ChatContactRowItem: ChatRowItem {
             self.appearance = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, object.renderType == .bubble), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
 
             
-            if let vCard = contact.vCardData?.data(using: .utf8) {
+            if let _ = contact.vCardData?.data(using: .utf8) {
                 //let contacts = try? CNContactVCardSerialization.contacts(with: vCard)
                 self.vCard = nil
             } else {

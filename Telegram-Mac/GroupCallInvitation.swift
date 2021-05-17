@@ -68,12 +68,13 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
         }
     }
     
-    override func start(account: Account, search: Signal<SearchState, NoError>, linkInvation: ((Int) -> Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int) -> Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
         
         let peerMemberContextsManager = data.peerMemberContextsManager
         let account = data.call.account
         let peerId = data.call.peerId
+        let engine = data.call.engine
         let customTheme = self.customTheme
         let cachedContacts = self.cachedContacts
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
@@ -115,7 +116,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             if search.request.isEmpty {
                 globalSearch = .single([])
             } else if let peer = peer, peer.groupAccess.canAddMembers {
-                globalSearch = searchPeers(account: account, query: search.request) |> map {
+                globalSearch = engine.peers.searchPeers(query: search.request.lowercased()) |> map {
                     return $0.0.map {
                         $0.peer
                     } + $0.1.map {
@@ -289,10 +290,11 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
         }
     }
     
-    override func start(account: Account, search: Signal<SearchState, NoError>, linkInvation: ((Int) -> Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int) -> Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
         let account = data.call.account
         let peerId = data.call.peerId
+        let engine = data.call.engine
         let customTheme = self.customTheme
         let cachedContacts = self.cachedContacts
         let members = data.call.members |> filter { $0 != nil } |> map { $0! }
@@ -334,7 +336,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
             if search.request.isEmpty {
                 globalSearch = .single([])
             } else {
-                globalSearch = searchPeers(account: account, query: search.request) |> map {
+                globalSearch = engine.peers.searchPeers(query: search.request.lowercased()) |> map {
                     return $0.0.map {
                         $0.peer
                     } + $0.1.map {
@@ -458,7 +460,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
 
     let peer = data.call.peer
     let links = data.call.inviteLinks
-    return selectModalPeers(window: window, account: data.call.account, title: title, settings: [], excludePeerIds: [], limit: behaviour is GroupCallAddMembersBehaviour ? 1 : 100, behavior: behaviour, confirmation: { [weak behaviour, weak window, weak data] peerIds in
+    return selectModalPeers(window: window, context: data.call.accountContext, title: title, settings: [], excludePeerIds: [], limit: behaviour is GroupCallAddMembersBehaviour ? 1 : 100, behavior: behaviour, confirmation: { [weak behaviour, weak window, weak data] peerIds in
         
 
         if let behaviour = behaviour as? GroupCallAddMembersBehaviour {

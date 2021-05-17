@@ -65,7 +65,7 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
         }
     }
     
-    func recentOnline(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, updated: @escaping (Int32) -> Void) -> Disposable {
+    func recentOnline(engine: TelegramEngine, accountPeerId: PeerId, peerId: PeerId, updated: @escaping (Int32) -> Void) -> Disposable {
         let context: PeerChannelMembersOnlineContext
         if let current = self.onlineContexts[peerId] {
             context = current
@@ -75,7 +75,7 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
             self.onlineContexts[peerId] = context
             
             let signal = (
-                chatOnlineMembers(postbox: postbox, network: network, peerId: peerId)
+                engine.peers.chatOnlineMembers(peerId: peerId)
                     |> then(
                         .complete()
                             |> delay(30.0, queue: .mainQueue())
@@ -212,7 +212,7 @@ final class PeerChannelMemberCategoriesContextsManager {
         return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
     }
     
-    func recentOnline(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId) -> Signal<Int32, NoError> {
+    func recentOnline(engine: TelegramEngine, accountPeerId: PeerId, peerId: PeerId) -> Signal<Int32, NoError> {
         return Signal { [weak self] subscriber in
             guard let strongSelf = self else {
                 subscriber.putNext(0)
@@ -220,7 +220,7 @@ final class PeerChannelMemberCategoriesContextsManager {
                 return EmptyDisposable
             }
             let disposable = strongSelf.impl.syncWith({ impl -> Disposable in
-                return impl.recentOnline(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, updated: { value in
+                return impl.recentOnline(engine: engine, accountPeerId: accountPeerId, peerId: peerId, updated: { value in
                     subscriber.putNext(value)
                 })
             })

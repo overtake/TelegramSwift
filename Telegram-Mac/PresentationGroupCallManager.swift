@@ -5,6 +5,68 @@ import SyncCore
 import SwiftSignalKit
 
 
+struct PresentationGroupCallRequestedVideo {
+    enum Quality {
+        case thumbnail
+        case medium
+        case full
+    }
+
+    var audioSsrc: UInt32
+    var endpointId: String
+    var videoInformation: String
+    var quality: Quality
+}
+extension GroupCallParticipantsContext.Participant {
+    var videoEndpointId: String? {
+        if let jsonParams = self.videoJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
+            if let endpoint = json["endpoint"] as? String {
+                return endpoint
+            }
+        }
+        return nil
+    }
+
+    var presentationEndpointId: String? {
+        if let jsonParams = self.presentationJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
+            if let endpoint = json["endpoint"] as? String {
+                return endpoint
+            }
+        }
+        return nil
+    }
+}
+
+extension GroupCallParticipantsContext.Participant {
+    func requestedVideoChannel(quality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
+        guard let audioSsrc = self.ssrc else {
+            return nil
+        }
+        guard let videoInformation = self.videoJsonDescription else {
+            return nil
+        }
+        guard let videoEndpointId = self.videoEndpointId else {
+            return nil
+        }
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: videoEndpointId, videoInformation: videoInformation, quality: quality)
+    }
+
+    func requestedPresentationVideoChannel(quality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
+        guard let audioSsrc = self.ssrc else {
+            return nil
+        }
+        guard let videoInformation = self.presentationJsonDescription else {
+            return nil
+        }
+        guard let presentationEndpointId = self.presentationEndpointId else {
+            return nil
+        }
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: presentationEndpointId, videoInformation: videoInformation, quality: quality)
+    }
+}
+
+
+
 final class PresentationCallVideoView {
     public enum Orientation {
         case rotation0
@@ -183,10 +245,18 @@ struct PresentationGroupCallMembers: Equatable {
 }
 
 
-
+enum GroupCallVideoMode {
+    case video
+    case screencast
+}
 
 protocol PresentationGroupCall: class {
+    
+
+    
     var account: Account { get }
+    var engine: TelegramEngine { get }
+    var accountContext: AccountContext { get }
     var sharedContext: SharedAccountContext { get }
     var internalId: CallSessionInternalId { get }
     var peerId: PeerId { get }
@@ -201,8 +271,13 @@ protocol PresentationGroupCall: class {
     var invitedPeers: Signal<[PeerId], NoError> { get }
     var isMuted: Signal<Bool, NoError> { get }
     var summaryState: Signal<PresentationGroupCallSummaryState?, NoError> { get }
-    
-    var outgoingVideoSource: Signal<[PeerId: UInt32], NoError> { get }
+    var callInfo: Signal<GroupCallInfo?, NoError> { get }
+    var stateVersion: Signal<Int, NoError> { get }
+
+
+    var mustStopSharing:(()->Void)? { get set }
+    var mustStopVideo:(()->Void)? { get set }
+
 //    var activeCall: CachedChannelData.ActiveCall? { get }
     var inviteLinks:Signal<GroupCallInviteLinks?, NoError> { get }
 
@@ -222,12 +297,13 @@ protocol PresentationGroupCall: class {
     func invitePeer(_ peerId: PeerId) -> Bool
     func updateDefaultParticipantsAreMuted(isMuted: Bool)
     
-    func setFullSizeVideo(ssrc: UInt32?)
-    func makeVideoView(source: UInt32, completion: @escaping (PresentationCallVideoView?) -> Void)
-    var incomingVideoSources: Signal<[PeerId: UInt32], NoError> { get }
-    
+    func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo])
+    func makeVideoView(endpointId: String, videoMode: GroupCallVideoMode, completion: @escaping (PresentationCallVideoView?) -> Void)
     func requestVideo(deviceId: String)
     func disableVideo()
+    func requestScreencast(deviceId: String)
+    func disableScreencast()
+
     func loadMore()
 
     func joinAsSpeakerIfNeeded(_ joinHash: String)

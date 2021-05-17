@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_unmutedbig.png",
+      "filename" : "ic_unpin.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_unmutedbig@2x.png",
+      "filename" : "ic_unpin@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

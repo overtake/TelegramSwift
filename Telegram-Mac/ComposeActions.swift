@@ -16,10 +16,10 @@ import TGUIKit
 
 func createGroup(with context: AccountContext) {
     
-    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), account: context.account, settings: [.contacts, .remote], isNewGroup: true) }
+    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true) }
     let chooseName = { CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context) }
     let signal = execute(context: context, select, chooseName) |> mapError { _ in return CreateGroupError.generic } |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), CreateGroupError> in
-        let signal = showModalProgress(signal: createGroup(account: context.account, title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
+        let signal = showModalProgress(signal: context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
         return signal
     } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), CreateGroupError> in
             if let peerId = peerId, let picture = picture {

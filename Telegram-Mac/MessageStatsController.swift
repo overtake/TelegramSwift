@@ -182,13 +182,13 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
         context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
     }
     
-    let searchSignal = searchMessages(account: context.account, location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)
+    let searchSignal = context.engine.messages.searchMessages(location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)
         |> map(Optional.init)
         |> afterNext { result in
             if let result = result {
                 for message in result.0.messages {
                     if let peer = message.peers[message.id.peerId], let peerReference = PeerReference(peer) {
-                        let _ = updatedRemotePeer(postbox: context.account.postbox, network: context.account.network, peer: peerReference).start()
+                        let _ = context.engine.peers.updatedRemotePeer(peer: peerReference).start()
                     }
                 }
             }

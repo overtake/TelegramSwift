@@ -135,7 +135,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
     
     let disposable = MetaDisposable()
     
-    disposable.set((inactiveChannelList(network: context.account.network) |> delay(0.5, queue: .mainQueue())).start(next: { channels in
+    disposable.set((context.engine.peers.inactiveChannelList() |> delay(0.5, queue: .mainQueue())).start(next: { channels in
         updateState {
             $0.withUpdatedChannels(channels)
         }

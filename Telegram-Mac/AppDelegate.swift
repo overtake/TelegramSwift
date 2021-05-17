@@ -390,7 +390,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             }
         }, completed: {
             
-            
             let passcodeSemaphore = DispatchSemaphore(value: 0)
             
             _ = accountManager.transaction { modifier -> Void in
@@ -625,6 +624,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 if let contextValue = self.contextValue {
                     contextValue.context.sharedContext.bindings.rootNavigation().controller.updateController()
                 }
+            }, applyMaxReadIndexInteractively: { index in
+                if let context = self.contextValue?.context {
+                    _ = context.engine.messages.applyMaxReadIndexInteractively(index: index).start()
+                }
+
             })
             
             let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, appEncryption: appEncryption, accountManager: accountManager, window: window, bindings: notificationsBindings)
@@ -1097,10 +1101,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if viewer != nil {
             viewer?.windowDidResignKey()
-        } else if let passport = passport {
-            passport.window.makeKeyAndOrderFront(nil)
-        } else if !makeKeyAndOrderFrontCallWindow() {
-            window.makeKeyAndOrderFront(nil)
         }
         
         return true
@@ -1145,10 +1145,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         if contextValue != nil {
             if viewer != nil {
                 viewer?.windowDidResignKey()
-            } else if let passport = passport {
-                passport.window.makeKeyAndOrderFront(nil)
-            } else if let groupCallWindow = sharedApplicationContextValue?.sharedContext.bindings.groupCall()?.window {
-                groupCallWindow.makeKeyAndOrderFront(nil)
             }
             self.activeValue.set(true)
             

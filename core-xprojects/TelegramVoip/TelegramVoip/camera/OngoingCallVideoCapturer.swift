@@ -110,6 +110,12 @@ public final class OngoingCallVideoCapturer {
     public func setIsVideoEnabled(_ value: Bool) {
         self.impl.setIsVideoEnabled(value)
     }
+    
+    public func setOnFatalError(_ onError: @escaping()->Void) {
+        self.impl.setOnFatalError({
+            DispatchQueue.main.async(execute: onError)
+        })
+    }
 
     public func switchVideoInput(_ deviceId: String) {
         self.impl.switchVideoInput(deviceId)

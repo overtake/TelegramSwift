@@ -216,7 +216,7 @@ class Sender: NSObject {
             if FastSettings.isChannelMessagesMuted(peerId) || silent {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
             }
-            if !subState.inputText.isEmpty {
+            if !subState.inputText.isEmpty || mediaReference != nil {
                 return .message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
             } else {
                 return nil

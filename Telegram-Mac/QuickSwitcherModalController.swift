@@ -293,7 +293,9 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                     return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 }
                 
-                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then( searchPeers(account: context.account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
+                
+                
+                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then(context.engine.peers.searchPeers(query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
                 
                 return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values -> ([Peer], Bool) in
                     var peers = values.0

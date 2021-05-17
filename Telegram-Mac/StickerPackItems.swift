@@ -48,8 +48,8 @@ class StickerPackRowItem: TableRowItem {
         
         switch _stableId {
         case let .pack(id):
-            items.append(ContextMenuItem.init(L10n.stickersContextArchive, handler: {
-                _ = removeStickerPackInteractively(postbox: context.account.postbox, id: id, option: RemoveStickerPackOption.archive).start()
+            items.append(ContextMenuItem(L10n.stickersContextArchive, handler: {
+                _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: RemoveStickerPackOption.archive).start()
             }))
             
             

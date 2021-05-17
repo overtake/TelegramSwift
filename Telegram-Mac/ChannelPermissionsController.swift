@@ -518,7 +518,7 @@ final class ChannelPermissionsController : TableViewController {
                     
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
                         stopMerging = true
-                        signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                        signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                             |> map(Optional.init)
                             |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                 guard let upgradedPeerId = upgradedPeerId else {
@@ -650,7 +650,7 @@ final class ChannelPermissionsController : TableViewController {
         }, addPeer: {
             let behavior = peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1)
             
-            _ = (selectModalPeers(window: context.window, account: context.account, title: L10n.channelBlacklistSelectNewUserTitle, limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(window: context.window, context: context, title: L10n.channelBlacklistSelectNewUserTitle, limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {
@@ -717,7 +717,7 @@ final class ChannelPermissionsController : TableViewController {
             
             if peerId.namespace == Namespaces.Peer.CloudGroup {
                 stopMerging = true
-                signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                     |> map(Optional.init)
                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                         guard let upgradedPeerId = upgradedPeerId else {

@@ -898,6 +898,7 @@ class GalleryViewer: NSResponder {
                 if canDelete {
                     let thrid:String? = (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : nil)
                     
+                    
                     if let thrid = thrid {
                         modernConfirm(for: self.window, account: self.context.account, peerId: nil, header: L10n.chatConfirmDeleteMessages1Countable(messages.count), information: nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak self] result in
                             guard let `self` = self else {return}
@@ -909,11 +910,10 @@ class GalleryViewer: NSResponder {
                             case .thrid:
                                 type = .forEveryone
                             }
-                            
-                            _ = deleteMessagesInteractively(account: self.context.account, messageIds: messageIds, type: type).start()
+                            _ = self.context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: type).start()
                         })
                     } else {
-                        _ = deleteMessagesInteractively(account: self.context.account, messageIds: messageIds, type: .forLocalPeer).start()
+                        _ = self.context.engine.messages.deleteMessagesInteractively(messageIds: messageIds, type: .forLocalPeer).start()
                     }
                 }
             }))

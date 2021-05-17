@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_userstatus_muted.png",
+      "filename" : "ic_voicevolumeoff.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_userstatus_muted@2x.png",
+      "filename" : "ic_voicevolumeoff@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

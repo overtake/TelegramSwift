@@ -10,11 +10,29 @@ import Cocoa
 import TGUIKit
 
 struct CallControlData {
+    enum Mode: Equatable {
+        case normal(NSColor, CGImage)
+        case visualEffect(CGImage)
+        case animated(LocalAnimatedSticker, NSColor)
+    }
+    
     let text: String?
-    let isVisualEffect: Bool
-    let icon: CGImage
+    let mode: Mode
     let iconSize: NSSize
-    let backgroundColor: NSColor
+    
+    func isProperView(_ view: NSView?) -> Bool {
+        if view == nil {
+            return false
+        }
+        switch mode {
+        case .visualEffect:
+            return view is NSVisualEffectView
+        case .animated:
+            return view is LottiePlayerView
+        case .normal:
+            return !(view is LottiePlayerView) && !(view is NSVisualEffectView)
+        }
+    }
 }
 
 final class CallControl : Control {
@@ -129,8 +147,9 @@ final class CallControl : Control {
             }
         }
         
-        if data.isVisualEffect {
-            if !(self.imageBackgroundView is NSVisualEffectView) || self.imageBackgroundView == nil {
+        switch data.mode {
+        case let .visualEffect(icon):
+            if !data.isProperView(self.imageBackgroundView) {
                 self.imageBackgroundView?.removeFromSuperview()
                 self.imageBackgroundView = NSVisualEffectView(frame: NSMakeRect(0, 0, data.iconSize.width, data.iconSize.height))
                 self.imageBackgroundView?.wantsLayer = true
@@ -141,24 +160,53 @@ final class CallControl : Control {
             view.material = .light
             view.state = .active
             view.blendingMode = .withinWindow
-        } else {
-            if self.imageBackgroundView is NSVisualEffectView || self.imageBackgroundView == nil {
+            
+            imageView.isHidden = false
+            imageView.animates = animated
+            imageView.image = icon
+            imageView.setFrameSize(data.iconSize)
+            
+        case let .normal(color, icon):
+            if !data.isProperView(self.imageBackgroundView) {
                 self.imageBackgroundView?.removeFromSuperview()
                 self.imageBackgroundView = NSView(frame: NSMakeRect(0, 0, data.iconSize.width, data.iconSize.height))
                 self.imageBackgroundView?.wantsLayer = true
                 self.addSubview(self.imageBackgroundView!)
             }
-            self.imageBackgroundView?.background = data.backgroundColor
+            imageView.isHidden = false
+            imageView.animates = animated
+            imageView.image = icon
+            imageView.setFrameSize(data.iconSize)
+            
+            self.imageBackgroundView?.background = color
+        case let .animated(value, color):
+            if !data.isProperView(self.imageBackgroundView) {
+                self.imageBackgroundView?.removeFromSuperview()
+                self.imageBackgroundView = LottiePlayerView(frame: NSMakeRect(0, 0, data.iconSize.width, data.iconSize.height))
+                self.imageBackgroundView?.wantsLayer = true
+                self.addSubview(self.imageBackgroundView!)
+            }
+            imageView.isHidden = true
+            let player = self.imageBackgroundView as? LottiePlayerView
+            if let animationData = value.data {
+                let policy: LottiePlayPolicy
+                if animated {
+                    policy = .toEnd(from: 1)
+                } else {
+                    policy = .toEnd(from: .max)
+                }
+                player?.set(LottieAnimation(compressed: animationData, key: .init(key: .bundle(value.rawValue), size: data.iconSize), type: .lottie, cachePurpose: .none, playPolicy: policy, runOnQueue: .mainQueue()))
+            }
+            self.imageBackgroundView?.background = color
         }
+        
+
         imageView.removeFromSuperview()
         self.imageBackgroundView?.addSubview(imageView)
         
         imageBackgroundView!._change(size: data.iconSize, animated: animated)
         imageBackgroundView!.layer?.cornerRadius = data.iconSize.height / 2
         
-        imageView.animates = animated
-        imageView.image = data.icon
-        imageView.setFrameSize(data.iconSize)
         
         if let textView = self.textView {
             change(size: NSMakeSize(max(data.iconSize.width, textView.frame.width), data.iconSize.height + 5 + textView.frame.height), animated: animated)

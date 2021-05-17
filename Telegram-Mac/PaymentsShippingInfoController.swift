@@ -267,7 +267,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
         let formInfo = state.formInfo
         
         return .fail(.doSomething(next: { f in
-            _ = showModalProgress(signal: validateBotPaymentForm(account: context.account, saveInfo: state.saveInfo, messageId: messageId, formInfo: formInfo), for: context.window).start(next: { result in
+            _ = showModalProgress(signal: context.engine.payments.validateBotPaymentForm(saveInfo: state.saveInfo, messageId: messageId, formInfo: formInfo), for: context.window).start(next: { result in
                 
                 formInfoUpdated(formInfo, result)
                 close?()

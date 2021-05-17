@@ -11,7 +11,7 @@ import SwiftSignalKit
 import Postbox
 import SyncCore
 import TelegramCore
-
+import TGUIKit
 final class SoundEffectPlay {
     private static var queue: [Int64: MediaPlayer] = [:]
     static func play(postbox: Postbox, name: String?) {

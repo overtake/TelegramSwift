@@ -11,6 +11,7 @@ import Cocoa
 public enum ContainedViewLayoutTransitionCurve {
     case easeInOut
     case spring
+    case legacy
 }
 
 public extension ContainedViewLayoutTransitionCurve {
@@ -20,6 +21,8 @@ public extension ContainedViewLayoutTransitionCurve {
             return CAMediaTimingFunctionName.easeInEaseOut
         case .spring:
             return CAMediaTimingFunctionName.spring
+        case .legacy:
+            return CAMediaTimingFunctionName.easeInEaseOut
         }
     }
     
@@ -39,24 +42,26 @@ public extension ContainedViewLayoutTransition {
                 completion(true)
             }
         case let .animated(duration, curve):
-            let previousFrame = view.frame
+
+            switch curve {
+            case .legacy:
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    ctx.duration = duration
+                    ctx.timingFunction = .init(name: curve.timingFunction)
+                    view.animator().frame = frame
+                }, completionHandler: {
+                    completion?(true)
+                })
+            default:
+                view._change(size: frame.size, animated: true, duration: duration, timingFunction: .easeInEaseOut)
+                view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: .easeInEaseOut, completion: { completed in
+                    completion?(true)
+                })
+            }
             
-            NSAnimationContext.runAnimationGroup({ ctx in
-                ctx.duration = duration
-                ctx.timingFunction = .init(name: curve.timingFunction)
-                view.animator().frame = frame
-            }, completionHandler: {
-                completion?(true)
-            })
+            
+           
             view.animator().frame = frame
-            
-//
-//
-//            view.layer?.animateFrame(from: previousFrame, to: frame, duration: duration, timingFunction: curve.timingFunction, completion: { result in
-//                if let completion = completion {
-//                    completion(result)
-//                }
-//            })
         }
     }
     
@@ -96,7 +101,7 @@ public extension ContainedViewLayoutTransition {
 
     
 
-    func updateAlpha(view: View, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
+    func updateAlpha(view: NSView, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
         switch self {
         case .immediate:
             view.alphaValue = alpha
@@ -104,9 +109,9 @@ public extension ContainedViewLayoutTransition {
                 completion(true)
             }
         case let .animated(duration, curve):
-            let previousAlpha = view.alphaValue
-            view.alphaValue = alpha
-            view.layer?.animateAlpha(from: previousAlpha, to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
+            let previousAlpha = view.layer?.opacity ?? 1
+            view.layer?.opacity = Float(alpha)
+            view.layer?.animateAlpha(from: CGFloat(previousAlpha), to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
                 if let completion = completion {
                     completion(result)
                 }

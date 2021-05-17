@@ -88,7 +88,7 @@ class LocalizationPreviewModalController: ModalViewController {
     
     private func applyLocalization() {
         close()
-        _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: info.languageCode), for: mainWindow).start()
+        _ = showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: info.languageCode), for: context.window).start()
     }
     
     override var modalInteractions: ModalInteractions? {

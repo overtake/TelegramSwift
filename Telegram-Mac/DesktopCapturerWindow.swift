@@ -113,18 +113,16 @@ private final class DesktopCapturerView : View {
 
     }
     
-    private var previousDesktop: (DesktopCaptureSourceScope, DesktopCaptureSourceManager)?
+    private var previousDesktop: (DesktopCaptureSourceScopeMac, DesktopCaptureSourceManagerMac)?
     
-    func updatePreview(_ source: DesktopCaptureSource, isAvailable: Bool, manager: DesktopCaptureSourceManager, animated: Bool) {
+    func updatePreview(_ source: DesktopCaptureSourceMac, isAvailable: Bool, manager: DesktopCaptureSourceManagerMac, animated: Bool) {
         if let previous = previousDesktop {
             previous.1.stop(previous.0)
         }
         if isAvailable {
             let size = NSMakeSize(previewContainer.frame.width * 2.5, previewContainer.frame.size.height * 2.5)
-
-            let scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: size, fps: 24, captureMouse: true))
-
-            let view = manager.create(for: scope)
+            let scope = DesktopCaptureSourceScopeMac(source: source, data: DesktopCaptureSourceDataMac(size: size, fps: 24, captureMouse: true))
+            let view = manager.create(forScope: scope)
             manager.start(scope)
             self.previousDesktop = (scope, manager)
             swapView(view, animated: animated)
@@ -225,10 +223,11 @@ private final class DesktopCapturerView : View {
 final class DesktopCapturerWindow : Window {
     
     private let listController: DesktopCapturerListController
-    init(select: @escaping(VideoSource)->Void, devices: DevicesContext) {
-        
+    let mode: VideoSourceMacMode
+    init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) {
+        self.mode = mode
         let size = NSMakeSize(700, 600)
-        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90), devices: devices)
+        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90), devices: devices, mode: mode)
         
         var rect: NSRect = .init(origin: .zero, size: size)
         if let screen = NSScreen.main {
@@ -252,7 +251,7 @@ final class DesktopCapturerWindow : Window {
         
         var first: Bool = true
         listController.updateDesktopSelected = { [weak self] wrap, manager in
-            self?.genericView.updatePreview(wrap.source as! DesktopCaptureSource, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
+            self?.genericView.updatePreview(wrap.source as! DesktopCaptureSourceMac, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
             first = false
         }
         
@@ -272,7 +271,9 @@ final class DesktopCapturerWindow : Window {
         self.genericView.share.set(handler: { [weak self] _ in
             self?.orderOut(nil)
             if let source = self?.listController.selected {
-                select(source)
+                delay(1.0, closure: {
+                    select(source)
+                })
             }
         }, for: .Click)
         
@@ -301,9 +302,43 @@ final class DesktopCapturerWindow : Window {
     }
 }
 
+enum VideoSourceMacMode {
+    case video
+    case screencast
+    
+    var viceVersa: VideoSourceMacMode {
+        switch self {
+        case .video:
+            return .screencast
+        case .screencast:
+            return .video
+        }
+    }
+}
+extension VideoSourceMac {
+    
+    var mode: VideoSourceMacMode {
+        if self is DesktopCaptureSourceMac {
+            return .screencast
+        } else {
+            return .video
+        }
+    }
+}
 
-func presentDesktopCapturerWindow(select: @escaping(VideoSource)->Void, devices: DevicesContext) -> DesktopCapturerWindow {
-    let window = DesktopCapturerWindow(select: select, devices: devices)
+func presentDesktopCapturerWindow(mode: VideoSourceMacMode,select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) -> DesktopCapturerWindow? {
+    
+    switch mode {
+    case .video:
+        let devices = AVCaptureDevice.devices(for: .video).filter({ $0.isConnected && !$0.isSuspended })
+        if devices.isEmpty {
+            return nil
+        }
+    case .screencast:
+        break
+    }
+    
+    let window = DesktopCapturerWindow(mode: mode, select: select, devices: devices)
     window.makeKeyAndOrderFront(nil)
     
     return window

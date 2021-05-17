@@ -455,7 +455,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let cachedData = peerView.cachedData as? CachedChannelData {
             let onlineMemberCount:Signal<Int32?, NoError>
             if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(engine: context.engine, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
             } else {
                 onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
             }

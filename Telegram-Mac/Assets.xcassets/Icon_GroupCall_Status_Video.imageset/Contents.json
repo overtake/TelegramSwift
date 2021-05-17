@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_userstatus_video.png",
+      "filename" : "ic_voicecamera.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_userstatus_video@2x.png",
+      "filename" : "ic_voicecamera@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

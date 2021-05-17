@@ -13,8 +13,6 @@ import SyncCore
 import Postbox
 import TelegramCore
 
-private let photoSize: NSSize = NSMakeSize(35, 35)
-
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let verifyIcon = NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
@@ -23,7 +21,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let data: PeerGroupCallData
     private let _contextMenu: ()->Signal<[ContextMenuItem], NoError>
     
-    fileprivate let titleLayout: TextViewLayout
+    fileprivate private(set) var titleLayout: TextViewLayout!
     fileprivate let statusLayout: TextViewLayout
     fileprivate let account: Account
     fileprivate let isLastItem: Bool
@@ -31,12 +29,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let drawLine: Bool
     fileprivate let invite:(PeerId)->Void
     fileprivate let canManageCall:Bool
-    fileprivate let takeVideo:()->NSView?
+    fileprivate let takeVideo:(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?
     fileprivate let volume: TextViewLayout?
     fileprivate let audioLevel:(PeerId)->Signal<Float?, NoError>?
     fileprivate private(set) var buttonImage: (CGImage, CGImage?)? = nil
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping()->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?) {
+    var futureWidth:()->CGFloat?
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, futureWidth:@escaping()->CGFloat?) {
         self.data = data
         self.audioLevel = audioLevel
         self.account = account
@@ -46,47 +46,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self.isInvited = isInvited
         self.drawLine = drawLine
         self.takeVideo = takeVideo
-        
-        let isVertical = initialSize.width > (fullScreenThreshold - 40) && data.videoMode
-        
-        if isVertical {
-            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .normal(.text)), maximumNumberOfLines: 1)
-        } else {
-            self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
-        }
+        self.futureWidth = futureWidth
+                
         self.isLastItem = isLastItem
-        var string:String = L10n.peerStatusRecently
-        var color:NSColor = GroupCallTheme.grayStatusColor
-        if let state = data.state {
-            if data.wantsToSpeak, let _ = state.muteState {
-                string = L10n.voiceChatStatusWantsSpeak
-                color = GroupCallTheme.blueStatusColor
-            } else if let muteState = state.muteState, muteState.mutedByYou {
-                string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
-                color = GroupCallTheme.speakLockedColor
-            } else if data.isSpeaking {
-                string = L10n.voiceChatStatusSpeaking
-                color = GroupCallTheme.greenStatusColor
-            } else {
-                if let about = data.about {
-                    string = about
-                    color = GroupCallTheme.grayStatusColor
-                } else {
-                    string = L10n.voiceChatStatusListening
-                    color = GroupCallTheme.grayStatusColor
-                }
-            }
-        } else if data.peer.id == data.accountPeerId {
-            if let about = data.about {
-                string = about
-                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
-            } else {
-                string = L10n.voiceChatStatusConnecting.lowercased()
-                color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
-            }
-        } else if isInvited {
-            string = L10n.voiceChatStatusInvited
-        }
+        let (string, color) = data.status
+        
         if let volume = data.unsyncVolume ?? data.state?.volume, volume != 10000 {
             if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
                 self.volume = nil
@@ -104,8 +68,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
 
-        
-        
         self.statusLayout = TextViewLayout(.initialize(string: string, color: color, font: .normal(.short)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 0, stableId: stableId, type: .none, viewType: viewType, action: action, inset: .init(), enabled: true)
         
@@ -143,7 +105,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return isVertical ? 80 : 48
+        return isVertical ? 100 : 48
     }
     
     override var inset: NSEdgeInsets {
@@ -157,15 +119,18 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var width: CGFloat {
+        if let futureWidth = futureWidth() {
+            return futureWidth - 40
+        }
         if let superview = table?.superview {
-            return superview.frame.width
+            return superview.frame.width - 40
         } else {
             return super.width
         }
     }
     
     var isVertical: Bool {
-        return data.videoMode && (width == 80 || width > fullScreenThreshold)
+        return data.isVertical && (width == GroupCallTheme.smallTableWidth || width >= GroupCallTheme.fullScreenThreshold - 40)
     }
     
     
@@ -181,6 +146,28 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return data.peer
     }
     
+    func takeCurrentVideo() -> NSView? {
+        if self.data.layoutMode == .tile {
+            if data.dominantSpeakerWithVideo == nil {
+                return nil
+            }
+        }
+        if let dominant = data.dominantSpeakerWithVideo {
+            if dominant.peerId == data.peer.id {
+                if let mode = data.pinnedMode?.viceVersa {
+                    if dominant.mode == mode {
+                        return nil
+                    }
+                } else {
+                    return nil
+                }
+            }
+        }
+        
+        let videoView = self.takeVideo(peer.id, data.pinnedMode?.viceVersa, .list) as? GroupVideoView
+
+        return videoView
+    }
     
     var supplementIcon: (CGImage, NSSize)? {
         
@@ -205,28 +192,40 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return false
     }
     override var instantlyResize: Bool {
-        return false
+        return true
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
+                
+        let width = self.width
         
         self.volume?.measure(width: .greatestFiniteMagnitude)
-        let inset: CGFloat
+        var inset: CGFloat = 0
         if let volume = self.volume {
-            inset = volume.layoutSize.width + 28
+            inset = volume.layoutSize.width + 25
         } else {
-            inset = 0
+            for image in statusImage {
+                inset += image.backingSize.width + 3
+            }
         }
+
         
         
         if isVertical {
-            titleLayout.measure(width: 80 - 10 - 16 - 10)
+            self.titleLayout = TextViewLayout(.initialize(string: data.peer.compactDisplayTitle, color: NSColor.white.withAlphaComponent(0.8), font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
-            titleLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
+            self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
         
-        statusLayout.measure(width: width - 40 - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
+        if isVertical {
+            titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
+        } else {
+            let width = data.videoMode ? GroupCallTheme.tileTableWidth - 25 : width - 40
+            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
+            statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
+        }
+        
         return true
     }
     
@@ -235,58 +234,80 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override func viewClass() -> AnyClass {
-        if isVertical {
-            return GroupCallParticipantVerticalRowView.self
-        }
         return GroupCallParticipantRowView.self
     }
     
-    var statusImage: CGImage? {
-        assertOnMainThread()
-        let videoView = self.takeVideo()
-        if videoView != nil || volume != nil, let state = data.state {
-            var statusImage: CGImage
-            if videoView != nil {
-                if let muteState = state.muteState, muteState.mutedByYou {
-                    statusImage = GroupCallTheme.status_video_red
-                } else {
-                    if data.isSpeaking {
-                        statusImage = GroupCallTheme.status_video_green
-                    } else if data.wantsToSpeak {
-                        statusImage = GroupCallTheme.status_video_accent
+    var statusImage: [CGImage] {
+        let hasVideo = data.hasVideo
+        
+        var images:[CGImage] = []
+        
+        if hasVideo || volume != nil, let state = data.state {
+            if hasVideo {
+                if let _ = data.videoEndpoint {
+                    if let muteState = state.muteState, muteState.mutedByYou {
+                        images.append(GroupCallTheme.status_video_red)
                     } else {
-                        statusImage = GroupCallTheme.status_video_gray
+                        if data.isSpeaking {
+                            images.append(GroupCallTheme.status_video_green)
+                        } else if data.wantsToSpeak {
+                            images.append(GroupCallTheme.status_video_accent)
+                        } else {
+                            images.append(GroupCallTheme.status_video_gray)
+                        }
+                    }
+                }
+                if let _ = data.screencastEndpoint {
+                    if let muteState = state.muteState, muteState.mutedByYou {
+                        images.append(GroupCallTheme.status_screencast_red)
+                    } else {
+                        if data.isSpeaking {
+                            images.append(GroupCallTheme.status_screencast_green)
+                        } else if data.wantsToSpeak {
+                            images.append(GroupCallTheme.status_screencast_accent)
+                        } else {
+                            images.append(GroupCallTheme.status_screencast_gray)
+                        }
                     }
                 }
             } else {
                 if let muteState = state.muteState, muteState.mutedByYou {
-                    statusImage = GroupCallTheme.status_muted
+                    images.append(GroupCallTheme.status_muted)
                 } else {
                     if data.isSpeaking {
-                        statusImage = GroupCallTheme.status_unmuted_green
+                        images.append(GroupCallTheme.status_unmuted_green)
                     } else if data.wantsToSpeak {
-                        statusImage = GroupCallTheme.status_unmuted_accent
+                        images.append(GroupCallTheme.status_unmuted_accent)
                     } else {
-                        statusImage = GroupCallTheme.status_unmuted_gray
+                        images.append(GroupCallTheme.status_unmuted_gray)
                     }
                 }
             }
-            return statusImage
         }
-        return nil
+        return images
     }
     
-    var videoBoxImage: CGImage {
+    var videoBoxImage: [CGImage] {
         if isInvited {
-            return GroupCallTheme.videoBox_muted_locked
+            return [GroupCallTheme.videoBox_muted_locked]
         }
+        var images:[CGImage] = []
+
+        if data.videoEndpoint != nil {
+            images.append(GroupCallTheme.videoBox_video)
+        }
+        if data.screencastEndpoint != nil {
+            images.append(GroupCallTheme.videoBox_screencast)
+        }
+        
         if let _ = data.state?.muteState {
-            return GroupCallTheme.videoBox_muted
+            images.append(GroupCallTheme.videoBox_muted)
         } else if data.state == nil {
-            return GroupCallTheme.videoBox_muted
+            images.append(GroupCallTheme.videoBox_muted)
         } else {
-            return GroupCallTheme.videoBox_unmuted
+            images.append(GroupCallTheme.videoBox_unmuted)
         }
+        return images
     }
     
     var actionInteractionEnabled: Bool {
@@ -327,14 +348,16 @@ private final class GroupCallAvatarView : View {
     private var scaleAnimator: DisplayLinkAnimator?
     private let photoView: AvatarControl = AvatarControl(font: .avatar(20))
     private let audioLevelDisposable = MetaDisposable()
-    required init(frame frameRect: NSRect) {
+    let photoSize: NSSize
+    init(frame frameRect: NSRect, photoSize: NSSize) {
         playbackAudioLevelView = VoiceBlobView(
-            frame: NSMakeRect(0, 0, 55, 55),
+            frame: frameRect.size.bounds,
             maxLevel: 0.3,
             smallBlobRange: (0, 0),
             mediumBlobRange: (0.7, 0.8),
             bigBlobRange: (0.8, 0.9)
         )
+        self.photoSize = photoSize
         super.init(frame: frameRect)
         photoView.setFrameSize(photoSize)
         addSubview(playbackAudioLevelView)
@@ -397,7 +420,7 @@ private final class GroupCallAvatarView : View {
                 }
                 let rect = self.photoView.bounds
                 var fr = CATransform3DIdentity
-                fr = CATransform3DTranslate(fr, rect.width / 2, rect.width / 2, 0)
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
                 fr = CATransform3DScale(fr, value, value, 1)
                 fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
                 self.photoView.layer?.transform = fr
@@ -420,17 +443,371 @@ private final class GroupCallAvatarView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
 }
 
-private final class GroupCallParticipantRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
-    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55))
+
+final class VerticalContainerView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
+    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 68, 68), photoSize: NSMakeSize(48, 48))
+
+    private final class VideoContainer : View {
+        private let shadowView = ShadowView()
+        var view: NSView? {
+            didSet {
+                if let view = view {
+                    addSubview(view, positioned: .below, relativeTo: shadowView)
+                }
+                needsLayout = true
+            }
+        }
+        
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(shadowView)
+            shadowView.direction = .vertical(true)
+            shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.3)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            view?.frame = bounds
+            shadowView.frame = NSMakeRect(0, frame.height - 30, frame.width, 30)
+        }
+        
+        override func viewDidMoveToSuperview() {
+            super.viewDidMoveToSuperview()
+            if superview == nil {
+                var bp = 0
+                bp += 1
+            }
+        }
+        
+        deinit {
+            var bp:Int = 0
+            bp += 1
+        }
+    }
+    
+    func getPhotoView() -> NSView {
+        return self.photoView
+    }
+    
+    private var videoContainer: VideoContainer?
+    private let nameContainer = View()
+    private let titleView = TextView()
+    private let statusView = ImageView()
+    private var pinnedFrameView: View?
+    private let imagesView: View = View()
+    
+    private let audioLevelDisposable = MetaDisposable()
+    private var scaleAnimator: DisplayLinkAnimator?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(photoView)
+        nameContainer.addSubview(titleView)
+        nameContainer.addSubview(imagesView)
+        addSubview(statusView)
+       
+        addSubview(nameContainer)
+        
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        photoView.userInteractionEnabled = false
+    
+        containerView.set(handler: { [weak self] _ in
+            if let item = self?.item as? GroupCallParticipantRowItem {
+                item.action()
+            }
+        }, for: .Click)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Hover)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Normal)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.updateColors()
+        }, for: .Highlight)
+    }
+    
+    
+    override var backdorColor: NSColor {
+        let color: NSColor
+        if containerView.controlState == .Highlight || contextMenu != nil {
+            color = GroupCallTheme.membersColor.lighter()
+        } else {
+            color = GroupCallTheme.membersColor
+        }
+        return color
+    }
+    override func updateColors() {
+        super.updateColors()
+    }
+    
+    override func showContextMenu(_ event: NSEvent) {
+        super.showContextMenu(event)
+    }
+    
+    override var maxBlockWidth: CGFloat {
+        return GroupCallTheme.smallTableWidth
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        guard let item = item as? GroupCallParticipantRowItem else {
+            return
+        }
+        
+        let blockWidth = min(maxBlockWidth, frame.width - item.inset.left - item.inset.right)
+        
+        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (maxWidth - blockWidth) / 2), 0, blockWidth, maxHeight)
+        self.containerView.setCorners(item.viewType.corners)
+
+        
+        photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoView.photoSize.height) / 2)
+        videoContainer?.frame = containerView.bounds
+        
+        nameContainer.frame = NSMakeRect(0, 0, containerView.frame.width, max(imagesView.frame.height, titleView.frame.height))
+        nameContainer.centerX(y: containerView.frame.height - nameContainer.frame.height - 8)
+        
+        imagesView.setFrameOrigin(NSMakePoint(nameContainer.frame.width - imagesView.frame.width - 8, 0))
+        titleView.setFrameOrigin(NSMakePoint(8, 0))
+
+        
+        pinnedFrameView?.frame = containerView.bounds
+    }
+
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? GroupCallParticipantRowItem else {
+            return
+        }
+        
+        photoView.update(item, animated: animated)
+        photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
+                
+        if item.data.pinnedMode != nil {
+            let current: View
+            if let pinnedView = self.pinnedFrameView {
+                current = pinnedView
+            } else {
+                current = View()
+                self.pinnedFrameView = current
+                addSubview(current)
+                current.layer?.cornerRadius = 10
+                current.layer?.borderWidth = 2
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.layer?.borderColor = item.activityColor.withAlphaComponent(0.7).cgColor
+        } else {
+            if let pinnedView = self.pinnedFrameView {
+                self.pinnedFrameView = nil
+                if animated {
+                    pinnedView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pinnedView] _ in
+                        pinnedView?.removeFromSuperview()
+                    })
+                } else {
+                    pinnedView.removeFromSuperview()
+                }
+            }
+        }
+        
+        
+        let videoBoxImages = item.videoBoxImage
+        
+        while imagesView.subviews.count > videoBoxImages.count {
+            imagesView.subviews.removeLast()
+        }
+        while imagesView.subviews.count < videoBoxImages.count {
+            imagesView.addSubview(ImageView())
+        }
+        for (i, image) in videoBoxImages.enumerated() {
+            let view = (imagesView.subviews[i] as? ImageView)
+            view?.image = image
+            view?.sizeToFit()
+        }
+        imagesView.setFrameSize(imagesView.subviewsWidthSize)
+        
+        var x: CGFloat = 0
+        for view in imagesView.subviews {
+            view.centerY(x: x)
+            x += view.frame.width + 2
+        }
+
+        titleView.update(item.titleLayout)
+        
+        let videoView = item.takeCurrentVideo()
+        
+        
+        if let videoView = videoView {
+            
+            var isPresented: Bool = false
+            
+            let videoContainer: VideoContainer
+            if let current = self.videoContainer {
+                videoContainer = current
+            } else {
+                videoContainer = VideoContainer(frame: containerView.bounds)
+                videoContainer.isEventLess = true
+                self.videoContainer = videoContainer
+                addSubview(videoContainer, positioned: .above, relativeTo: photoView)
+                isPresented = true
+            }
+            videoContainer.view = videoView
+
+            if animated && isPresented {
+                videoContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+                let from = Float(videoContainer.frame.height / 2)
+                videoContainer.layer?.animate(from: NSNumber(value: from), to: NSNumber(value: 0), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.2, forKey: "cornerRadius")
+                
+                videoContainer.layer?.animateScaleCenter(from: photoView.frame.height / videoContainer.frame.width, to: 1, duration: 0.2)
+                
+                videoContainer.layer?.animatePosition(from: NSMakePoint(0, -photoView.frame.minY - 10), to: videoContainer.frame.origin, duration: 0.2)
+                
+            }
+        } else {
+            if let first = self.videoContainer {
+                self.videoContainer = nil
+                if animated {
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first, weak self] _ in
+                        if first?.superview == self?.videoContainer {
+                            first?.removeFromSuperview()
+                        }
+                    })
+                    
+                    let to = Float(first.frame.height / 2)
+                    first.layer?.animate(from: NSNumber(value: 0), to: NSNumber(value: to), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.2, removeOnCompletion: false, forKey: "cornerRadius")
+                    
+                    first.layer?.animateScaleCenter(from: 1, to: photoView.frame.height / first.frame.width, duration: 0.3, removeOnCompletion: false)
+                    
+                    first.layer?.animatePosition(from: first.frame.origin, to: NSMakePoint(0, -photoView.frame.minY - 10), duration: 0.2, removeOnCompletion: false)
+                    
+                } else {
+                    first.removeFromSuperview()
+                }
+            }
+        }
+        self.update(item, animated: animated)
+        
+        needsLayout = true
+    }
+    
+    private func update(_ item: GroupCallParticipantRowItem, animated: Bool) {
+//        if let audioLevel = item.audioLevel(item.data.peer.id) {
+//            self.audioLevelDisposable.set(audioLevel.start(next: { [weak item, weak self] value in
+//                if let item = item {
+//                    self?.updateAudioLevel(value, item: item, animated: animated)
+//                }
+//            }))
+//        } else {
+//            self.audioLevelDisposable.set(nil)
+//            self.updateAudioLevel(nil, item: item, animated: animated)
+//        }
+    }
+    
+    private func updateAudioLevel(_ value: Float?, item: GroupCallParticipantRowItem, animated: Bool) {
+        
+        
+//        let audioLevel = value ?? 0
+//        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
+//        let avatarScale: CGFloat
+//        if audioLevel > 0.0 {
+//            avatarScale = 1.1 + level * 0.07
+//        } else {
+//            avatarScale = 1.0
+//        }
+//
+//        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+//
+//        let t = button.layer!.transform
+//        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+//
+//        if animated {
+//            if scale != value {
+//                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+//                    guard let `self` = self else {
+//                        return
+//                    }
+//                    let rect = self.button.bounds
+//                    var fr = CATransform3DIdentity
+//                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+//                    fr = CATransform3DScale(fr, value, value, 1)
+//                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+//                    self.button.layer?.transform = fr
+//                }, completion: {
+//
+//                })
+//            }
+//        } else {
+//            self.scaleAnimator = nil
+//            self.button.layer?.transform = CATransform3DIdentity
+//        }
+    }
+
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
+}
+
+private final class HorizontalContainerView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
+    
+    private final class VideoContainer : View {
+        weak var view: NSView? {
+            didSet {
+                if let view = view {
+                    addSubview(view)
+                }
+                needsLayout = true
+            }
+        }
+
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            view?.frame = bounds
+        }
+
+    }
+
+    
+    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55), photoSize: NSMakeSize(35, 35))
     private let titleView: TextView = TextView()
     private var statusView: TextView?
     private let button = ImageButton()
     private let separator: View = View()
-    private let videoContainer: View = View()
+    private let videoContainer: VideoContainer = VideoContainer(frame: .zero)
     private var volumeView: TextView?
-    private var statusImageView: ImageView?
+    private var statusImageContainer: View = View()
     private var supplementImageView: ImageView?
     private let audioLevelDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
@@ -439,14 +816,15 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         addSubview(titleView)
         addSubview(separator)
         addSubview(button)
+        addSubview(statusImageContainer)
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
 
         photoView.userInteractionEnabled = false
 
         addSubview(videoContainer)
-        videoContainer.frame = .init(origin: .zero, size: photoSize)
-        videoContainer.layer?.cornerRadius = photoSize.height / 2
+        videoContainer.frame = .init(origin: .zero, size: photoView.photoSize)
+        videoContainer.layer?.cornerRadius = photoView.photoSize.height / 2
         
         button.animates = true
 
@@ -503,35 +881,49 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         return self.photoView
     }
     
-    override func layout() {
-        super.layout()
+    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
         
-        let frame = containerView.frame
+        let frame = size.bounds
         
-        self.photoView.centerY(x: item.itemInset.left - (self.photoView.frame.width - photoSize.width) / 2)
-
-        titleView.setFrameOrigin(NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, 6))
-        
-        if let imageView = self.supplementImageView {
-            imageView.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)))
+        if let statusView = statusView {
+            transition.updateFrame(view: statusView, frame: CGRect(origin: statusViewPoint, size: statusView.frame.size))
         }
+        if let volumeView = volumeView {
+            transition.updateFrame(view: volumeView, frame: CGRect(origin: volumeViewPoint, size: volumeView.frame.size))
+        }
+        transition.updateFrame(view: statusImageContainer, frame: CGRect(origin: statusImageViewViewPoint, size: statusImageContainer.frame.size))
         
-        statusView?.setFrameOrigin(statusViewPoint)
-        volumeView?.setFrameOrigin(volumeViewPoint)
-        statusImageView?.setFrameOrigin(statusImageViewViewPoint)
-        
-        if item.drawLine {
-            separator.frame = NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize)
+        if item.isVertical {
+            transition.updateFrame(view: videoContainer, frame: frame)
         } else {
-            separator.frame = .zero
-        }
+            transition.updateFrame(view: self.photoView, frame: self.photoView.centerFrameY(x: item.itemInset.left - (self.photoView.frame.width - photoView.photoSize.width) / 2))
 
-        button.centerY(x: frame.width - 12 - button.frame.width)
+            transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, 6), size: titleView.frame.size))
+                        
+            if let imageView = self.supplementImageView {
+                transition.updateFrame(view: imageView, frame: CGRect.init(origin: NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)), size: imageView.frame.size))
+            }
+            if item.drawLine {
+                transition.updateFrame(view: separator, frame: NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize))
+            } else {
+                transition.updateFrame(view: separator, frame: .zero)
+            }
+
+            transition.updateFrame(view: button, frame: button.centerFrameY(x: frame.width - 12 - button.frame.width))
+            
+            transition.updateFrame(view: videoContainer, frame: videoContainer.centerFrameY(x: item.itemInset.left, addition: -1))
+            
+        }
         
-        videoContainer.centerY(x: item.itemInset.left, addition: -1)
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
     }
     
     override func updateColors() {
@@ -550,32 +942,25 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
             return
         }
         
-        let videoView = item.takeVideo()
+        let videoView = item.takeCurrentVideo()
         
         if let videoView = videoView {
-            let previous = self.videoContainer.subviews.first
-            var isPresented: Bool = false
-            if previous != videoView, let previous = previous {
-                if animated {
-                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
-                        previous?.removeFromSuperview()
-                    })
-                } else {
-                    previous.removeFromSuperview()
-                }
-                isPresented = true
-            }
-            videoView.frame = self.videoContainer.bounds
-            self.videoContainer.addSubview(videoView)
+            let previous = self.videoContainer.view
             
-            if animated && isPresented {
+            videoView.frame = self.videoContainer.bounds
+            self.videoContainer.view = videoView
+            
+            if animated && previous == nil {
                 videoView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
         } else {
-            if let first = self.videoContainer.subviews.first {
+            if let first = self.videoContainer.view {
+                self.videoContainer.view = nil
                 if animated {
-                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first] _ in
-                        first?.removeFromSuperview()
+                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak first, weak self] _ in
+                        if first?.superview == self?.videoContainer {
+                            first?.removeFromSuperview()
+                        }
                     })
                 } else {
                     first.removeFromSuperview()
@@ -619,32 +1004,28 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         titleView.update(item.titleLayout)
         photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
 
-
-        if let statusImage = item.statusImage {
-            if statusImageView == nil {
-                statusImageView = ImageView()
-                addSubview(statusImageView!)
-            }
-            guard let statusImageView = statusImageView else {
-                return
-            }
+        
+        while statusImageContainer.subviews.count > item.statusImage.count {
+            statusImageContainer.subviews.last?.removeFromSuperview()
+        }
+        while statusImageContainer.subviews.count < item.statusImage.count {
+            let statusImageView = ImageView()
+            statusImageContainer.addSubview(statusImageView)
+        }
+        
+        for (i, statusImage) in item.statusImage.enumerated() {
+            let statusImageView = statusImageContainer.subviews[i] as! ImageView
             if statusImageView.image != statusImage {
                 statusImageView.image = statusImage
                 statusImageView.sizeToFit()
-                statusImageView.setFrameOrigin(statusImageViewViewPoint)
             }
-        } else {
-            if let statusImageView = self.statusImageView {
-                self.statusImageView = nil
-                if animated {
-                    statusImageView.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak statusImageView] _ in
-                        statusImageView?.removeFromSuperview()
-                    })
-                } else {
-                    statusImageView.removeFromSuperview()
-                }
-                
-            }
+        }
+        
+        statusImageContainer.setFrameSize(statusImageContainer.subviewsWidthSize + NSMakeSize((2 * CGFloat(statusImageContainer.subviews.count) - 1), 0))
+        var x: CGFloat = 0
+        for subview in statusImageContainer.subviews {
+            subview.setFrameOrigin(NSMakePoint(x, 0))
+            x += subview.frame.width + 2
         }
         
         if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
@@ -732,13 +1113,13 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         var point: NSPoint = .zero
         
         if let statusView = statusView {
-            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6)
+            point = NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, frame.height - statusView.frame.height - 6)
         }
         if let volume = item.volume {
             point.x += volume.layoutSize.width + 3
         }
-        if let statusImageView = statusImageView {
-            point.x += statusImageView.frame.width + 3
+        if !statusImageContainer.subviews.isEmpty {
+            point.x += statusImageContainer.frame.width + 3
         }
         
         return point
@@ -750,10 +1131,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         var point: NSPoint = .zero
         
         if let volumeView = volumeView {
-            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - volumeView.frame.height - 6)
+            point = NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, frame.height - volumeView.frame.height - 6)
         }
-        if let statusImageView = statusImageView {
-            point.x += statusImageView.frame.width + 3
+        if !statusImageContainer.subviews.isEmpty {
+            point.x += statusImageContainer.frame.width + 3
         }
         return point
     }
@@ -764,9 +1145,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
         var point: NSPoint = .zero
         
-        if let statusImageView = statusImageView {
-            point = NSMakePoint(item.itemInset.left + photoSize.width + item.itemInset.left, frame.height - statusImageView.frame.height - 6)
-        }
+        point = NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, containerView.frame.height - statusImageContainer.frame.height - 5)
         return point
     }
 
@@ -790,81 +1169,14 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
 }
 
 
-final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
-    private let photoView: GroupCallAvatarView = GroupCallAvatarView(frame: NSMakeRect(0, 0, 55, 55))
 
-    private final class VideoContainer : View {
-        private let shadowView = ShadowView()
-        var view: NSView? {
-            didSet {
-                if let view = view {
-                    addSubview(view, positioned: .below, relativeTo: shadowView)
-                }
-                needsLayout = true
-            }
-        }
-        
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(shadowView)
-            shadowView.direction = .vertical(true)
-            shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.3)
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func layout() {
-            super.layout()
-            view?.frame = bounds
-            shadowView.frame = NSMakeRect(0, frame.height - 30, frame.width, 30)
-        }
-    }
+private final class GroupCallParticipantRowView : GeneralContainableRowView, GroupCallParticipantRowProtocolView {
     
-    func getPhotoView() -> NSView {
-        return self.photoView
-    }
+    private var container: (GroupCallParticipantRowProtocolView & GeneralContainableRowView)?
     
-    private var videoContainer: VideoContainer?
-    private let titleView = TextView()
-    private let statusView = ImageView()
-    private let pinnedFrameView: View = View()
-    private let button: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(photoView)
-        addSubview(pinnedFrameView)
-        addSubview(titleView)
-        addSubview(button)
-        addSubview(statusView)
-        pinnedFrameView.layer?.cornerRadius = 10
-        pinnedFrameView.layer?.borderWidth = 2
         
-        button.animates = true
-        
-        titleView.userInteractionEnabled = false
-        titleView.isSelectable = false
-        photoView.userInteractionEnabled = false
-        
-        containerView.set(handler: { [weak self] _ in
-            if let event = NSApp.currentEvent {
-                self?.showContextMenu(event)
-            }
-        }, for: .Click)
-        
-        
-        containerView.set(handler: { [weak self] _ in
-            self?.updateColors()
-        }, for: .Hover)
-        
-        containerView.set(handler: { [weak self] _ in
-            self?.updateColors()
-        }, for: .Normal)
-        
-        containerView.set(handler: { [weak self] _ in
-            self?.updateColors()
-        }, for: .Highlight)
     }
     
     override var backdorColor: NSColor {
@@ -878,41 +1190,21 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
     }
     
     
-    override func updateColors() {
-        super.updateColors()
-        self.titleView.backgroundColor = .clear
+    func getPhotoView() -> NSView {
+        return self.container?.getPhotoView() ?? self
     }
-    
-    override var maxBlockWidth: CGFloat {
-        return 80
-    }
-    override var maxHeight: CGFloat {
-        return 80
-    }
-    override var maxWidth: CGFloat {
-        return 80
-    }
-    
+        
     override func layout() {
         super.layout()
-        
-        guard let item = item as? GroupCallParticipantRowItem else {
-            return
+        if let container = container as? HorizontalContainerView {
+            container.frame = containerView.bounds
         }
-
-        
-        photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoSize.height) / 2)
-        videoContainer?.frame = containerView.bounds
-        
-        
-        titleView.setFrameOrigin(NSMakePoint(floorToScreenPixels(backingScaleFactor, (containerView.frame.width - titleView.frame.width + button.frame.width) / 2), containerView.frame.height - titleView.frame.height - 7))
-        
-        button.setFrameOrigin(NSMakePoint(titleView.frame.minX - button.frame.width, containerView.frame.height - titleView.frame.height - 7))
-
-        
-        pinnedFrameView.frame = containerView.bounds
     }
-
+    
+    override func updateColors() {
+        super.updateColors()
+    }
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
@@ -920,89 +1212,60 @@ final class GroupCallParticipantVerticalRowView : GeneralContainableRowView, Gro
             return
         }
         
-        photoView.update(item, animated: animated)
-        photoView._change(opacity: item.isActivePeer ? 1.0 : 0.5, animated: animated)
+        let current: (GeneralContainableRowView & GroupCallParticipantRowProtocolView)
         
-        
-        pinnedFrameView.layer?.borderColor = item.activityColor.cgColor
-        if animated {
-            pinnedFrameView.layer?.animateBorderColor()
-        }
-        
-        
-        button.image = item.videoBoxImage
-        button.sizeToFit()
-
-        
-        pinnedFrameView.change(opacity: item.data.isPinned ? 1 : 0)
-        
-        titleView.update(item.titleLayout)
-        
-        let videoView = item.takeVideo()
-        
-        if let videoView = videoView {
-            
-            let previous = self.videoContainer?.view
-            var isPresented: Bool = false
-            if previous != videoView, let previous = previous {
-                if animated {
-                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
-                        previous?.removeFromSuperview()
-                    })
-                } else {
-                    previous.removeFromSuperview()
-                }
-            }
-            let videoContainer: VideoContainer
-            if let current = self.videoContainer {
-                videoContainer = current
+        var previous: NSView?
+        if item.isVertical {
+            if self.container is VerticalContainerView {
+                current = self.container!
             } else {
-                videoContainer = VideoContainer(frame: containerView.bounds)
-                videoContainer.isEventLess = true
-                self.videoContainer = videoContainer
-                addSubview(videoContainer, positioned: .above, relativeTo: photoView)
-                isPresented = true
-            }
-            videoContainer.view = videoView
-            photoView._change(opacity: 0, animated: animated)
-
-            if animated && isPresented {
-                videoContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
-                let from = Float(videoContainer.frame.height / 2)
-                videoContainer.layer?.animate(from: NSNumber(value: from), to: NSNumber(value: 0), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.3, forKey: "cornerRadius")
-                
-                videoContainer.layer?.animateScaleCenter(from: photoView.frame.height / videoContainer.frame.width, to: 1, duration: 0.3)
-                
-                videoContainer.layer?.animatePosition(from: NSMakePoint(0, -photoView.frame.minY), to: videoContainer.frame.origin, duration: 0.3)
-                
-                photoView.layer?.animateScaleCenter(from: 1, to: videoContainer.frame.width / photoView.frame.height, duration: 0.3)
+                current = VerticalContainerView(frame: NSMakeRect(0, 0, GroupCallTheme.smallTableWidth, 95))
+                previous = self.container
+                self.container = current
+                addSubview(current)
             }
         } else {
-            if let first = self.videoContainer {
-                self.videoContainer = nil
-                photoView._change(opacity: 1, animated: animated)
-                if animated {
-                    first.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak first] _ in
-                        first?.removeFromSuperview()
-                    })
-                    
-                    let to = Float(first.frame.height / 2)
-                    first.layer?.animate(from: NSNumber(value: 0), to: NSNumber(value: to), keyPath: "cornerRadius", timingFunction: .easeInEaseOut, duration: 0.3, removeOnCompletion: false, forKey: "cornerRadius")
-                    
-                    first.layer?.animateScaleCenter(from: 1, to: photoView.frame.height / first.frame.width, duration: 0.3, removeOnCompletion: false)
-                    
-                    first.layer?.animatePosition(from: first.frame.origin, to: NSMakePoint(0, -photoView.frame.minY), duration: 0.3, removeOnCompletion: false)
-                    
-                    photoView.layer?.animateScaleCenter(from:  first.frame.width / photoView.frame.height, to: 1, duration: 0.2)
-                } else {
-                    first.removeFromSuperview()
-                }
+            if self.container is HorizontalContainerView {
+                current = self.container!
+            } else {
+                current = HorizontalContainerView(frame: containerView.bounds)
+                previous = self.container
+                self.container = current
+                addSubview(current)
             }
         }
+        
+        if let previous = previous {
+//            if animated {
+//                previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak previous] _ in
+//                    previous?.removeFromSuperview()
+//                })
+//            } else {
+                previous.removeFromSuperview()
+//            }
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
+            }
+        }
+        
+        self.container?.set(item: item, animated: animated && previous == nil)
+        
         needsLayout = true
+    }
+    
+    
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        showContextMenu(event)
+    }
+    
+    override var rowAppearance: NSAppearance? {
+        return darkPalette.appearance
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+
