@@ -1136,53 +1136,32 @@ final class GroupCallUIController : ViewController {
                         let isScreencast = member.presentationEndpointId == endpointId
                         let videoMode: VideoSourceMacMode = isScreencast ? .screencast : .video
                         let takeVideoMode: GroupCallVideoMode = isScreencast && member.peer.id == accountId ? .screencast : .video
-                                                
-                        strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                            DispatchQueue.main.async {
-                                guard let strongSelf = self, let videoView = videoView else {
-                                    return
-                                }
-                                let videoViewValue = GroupVideoView(videoView: videoView)
-                                strongSelf.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, true), .main, videoViewValue))
-                                updateActiveVideoViews { current in
-                                    var current = current
-                                    current.insert(.init(endpointId: endpointId, mode: .main))
-                                    return current
-                                }
-                            }
-                        })
+                                            
                         
-                        strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                            DispatchQueue.main.async {
-                                guard let strongSelf = self, let videoView = videoView else {
-                                    return
-                                }
-                                let videoViewValue = GroupVideoView(videoView: videoView)
-                                strongSelf.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, true), .list, videoViewValue))
-                                updateActiveVideoViews { current in
-                                    var current = current
-                                    current.insert(.init(endpointId: endpointId, mode: .list))
-                                    return current
-                                }
-                            }
-                        })
+                        let types:[GroupCallUIState.ActiveVideo.Mode] = [.backstage, .list, .main]
                         
-                        strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                            DispatchQueue.main.async {
-                                guard let strongSelf = self, let videoView = videoView else {
-                                    return
+                        for type in types {
+                            strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
+                                DispatchQueue.main.async {
+                                    guard let strongSelf = self, let videoView = videoView else {
+                                        return
+                                    }
+                                    var videoViewValue: GroupVideoView?  = GroupVideoView(videoView: videoView)
+                                    
+                                    videoView.setOnFirstFrameReceived( { f in
+                                        if let videoViewValue = videoViewValue {
+                                            strongSelf.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, true), type, videoViewValue))
+                                            updateActiveVideoViews { current in
+                                                var current = current
+                                                current.insert(.init(endpointId: endpointId, mode: type))
+                                                return current
+                                            }
+                                        }
+                                        videoViewValue = nil
+                                    })
                                 }
-                                let videoViewValue = GroupVideoView(videoView: videoView)
-                                strongSelf.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, true), .backstage, videoViewValue))
-                                updateActiveVideoViews { current in
-                                    var current = current
-                                    current.insert(.init(endpointId: endpointId, mode: .backstage))
-                                    return current
-                                }
-                            }
-                        })
-
-                        
+                            })
+                        }
                     }
                 }
             }
