@@ -2581,6 +2581,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     view: view.view,
                     setOnFirstFrameReceived: { f in
                         setOnFirstFrameReceived(f)
+                        
                     },
                     getOrientation: { [weak view] in
                         if let view = view {
