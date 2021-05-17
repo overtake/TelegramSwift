@@ -389,6 +389,14 @@ public extension NSView {
         }
         return size
     }
+    var subviewsWidthSize: NSSize {
+        var size: NSSize = NSZeroSize
+        for subview in subviews {
+            size.width += subview.frame.width
+            size.height = max(subview.frame.height, size.height)
+        }
+        return size
+    }
     private func isInSuperclassView(_ superclass: AnyClass, view: NSView) -> Bool {
         if view.isKind(of: superclass) {
             return true
@@ -617,6 +625,33 @@ public extension NSView {
 
     
     func _change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, additive: Bool = false, forceAnimateIfHasAnimation: Bool = false, completion:((Bool)->Void)? = nil) -> Void {
+        
+        
+        if position == frame.origin && !additive {
+            completion?(true)
+            return
+        }
+        
+        if self is NSVisualEffectView {
+            let sub = self.layer?.sublayers ?? []
+            for layer in sub {
+                if animated || (forceAnimateIfHasAnimation && layer.animation(forKey:"position") != nil) {
+                    
+                    var presentX = NSMinX(self.frame)
+                    var presentY = NSMinY(self.frame)
+                    let presentation:CALayer? = layer.presentation()
+                    if let presentation = presentation, let _ = layer.animation(forKey:"position") {
+                        presentY =  presentation.frame.minY
+                        presentX = presentation.frame.minX
+                    }
+                    layer.animatePosition(from: NSMakePoint(presentX, presentY), to: position, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion)
+
+                } else {
+                    layer.removeAnimation(forKey: "position")
+                }
+            }
+        }
+        
         if animated || (forceAnimateIfHasAnimation && self.layer?.animation(forKey:"position") != nil) {
             
             var presentX = NSMinX(self.frame)
@@ -631,6 +666,8 @@ public extension NSView {
         } else {
             self.layer?.removeAnimation(forKey: "position")
         }
+        
+        
         if save {
             self.setFrameOrigin(position)
             if let completion = completion, !animated {
@@ -651,6 +688,31 @@ public extension NSView {
     }
     
     func _change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
+        
+        if size == frame.size {
+            completion?(true)
+            return
+        }
+        
+        if self is NSVisualEffectView {
+            let sub = self.layer?.sublayers ?? []
+            for layer in sub {
+                if animated {
+                    var presentBounds:NSRect = layer.bounds
+                    let presentation = layer.presentation()
+                    if let presentation = presentation, layer.animation(forKey:"bounds") != nil {
+                        presentBounds.size.width = NSWidth(presentation.bounds)
+                        presentBounds.size.height = NSHeight(presentation.bounds)
+                    }
+                    layer.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+
+                    
+                } else {
+                    layer.removeAnimation(forKey: "bounds")
+                }
+            }
+        }
+        
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
             let presentation = self.layer?.presentation()
@@ -659,11 +721,10 @@ public extension NSView {
                 presentBounds.size.height = NSHeight(presentation.bounds)
             }
             self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
-
-            
         } else {
             self.layer?.removeAnimation(forKey: "bounds")
         }
+        
         if save {
             self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
         }
@@ -679,6 +740,18 @@ public extension NSView {
         if from == to {
             completion?(true)
             return
+        }
+        
+        if self is NSVisualEffectView {
+            let sub = self.layer?.sublayers ?? []
+            for layer in sub {
+                if animated {
+                    layer.animateBounds(from: from, to: to, duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+                    
+                } else {
+                    layer.removeAnimation(forKey: "bounds")
+                }
+            }
         }
         
         if animated {
@@ -2090,3 +2163,6 @@ extension NSEdgeInsets : Equatable {
 }
 
 
+public func arc4random64() -> Int64 {
+    return Int64.random(in: Int64.min ... Int64.max)
+}

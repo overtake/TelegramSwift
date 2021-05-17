@@ -759,9 +759,9 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         }
         
         
-        peersDisablingAddressNameAssignment.set(.single(nil) |> then(context.engine.peerNames.channelAddressNameAssignmentAvailability(peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
+        peersDisablingAddressNameAssignment.set(.single(nil) |> then(context.engine.peers.channelAddressNameAssignmentAvailability(peerId: peerId.namespace == Namespaces.Peer.CloudChannel ? peerId : nil) |> mapToSignal { result -> Signal<[Peer]?, NoError> in
             if case .addressNameLimitReached = result {
-                return context.engine.peerNames.adminedPublicChannels()
+                return context.engine.peers.adminedPublicChannels()
                     |> map { Optional($0) }
             } else {
                 return .single([])
@@ -788,7 +788,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                     return state.withUpdatedEditingPublicLinkText(text)
                 }
                 
-                self?.checkAddressNameDisposable.set((context.engine.peerNames.validateAddressNameInteractive(domain: .peer(peerId), name: text)
+                self?.checkAddressNameDisposable.set((context.engine.peers.validateAddressNameInteractive(domain: .peer(peerId), name: text)
                     |> deliverOnMainQueue).start(next: { result in
                         updateState { state in
                             return state.withUpdatedAddressNameValidationStatus(result)
@@ -810,7 +810,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                     return .single(true)
                 }
             } |> mapToSignal { _ -> Signal<Void, UpdateAddressNameError> in
-                return context.engine.peerNames.updateAddressName(domain: .peer(peerId), name: nil)
+                return context.engine.peers.updateAddressName(domain: .peer(peerId), name: nil)
             } |> deliverOnMainQueue).start(error: { _ in
                 updateState { state in
                     return state.withUpdatedRevokingPeerId(nil)
@@ -946,12 +946,13 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                             }
                             
                             if peer.isGroup {
-                                signal = convertGroupToSupergroup(account: context.account, peerId: peerId)
+                                
+                                signal = context.engine.peers.convertGroupToSupergroup(peerId: peerId)
                                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return csignal
                                             |> mapToSignal {
                                                 
-                                                showModalProgress(signal: context.engine.peerNames.updateAddressName(domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
+                                                showModalProgress(signal: context.engine.peers.updateAddressName(domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
                                             }
                                         |> mapError {_ in return ConvertGroupToSupergroupError.generic}
                                         |> mapToSignal { _ in
@@ -963,7 +964,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                
                                 signal = csignal
                                     |> mapToSignal {
-                                        showModalProgress(signal: context.engine.peerNames.updateAddressName(domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
+                                        showModalProgress(signal: context.engine.peers.updateAddressName(domain: .peer(peerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
                                     }
                                     |> mapToSignal { _ in
                                         return .single(nil)

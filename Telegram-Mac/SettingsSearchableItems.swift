@@ -604,7 +604,7 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     let icon: SettingsSearchableItemIcon = .language
     
     let applyLocalization: (AccountContext, @escaping (SettingsSearchableItemPresentation, ViewController?) -> Void, String) -> Void = { context, present, languageCode in
-        _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, postbox: context.account.postbox, network: context.account.network, languageCode: languageCode), for: context.window).start()
+        _ = showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: languageCode), for: context.window).start()
     }
     
     var items: [SettingsSearchableItem] = []
@@ -731,7 +731,7 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
                 confirm(for: context.window, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
-                        _ = showModalProgress(signal: context.engine.peerNames.supportPeerId(), for: context.window).start(next: {  peerId in
+                        _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: {  peerId in
                             if let peerId = peerId {
                                 present(.push, ChatController(context: context, chatLocation: .peer(peerId)))
                             }

@@ -673,6 +673,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
     private let configurationDisposable = MetaDisposable()
     private var account:UnauthorizedAccount
     private let sharedContext: SharedAccountContext
+    private let engine: TelegramEngineUnauthorized
     #if !APP_STORE
     private let updateController: UpdateTabController
     #endif
@@ -700,6 +701,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
     init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
         self.account = account
         self.sharedContext = sharedContext
+        self.engine = .init(account: account)
         self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
         #if !APP_STORE
         updateController = UpdateTabController(sharedContext)
@@ -902,7 +904,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                                     })
                                 }
                         }))
-                    _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.account.postbox, languageCode: Locale.current.languageCode ?? "en").start()
+                    _ = self?.engine.localization.markSuggestedLocalizationAsSeenInteractively(languageCode: Locale.current.languageCode ?? "en").start()
                 }
             }
         },resendCode: { [weak self] in
@@ -1017,13 +1019,13 @@ class AuthController : GenericViewController<AuthHeaderView> {
         }, for: .Click)
         
         if otherAccountPhoneNumbers.1.isEmpty {
-            suggestedLanguageDisposable.set((currentlySuggestedLocalization(network: account.network, extractKeys: ["Login.ContinueOnLanguage"]) |> deliverOnMainQueue).start(next: { [weak self] info in
+            suggestedLanguageDisposable.set((engine.localization.currentlySuggestedLocalization(extractKeys: ["Login.ContinueOnLanguage"]) |> deliverOnMainQueue).start(next: { [weak self] info in
                 if let strongSelf = self, let info = info, info.languageCode != appCurrentLanguage.baseLanguageCode {
                     
                     strongSelf.genericView.showLanguageButton(title: info.localizedKey("Login.ContinueOnLanguage"), callback: { [weak strongSelf] in
                         if let strongSelf = strongSelf {
                             strongSelf.genericView.hideSwitchButton()
-                            _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: sharedContext.accountManager, postbox: strongSelf.account.postbox, network: strongSelf.account.network, languageCode: info.languageCode), for: mainWindow).start()
+                            _ = showModalProgress(signal: strongSelf.engine.localization.downloadAndApplyLocalization(accountManager: sharedContext.accountManager, languageCode: info.languageCode), for: mainWindow).start()
                         }
                     })
                 }
@@ -1072,10 +1074,10 @@ class AuthController : GenericViewController<AuthHeaderView> {
     private func refreshQrToken(_ showProgress: Bool = false) {
         
         let sharedContext = self.sharedContext
-        let account = self.account
+        let engine = self.engine
         
         var tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> mapToSignal { accounts in
-            return exportAuthTransferToken(accountManager: sharedContext.accountManager, account: account, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
+            return engine.auth.exportAuthTransferToken(accountManager: sharedContext.accountManager, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
         }
         
         if showProgress {

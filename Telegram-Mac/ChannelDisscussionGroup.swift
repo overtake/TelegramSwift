@@ -331,7 +331,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         let signal: Signal<Bool, (ConvertGroupToSupergroupError?, ChannelDiscussionGroupError?)>
         
         if let groupId = groupId, groupId.namespace == Namespaces.Peer.CloudGroup {
-            signal = convertGroupToSupergroup(account: context.account, peerId: groupId)
+            signal = context.engine.peers.convertGroupToSupergroup(peerId: groupId)
                 |> mapError { value in
                     return (value, nil)
                 }

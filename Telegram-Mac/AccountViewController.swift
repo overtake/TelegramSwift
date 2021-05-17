@@ -486,7 +486,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     switch result {
                     case .basic:
                         
-                        _ = showModalProgress(signal: arguments.context.engine.peerNames.supportPeerId(), for: mainWindow).start(next: {  peerId in
+                        _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: mainWindow).start(next: {  peerId in
                             if let peerId = peerId {
                                 arguments.presentController(ChatController(context: arguments.context, chatLocation: .peer(peerId)), true)
                             }
@@ -771,7 +771,7 @@ class LayoutAccountController : TableViewController {
         }, passportPromise.get()))
         
         
-        syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
+        syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
         
         self.hasWallet.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
         |> map { view -> Bool in
@@ -957,7 +957,7 @@ class LayoutAccountController : TableViewController {
         }, passportPromise.get()))
         
 
-        syncLocalizations.set(synchronizedLocalizationListState(postbox: context.account.postbox, network: context.account.network).start())
+        syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
         
     }
     

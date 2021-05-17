@@ -12,14 +12,14 @@ import TGUIKit
 import SwiftSignalKit
 
 final class DesktopCapturePreviewItem : GeneralRowItem {
-    fileprivate let scope: DesktopCaptureSourceScope
+    fileprivate let scope: DesktopCaptureSourceScopeMac
     fileprivate let selected: Bool
-    fileprivate let select: (DesktopCaptureSource, DesktopCaptureSourceManager)->Void
-    fileprivate private(set) weak var manager: DesktopCaptureSourceManager?
+    fileprivate let select: (DesktopCaptureSourceMac, DesktopCaptureSourceManagerMac)->Void
+    fileprivate private(set) weak var manager: DesktopCaptureSourceManagerMac?
     fileprivate let isAvailable: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, source: DesktopCaptureSource, isAvailable: Bool, isSelected: Bool, manager: DesktopCaptureSourceManager?, select: @escaping(DesktopCaptureSource, DesktopCaptureSourceManager)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, source: DesktopCaptureSourceMac, isAvailable: Bool, isSelected: Bool, manager: DesktopCaptureSourceManagerMac?, select: @escaping(DesktopCaptureSourceMac, DesktopCaptureSourceManagerMac)->Void) {
         self.manager = manager
-        self.scope = DesktopCaptureSourceScope(source: source, data: DesktopCaptureSourceData(size: CGSize(width: 135, height: 90).multipliedByScreenScale(), fps: 0.5, captureMouse: false))
+        self.scope = DesktopCaptureSourceScopeMac(source: source, data: DesktopCaptureSourceDataMac(size: CGSize(width: 135, height: 90).multipliedByScreenScale(), fps: 0.5, captureMouse: false))
         self.select = select
         self.isAvailable = isAvailable
         self.selected = isSelected
@@ -69,7 +69,7 @@ class DesktopCameraCapturerRowItem: GeneralRowItem {
 
 
  
-private final class DesktopCaptureSourceView : Control {
+private final class DesktopCaptureSourceMacView : Control {
     
     
     private var contentView: View = View()
@@ -149,8 +149,8 @@ private final class DesktopCaptureSourceView : Control {
         return rect
     }
     
-    private var source: VideoSource?
-    func update(view: NSView, source: VideoSource, selected: Bool, animated: Bool, callback:@escaping()->Void) {
+    private var source: VideoSourceMac?
+    func update(view: NSView, source: VideoSourceMac, selected: Bool, animated: Bool, callback:@escaping()->Void) {
         self.callback = callback
         self.source = source
         view.frame = bounds
@@ -193,7 +193,7 @@ private final class DesktopCaptureSourceView : Control {
         needsLayout = true
     }
 
-    func viewFor(_ other: VideoSource) -> NSView? {
+    func viewFor(_ other: VideoSourceMac) -> NSView? {
         if let source = self.source {
             if source.isEqual(other) {
                 return self.view
@@ -225,7 +225,7 @@ private final class DesktopCaptureSourceView : Control {
 
 final class DesktopCapturePreviewView : HorizontalRowView {
         
-    private let contentView = DesktopCaptureSourceView(frame: NSMakeRect(5, 0, 135, 90))
+    private let contentView = DesktopCaptureSourceMacView(frame: NSMakeRect(5, 0, 135, 90))
     private let disposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -323,7 +323,7 @@ final class DesktopCapturePreviewView : HorizontalRowView {
             if let manager = item.manager {
                 let view: NSView
                 if item.isAvailable {
-                    view = contentView.viewFor(item.scope.source) ?? manager.create(for: item.scope)
+                    view = contentView.viewFor(item.scope.source) ?? manager.create(forScope: item.scope)
                 } else {
                     view = View()
                 }

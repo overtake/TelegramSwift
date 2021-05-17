@@ -706,7 +706,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 } else {
                     location = globalTags.location
                     if globalTags.isEmpty {
-                        foundRemotePeers = .single(([], [], true)) |> then(searchPeers(account: context.account, query: query)
+                        
+                        
+                        
+                        foundRemotePeers = .single(([], [], true)) |> then(context.engine.peers.searchPeers(query: query)
                             |> delay(0.2, queue: prepareQueue)
                             |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                 
@@ -780,7 +783,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
                 
                 let remoteSearch = searchMessagesState.get() |> mapToSignal { state in
-                    return searchMessages(account: context.account, location: location , query: query, state: state)
+                    return context.engine.messages.searchMessages(location: location , query: query, state: state)
                         |> delay(0.2, queue: prepareQueue)
                         |> map { result -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                             

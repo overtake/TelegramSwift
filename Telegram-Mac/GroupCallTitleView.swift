@@ -74,8 +74,9 @@ final class GroupCallTitleView : Control {
     fileprivate let titleView: TextView = TextView()
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     private var recordingView: GroupCallRecordingView?
+    let resize = ImageButton()
+    let hidePeers = ImageButton()
     private let backgroundView: View = View()
-    fileprivate let settings = ImageButton()
     enum Mode {
         case normal
         case transparent
@@ -83,29 +84,18 @@ final class GroupCallTitleView : Control {
     
     fileprivate var mode: Mode = .normal
     
-    private var settingsClick: (()->Void)? = nil
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(backgroundView)
         backgroundView.addSubview(titleView)
         backgroundView.addSubview(statusView)
-        //backgroundView.addSubview(settings)
+        backgroundView.addSubview(resize)
+        backgroundView.addSubview(hidePeers)
         titleView.isSelectable = false
         titleView.userInteractionEnabled = false
         statusView.userInteractionEnabled = false
         titleView.disableBackgroundDrawing = true
-        
-        settings.set(image: GroupCallTheme.topSettingsIcon, for: .Normal)
-        settings.sizeToFit()
-        settings.scaleOnClick = true
-        settings.autohighlight = false
-        
-        
-        settings.set(handler: { [weak self] _ in
-            self?.settingsClick?()
-        }, for: .SingleClick)
-        
         
         set(handler: { [weak self] _ in
             self?.window?.performZoom(nil)
@@ -171,7 +161,9 @@ final class GroupCallTitleView : Control {
             transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(max(100, rect.minX), backgroundView.frame.midY - titleView.frame.height), size: titleView.frame.size))
         }
         
-        transition.updateFrame(view: settings, frame: settings.centerFrameY(x: backgroundView.frame.width - settings.frame.width - 15))
+        transition.updateFrame(view: resize, frame: resize.centerFrameY(x: frame.width - resize.frame.width - 10))
+        
+        transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: frame.width - resize.frame.width - 10 - 10 - hidePeers.frame.width))
     }
     
     
@@ -183,15 +175,13 @@ final class GroupCallTitleView : Control {
     
     private var currentState: GroupCallUIState?
     private var currentPeer: Peer?
-    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, settingsClick: @escaping()->Void, recordClick: @escaping()->Void, animated: Bool) {
+    func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, hidePeersClick: @escaping()->Void, animated: Bool) {
         
         let oldMode = self.mode
-        let mode: Mode = state.isFullScreen && state.currentDominantSpeakerWithVideo != nil ? .transparent : .normal
+        let mode: Mode = .normal//state.isFullScreen && state.currentDominantSpeakerWithVideo != nil & ? .transparent : .normal
         
         self.updateMode(mode, animated: animated)
-        
-        self.settingsClick = settingsClick
-        
+                
         let title: String = state.title
         let oldTitle: String? = currentState?.title
         
@@ -200,13 +190,54 @@ final class GroupCallTitleView : Control {
         let recordingUpdated = state.state.recordingStartTimestamp != currentState?.state.recordingStartTimestamp
         let participantsUpdated = state.summaryState?.participantCount != currentState?.summaryState?.participantCount || state.state.scheduleTimestamp != currentState?.state.scheduleTimestamp
         
-        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode
+       
+        
+        let hideResize = state.mode != .video || state.activeVideoViews.isEmpty
+        let oldHideResize = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true
+        
+        let isFullscreen = state.isFullScreen
+        let oldFullscreen = currentState?.isFullScreen == true
+        
+        let hidePeers = state.hideParticipants
+        let oldHidePeers = currentState?.hideParticipants == true
+        
+        
+        let hidePeersButtonHide = state.mode != .video || state.activeVideoViews.isEmpty || !state.isFullScreen
+        
+        let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false
+
+        
+        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hideResize != oldHideResize || isFullscreen != oldFullscreen || hidePeers != oldHidePeers || oldHidePeersButtonHide != hidePeersButtonHide
+                
                 
         guard updated else {
             self.currentState = state
             self.currentPeer = peer
             return
         }
+        
+        resize.isHidden = hideResize
+        resize.set(image: isFullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
+        resize.sizeToFit()
+        resize.autohighlight = false
+        resize.scaleOnClick = true
+        
+        resize.removeAllHandlers()
+        resize.set(handler: { _ in
+            resizeClick()
+        }, for: .Click)
+        
+        self.hidePeers.isHidden = hidePeersButtonHide
+        self.hidePeers.set(image: hidePeers ?  GroupCallTheme.unhide_peers : GroupCallTheme.hide_peers, for: .Normal)
+        self.hidePeers.sizeToFit()
+        self.hidePeers.autohighlight = false
+        self.hidePeers.scaleOnClick = true
+        
+        self.hidePeers.removeAllHandlers()
+        self.hidePeers.set(handler: { _ in
+            hidePeersClick()
+        }, for: .Click)
+
         
         if titleUpdated {
             let layout = TextViewLayout(.initialize(string: title, color: GroupCallTheme.titleColor, font: .medium(.title)), maximumNumberOfLines: 1)
@@ -273,6 +304,7 @@ final class GroupCallTitleView : Control {
         if updated {
             needsLayout = true
         }
+        
     }
     
     required init?(coder: NSCoder) {

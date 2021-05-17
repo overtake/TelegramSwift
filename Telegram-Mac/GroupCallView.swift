@@ -13,6 +13,7 @@ import TelegramCore
 import Postbox
 
 
+
 final class GroupCallView : View {
     
     enum ControlsMode {
@@ -21,22 +22,21 @@ final class GroupCallView : View {
     }
     
     private var controlsMode: ControlsMode = .normal
-    private var resizeMode: CALayerContentsGravity = .resizeAspect {
-        didSet {
-            mainVideoView?.currentResizeMode = resizeMode
-        }
-    }
-    private let titleHeaderCap = View()
+//    private var resizeMode: CALayerContentsGravity = .resizeAspect {
+//        didSet {
+//            mainVideoView?.currentResizeMode = resizeMode
+//        }
+//    }
     let peersTable: TableView = TableView(frame: NSMakeRect(0, 0, 340, 329))
     
     let titleView: GroupCallTitleView = GroupCallTitleView(frame: NSMakeRect(0, 0, 380, 54))
     private let peersTableContainer: View = View(frame: NSMakeRect(0, 0, 340, 329))
     private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 360, height: 320))
     
-    private var mainVideoView: MainVideoContainerView? = nil
-    
+    private var mainVideoView: GroupCallMainVideoContainerView? = nil
     private var scheduleView: GroupCallScheduleView?
-    
+    private var tileView: GroupCallTileView?
+
     
     var arguments: GroupCallUIArguments? {
         didSet {
@@ -63,10 +63,11 @@ final class GroupCallView : View {
         addSubview(peersTableContainer)
         addSubview(peersTable)
         addSubview(titleView)
-        addSubview(titleHeaderCap)
         addSubview(controlsContainer)
+                
         peersTableContainer.layer?.cornerRadius = 10
         updateLocalizationAndTheme(theme: theme)
+        
 
         peersTable._mouseDownCanMoveWindow = true
         
@@ -100,17 +101,18 @@ final class GroupCallView : View {
         peersTableContainer.backgroundColor = GroupCallTheme.membersColor
         backgroundColor = GroupCallTheme.windowBackground
         titleView.backgroundColor = .clear
-        titleHeaderCap.backgroundColor = GroupCallTheme.windowBackground
     }
     
-    func updateMouse(event: NSEvent, animated: Bool) {
-        let isVertical = state?.currentDominantSpeakerWithVideo != nil
+    func updateMouse(event: NSEvent, animated: Bool, isReal: Bool) {
+        guard let window = self.window else {
+            return
+        }
+        let location = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
-        let location = self.convert(event.locationInWindow, from: nil)
-        
-        let mode: ControlsMode
-        if isVertical, let mainVideoView = self.mainVideoView {
-            if NSPointInRect(location, mainVideoView.frame) {
+        var mode: ControlsMode
+        let videoView = self.mainVideoView ?? self.tileView
+        if let videoView = videoView {
+            if NSPointInRect(location, videoView.frame) && mouseInside() {
                 mode = .normal
             } else {
                 mode = .invisible
@@ -119,42 +121,86 @@ final class GroupCallView : View {
             mode = .normal
         }
         
+        if state?.state.networkState == .connecting {
+            mode = .normal
+        }
         
         let previousMode = self.controlsMode
         self.controlsMode = mode
         
         if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: animated)
-            titleView.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: animated)
-            mainVideoView?.updateMode(controlsMode: mode, animated: animated)
+            mainVideoView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
+            tileView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
+
         }
     }
     
     func idleHide() {
-        let isVertical = state?.currentDominantSpeakerWithVideo != nil
-        let mode: ControlsMode = isVertical ? .invisible :.normal
+        
+        guard let window = self.window else {
+            return
+        }
+        let location = window.mouseLocationOutsideOfEventStream
+        
+        let frame = controlsContainer.convert(controlsContainer.fullscreenBackgroundView.frame, to: nil)
+
+        
+        
+        let hasVideo = (mainVideoView ?? tileView) != nil
+        let mode: ControlsMode = hasVideo && isFullScreen && !NSPointInRect(location, frame) ? .invisible :.normal
         let previousMode = self.controlsMode
         self.controlsMode = mode
         
         if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: true)
-            titleView.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: true)
-            mainVideoView?.updateMode(controlsMode: mode, animated: true)
+            
+            
+            var videosMode: ControlsMode
+            if !isFullScreen {
+                if NSPointInRect(location, frame) && mouseInside() {
+                    videosMode = .normal
+                } else {
+                    videosMode = .invisible
+                }
+            } else {
+                videosMode = mode
+            }
+            mainVideoView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
+            tileView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
+
         }
     }
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
         
-        let isVertical = isFullScreen && state?.currentDominantSpeakerWithVideo != nil
+        
+        let hasVideo = isFullScreen && (self.tileView != nil || self.mainVideoView != nil)
+        
+        let isVideo = state?.mode == .video
+        
+        
+        peersTableContainer.setFrameSize(NSMakeSize(substrateRect().width, peersTableContainer.frame.height))
+        peersTable.setFrameSize(NSMakeSize(tableRect.width, peersTable.frame.height))
         
         transition.updateFrame(view: peersTable, frame: tableRect)
+
         transition.updateFrame(view: peersTableContainer, frame: substrateRect())
-        if isVertical {
-            transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 100, addition: peersTable.frame.width / 2))
+        if hasVideo {
+            if isFullScreen, state?.hideParticipants == true {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75))
+            } else {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2 + 5))
+            }
         } else {
-            transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
+            if isVideo {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 110))
+            } else {
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 50))
+            }
         }
-        let titleRect = NSMakeRect(isVertical ? 100 : 0, 0, frame.width - (isVertical ? 100 : 0), isVertical ? 54 : 54)
+        
+        let titleRect = NSMakeRect(0, 0, frame.width, 54)
         transition.updateFrame(view: titleView, frame: titleRect)
         titleView.updateLayout(size: titleRect.size, transition: transition)
         
@@ -163,8 +209,11 @@ final class GroupCallView : View {
             transition.updateFrame(view: mainVideoView, frame: mainVideoRect)
             mainVideoView.updateLayout(size: mainVideoRect.size, transition: transition)
         }
+        if let tileView = tileView {
+            transition.updateFrame(view: tileView, frame: mainVideoRect)
+            tileView.updateLayout(size: mainVideoRect.size, transition: transition)
+        }
         
-        transition.updateFrame(view: titleHeaderCap, frame: NSMakeRect(0, 0, 100, 54))
         
         if let scheduleView = self.scheduleView {
             let rect = tableRect
@@ -178,11 +227,17 @@ final class GroupCallView : View {
     private var tableRect: NSRect {
         var size = peersTable.frame.size
         let width = min(frame.width - 40, 600)
-        if let state = state, state.currentDominantSpeakerWithVideo != nil {
+        
+        if let state = state, !state.videoActive(.main).isEmpty {
             if isFullScreen {
-                size = NSMakeSize(80, frame.height - 40 - 10)
+                switch state.layoutMode {
+                case .classic:
+                    size = NSMakeSize(GroupCallTheme.smallTableWidth, frame.height - 54 - 10)
+                case .tile:
+                    size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 10)
+                }
             } else {
-                size = NSMakeSize(width, frame.height - round(width * 0.4) - 271 )
+                size = NSMakeSize(width, frame.height - 180 - mainVideoRect.height)
             }
         } else {
             size = NSMakeSize(width, frame.height - 271)
@@ -190,14 +245,19 @@ final class GroupCallView : View {
         var rect = focus(size)
         rect.origin.y = 54
         
-        if let state = state, state.currentDominantSpeakerWithVideo != nil {
+        if let state = state, !state.videoActive(.main).isEmpty {
             if !isFullScreen {
                 rect.origin.y = mainVideoRect.maxY + 10
             } else {
                 rect.origin.x = 10
                 rect.origin.y = 54
+                
+                if state.hideParticipants {
+                    rect.origin.x = -(rect.width + 10)
+                }
             }
         }
+        
         return rect
     }
     
@@ -208,25 +268,47 @@ final class GroupCallView : View {
         if prevFullScreen != self.isFullScreen, let state = self.state {
             updateUIAfterFullScreenUpdated(state, reloadTable: false)
         }
-        updateLayout(size: newSize, transition: .immediate)
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
     }
     
     var isFullScreen: Bool {
-        if frame.width > fullScreenThreshold {
+        if let tempVertical = tempFullScreen {
+            return tempVertical
+        }
+        if frame.width >= GroupCallTheme.fullScreenThreshold {
             return true
         }
         return false
     }
     
-    private var mainVideoRect: NSRect {
+    var mainVideoRect: NSRect {
         var rect: CGRect
-        if isFullScreen {
-            let width = frame.width - 100
-            let height = frame.height
-            rect = CGRect(origin: .init(x: 100, y: 0), size: .init(width: width, height: height))
+        if isFullScreen, let state = state {
+            let tableWidth: CGFloat
+            switch state.layoutMode {
+            case .classic:
+                tableWidth = (GroupCallTheme.smallTableWidth + 20)
+            case .tile:
+                tableWidth = (GroupCallTheme.tileTableWidth + 20)
+            }
+            
+            if state.hideParticipants, isFullScreen {
+                let width = frame.width - 20
+                let height = frame.height - 54 - 10
+                rect = CGRect(origin: .init(x: 10, y: 54), size: .init(width: width, height: height))
+            } else {
+                let width = frame.width - tableWidth - 10
+                let height = frame.height - 54 - 10
+                rect = CGRect(origin: .init(x: tableWidth, y: 54), size: .init(width: width, height: height))
+            }
+            
         } else {
             let width = min(frame.width - 40, 600)
-            rect = focus(NSMakeSize(width, width * 0.4))
+            rect = focus(NSMakeSize(width, max(200, frame.height - 180 - 200)))
             rect.origin.y = 54
         }
         return rect
@@ -236,13 +318,17 @@ final class GroupCallView : View {
     
     var markWasScheduled: Bool? = false
     
+    var tempFullScreen: Bool? = nil
+    
     func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
                 
         let duration: Double = 0.3
         
        
         let previousState = self.state
-        peersTable.merge(with: transition)
+        if !transition.isEmpty {
+            peersTable.merge(with: transition)
+        }
         
         if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
@@ -264,13 +350,15 @@ final class GroupCallView : View {
         self.state = state
 
         
-        titleView.update(state.peer, state, call.account, settingsClick: { [weak self] in
-            self?.arguments?.settings()
-        }, recordClick: { [weak self, weak state] in
+        titleView.update(state.peer, state, call.account, recordClick: { [weak self, weak state] in
             if let state = state {
                 self?.arguments?.recordClick(state.state)
             }
-        }, animated: animated)
+        }, resizeClick: { [weak self] in
+            self?.arguments?.toggleScreenMode()
+        }, hidePeersClick: { [weak self] in
+            self?.arguments?.togglePeersHidden()
+        } , animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeInOut) : .immediate
@@ -320,96 +408,121 @@ final class GroupCallView : View {
             if state.state.scheduleState != nil {
                 peersTable.removeFromSuperview()
                 peersTableContainer.removeFromSuperview()
-            } else {
+            } else if peersTable.superview == nil {
                 addSubview(peersTableContainer)
                 addSubview(peersTable)
             }
         }
         
-        if let currentDominantSpeakerWithVideo = state.currentDominantSpeakerWithVideo {
-            let mainVideo: MainVideoContainerView
-            var isPresented: Bool = false
-            if let video = self.mainVideoView {
-                mainVideo = video
+        switch state.layoutMode {
+        case .classic:
+            if let tileView = self.tileView {
+                self.tileView = nil
+                if animated {
+                    tileView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak tileView] _ in
+                        tileView?.removeFromSuperview()
+                    })
+                } else {
+                    tileView.removeFromSuperview()
+                }
+            }
+            if let currentDominantSpeakerWithVideo = state.currentDominantSpeakerWithVideo {
+                let mainVideo: GroupCallMainVideoContainerView
+                var isPresented: Bool = false
+                if let video = self.mainVideoView {
+                    mainVideo = video
+                } else {
+                    mainVideo = GroupCallMainVideoContainerView(call: call)
+                    mainVideo.frame = mainVideoRect
+                    
+                    
+                    self.mainVideoView = mainVideo
+                    addSubview(mainVideo, positioned: .below, relativeTo: titleView)
+                    isPresented = true
+                }
+                
+                let member = state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId})
+                
+                mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: member, resizeMode: .resizeAspect, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: state.isFullScreen, isPinned: true, arguments: arguments)
+                
+                if isPresented && animated {
+                    mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
+                    mainVideo.updateLayout(size: mainVideoRect.size, transition: .immediate)
+                    mainVideo.frame = mainVideoRect
+                    mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
+                }
             } else {
-                mainVideo = MainVideoContainerView(call: call, resizeMode: self.resizeMode)
-                
-                mainVideo.set(handler: { [weak self] control in
-                    guard let `self` = self else {
-                        return
+                if let mainVideo = self.mainVideoView{
+                    self.mainVideoView = nil
+                    if animated {
+                        mainVideo.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak mainVideo] _ in
+                            mainVideo?.removeFromSuperview()
+                        })
+                    } else {
+                        mainVideo.removeFromSuperview()
                     }
-                    switch self.resizeMode {
-                    case .resizeAspect:
-                        self.resizeMode = .resizeAspectFill
-                    case .resizeAspectFill:
-                        self.resizeMode = .resizeAspect
-                    default:
-                        break
-                    }
-                }, for: .DoubleClick)
-                
-                mainVideo.gravityButton.set(handler: { [weak self] control in
-                    guard let `self` = self else {
-                        return
-                    }
-                    switch self.resizeMode {
-                    case .resizeAspect:
-                        self.resizeMode = .resizeAspectFill
-                    case .resizeAspectFill:
-                        self.resizeMode = .resizeAspect
-                    default:
-                        break
-                    }
-                }, for: .Click)
-                
-                self.mainVideoView = mainVideo
-                addSubview(mainVideo, positioned: .below, relativeTo: titleView)
-                isPresented = true
+                }
             }
-            mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, transition: .immediate, controlsMode: self.controlsMode)
-            
-            if isPresented && animated {
-                mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
-                 
-                mainVideo.updateLayout(size: mainVideoRect.size, transition: .immediate)
-                mainVideo.frame = mainVideoRect
-                
-                mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
-                
-
-                peersTable.change(size: tableRect.size, animated: animated)
-                peersTableContainer.change(size: substrateRect().size, animated: animated)
-
-            }
-        } else {
-            if let mainVideo = self.mainVideoView{
+        case .tile:
+            if let mainVideo = self.mainVideoView {
                 self.mainVideoView = nil
                 if animated {
                     mainVideo.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak mainVideo] _ in
                         mainVideo?.removeFromSuperview()
                     })
-                    peersTable.change(size: tableRect.size, animated: animated)
-                    peersTableContainer.change(size: substrateRect().size, animated: animated)
-
                 } else {
                     mainVideo.removeFromSuperview()
                 }
             }
+            
+            if !state.videoActive(.main).isEmpty {
+                let current: GroupCallTileView
+                if let tileView = self.tileView {
+                    current = tileView
+                } else {
+                    current = GroupCallTileView(call: call, arguments: arguments, frame: mainVideoRect)
+                    self.tileView = current
+                    addSubview(current, positioned: .below, relativeTo: titleView)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
+                    }
+                }
+                current.update(state: state, transition: transition, animated: animated, controlsMode: self.controlsMode)
+            } else {
+                if let tileView = self.tileView {
+                    self.tileView = nil
+                    if animated {
+                        tileView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak tileView] _ in
+                            tileView?.removeFromSuperview()
+                        })
+                    } else {
+                        tileView.removeFromSuperview()
+                    }
+                }
+            }
         }
+
+        self.mainVideoView?.updateMode(controlsMode: controlsMode, controlsState: controlsContainer.mode, animated: animated)
         
         updateLayout(size: frame.size, transition: transition)
         updateUIAfterFullScreenUpdated(state, reloadTable: false)
 
     }
     
+    var isVertical: Bool {
+        return isFullScreen && state?.currentDominantSpeakerWithVideo != nil && state?.layoutMode == .classic
+    }
+    
     private func updateUIAfterFullScreenUpdated(_ state: GroupCallUIState, reloadTable: Bool) {
-        let isVertical = isFullScreen && state.currentDominantSpeakerWithVideo != nil
         
         peersTableContainer.isHidden = isVertical
         peersTable.layer?.cornerRadius = isVertical ? 0 : 10
         
-        mainVideoView?.layer?.cornerRadius = isVertical ? 0 : 10
+        mainVideoView?.layer?.cornerRadius = 10
         
+        if let event = NSApp.currentEvent {
+            updateMouse(event: event, animated: false, isReal: false)
+        }
     }
 
     required init?(coder: NSCoder) {

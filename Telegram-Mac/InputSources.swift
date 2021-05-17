@@ -26,10 +26,10 @@ final class InputSources: NSObject {
         return _inputSource.get() |> distinctUntilChanged(isEqual: { $0 == $1 })
     }
     
-    func searchEmoji(postbox: Postbox, sharedContext: SharedAccountContext, query: String, completeMatch: Bool, checkPrediction: Bool) -> Signal<[String], NoError> {
+    func searchEmoji(postbox: Postbox, engine: TelegramEngine, sharedContext: SharedAccountContext, query: String, completeMatch: Bool, checkPrediction: Bool) -> Signal<[String], NoError> {
         return combineLatest(value, baseAppSettings(accountManager: sharedContext.accountManager)) |> mapToSignal { sources, settings in
             if settings.predictEmoji || !checkPrediction {
-                return combineLatest(sources.map({ searchEmojiKeywords(postbox: postbox, inputLanguageCode: $0, query: query.lowercased(), completeMatch: completeMatch) })) |> map { results in
+                return combineLatest(sources.map({ engine.stickers.searchEmojiKeywords(inputLanguageCode: $0, query: query.lowercased(), completeMatch: completeMatch) })) |> map { results in
                     return results.reduce([], { $0 + $1 }).reduce([], { current, value -> [String] in
                         if completeMatch {
                             if query.lowercased() == value.keyword.lowercased() {

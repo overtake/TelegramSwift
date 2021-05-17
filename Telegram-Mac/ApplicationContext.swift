@@ -571,7 +571,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 let split = current.split(separator: "-")
                 let lan: String = !split.isEmpty ? String(split[0]) : "en"
                 if lan != "en" {
-                    return suggestedLocalizationInfo(network: context.account.network, languageCode: lan, extractKeys: ["Suggest.Localization.Header", "Suggest.Localization.Other"]) |> take(1)
+                    return context.engine.localization.suggestedLocalizationInfo(languageCode: lan, extractKeys: ["Suggest.Localization.Header", "Suggest.Localization.Other"]) |> take(1)
                 }
             }
             return .complete()

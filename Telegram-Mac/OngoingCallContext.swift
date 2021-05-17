@@ -657,12 +657,15 @@ final class OngoingCallContext {
         }
         
         
-        self.signalingDataDisposable = (callSessionManager.callSignalingData(internalId: internalId)).start(next: { [weak self] data in
+        
+        self.signalingDataDisposable = callSessionManager.beginReceivingCallSignalingData(internalId: internalId, { [weak self] dataList in
             print("data received")
             queue.async {
                 self?.withContext { context in
                     if let context = context as? OngoingCallThreadLocalContextWebrtc {
-                        context.addSignaling(data)
+                        for data in dataList {
+                            context.addSignaling(data)
+                        }
                     }
                 }
             }

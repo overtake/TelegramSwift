@@ -131,8 +131,7 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
             thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
         }
         modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-
-            context.chatUndoManager.clearHistoryInteractively(postbox: context.account.postbox, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
+            context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
             close?()
         })
     })
@@ -193,8 +192,8 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
 //            } else {
 //                text = L10n.tipAutoDeleteTimerSetOff
 //            }
-
-            _ = showModalProgress(signal: setChatMessageAutoremoveTimeoutInteractively(account: context.account, peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout), for: context.window).start(completed: {
+            
+            _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout), for: context.window).start(completed: {
                 f(.success(.custom({
                    // if let text = text {
                      //   showModalText(for: context.window, text: text)

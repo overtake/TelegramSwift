@@ -524,8 +524,7 @@ final class ChatInteraction : InterfaceObserver  {
                         }
                     case let .urlAuth(url, buttonId):
                         let context = strongSelf.context
-                        
-                        _ = showModalProgress(signal: requestMessageActionUrlAuth(account: context.account, subject: .message(id: keyboardMessage.id, buttonId: buttonId)), for: context.window).start(next: { result in
+                        _ = showModalProgress(signal: context.engine.messages.requestMessageActionUrlAuth(subject: .message(id: keyboardMessage.id, buttonId: buttonId)), for: context.window).start(next: { result in
                             switch result {
                             case let .accepted(url):
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
@@ -533,7 +532,7 @@ final class ChatInteraction : InterfaceObserver  {
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                             case let .request(requestURL, peer, writeAllowed):
                                 showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
-                                    _ = showModalProgress(signal: acceptMessageActionUrlAuth(account: context.account, subject: .message(id: keyboardMessage.id, buttonId: buttonId), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                                    _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .message(id: keyboardMessage.id, buttonId: buttonId), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
                                         switch result {
                                         case .default:
                                             execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))

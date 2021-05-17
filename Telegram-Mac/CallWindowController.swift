@@ -194,8 +194,8 @@ private class PhoneCallWindowView : View {
         imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
         
-        acceptControl.updateWithData(CallControlData(text: L10n.callAccept, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(50, 50), backgroundColor: .greenUI), animated: false)
-        declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: false)
+        acceptControl.updateWithData(CallControlData(text: L10n.callAccept, mode: .normal(.greenUI, theme.icons.callWindowAccept), iconSize: NSMakeSize(50, 50)), animated: false)
+        declineControl.updateWithData(CallControlData(text: L10n.callDecline, mode: .normal(.redUI, theme.icons.callWindowDecline), iconSize: NSMakeSize(50, 50)), animated: false)
         
         
         basicControls.addSubview(b_VideoCamera)
@@ -593,9 +593,22 @@ private class PhoneCallWindowView : View {
             self.b_ScreenShare.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
         }
         
-        self.b_VideoCamera.updateWithData(CallControlData(text: L10n.callCamera, isVisualEffect: !inputCameraIsActive, icon: inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        let vcBg: CallControlData.Mode
+        if !inputCameraIsActive {
+            vcBg = .visualEffect(inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo)
+        } else {
+            vcBg = .normal(.white, inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo)
+        }
+        let mBg: CallControlData.Mode
+        if !state.isMuted {
+            mBg = .visualEffect(state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute)
+        } else {
+            mBg = .normal(.white, state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute)
+        }
         
-        self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        self.b_VideoCamera.updateWithData(CallControlData(text: L10n.callCamera, mode: vcBg, iconSize: NSMakeSize(50, 50)), animated: false)
+        
+        self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, mode: mBg, iconSize: NSMakeSize(50, 50)), animated: false)
         
         self.b_Mute.updateEnabled(state.muteIsAvailable, animated: animated)
         
@@ -603,7 +616,13 @@ private class PhoneCallWindowView : View {
         self.b_VideoCamera.isHidden = !session.isVideoPossible
         
         
-        self.b_ScreenShare.updateWithData(CallControlData(text: L10n.callScreen, isVisualEffect: !state.isScreenCapture, icon: state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        let ssBg: CallControlData.Mode
+        if !state.isScreenCapture {
+            ssBg = .visualEffect(state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing)
+        } else {
+            ssBg = .normal(.white, state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing)
+        }
+        self.b_ScreenShare.updateWithData(CallControlData(text: L10n.callScreen, mode: ssBg, iconSize: NSMakeSize(50, 50)), animated: false)
         self.b_ScreenShare.updateLoading(outgoingCameraInitialized == .initializing && state.isScreenCapture, animated: animated)
         
         self.b_ScreenShare.isHidden = true//!session.isVideoPossible
@@ -641,7 +660,7 @@ private class PhoneCallWindowView : View {
                 activeView._change(pos: NSMakePoint(x, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
                 x += activeView.size.width + 45
             }
-            declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDeclineSmall, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: animated)
+            declineControl.updateWithData(CallControlData(text: L10n.callDecline, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: animated)
             
         case .ringing:
             break
@@ -656,9 +675,9 @@ private class PhoneCallWindowView : View {
                     activeView._change(pos: NSMakePoint(x, 0), animated: animated, duration: 0.3, timingFunction: .spring)
                     x += activeView.size.width + 45
                 }
-                acceptControl.updateWithData(CallControlData(text: L10n.callRecall, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(50, 50), backgroundColor: .greenUI), animated: animated)
+                acceptControl.updateWithData(CallControlData(text: L10n.callRecall, mode: .normal(.greenUI, theme.icons.callWindowAccept), iconSize: NSMakeSize(50, 50)), animated: animated)
                 
-                declineControl.updateWithData(CallControlData(text: L10n.callClose, isVisualEffect: false, icon: theme.icons.callWindowCancel, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: animated)
+                declineControl.updateWithData(CallControlData(text: L10n.callClose, mode: .normal(.redUI, theme.icons.callWindowCancel), iconSize: NSMakeSize(50, 50)), animated: animated)
                 
                 
                 acceptControl.change(pos: NSMakePoint(frame.midX + 25, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
@@ -671,7 +690,7 @@ private class PhoneCallWindowView : View {
             } else {
                 self.acceptControl.isHidden = true
                 
-                declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDeclineSmall, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: false)
+                declineControl.updateWithData(CallControlData(text: L10n.callDecline, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: false)
                 
                 let activeViews = self.allActiveControlsViews
                 let restWidth = self.allControlRestWidth

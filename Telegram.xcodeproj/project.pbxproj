@@ -31,6 +31,8 @@
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
 		27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */; };
 		274A12DE2584BFF5006C6FED /* GroupCallInvitation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */; };
+		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
+		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
 		275045E525EE271D00872D20 /* GroupCallDisplayAsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */; };
 		2756EF1D25C463F10062303D /* LegacyReachability.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2756EF1C25C463F10062303D /* LegacyReachability.framework */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
@@ -86,8 +88,11 @@
 		27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */; };
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
+		27AAFCBF2649288E000B1053 /* GroupCallTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */; };
 		27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */; };
 		27B15D32259B373800C7F280 /* DesktopCapturePreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */; };
+		27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8AFE926380B4D0044C71B /* screenon.tgs */; };
+		27B8AFEC26380B4E0044C71B /* screenoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8AFEA26380B4E0044C71B /* screenoff.tgs */; };
 		27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */; };
 		27C4089125B068C300372302 /* InviteLinkRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089025B068C300372302 /* InviteLinkRowItem.swift */; };
 		27C4089425B081B500372302 /* FireTimerControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089325B081B500372302 /* FireTimerControl.swift */; };
@@ -298,7 +303,6 @@
 		A766493F236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A7664940236D6BFD00163DF4 /* PasscodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */; };
 		A767DD4123F2BB3200366F76 /* ShortcutListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A767DD4023F2BB3200366F76 /* ShortcutListController.swift */; };
-		A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */; };
 		A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */; };
 		A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */; };
 		A76C8AA224221D3000FDB071 /* graph_loading.tgs in Resources */ = {isa = PBXBuildFile; fileRef = A76C8AA124221D2800FDB071 /* graph_loading.tgs */; };
@@ -1098,6 +1102,8 @@
 		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
 		27478F5B25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_3.tgs; sourceTree = "<group>"; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
+		274BB56C264013AC00620D03 /* cameraon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraon.tgs; sourceTree = "<group>"; };
+		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
 		2756EF1C25C463F10062303D /* LegacyReachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LegacyReachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
@@ -1153,8 +1159,11 @@
 		27A99049257A7435009044DB /* SoundEffectPlayQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundEffectPlayQueue.swift; sourceTree = "<group>"; };
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
+		27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileView.swift; sourceTree = "<group>"; };
 		27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListController.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
+		27B8AFE926380B4D0044C71B /* screenon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = screenon.tgs; sourceTree = "<group>"; };
+		27B8AFEA26380B4E0044C71B /* screenoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = screenoff.tgs; sourceTree = "<group>"; };
 		27C4088D25B0603700372302 /* GeneralLoadingRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralLoadingRowItem.swift; sourceTree = "<group>"; };
 		27C4089025B068C300372302 /* InviteLinkRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinkRowItem.swift; sourceTree = "<group>"; };
 		27C4089325B081B500372302 /* FireTimerControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTimerControl.swift; sourceTree = "<group>"; };
@@ -1373,7 +1382,6 @@
 		A7565EAD23BE02AF0031EADE /* ChatGradientModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGradientModel.swift; sourceTree = "<group>"; };
 		A766493E236D6BFD00163DF4 /* PasscodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasscodeSettings.swift; sourceTree = "<group>"; };
 		A767DD4023F2BB3200366F76 /* ShortcutListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutListController.swift; sourceTree = "<group>"; };
-		A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchModalController.swift; sourceTree = "<group>"; };
 		A76C8A9D2420FFE400FDB071 /* folder_empty.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = folder_empty.tgs; sourceTree = "<group>"; };
 		A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticalTabsView.swift; sourceTree = "<group>"; };
 		A76C8AA124221D2800FDB071 /* graph_loading.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = graph_loading.tgs; sourceTree = "<group>"; };
@@ -2221,6 +2229,9 @@
 				276B5988261C7AC60029FD3F /* GroupCallSchedule.swift */,
 				2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */,
 				2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */,
+				27335F0225C8295100FD040C /* GroupVideoView.swift */,
+				27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */,
+				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -4438,7 +4449,6 @@
 				27CD09752624D33100ECB8EF /* animated-webp */,
 				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
 				A7F28336239A808500742C20 /* TemplateController.swift */,
-				A76C8A99241F826900FDB071 /* GlobalSearchModalController.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -4488,6 +4498,10 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				274BB56F264013B800620D03 /* cameraoff.tgs */,
+				274BB56C264013AC00620D03 /* cameraon.tgs */,
+				27B8AFEA26380B4E0044C71B /* screenoff.tgs */,
+				27B8AFE926380B4D0044C71B /* screenon.tgs */,
 				270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */,
 				270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */,
 				2763A16A261DF65700C12762 /* voice_chat_set_reminder.tgs */,
@@ -4758,8 +4772,6 @@
 				D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */,
 				D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */,
 				D0E7BD78256AE4B00068644D /* GroupCallController.swift */,
-				27335F0225C8295100FD040C /* GroupVideoView.swift */,
-				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 				D0E7BECF256EA7140068644D /* GroupCallSettingsController.swift */,
 				D00747032577AF0B0000DF74 /* PushToTalkRowItem.swift */,
 				D032AFA32578172400E67215 /* PushToTalk.swift */,
@@ -4951,6 +4963,7 @@
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
 				D07450E9233D61B800769D7F /* keyboard_typing.tgs in Resources */,
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
+				27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
 				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
@@ -4995,6 +5008,7 @@
 				D07C6D802346A43000468B1A /* monkey_unsee.tgs in Resources */,
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				D07450EE233D61B800769D7F /* keychain.tgs in Resources */,
+				274BB56D264013AD00620D03 /* cameraon.tgs in Resources */,
 				D07C6D812346A43000468B1A /* monkey_see.tgs in Resources */,
 				D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */,
 				2773A55F25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs in Resources */,
@@ -5003,6 +5017,7 @@
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
+				274BB570264013B900620D03 /* cameraoff.tgs in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
 				2763A16E261DF68100C12762 /* voice_chat_set_reminder_to_mute.tgs in Resources */,
 				27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */,
@@ -5025,6 +5040,7 @@
 				27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */,
 				A778DC3323C8988300DD307B /* quiz-incorrect.mp3 in Resources */,
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
+				27B8AFEC26380B4E0044C71B /* screenoff.tgs in Resources */,
 				A731925925DBA60000218E0E /* gigagroup.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
@@ -5158,7 +5174,6 @@
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				C24FD4101F20FBFB00A97196 /* RecentUsedEmoji.swift in Sources */,
-				A76C8A9A241F826900FDB071 /* GlobalSearchModalController.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
 				9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */,
 				A76C8AA424221F5400FDB071 /* StatisticsLoadingRowItem.swift in Sources */,
@@ -5517,6 +5532,7 @@
 				9FB14FBF209889A500688EF9 /* EDSunriseSet.m in Sources */,
 				C21AAE361DB22CA5007638C5 /* AvatarLayer.swift in Sources */,
 				C2DF47E01DE846AB003AA6C0 /* ChatAudioContentView.swift in Sources */,
+				27AAFCBF2649288E000B1053 /* GroupCallTileView.swift in Sources */,
 				C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */,
 				C24DABA51E083185005EE404 /* YTVimeoVideo.m in Sources */,
 				C2FD33E91E696A86008D13D4 /* GroupsInCommonViewController.swift in Sources */,

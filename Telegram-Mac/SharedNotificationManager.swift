@@ -54,10 +54,12 @@ final class SharedNotificationBindings {
     let navigateToChat:(Account, PeerId) -> Void
     let navigateToThread:(Account, MessageId, MessageId) -> Void // threadId, fromId
     let updateCurrectController:()->Void
-    init(navigateToChat: @escaping(Account, PeerId) -> Void, navigateToThread: @escaping(Account, MessageId, MessageId) -> Void, updateCurrectController: @escaping()->Void) {
+    let applyMaxReadIndexInteractively:(MessageIndex)->Void
+    init(navigateToChat: @escaping(Account, PeerId) -> Void, navigateToThread: @escaping(Account, MessageId, MessageId) -> Void, updateCurrectController: @escaping()->Void, applyMaxReadIndexInteractively:@escaping(MessageIndex)->Void) {
         self.navigateToChat = navigateToChat
         self.navigateToThread = navigateToThread
         self.updateCurrectController = updateCurrectController
+        self.applyMaxReadIndexInteractively = applyMaxReadIndexInteractively
     }
 }
 
@@ -461,13 +463,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     @objc func userNotificationCenter(_ center: NSUserNotificationCenter, didDismissAlert notification: NSUserNotification) {
         if let userInfo = notification.userInfo, let timestamp = userInfo["timestamp"] as? Int32, let accountId = userInfo["accountId"] as? Int64, let messageId = getNotificationMessageId(userInfo: userInfo, for: "reply") {
             
-            let accountId = AccountRecordId(rawValue: accountId)
-            
-            guard let account = activeAccounts.accounts.first(where: {$0.0 == accountId})?.1 else {
-                return
-            }
-            
-            _ = applyMaxReadIndexInteractively(postbox: account.postbox, stateManager: account.stateManager, index: MessageIndex(id: messageId, timestamp: timestamp)).start()
+            bindings.applyMaxReadIndexInteractively(MessageIndex(id: messageId, timestamp: timestamp))
         }
     }
     

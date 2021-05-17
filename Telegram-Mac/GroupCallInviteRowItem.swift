@@ -16,12 +16,17 @@ import SwiftSignalKit
 
 final class GroupCallInviteRowItem : GeneralRowItem {
     fileprivate let videoMode: Bool
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void) {
+    private let futureWidth:()->CGFloat?
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void, futureWidth:@escaping()->CGFloat?) {
         self.videoMode = videoMode
+        self.futureWidth = futureWidth
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType, action: action, inset: NSEdgeInsets())
     }
     
     override var width: CGFloat {
+        if let futureWidth = self.futureWidth() {
+            return futureWidth
+        }
         if let superview = table?.superview {
             return superview.frame.width
         } else {
@@ -30,7 +35,7 @@ final class GroupCallInviteRowItem : GeneralRowItem {
     }
     
     var isVertical: Bool {
-        return videoMode && (width == 80 || width > fullScreenThreshold)
+        return videoMode && (width == GroupCallTheme.smallTableWidth || width >= GroupCallTheme.fullScreenThreshold)
     }
     
     override var hasBorder: Bool {
@@ -111,7 +116,7 @@ private final class GroupCallInviteRowView : GeneralContainableRowView {
         self.layout()
         
         if item.isVertical {
-            thumbView.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (80 - thumbView.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (containerView.frame.height - thumbView.frame.height) / 2)), animated: animated)
+            thumbView.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (160 - thumbView.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (containerView.frame.height - thumbView.frame.height) / 2)), animated: animated)
         } else {
             thumbView.change(pos: NSMakePoint(item.viewType.innerInset.left, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - thumbView.frame.height) / 2)), animated: animated)
             textView.change(pos: NSMakePoint(thumbView.frame.maxX + 20, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - textView.frame.height) / 2)), animated: animated)

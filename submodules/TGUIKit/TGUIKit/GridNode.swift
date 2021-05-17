@@ -964,13 +964,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
             }
             
             if let offset = offset {
-                let timingFunction: CAMediaTimingFunctionName
-                switch curve {
-                case .easeInOut:
-                    timingFunction = CAMediaTimingFunctionName.easeInEaseOut
-                case .spring:
-                    timingFunction = CAMediaTimingFunctionName.spring
-                }
+                let timingFunction: CAMediaTimingFunctionName = curve.timingFunction
                 
                 for (index, itemNode) in self.itemNodes where existingItemIndices.contains(index) {
                     itemNode.layer!.animatePosition(from: CGPoint(x: 0.0, y: offset), to: CGPoint(), duration: duration, timingFunction: timingFunction, additive: true)
@@ -1037,13 +1031,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
                 }
             }
         } else if let previousItemFrames = previousItemFrames, case let .animated(duration, curve) = itemTransition {
-            let timingFunction: CAMediaTimingFunctionName
-            switch curve {
-            case .easeInOut:
-                timingFunction = CAMediaTimingFunctionName.easeInEaseOut
-            case .spring:
-                timingFunction = CAMediaTimingFunctionName.spring
-            }
+            let timingFunction: CAMediaTimingFunctionName = curve.timingFunction
             
             for index in self.itemNodes.keys {
                 let itemNode = self.itemNodes[index]!

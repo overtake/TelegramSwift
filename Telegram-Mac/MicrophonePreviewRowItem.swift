@@ -71,6 +71,7 @@ class MicrophonePreviewRowItem: GeneralRowItem {
     }
     deinit {
         peakDisposable.dispose()
+        self.session.stopRunning()
     }
     
     override func viewClass() -> AnyClass {

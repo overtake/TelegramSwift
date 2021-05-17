@@ -494,7 +494,7 @@ class SelectPeersBehavior {
     }
     
     
-    func start(account: Account, search:Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    func start(context: AccountContext, search:Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         return .complete()
     }
 
@@ -514,10 +514,11 @@ class SelectGroupMembersBehavior : SelectPeersBehavior {
         super.init(settings: settings, limit: limit)
     }
     
-    override func start(account: Account, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         let peerId = self.peerId
         let _renderedResult = self._renderedResult
-        
+        let account = context.account
+
         let previousSearch =  Atomic<String?>(value: nil)
         
         return search |> map { SearchState(state: .Focus, request: $0.request) } |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError>  in
@@ -618,12 +619,13 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
         super.init(settings: settings, limit: limit)
     }
     
-    override func start(account: Account, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         let peerId = self.peerId
         let _renderedResult = self._renderedResult
         let _peersResult = self._peersResult
         let settings = self.settings
         let loadDisposable = self.loadDisposable
+        let account = context.account
         let peerChannelMemberContextsManager = self.peerChannelMemberContextsManager
         let previousSearch = Atomic<String?>(value: nil)
         return search |> mapToSignal { query -> Signal<SearchState, NoError> in
@@ -660,7 +662,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
 
             let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
             
-            let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)}
+            let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = context.engine.peers.searchPeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)}
             
             
             let contactsSearch: Signal<([TemporaryPeer], [TemporaryPeer], Bool), NoError>
@@ -778,10 +780,10 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
 
 
 final class SelectChatsBehavior: SelectPeersBehavior {
-    override func start(account: Account, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
         let previousSearch = Atomic<String?>(value: nil)
-        
+        let account = context.account
         return search |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             if search.request.isEmpty {
@@ -848,8 +850,9 @@ final class SelectChatsBehavior: SelectPeersBehavior {
 class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
     
     
-    override func start(account: Account, search:Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search:Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
+        let account = context.account
         let previousSearch = Atomic<String?>(value: nil)
         
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
@@ -910,10 +913,8 @@ class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
                 }
                 
             } else  {
-                
                 let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased())
-                
-                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
+                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then (context.engine.peers.searchPeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
                 
                 return combineLatest(foundLocalPeers |> map {$0.compactMap( {$0.chatMainPeer })}, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
                     return (uniquePeers(from: values.0), values.1.0 + values.1.1, values.1.2 && search.request.length >= 5)
@@ -985,10 +986,11 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
         bp += 1
         _ = previousGlobal.swap([])
     }
-    override func start(account: Account, search:Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+    override func start(context: AccountContext, search:Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
         let previousGlobal = self.previousGlobal
         let previousSearch = Atomic<String?>(value: nil)
+        let account = context.account
         return search |> mapToSignal { [weak self] search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             let settings = self?.settings ?? SelectPeerSettings()
@@ -1006,8 +1008,7 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
             } else  {
                 
                 let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
-                
-                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
+                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then (context.engine.peers.searchPeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
                 
                 return combineLatest(foundLocalPeers |> map {$0.0}, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
                     return (uniquePeers(from: values.0), values.1.0 + values.1.1, values.1.2 && search.request.length >= 5)
@@ -1180,11 +1181,11 @@ class SelectPeersMainController<T,I,R>: GenericViewController<R> where R:NSView 
         }, for: .Click)
     }
     
-    let account: Account
+    let context: AccountContext
     
-    public init(titles:ComposeTitles, account: Account) {
+    public init(titles:ComposeTitles, context: AccountContext) {
         self.titles = titles
-        self.account = account
+        self.context = context
         super.init()
     }
     
@@ -1274,7 +1275,8 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
         super.viewDidLoad()
         self.nextEnabled(false)
 
-        let account = self.account
+        let context = self.context
+        let account = self.context.account
         let interactions = self.interactions
         
         interactions.add(observer: self)
@@ -1299,7 +1301,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
         
         let first: Atomic<Bool> = Atomic(value: true)
         
-        let transition = combineLatest(queue: prepareQueue, behavior.start(account: account, search: search.get() |> distinctUntilChanged |> map {SearchState(state: .None, request: $0)}), limitsSignal) |> mapToQueue { entries, limits -> Signal<(TableUpdateTransition, LimitsConfiguration?), NoError> in
+        let transition = combineLatest(queue: prepareQueue, behavior.start(context: context, search: search.get() |> distinctUntilChanged |> map {SearchState(state: .None, request: $0)}), limitsSignal) |> mapToQueue { entries, limits -> Signal<(TableUpdateTransition, LimitsConfiguration?), NoError> in
             return prepareEntries(from: previous.swap(entries.0), to: entries.0, account: account, initialSize: initialSize.modify({$0}), animated: false, interactions: interactions, scroll: entries.1 ? .up(false) : .none(nil)) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue) |> map { ($0, limits) }
         } |> deliverOnMainQueue
         
@@ -1317,10 +1319,10 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
     }
     
     
-    init(titles: ComposeTitles, account: Account, settings:SelectPeerSettings = [.contacts], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, isNewGroup: Bool = false) {
+    init(titles: ComposeTitles, context: AccountContext, settings:SelectPeerSettings = [.contacts], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, isNewGroup: Bool = false) {
         self.behavior = SelectContactsBehavior(settings: settings, excludePeerIds: excludePeerIds, limit: limit)
         self.isNewGroup = isNewGroup
-        super.init(titles: titles, account: account)
+        super.init(titles: titles, context: context)
     }
 
     override func firstResponder() -> NSResponder? {
@@ -1427,7 +1429,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     private let disposable:MetaDisposable = MetaDisposable()
     let interactions:SelectPeerInteraction = SelectPeerInteraction()
     private var previous:Atomic<[SelectPeerEntry]?> = Atomic(value:nil)
-    private let account:Account
+    private let context: AccountContext
     private let defaultTitle:String
     private let confirmation:([PeerId])->Signal<Bool,NoError>
     fileprivate let onComplete:Promise<[PeerId]> = Promise()
@@ -1507,10 +1509,10 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let account = self.account
+        let context = self.context
         let interactions = self.interactions
         let initialSize = atomicSize
-        
+        let account = context.account
         genericView.customTheme = behavior.customTheme
         
          
@@ -1549,7 +1551,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         let first: Atomic<Bool> = Atomic(value: true)
 
         
-        let transition = behavior.start(account: account, search: search.get() |> distinctUntilChanged, linkInvation: linkInvation) |> mapToQueue { entries, updateSearch -> Signal<TableUpdateTransition, NoError> in
+        let transition = behavior.start(context: context, search: search.get() |> distinctUntilChanged, linkInvation: linkInvation) |> mapToQueue { entries, updateSearch -> Signal<TableUpdateTransition, NoError> in
             return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: false, interactions:interactions, singleAction: singleAction, scroll: updateSearch ? .up(false) : .none(nil)) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
         } |> deliverOnMainQueue
         
@@ -1563,8 +1565,8 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     private let linkInvation: ((Int)->Void)?
     
-    init(account: Account, title:String, settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, confirmation:@escaping([PeerId])->Signal<Bool,NoError>, behavior: SelectPeersBehavior? = nil, linkInvation:((Int)->Void)? = nil) {
-        self.account = account
+    init(context: AccountContext, title:String, settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, confirmation:@escaping([PeerId])->Signal<Bool,NoError>, behavior: SelectPeersBehavior? = nil, linkInvation:((Int)->Void)? = nil) {
+        self.context = context
         self.defaultTitle = title
         self.confirmation = confirmation
         self.linkInvation = linkInvation
@@ -1578,7 +1580,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     }
     
     func confirmSelected(_ peerIds:[PeerId], _ peers:[Peer]) {
-        let signal = account.postbox.transaction { transaction -> Void in
+        let signal = context.account.postbox.transaction { transaction -> Void in
             updatePeers(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
                 return updated
             })
@@ -1639,9 +1641,9 @@ private class SelectPeersModalController : ModalViewController, Notifable {
 }
 
 
-func selectModalPeers(window: Window, account: Account, title:String , settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT_MAX, behavior: SelectPeersBehavior? = nil, confirmation:@escaping ([PeerId]) -> Signal<Bool,NoError> = {_ in return .single(true) }, linkInvation:((Int)->Void)? = nil) -> Signal<[PeerId], NoError> {
+func selectModalPeers(window: Window, context: AccountContext, title:String , settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT_MAX, behavior: SelectPeersBehavior? = nil, confirmation:@escaping ([PeerId]) -> Signal<Bool,NoError> = {_ in return .single(true) }, linkInvation:((Int)->Void)? = nil) -> Signal<[PeerId], NoError> {
     
-    let modal = SelectPeersModalController(account: account, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation)
+    let modal = SelectPeersModalController(context: context, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation)
     
     showModal(with: modal, for: window)
     
