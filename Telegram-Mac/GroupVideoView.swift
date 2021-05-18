@@ -112,16 +112,27 @@ final class GroupVideoView: View {
             transition.updateFrame(view: subview, frame: videoRect.size.bounds)
         }
         
+        var fr = CATransform3DIdentity
         if isMirrored {
             let rect = self.videoViewContainer.bounds
-            var fr = CATransform3DIdentity
             fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
             fr = CATransform3DScale(fr, -1, 1, 1)
             fr = CATransform3DTranslate(fr, -(rect.width / 2), 0, 0)
-            self.videoViewContainer.layer?.sublayerTransform = fr
-        } else {
-            self.videoViewContainer.layer?.sublayerTransform = CATransform3DIdentity
         }
+        
+        switch transition {
+        case .immediate:
+            self.videoViewContainer.layer?.sublayerTransform = fr
+        case let .animated(duration, curve):
+            let animation = CABasicAnimation(keyPath: "sublayerTransform")
+            animation.fromValue = self.videoViewContainer.layer?.presentation()?.sublayerTransform ?? self.videoViewContainer.layer?.sublayerTransform ?? CATransform3DIdentity
+            animation.toValue = fr
+            animation.timingFunction = .init(name: curve.timingFunction)
+            animation.duration = duration
+            self.videoViewContainer.layer?.add(animation, forKey: "sublayerTransform")
+            self.videoViewContainer.layer?.sublayerTransform = fr
+        }
+
     }
     
     override func viewDidMoveToSuperview() {

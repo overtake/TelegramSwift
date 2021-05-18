@@ -47,10 +47,11 @@ final class GroupCallUIState : Equatable {
         }
         let endpointId: String
         let mode: Mode
-        
+        let index: Int
         func hash(into hasher: inout Hasher) {
             hasher.combine(endpointId)
             hasher.combine(mode.hashValue)
+            hasher.combine(index)
         }
     }
     
@@ -101,10 +102,10 @@ final class GroupCallUIState : Equatable {
     let videoSources: VideoSources
     let layoutMode: LayoutMode
     let version: Int
-    let activeVideoViews: Set<ActiveVideo>
+    let activeVideoViews: [ActiveVideo]
     let hideParticipants: Bool
     let isVideoEnabled: Bool
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: Set<ActiveVideo>, hideParticipants: Bool, isVideoEnabled: Bool) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, currentDominantSpeakerWithVideo: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -215,22 +216,30 @@ final class GroupCallUIState : Equatable {
     }
     
     func videoActive(_ mode: ActiveVideo.Mode) -> [PeerGroupCallData] {
-        return memberDatas.filter { peer in
-            if version == 0 {
+        
+        var members:[PeerGroupCallData] = []
+        for activeVideo in activeVideoViews.filter({ $0.mode == mode }) {
+            let member = memberDatas.first(where: { peer in
+                if version == 0 {
+                    return false
+                }
+                if let endpoint = peer.videoEndpoint {
+                    if activeVideo.endpointId == endpoint {
+                        return true
+                    }
+                }
+                if let endpoint = peer.screencastEndpoint {
+                    if activeVideo.endpointId == endpoint {
+                        return true
+                    }
+                }
                 return false
+            })
+            if let member = member, !members.contains(where: { $0.peer.id == member.peer.id }) {
+                members.append(member)
             }
-            if let endpoint = peer.videoEndpoint {
-                if activeVideoViews.contains(where: { $0.mode == mode && $0.endpointId == endpoint}) {
-                    return true
-                }
-            }
-            if let endpoint = peer.screencastEndpoint {
-                if activeVideoViews.contains(where: { $0.mode == mode && $0.endpointId == endpoint}) {
-                    return true
-                }
-            }
-            return false
         }
+        return members
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
