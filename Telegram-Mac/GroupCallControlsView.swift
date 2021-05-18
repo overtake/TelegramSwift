@@ -169,9 +169,9 @@ final class GroupCallControlsView : View {
                 switch callMode {
                 case .video:
                     from = 1.0
-                    to = 0.5
+                    to = 0.42
                 case .voice:
-                    from = 0.5
+                    from = 0.42
                     to = 1.0
                 }
                 let rect = self.backgroundView.bounds
@@ -214,15 +214,18 @@ final class GroupCallControlsView : View {
         case .video:
             let bgRect = focus(NSMakeSize(340, 70))
             
-            speak.update(size: NSMakeSize(86, 86), transition: transition)
-            transition.updateFrame(view: self.speak, frame: focus(NSMakeSize(86, 86)))
-            transition.updateFrame(view: self.leftButton1, frame: leftButton1.centerFrameY(x: bgRect.minX + 10))
+            speak.update(size: NSMakeSize(80, 80), transition: transition)
+            
+            let addition: CGFloat = mode == .normal ? 10 : 0
+            
+            transition.updateFrame(view: self.speak, frame: focus(NSMakeSize(80, 80)))
+            transition.updateFrame(view: self.leftButton1, frame: leftButton1.centerFrameY(x: bgRect.minX + 16, addition: addition))
             if let leftButton2 = self.leftButton2 {
-                transition.updateFrame(view: leftButton2, frame: leftButton1.centerFrameY(x: leftButton1.frame.maxX + 10))
+                transition.updateFrame(view: leftButton2, frame: leftButton1.centerFrameY(x: leftButton1.frame.maxX + 16, addition: addition))
             }
-            transition.updateFrame(view: self.end, frame: end.centerFrameY(x: bgRect.maxX - end.frame.width - 10))
+            transition.updateFrame(view: self.end, frame: end.centerFrameY(x: bgRect.maxX - end.frame.width - 16, addition: addition))
             if let rightButton1 = self.rightButton1 {
-                transition.updateFrame(view: rightButton1, frame: leftButton1.centerFrameY(x: end.frame.minX - 10 - rightButton1.frame.width))
+                transition.updateFrame(view: rightButton1, frame: leftButton1.centerFrameY(x: end.frame.minX - 16 - rightButton1.frame.width, addition: addition))
             }
             transition.updateFrame(view: self.backgroundView, frame: focus(.init(width: 360, height: 360)))
             transition.updateFrame(view: self.fullscreenBackgroundView, frame: bgRect)
