@@ -360,10 +360,8 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             return !excludedPins.contains($0.presentationEndpointId!)
         })
         if let first = intersection.first {
-            if current == nil || current?.temporary == true {
-                let master: DominantVideo = DominantVideo(first.peer.id, first.presentationEndpointId!, .screencast, true)
-                current = master
-            }
+            let master: DominantVideo = DominantVideo(first.peer.id, first.presentationEndpointId!, .screencast, true)
+            current = master
         }
     } else {
         if current == nil || current?.temporary == false {
