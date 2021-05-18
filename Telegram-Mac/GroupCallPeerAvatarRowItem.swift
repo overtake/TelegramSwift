@@ -56,7 +56,7 @@ private final class GroupCallPeerAvatarRowView: GeneralContainableRowView {
         
         
         shadowView.direction = .vertical(true)
-        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.2)
+        shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.4)
         self.addSubview(shadowView)
         
         addSubview(nameView)
@@ -73,7 +73,7 @@ private final class GroupCallPeerAvatarRowView: GeneralContainableRowView {
         }
         imageView.frame = containerView.bounds
         nameView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, imageView.frame.maxY - nameView.frame.height - item.viewType.innerInset.top))
-        shadowView.frame = NSMakeRect(0, containerView.frame.height - 40, containerView.frame.width, 40)
+        shadowView.frame = NSMakeRect(0, containerView.frame.height - 50, containerView.frame.width, 50)
     }
     
     override var backdorColor: NSColor {

@@ -9265,9 +9265,9 @@ internal final class L10n {
   internal static var voiceChatScheduledHeaderLate: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.HeaderLate") }
   /// Voice Chat
   internal static var voiceChatScreencastConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Screencast.Confirm.Header") }
-  /// Share
+  /// Continue
   internal static var voiceChatScreencastConfirmOK: String  { return L10n.tr("Localizable", "VoiceChat.Screencast.Confirm.OK") }
-  /// %@ is presenting. This action will make you pinned for all participants
+  /// %@ is screensharing. This action will make your screencast pinned for all participants.
   internal static func voiceChatScreencastConfirmText(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.Screencast.Confirm.Text", p1)
   }
@@ -9419,6 +9419,14 @@ internal final class L10n {
   internal static func voiceChatTooltipVideoUnpinned(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.Tooltip.VideoUnpinned", p1)
   }
+  /// Your screencast is pinned
+  internal static var voiceChatTooltipYourScreenPinned: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.YourScreenPinned") }
+  /// Your screencast is unpinned
+  internal static var voiceChatTooltipYourScreenUnpinned: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.YourScreenUnpinned") }
+  /// Your video is pinned
+  internal static var voiceChatTooltipYourVideoPinned: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.YourVideoPinned") }
+  /// Your video is unpinned
+  internal static var voiceChatTooltipYourVideoUnpinned: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.YourVideoUnpinned") }
   /// Screencast share is not available right now. Please try again.
   internal static var voiceChatTooltipErrorScreenUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Error.ScreenUnavailable") }
   /// Video share is not available right now. Please try again.

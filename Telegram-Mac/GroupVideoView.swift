@@ -10,12 +10,30 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 
+
 final class GroupVideoView: View {
+    
+    
     private let videoViewContainer: View
     let videoView: PresentationCallVideoView
     var gravity: CALayerContentsGravity = .resizeAspect
     var initialGravity: CALayerContentsGravity? = nil
     private var validLayout: CGSize?
+    
+    private var isMirrored: Bool = false {
+        didSet {
+            if isMirrored {
+                let rect = self.videoViewContainer.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
+                fr = CATransform3DScale(fr, -1, 1, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), 0, 0)
+                self.videoViewContainer.layer?.sublayerTransform = fr
+            } else {
+                self.videoViewContainer.layer?.sublayerTransform = CATransform3DIdentity
+            }
+        }
+    }
     
     var tapped: (() -> Void)?
     
@@ -37,6 +55,12 @@ final class GroupVideoView: View {
                 if let size = strongSelf.validLayout {
                     strongSelf.updateLayout(size: size, transition: .immediate)
                 }
+            }
+        })
+        
+        videoView.setOnIsMirroredUpdated({ isMirrored in
+            DispatchQueue.main.async { [weak self] in
+                self?.isMirrored = isMirrored
             }
         })
     }
@@ -86,6 +110,17 @@ final class GroupVideoView: View {
         transition.updateFrame(view: self.videoView.view, frame: videoRect)
         for subview in self.videoView.view.subviews {
             transition.updateFrame(view: subview, frame: videoRect.size.bounds)
+        }
+        
+        if isMirrored {
+            let rect = self.videoViewContainer.bounds
+            var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
+            fr = CATransform3DScale(fr, -1, 1, 1)
+            fr = CATransform3DTranslate(fr, -(rect.width / 2), 0, 0)
+            self.videoViewContainer.layer?.sublayerTransform = fr
+        } else {
+            self.videoViewContainer.layer?.sublayerTransform = CATransform3DIdentity
         }
     }
     

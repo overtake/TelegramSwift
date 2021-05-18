@@ -177,14 +177,15 @@ final class VoiceChatActionButtonBackgroundView: View {
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        if let window = window as? Window {
-            occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
-                self?.isCurrentlyInHierarchy = value.contains(.visible)
-            }))
-        } else {
-            occlusionDisposable.set(nil)
-            isCurrentlyInHierarchy = false
-        }
+        isCurrentlyInHierarchy = window != nil
+//        if let window = window as? Window {
+//            occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
+//                self?.isCurrentlyInHierarchy = value.contains(.visible)
+//            }))
+//        } else {
+//            occlusionDisposable.set(nil)
+//            isCurrentlyInHierarchy = false
+//        }
     }
 
 
