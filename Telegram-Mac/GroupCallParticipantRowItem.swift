@@ -248,7 +248,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         if hasVideo || volume != nil, let state = data.state {
             if hasVideo {
-                if let _ = data.videoEndpoint {
+                if let endpoint = data.videoEndpoint, data.activeVideos.contains(endpoint) {
                     if let muteState = state.muteState, muteState.mutedByYou {
                         images.append(GroupCallTheme.status_video_red)
                     } else {
@@ -261,7 +261,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                         }
                     }
                 }
-                if let _ = data.screencastEndpoint {
+                if let endpoint = data.screencastEndpoint, data.activeVideos.contains(endpoint) {
                     if let muteState = state.muteState, muteState.mutedByYou {
                         images.append(GroupCallTheme.status_screencast_red)
                     } else {
