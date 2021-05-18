@@ -243,7 +243,6 @@ final class GroupCallTileView: View {
             view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
                 view?.removeFromSuperview()
             })
-//            view.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.4, removeOnCompletion: false, bounce: false)
         } else {
             view.removeFromSuperview()
         }

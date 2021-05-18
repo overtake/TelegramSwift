@@ -55,13 +55,17 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             if let muteState = data.state?.muteState, !muteState.canUnmute || muteState.mutedByYou {
                 self.volume = nil
             } else {
-                var volumeColor: NSColor
-                if volume == 0 {
-                    volumeColor = GroupCallTheme.grayStatusColor
+                if data.isSpeaking {
+                    var volumeColor: NSColor
+                    if volume == 0 {
+                        volumeColor = GroupCallTheme.grayStatusColor
+                    } else {
+                        volumeColor = color
+                    }
+                    self.volume = TextViewLayout(.initialize(string: "\(Int(Float(volume) / 10000 * 100))%", color: volumeColor, font: .normal(.short)))
                 } else {
-                    volumeColor = color
+                    self.volume = nil
                 }
-                self.volume = TextViewLayout(.initialize(string: "\(Int(Float(volume) / 10000 * 100))%", color: volumeColor, font: .normal(.short)))
             }
         } else {
             self.volume = nil

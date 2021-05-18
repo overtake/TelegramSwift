@@ -1143,6 +1143,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationWillBecomeActive(_ notification: Notification) {
         if contextValue != nil {
+            if !self.window.isVisible {
+                self.window.makeKeyAndOrderFront(self)
+                self.window.orderFrontRegardless()
+            }
             if viewer != nil {
                 viewer?.windowDidResignKey()
             }

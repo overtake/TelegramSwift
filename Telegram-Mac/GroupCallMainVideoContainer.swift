@@ -215,7 +215,9 @@ final class GroupCallMainVideoContainerView: Control {
         
         self.pinView.update(isPinned, animated: animated)
         
-        transition.updateAlpha(view: speakingView, alpha: participant?.isSpeaking == true ? 1 : 0)
+        let showSpeakingView = participant?.isSpeaking == true && (participant?.state?.muteState?.mutedByYou == nil || participant?.state?.muteState?.mutedByYou == false)
+        
+        transition.updateAlpha(view: speakingView, alpha: showSpeakingView ? 1 : 0)
                 
         transition.updateAlpha(view: pinView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
