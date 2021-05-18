@@ -176,21 +176,11 @@ final class GroupCallTileView: View {
         }
         
         let prevTiles = tileViews(self.items.count, windowSize: window.frame.size, frameSize: frame.size)
-
-        var stableIndexes:[String: Int] = [:]
-        var index = 0
-        for member in state.videoActive(.main) {
-            let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
-            for endpoint in endpoints {
-                stableIndexes[endpoint] = index
-                index += 1
-            }
-        }
         
         for member in state.videoActive(.main) {
             let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
-                if state.activeVideoViews.contains(where: { $0.mode == .main && $0.endpointId == endpointId }) {
+                if let activeVideo = state.activeVideoViews.first(where: { $0.mode == .main && $0.endpointId == endpointId }) {
                     let dominant = state.currentDominantSpeakerWithVideo
                     if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
                         let source: VideoSourceMacMode?
@@ -202,7 +192,7 @@ final class GroupCallTileView: View {
                             source = nil
                         }
                         if let source = source {
-                            items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, stableIndexes[endpointId] ?? 0))
+                            items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, activeVideo.index))
                         }
                     }
                 }
@@ -212,53 +202,62 @@ final class GroupCallTileView: View {
         
         let tiles = tileViews(items.count, windowSize: window.frame.size, frameSize: frame.size)
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
+        
+        var deletedViews:[Int: GroupCallMainVideoContainerView] = [:]
+        
         for rdx in deleteIndices.reversed() {
-            self.deleteItem(at: rdx, animated: animated)
+            deletedViews[rdx] = self.deleteItem(at: rdx, animated: animated)
             self.items.remove(at: rdx)
         }
         for (idx, item, pix) in indicesAndItems {
             var prevFrame: NSRect? = nil
+            var prevView: GroupCallMainVideoContainerView? = nil
             if let pix = pix {
                 prevFrame = prevTiles[pix].rect
+                prevView = deletedViews[pix]
             }
-            self.insertItem(item, at: idx, prevFrame: prevFrame, frame: tiles[idx].rect, animated: animated)
+            self.insertItem(item, at: idx, prevFrame: prevFrame, prevView: prevView, frame: tiles[idx].rect, animated: animated)
             self.items.insert(item, at: idx)
         }
 
         
-        for (idx, item, _) in updateIndices {
+        for (idx, item, prev) in updateIndices {
             let item =  item
-            updateItem(item, at: idx, animated: animated)
+            updateItem(item, at: idx, prevFrame: prev != idx ? prevTiles[prev].rect : nil, animated: animated)
             self.items[idx] = item
         }
+    
         
         updateLayout(size: frame.size, transition: transition)
 
     }
     
-    private func deleteItem(at index: Int, animated: Bool) {
+    private func deleteItem(at index: Int, animated: Bool) -> GroupCallMainVideoContainerView {
         let view = self.views.remove(at: index)
         
         if animated {
-            view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                view?.removeFromSuperview()
+            view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completion in
+                if completion {
+                    view?.removeFromSuperview()
+                }
             })
         } else {
             view.removeFromSuperview()
         }
-        
+        return view
     }
-    private func insertItem(_ item: TileEntry, at index: Int, prevFrame: NSRect?, frame: NSRect, animated: Bool) {
+    private func insertItem(_ item: TileEntry, at index: Int, prevFrame: NSRect?, prevView: GroupCallMainVideoContainerView?, frame: NSRect, animated: Bool) {
         
-        let view = GroupCallMainVideoContainerView(call: self.call)
+        let view = prevView ?? GroupCallMainVideoContainerView(call: self.call)
         view.frame = prevFrame ?? frame
+        prevView?.layer?.removeAllAnimations()
         if index == 0 {
             addSubview(view, positioned: .below, relativeTo: self.subviews.first)
         } else {
             addSubview(view, positioned: .above, relativeTo: self.subviews[index - 1])
         }
         
-        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
+        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated && prevView != nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
         
         self.views.insert(view, at: index)
         
@@ -266,8 +265,12 @@ final class GroupCallTileView: View {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
          }
     }
-    private func updateItem(_ item: TileEntry, at index: Int, animated: Bool) {
+    private func updateItem(_ item: TileEntry, at index: Int, prevFrame: NSRect?, animated: Bool) {
         self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
+        
+        if let prevFrame = prevFrame {
+            self.views[index].frame = prevFrame
+        }
     }
     
     
