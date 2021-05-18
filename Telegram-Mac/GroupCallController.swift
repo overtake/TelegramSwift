@@ -315,14 +315,12 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     activeParticipants = peerStates?.participants ?? []
     var index: Int32 = 0
     
-    var currentDominantSpeakerWithVideo = currentDominantSpeakerWithVideo
-
     let videoMembers: [GroupCallParticipantsContext.Participant] = activeParticipants
         .filter { member in
         return member.presentationEndpointId != nil
     }.filter { member in
         return activeVideoViews.contains(where: {
-            $0.endpointId == member.presentationEndpointId
+            $0.endpointId == member.presentationEndpointId && $0.mode == .main
         })
     }
     
@@ -332,12 +330,12 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         return member.presentationEndpointId != nil
     }.filter { member in
         return previous?.activeVideoViews.contains(where: {
-            $0.endpointId == member.presentationEndpointId
+            $0.endpointId == member.presentationEndpointId && $0.mode == .main
         }) ?? false
     } ?? []
     let presenting = videoMembers
     
-    var current: DominantVideo? = currentDominantSpeakerWithVideo
+    var current: DominantVideo? = previous?.currentDominantSpeakerWithVideo
     
     if presenting.count != prevPresenting.count {
         var intersection:[GroupCallParticipantsContext.Participant] = []
@@ -367,13 +365,19 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
                 current = master
             }
         }
+    } else {
+        if current == nil || current?.temporary == false {
+            current = currentDominantSpeakerWithVideo
+        }
     }
     if let dominant = current {
-        if !activeVideoViews.contains(where: { $0.endpointId == dominant.endpointId}) {
+        if !activeVideoViews.contains(where: { $0.endpointId == dominant.endpointId && $0.mode == .main }) {
+            current = nil
+        }
+        if excludedPins.contains(dominant.endpointId), dominant.temporary {
             current = nil
         }
     }
-    currentDominantSpeakerWithVideo = current
     
     let isVertical = isFullScreen && currentDominantSpeakerWithVideo != nil && layoutMode == .classic
     
@@ -431,7 +435,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }
     }
 
-    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, currentDominantSpeakerWithVideo: currentDominantSpeakerWithVideo, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, currentDominantSpeakerWithVideo: current, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false)
 }
 
 
@@ -1268,29 +1272,33 @@ final class GroupCallUIController : ViewController {
         
         var currentState: GroupCallUIState?
 
-
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)), account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), mode, videoSources.get()) |> mapToQueue { [weak currentState] values in
-            return .single(makeState(previous: currentState, peerView: values.3,
-                                     state: values.0,
-                                     isMuted: values.7.0,
-                                     invitedPeers: values.4,
-                                     peerStates: values.1,
-                                     myAudioLevel: values.2,
-                                     summaryState: values.5,
-                                     voiceSettings: values.6,
-                                     isWindowVisible: values.7.1,
-                                     accountPeer: values.7.2,
-                                     unsyncVolumes: values.7.3,
-                                     currentDominantSpeakerWithVideo: values.7.4,
-                                     hideWantsToSpeak: values.8,
-                                     isFullScreen: values.7.6,
-                                     mode: values.9,
-                                     videoSources: values.10,
-                                     layoutMode: values.7.7,
-                                     activeVideoViews: values.7.5.set,
-                                     hideParticipants: values.7.9,
-                                     excludedPins: values.7.10,
-                                     version: values.7.8))
+        let previousState: Atomic<GroupCallUIState?> = Atomic(value: nil)
+        
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), mode, videoSources.get()) |> mapToQueue { values in
+            let value = previousState.modify { previous in
+                return makeState(previous: previous, peerView: values.3,
+                                         state: values.0,
+                                         isMuted: values.7.0,
+                                         invitedPeers: values.4,
+                                         peerStates: values.1,
+                                         myAudioLevel: values.2,
+                                         summaryState: values.5,
+                                         voiceSettings: values.6,
+                                         isWindowVisible: values.7.1,
+                                         accountPeer: values.7.2,
+                                         unsyncVolumes: values.7.3,
+                                         currentDominantSpeakerWithVideo: values.7.4,
+                                         hideWantsToSpeak: values.8,
+                                         isFullScreen: values.7.6,
+                                         mode: values.9,
+                                         videoSources: values.10,
+                                         layoutMode: values.7.7,
+                                         activeVideoViews: values.7.5.set,
+                                         hideParticipants: values.7.9,
+                                         excludedPins: values.7.10,
+                                         version: values.7.8)
+            }
+            return .single(value!)
         } |> distinctUntilChanged
         
         
@@ -1459,9 +1467,6 @@ final class GroupCallUIController : ViewController {
             DispatchQueue.main.async {
                 displayedRaisedHandsPromise.set(displayedRaisedHands.with { $0 })
             }
-            strongSelf.currentDominantSpeakerWithVideoSignal.set(state.currentDominantSpeakerWithVideo)
-            
-            
 
         })
         
@@ -1469,6 +1474,7 @@ final class GroupCallUIController : ViewController {
         self.onDeinit = {
             currentState = nil
             _ = previousEntries.swap([])
+            previousState.swap(nil)
         }
 
         genericView.peersTable.setScrollHandler { [weak self] position in

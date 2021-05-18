@@ -113,7 +113,11 @@ final class GroupCallView : View {
         let videoView = self.mainVideoView ?? self.tileView
         if let videoView = videoView {
             if NSPointInRect(location, videoView.frame) && mouseInside() {
-                mode = .normal
+                if isReal {
+                    mode = .normal
+                } else {
+                    mode = self.controlsMode
+                }
             } else {
                 mode = .invisible
             }
@@ -166,6 +170,9 @@ final class GroupCallView : View {
             } else {
                 videosMode = mode
             }
+            
+            self.controlsMode = videosMode
+            
             mainVideoView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
             tileView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
 

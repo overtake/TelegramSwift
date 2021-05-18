@@ -154,7 +154,7 @@ final class GroupCallMainVideoContainerView: Control {
         addSubview(statusView)
         
         backstage.wantsLayer = true
-        backstage.material = .dark
+        backstage.material = .ultraDark
         backstage.blendingMode = .withinWindow
         backstage.state = .active
         
@@ -218,6 +218,8 @@ final class GroupCallMainVideoContainerView: Control {
         let showSpeakingView = participant?.isSpeaking == true && (participant?.state?.muteState?.mutedByYou == nil || participant?.state?.muteState?.mutedByYou == false)
         
         transition.updateAlpha(view: speakingView, alpha: showSpeakingView ? 1 : 0)
+        
+        speakingView.layer?.borderColor = participant?.state?.muteState?.mutedByYou == true ? GroupCallTheme.customTheme.redColor.cgColor : GroupCallTheme.speakActiveColor.cgColor
                 
         transition.updateAlpha(view: pinView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)

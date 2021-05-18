@@ -1099,6 +1099,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !self.window.isVisible {
+            self.window.makeKeyAndOrderFront(self)
+            self.window.orderFrontRegardless()
+        }
         if viewer != nil {
             viewer?.windowDidResignKey()
         }
