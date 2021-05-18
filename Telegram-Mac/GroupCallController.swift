@@ -1377,6 +1377,52 @@ final class GroupCallUIController : ViewController {
                 _ = strongSelf.disableScreenSleep()
             }
             
+            if currentState?.currentDominantSpeakerWithVideo != state.currentDominantSpeakerWithVideo {
+                guard let window = strongSelf.window else {
+                    return
+                }
+                let currentDominantSpeakerWithVideo = state.currentDominantSpeakerWithVideo
+                let dominant = currentDominantSpeakerWithVideo ?? currentState?.currentDominantSpeakerWithVideo
+                if let dominant = dominant {
+                    let isPinned = currentDominantSpeakerWithVideo != nil
+                    let participant = state.memberDatas.first(where: { $0.peer.id == dominant.peerId })
+                    if let participant = participant {
+                        let text: String = participant.peer.compactDisplayTitle
+                        switch dominant.mode {
+                        case .video:
+                            if isPinned {
+                                if participant.accountPeerId == participant.peer.id {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipYourVideoPinned)
+                                } else {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipVideoPinned(text))
+                                }
+                            } else {
+                                if participant.accountPeerId == participant.peer.id {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipYourVideoUnpinned)
+                                } else {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipVideoUnpinned(text))
+                                }
+                            }
+                        case .screencast:
+                            if isPinned {
+                                if participant.accountPeerId == participant.peer.id {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipYourScreenPinned)
+                                } else {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipScreenPinned(text))
+                                }
+                            } else {
+                                if participant.accountPeerId == participant.peer.id {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipYourScreenUnpinned)
+                                } else {
+                                    showModalText(for: window, text: L10n.voiceChatTooltipScreenUnpinned(text))
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            
             currentState = state
             
             strongSelf.applyUpdates(value.0, value.1, strongSelf.data.call, animated: animated.swap(true))
@@ -1414,6 +1460,9 @@ final class GroupCallUIController : ViewController {
                 displayedRaisedHandsPromise.set(displayedRaisedHands.with { $0 })
             }
             strongSelf.currentDominantSpeakerWithVideoSignal.set(state.currentDominantSpeakerWithVideo)
+            
+            
+
         })
         
 
@@ -1650,49 +1699,3 @@ final class GroupCallUIController : ViewController {
     
 }
 
-
-/*
- 
- guard let window = self.window, let state = genericView.state else {
-     return
- }
- if currentDominantSpeakerWithVideo != oldValue {
-     if let dominant = currentDominantSpeakerWithVideo ?? oldValue {
-         let isPinned = currentDominantSpeakerWithVideo != nil
-         let participant = state.memberDatas.first(where: { $0.peer.id == dominant.peerId })
-         if let participant = participant {
-             let text: String = participant.peer.compactDisplayTitle
-             switch dominant.mode {
-             case .video:
-                 if isPinned {
-                     if participant.accountPeerId == participant.peer.id {
-                         showModalText(for: window, text: L10n.voiceChatTooltipYourVideoPinned)
-                     } else {
-                         showModalText(for: window, text: L10n.voiceChatTooltipVideoPinned(text))
-                     }
-                 } else {
-                     if participant.accountPeerId == participant.peer.id {
-                         showModalText(for: window, text: L10n.voiceChatTooltipYourVideoUnpinned)
-                     } else {
-                         showModalText(for: window, text: L10n.voiceChatTooltipVideoUnpinned(text))
-                     }
-                 }
-             case .screencast:
-                 if isPinned {
-                     if participant.accountPeerId == participant.peer.id {
-                         showModalText(for: window, text: L10n.voiceChatTooltipYourScreenPinned)
-                     } else {
-                         showModalText(for: window, text: L10n.voiceChatTooltipScreenPinned(text))
-                     }
-                 } else {
-                     if participant.accountPeerId == participant.peer.id {
-                         showModalText(for: window, text: L10n.voiceChatTooltipYourScreenUnpinned)
-                     } else {
-                         showModalText(for: window, text: L10n.voiceChatTooltipScreenUnpinned(text))
-                     }
-                 }
-             }
-         }
-     }
- }
- */
