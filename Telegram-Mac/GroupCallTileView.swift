@@ -25,7 +25,7 @@ struct VoiceChatTile {
 }
 
 
-func tileViews(_ count: Int, windowSize: NSSize, frameSize: NSSize) -> [VoiceChatTile] {
+func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize) -> [VoiceChatTile] {
     
     var tiles:[VoiceChatTile] = []
 //    let minSize: NSSize = NSMakeSize(160, 100)
@@ -39,7 +39,7 @@ func tileViews(_ count: Int, windowSize: NSSize, frameSize: NSSize) -> [VoiceCha
             } else if count == 1 {
                 return (size: size, rows: 1, cols: 1)
             } else if count == 2 {
-                if windowSize.width < GroupCallTheme.fullScreenThreshold {
+                if !isFullscreen {
                     return (size: NSMakeSize(frameSize.width / 2, frameSize.height), rows: 2, cols: 1)
                 } else {
                     return (size: NSMakeSize(frameSize.width, frameSize.height / 2), rows: 1, cols: 2)
@@ -175,7 +175,7 @@ final class GroupCallTileView: View {
             return
         }
         
-        let prevTiles = tileViews(self.items.count, windowSize: window.frame.size, frameSize: frame.size)
+        let prevTiles = tileViews(self.items.count, isFullscreen: state.isFullScreen, frameSize: frame.size)
         
         for member in state.videoActive(.main) {
             let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
@@ -200,7 +200,7 @@ final class GroupCallTileView: View {
         }
         
         
-        let tiles = tileViews(items.count, windowSize: window.frame.size, frameSize: frame.size)
+        let tiles = tileViews(items.count, isFullscreen: state.isFullScreen, frameSize: frame.size)
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
         
         var deletedViews:[Int: GroupCallMainVideoContainerView] = [:]
@@ -266,11 +266,10 @@ final class GroupCallTileView: View {
          }
     }
     private func updateItem(_ item: TileEntry, at index: Int, prevFrame: NSRect?, animated: Bool) {
-        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
-        
         if let prevFrame = prevFrame {
             self.views[index].frame = prevFrame
         }
+        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
     }
     
     
@@ -280,12 +279,8 @@ final class GroupCallTileView: View {
     }
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
-        
-        guard let window = self.window as? Window else {
-            return
-        }
-        
-        let tiles = tileViews(items.count, windowSize: window.frame.size, frameSize: size)
+
+        let tiles = tileViews(items.count, isFullscreen: items.first?.isFullScreen ?? false, frameSize: size)
         for tile in tiles {
             transition.updateFrame(view: views[tile.index], frame: tile.rect)
             views[tile.index].updateLayout(size: tile.rect.size, transition: transition)

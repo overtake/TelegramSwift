@@ -126,8 +126,8 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         if let futureWidth = futureWidth() {
             return futureWidth - 40
         }
-        if let superview = table?.superview {
-            return superview.frame.width - 40
+        if let superview = table {
+            return superview.frame.width
         } else {
             return super.width
         }
@@ -225,7 +225,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         if isVertical {
             titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
         } else {
-            let width = data.videoMode ? GroupCallTheme.tileTableWidth - 25 : width - 40
+            let width = width - 40
             titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right)
             statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 24 - itemInset.right - inset)
         }
