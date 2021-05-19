@@ -377,7 +377,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }
     }
     
-    let isVertical = isFullScreen && currentDominantSpeakerWithVideo != nil && layoutMode == .classic
+    let isVertical = isFullScreen && activeVideoViews.count > 0
     
     func hasVideo(_ peerId: PeerId) -> Bool {
         return activeParticipants.first(where: { participant in
@@ -682,9 +682,15 @@ final class GroupCallUIController : ViewController {
         self.size.set(size)
     }
     
+    
     override func viewDidResized(_ size: NSSize) {
-        super.viewDidResized(size)
         
+        
+    }
+
+    @objc private func _viewFrameChanged(_ notification:Notification) {
+        let size = self.genericView.frame.size
+        _ = self.atomicSize.swap(genericView.peersTable.frame.size)
         self.isFullScreen.set(size.width >= GroupCallTheme.fullScreenThreshold)
         self.size.set(size)
     }
@@ -692,6 +698,8 @@ final class GroupCallUIController : ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        NotificationCenter.default.addObserver(self, selector: #selector(_viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: genericView.peersTable)
+
         let layoutMode: ValuePromise<GroupCallUIState.LayoutMode> = ValuePromise(.tile, ignoreRepeated: true)
         
         
@@ -1314,7 +1322,7 @@ final class GroupCallUIController : ViewController {
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
             let previous = previousEntries.swap(current)
             
-            let signal = prepareInputDataTransition(left: previous, right: current, animated: abs(current.count - previous.count) <= 10 && state.isWindowVisible && state.isFullScreen == previousIsFullScreen, searchState: nil, initialSize: initialSize.with { $0 - NSMakeSize(40, 0) }, arguments: inputArguments, onMainQueue: false)
+            let signal = prepareInputDataTransition(left: previous, right: current, animated: abs(current.count - previous.count) <= 10 && state.isWindowVisible && state.isFullScreen == previousIsFullScreen, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputArguments, onMainQueue: false)
             
             previousIsFullScreen = state.isFullScreen
             
@@ -1657,6 +1665,7 @@ final class GroupCallUIController : ViewController {
         sharing?.orderOut(nil)
         idleTimer?.invalidate()
         _ = enableScreenSleep()
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
