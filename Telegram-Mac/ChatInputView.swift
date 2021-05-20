@@ -568,6 +568,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func makeBold() {
         self.textView.boldWord()
     }
+    func removeAllAttributes() {
+        self.textView.removeAllAttributes()
+    }
     func makeUrl() {
         self.makeUrl(of: textView.selectedRange())
     }

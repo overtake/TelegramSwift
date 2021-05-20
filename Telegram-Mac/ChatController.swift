@@ -5180,6 +5180,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.inputView.removeAllAttributes()
+            return .invoked
+        }, with: self, for: .Backslash, priority: .medium, modifierFlags: [.command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeUrl()
             return .invoked
         }, with: self, for: .U, priority: .medium, modifierFlags: [.command])

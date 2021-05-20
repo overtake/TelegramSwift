@@ -97,6 +97,9 @@ final class GroupCallTitleView : Control {
         statusView.userInteractionEnabled = false
         titleView.disableBackgroundDrawing = true
         
+        resize.autohighlight = false
+        resize.scaleOnClick = true
+        
         set(handler: { [weak self] _ in
             self?.window?.performZoom(nil)
         }, for: .DoubleClick)
@@ -192,12 +195,8 @@ final class GroupCallTitleView : Control {
         
        
         
-        let hideResize = state.mode != .video || state.activeVideoViews.isEmpty
-        let oldHideResize = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true
         
-        let isFullscreen = state.isFullScreen
-        let oldFullscreen = currentState?.isFullScreen == true
-        
+                
         let hidePeers = state.hideParticipants
         let oldHidePeers = currentState?.hideParticipants == true
         
@@ -207,7 +206,7 @@ final class GroupCallTitleView : Control {
         let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false
 
         
-        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hideResize != oldHideResize || isFullscreen != oldFullscreen || hidePeers != oldHidePeers || oldHidePeersButtonHide != hidePeersButtonHide
+        let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hidePeers != oldHidePeers || oldHidePeersButtonHide != hidePeersButtonHide
                 
                 
         guard updated else {
@@ -216,16 +215,7 @@ final class GroupCallTitleView : Control {
             return
         }
         
-        resize.isHidden = hideResize
-        resize.set(image: isFullscreen ?  GroupCallTheme.videoZoomOut : GroupCallTheme.videoZoomIn, for: .Normal)
-        resize.sizeToFit()
-        resize.autohighlight = false
-        resize.scaleOnClick = true
-        
-        resize.removeAllHandlers()
-        resize.set(handler: { _ in
-            resizeClick()
-        }, for: .Click)
+
         
         self.hidePeers.isHidden = hidePeersButtonHide
         self.hidePeers.set(image: hidePeers ?  GroupCallTheme.unhide_peers : GroupCallTheme.hide_peers, for: .Normal)
@@ -305,6 +295,18 @@ final class GroupCallTitleView : Control {
             needsLayout = true
         }
         
+        let windowIsPinned = window?.level == NSWindow.Level.popUpMenu
+        
+        resize.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
+        resize.sizeToFit()
+        
+        resize.removeAllHandlers()
+        resize.set(handler: { control in
+            let windowIsPinned = control.window?.level == NSWindow.Level.popUpMenu
+            control.window?.level = (windowIsPinned ? NSWindow.Level.normal : NSWindow.Level.popUpMenu)
+            (control as? ImageButton)?.set(image: windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
+        }, for: .Click)
+
     }
     
     required init?(coder: NSCoder) {

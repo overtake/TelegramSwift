@@ -182,6 +182,14 @@ final class GroupCallMainVideoContainerView: Control {
         self.set(handler: { [weak self] _ in
             self?.pinView.send(event: .Click)
         }, for: .DoubleClick)
+        
+        self.set(handler: { [weak self] control in
+            if let data = self?.participant {
+                if let menuItems = self?.arguments?.contextMenuItems(data), let event = NSApp.currentEvent {
+                    ContextMenu.show(items: menuItems, view: control, event: event)
+                }
+            }
+        }, for: .RightDown)
     }
     
     override var mouseDownCanMoveWindow: Bool {

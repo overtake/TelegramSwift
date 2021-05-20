@@ -1389,6 +1389,15 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(void)boldWord {
     [self.textView boldWord:nil];
 }
+-(void)removeAllAttributes {
+    if(self.selectedRange.length == 0) {
+        return;
+    }
+    NSMutableAttributedString *attr = [self.textView.attributedString mutableCopy];
+    [attr removeAttribute:NSFontAttributeName range:self.selectedRange];
+    [attr removeAttribute:TGCustomLinkAttributeName range:self.selectedRange];
+    [self.textView.textStorage setAttributedString:attr];
+}
     
 -(void)italicWord {
     [self.textView italicWord:nil];
