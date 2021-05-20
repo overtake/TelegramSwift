@@ -120,6 +120,10 @@ struct GroupCallTheme {
     static let unpin_video = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(.white)
 
     
+    static let pin_window = NSImage(named: "Icon_VoiceChat_PinVideo")!.precomposed(.white)
+    static let unpin_window = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(GroupCallTheme.customTheme.accentColor)
+
+    
     static let unhide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(.white)
     static let hide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
 

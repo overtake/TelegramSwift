@@ -480,19 +480,6 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
             view?.frame = bounds
             shadowView.frame = NSMakeRect(0, frame.height - 30, frame.width, 30)
         }
-        
-        override func viewDidMoveToSuperview() {
-            super.viewDidMoveToSuperview()
-            if superview == nil {
-                var bp = 0
-                bp += 1
-            }
-        }
-        
-        deinit {
-            var bp:Int = 0
-            bp += 1
-        }
     }
     
     func getPhotoView() -> NSView {
