@@ -433,7 +433,7 @@ final class GroupCallView : View {
                     tileView.removeFromSuperview()
                 }
             }
-            if let currentDominantSpeakerWithVideo = state.currentDominantSpeakerWithVideo {
+            if let dominantSpeaker = state.dominantSpeaker {
                 let mainVideo: GroupCallMainVideoContainerView
                 var isPresented: Bool = false
                 if let video = self.mainVideoView {
@@ -448,9 +448,9 @@ final class GroupCallView : View {
                     isPresented = true
                 }
                 
-                let member = state.memberDatas.first(where: { $0.peer.id == currentDominantSpeakerWithVideo.peerId})
+                let member = state.memberDatas.first(where: { $0.peer.id == dominantSpeaker.peerId})
                 
-                mainVideo.updatePeer(peer: currentDominantSpeakerWithVideo, participant: member, resizeMode: .resizeAspect, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: state.isFullScreen, isPinned: true, arguments: arguments)
+                mainVideo.updatePeer(peer: dominantSpeaker, participant: member, resizeMode: .resizeAspect, transition: .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: state.isFullScreen, isPinned: true, arguments: arguments)
                 
                 if isPresented && animated {
                     mainVideo.layer?.animateAlpha(from: 0, to: 1, duration: duration)
@@ -517,7 +517,7 @@ final class GroupCallView : View {
     }
     
     var isVertical: Bool {
-        return isFullScreen && state?.currentDominantSpeakerWithVideo != nil && state?.layoutMode == .classic
+        return isFullScreen && state?.dominantSpeaker != nil && state?.layoutMode == .classic
     }
     
     private func updateUIAfterFullScreenUpdated(_ state: GroupCallUIState, reloadTable: Bool) {

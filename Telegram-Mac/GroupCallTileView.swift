@@ -217,11 +217,11 @@ final class GroupCallTileView: View {
                         source = nil
                     }
                     if let source = source {
-                        items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, activeVideo.index))
+                        items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.dominantSpeaker?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, activeVideo.index))
                     }
                     
                     
-//                    let dominant = state.currentDominantSpeakerWithVideo
+//                    let dominant = state.dominantSpeaker
 //                    if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
 //
 //                    }
