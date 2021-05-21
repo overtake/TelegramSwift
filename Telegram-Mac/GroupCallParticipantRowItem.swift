@@ -148,11 +148,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     
     func takeCurrentVideo() -> NSView? {
         if self.data.layoutMode == .tile {
-            if data.dominantSpeakerWithVideo == nil {
+            if data.dominantSpeaker == nil {
                 return nil
             }
         }
-        if let dominant = data.dominantSpeakerWithVideo {
+        if let dominant = data.dominantSpeaker {
             if dominant.peerId == data.peer.id {
                 if let mode = data.pinnedMode?.viceVersa {
                     if dominant.mode == mode {
