@@ -89,10 +89,19 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
     
     let getPos:(Int) -> (row: Int, col: Int) = { index in
         
+        var index = index
+        if data.cols * data.rows > count && data.rows == 2, index > 0 {
+            index += 1
+        }
+        
         var col = Int(floor(Float(index) / Float(data.rows)))
+        
+        
         if col * data.rows - index > 0 {
             col += 1
         }
+        
+        
         return (row: data.rows - ((index + 1) % data.rows) - 1, col: col)
     }
     

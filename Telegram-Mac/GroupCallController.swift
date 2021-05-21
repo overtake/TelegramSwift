@@ -464,6 +464,12 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     let mode: GroupCallUIState.Mode
     let isVideoEnabled = summaryState?.info?.isVideoEnabled ?? false
+    
+    if !isVideoEnabled {
+        var bp = 0
+        bp += 1
+    }
+    
     switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
     case true:
         mode = .video
@@ -792,6 +798,7 @@ final class GroupCallUIController : ViewController {
                             }
                         }, devices: sharedContext.devicesContext)
                         self?.sharing = sharing
+                        sharing?.level = self?.window?.level ?? .normal
                         if sharing == nil, let window = self?.window {
                             switch mode {
                             case .video:
