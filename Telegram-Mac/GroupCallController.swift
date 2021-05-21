@@ -150,6 +150,11 @@ struct PeerGroupCallData : Equatable, Comparable {
     let dominantSpeakerWithVideo: DominantVideo?
     let activeVideos:Set<String>
     let adminIds: Set<PeerId>
+    
+    
+    let videoEndpointId: String?
+    let presentationEndpointId: String?
+    
     var isRaisedHand: Bool {
         return self.state?.hasRaiseHand == true
     }
@@ -158,10 +163,10 @@ struct PeerGroupCallData : Equatable, Comparable {
     }
     
     var videoEndpoint: String? {
-        return activeVideos.first(where: { $0 == state?.videoEndpointId })
+        return activeVideos.first(where: { $0 == videoEndpointId })
     }
     var screencastEndpoint: String? {
-        return activeVideos.first(where: { $0 == state?.presentationEndpointId })
+        return activeVideos.first(where: { $0 == presentationEndpointId })
     }
     
     var about: String? {
@@ -281,6 +286,14 @@ struct PeerGroupCallData : Equatable, Comparable {
         if lhs.adminIds != rhs.adminIds {
             return false
         }
+        
+        if lhs.videoEndpointId != rhs.videoEndpointId {
+            return false
+        }
+        if lhs.presentationEndpointId != rhs.presentationEndpointId {
+            return false
+        }
+        
         return true
     }
     
@@ -415,7 +428,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             pinnedMode = nil
         }
                 
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(accountPeerId), layoutMode: layoutMode, dominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideos: Set(), adminIds: state.adminIds))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(accountPeerId), layoutMode: layoutMode, dominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
         index += 1
     } 
 
@@ -435,13 +448,13 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             return active.endpointId == value.presentationEndpointId || active.endpointId == value.videoEndpointId
         }).map { $0.endpointId })
         
-        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), layoutMode: layoutMode, dominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideos: activeVideos, adminIds: state.adminIds))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), layoutMode: layoutMode, dominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideos: activeVideos, adminIds: state.adminIds, videoEndpointId: value.videoEndpointId, presentationEndpointId: value.presentationEndpointId))
         index += 1
     }
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, pinnedMode: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: false, layoutMode: layoutMode, dominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideos: Set(), adminIds: state.adminIds))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, pinnedMode: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: false, layoutMode: layoutMode, dominantSpeakerWithVideo: currentDominantSpeakerWithVideo, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
             index += 1
         }
     }
@@ -622,9 +635,10 @@ final class GroupCallUIController : ViewController {
             var index: Int
         }
         let activeVideoViewsValue:Atomic<ActiveVideos> = Atomic(value: ActiveVideos(set: [], index: Int.max))
-        let activeVideoViews = ValuePromise(ActiveVideos(set: [], index: Int.max), ignoreRepeated: true)
+        let activeVideoViews = Promise(ActiveVideos(set: [], index: Int.max))
         let updateActiveVideoViews:((ActiveVideos)->ActiveVideos)->Void = { f in
-            activeVideoViews.set(activeVideoViewsValue.modify(f))
+            let updated = activeVideoViewsValue.modify(f)
+            activeVideoViews.set(.single(updated) |> delay(0.15, queue: .mainQueue()))
         }
                 
         let actionsDisposable = self.actionsDisposable
@@ -1299,7 +1313,7 @@ final class GroupCallUIController : ViewController {
             }
         }
         
-        let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), activeVideoViews.get(), isFullScreen.get(), layoutMode.get(), self.data.call.stateVersion, hideParticipants.get(), excludedPinsValue.get())
+        let some = combineLatest(queue: .mainQueue(), self.data.call.isMuted, animate, joinAsPeer, unsyncVolumes.get(), currentDominantSpeakerWithVideoSignal.get(), activeVideoViews.get() |> distinctUntilChanged, isFullScreen.get(), layoutMode.get(), self.data.call.stateVersion, hideParticipants.get(), excludedPinsValue.get())
 
         
         var currentState: GroupCallUIState?

@@ -132,12 +132,12 @@ final class GroupCallView : View {
         let previousMode = self.controlsMode
         self.controlsMode = mode
         
-        if previousMode != mode {
+       // if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: animated)
             mainVideoView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
             tileView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
 
-        }
+    ///    }
     }
     
     func idleHide() {
