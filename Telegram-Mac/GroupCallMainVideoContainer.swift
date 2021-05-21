@@ -154,7 +154,7 @@ final class GroupCallMainVideoContainerView: Control {
         addSubview(statusView)
         
         backstage.wantsLayer = true
-        backstage.material = .ultraDark
+        backstage.material = .dark
         backstage.blendingMode = .withinWindow
         backstage.state = .active
         
@@ -190,6 +190,22 @@ final class GroupCallMainVideoContainerView: Control {
                 }
             }
         }, for: .RightDown)
+        
+        self.pinView.layer?.opacity = 0
+        
+        self.set(handler: { [weak self] control in
+            self?.pinView.change(opacity: 1, animated: true)
+        }, for: .Hover)
+        
+        self.set(handler: { [weak self] control in
+            self?.pinView.change(opacity: 1, animated: true)
+        }, for: .Highlight)
+        
+        self.set(handler: { [weak self] control in
+            self?.pinView.change(opacity: 0, animated: true)
+        }, for: .Normal)
+        
+        
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -209,7 +225,8 @@ final class GroupCallMainVideoContainerView: Control {
         
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
-        pinView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
+        
+        self.pinView.change(opacity: self.mouseInside() ? 1 : 0, animated: animated)
     }
     
     private var participant: PeerGroupCallData?
@@ -218,10 +235,16 @@ final class GroupCallMainVideoContainerView: Control {
     
     func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, resizeMode: CALayerContentsGravity, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, isFullScreen: Bool, isPinned: Bool, arguments: GroupCallUIArguments?) {
         
+       
+        
         self.isPinned = isPinned
         self.arguments = arguments
         
+        
         self.pinView.update(isPinned, animated: animated)
+        
+        self.pinView.change(opacity: self.mouseInside() ? 1 : 0, animated: animated)
+
         
         let showSpeakingView = participant?.isSpeaking == true && (participant?.state?.muteState?.mutedByYou == nil || participant?.state?.muteState?.mutedByYou == false)
         
@@ -229,7 +252,6 @@ final class GroupCallMainVideoContainerView: Control {
         
         speakingView.layer?.borderColor = participant?.state?.muteState?.mutedByYou == true ? GroupCallTheme.customTheme.redColor.cgColor : GroupCallTheme.speakActiveColor.cgColor
                 
-        transition.updateAlpha(view: pinView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)

@@ -58,8 +58,8 @@ final class GroupVideoView: View {
             }
         })
         
-        videoView.setOnIsMirroredUpdated({ isMirrored in
-            DispatchQueue.main.async { [weak self] in
+        videoView.setOnIsMirroredUpdated({ [weak self] isMirrored in
+            DispatchQueue.main.async {
                 self?.isMirrored = isMirrored
             }
         })
@@ -142,5 +142,4 @@ final class GroupVideoView: View {
     }
     
     var didRemoveFromSuperview: (()->Void)? = nil
-    
 }

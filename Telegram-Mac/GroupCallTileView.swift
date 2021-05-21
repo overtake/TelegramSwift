@@ -10,8 +10,8 @@ import Foundation
 import TGUIKit
 
 struct VoiceChatTile {
-    let rect: NSRect
-    let index: Int
+    fileprivate(set) var rect: NSRect
+    fileprivate(set) var index: Int
     
     var bestQuality: PresentationGroupCallRequestedVideo.Quality {
         if rect.width > 480 || rect.height > 480 {
@@ -25,7 +25,7 @@ struct VoiceChatTile {
 }
 
 
-func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize) -> [VoiceChatTile] {
+func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex: Int? = nil) -> [VoiceChatTile] {
     
     var tiles:[VoiceChatTile] = []
 //    let minSize: NSSize = NSMakeSize(160, 100)
@@ -64,9 +64,7 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize) -> [VoiceCha
     
     var point: CGPoint = .zero
     var index: Int = 0
-    
     let inset: CGFloat = 5
-    
     let insetSize = NSMakeSize(CGFloat((data.rows - 1) * 5) / CGFloat(data.rows), CGFloat((data.cols - 1) * 5) / CGFloat(data.cols))
 
     
@@ -76,23 +74,52 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize) -> [VoiceCha
         index += 1
     }
     
-
     for _ in 0 ..< data.cols {
         for _ in 0 ..< data.rows {
             if index < count {
-                
                 let size = (data.size - insetSize)
-                
                 tiles.append(.init(rect: CGRect(origin: point, size: size), index: index))
                 point.x += size.width + inset
                 index += 1
             }
         }
-                        
         point.x = 0
         point.y += data.size.height - insetSize.height + inset
     }
-
+    
+    let getPos:(Int) -> (row: Int, col: Int) = { index in
+        
+        var col = Int(floor(Float(index) / Float(data.rows)))
+        if col * data.rows - index > 0 {
+            col += 1
+        }
+        return (row: data.rows - ((index + 1) % data.rows) - 1, col: col)
+    }
+    
+    if let pinnedIndex = pinnedIndex {
+        let indexPos = getPos(pinnedIndex)
+        for i in 0 ..< tiles.count {
+            let pos = getPos(i)
+            var tile = tiles[i]
+            if i == pinnedIndex {
+                tile.rect = frameSize.bounds
+            } else if i < pinnedIndex {
+                if pos.col != indexPos.col {
+                    tile.rect = tile.rect.offsetBy(dx: 0, dy: -tile.rect.maxY)
+                } else {
+                    tile.rect = tile.rect.offsetBy(dx: -tile.rect.maxX, dy: 0)
+                }
+            } else {
+                if pos.col != indexPos.col {
+                    tile.rect = tile.rect.offsetBy(dx: 0, dy: frameSize.height - tile.rect.minY)
+                } else {
+                    tile.rect = tile.rect.offsetBy(dx: frameSize.width - tile.rect.minX, dy: 0)
+                }
+            }
+            tiles[i] = tile
+        }
+    }
+    
     return tiles
 }
 
@@ -159,6 +186,8 @@ final class GroupCallTileView: View {
     private let call: PresentationGroupCall
     private var controlsMode: GroupCallView.ControlsMode = .normal
     private var arguments: GroupCallUIArguments? = nil
+    private var prevState: GroupCallUIState?
+    private var pinnedIndex: Int? = nil
     init(call: PresentationGroupCall, arguments: GroupCallUIArguments?, frame: NSRect) {
         self.call = call
         self.arguments = arguments
@@ -171,36 +200,40 @@ final class GroupCallTileView: View {
         
         var items:[TileEntry] = []
         
-        guard let window = self.window as? Window else {
-            return
-        }
         
-        let prevTiles = tileViews(self.items.count, isFullscreen: state.isFullScreen, frameSize: frame.size)
+        let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
         
         for member in state.videoActive(.main) {
             let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
                 if let activeVideo = state.activeVideoViews.first(where: { $0.mode == .main && $0.endpointId == endpointId }) {
-                    let dominant = state.currentDominantSpeakerWithVideo
-                    if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
-                        let source: VideoSourceMacMode?
-                        if member.videoEndpoint == endpointId {
-                            source = .video
-                        } else if member.screencastEndpoint == endpointId {
-                            source = .screencast
-                        } else {
-                            source = nil
-                        }
-                        if let source = source {
-                            items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, activeVideo.index))
-                        }
+                    
+                    let source: VideoSourceMacMode?
+                    if member.videoEndpoint == endpointId {
+                        source = .video
+                    } else if member.screencastEndpoint == endpointId {
+                        source = .screencast
+                    } else {
+                        source = nil
                     }
+                    if let source = source {
+                        items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.currentDominantSpeakerWithVideo?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, activeVideo.index))
+                    }
+                    
+                    
+//                    let dominant = state.currentDominantSpeakerWithVideo
+//                    if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
+//
+//                    }
                 }
             }
         }
         
         
-        let tiles = tileViews(items.count, isFullscreen: state.isFullScreen, frameSize: frame.size)
+        
+        let tiles = tileViews(items.count, isFullscreen: state.isFullScreen, frameSize: frame.size, pinnedIndex: self.pinnedIndex)
+        
+        
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
         
         var deletedViews:[Int: GroupCallMainVideoContainerView] = [:]
@@ -226,10 +259,17 @@ final class GroupCallTileView: View {
             updateItem(item, at: idx, prevFrame: prev != idx ? prevTiles[prev].rect : nil, animated: animated)
             self.items[idx] = item
         }
-    
+        self.prevState = state
+        self.pinnedIndex = self.items.firstIndex(where: { $0.isPinned })
+        
+        if let pinnedIndex = pinnedIndex {
+            self.views[pinnedIndex].layer?.zPosition = 1000
+        }
+        
         
         updateLayout(size: frame.size, transition: transition)
 
+        
     }
     
     private func deleteItem(at index: Int, animated: Bool) -> GroupCallMainVideoContainerView {
@@ -280,7 +320,9 @@ final class GroupCallTileView: View {
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
 
-        let tiles = tileViews(items.count, isFullscreen: items.first?.isFullScreen ?? false, frameSize: size)
+        
+        let tiles:[VoiceChatTile] = tileViews(items.count, isFullscreen: prevState?.isFullScreen ?? false, frameSize: size, pinnedIndex: pinnedIndex)
+        
         for tile in tiles {
             transition.updateFrame(view: views[tile.index], frame: tile.rect)
             views[tile.index].updateLayout(size: tile.rect.size, transition: transition)
