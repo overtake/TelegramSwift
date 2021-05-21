@@ -27,7 +27,7 @@ final class GroupCallContextMenuHeaderView : View {
     
     override func layout() {
         super.layout()
-        imageView.frame = NSMakeSize(frame.width, 200).bounds.insetBy(dx: 5, dy: 0)
+        imageView.frame = NSMakeSize(frame.width, 190).bounds.insetBy(dx: 5, dy: 0)
         nameView.setFrameOrigin(NSMakePoint(14, imageView.frame.maxY + 5))
         descView?.setFrameOrigin(NSMakePoint(14, nameView.frame.maxY + 3))
     }
@@ -81,7 +81,7 @@ final class GroupCallContextMenuHeaderView : View {
             self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: account, peer: peer) |> map { TransformImageResult($0, true) })
         }
         
-        setFrameSize(NSMakeSize(frame.width, 200 + name.layoutSize.height + 10 + (descView != nil ? descView!.frame.height + 3 : 0)))
+        setFrameSize(NSMakeSize(frame.width, 190 + name.layoutSize.height + 10 + (descView != nil ? descView!.frame.height + 3 : 0)))
     }
     
     required init?(coder: NSCoder) {

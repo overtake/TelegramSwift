@@ -1517,9 +1517,8 @@ final class GroupCallUIController : ViewController {
                     }
                 }
             }
-            DispatchQueue.main.async { [weak strongSelf] in
+            DispatchQueue.main.async {
                 displayedRaisedHandsPromise.set(displayedRaisedHands.with { $0 })
-                strongSelf?.dominantSpeakerSignal.set(state.dominantSpeaker)
             }
 
         })
