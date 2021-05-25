@@ -106,7 +106,10 @@ final class GroupCallUIState : Equatable {
     let activeVideoViews: [ActiveVideo]
     let hideParticipants: Bool
     let isVideoEnabled: Bool
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, handbyDominant: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool) {
+    
+    let tooltipSpeaker: PeerGroupCallData?
+    let activeVideoMembers: [GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]]
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, handbyDominant: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -126,6 +129,35 @@ final class GroupCallUIState : Equatable {
         self.activeVideoViews = activeVideoViews
         self.hideParticipants = hideParticipants
         self.isVideoEnabled = isVideoEnabled
+        self.tooltipSpeaker = tooltipSpeaker
+        var modeMembers:[GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]] = [:]
+        
+        let modes:[GroupCallUIState.ActiveVideo.Mode] = [.backstage, .list, .main]
+        
+        for mode in modes {
+            var members:[PeerGroupCallData] = []
+            for activeVideo in activeVideoViews.filter({ $0.mode == mode }) {
+                let member = memberDatas.first(where: { peer in
+                    
+                    if let endpoint = peer.videoEndpoint {
+                        if activeVideo.endpointId == endpoint {
+                            return true
+                        }
+                    }
+                    if let endpoint = peer.screencastEndpoint {
+                        if activeVideo.endpointId == endpoint {
+                            return true
+                        }
+                    }
+                    return false
+                })
+                if let member = member, !members.contains(where: { $0.peer.id == member.peer.id }) {
+                    members.append(member)
+                }
+            }
+            modeMembers[mode] = members
+        }
+        self.activeVideoMembers = modeMembers
     }
     
     var hasVideo: Bool {
@@ -217,37 +249,20 @@ final class GroupCallUIState : Equatable {
         if lhs.isMuted != rhs.isMuted {
             return false
         }
+        if lhs.activeVideoMembers != rhs.activeVideoMembers {
+            return false
+        }
+        if lhs.tooltipSpeaker != rhs.tooltipSpeaker {
+            return false
+        }
         return true
     }
     
     func videoActive(_ mode: ActiveVideo.Mode) -> [PeerGroupCallData] {
-        
-        var members:[PeerGroupCallData] = []
-        for activeVideo in activeVideoViews.filter({ $0.mode == mode }) {
-            let member = memberDatas.first(where: { peer in
-                if version == 0 {
-                    return false
-                }
-                if let endpoint = peer.videoEndpoint {
-                    if activeVideo.endpointId == endpoint {
-                        return true
-                    }
-                }
-                if let endpoint = peer.screencastEndpoint {
-                    if activeVideo.endpointId == endpoint {
-                        return true
-                    }
-                }
-                return false
-            })
-            if let member = member, !members.contains(where: { $0.peer.id == member.peer.id }) {
-                members.append(member)
-            }
-        }
-        return members
+        return activeVideoMembers[mode] ?? []
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, handbyDominant: self.handbyDominant, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, handbyDominant: self.handbyDominant, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, layoutMode: self.layoutMode, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker)
     }
 }

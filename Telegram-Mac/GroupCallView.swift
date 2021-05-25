@@ -37,6 +37,7 @@ final class GroupCallView : View {
     private var scheduleView: GroupCallScheduleView?
     private var tileView: GroupCallTileView?
 
+    private var speakingTooltipView: GroupCallSpeakingTooltipView?
     
     var arguments: GroupCallUIArguments? {
         didSet {
@@ -226,6 +227,10 @@ final class GroupCallView : View {
             let rect = tableRect
             transition.updateFrame(view: scheduleView, frame: rect)
             scheduleView.updateLayout(size: rect.size, transition: transition)
+        }
+        
+        if let current = speakingTooltipView {
+            transition.updateFrame(view: current, frame: current.centerFrameX(y: 64, addition: peersTable.frame.width / 2 + 5))
         }
     }
     
@@ -510,6 +515,45 @@ final class GroupCallView : View {
         }
 
         self.mainVideoView?.updateMode(controlsMode: controlsMode, controlsState: controlsContainer.mode, animated: animated)
+        
+        
+        if previousState?.tooltipSpeaker != state.tooltipSpeaker {
+            
+            if let current = self.speakingTooltipView {
+                self.speakingTooltipView = nil
+                if animated {
+                    current.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak current] _ in
+                        current?.removeFromSuperview()
+                    })
+                    current.layer?.animatePosition(from: current.frame.origin, to: current.frame.origin - NSMakePoint(0, 10), removeOnCompletion: false)
+                } else {
+                    current.removeFromSuperview()
+                }
+            }
+            if let tooltipSpeaker = state.tooltipSpeaker {
+                let current: GroupCallSpeakingTooltipView
+                var presented = false
+                if let speakingTooltipView = self.speakingTooltipView {
+                    current = speakingTooltipView
+                } else {
+                    current = GroupCallSpeakingTooltipView(frame: .zero)
+                    self.speakingTooltipView = current
+                    addSubview(current)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
+                    }
+                    presented = true
+                }
+                current.setPeer(data: tooltipSpeaker, account: call.account, audioLevel: arguments?.audioLevel ?? { _ in return nil })
+                
+                if presented {
+                    current.setFrameOrigin(current.centerFrameX(y: 64, addition: peersTable.frame.width / 2 + 5).origin)
+                    if animated {
+                        current.layer?.animatePosition(from: current.frame.origin - NSMakePoint(0, 10), to: current.frame.origin)
+                    }
+                }
+            }
+        }
         
         updateLayout(size: frame.size, transition: transition)
         updateUIAfterFullScreenUpdated(state, reloadTable: false)

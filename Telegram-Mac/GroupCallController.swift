@@ -471,8 +471,20 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     case false:
         mode = .voice
     }
+    var tooltipSpeaker: PeerGroupCallData? = nil
+    if dominantSpeaker != nil {
+        if let previous = previous?.tooltipSpeaker {
+            let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
+            if let member = member, member.isSpeaking {
+                tooltipSpeaker = previous
+            }
+        }
+        if tooltipSpeaker == nil {
+            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != dominantSpeaker?.peerId })
+        }
+    }
     
-    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, handbyDominant: handbyDominant, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, handbyDominant: handbyDominant, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker)
 }
 
 
@@ -715,10 +727,11 @@ final class GroupCallUIController : ViewController {
                 }
             }, appearance: darkPalette.appearance)
         }, openInfo: { [weak self] peer in
-            guard let window = self?.window else {
+            guard let strongSelf = self else {
                 return
             }
-            showModal(with: GroupCallPeerController(account: account, peer: peer), for: window)
+            strongSelf.data.call.sharedContext.bindings.rootNavigation().push(PeerInfoController.init(context: strongSelf.data.call.accountContext, peerId: peer.id))
+            strongSelf.data.call.accountContext.window.orderFrontRegardless()
         }, inviteMembers: { [weak self] in
             guard let window = self?.window, let data = self?.data else {
                 return
@@ -997,7 +1010,9 @@ final class GroupCallUIController : ViewController {
                 })
                 let headerView = GroupCallContextMenuHeaderView(frame: NSMakeRect(0, 0, 200, 200))
                 
-                headerView.setPeer(state.peer, about: data.about, account: account)
+                let videos = [arguments.takeVideo(state.peer.id, .video, .list), arguments.takeVideo(state.peer.id, .screencast, .list)].compactMap { $0}
+                
+                headerView.setPeer(state.peer, about: data.about, account: account, videos: videos)
                 headerItem.view = headerView
 
 
@@ -1104,7 +1119,11 @@ final class GroupCallUIController : ViewController {
                             arguments.remove(data.peer)
                         }))
                     }
-
+                }
+                if data.peer.id != data.accountPeerId {
+                    items.append(.init(L10n.voiceChatOpenProfile, handler: {
+                        arguments.openInfo(data.peer)
+                    }))
                 }
             }
             return items
@@ -1152,10 +1171,10 @@ final class GroupCallUIController : ViewController {
         let members = data.call.members
         
         
-        let videoData = combineLatest(queue: .mainQueue(), members, layoutMode.get(), dominantSpeakerSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 }, size.get())
+        let videoData = combineLatest(queue: .mainQueue(), members, layoutMode.get(), dominantSpeakerSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 }, size.get(), videoSources.get())
         
                 
-        actionsDisposable.add(videoData.start(next: { [weak self] members, layoutMode, dominant, isFullScreen, accountId, stateVersion, size in
+        actionsDisposable.add(videoData.start(next: { [weak self] members, layoutMode, dominant, isFullScreen, accountId, stateVersion, size, videoSources in
             
             guard let strongSelf = self else {
                 return
@@ -1226,8 +1245,16 @@ final class GroupCallUIController : ViewController {
             var validSources = Set<String>()
             for item in items {
                 let endpointId = item.endpointId
-                let member = members?.participants.first(where: {
-                    $0.videoEndpointId == item.endpointId || $0.presentationEndpointId == item.endpointId
+                let member = members?.participants.first(where: { participant in
+                    if participant.peer.id == accountId {
+                        if participant.videoEndpointId == item.endpointId {
+                            return videoSources.video != nil
+                        }
+                        if participant.presentationEndpointId == item.endpointId {
+                            return videoSources.screencast != nil
+                        }
+                    }
+                    return participant.videoEndpointId == item.endpointId || participant.presentationEndpointId == item.endpointId
                 })
 
                 if let member = member {

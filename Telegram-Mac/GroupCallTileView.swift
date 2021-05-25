@@ -46,8 +46,9 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
                 }
             } else {
                 if size.width / size.height > 2 {
-                    rows += 1
+                    rows += Int(floor(size.width / size.height / 3.0))
                 }
+
                 let cols: Int = Int(ceil(Float(count) / Float(rows)))
                 if CGFloat(cols) * size.height > frameSize.height {
                     size = NSMakeSize(frameSize.width / CGFloat(rows), frameSize.height / CGFloat(cols))

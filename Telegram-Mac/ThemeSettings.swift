@@ -127,7 +127,7 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
                 options.append("mode=blur")
             }
             if isPattern {
-                if let pattern = settings.color {
+                if let pattern = settings.colors.first {
                     var color = NSColor(argb: pattern).hexString.lowercased()
                     color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     options.append("bg_color=\(color)")

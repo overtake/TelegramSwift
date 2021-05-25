@@ -132,9 +132,9 @@ final class SettingsThemeWallpaperView: BackgroundView {
                 if let intensity = settings.intensity {
                     patternIntensity = CGFloat(intensity) / 100.0
                 }
-                if let color = settings.color, settings.bottomColor == nil {
+                if settings.colors.count == 1, let color = settings.colors.first {
                     patternColor = .color(NSColor(rgb: color, alpha: patternIntensity))
-                } else if let t = settings.color, let b = settings.bottomColor {
+                } else if let t = settings.colors.first, let b = settings.colors.last {
                     let top = NSColor(argb: t)
                     let bottom = NSColor(argb: b)
                     patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity), rotation: settings.rotation)

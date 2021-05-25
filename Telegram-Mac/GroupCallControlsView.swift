@@ -213,12 +213,11 @@ final class GroupCallControlsView : View {
             transition.updateFrame(view: self.fullscreenBackgroundView, frame: focus(.init(width: 250, height: 80)))
         case .video:
             let bgRect = focus(NSMakeSize(340, 70))
-            
+            transition.updateFrame(view: self.speak, frame: focus(NSMakeSize(80, 80)))
             speak.update(size: NSMakeSize(80, 80), transition: transition)
             
             let addition: CGFloat = mode == .normal ? 10 : 0
             
-            transition.updateFrame(view: self.speak, frame: focus(NSMakeSize(80, 80)))
             transition.updateFrame(view: self.leftButton1, frame: leftButton1.centerFrameY(x: bgRect.minX + 16, addition: addition))
             if let leftButton2 = self.leftButton2 {
                 transition.updateFrame(view: leftButton2, frame: leftButton1.centerFrameY(x: leftButton1.frame.maxX + 16, addition: addition))
