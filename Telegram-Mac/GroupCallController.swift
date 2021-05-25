@@ -472,7 +472,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         mode = .voice
     }
     var tooltipSpeaker: PeerGroupCallData? = nil
-    if dominantSpeaker != nil {
+    if current != nil {
         if let previous = previous?.tooltipSpeaker {
             let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
             if let member = member, member.isSpeaking {
@@ -480,7 +480,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             }
         }
         if tooltipSpeaker == nil {
-            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != dominantSpeaker?.peerId })
+            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
         }
     }
     
