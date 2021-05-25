@@ -9279,7 +9279,7 @@ internal final class L10n {
   internal static var voiceChatSettingsInputMode: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode") }
   /// Enabled
   internal static var voiceChatSettingsNoiseText: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseText") }
-  /// NOISE SUSPENSION
+  /// NOISE Suppression
   internal static var voiceChatSettingsNoiseTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseTitle") }
   /// New participants are muted
   internal static var voiceChatSettingsOnlyAdmins: String  { return L10n.tr("Localizable", "VoiceChat.Settings.OnlyAdmins") }
