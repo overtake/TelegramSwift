@@ -27,10 +27,10 @@ private final class GroupCallControlsTooltipView: Control {
         backgroundView.isEventLess = true
         textView.userInteractionEnabled = false
         textView.isSelectable = false
-        
+        textView.disableBackgroundDrawing = true
         cornerView.image = generateImage(NSMakeSize(30, 10), rotatedContext: { size, context in
             context.clear(CGRect(origin: CGPoint(), size: size))
-            context.setFillColor(GroupCallTheme.membersColor.cgColor)
+            context.setFillColor(GroupCallTheme.memberSeparatorColor.cgColor)
             context.scaleBy(x: 0.333, y: 0.333)
             let _ = try? drawSvgPath(context, path: "M85.882251,0 C79.5170552,0 73.4125613,2.52817247 68.9116882,7.02834833 L51.4264069,24.5109211 C46.7401154,29.1964866 39.1421356,29.1964866 34.4558441,24.5109211 L16.9705627,7.02834833 C12.4696897,2.52817247 6.36519576,0 0,0 L85.882251,0 ")
             context.fillPath()
@@ -44,7 +44,7 @@ private final class GroupCallControlsTooltipView: Control {
         textView.update(layout)
         
         self.toView = view
-        backgroundView.background = GroupCallTheme.membersColor
+        backgroundView.background = GroupCallTheme.memberSeparatorColor
         
         setFrameSize(NSMakeSize(layout.layoutSize.width + 16, layout.layoutSize.height + 8 + 10))
         

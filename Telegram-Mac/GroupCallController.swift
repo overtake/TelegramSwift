@@ -519,6 +519,10 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }
     }
     
+    if state.networkState == .connecting {
+        controlsTooltip = nil
+    }
+    
     
     return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, handbyDominant: handbyDominant, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed)
 }
@@ -1793,7 +1797,7 @@ final class GroupCallUIController : ViewController {
             speakController.pause()
         case .connected:
             if !state.dismissedTooltips.contains(.micro), state.controlsTooltip == nil {
-                if state.isMuted || state.state.muteState?.canUnmute == true {
+                if state.isMuted && state.state.muteState?.canUnmute == true {
                     speakController.resume { [weak self] in
                         self?.updateTooltips { current in
                             var current = current
@@ -1803,14 +1807,20 @@ final class GroupCallUIController : ViewController {
                     }
                 } else {
                     speakController.pause()
-                    self.updateTooltips { current in
-                        var current = current
-                        current.dismissed.insert(.micro)
-                        return current
-                    }
                 }
             } else {
                 speakController.pause()
+            }
+            if !state.isMuted {
+                if !state.isMuted {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.updateTooltips { current in
+                            var current = current
+                            current.dismissed.insert(.micro)
+                            return current
+                        }
+                    }
+                }
             }
         }
     }
