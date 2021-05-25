@@ -9387,6 +9387,10 @@ internal final class L10n {
   internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
+  /// %@ is speaking
+  internal static func voiceChatTooltipIsSpeaking(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Tooltip.IsSpeaking", p1)
+  }
   /// No active and connected camera was found.
   internal static var voiceChatTooltipNoCameraFound: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.NoCameraFound") }
   /// An error occured. Screencast has stopped.
@@ -9399,9 +9403,9 @@ internal final class L10n {
   internal static func voiceChatTooltipScreenUnpinned(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.Tooltip.ScreenUnpinned", p1)
   }
-  /// Your screen are being broadcast.
+  /// Your screen is being broadcast.
   internal static var voiceChatTooltipShareScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareScreen") }
-  /// Your video are being broadcast.
+  /// Your video is being broadcast.
   internal static var voiceChatTooltipShareVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ShareVideo") }
   /// You have stopped broadcasting screen.
   internal static var voiceChatTooltipStopScreen: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopScreen") }
