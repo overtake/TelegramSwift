@@ -1156,7 +1156,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false)
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
-                    self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuspension)
+                    self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuppression)
                 })
                 
                 self.genericCallContext = genericCallContext
