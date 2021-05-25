@@ -46,6 +46,7 @@
 		2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */; };
 		2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2764A5AC25DFBB4300F9A20D /* police.tgs */; };
 		2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */; };
+		276A1D59265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */; };
 		276B597A261C780F0029FD3F /* GroupCallMainVideoContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */; };
 		276B597D261C78AD0029FD3F /* GroupCallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B597C261C78AD0029FD3F /* GroupCallView.swift */; };
 		276B5980261C78F40029FD3F /* GroupCallUIState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B597F261C78F40029FD3F /* GroupCallUIState.swift */; };
@@ -69,6 +70,7 @@
 		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
+		278E86D4265D0F330006685D /* GroupCallAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E86D3265D0F330006685D /* GroupCallAvatarView.swift */; };
 		278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */; };
 		278FA2E925E8C36A00280629 /* PaymentsPaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */; };
 		278FA43825E8D5CD00280629 /* Stripe.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278FA43725E8D5CD00280629 /* Stripe.framework */; };
@@ -1118,6 +1120,7 @@
 		2764A5A925DFB5B300F9A20D /* ReportDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportDetailsController.swift; sourceTree = "<group>"; };
 		2764A5AC25DFBB4300F9A20D /* police.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = police.tgs; sourceTree = "<group>"; };
 		2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoDeleteContextMenuView.swift; sourceTree = "<group>"; };
+		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
 		276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallMainVideoContainer.swift; sourceTree = "<group>"; };
 		276B597C261C78AD0029FD3F /* GroupCallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallView.swift; sourceTree = "<group>"; };
 		276B597F261C78F40029FD3F /* GroupCallUIState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallUIState.swift; sourceTree = "<group>"; };
@@ -1141,6 +1144,7 @@
 		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
+		278E86D3265D0F330006685D /* GroupCallAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarView.swift; sourceTree = "<group>"; };
 		278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingMethodController.swift; sourceTree = "<group>"; };
 		278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsPaymentMethodController.swift; sourceTree = "<group>"; };
 		278FA43725E8D5CD00280629 /* Stripe.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Stripe.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2234,6 +2238,8 @@
 				27335F0225C8295100FD040C /* GroupVideoView.swift */,
 				27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */,
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
+				276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */,
+				278E86D3265D0F330006685D /* GroupCallAvatarView.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5568,6 +5574,7 @@
 				C2B1B1261E5F840B00895E0D /* PeerInfoUtils.swift in Sources */,
 				C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */,
 				C24DABA21E083185005EE404 /* YTVimeoExtractor.m in Sources */,
+				278E86D4265D0F330006685D /* GroupCallAvatarView.swift in Sources */,
 				C26A71991DC9FA5100F69385 /* EditMessageModel.swift in Sources */,
 				C2AF011D1F03D4C600D8AC1D /* TGCallAesCtr.m in Sources */,
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
@@ -5861,6 +5868,7 @@
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
 				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
+				276A1D59265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift in Sources */,
 				27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
 				C236ADDE1F7D318700E8C71A /* TGVideoCameraMovieRecorder.m in Sources */,

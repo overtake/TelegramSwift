@@ -17,7 +17,7 @@ public enum SliderTransitionStyle {
 
 private let kDefaultScheduledTransitionTimeInterval: TimeInterval = 4.0
 private let kDefaultTransitionAnimationDuration: TimeInterval = 0.6
-public class SliderView: View {
+public class SliderView: Control {
     
     public private(set) var indexOfDisplayedSlide: Int = 0
     public var displayedSlide: NSView?
@@ -46,6 +46,19 @@ public class SliderView: View {
         super.init(frame: frameRect)
         self._prepareView()
         scheduledTransition = true
+        
+        set(handler: { control in
+            
+            let mousePoint = control.window?.mouseLocationOutsideOfEventStream ?? .zero
+            
+            let point = control.convert(mousePoint, from: nil)
+            let slider = control as! SliderView
+            if point.x < control.frame.width / 2 {
+                slider.displaySlide(at: (slider.indexOfDisplayedSlide - 1) % slider.slides.count)
+            } else {
+                slider.displaySlide(at: (slider.indexOfDisplayedSlide + 1) % slider.slides.count)
+            }
+        }, for: .Click)
     }
     
     required public init?(coder: NSCoder) {

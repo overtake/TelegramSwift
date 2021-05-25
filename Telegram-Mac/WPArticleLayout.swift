@@ -188,14 +188,14 @@ class WPArticleLayout: WPLayout {
                 case let .wallpaper(_, _, preview):
                     switch preview {
                     case let .slug(_, settings):
-                        if settings.color != nil {
+                        if !settings.colors.isEmpty {
                             var patternIntensity: CGFloat = 0.5
                             
-                            let color = settings.color ?? NSColor(rgb: 0xd6e2ee, alpha: 0.5).argb
+                            let color = settings.colors.first ?? NSColor(rgb: 0xd6e2ee, alpha: 0.5).argb
                             if let intensity = settings.intensity {
                                 patternIntensity = CGFloat(intensity) / 100.0
                             }
-                            if let bottomColor = settings.bottomColor {
+                            if let bottomColor = settings.colors.last, settings.colors.count > 1 {
                                 emptyColor = .gradient(top: NSColor(argb: color).withAlphaComponent(patternIntensity), bottom: NSColor(rgb: bottomColor).withAlphaComponent(patternIntensity), rotation: settings.rotation)
                             } else {
                                 emptyColor = .color(NSColor(argb: color))

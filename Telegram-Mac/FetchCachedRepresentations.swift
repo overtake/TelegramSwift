@@ -178,7 +178,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                             let color: NSColor
                             var intensity: CGFloat = 0.5
                             
-                            if let combinedColor = settings.color, settings.bottomColor == nil {
+                            if settings.colors.count == 1, let combinedColor = settings.colors.first {
                                 let combinedColor = NSColor(UInt32(combinedColor))
                                 if let i = settings.intensity {
                                     intensity = CGFloat(i) / 100.0
@@ -186,7 +186,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                                 color = combinedColor.withAlphaComponent(1.0)
                                 intensity = combinedColor.alpha
                                 colors = [color]
-                            } else if let t = settings.color, let b = settings.bottomColor {
+                            } else if let t = settings.colors.first, let b = settings.colors.last {
                                 let top = NSColor(UInt32(t))
                                 let bottom = NSColor(UInt32(b))
                                 color = top.withAlphaComponent(1.0)

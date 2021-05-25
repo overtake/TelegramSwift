@@ -263,7 +263,7 @@ class ChatWallpaperModalController: ModalViewController {
                     if !deletedWallpapers.contains(where: {$0.isSemanticallyEqual(to: wallpaper)}) {
                         switch item {
                         case let .file(_, _, _, _, isPattern, _, _, _, settings):
-                            if isPattern, settings.color == nil {
+                            if isPattern, settings.colors.isEmpty {
                                 continue
                             }
                         default:

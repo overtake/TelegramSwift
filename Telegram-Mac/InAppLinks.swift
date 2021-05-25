@@ -566,7 +566,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .wallpaper(_, context, preview):
         switch preview {
         case let .gradient(top, bottom, rotation):
-            let wallpaper: TelegramWallpaper = .gradient(top.argb, bottom.rgb, WallpaperSettings(rotation: rotation))
+            let wallpaper: TelegramWallpaper = .gradient([top.argb, bottom.rgb], WallpaperSettings(rotation: rotation))
             showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .color(color):
             let wallpaper: TelegramWallpaper = .color(color.argb)
@@ -1023,7 +1023,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                         blur = mode.contains("blur")
                                     }
                                     
-                                    let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, bottomColor: bottomColor, intensity: intensity, rotation: rotation)
+                                    let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: [color, bottomColor].compactMap { $0 }, intensity: intensity, rotation: rotation)
                                     
                                     var slug = component
                                     if let index = component.range(of: "?") {
@@ -1303,7 +1303,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             intensity = Int32(intensityString)
                         }
                         
-                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, color: color, bottomColor: bottomColor, intensity: intensity, rotation: rotation)
+                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: [color, bottomColor].compactMap { $0 }, intensity: intensity, rotation: rotation)
                         
                         return .wallpaper(link: urlString, context: context, preview: .slug(value, settings))
                     }

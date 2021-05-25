@@ -17,6 +17,8 @@
 		271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 2715040F2631799A004FB0E0 /* DesktopCaptureSourceViewMac.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27335F0825C833D400FD040C /* GroupInstanceCustomImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */; };
 		27335F0925C833D400FD040C /* GroupInstanceCustomImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27335F0725C833D300FD040C /* GroupInstanceCustomImpl.h */; };
+		273F3237265B97F2005D918E /* VideoSampleBufferViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */; };
+		273F3238265B97F2005D918E /* VideoSampleBufferViewMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 273F3236265B97F2005D918E /* VideoSampleBufferViewMac.h */; };
 		274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */; };
 		274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 274BB565263AE0AA00620D03 /* GroupJoinPayloadInternal.h */; };
 		274BB569263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 274BB566263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp */; };
@@ -89,6 +91,8 @@
 		2715040F2631799A004FB0E0 /* DesktopCaptureSourceViewMac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceViewMac.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopCaptureSourceViewMac.h; sourceTree = "<group>"; };
 		27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupInstanceCustomImpl.cpp; sourceTree = "<group>"; };
 		27335F0725C833D300FD040C /* GroupInstanceCustomImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupInstanceCustomImpl.h; sourceTree = "<group>"; };
+		273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoSampleBufferViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoSampleBufferViewMac.mm; sourceTree = "<group>"; };
+		273F3236265B97F2005D918E /* VideoSampleBufferViewMac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoSampleBufferViewMac.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoSampleBufferViewMac.h; sourceTree = "<group>"; };
 		274340F925A5BADE00A71071 /* AudioDeviceHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AudioDeviceHelper.cpp; path = ../../submodules/tgcalls/tgcalls/AudioDeviceHelper.cpp; sourceTree = "<group>"; };
 		274BB565263AE0AA00620D03 /* GroupJoinPayloadInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupJoinPayloadInternal.h; sourceTree = "<group>"; };
 		274BB566263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupJoinPayloadInternal.cpp; sourceTree = "<group>"; };
@@ -238,6 +242,8 @@
 				D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */,
 				D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */,
 				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
+				273F3236265B97F2005D918E /* VideoSampleBufferViewMac.h */,
+				273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
 				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
 				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
@@ -334,6 +340,7 @@
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
 				27C1680226203A56000B8449 /* InstanceV2Impl.h in Headers */,
 				27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */,
+				273F3238265B97F2005D918E /* VideoSampleBufferViewMac.h in Headers */,
 				27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */,
 				2767ADF625D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h in Headers */,
 				274BB56A263AE0AA00620D03 /* GroupJoinPayload.h in Headers */,
@@ -451,6 +458,7 @@
 				274BB569263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp in Sources */,
 				D0E3685624DAADF5009896D4 /* TGRTCVideoEncoderH264.mm in Sources */,
 				27C1680426203A56000B8449 /* Signaling.cpp in Sources */,
+				273F3237265B97F2005D918E /* VideoSampleBufferViewMac.mm in Sources */,
 				D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */,
 				D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */,
 				D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */,

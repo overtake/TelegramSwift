@@ -2511,10 +2511,10 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
 extension WallpaperSettings {
     var stringValue: String {
         var value: String = ""
-        if let top = self.color {
+        if let top = self.colors.first {
             value += "ctop\(top)"
         }
-        if let top = self.bottomColor {
+        if let top = self.colors.last, self.colors.count == 2 {
             value += "cbottom\(top)"
         }
         if let rotation = self.rotation {
@@ -3216,8 +3216,8 @@ extension TelegramWallpaper {
             t = .color(color)
         case let .file(values):
             t = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
-        case let .gradient(top, bottom, settings):
-            t = .gradient(top, bottom, settings.rotation)
+        case let .gradient(colors, settings):
+            t = .gradient(colors.first!, colors.last!, settings.rotation)
         case let .image(reps, settings):
             t = .image(reps, settings: settings)
         }
@@ -3233,7 +3233,7 @@ extension Wallpaper {
         case let .color(color):
             return .color(color)
         case let .gradient(top, bottom, rotation):
-            return .gradient(top, bottom, WallpaperSettings(rotation: rotation))
+            return .gradient([top, bottom], WallpaperSettings(rotation: rotation))
         default:
             break
         }

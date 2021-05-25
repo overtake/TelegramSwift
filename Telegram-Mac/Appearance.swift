@@ -1160,14 +1160,14 @@ final class TelegramChatListTheme {
 
 extension WallpaperSettings {
     func withUpdatedBlur(_ blur: Bool) -> WallpaperSettings {
-        return WallpaperSettings(blur: blur, motion: self.motion, color: self.color, intensity: self.intensity)
+        return WallpaperSettings(blur: blur, motion: self.motion, colors: self.colors, intensity: self.intensity)
     }
     func withUpdatedColor(_ color: UInt32?) -> WallpaperSettings {
-        return WallpaperSettings(blur: self.blur, motion: self.motion, color: color, intensity: self.intensity)
+        return WallpaperSettings(blur: self.blur, motion: self.motion, colors: color != nil ? [color!] : [], intensity: self.intensity)
     }
     
     func isSemanticallyEqual(to other: WallpaperSettings) -> Bool {
-        return self.color == other.color && self.intensity == other.intensity
+        return self.colors == other.colors && self.intensity == other.intensity
     }
 }
 
@@ -1190,8 +1190,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .image(image, settings: settings)
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
-        case let .gradient(top, bottom, settings):
-            self = .gradient(top, bottom, settings.rotation)
+        case let .gradient(colors, settings):
+            self = .gradient(colors.first!, colors.last!, settings.rotation)
         }
     }
     
@@ -1252,7 +1252,7 @@ enum Wallpaper : Equatable, PostboxCoding {
                 options.append("mode=blur")
             }
             if isPattern {
-                if let pattern = settings.color {
+                if let pattern = settings.colors.first {
                     var color = NSColor(argb: pattern).withAlphaComponent(1.0).hexString.lowercased()
                     color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     options.append("bg_color=\(color)")
@@ -1341,9 +1341,9 @@ enum Wallpaper : Equatable, PostboxCoding {
         case .gradient:
             return self
         case let .image(representations, settings):
-            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, bottomColor: settings.bottomColor, intensity: settings.intensity, rotation: settings.rotation))
+            return .image(representations, settings: WallpaperSettings(blur: blurred, motion: settings.motion, colors: settings.colors, intensity: settings.intensity, rotation: settings.rotation))
         case let .file(values):
-            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, color: settings.color, bottomColor: settings.bottomColor, intensity: settings.intensity, rotation: settings.rotation), isPattern: values.isPattern)
+            return .file(slug: values.slug, file: values.file, settings: WallpaperSettings(blur: blurred, motion: settings.motion, colors: settings.colors, intensity: settings.intensity, rotation: settings.rotation), isPattern: values.isPattern)
         case let .custom(path, _):
             return .custom(path, blurred: blurred)
         case .none:
@@ -1396,9 +1396,9 @@ enum Wallpaper : Equatable, PostboxCoding {
         case let .file(values):
             return values.settings
         case let .color(t):
-            return WallpaperSettings(color: t)
+            return WallpaperSettings(colors: [t])
         case let .gradient(t, b, r):
-            return WallpaperSettings(color: t, bottomColor: b, rotation: r)
+            return WallpaperSettings(colors: [t, b], rotation: r)
         default:
             return WallpaperSettings()
         }
