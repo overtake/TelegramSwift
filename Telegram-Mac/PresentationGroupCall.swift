@@ -570,6 +570,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         }
     }
+    
+    private var settingsDisposable: Disposable?
         
     private var audioLevelsDisposable = MetaDisposable()
     
@@ -919,6 +921,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.startDisposable.dispose()
         self.subscribeDisposable.dispose()
         self.updateGroupCallJoinAsDisposable.dispose()
+        self.settingsDisposable?.dispose()
     }
     
     private func switchToTemporaryParticipantsContext(sourceContext: GroupCallParticipantsContext?, oldMyPeerId: PeerId) {
@@ -1150,7 +1153,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: true)
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false)
+                
+                self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
+                    self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuspension)
+                })
                 
                 self.genericCallContext = genericCallContext
                 self.stateVersionValue += 1

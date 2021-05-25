@@ -9277,6 +9277,10 @@ internal final class L10n {
   internal static var voiceChatSettingsEnd: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End") }
   /// MODE
   internal static var voiceChatSettingsInputMode: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode") }
+  /// Enabled
+  internal static var voiceChatSettingsNoiseText: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseText") }
+  /// NOISE SUSPENSION
+  internal static var voiceChatSettingsNoiseTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseTitle") }
   /// New participants are muted
   internal static var voiceChatSettingsOnlyAdmins: String  { return L10n.tr("Localizable", "VoiceChat.Settings.OnlyAdmins") }
   /// OUTPUT
@@ -9387,7 +9391,11 @@ internal final class L10n {
   internal static var voiceChatToastStop: String  { return L10n.tr("Localizable", "VoiceChat.Toast.Stop") }
   /// Now you can speak in the voice chat
   internal static var voiceChatToastYouCanSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Toast.YouCanSpeak") }
-  /// %@ is speaking
+  /// Your camera is off. Click here to enable camera.
+  internal static var voiceChatTooltipEnableCamera: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.EnableCamera") }
+  /// You are on mute. Click here to speak.
+  internal static var voiceChatTooltipEnableMicro: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.EnableMicro") }
+  /// **%@** is speaking
   internal static func voiceChatTooltipIsSpeaking(_ p1: String) -> String {
     return L10n.tr("Localizable", "VoiceChat.Tooltip.IsSpeaking", p1)
   }

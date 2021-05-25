@@ -171,7 +171,7 @@ final class GroupCallContextMenuHeaderView : View {
         setFrameSize(NSMakeSize(frame.width, 190 + name.layoutSize.height + 10 + (descView != nil ? descView!.frame.height + 3 : 0)))
         layout()
         
-        let photos = Array(syncPeerPhotos(peerId: peer.id).prefix(10))
+        var photos = Array(syncPeerPhotos(peerId: peer.id).prefix(10))
         let signal = peerPhotos(account: account, peerId: peer.id, force: true) |> deliverOnMainQueue
                 
         for video in videos {
@@ -191,9 +191,16 @@ final class GroupCallContextMenuHeaderView : View {
                 guard let `self` = self else {
                     return
                 }
-                self.slider.removeSlide(view)
                 
-                let photos = Array(photos.prefix(10))
+                var photos = Array(photos.prefix(10))
+                
+                if !photos.isEmpty {
+                    let first = photos.removeFirst()
+                    if !first.image.videoRepresentations.isEmpty {
+                        photos.insert(first, at: 0)
+                        self.slider.removeSlide(view)
+                    }
+                }
                 for photo in photos {
                     let view = PhotoOrVideoView(frame: self.slider.bounds)
                     view.setPeer(peer, peerPhoto: photo, video: nil, account: account)
@@ -201,8 +208,13 @@ final class GroupCallContextMenuHeaderView : View {
                 }
             }))
         } else {
-            self.slider.removeSlide(view)
-            
+            if !photos.isEmpty {
+                let first = photos.removeFirst()
+                if !first.image.videoRepresentations.isEmpty {
+                    photos.insert(first, at: 0)
+                    self.slider.removeSlide(view)
+                }
+            }
             for photo in photos {
                 let view = PhotoOrVideoView(frame: self.slider.bounds)
                 view.setPeer(peer, peerPhoto: photo, video: nil, account: account)

@@ -16,6 +16,15 @@ import HotKey
 import TgVoipWebrtc
 
 
+private struct Tooltips : Equatable {
+    var dismissed: Set<GroupCallUIState.ControlsTooltip>
+    var speachDetected: Bool
+    
+    static var initialValue: Tooltips {
+        return Tooltips(dismissed: Set(), speachDetected: false)
+    }
+}
+
 final class GroupCallUIArguments {
     let leave:()->Void
     let settings:()->Void
@@ -47,6 +56,7 @@ final class GroupCallUIArguments {
     let switchCamera:(PeerGroupCallData)->Void
     let togglePeersHidden:()->Void
     let contextMenuItems:(PeerGroupCallData)->[ContextMenuItem]
+    let dismissTooltip:(GroupCallUIState.ControlsTooltip)->Void
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -76,7 +86,8 @@ final class GroupCallUIArguments {
     futureWidth:@escaping()->CGFloat?,
     switchCamera:@escaping(PeerGroupCallData)->Void,
     togglePeersHidden: @escaping()->Void,
-    contextMenuItems:@escaping(PeerGroupCallData)->[ContextMenuItem]) {
+    contextMenuItems:@escaping(PeerGroupCallData)->[ContextMenuItem],
+    dismissTooltip:@escaping(GroupCallUIState.ControlsTooltip)->Void) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -107,6 +118,7 @@ final class GroupCallUIArguments {
         self.switchCamera = switchCamera
         self.togglePeersHidden = togglePeersHidden
         self.contextMenuItems = contextMenuItems
+        self.dismissTooltip = dismissTooltip
     }
 }
 
@@ -330,7 +342,7 @@ private func _id_peer_id(_ id: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_peer_id_\(id.toInt64())")
 }
 
-private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], dominantSpeaker: DominantVideo?, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, layoutMode: GroupCallUIState.LayoutMode, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, excludedPins: Set<String>, version: Int) -> GroupCallUIState {
+private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], dominantSpeaker: DominantVideo?, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, layoutMode: GroupCallUIState.LayoutMode, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, excludedPins: Set<String>, tooltips: Tooltips, version: Int) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -484,7 +496,31 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }
     }
     
-    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, handbyDominant: handbyDominant, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker)
+    var controlsTooltip: GroupCallUIState.ControlsTooltip? = previous?.controlsTooltip
+    
+    
+    if let current = controlsTooltip, tooltips.dismissed.contains(current) {
+        controlsTooltip = nil
+    }
+    
+    if controlsTooltip == nil {
+        if let member = memberDatas.first(where: { $0.peer.id == $0.accountPeerId }) {
+            if member.isSpeaking, !member.hasVideo, !activeVideoViews.isEmpty {
+                if !tooltips.dismissed.contains(.camera) {
+                    controlsTooltip = .camera
+                }
+            }
+        }
+    }
+        
+    if controlsTooltip == nil {
+        if tooltips.speachDetected, !tooltips.dismissed.contains(.micro) {
+            controlsTooltip = .micro
+        }
+    }
+    
+    
+    return GroupCallUIState(memberDatas: memberDatas.sorted(), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, handbyDominant: handbyDominant, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, layoutMode: layoutMode, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed)
 }
 
 
@@ -595,12 +631,23 @@ final class GroupCallUIController : ViewController {
     private var dominantSpeakerSignal:ValuePromise<DominantVideo?> = ValuePromise(nil, ignoreRepeated: true)
 
     private var idleTimer: SwiftSignalKit.Timer?
-
+    private var speakController: MicroListenerController
+    
     let size: ValuePromise<NSSize> = ValuePromise(.zero, ignoreRepeated: true)
+    
+    
+    private let tooltips:Atomic<Tooltips> = Atomic(value: Tooltips.initialValue)
+    private let tooltipsValue:ValuePromise<Tooltips> = ValuePromise(Tooltips.initialValue, ignoreRepeated: true)
+    private func updateTooltips(_ f: (Tooltips)->Tooltips)->Void {
+        tooltipsValue.set(tooltips.modify(f))
+    }
+    
+
     
     var disableSounds: Bool = false
     init(_ data: UIData, size: NSSize) {
         self.data = data
+        self.speakController = MicroListenerController(devices: data.call.sharedContext.devicesContext, accountManager: data.call.sharedContext.accountManager)
         super.init(frame: NSMakeRect(0, 0, size.width, size.height))
         bar = .init(height: 0)
         isFullScreen.set(size.width >= GroupCallTheme.fullScreenThreshold)
@@ -637,6 +684,10 @@ final class GroupCallUIController : ViewController {
                 return current
             })
         }
+        
+        
+       
+        
         
         let hideParticipantsValue:Atomic<Bool> = Atomic(value: false)
         let hideParticipants:Promise<Bool> = Promise(false)
@@ -803,6 +854,11 @@ final class GroupCallUIController : ViewController {
                                 self?.data.call.requestScreencast(deviceId: source.deviceIdKey())
                             case .video:
                                 self?.data.call.requestVideo(deviceId: source.deviceIdKey())
+                            }
+                            self?.updateTooltips { current in
+                                var current = current
+                                current.dismissed.insert(.camera)
+                                return current
                             }
                         }, devices: sharedContext.devicesContext)
                         self?.sharing = sharing
@@ -993,6 +1049,12 @@ final class GroupCallUIController : ViewController {
             }
         }, contextMenuItems: { data in
             return contextMenuItems?(data) ?? []
+        }, dismissTooltip: { [weak self] tooltip in
+            self?.updateTooltips { current in
+                var current = current
+                current.dismissed.insert(tooltip)
+                return current
+            }
         })
         
         contextMenuItems = { [weak arguments] data in
@@ -1322,7 +1384,7 @@ final class GroupCallUIController : ViewController {
 
         }))
         
-        
+                
         let invited: Signal<[Peer], NoError> = self.data.call.invitedPeers |> mapToSignal { ids in
             return account.postbox.transaction { transaction -> [Peer] in
                 var peers:[Peer] = []
@@ -1355,7 +1417,7 @@ final class GroupCallUIController : ViewController {
 
         let previousState: Atomic<GroupCallUIState?> = Atomic(value: nil)
         
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), videoSources.get()) |> mapToQueue { values in
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), videoSources.get(), tooltipsValue.get()) |> mapToQueue { values in
             let value = previousState.modify { previous in
                 return makeState(previous: previous, peerView: values.3,
                                          state: values.0,
@@ -1376,6 +1438,7 @@ final class GroupCallUIController : ViewController {
                                          activeVideoViews: values.7.5.set,
                                          hideParticipants: values.7.9,
                                          excludedPins: values.7.10,
+                                         tooltips: values.10,
                                          version: values.7.8)
             }
             return .single(value!)
@@ -1717,16 +1780,39 @@ final class GroupCallUIController : ViewController {
         self.genericView.applyUpdates(state, transition, call, animated: transition.animated)
         canManageCall = state.state.canManageCall
         
-       // if genericView.inLiveResize {
-//            for view in genericView.peersTable.view.subviews {
-//                if let view = view as? TableRowView {
-//                    let rowIndex = genericView.peersTable.view.row(for: view)
-//                    if rowIndex < 0 {
-//                        view.removeFromSuperview()
-//                    }
-//                }
-//            }
-      //  }
+        
+        self.checkMicro(state)
+    }
+
+    
+    private func checkMicro(_ state: GroupCallUIState) {
+        
+        
+        switch state.state.networkState {
+        case .connecting:
+            speakController.pause()
+        case .connected:
+            if !state.dismissedTooltips.contains(.micro), state.controlsTooltip == nil {
+                if state.isMuted || state.state.muteState?.canUnmute == true {
+                    speakController.resume { [weak self] in
+                        self?.updateTooltips { current in
+                            var current = current
+                            current.speachDetected = true
+                            return current
+                        }
+                    }
+                } else {
+                    speakController.pause()
+                    self.updateTooltips { current in
+                        var current = current
+                        current.dismissed.insert(.micro)
+                        return current
+                    }
+                }
+            } else {
+                speakController.pause()
+            }
+        }
     }
     
     deinit {

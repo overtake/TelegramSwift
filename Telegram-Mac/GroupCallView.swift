@@ -230,7 +230,7 @@ final class GroupCallView : View {
         }
         
         if let current = speakingTooltipView {
-            transition.updateFrame(view: current, frame: current.centerFrameX(y: 64, addition: peersTable.frame.width / 2 + 5))
+            transition.updateFrame(view: current, frame: current.centerFrameX(y: 60, addition: peersTable.frame.width / 2 + 5))
         }
     }
     
@@ -547,7 +547,7 @@ final class GroupCallView : View {
                 current.setPeer(data: tooltipSpeaker, account: call.account, audioLevel: arguments?.audioLevel ?? { _ in return nil })
                 
                 if presented {
-                    current.setFrameOrigin(current.centerFrameX(y: 64, addition: peersTable.frame.width / 2 + 5).origin)
+                    current.setFrameOrigin(current.centerFrameX(y: 60, addition: peersTable.frame.width / 2 + 5).origin)
                     if animated {
                         current.layer?.animatePosition(from: current.frame.origin - NSMakePoint(0, 10), to: current.frame.origin)
                     }
