@@ -71,6 +71,7 @@
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
 		278E86D4265D0F330006685D /* GroupCallAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E86D3265D0F330006685D /* GroupCallAvatarView.swift */; };
+		278E86D7265D49100006685D /* MicroListenerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E86D6265D49100006685D /* MicroListenerController.swift */; };
 		278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */; };
 		278FA2E925E8C36A00280629 /* PaymentsPaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */; };
 		278FA43825E8D5CD00280629 /* Stripe.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 278FA43725E8D5CD00280629 /* Stripe.framework */; };
@@ -1145,6 +1146,7 @@
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
 		278E86D3265D0F330006685D /* GroupCallAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarView.swift; sourceTree = "<group>"; };
+		278E86D6265D49100006685D /* MicroListenerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroListenerController.swift; sourceTree = "<group>"; };
 		278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingMethodController.swift; sourceTree = "<group>"; };
 		278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsPaymentMethodController.swift; sourceTree = "<group>"; };
 		278FA43725E8D5CD00280629 /* Stripe.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Stripe.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4790,6 +4792,7 @@
 				A7ADC4792587B3750069737A /* VoiceChatActionButton.swift */,
 				275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */,
 				276B597F261C78F40029FD3F /* GroupCallUIState.swift */,
+				278E86D6265D49100006685D /* MicroListenerController.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5213,6 +5216,7 @@
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
+				278E86D7265D49100006685D /* MicroListenerController.swift in Sources */,
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
 				27C4089125B068C300372302 /* InviteLinkRowItem.swift in Sources */,

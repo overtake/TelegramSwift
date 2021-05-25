@@ -13,6 +13,62 @@ import TelegramCore
 import Postbox
 
 
+private final class GroupCallControlsTooltipView: Control {
+    private let backgroundView = View()
+    private let textView = TextView()
+    private let cornerView =  ImageView()
+    private(set) weak var toView: NSView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(backgroundView)
+        backgroundView.addSubview(textView)
+        addSubview(cornerView)
+        cornerView.isEventLess = true
+        backgroundView.isEventLess = true
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        cornerView.image = generateImage(NSMakeSize(30, 10), rotatedContext: { size, context in
+            context.clear(CGRect(origin: CGPoint(), size: size))
+            context.setFillColor(GroupCallTheme.membersColor.cgColor)
+            context.scaleBy(x: 0.333, y: 0.333)
+            let _ = try? drawSvgPath(context, path: "M85.882251,0 C79.5170552,0 73.4125613,2.52817247 68.9116882,7.02834833 L51.4264069,24.5109211 C46.7401154,29.1964866 39.1421356,29.1964866 34.4558441,24.5109211 L16.9705627,7.02834833 C12.4696897,2.52817247 6.36519576,0 0,0 L85.882251,0 ")
+            context.fillPath()
+        })!
+        cornerView.sizeToFit()
+    }
+    
+    func set(text: String, maxWidth: CGFloat, to view: NSView?) {
+        let layout = TextViewLayout(.initialize(string: text, color: GroupCallTheme.customTheme.textColor, font: .normal(12)))
+        layout.measure(width: maxWidth)
+        textView.update(layout)
+        
+        self.toView = view
+        backgroundView.background = GroupCallTheme.membersColor
+        
+        setFrameSize(NSMakeSize(layout.layoutSize.width + 16, layout.layoutSize.height + 8 + 10))
+        
+        backgroundView.layer?.cornerRadius = (frame.height - 10) / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        backgroundView.frame = focus(NSMakeSize(frame.width, frame.height - 10))
+        
+        if let toView = toView {
+            cornerView.setFrameOrigin(NSMakePoint(toView.frame.minX - 12 + toView.frame.width / 2 - cornerView.frame.width / 2, frame.height - 10))
+        } else {
+            cornerView.centerX(y: frame.height - 10)
+        }
+        
+        textView.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 final class GroupCallControlsView : View {
     
     enum Mode : Equatable {
@@ -37,6 +93,8 @@ final class GroupCallControlsView : View {
     private let backgroundView = VoiceChatActionButtonBackgroundView()
     let fullscreenBackgroundView = NSVisualEffectView(frame: .zero)
 
+    private var tooltipView: GroupCallControlsTooltipView?
+    
     required init(frame frameRect: NSRect) {
 
 
@@ -53,6 +111,7 @@ final class GroupCallControlsView : View {
         
         addSubview(backgroundView)
         addSubview(speak)
+        
 
         addSubview(leftButton1)
         addSubview(end)
@@ -230,6 +289,26 @@ final class GroupCallControlsView : View {
             transition.updateFrame(view: self.fullscreenBackgroundView, frame: bgRect)
         }
         
+        if let tooltipView = tooltipView {
+            
+            var yOffset: CGFloat = 0
+            switch callMode {
+            case .video:
+                if mode == .normal {
+                    yOffset = 10
+                }
+            case .voice:
+                yOffset = 10
+            }
+            
+            var rect = CGRect(origin: CGPoint(x: fullscreenBackgroundView.frame.minX, y: fullscreenBackgroundView.frame.minY - tooltipView.frame.height - 5 + yOffset), size: tooltipView.frame.size)
+            
+            if tooltipView.toView == nil {
+                rect.origin.x = focus(rect.size).minX
+            }
+            
+            transition.updateFrame(view: tooltipView, frame: rect)
+        }
     }
     
         
@@ -413,9 +492,77 @@ final class GroupCallControlsView : View {
                 speakText.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.5)
             }
         }
+        
+        if self.currentState?.controlsTooltip != callState.controlsTooltip {
+            
+            if let tooltip = callState.controlsTooltip {
+                let current: GroupCallControlsTooltipView
+                var presented = false
+                if let view = self.tooltipView {
+                    current = view
+                } else {
+                    current = GroupCallControlsTooltipView(frame: .zero)
+                    self.tooltipView = current
+                    self.addSubview(current)
+                    presented = true
+                    
+                    current.set(handler: { [weak self] _ in
+                        self?.arguments?.dismissTooltip(tooltip)
+                    }, for: .Click)
+                }
+                let toView: NSView?
+                switch tooltip {
+                case .camera:
+                    toView = self.leftButton1
+                case .micro:
+                    toView = nil
+                }
+                current.set(text: tooltip.text, maxWidth: 340, to: toView)
+                
+                if presented {
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    
+                    var yOffset: CGFloat = 0
+                    switch callMode {
+                    case .video:
+                        if mode == .normal {
+                            yOffset = 10
+                        }
+                    case .voice:
+                        yOffset = 10
+                    }
+                    
+                    var point = CGPoint(x: fullscreenBackgroundView.frame.minX, y: fullscreenBackgroundView.frame.minY - current.frame.height - 5 + yOffset)
+                        
+                    if current.toView == nil {
+                        point.x = focus(current.frame.size).minX
+                    }
+                    current.setFrameOrigin(point)
+                }
+                
+            } else {
+                if let current = self.tooltipView {
+                    self.tooltipView = nil
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak current] _ in
+                            current?.removeFromSuperview()
+                        })
+                    } else {
+                        current.removeFromSuperview()
+                    }
+                }
+            }
+            
+        }
 
         self.currentState = callState
-        needsLayout = true
+        
+        let transition: ContainedViewLayoutTransition = !animated ? .immediate : .animated(duration: 0.2, curve: .easeInOut)
+        
+        updateLayout(size: frame.size, transition: transition)
     }
     
     override var mouseDownCanMoveWindow: Bool {

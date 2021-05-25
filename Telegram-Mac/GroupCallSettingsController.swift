@@ -28,6 +28,7 @@ private final class Arguments {
     let startRecording:()->Void
     let stopRecording:()->Void
     let resetLink:()->Void
+    let setNoiseSuspension:(Bool)->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -40,7 +41,8 @@ private final class Arguments {
          switchAccount: @escaping(PeerId)->Void,
          startRecording: @escaping()->Void,
          stopRecording: @escaping()->Void,
-         resetLink: @escaping()->Void) {
+         resetLink: @escaping()->Void,
+         setNoiseSuspension:@escaping(Bool)->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -54,6 +56,7 @@ private final class Arguments {
         self.startRecording = startRecording
         self.stopRecording = stopRecording
         self.resetLink = resetLink
+        self.setNoiseSuspension = setNoiseSuspension
     }
 }
 
@@ -456,6 +459,16 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         }
     }
 
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsNoiseTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseText, color: theme.textColor, type: .switchable(settings.noiseSuspension), viewType: .singleItem, enabled: true, action: {
+        arguments.setNoiseSuspension(!settings.noiseSuspension)
+    }, theme: theme)))
+    index += 1
 
     if state.canManageCall {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
@@ -713,6 +726,10 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             if let window = self?.window {
                 showModalText(for: window, text: L10n.voiceChatSettingsResetLinkSuccess)
             }
+        }, setNoiseSuspension: { value in
+            _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
+                $0.withUpdatedNoiseSuspension(value)
+            }).start()
         })
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
