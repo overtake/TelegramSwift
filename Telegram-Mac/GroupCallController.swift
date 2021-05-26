@@ -424,11 +424,15 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             if participant.peer.id != peerId {
                 return false
             }
-            if let _ = participant.presentationEndpointId {
-                return true
+            if let endpointId = participant.presentationEndpointId {
+                if activeVideoViews.contains(where: { $0.endpointId == endpointId }) {
+                    return true
+                }
             }
-            if let _ = participant.videoEndpointId {
-                return true
+            if let endpointId = participant.videoEndpointId {
+                if activeVideoViews.contains(where: { $0.endpointId == endpointId }) {
+                    return true
+                }
             }
             return false
         }) != nil
@@ -494,6 +498,9 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         if tooltipSpeaker == nil {
             tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
         }
+    }
+    if tooltipSpeaker == nil && current == nil {
+        tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId && $0.videoEndpoint == nil && $0.presentationEndpointId == nil })
     }
     
     var controlsTooltip: GroupCallUIState.ControlsTooltip? = previous?.controlsTooltip
@@ -635,7 +642,7 @@ final class GroupCallUIController : ViewController {
     private var dominantSpeakerSignal:ValuePromise<DominantVideo?> = ValuePromise(nil, ignoreRepeated: true)
 
     private var idleTimer: SwiftSignalKit.Timer?
-    private var speakController: MicroListenerController
+    private var speakController: MicroListenerContext
     
     let size: ValuePromise<NSSize> = ValuePromise(.zero, ignoreRepeated: true)
     
@@ -651,7 +658,7 @@ final class GroupCallUIController : ViewController {
     var disableSounds: Bool = false
     init(_ data: UIData, size: NSSize) {
         self.data = data
-        self.speakController = MicroListenerController(devices: data.call.sharedContext.devicesContext, accountManager: data.call.sharedContext.accountManager)
+        self.speakController = MicroListenerContext(devices: data.call.sharedContext.devicesContext, accountManager: data.call.sharedContext.accountManager)
         super.init(frame: NSMakeRect(0, 0, size.width, size.height))
         bar = .init(height: 0)
         isFullScreen.set(size.width >= GroupCallTheme.fullScreenThreshold)
@@ -800,6 +807,21 @@ final class GroupCallUIController : ViewController {
             }))
         }, shareSource: { [weak self] mode in
             guard let state = self?.genericView.state, let window = self?.window else {
+                return
+            }
+            
+            if state.state.muteState?.canUnmute == false {
+                
+                let text: String
+                switch mode {
+                case .screencast:
+                    text = L10n.voiceChatShareVideoMutedError
+                case .video:
+                    text = L10n.voiceChatShareScreenMutedError
+                }
+                
+                alert(for: window, info: text)
+                
                 return
             }
             
@@ -1798,13 +1820,13 @@ final class GroupCallUIController : ViewController {
         case .connected:
             if !state.dismissedTooltips.contains(.micro), state.controlsTooltip == nil {
                 if state.isMuted && state.state.muteState?.canUnmute == true {
-                    speakController.resume { [weak self] in
+                    speakController.resume(onSpeaking: { [weak self] _ in
                         self?.updateTooltips { current in
                             var current = current
                             current.speachDetected = true
                             return current
                         }
-                    }
+                    })
                 } else {
                     speakController.pause()
                 }

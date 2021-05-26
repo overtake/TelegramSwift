@@ -134,7 +134,7 @@ final class GroupCallView : View {
         self.controlsMode = mode
         
        // if previousMode != mode {
-            controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: animated)
+            controlsContainer.change(opacity: mode == .invisible && isFullScreen && state?.controlsTooltip == nil ? 0 : 1, animated: animated)
             mainVideoView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
             tileView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
 
@@ -158,7 +158,7 @@ final class GroupCallView : View {
         self.controlsMode = mode
         
         if previousMode != mode {
-            controlsContainer.change(opacity: mode == .invisible && isFullScreen ? 0 : 1, animated: true)
+            controlsContainer.change(opacity: mode == .invisible && isFullScreen && state?.controlsTooltip == nil ? 0 : 1, animated: true)
             
             
             var videosMode: ControlsMode
