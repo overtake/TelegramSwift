@@ -52,8 +52,8 @@ private final class GroupCallControlsTooltipView: Control {
         })!, for: .Normal)
         
         closeView.set(handler: { [weak self] _ in
-            self?.send(event: .Click)
-        }, for: .Click)
+            self?.send(event: .SingleClick)
+        }, for: .SingleClick)
         
         closeView.sizeToFit()
     }
@@ -145,7 +145,7 @@ final class GroupCallControlsView : View {
 
         end.set(handler: { [weak self] _ in
             self?.arguments?.leave()
-        }, for: .Click)
+        }, for: .SingleClick)
                 
         speak.set(handler: { [weak self] _ in
             if let state = self?.currentState {
@@ -165,7 +165,7 @@ final class GroupCallControlsView : View {
                 }
             }
             
-        }, for: .Click)
+        }, for: .SingleClick)
 
         self.backgroundView.update(state: .connecting, animated: false)
 
@@ -365,7 +365,7 @@ final class GroupCallControlsView : View {
                     self?.arguments?.settings()
                 }
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
         
         leftButton2?.removeAllHandlers()
@@ -375,12 +375,12 @@ final class GroupCallControlsView : View {
             } else {
                 self?.arguments?.shareSource(.screencast)
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
         rightButton1?.removeAllHandlers()
         rightButton1?.set(handler: { [weak self] _ in
             self?.arguments?.settings()
-        }, for: .Click)
+        }, for: .SingleClick)
 
         var backgroundState: VoiceChatActionButtonBackgroundView.State
         if state.scheduleTimestamp == nil {
@@ -529,7 +529,7 @@ final class GroupCallControlsView : View {
                     
                     current.set(handler: { [weak self] _ in
                         self?.arguments?.dismissTooltip(tooltip)
-                    }, for: .Click)
+                    }, for: .SingleClick)
                 }
                 let toView: NSView?
                 switch tooltip {

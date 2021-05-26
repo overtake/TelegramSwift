@@ -132,7 +132,7 @@ private let _id_input_mode_ptt = InputDataIdentifier("_id_input_mode_ptt")
 private let _id_ptt = InputDataIdentifier("_id_ptt")
 private let _id_input_mode_ptt_se = InputDataIdentifier("_id_input_mode_ptt_se")
 private let _id_input_mode_toggle = InputDataIdentifier("_id_input_mode_toggle")
-
+private let _id_noise_suppression =  InputDataIdentifier("_id_noise_suppression")
 
 private let _id_input_chat_title = InputDataIdentifier("_id_input_chat_title")
 private let _id_input_record_title = InputDataIdentifier("_id_input_record_title")
@@ -465,7 +465,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsNoiseTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseText, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseText, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
         arguments.setNoiseSuppression(!settings.noiseSuppression)
     }, theme: theme)))
     index += 1
