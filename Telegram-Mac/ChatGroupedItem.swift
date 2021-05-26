@@ -493,7 +493,7 @@ class ChatGroupedItem: ChatRowItem {
             }
         }
         if let editMessage = editMessage {
-            if canEditMessage(editMessage, context: context) {
+            if canEditMessage(editMessage, chatInteraction: chatInteraction, context: context) {
                 items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [weak self] in
                     self?.chatInteraction.beginEditingMessage(editMessage)
                 }))

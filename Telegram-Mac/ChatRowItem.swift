@@ -2382,7 +2382,7 @@ class ChatRowItem: TableRowItem {
     }
     func editAction() -> Bool {
          if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing, chatInteraction.mode.threadId != effectiveCommentMessage?.id {
-            if let message = message, canEditMessage(message, context: context) {
+            if let message = message, canEditMessage(message, chatInteraction: chatInteraction, context: context) {
                 chatInteraction.beginEditingMessage(message)
                 return true
             }
@@ -2573,7 +2573,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     items.append(ContextSeparatorItem())
     
-    if canEditMessage(message, context: context), chatInteraction.mode != .pinned {
+    if canEditMessage(message, chatInteraction: chatInteraction, context: context), chatInteraction.mode != .pinned {
         items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [unowned chatInteraction] in
             chatInteraction.beginEditingMessage(message)
         }))

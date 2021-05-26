@@ -1340,7 +1340,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         missingSsrcs.insert(ssrcValue)
                     }
                 }
-                
+                            
                 strongSelf.speakingParticipantsContext.update(levels: result)
                 
                 let mappedLevel = myLevel * 1.5

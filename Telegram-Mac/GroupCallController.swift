@@ -488,19 +488,21 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         mode = .voice
     }
     var tooltipSpeaker: PeerGroupCallData? = nil
-    if current != nil {
-        if let previous = previous?.tooltipSpeaker {
-            let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
-            if let member = member, member.isSpeaking {
-                tooltipSpeaker = previous
+    if !activeVideoViews.isEmpty {
+        if current != nil {
+            if let previous = previous?.tooltipSpeaker {
+                let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
+                if let member = member, member.isSpeaking {
+                    tooltipSpeaker = previous
+                }
+            }
+            if tooltipSpeaker == nil {
+                tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
             }
         }
-        if tooltipSpeaker == nil {
-            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
+        if tooltipSpeaker == nil && current == nil {
+            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId && $0.videoEndpoint == nil && $0.presentationEndpointId == nil })
         }
-    }
-    if tooltipSpeaker == nil && current == nil {
-        tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId && $0.videoEndpoint == nil && $0.presentationEndpointId == nil })
     }
     
     var controlsTooltip: GroupCallUIState.ControlsTooltip? = previous?.controlsTooltip

@@ -5346,7 +5346,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         continue
                     }
                 }
-                if canEditMessage(entry.message, context: context)  {
+                if canEditMessage(entry.message, chatInteraction: chatInteraction, context: context)  {
                     chatInteraction.beginEditingMessage(entry.message)
                     return true
                 }

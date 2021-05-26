@@ -57,6 +57,7 @@ struct GroupCallTheme {
     static let videoBox_screencast = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(NSColor.white.withAlphaComponent(0.8))
 
     
+    static let closeTooltip = NSImage(named: "Icon_VoiceChat_Tooltip_Close")!.precomposed(.white)
         
     static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
     static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
