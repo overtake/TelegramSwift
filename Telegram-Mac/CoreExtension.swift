@@ -956,7 +956,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
     return false
 }
 
-func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
+func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext) -> Bool {
     if message.forwardInfo != nil {
         return false
     }
@@ -1002,7 +1002,9 @@ func canEditMessage(_ message:Message, context: AccountContext) -> Bool {
         if attr is InlineBotMessageAttribute {
             return false
         } else if attr is AutoremoveTimeoutMessageAttribute {
-            return false
+            if !chatInteraction.hasSetDestructiveTimer {
+                return false
+            }
         }
     }
     

@@ -17,18 +17,20 @@ private final class GroupCallControlsTooltipView: Control {
     private let backgroundView = View()
     private let textView = TextView()
     private let cornerView =  ImageView()
+    private let closeView = ImageButton()
     private(set) weak var toView: NSView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(backgroundView)
         backgroundView.addSubview(textView)
         addSubview(cornerView)
+        addSubview(closeView)
         cornerView.isEventLess = true
         backgroundView.isEventLess = true
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         textView.disableBackgroundDrawing = true
-        cornerView.image = generateImage(NSMakeSize(30, 10), rotatedContext: { size, context in
+        cornerView.image = generateImage(NSMakeSize(30, 12), rotatedContext: { size, context in
             context.clear(CGRect(origin: CGPoint(), size: size))
             context.setFillColor(GroupCallTheme.memberSeparatorColor.cgColor)
             context.scaleBy(x: 0.333, y: 0.333)
@@ -36,6 +38,24 @@ private final class GroupCallControlsTooltipView: Control {
             context.fillPath()
         })!
         cornerView.sizeToFit()
+        
+        closeView.autohighlight = false
+        closeView.scaleOnClick = true
+        
+        closeView.set(image: generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
+            ctx.clear(size.bounds)
+            ctx.round(size, size.height / 2)
+            ctx.setFillColor(GroupCallTheme.membersColor.cgColor)
+            ctx.fill(size.bounds)
+            
+            ctx.draw(GroupCallTheme.closeTooltip, in: size.bounds.focus(GroupCallTheme.closeTooltip.backingSize))
+        })!, for: .Normal)
+        
+        closeView.set(handler: { [weak self] _ in
+            self?.send(event: .Click)
+        }, for: .Click)
+        
+        closeView.sizeToFit()
     }
     
     func set(text: String, maxWidth: CGFloat, to view: NSView?) {
@@ -46,7 +66,7 @@ private final class GroupCallControlsTooltipView: Control {
         self.toView = view
         backgroundView.background = GroupCallTheme.memberSeparatorColor
         
-        setFrameSize(NSMakeSize(layout.layoutSize.width + 16, layout.layoutSize.height + 8 + 10))
+        setFrameSize(NSMakeSize(layout.layoutSize.width + 16 + 24, layout.layoutSize.height + 8 + 10))
         
         backgroundView.layer?.cornerRadius = (frame.height - 10) / 2
     }
@@ -61,7 +81,8 @@ private final class GroupCallControlsTooltipView: Control {
             cornerView.centerX(y: frame.height - 10)
         }
         
-        textView.center()
+        closeView.centerY(x: 1)
+        textView.centerY(x: 26)
     }
     
     required init?(coder: NSCoder) {

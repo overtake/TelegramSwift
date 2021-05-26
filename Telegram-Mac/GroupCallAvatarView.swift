@@ -57,6 +57,8 @@ final class GroupCallAvatarView : View {
         photoView.setPeer(account: account, peer: data.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
     }
     
+    private var value: CGFloat = 0
+    
     private func updateAudioLevel(_ value: Float?, data: PeerGroupCallData, animated: Bool) {
         if (value != nil || data.isSpeaking)  {
             playbackAudioLevelView.startAnimating()
@@ -76,28 +78,32 @@ final class GroupCallAvatarView : View {
             avatarScale = 1.0
         }
 
+        
         let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
+        if value != self.value {
+            self.value = value
+            
+            let t = photoView.layer!.transform
+            let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
 
-        let t = photoView.layer!.transform
-        let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
+            if animated {
+                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+                    guard let `self` = self else {
+                        return
+                    }
+                    let rect = self.photoView.bounds
+                    var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+                    fr = CATransform3DScale(fr, value, value, 1)
+                    fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                    self.photoView.layer?.transform = fr
+                }, completion: {
 
-        if animated {
-            self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
-                guard let `self` = self else {
-                    return
-                }
-                let rect = self.photoView.bounds
-                var fr = CATransform3DIdentity
-                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
-                fr = CATransform3DScale(fr, value, value, 1)
-                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                self.photoView.layer?.transform = fr
-            }, completion: {
-
-            })
-        } else {
-            self.scaleAnimator = nil
-            self.photoView.layer?.transform = CATransform3DIdentity
+                })
+            } else {
+                self.scaleAnimator = nil
+                self.photoView.layer?.transform = CATransform3DIdentity
+            }
         }
     }
 
