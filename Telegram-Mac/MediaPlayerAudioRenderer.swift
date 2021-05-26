@@ -69,7 +69,7 @@ private func withPlayerRendererBuffer(_ id: Int32, _ f: (Atomic<AudioPlayerRende
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
 
-private func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
+private func rendererInputProcPlayer(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
     guard let ioData = ioData else {
         return noErr
     }
@@ -400,7 +400,7 @@ private final class AudioPlayerRendererContext {
             AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &streamFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size))
             
             var callbackStruct = AURenderCallbackStruct()
-            callbackStruct.inputProc = rendererInputProc
+            callbackStruct.inputProc = rendererInputProcPlayer
             callbackStruct.inputProcRefCon = UnsafeMutableRawPointer(bitPattern: intptr_t(self.bufferContextId))
             
             guard AUGraphSetNodeInputCallback(audioGraph, converterNode, 0, &callbackStruct) == noErr else {

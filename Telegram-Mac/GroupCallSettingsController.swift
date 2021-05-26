@@ -354,7 +354,7 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     
     if let microDevice = microDevice {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: microDevice, viewType: .lastItem, customTheme: theme)
+            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem, customTheme: theme)
         }))
         index += 1
     }

@@ -112,7 +112,7 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     
     if let activeMicroDevice = activeMicroDevice {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(activeMicroDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, device: activeMicroDevice, viewType: .lastItem)
+            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem)
         }))
         index += 1
     }

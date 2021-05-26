@@ -18,7 +18,7 @@ import SyncCore
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
 
-private func audioRecorderNativeStreamDescription(_ sampleRate:Float64) -> AudioStreamBasicDescription {
+func audioRecorderNativeStreamDescription(_ sampleRate:Float64) -> AudioStreamBasicDescription {
     var canonicalBasicStreamDescription = AudioStreamBasicDescription()
     canonicalBasicStreamDescription.mSampleRate = sampleRate
     canonicalBasicStreamDescription.mFormatID = kAudioFormatLinearPCM
@@ -32,19 +32,23 @@ private func audioRecorderNativeStreamDescription(_ sampleRate:Float64) -> Audio
 }
 
 private var nextRecorderContextId: Int32 = 0
-private func getNextRecorderContextId() -> Int32 {
+func getNextRecorderContextId() -> Int32 {
     return OSAtomicIncrement32(&nextRecorderContextId)
 }
 
-private final class RecorderContextHolder {
-    weak var context: ManagedAudioRecorderContext?
+protocol RecoderContextRenderer : class {
+    func processAndDisposeAudioBuffer(_ buffer: AudioBuffer)
+}
+
+final class RecorderContextHolder {
+    weak var context: RecoderContextRenderer?
     
-    init(context: ManagedAudioRecorderContext?) {
+    init(context: RecoderContextRenderer?) {
         self.context = context
     }
 }
 
-private final class AudioUnitHolder {
+final class AudioUnitHolder {
     let queue: Queue
     let audioUnit: Atomic<AudioUnit?>
     
@@ -57,15 +61,15 @@ private final class AudioUnitHolder {
 private var audioRecorderContexts: [Int32: RecorderContextHolder] = [:]
 private var audioUnitHolders = Atomic<[Int32: AudioUnitHolder]>(value: [:])
 
-private func addAudioRecorderContext(_ id: Int32, _ context: ManagedAudioRecorderContext) {
+func addAudioRecorderContext(_ id: Int32, _ context: RecoderContextRenderer) {
     audioRecorderContexts[id] = RecorderContextHolder(context: context)
 }
 
-private func removeAudioRecorderContext(_ id: Int32) {
+func removeAudioRecorderContext(_ id: Int32) {
     audioRecorderContexts.removeValue(forKey: id)
 }
 
-private func addAudioUnitHolder(_ id: Int32, _ queue: Queue, _ audioUnit: Atomic<AudioUnit?>) {
+func addAudioUnitHolder(_ id: Int32, _ queue: Queue, _ audioUnit: Atomic<AudioUnit?>) {
     _ = audioUnitHolders.modify { dict in
         var dict = dict
         dict[id] = AudioUnitHolder(queue: queue, audioUnit: audioUnit)
@@ -73,7 +77,7 @@ private func addAudioUnitHolder(_ id: Int32, _ queue: Queue, _ audioUnit: Atomic
     }
 }
 
-private func removeAudioUnitHolder(_ id: Int32) {
+func removeAudioUnitHolder(_ id: Int32) {
     _ = audioUnitHolders.modify { dict in
         var dict = dict
         dict.removeValue(forKey: id)
@@ -81,7 +85,7 @@ private func removeAudioUnitHolder(_ id: Int32) {
     }
 }
 
-private func withAudioRecorderContext(_ id: Int32, _ f: (ManagedAudioRecorderContext?) -> Void) {
+func withAudioRecorderContext(_ id: Int32, _ f: (RecoderContextRenderer?) -> Void) {
     if let holder = audioRecorderContexts[id], let context = holder.context {
         f(context)
     } else {
@@ -89,7 +93,7 @@ private func withAudioRecorderContext(_ id: Int32, _ f: (ManagedAudioRecorderCon
     }
 }
 
-private func withAudioUnitHolder(_ id: Int32, _ f: (Atomic<AudioUnit?>, Queue) -> Void) {
+func withAudioUnitHolder(_ id: Int32, _ f: (Atomic<AudioUnit?>, Queue) -> Void) {
     let audioUnitAndQueue = audioUnitHolders.with { dict -> (Atomic<AudioUnit?>, Queue)? in
         if let record = dict[id] {
             return (record.audioUnit, record.queue)
@@ -102,7 +106,7 @@ private func withAudioUnitHolder(_ id: Int32, _ f: (Atomic<AudioUnit?>, Queue) -
     }
 }
 
-private func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
+func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
     let id = Int32(intptr_t(bitPattern: refCon))
     
     withAudioUnitHolder(id, { (holder, queue) in
@@ -157,7 +161,7 @@ struct RecordedAudioData {
 }
 
 
-final class ManagedAudioRecorderContext {
+final class ManagedAudioRecorderContext : RecoderContextRenderer {
     private let id: Int32
     private let micLevel: ValuePromise<Float>
     private let recordingState: ValuePromise<AudioRecordingState>

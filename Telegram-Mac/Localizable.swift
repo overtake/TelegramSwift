@@ -9279,7 +9279,7 @@ internal final class L10n {
   internal static var voiceChatSettingsInputMode: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode") }
   /// Enabled
   internal static var voiceChatSettingsNoiseText: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseText") }
-  /// NOISE Suppression
+  /// NOISE SUPPRESSION
   internal static var voiceChatSettingsNoiseTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseTitle") }
   /// New participants are muted
   internal static var voiceChatSettingsOnlyAdmins: String  { return L10n.tr("Localizable", "VoiceChat.Settings.OnlyAdmins") }
@@ -9331,6 +9331,10 @@ internal final class L10n {
   internal static var voiceChatSettingsResetLinkSuccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink.Success") }
   /// Title...
   internal static var voiceChatSettingsTitlePlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title.Placeholder") }
+  /// You can't share screencast right now. Please ask to speak.
+  internal static var voiceChatShareScreenMutedError: String  { return L10n.tr("Localizable", "VoiceChat.ShareScreen.MutedError") }
+  /// You can't share video right now. Please ask to speak.
+  internal static var voiceChatShareVideoMutedError: String  { return L10n.tr("Localizable", "VoiceChat.ShareVideo.MutedError") }
   /// Connecting...
   internal static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
   /// invited
