@@ -2875,7 +2875,7 @@ func requestCameraPermission() -> Signal<Bool, NoError> {
 }
 func requestScreenCapturPermission() -> Signal<Bool, NoError> {
     return Signal { subscriber in
-        subscriber.putNext(screenCaptureAvailable())
+        subscriber.putNext(requestScreenCaptureAccess())
         subscriber.putCompletion()
         return EmptyDisposable
     } |> runOn(.mainQueue())

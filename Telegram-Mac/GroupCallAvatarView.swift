@@ -44,6 +44,7 @@ final class GroupCallAvatarView : View {
     }
     
     func update(_ audioLevel:(PeerId)->Signal<Float?, NoError>?, data: PeerGroupCallData, activityColor: NSColor, account: Account, animated: Bool) {
+        self.timestamp = nil
         if let audioLevel = audioLevel(data.peer.id) {
             self.audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
                 self?.updateAudioLevel(value, data: data, animated: animated)
@@ -57,37 +58,50 @@ final class GroupCallAvatarView : View {
         photoView.setPeer(account: account, peer: data.peer, message: nil, size: NSMakeSize(floor(photoSize.width * 1.5), floor(photoSize.height * 1.5)))
     }
     
-    private var value: CGFloat = 0
+    private var value: Float? = nil
+    
+    private var timestamp: TimeInterval?
     
     private func updateAudioLevel(_ value: Float?, data: PeerGroupCallData, animated: Bool) {
+        if let timestamp = self.timestamp {
+            if CACurrentMediaTime() - timestamp < 0.100 {
+                return
+            }
+        }
+        self.timestamp = CACurrentMediaTime()
+        
         if (value != nil || data.isSpeaking)  {
             playbackAudioLevelView.startAnimating()
         } else {
             playbackAudioLevelView.stopAnimating()
         }
         playbackAudioLevelView.change(opacity: (value != nil || data.isSpeaking) ? 1 : 0, animated: animated)
-
-        playbackAudioLevelView.updateLevel(CGFloat(value ?? 0))
         
-        let audioLevel = value ?? 0
-        let level = min(1.0, max(0.0, CGFloat(audioLevel)))
-        let avatarScale: CGFloat
-        if audioLevel > 0.0 {
-            avatarScale = 0.9 + level * 0.07
-        } else {
-            avatarScale = 1.0
-        }
-
         
-        let value = CGFloat(truncate(double: Double(avatarScale), places: 2))
         if value != self.value {
-            self.value = value
+            let value = value != nil ? Float(truncate(double: Double(value ?? 0), places: 2)) : nil
             
+            self.value = value
+
+            playbackAudioLevelView.updateLevel(CGFloat(value ?? 0))
+            
+            let audioLevel = value ?? 0
+            let level = min(1.0, max(0.0, CGFloat(audioLevel)))
+            let avatarScale: CGFloat
+            if audioLevel > 0.0 {
+                avatarScale = 0.9 + level * 0.07
+            } else {
+                avatarScale = 1.0
+            }
+
+            
+            let valueScale = CGFloat(truncate(double: Double(avatarScale), places: 2))
+                        
             let t = photoView.layer!.transform
             let scale = sqrt((t.m11 * t.m11) + (t.m12 * t.m12) + (t.m13 * t.m13))
 
             if animated {
-                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: value, update: { [weak self] value in
+                self.scaleAnimator = DisplayLinkAnimator(duration: 0.1, from: scale, to: valueScale, update: { [weak self] value in
                     guard let `self` = self else {
                         return
                     }
@@ -105,6 +119,8 @@ final class GroupCallAvatarView : View {
                 self.photoView.layer?.transform = CATransform3DIdentity
             }
         }
+        
+        
     }
 
     

@@ -992,6 +992,9 @@ final class GroupCallUIController : ViewController {
                     return combineLatest(animate, call.myAudioLevel)
                         |> map (Optional.init)
                         |> map { $0?.1 == 0 || $0?.0 == false ? nil : $0?.1 }
+                        |> mapToThrottled { value in
+                            return .single(value) |> delay(0.1, queue: .mainQueue())
+                        }
                         |> deliverOnMainQueue
                 } else {
                     return combineLatest(animate, call.audioLevels) |> map { (visible, values) in
