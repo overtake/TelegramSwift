@@ -117,6 +117,9 @@ final class GroupCallUIState : Equatable {
     
     let controlsTooltip: ControlsTooltip?
     let dismissedTooltips: Set<ControlsTooltip>
+    
+    let myPeer: PeerGroupCallData?
+    
     init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, handbyDominant: DominantVideo?, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, layoutMode: LayoutMode, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip>) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
@@ -140,6 +143,8 @@ final class GroupCallUIState : Equatable {
         self.tooltipSpeaker = tooltipSpeaker
         self.controlsTooltip = controlsTooltip
         self.dismissedTooltips = dismissedTooltips
+        self.myPeer = memberDatas.first(where: { $0.peer.id == $0.accountPeerId })
+        
         var modeMembers:[GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]] = [:]
         
         let modes:[GroupCallUIState.ActiveVideo.Mode] = [.backstage, .list, .main]
