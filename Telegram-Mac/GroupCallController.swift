@@ -482,7 +482,6 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     let isVideoEnabled = summaryState?.info?.isVideoEnabled ?? false
     
     
-    
     switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
     case true:
         mode = .video
