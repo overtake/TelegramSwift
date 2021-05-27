@@ -254,12 +254,27 @@ final class GroupCallControlsView : View {
                     from = 0.42
                     to = 1.0
                 }
-                let rect = self.backgroundView.bounds
+                
+                let view = self.backgroundView
+
+                
+                let rect = view.bounds
                 var fr = CATransform3DIdentity
                 fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
                 fr = CATransform3DScale(fr, to, to, 1)
                 fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
-                self.backgroundView.layer?.transform = fr
+                
+                if animated {
+                    view.layer?.transform = CATransform3DIdentity
+                    view.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false, completion: { [weak view] completed in
+                        if completed {
+                            view?.layer?.transform = fr
+                            view?.layer?.removeAnimation(forKey: "transform")
+                        }
+                    })
+                } else {
+                    view.layer?.transform = fr
+                }
             }
         }
         self.mode = mode
