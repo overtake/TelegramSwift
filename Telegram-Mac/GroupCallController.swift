@@ -34,7 +34,7 @@ final class GroupCallUIArguments {
     let remove:(Peer)->Void
     let openInfo: (Peer)->Void
     let inviteMembers:()->Void
-    let shareSource:(VideoSourceMacMode)->Void
+    let shareSource:(VideoSourceMacMode, Bool)->Void
     let takeVideo:(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?
     let isSharingVideo:(PeerId)->Bool
     let isSharingScreencast:(PeerId)->Bool
@@ -65,7 +65,7 @@ final class GroupCallUIArguments {
     remove:@escaping(Peer)->Void,
     openInfo: @escaping(Peer)->Void,
     inviteMembers:@escaping()->Void,
-    shareSource: @escaping(VideoSourceMacMode)->Void,
+    shareSource: @escaping(VideoSourceMacMode, Bool)->Void,
     takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?,
     isSharingVideo: @escaping(PeerId)->Bool,
     isSharingScreencast: @escaping(PeerId)->Bool,
@@ -481,6 +481,8 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     let mode: GroupCallUIState.Mode
     let isVideoEnabled = summaryState?.info?.isVideoEnabled ?? false
     
+    
+    
     switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
     case true:
         mode = .video
@@ -807,13 +809,12 @@ final class GroupCallUIController : ViewController {
                     }
                 }
             }))
-        }, shareSource: { [weak self] mode in
+        }, shareSource: { [weak self] mode, takeFirst in
             guard let state = self?.genericView.state, let window = self?.window else {
                 return
             }
             
             if state.state.muteState?.canUnmute == false {
-                
                 let text: String
                 switch mode {
                 case .screencast:
@@ -821,9 +822,7 @@ final class GroupCallUIController : ViewController {
                 case .video:
                     text = L10n.voiceChatShareScreenMutedError
                 }
-                
                 alert(for: window, info: text)
-                
                 return
             }
             
@@ -860,6 +859,55 @@ final class GroupCallUIController : ViewController {
                     }
                 }
             }
+            
+            let select:(VideoSourceMac)->Void = { source in
+                updateVideoSources { current in
+                    var current = current
+                    switch source.mode {
+                    case .screencast:
+                        current.screencast = source
+                    case .video:
+                        current.video = source
+                    }
+                    return current
+                }
+                switch source.mode {
+                case .screencast:
+                    self?.data.call.requestScreencast(deviceId: source.deviceIdKey())
+                case .video:
+                    self?.data.call.requestVideo(deviceId: source.deviceIdKey())
+                }
+                self?.updateTooltips { current in
+                    var current = current
+                    current.dismissed.insert(.camera)
+                    return current
+                }
+            }
+            
+            if takeFirst {
+                switch mode {
+                case .video:
+                    let devicesSignal = sharedContext.devicesContext.signal
+                        |> take(1)
+                        |> deliverOnMainQueue
+                    
+                    let deviceId = sharedContext.devicesContext.currentCameraId
+                    
+                    actionsDisposable.add(devicesSignal.start(next: { devices in
+                        let device = devices.camera.first(where: { deviceId == $0.uniqueID })
+                        if let device = device {
+                            select(CameraCaptureDevice(device))
+                        }
+                    }))
+                case .screencast:
+                    let screens = DesktopCaptureSourceManagerMac(_s: ())
+                    if let first = screens.list().first {
+                        select(first)
+                    }
+                }
+                return
+            }
+            
             if let sharing = self?.sharing, sharing.mode == mode {
                 sharing.orderFront(nil)
             } else {
@@ -867,27 +915,7 @@ final class GroupCallUIController : ViewController {
                 confirmSource(mode, { accept in
                     if accept {
                         let sharing = presentDesktopCapturerWindow(mode: mode, select: { source in
-                            updateVideoSources { current in
-                                var current = current
-                                switch source.mode {
-                                case .screencast:
-                                    current.screencast = source
-                                case .video:
-                                    current.video = source
-                                }
-                                return current
-                            }
-                            switch source.mode {
-                            case .screencast:
-                                self?.data.call.requestScreencast(deviceId: source.deviceIdKey())
-                            case .video:
-                                self?.data.call.requestVideo(deviceId: source.deviceIdKey())
-                            }
-                            self?.updateTooltips { current in
-                                var current = current
-                                current.dismissed.insert(.camera)
-                                return current
-                            }
+                            select(source)
                         }, devices: sharedContext.devicesContext)
                         self?.sharing = sharing
                         sharing?.level = self?.window?.level ?? .normal
@@ -1559,6 +1587,44 @@ final class GroupCallUIController : ViewController {
                 _ = strongSelf.disableScreenSleep()
             }
             
+            if state.state.muteState?.canUnmute == false || currentState?.state.myPeerId != state.state.myPeerId {
+                if !state.videoSources.isEmpty {
+                    DispatchQueue.main.async {
+                        updateVideoSources { current in
+                            var current = current
+                            current.screencast = nil
+                            current.video = nil
+                            return current
+                        }
+                        self?.data.call.disableVideo()
+                        self?.data.call.disableScreencast()
+                    }
+                }
+            }
+//            if state.myPeer?.presentationEndpointId == nil || state.myPeer?.videoEndpoint == nil {
+//                let (video, presentation) = videoSourcesValue.with({ ($0.video, $0.screencast) })
+//                var newVideo:VideoSourceMac? = nil
+//                var newPresentation:VideoSourceMac? = nil
+//                if state.myPeer?.videoEndpoint != nil  {
+//                    newVideo = video
+//                }
+//                if state.myPeer?.presentationEndpointId != nil  {
+//                    newPresentation = presentation
+//                }
+//                updateVideoSources { current in
+//                    var current = current
+//                    current.screencast = newPresentation
+//                    current.video = newVideo
+//                    return current
+//                }
+//                if newVideo == nil && video != nil {
+//                    self?.data.call.disableVideo()
+//                }
+//                if newPresentation == nil && presentation != nil {
+//                    self?.data.call.disableScreencast()
+//                }
+//            }
+            
             if currentState?.dominantSpeaker != state.dominantSpeaker {
                 guard let window = strongSelf.window else {
                     return
@@ -1787,12 +1853,23 @@ final class GroupCallUIController : ViewController {
         }, with: self, for: .mouseExited, priority: .modal)
         
         
-        window.set(handler: { [weak self] event in
-            if let state = self?.genericView.state {
-                layoutMode.set(state.layoutMode.viceVerse)
+        window.set(handler: { [weak arguments] event in
+            if videoSourcesValue.with ({ $0.screencast == nil }) {
+                arguments?.shareSource(.screencast, true)
+            } else {
+                arguments?.cancelShareScreencast()
             }
             return .invokeNext
         }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
+        
+        window.set(handler: { [weak arguments] event in
+            if videoSourcesValue.with ({ $0.video == nil }) {
+                arguments?.shareSource(.video, true)
+            } else {
+                arguments?.cancelShareVideo()
+            }
+            return .invokeNext
+        }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
         
     }
     

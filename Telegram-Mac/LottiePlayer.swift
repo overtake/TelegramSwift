@@ -1283,7 +1283,7 @@ class LottiePlayerView : NSView {
     
     func update(size: NSSize, transition: ContainedViewLayoutTransition) {
         for subview in subviews {
-            transition.updateFrame(view: subview, frame: bounds)
+            transition.updateFrame(view: subview, frame: size.bounds)
         }
     }
     

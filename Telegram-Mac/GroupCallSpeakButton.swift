@@ -28,7 +28,7 @@ final class GroupCallSpeakButton : Control {
     
     override func layout() {
         super.layout()
-        animationView.frame = focus(NSMakeSize(frame.width - 20, frame.height - 20))
+        update(size: bounds.size, transition: .immediate)
     }
     
     func update(size: CGSize, transition: ContainedViewLayoutTransition) {

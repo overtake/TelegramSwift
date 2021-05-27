@@ -208,7 +208,7 @@ final class GroupCallControlsView : View {
                 }
             case .video:
                 leftButton1Text = L10n.voiceChatVideoStreamVideo
-                leftBg = .animated(hasVideo ? .cameraoff : .cameraon, GroupCallTheme.settingsColor)
+                leftBg = .animated(!hasVideo ? .cameraoff : .cameraon, GroupCallTheme.settingsColor)
                 
                 let leftButton2: CallControl
                 let rightButton1: CallControl
@@ -235,7 +235,7 @@ final class GroupCallControlsView : View {
                         leftButton2.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
-                leftButton2.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamScreencast : nil, mode: .animated(hasScreencast ? .screenoff : .screenon, GroupCallTheme.settingsColor), iconSize: NSMakeSize(48, 48)), animated: animated)
+                leftButton2.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamScreencast : nil, mode: .animated(!hasScreencast ? .screenoff : .screenon, GroupCallTheme.settingsColor), iconSize: NSMakeSize(48, 48)), animated: animated)
                 
                 rightButton1.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamMore : nil, mode: .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             }
@@ -260,9 +260,6 @@ final class GroupCallControlsView : View {
                 fr = CATransform3DScale(fr, to, to, 1)
                 fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
                 self.backgroundView.layer?.transform = fr
-                if animated {
-                    self.backgroundView.layer?.animateScaleCenter(from: from, to: to, duration: 0.2, removeOnCompletion: false)
-                }
             }
         }
         self.mode = mode
@@ -281,8 +278,9 @@ final class GroupCallControlsView : View {
         
         switch callMode {
         case .voice:
-            speak.update(size: NSMakeSize(140, 140), transition: transition)
-            transition.updateFrame(view: self.speak, frame: focus(NSMakeSize(140, 140)))
+            self.speak.frame = focus(NSMakeSize(140, 140))
+            speak.update(size: NSMakeSize(140, 140), transition: .immediate)
+            
             transition.updateFrame(view: self.leftButton1, frame: leftButton1.centerFrameY(x: 30))
             transition.updateFrame(view: self.end, frame: end.centerFrameY(x: frame.width - end.frame.width - 30))
             if let speakText = self.speakText {
@@ -293,8 +291,8 @@ final class GroupCallControlsView : View {
             transition.updateFrame(view: self.fullscreenBackgroundView, frame: focus(.init(width: 250, height: 80)))
         case .video:
             let bgRect = focus(NSMakeSize(340, 70))
-            transition.updateFrame(view: self.speak, frame: focus(NSMakeSize(80, 80)))
-            speak.update(size: NSMakeSize(80, 80), transition: transition)
+            self.speak.frame = focus(NSMakeSize(80, 80))
+            speak.update(size: NSMakeSize(80, 80), transition: .immediate)
             
             let addition: CGFloat = mode == .normal ? 10 : 0
             
@@ -306,6 +304,7 @@ final class GroupCallControlsView : View {
             if let rightButton1 = self.rightButton1 {
                 transition.updateFrame(view: rightButton1, frame: leftButton1.centerFrameY(x: end.frame.minX - 16 - rightButton1.frame.width, addition: addition))
             }
+                        
             transition.updateFrame(view: self.backgroundView, frame: focus(.init(width: 360, height: 360)))
             transition.updateFrame(view: self.fullscreenBackgroundView, frame: bgRect)
         }
@@ -319,7 +318,7 @@ final class GroupCallControlsView : View {
                     yOffset = 10
                 }
             case .voice:
-                yOffset = 10
+                yOffset = -20
             }
             
             var rect = CGRect(origin: CGPoint(x: fullscreenBackgroundView.frame.minX, y: fullscreenBackgroundView.frame.minY - tooltipView.frame.height - 5 + yOffset), size: tooltipView.frame.size)
@@ -357,7 +356,7 @@ final class GroupCallControlsView : View {
                 switch callState.mode {
                 case .video:
                     if !callState.hasVideo {
-                        self?.arguments?.shareSource(.video)
+                        self?.arguments?.shareSource(.video, false)
                     } else {
                         self?.arguments?.cancelShareVideo()
                     }
@@ -373,7 +372,7 @@ final class GroupCallControlsView : View {
             if let callState = callState, callState.hasScreencast {
                 self?.arguments?.cancelShareScreencast()
             } else {
-                self?.arguments?.shareSource(.screencast)
+                self?.arguments?.shareSource(.screencast, false)
             }
         }, for: .SingleClick)
         
@@ -552,7 +551,7 @@ final class GroupCallControlsView : View {
                             yOffset = 10
                         }
                     case .voice:
-                        yOffset = 10
+                        yOffset = -20
                     }
                     
                     var point = CGPoint(x: fullscreenBackgroundView.frame.minX, y: fullscreenBackgroundView.frame.minY - current.frame.height - 5 + yOffset)
