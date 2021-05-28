@@ -594,7 +594,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             viewType = i != members.count - 1 ? .innerItem : .lastItem
         } else if !canInvite, !data.isVertical, i > 0 {
             if members[i - 1].isVertical {
-                viewType = i != members.count - 1 ? .firstItem : .lastItem
+                viewType = i != members.count - 1 ? .firstItem : .singleItem
             }
         }
 
