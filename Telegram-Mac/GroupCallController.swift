@@ -174,7 +174,7 @@ struct PeerGroupCallData : Equatable, Comparable {
     var videoEndpoint: String? {
         return activeVideos.first(where: { $0 == videoEndpointId })
     }
-    var screencastEndpoint: String? {
+    var presentationEndpoint: String? {
         return activeVideos.first(where: { $0 == presentationEndpointId })
     }
     
@@ -308,8 +308,8 @@ struct PeerGroupCallData : Equatable, Comparable {
     
     static func <(lhs: PeerGroupCallData, rhs: PeerGroupCallData) -> Bool {
         
-        let lhsScreencast = lhs.activeVideos.contains(where: { $0 == lhs.screencastEndpoint})
-        let rhsScreencast = lhs.activeVideos.contains(where: { $0 == rhs.screencastEndpoint})
+        let lhsScreencast = lhs.activeVideos.contains(where: { $0 == lhs.presentationEndpoint})
+        let rhsScreencast = lhs.activeVideos.contains(where: { $0 == rhs.presentationEndpoint})
 
         let lhsVideo = lhs.activeVideos.contains(where: { $0 == lhs.videoEndpoint})
         let rhsVideo = lhs.activeVideos.contains(where: { $0 == rhs.videoEndpoint})
@@ -335,8 +335,12 @@ struct PeerGroupCallData : Equatable, Comparable {
 
 
 
-private func _id_peer_id(_ data: PeerGroupCallData) -> InputDataIdentifier {
-    return InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())_")
+private func _id_peer_id(_ data: PeerGroupCallData, endpoint: String? = nil) -> InputDataIdentifier {
+    if let endpoint = endpoint {
+        return InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())_\(endpoint)")
+    } else {
+        return InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())_")
+    }
 }
 
 private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], dominantSpeaker: DominantVideo?, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, layoutMode: GroupCallUIState.LayoutMode, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, excludedPins: Set<String>, tooltips: Tooltips, version: Int) -> GroupCallUIState {
@@ -421,12 +425,12 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
                 return false
             }
             if let endpointId = participant.presentationEndpointId {
-                if activeVideoViews.contains(where: { $0.endpointId == endpointId }) {
+                if activeVideoViews.contains(where: { $0.endpointId == endpointId && $0.mode == .list }) {
                     return true
                 }
             }
             if let endpointId = participant.videoEndpointId {
-                if activeVideoViews.contains(where: { $0.endpointId == endpointId }) {
+                if activeVideoViews.contains(where: { $0.endpointId == endpointId && $0.mode == .list }) {
                     return true
                 }
             }
@@ -544,9 +548,19 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     var index: Int32 = 0
     
     
-    var members:[PeerGroupCallData] = state.memberDatas
+    var members = state.memberDatas
     if state.isFullScreen, state.dominantSpeaker != nil {
-        members.removeAll(where: { $0.peer.id == state.dominantSpeaker?.peerId && $0.isVertical })
+        members.removeAll(where: {  member in
+            if member.isVertical {
+                if member.peer.id == state.dominantSpeaker?.peerId {
+                    if member.videoEndpoint != nil && member.presentationEndpoint != nil {
+                        return false
+                    }
+                    return true
+                }
+            }
+            return false
+        })
     } else {
         members.removeAll(where: { $0.hasVideo })
     }
@@ -588,37 +602,60 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             let canManageCall:Bool
             let adminIds: Set<PeerId>
             let viewType: GeneralViewType
+            let baseEndpoint: String?
+        }
+        
+        var duplicates:[(InputDataIdentifier, String?)] = []
+        
+        if data.isVertical {
+            if let endpoint = data.presentationEndpoint {
+                if state.dominantSpeaker?.endpointId != endpoint {
+                    duplicates.append((_id_peer_id(data, endpoint: endpoint), endpoint))
+                }
+            }
+            if let endpoint = data.videoEndpoint {
+                if state.dominantSpeaker?.endpointId != endpoint {
+                    duplicates.append((_id_peer_id(data, endpoint: endpoint), endpoint))
+                }
+            }
+        } else {
+            duplicates.append((_id_peer_id(data), nil))
         }
 
-        let tuple = Tuple(drawLine: drawLine, data: data, canManageCall: state.state.canManageCall, adminIds: state.state.adminIds, viewType: viewType)
-
-
-        let comparable = InputDataComparableIndex(data: data, compare: { lhs, rhs in
-            let lhs = lhs as? PeerGroupCallData
-            let rhs = rhs as? PeerGroupCallData
-            if let lhs = lhs, let rhs = rhs {
-                return lhs < rhs
-            } else {
-                return false
-            }
-        }, equatable: { lhs, rhs in
-            let lhs = lhs as? PeerGroupCallData
-            let rhs = rhs as? PeerGroupCallData
-            if let lhs = lhs, let rhs = rhs {
-                return lhs.state == rhs.state
-            } else {
-                return false
-            }
-        })
         
-        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: _id_peer_id(data), equatable: InputDataEquatable(tuple), comparable: comparable, item: { initialSize, stableId in
-            return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: tuple.data, canManageCall: tuple.canManageCall, isInvited: tuple.data.isInvited, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
-                arguments.openInfo(data.peer)
-            }, invite: arguments.invite, contextMenu: {
-                return .single(arguments.contextMenuItems(tuple.data))
-            }, takeVideo: arguments.takeVideo, audioLevel: arguments.audioLevel)
-        }))
-//        index += 1
+       
+        for (stableId, baseEndpoint) in duplicates {
+            
+            let tuple = Tuple(drawLine: drawLine, data: data, canManageCall: state.state.canManageCall, adminIds: state.state.adminIds, viewType: viewType, baseEndpoint: baseEndpoint)
+
+            let comparable = InputDataComparableIndex(data: data, compare: { lhs, rhs in
+                let lhs = lhs as? PeerGroupCallData
+                let rhs = rhs as? PeerGroupCallData
+                if let lhs = lhs, let rhs = rhs {
+                    return lhs < rhs
+                } else {
+                    return false
+                }
+            }, equatable: { lhs, rhs in
+                let lhs = lhs as? PeerGroupCallData
+                let rhs = rhs as? PeerGroupCallData
+                if let lhs = lhs, let rhs = rhs {
+                    return lhs.state == rhs.state
+                } else {
+                    return false
+                }
+            })
+            
+            entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: stableId, equatable: InputDataEquatable(tuple), comparable: comparable, item: { initialSize, stableId in
+                return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: tuple.data, baseEndpoint: tuple.baseEndpoint, canManageCall: tuple.canManageCall, isInvited: tuple.data.isInvited, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
+                    arguments.openInfo(data.peer)
+                }, invite: arguments.invite, contextMenu: {
+                    return .single(arguments.contextMenuItems(tuple.data))
+                }, takeVideo: arguments.takeVideo, audioLevel: arguments.audioLevel)
+            }))
+            //        index += 1
+        }
+        
 
     }
     
@@ -852,7 +889,7 @@ final class GroupCallUIController : ViewController {
                 if let state = state, let window = window {
                     switch mode {
                     case .screencast:
-                        let presentingPeer = state.videoActive(.main).first(where: { $0.screencastEndpoint != nil })
+                        let presentingPeer = state.videoActive(.main).first(where: { $0.presentationEndpoint != nil })
                         if let peer = presentingPeer {
                             confirm(for: window, header: L10n.voiceChatScreencastConfirmHeader, information: L10n.voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), okTitle: L10n.voiceChatScreencastConfirmOK, successHandler: { _ in
                                 f(true)
@@ -1092,14 +1129,14 @@ final class GroupCallUIController : ViewController {
                         video = .init(peer.peer.id, endpoint, .video, mode.temporary)
                     }
                 case .screencast:
-                    if let endpoint = peer.screencastEndpoint {
+                    if let endpoint = peer.presentationEndpoint {
                         video = .init(peer.peer.id, endpoint, .screencast, mode.temporary)
                     }
                 }
             } else if peer.hasVideo {
                 if let endpoint = peer.videoEndpoint {
                     video = .init(peer.peer.id, endpoint, .video, true)
-                } else if let endpoint = peer.screencastEndpoint {
+                } else if let endpoint = peer.presentationEndpoint {
                     video = .init(peer.peer.id, endpoint, .screencast, true)
                 }
             }
@@ -1184,7 +1221,7 @@ final class GroupCallUIController : ViewController {
                         }))
                     }
                 }
-                if let endpointId = data.screencastEndpoint {
+                if let endpointId = data.presentationEndpoint {
                     if !arguments.isPinnedVideo(data.peer.id, .screencast) {
                         items.append(ContextMenuItem(L10n.voiceChatPinScreencast, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .screencast, false))

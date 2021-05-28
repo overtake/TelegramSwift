@@ -1034,13 +1034,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 }
                             }
                         }
-                        return .external(link: url as String, false)
+                        return .external(link: urlString, false)
                     case actions_me[7]:
                         let userAndPost = string.components(separatedBy: "/")
                         if userAndPost.count == 2, let context = context {
                             return .theme(link: urlString, context: context, name: userAndPost[1])
                         }
-                        return .external(link: url as String, false)
+                        return .external(link: urlString, false)
                     default:
                         break
                     }
@@ -1079,14 +1079,14 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
 
 
                     if username == "iv" || username.isEmpty {
-                        return .external(link: url as String, username.isEmpty)
+                        return .external(link: urlString, username.isEmpty)
                     } else if let context = context {
 
                         let joinKeys:[String] = ["+", "%20"]
 
                         for joinKey in joinKeys {
                             if username.hasPrefix(joinKey), username.length > joinKey.length {
-                                return .joinchat(link: url as String, username.nsstring.substring(from: joinKey.length), context: context, callback: openInfo)
+                                return .joinchat(link: urlString, username.nsstring.substring(from: joinKey.length), context: context, callback: openInfo)
                             }
                         }
                         return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
@@ -1111,10 +1111,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                     } else if name == "s" {
-                        return .external(link: url as String, false)
+                        return .external(link: urlString, false)
                     } else if name == "addtheme" {
                         if let context = context {
-                            return .theme(link: url as String, context: context, name: userAndPost[1])
+                            return .theme(link: urlString, context: context, name: userAndPost[1])
                         }
                     } else {
                         var post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
@@ -1122,13 +1122,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             post = Int32(userAndPost[1][..<range.lowerBound])
                         }
                         if name.hasPrefix("iv?") {
-                            return .external(link: url as String, false)
+                            return .external(link: urlString, false)
                         } else if name.hasPrefix("share?") || name == "share" {
                             let (params, _) = urlVars(with: url as String)
                             if let url = params["url"], let context = context {
                                 return .shareUrl(link: urlString, context, url)
                             }
-                            return .external(link: url as String, false)
+                            return .external(link: urlString, false)
                         } else if let context = context {
                             let (params, _) = urlVars(with: url as String)
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
@@ -1362,7 +1362,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         }
        
     } else if url.hasPrefix(ton_scheme), let context = context {
-        return .external(link: url as String, false)
+        return .external(link: urlString, false)
 //        let action = url.substring(from: ton_scheme.length)
 //        if action.hasPrefix("transfer/") {
 //            let (vars, emptyVars) = urlVars(with: url as String)

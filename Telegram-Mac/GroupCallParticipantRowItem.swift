@@ -33,8 +33,8 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let volume: TextViewLayout?
     fileprivate let audioLevel:(PeerId)->Signal<Float?, NoError>?
     fileprivate private(set) var buttonImage: (CGImage, CGImage?)? = nil
-        
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?) {
+    private let baseEndpoint: String?
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, baseEndpoint: String?, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?) {
         self.data = data
         self.audioLevel = audioLevel
         self.account = account
@@ -44,7 +44,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         self.isInvited = isInvited
         self.drawLine = drawLine
         self.takeVideo = takeVideo
-                
+        self.baseEndpoint = baseEndpoint
         self.isLastItem = isLastItem
         let (string, color) = data.status
         
@@ -141,24 +141,16 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     func takeCurrentVideo() -> NSView? {
-        if self.data.layoutMode == .tile {
-            if data.dominantSpeaker == nil {
-                return nil
+        var mode: VideoSourceMacMode? = nil
+        if let baseEndpoint = self.baseEndpoint {
+            if self.data.videoEndpoint == baseEndpoint {
+                mode = .video
+            }
+            if self.data.presentationEndpoint == baseEndpoint {
+                mode = .screencast
             }
         }
-        if let dominant = data.dominantSpeaker {
-            if dominant.peerId == data.peer.id {
-                if let mode = data.pinnedMode?.viceVersa {
-                    if dominant.mode == mode {
-                        return nil
-                    }
-                } else {
-                    return nil
-                }
-            }
-        }
-        
-        let videoView = isVertical ? self.takeVideo(peer.id, data.pinnedMode?.viceVersa, .list) : nil
+        let videoView = isVertical ? self.takeVideo(peer.id, mode, .list) : nil
 
         return videoView
     }
@@ -237,31 +229,36 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         if hasVideo || volume != nil, let state = data.state {
             if hasVideo {
-                if let endpoint = data.videoEndpoint, data.activeVideos.contains(endpoint) {
-                    if let muteState = state.muteState, muteState.mutedByYou {
-                        images.append(GroupCallTheme.status_video_red)
-                    } else {
-                        if data.isSpeaking {
-                            images.append(GroupCallTheme.status_video_green)
-                        } else if data.wantsToSpeak {
-                            images.append(GroupCallTheme.status_video_accent)
+                if let endpoint = data.videoEndpoint {
+                    if baseEndpoint == nil || baseEndpoint == endpoint {
+                        if let muteState = state.muteState, muteState.mutedByYou {
+                            images.append(GroupCallTheme.status_video_red)
                         } else {
-                            images.append(GroupCallTheme.status_video_gray)
+                            if data.isSpeaking {
+                                images.append(GroupCallTheme.status_video_green)
+                            } else if data.wantsToSpeak {
+                                images.append(GroupCallTheme.status_video_accent)
+                            } else {
+                                images.append(GroupCallTheme.status_video_gray)
+                            }
                         }
                     }
                 }
-                if let endpoint = data.screencastEndpoint, data.activeVideos.contains(endpoint) {
-                    if let muteState = state.muteState, muteState.mutedByYou {
-                        images.append(GroupCallTheme.status_screencast_red)
-                    } else {
-                        if data.isSpeaking {
-                            images.append(GroupCallTheme.status_screencast_green)
-                        } else if data.wantsToSpeak {
-                            images.append(GroupCallTheme.status_screencast_accent)
+                if let endpoint = data.presentationEndpoint {
+                    if baseEndpoint == nil || baseEndpoint == endpoint {
+                        if let muteState = state.muteState, muteState.mutedByYou {
+                            images.append(GroupCallTheme.status_screencast_red)
                         } else {
-                            images.append(GroupCallTheme.status_screencast_gray)
+                            if data.isSpeaking {
+                                images.append(GroupCallTheme.status_screencast_green)
+                            } else if data.wantsToSpeak {
+                                images.append(GroupCallTheme.status_screencast_accent)
+                            } else {
+                                images.append(GroupCallTheme.status_screencast_gray)
+                            }
                         }
                     }
+                    
                 }
             } else {
                 if let muteState = state.muteState, muteState.mutedByYou {
@@ -286,11 +283,15 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         var images:[CGImage] = []
 
-        if data.videoEndpoint != nil {
-            images.append(GroupCallTheme.videoBox_video)
+        if let endpoint = data.videoEndpoint {
+            if baseEndpoint == nil || baseEndpoint == endpoint {
+                images.append(GroupCallTheme.videoBox_video)
+            }
         }
-        if data.screencastEndpoint != nil {
-            images.append(GroupCallTheme.videoBox_screencast)
+        if let endpoint = data.presentationEndpoint {
+            if baseEndpoint == nil || baseEndpoint == endpoint {
+                images.append(GroupCallTheme.videoBox_screencast)
+            }
         }
         
         if let _ = data.state?.muteState {
@@ -457,7 +458,7 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         self.containerView.setCorners(item.viewType.corners)
 
         
-        photoView.centerX(y: item.viewType.innerInset.top - (photoView.frame.height - photoView.photoSize.height) / 2)
+        photoView.center()
         videoContainer?.frame = containerView.bounds
         
         nameContainer.frame = NSMakeRect(0, 0, containerView.frame.width, max(imagesView.frame.height, titleView.frame.height))
@@ -729,28 +730,23 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         }
         transition.updateFrame(view: statusImageContainer, frame: CGRect(origin: statusImageViewViewPoint, size: statusImageContainer.frame.size))
         
-        if item.isVertical {
-            transition.updateFrame(view: videoContainer, frame: frame)
-        } else {
-            transition.updateFrame(view: self.photoView, frame: self.photoView.centerFrameY(x: item.itemInset.left - (self.photoView.frame.width - photoView.photoSize.width) / 2))
+        transition.updateFrame(view: self.photoView, frame: self.photoView.centerFrameY(x: item.itemInset.left - (self.photoView.frame.width - photoView.photoSize.width) / 2))
 
-            transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, 6), size: titleView.frame.size))
-                        
-            if let imageView = self.supplementImageView {
-                transition.updateFrame(view: imageView, frame: CGRect.init(origin: NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)), size: imageView.frame.size))
-            }
-            if item.drawLine {
-                transition.updateFrame(view: separator, frame: NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize))
-            } else {
-                transition.updateFrame(view: separator, frame: .zero)
-            }
-
-            transition.updateFrame(view: button, frame: button.centerFrameY(x: frame.width - 12 - button.frame.width))
-            
-            transition.updateFrame(view: videoContainer, frame: videoContainer.centerFrameY(x: item.itemInset.left, addition: -1))
-            
+        transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, 6), size: titleView.frame.size))
+                    
+        if let imageView = self.supplementImageView {
+            transition.updateFrame(view: imageView, frame: CGRect.init(origin: NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)), size: imageView.frame.size))
         }
+        if item.drawLine {
+            transition.updateFrame(view: separator, frame: NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize))
+        } else {
+            transition.updateFrame(view: separator, frame: .zero)
+        }
+
+        transition.updateFrame(view: button, frame: button.centerFrameY(x: frame.width - 12 - button.frame.width))
         
+        transition.updateFrame(view: videoContainer, frame: videoContainer.centerFrameY(x: item.itemInset.left, addition: -1))
+
         
     }
     
