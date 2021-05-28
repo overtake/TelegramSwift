@@ -95,9 +95,10 @@ final class GroupCallView : View {
             }
             return isVertical == nil || isVertical == true
         })
-        h -= offset
         h = min(h, self.peersTable.frame.height)
-        return .init(origin:  tableRect.origin + NSMakePoint(0, offset), size: NSMakeSize(self.peersTable.frame.width, h))
+        h -= offset
+        let point = tableRect.origin + NSMakePoint(0, offset)
+        return .init(origin: point, size: NSMakeSize(self.peersTable.frame.width, h))
 
     }
     
@@ -204,7 +205,7 @@ final class GroupCallView : View {
             if isFullScreen, state?.hideParticipants == true {
                 transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75))
             } else {
-                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2))
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: -peersTable.frame.width / 2))
             }
         } else {
             if isVideo {
@@ -233,7 +234,7 @@ final class GroupCallView : View {
         
         if let current = speakingTooltipView {
             let hasTable = isFullScreen && state?.hideParticipants == false
-            transition.updateFrame(view: current, frame: current.centerFrameX(y: 60, addition: hasTable ? (peersTable.frame.width / 2 + 5) : 0))
+            transition.updateFrame(view: current, frame: current.centerFrameX(y: 60, addition: hasTable ? (-peersTable.frame.width / 2) : 0))
         }
     }
     
@@ -245,7 +246,7 @@ final class GroupCallView : View {
         
         if let state = state, !state.videoActive(.main).isEmpty {
             if isFullScreen {
-                size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 10)
+                size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 5)
             } else {
                 size = NSMakeSize(width, frame.height - 180 - mainVideoRect.height)
             }
@@ -259,11 +260,11 @@ final class GroupCallView : View {
             if !isFullScreen {
                 rect.origin.y = mainVideoRect.maxY + 5
             } else {
-                rect.origin.x = 5
+                rect.origin.x = frame.width - size.width - 5
                 rect.origin.y = 54
                 
                 if state.hideParticipants {
-                    rect.origin.x = -(rect.width + 5)
+                    rect.origin.x = (frame.width + 5)
                 }
             }
         }
@@ -309,7 +310,7 @@ final class GroupCallView : View {
             } else {
                 let width = frame.width - tableWidth + 5
                 let height = frame.height - 54 - 5
-                rect = CGRect(origin: .init(x: tableWidth - 10, y: 54), size: .init(width: width, height: height))
+                rect = CGRect(origin: .init(x: 5, y: 54), size: .init(width: width, height: height))
             }
             
         } else {
@@ -333,6 +334,7 @@ final class GroupCallView : View {
        
         let previousState = self.state
         if !transition.isEmpty {
+            NSLog("\(transition.animated), \(transition.description)")
             peersTable.merge(with: transition)
         }
         
@@ -478,7 +480,7 @@ final class GroupCallView : View {
                 
                 if presented {
                     let hasTable = isFullScreen && state.hideParticipants == false
-                    current.setFrameOrigin(current.centerFrameX(y: 60, addition: hasTable ? (peersTable.frame.width / 2 + 5) : 0).origin)
+                    current.setFrameOrigin(current.centerFrameX(y: 60, addition: hasTable ? (-peersTable.frame.width / 2) : 0).origin)
                     if animated {
                         current.layer?.animatePosition(from: current.frame.origin - NSMakePoint(0, 10), to: current.frame.origin)
                     }

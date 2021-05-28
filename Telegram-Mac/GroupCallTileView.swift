@@ -110,7 +110,6 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
     
     if let pinnedIndex = pinnedIndex {
         let pinnedPos = getPos(pinnedIndex)
-        let pinnedTile = tiles[pinnedIndex]
         for i in 0 ..< tiles.count {
             let pos = getPos(i)
             var tile = tiles[i]
