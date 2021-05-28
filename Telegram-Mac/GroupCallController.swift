@@ -52,7 +52,6 @@ final class GroupCallUIArguments {
     let startVoiceChat:()->Void
     let toggleReminder:(Bool)->Void
     let toggleScreenMode:()->Void
-    let futureWidth:()->CGFloat?
     let switchCamera:(PeerGroupCallData)->Void
     let togglePeersHidden:()->Void
     let contextMenuItems:(PeerGroupCallData)->[ContextMenuItem]
@@ -83,7 +82,6 @@ final class GroupCallUIArguments {
     startVoiceChat:@escaping()->Void,
     toggleReminder:@escaping(Bool)->Void,
     toggleScreenMode:@escaping()->Void,
-    futureWidth:@escaping()->CGFloat?,
     switchCamera:@escaping(PeerGroupCallData)->Void,
     togglePeersHidden: @escaping()->Void,
     contextMenuItems:@escaping(PeerGroupCallData)->[ContextMenuItem],
@@ -114,7 +112,6 @@ final class GroupCallUIArguments {
         self.startVoiceChat = startVoiceChat
         self.toggleReminder = toggleReminder
         self.toggleScreenMode = toggleScreenMode
-        self.futureWidth = futureWidth
         self.switchCamera = switchCamera
         self.togglePeersHidden = togglePeersHidden
         self.contextMenuItems = contextMenuItems
@@ -338,8 +335,8 @@ struct PeerGroupCallData : Equatable, Comparable {
 
 
 
-private func _id_peer_id(_ id: PeerId) -> InputDataIdentifier {
-    return InputDataIdentifier("_peer_id_\(id.toInt64())")
+private func _id_peer_id(_ data: PeerGroupCallData) -> InputDataIdentifier {
+    return InputDataIdentifier("_peer_id_\(data.peer.id.toInt64())_")
 }
 
 private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], dominantSpeaker: DominantVideo?, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, layoutMode: GroupCallUIState.LayoutMode, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, excludedPins: Set<String>, tooltips: Tooltips, version: Int) -> GroupCallUIState {
@@ -417,7 +414,6 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }
     }
     
-    let isVertical = isFullScreen && activeVideoViews.count > 0
     
     func hasVideo(_ peerId: PeerId) -> Bool {
         return activeParticipants.first(where: { participant in
@@ -438,6 +434,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }) != nil
     }
     
+    
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
         let pinnedMode: PeerGroupCallData.PinnedMode?
         if let current = dominantSpeaker, current.peerId == accountPeerId {
@@ -446,7 +443,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             pinnedMode = nil
         }
                 
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(accountPeerId), layoutMode: layoutMode, dominantSpeaker: dominantSpeaker, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: hasVideo(accountPeerId), layoutMode: layoutMode, dominantSpeaker: dominantSpeaker, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
         index += 1
     } 
 
@@ -466,13 +463,16 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             return active.endpointId == value.presentationEndpointId || active.endpointId == value.videoEndpointId
         }).map { $0.endpointId })
         
+        let isVertical = isFullScreen && current != nil && hasVideo(value.peer.id)
+        
+        
         memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], pinnedMode: pinnedMode, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: Int32.max - 1 - index, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), layoutMode: layoutMode, dominantSpeaker: dominantSpeaker, activeVideos: activeVideos, adminIds: state.adminIds, videoEndpointId: value.videoEndpointId, presentationEndpointId: value.presentationEndpointId))
         index += 1
     }
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, pinnedMode: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: false, layoutMode: layoutMode, dominantSpeaker: dominantSpeaker, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, pinnedMode: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: Int32.max - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: false, layoutMode: layoutMode, dominantSpeaker: dominantSpeaker, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
             index += 1
         }
     }
@@ -542,8 +542,16 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     var entries:[InputDataEntry] = []
     
     var index: Int32 = 0
+    
+    
+    var members:[PeerGroupCallData] = state.memberDatas
+    if state.isFullScreen, state.dominantSpeaker != nil {
+        members.removeAll(where: { $0.peer.id == state.dominantSpeaker?.peerId && $0.isVertical })
+    } else {
+        members.removeAll(where: { $0.hasVideo })
+    }
         
-    let canInvite: Bool = true
+    let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
     if canInvite {
         
@@ -555,22 +563,23 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         let tuple = Tuple(viewType: viewType, videoMode: state.dominantSpeaker != nil && state.layoutMode == .classic)
         
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("invite"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return GroupCallInviteRowItem(initialSize, height: 42, stableId: stableId, videoMode: tuple.videoMode, viewType: viewType, action: arguments.inviteMembers, futureWidth: arguments.futureWidth)
+            return GroupCallInviteRowItem(initialSize, height: 42, stableId: stableId, videoMode: tuple.videoMode, viewType: viewType, action: arguments.inviteMembers)
         }))
         index += 1
 
     }
 
+    for (i, data) in members.enumerated() {
 
+        let drawLine = i != members.count - 1
 
-
-    for (i, data) in state.memberDatas.enumerated() {
-
-        let drawLine = i != state.memberDatas.count - 1
-
-        var viewType: GeneralViewType = bestGeneralViewType(state.memberDatas, for: i)
+        var viewType: GeneralViewType = bestGeneralViewType(members, for: i)
         if i == 0, canInvite {
-            viewType = i != state.memberDatas.count - 1 ? .innerItem : .lastItem
+            viewType = i != members.count - 1 ? .innerItem : .lastItem
+        } else if !canInvite, !data.isVertical, i > 0 {
+            if members[i - 1].isVertical {
+                viewType = i != members.count - 1 ? .firstItem : .lastItem
+            }
         }
 
         struct Tuple : Equatable {
@@ -602,12 +611,12 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             }
         })
         
-        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: _id_peer_id(data.peer.id), equatable: InputDataEquatable(tuple), comparable: comparable, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: _id_peer_id(data), equatable: InputDataEquatable(tuple), comparable: comparable, item: { initialSize, stableId in
             return GroupCallParticipantRowItem(initialSize, stableId: stableId, account: account, data: tuple.data, canManageCall: tuple.canManageCall, isInvited: tuple.data.isInvited, isLastItem: false, drawLine: drawLine, viewType: viewType, action: {
                 arguments.openInfo(data.peer)
             }, invite: arguments.invite, contextMenu: {
                 return .single(arguments.contextMenuItems(tuple.data))
-            }, takeVideo: arguments.takeVideo, audioLevel: arguments.audioLevel, futureWidth: arguments.futureWidth)
+            }, takeVideo: arguments.takeVideo, audioLevel: arguments.audioLevel)
         }))
 //        index += 1
 
@@ -1074,8 +1083,6 @@ final class GroupCallUIController : ViewController {
                 invoke()
             }
             
-        }, futureWidth: {
-            return nil
         }, switchCamera: { [weak self] peer in
             var video: DominantVideo? = nil
             if let mode = peer.pinnedMode {
@@ -1130,7 +1137,7 @@ final class GroupCallUIController : ViewController {
                 })
                 let headerView = GroupCallContextMenuHeaderView(frame: NSMakeRect(0, 0, 200, 200))
                 
-                let videos = [arguments.takeVideo(state.peer.id, .video, .list), arguments.takeVideo(state.peer.id, .screencast, .list)].compactMap { $0}
+                let videos = [arguments.takeVideo(state.peer.id, .video, .profile), arguments.takeVideo(state.peer.id, .screencast, .profile)].compactMap { $0}
                 
                 headerView.setPeer(state.peer, about: data.about, account: account, videos: videos)
                 headerItem.view = headerView
@@ -1299,7 +1306,7 @@ final class GroupCallUIController : ViewController {
             guard let strongSelf = self else {
                 return
             }
-            let types:[GroupCallUIState.ActiveVideo.Mode] = [.backstage, .list, .main]
+            let types:[GroupCallUIState.ActiveVideo.Mode] = GroupCallUIState.ActiveVideo.allModes
 
             
             let videoMembers: [GroupCallParticipantsContext.Participant] = members?.participants.filter { member in
@@ -1311,54 +1318,30 @@ final class GroupCallUIController : ViewController {
             
             var items:[PresentationGroupCallRequestedVideo] = []
                         
-            switch layoutMode {
-            case .tile:
-                for (i, member) in videoMembers.enumerated() {
-                    
-                    var videoQuality: PresentationGroupCallRequestedVideo.Quality = tiles[i].bestQuality
-                    var screencastQuality: PresentationGroupCallRequestedVideo.Quality = tiles[i].bestQuality
+            for (i, member) in videoMembers.enumerated() {
+                
+                var videoQuality: PresentationGroupCallRequestedVideo.Quality = tiles[i].bestQuality
+                var screencastQuality: PresentationGroupCallRequestedVideo.Quality = tiles[i].bestQuality
 
-                    if let dominant = dominant {
-                        videoQuality = .thumbnail
-                        screencastQuality = .thumbnail
-                        
-                        if dominant.peerId == member.peer.id {
-                            switch dominant.mode {
-                            case .video:
-                                videoQuality = .full
-                            case .screencast:
-                                screencastQuality = .full
-                            }
-                        }
-                    }
+                if let dominant = dominant {
+                    videoQuality = .thumbnail
+                    screencastQuality = .thumbnail
                     
-                    if let item = member.requestedVideoChannel(quality: videoQuality) {
-                        items.append(item)
-                    }
-                    if let item = member.requestedPresentationVideoChannel(quality: screencastQuality) {
-                        items.append(item)
+                    if dominant.peerId == member.peer.id {
+                        switch dominant.mode {
+                        case .video:
+                            videoQuality = .full
+                        case .screencast:
+                            screencastQuality = .full
+                        }
                     }
                 }
-            case .classic:
-                for member in videoMembers {
-                    if member.peer.id == dominant?.peerId {
-                        if dominant?.endpointId == member.videoEndpointId {
-                            if let item = member.requestedVideoChannel(quality: .full) {
-                                items.append(item)
-                            }
-                        } else if dominant?.endpointId == member.presentationEndpointId {
-                            if let item = member.requestedPresentationVideoChannel(quality: isFullScreen ? .medium : .thumbnail) {
-                                items.append(item)
-                            }
-                        }
-                    } else {
-                        if let item = member.requestedVideoChannel(quality: isFullScreen ? .medium : .thumbnail) {
-                            items.append(item)
-                        }
-                        if let item = member.requestedPresentationVideoChannel(quality: isFullScreen ? .medium : .thumbnail) {
-                            items.append(item)
-                        }
-                    }
+                
+                if let item = member.requestedVideoChannel(quality: videoQuality) {
+                    items.append(item)
+                }
+                if let item = member.requestedPresentationVideoChannel(quality: screencastQuality) {
+                    items.append(item)
                 }
             }
             
@@ -1402,6 +1385,8 @@ final class GroupCallUIController : ViewController {
                                     case .list:
                                         videoView.setVideoContentMode(.resizeAspectFill)
                                     case .backstage:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    case .profile:
                                         videoView.setVideoContentMode(.resizeAspectFill)
                                     }
                                     

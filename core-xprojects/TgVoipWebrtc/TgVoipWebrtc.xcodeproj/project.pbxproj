@@ -15,6 +15,8 @@
 		271503F52631679B004FB0E0 /* DesktopSharingCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 271503F12631679B004FB0E0 /* DesktopSharingCapturer.h */; };
 		271504102631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2715040E2631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm */; };
 		271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 2715040F2631799A004FB0E0 /* DesktopCaptureSourceViewMac.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27328D8C2660E8AD00E3B7D8 /* DarwinVideoSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */; };
+		27328D8D2660E8AD00E3B7D8 /* DarwinVideoSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */; };
 		27335F0825C833D400FD040C /* GroupInstanceCustomImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */; };
 		27335F0925C833D400FD040C /* GroupInstanceCustomImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27335F0725C833D300FD040C /* GroupInstanceCustomImpl.h */; };
 		273F3237265B97F2005D918E /* VideoSampleBufferViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */; };
@@ -89,6 +91,8 @@
 		271503F12631679B004FB0E0 /* DesktopSharingCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopSharingCapturer.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopSharingCapturer.h; sourceTree = "<group>"; };
 		2715040E2631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DesktopCaptureSourceViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopCaptureSourceViewMac.mm; sourceTree = "<group>"; };
 		2715040F2631799A004FB0E0 /* DesktopCaptureSourceViewMac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceViewMac.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopCaptureSourceViewMac.h; sourceTree = "<group>"; };
+		27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DarwinVideoSource.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinVideoSource.h; sourceTree = "<group>"; };
+		27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DarwinVideoSource.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinVideoSource.mm; sourceTree = "<group>"; };
 		27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupInstanceCustomImpl.cpp; sourceTree = "<group>"; };
 		27335F0725C833D300FD040C /* GroupInstanceCustomImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupInstanceCustomImpl.h; sourceTree = "<group>"; };
 		273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoSampleBufferViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoSampleBufferViewMac.mm; sourceTree = "<group>"; };
@@ -233,6 +237,8 @@
 				D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */,
 				D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */,
 				D0D751AD24BE3A140037D73A /* DarwinInterface.mm */,
+				27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */,
+				27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */,
 				D0D751AB24BE3A140037D73A /* TGRTCDefaultVideoDecoderFactory.mm */,
 				D0D751A624BE3A130037D73A /* TGRTCDefaultVideoEncoderFactory.mm */,
 				D0D751AA24BE3A140037D73A /* TGRTCVideoDecoderH265.mm */,
@@ -345,6 +351,7 @@
 				2767ADF625D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h in Headers */,
 				274BB56A263AE0AA00620D03 /* GroupJoinPayload.h in Headers */,
 				27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */,
+				27328D8C2660E8AD00E3B7D8 /* DarwinVideoSource.h in Headers */,
 				271503F52631679B004FB0E0 /* DesktopSharingCapturer.h in Headers */,
 				27335F0925C833D400FD040C /* GroupInstanceCustomImpl.h in Headers */,
 				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
@@ -421,6 +428,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */,
+				27328D8D2660E8AD00E3B7D8 /* DarwinVideoSource.mm in Sources */,
 				271503F42631679B004FB0E0 /* DesktopSharingCapturer.mm in Sources */,
 				D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */,
 				D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */,

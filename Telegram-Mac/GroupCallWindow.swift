@@ -131,7 +131,7 @@ struct GroupCallTheme {
     static let smallTableWidth: CGFloat = 160
     static let fullScreenThreshold: CGFloat = 630
 
-    static let tileTableWidth: CGFloat = 240
+    static let tileTableWidth: CGFloat = 250
     
     static var minSize:NSSize {
         return NSMakeSize(380, 600)
@@ -188,8 +188,8 @@ final class GroupCallWindow : Window {
         self.isMovableByWindowBackground = true
         self.level = .normal
         self.appearance = darkPalette.appearance
-//        self.toolbar = NSToolbar(identifier: "window")
-//        self.toolbar?.showsBaselineSeparator = false
+        self.toolbar = NSToolbar(identifier: "window")
+        self.toolbar?.showsBaselineSeparator = false
         
         initSaver()
     }
@@ -199,7 +199,7 @@ final class GroupCallWindow : Window {
         super.layoutIfNeeded()
         
         if !isFullScreen {
-            var point: NSPoint = NSMakePoint(20, 0)
+            var point: NSPoint = NSMakePoint(20, 4)
             self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
             point.x += 20
             self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)

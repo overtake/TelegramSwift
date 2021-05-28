@@ -9405,6 +9405,8 @@ internal final class L10n {
   }
   /// No active and connected camera was found.
   internal static var voiceChatTooltipNoCameraFound: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.NoCameraFound") }
+  /// Window is pinned.
+  internal static var voiceChatTooltipPinWindow: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.PinWindow") }
   /// An error occured. Screencast has stopped.
   internal static var voiceChatTooltipScreencastFailed: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.ScreencastFailed") }
   /// %@'s screencast is pinned
@@ -9425,6 +9427,8 @@ internal final class L10n {
   internal static var voiceChatTooltipStopVideo: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.StopVideo") }
   /// We will notify you when it starts
   internal static var voiceChatTooltipSubscribe: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Subscribe") }
+  /// Window is unpinned.
+  internal static var voiceChatTooltipUnpinWindow: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.UnpinWindow") }
   /// An error occured. Video stream has stopped.
   internal static var voiceChatTooltipVideoFailed: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.VideoFailed") }
   /// %@'s video is pinned

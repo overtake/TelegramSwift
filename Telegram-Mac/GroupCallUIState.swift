@@ -49,7 +49,13 @@ final class GroupCallUIState : Equatable {
             case main
             case list
             case backstage
+            case profile
         }
+        
+        static var allModes:[Mode] {
+            return [.backstage, .list, .main]
+        }
+ 
         let endpointId: String
         let mode: Mode
         let index: Int

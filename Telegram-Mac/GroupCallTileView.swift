@@ -202,6 +202,7 @@ final class GroupCallTileView: View {
         self.call = call
         self.arguments = arguments
         super.init(frame: frame)
+        self.layer?.cornerRadius = 4
     }
     
     func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {

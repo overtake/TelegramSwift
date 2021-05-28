@@ -64,6 +64,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
     deinit {
         removeAudioRecorderContext(self.id)
         removeAudioUnitHolder(self.id)
+        stop()
     }
     
     func pause() {
