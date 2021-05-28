@@ -165,11 +165,7 @@ final class GroupCallTitleView : Control {
         }
         
         transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: 85))
-        if hidePeers.isHidden {
-            transition.updateFrame(view: pinWindow, frame: pinWindow.centerFrameY(x: 85))
-        } else {
-            transition.updateFrame(view: pinWindow, frame: pinWindow.centerFrameY(x: hidePeers.frame.maxX + 10))
-        }
+        transition.updateFrame(view: pinWindow, frame: pinWindow.centerFrameY(x: frame.width - pinWindow.frame.width - 20))
         
     }
     

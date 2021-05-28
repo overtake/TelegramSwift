@@ -165,7 +165,7 @@ final class GroupCallUIState : Equatable {
                             return true
                         }
                     }
-                    if let endpoint = peer.screencastEndpoint {
+                    if let endpoint = peer.presentationEndpoint {
                         if activeVideo.endpointId == endpoint {
                             return true
                         }

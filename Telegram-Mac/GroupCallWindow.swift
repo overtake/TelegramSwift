@@ -131,7 +131,7 @@ struct GroupCallTheme {
     static let smallTableWidth: CGFloat = 160
     static let fullScreenThreshold: CGFloat = 630
 
-    static let tileTableWidth: CGFloat = 250
+    static let tileTableWidth: CGFloat = 200
     
     static var minSize:NSSize {
         return NSMakeSize(380, 600)

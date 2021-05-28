@@ -69,6 +69,8 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
     let insetSize = NSMakeSize(CGFloat((data.rows - 1) * 5) / CGFloat(data.rows), CGFloat((data.cols - 1) * 5) / CGFloat(data.cols))
 
     
+    let firstIsSuperior = data.cols * data.rows > count && data.rows == 2
+    
     if data.cols * data.rows > count && data.rows == 2 {
         tiles.append(.init(rect: CGRect(origin: point, size: CGSize(width: frameSize.width, height: data.size.height - insetSize.height)), index: index))
         point.y += (data.size.height - insetSize.height) + inset
@@ -107,25 +109,48 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
     }
     
     if let pinnedIndex = pinnedIndex {
-        let indexPos = getPos(pinnedIndex)
+        let pinnedPos = getPos(pinnedIndex)
+        let pinnedTile = tiles[pinnedIndex]
         for i in 0 ..< tiles.count {
             let pos = getPos(i)
             var tile = tiles[i]
+            
+            let farAway = (row: CGFloat(pos.row - pinnedPos.row), col: CGFloat(pos.col - pinnedPos.col))
+            
             if i == pinnedIndex {
                 tile.rect = frameSize.bounds
-            } else if i < pinnedIndex {
-                if pos.col != indexPos.col {
-                    tile.rect = tile.rect.offsetBy(dx: 0, dy: -tile.rect.maxY)
-                } else {
-                    tile.rect = tile.rect.offsetBy(dx: -tile.rect.maxX, dy: 0)
-                }
             } else {
-                if pos.col != indexPos.col {
-                    tile.rect = tile.rect.offsetBy(dx: 0, dy: frameSize.height - tile.rect.minY)
+                var x: CGFloat = 0
+                var y: CGFloat = 0
+                
+                if i == 0 && firstIsSuperior {
+                    x = 0
                 } else {
-                    tile.rect = tile.rect.offsetBy(dx: frameSize.width - tile.rect.minX, dy: 0)
+                    x += farAway.row * frameSize.width
+                    x += max(0, farAway.row - 1) * inset
                 }
+                y += farAway.col * frameSize.height
+                y += max(0, farAway.col - 1) * inset
+
+                tile.rect = CGRect(origin: CGPoint(x: x, y: y), size: frameSize)
             }
+            
+            /*
+             else if i < pinnedIndex {
+                 if pos.col != pinnedPos.col {
+                     tile.rect = tile.rect.offsetBy(dx: 0, dy: -tile.rect.maxY)
+                 } else {
+                     tile.rect = tile.rect.offsetBy(dx: -tile.rect.maxX, dy: 0)
+                 }
+             } else {
+                 if pos.col != pinnedPos.col {
+                     tile.rect = tile.rect.offsetBy(dx: 0, dy: frameSize.height - tile.rect.minY)
+                 } else {
+                     tile.rect = tile.rect.offsetBy(dx: frameSize.width - tile.rect.minX, dy: 0)
+                 }
+             }
+             */
+            
             tiles[i] = tile
         }
     }
@@ -215,14 +240,14 @@ final class GroupCallTileView: View {
         let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
         
         for member in state.videoActive(.main) {
-            let endpoints:[String] = [member.screencastEndpoint, member.videoEndpoint].compactMap { $0 }
+            let endpoints:[String] = [member.presentationEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
                 if let activeVideo = state.activeVideoViews.first(where: { $0.mode == .main && $0.endpointId == endpointId }) {
                     
                     let source: VideoSourceMacMode?
                     if member.videoEndpoint == endpointId {
                         source = .video
-                    } else if member.screencastEndpoint == endpointId {
+                    } else if member.presentationEndpoint == endpointId {
                         source = .screencast
                     } else {
                         source = nil
