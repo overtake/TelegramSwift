@@ -164,9 +164,8 @@ final class GroupCallTitleView : Control {
             transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(max(100, rect.minX), backgroundView.frame.midY - titleView.frame.height), size: titleView.frame.size))
         }
         
-        transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: 85))
         transition.updateFrame(view: pinWindow, frame: pinWindow.centerFrameY(x: frame.width - pinWindow.frame.width - 20))
-        
+        transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: pinWindow.frame.minX - 10 - hidePeers.frame.width))
     }
     
     

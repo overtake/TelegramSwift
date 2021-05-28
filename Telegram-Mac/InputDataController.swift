@@ -206,7 +206,7 @@ final class InputDataArguments {
 
 private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
 
-func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool) -> Signal<TableUpdateTransition, NoError> {
+func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         
         func makeItem(_ entry: InputDataEntry) -> TableRowItem {
@@ -251,7 +251,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
                 }
                 if !cancelled.with({ $0 }) {
                     applyQueue.async {
-                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), searchState: searchState))
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
                         subscriber.putCompletion()
                     }
                 }
@@ -266,7 +266,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             })
             if !cancelled.with({ $0 }) {
                 applyQueue.async {
-                    subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), searchState: searchState))
+                    subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
                     subscriber.putCompletion()
                 }
             }

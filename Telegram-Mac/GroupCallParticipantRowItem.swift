@@ -222,6 +222,10 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return GroupCallParticipantRowView.self
     }
     
+    override var identifier: String {
+        return isVertical ? "vertical_group_call_item" : super.identifier
+    }
+    
     var statusImage: [CGImage] {
         let hasVideo = data.hasVideo
         
@@ -490,33 +494,33 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         speakingView.layer?.borderColor = item.data.state?.muteState?.mutedByYou == true ? GroupCallTheme.customTheme.redColor.cgColor : GroupCallTheme.speakActiveColor.cgColor
 
         
-        if item.data.pinnedMode != nil {
-            let current: View
-            if let pinnedView = self.pinnedFrameView {
-                current = pinnedView
-            } else {
-                current = View()
-                self.pinnedFrameView = current
-                addSubview(current)
-                current.layer?.cornerRadius = 10
-                current.layer?.borderWidth = 2
-                if animated {
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                }
-            }
-            current.layer?.borderColor = item.activityColor.withAlphaComponent(0.7).cgColor
-        } else {
-            if let pinnedView = self.pinnedFrameView {
-                self.pinnedFrameView = nil
-                if animated {
-                    pinnedView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pinnedView] _ in
-                        pinnedView?.removeFromSuperview()
-                    })
-                } else {
-                    pinnedView.removeFromSuperview()
-                }
-            }
-        }
+//        if item.data.pinnedMode != nil {
+//            let current: View
+//            if let pinnedView = self.pinnedFrameView {
+//                current = pinnedView
+//            } else {
+//                current = View()
+//                self.pinnedFrameView = current
+//                addSubview(current)
+//                current.layer?.cornerRadius = 10
+//                current.layer?.borderWidth = 2
+//                if animated {
+//                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+//                }
+//            }
+//            current.layer?.borderColor = item.activityColor.withAlphaComponent(0.7).cgColor
+//        } else {
+//            if let pinnedView = self.pinnedFrameView {
+//                self.pinnedFrameView = nil
+//                if animated {
+//                    pinnedView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pinnedView] _ in
+//                        pinnedView?.removeFromSuperview()
+//                    })
+//                } else {
+//                    pinnedView.removeFromSuperview()
+//                }
+//            }
+//        }
         
         
         let videoBoxImages = item.videoBoxImage
@@ -871,6 +875,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             let animated = statusView?.layout != nil
             
             let statusView = TextView()
+            let hadOld = self.statusView != nil
             self.statusView = statusView
             statusView.userInteractionEnabled = false
             statusView.isSelectable = false
@@ -878,7 +883,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             addSubview(statusView)
             statusView.setFrameOrigin(statusViewPoint)
             
-            if animated {
+            if animated && hadOld {
                 statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
                 statusView.layer?.animatePosition(from: NSMakePoint(statusViewPoint.x, statusViewPoint.y - 10), to: statusViewPoint)
             }
