@@ -204,7 +204,7 @@ final class GroupCallView : View {
             if isFullScreen, state?.hideParticipants == true {
                 transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75))
             } else {
-                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2 + 5))
+                transition.updateFrame(view: controlsContainer, frame: controlsContainer.centerFrameX(y: frame.height - controlsContainer.frame.height + 75, addition: peersTable.frame.width / 2))
             }
         } else {
             if isVideo {
