@@ -16,17 +16,12 @@ import SwiftSignalKit
 
 final class GroupCallInviteRowItem : GeneralRowItem {
     fileprivate let videoMode: Bool
-    private let futureWidth:()->CGFloat?
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void, futureWidth:@escaping()->CGFloat?) {
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, videoMode: Bool, viewType: GeneralViewType = .legacy, action: @escaping () -> Void) {
         self.videoMode = videoMode
-        self.futureWidth = futureWidth
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType, action: action, inset: NSEdgeInsets())
     }
     
     override var width: CGFloat {
-        if let futureWidth = self.futureWidth() {
-            return futureWidth
-        }
         if let superview = table?.superview {
             return superview.frame.width
         } else {

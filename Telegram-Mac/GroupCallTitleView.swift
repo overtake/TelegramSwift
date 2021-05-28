@@ -74,7 +74,7 @@ final class GroupCallTitleView : Control {
     fileprivate let titleView: TextView = TextView()
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     private var recordingView: GroupCallRecordingView?
-    let resize = ImageButton()
+    let pinWindow = ImageButton()
     let hidePeers = ImageButton()
     private let backgroundView: View = View()
     enum Mode {
@@ -90,15 +90,15 @@ final class GroupCallTitleView : Control {
         addSubview(backgroundView)
         backgroundView.addSubview(titleView)
         backgroundView.addSubview(statusView)
-        backgroundView.addSubview(resize)
+        backgroundView.addSubview(pinWindow)
         backgroundView.addSubview(hidePeers)
         titleView.isSelectable = false
         titleView.userInteractionEnabled = false
         statusView.userInteractionEnabled = false
         titleView.disableBackgroundDrawing = true
         
-        resize.autohighlight = false
-        resize.scaleOnClick = true
+        pinWindow.autohighlight = false
+        pinWindow.scaleOnClick = true
         
         set(handler: { [weak self] _ in
             self?.window?.performZoom(nil)
@@ -164,9 +164,13 @@ final class GroupCallTitleView : Control {
             transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(max(100, rect.minX), backgroundView.frame.midY - titleView.frame.height), size: titleView.frame.size))
         }
         
-        transition.updateFrame(view: resize, frame: resize.centerFrameY(x: frame.width - resize.frame.width - 10))
+        transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: 85))
+        if hidePeers.isHidden {
+            transition.updateFrame(view: pinWindow, frame: pinWindow.centerFrameY(x: 85))
+        } else {
+            transition.updateFrame(view: pinWindow, frame: pinWindow.centerFrameY(x: hidePeers.frame.maxX + 10))
+        }
         
-        transition.updateFrame(view: hidePeers, frame: hidePeers.centerFrameY(x: frame.width - resize.frame.width - 10 - 10 - hidePeers.frame.width))
     }
     
     
@@ -297,14 +301,20 @@ final class GroupCallTitleView : Control {
         
         let windowIsPinned = window?.level == NSWindow.Level.popUpMenu
         
-        resize.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
-        resize.sizeToFit()
+        pinWindow.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
+        pinWindow.sizeToFit()
         
-        resize.removeAllHandlers()
-        resize.set(handler: { control in
+        pinWindow.removeAllHandlers()
+        pinWindow.set(handler: { control in
+            guard let window = control.window as? Window else {
+                return
+            }
             let windowIsPinned = control.window?.level == NSWindow.Level.popUpMenu
             control.window?.level = (windowIsPinned ? NSWindow.Level.normal : NSWindow.Level.popUpMenu)
             (control as? ImageButton)?.set(image: windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
+            
+            showModalText(for: window, text: !windowIsPinned ? L10n.voiceChatTooltipPinWindow : L10n.voiceChatTooltipUnpinWindow)
+            
         }, for: .Click)
 
     }
