@@ -494,12 +494,11 @@ final class GroupCallView : View {
     }
     
     var isVertical: Bool {
-        return isFullScreen && state?.dominantSpeaker != nil && state?.layoutMode == .classic
+        return isFullScreen && state?.dominantSpeaker != nil
     }
     
     private func updateUIAfterFullScreenUpdated(_ state: GroupCallUIState, reloadTable: Bool) {
         
-        peersTableContainer.isHidden = isVertical
         peersTable.layer?.cornerRadius = isVertical ? 0 : 10
                 
         if let event = NSApp.currentEvent {

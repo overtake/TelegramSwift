@@ -95,15 +95,21 @@ private final class PinView : Control {
 
 
 struct DominantVideo : Equatable {
+    
+    enum PinMode {
+        case permanent
+        case focused
+    }
+    
     let peerId: PeerId
     let endpointId: String
     let mode: VideoSourceMacMode
-    let temporary: Bool
-    init(_ peerId: PeerId, _ endpointId: String, _ mode: VideoSourceMacMode, _ temporary: Bool) {
+    let pinMode: PinMode?
+    init(_ peerId: PeerId, _ endpointId: String, _ mode: VideoSourceMacMode, _ pinMode: PinMode?) {
         self.peerId = peerId
         self.endpointId = endpointId
         self.mode = mode
-        self.temporary = temporary
+        self.pinMode = pinMode
     }
 }
 
@@ -180,8 +186,10 @@ final class GroupCallMainVideoContainerView: Control {
         }, for: .Click)
         
         self.set(handler: { [weak self] _ in
-            self?.pinView.send(event: .Click)
-        }, for: .DoubleClick)
+            if let dominant = self?.currentPeer {
+                self?.arguments?.focusVideo(dominant.endpointId)
+            }
+        }, for: .Click)
         
         self.set(handler: { [weak self] control in
             if let data = self?.participant {
@@ -194,18 +202,21 @@ final class GroupCallMainVideoContainerView: Control {
         self.pinView.layer?.opacity = 0
         
         self.set(handler: { [weak self] control in
-            self?.pinView.change(opacity: 1, animated: true)
+            self?.pinView.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
         }, for: .Hover)
         
         self.set(handler: { [weak self] control in
-            self?.pinView.change(opacity: 1, animated: true)
+            self?.pinView.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
         }, for: .Highlight)
         
         self.set(handler: { [weak self] control in
             self?.pinView.change(opacity: 0, animated: true)
         }, for: .Normal)
         
-        
+    }
+    
+    private var pinIsVisible: Bool {
+        return (self.isFocused || self.isPinned)
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -226,25 +237,27 @@ final class GroupCallMainVideoContainerView: Control {
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         
-        self.pinView.change(opacity: self.mouseInside() ? 1 : 0, animated: animated)
+        self.pinView.change(opacity: self.mouseInside() && self.pinIsVisible ? 1 : 0, animated: animated)
     }
     
     private var participant: PeerGroupCallData?
     
     private var isPinned: Bool = false
-    
-    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, resizeMode: CALayerContentsGravity, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, isFullScreen: Bool, isPinned: Bool, arguments: GroupCallUIArguments?) {
+    private var isFocused: Bool = false
+    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, resizeMode: CALayerContentsGravity, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, isPinned: Bool, isFocused: Bool, arguments: GroupCallUIArguments?) {
         
        
-        
+        self.isFocused = isFocused
         self.isPinned = isPinned
         self.arguments = arguments
         
         
         self.pinView.update(isPinned, animated: animated)
         
-        self.pinView.change(opacity: self.mouseInside() ? 1 : 0, animated: animated)
+        self.pinView.change(opacity: self.mouseInside() && pinIsVisible ? 1 : 0, animated: animated)
 
+//        self.userInteractionEnabled = arguments?.videosCount() != 1 
+        
         
         let showSpeakingView = participant?.isSpeaking == true && (participant?.state?.muteState?.mutedByYou == nil || participant?.state?.muteState?.mutedByYou == false)
         

@@ -161,57 +161,20 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
 
 final class GroupCallTileView: View {
     
-    private enum TileEntry : Comparable, Identifiable {
+    private struct TileEntry : Comparable, Identifiable {
         static func < (lhs: TileEntry, rhs: TileEntry) -> Bool {
             return lhs.index < rhs.index
         }
-        
-        case video(DominantVideo, PeerGroupCallData, Bool, Bool, CALayerContentsGravity, Int)
-        var index: Int {
-            switch self {
-            case let .video(_, _, _, _, _, index):
-                return index
-            }
-        }
-        
-        var video: DominantVideo {
-            switch self {
-            case let .video(video, _, _ , _, _, _):
-                return video
-            }
-        }
-        var member: PeerGroupCallData {
-            switch self {
-            case let .video(_, member, _ , _, _, _):
-                return member
-            }
-        }
-        
         var stableId: Int {
-            switch self {
-            case let .video(video, _, _ , _, _, _):
-                return video.endpointId.hash
-            }
+            return video.endpointId.hash
         }
-        
-        var isFullScreen: Bool {
-            switch self {
-            case let .video(_, _, isFullScreen, _, _, _):
-                return isFullScreen
-            }
-        }
-        var resizeMode: CALayerContentsGravity {
-            switch self {
-            case let .video(_, _, _, _, resizeMode, _):
-                return resizeMode
-            }
-        }
-        var isPinned: Bool {
-            switch self {
-            case let .video(_, _, _, isPinned, _, _):
-                return isPinned
-            }
-        }
+        let video: DominantVideo
+        let member: PeerGroupCallData
+        let isFullScreen: Bool
+        let isPinned: Bool
+        let isFocused: Bool
+        let resizeMode: CALayerContentsGravity
+        let index: Int
     }
 
     
@@ -235,10 +198,16 @@ final class GroupCallTileView: View {
         
         var items:[TileEntry] = []
         
+//        let previousPinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
+
         
         let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
         
-        for member in state.videoActive(.main) {
+        let activeMembers = state.videoActive(.main)
+        
+        let activeVideos = state.activeVideoViews.filter { $0.mode == .main }
+        
+        for member in activeMembers {
             let endpoints:[String] = [member.presentationEndpoint, member.videoEndpoint].compactMap { $0 }
             for endpointId in endpoints {
                 if let activeVideo = state.activeVideoViews.first(where: { $0.mode == .main && $0.endpointId == endpointId }) {
@@ -252,14 +221,14 @@ final class GroupCallTileView: View {
                         source = nil
                     }
                     if let source = source {
-                        items.append(.video(DominantVideo(member.peer.id, endpointId, source, false), member, state.isFullScreen, state.dominantSpeaker?.endpointId == endpointId, state.isFullScreen ? .resizeAspect : .resizeAspectFill, activeVideo.index))
+                        
+                        let pinVideo = state.dominantSpeaker?.endpointId == endpointId ? state.dominantSpeaker : nil
+                        
+                        let resizeMode: CALayerContentsGravity = state.isFullScreen ? .resizeAspect : .resizeAspectFill
+                        
+                        let video = DominantVideo(member.peer.id, endpointId, source, pinVideo?.pinMode)
+                        items.append(.init(video: video, member: member, isFullScreen: state.isFullScreen, isPinned: pinVideo?.pinMode == .permanent, isFocused: pinVideo?.pinMode == .focused || activeVideos.count == 1, resizeMode: resizeMode, index: activeVideo.index))
                     }
-                    
-                    
-//                    let dominant = state.dominantSpeaker
-//                    if dominant == nil || dominant?.endpointId == endpointId || dominant?.peerId == member.peer.id && !endpoints.contains(dominant!.endpointId) {
-//
-//                    }
                 }
             }
         }
@@ -295,8 +264,7 @@ final class GroupCallTileView: View {
             self.items[idx] = item
         }
         self.prevState = state
-        self.pinnedIndex = self.items.firstIndex(where: { $0.isPinned })
-        
+        self.pinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
         
         for (i, view) in views.enumerated() {
             if let pinnedIndex = pinnedIndex, i == pinnedIndex {
@@ -337,7 +305,7 @@ final class GroupCallTileView: View {
             addSubview(view, positioned: .above, relativeTo: self.subviews[index - 1])
         }
         
-        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated && prevView != nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
+        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated && prevView != nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, arguments: self.arguments)
         
         self.views.insert(view, at: index)
         
@@ -349,7 +317,7 @@ final class GroupCallTileView: View {
         if let prevFrame = prevFrame {
             self.views[index].frame = prevFrame
         }
-        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isFullScreen: item.isFullScreen, isPinned: item.isPinned, arguments: self.arguments)
+        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, arguments: self.arguments)
     }
     
     

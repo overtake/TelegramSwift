@@ -98,6 +98,14 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
         if self.device != device {
             self.device = device
             
+            
+            if let audioUnit = self.audioUnit.swap(nil) {
+                var status = noErr
+                status = AudioOutputUnitStop(audioUnit)
+                status = AudioUnitUninitialize(audioUnit)
+                status = AudioComponentInstanceDispose(audioUnit)
+            }
+            
             var desc = AudioComponentDescription()
             desc.componentType = kAudioUnitType_Output
             desc.componentSubType = kAudioUnitSubType_HALOutput
