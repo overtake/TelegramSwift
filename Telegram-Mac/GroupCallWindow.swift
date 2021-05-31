@@ -45,6 +45,17 @@ struct GroupCallTheme {
         return grayStatusColor
     }
     
+    static let video_status_muted_red = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
+    static let video_status_muted_accent = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.greenStatusColor)
+    static let video_status_muted_gray = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+
+    static let video_status_unmuted_green = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
+    static let video_status_unmuted_gray = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+    static let video_status_unmuted_accent = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.accent)
+
+    
+
+    
     static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
     static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
     static let videoBox_speaking = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor.withAlphaComponent(0.8))
@@ -188,8 +199,8 @@ final class GroupCallWindow : Window {
         self.isMovableByWindowBackground = true
         self.level = .normal
         self.appearance = darkPalette.appearance
-        self.toolbar = NSToolbar(identifier: "window")
-        self.toolbar?.showsBaselineSeparator = false
+//        self.toolbar = NSToolbar(identifier: "window")
+//        self.toolbar?.showsBaselineSeparator = false
         
         initSaver()
     }

@@ -209,8 +209,8 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
         } else {
             let width = width - 20
-            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 28 - itemInset.right)
-            statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - 28 - itemInset.right - inset)
+            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right)
+            statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - inset)
         }
         
         return true
@@ -233,7 +233,26 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         
         var images:[CGImage] = []
         
-        if hasVideo || volume != nil, let state = data.state {
+        if hasVideo || volume != nil || data.videoMode, let state = data.state {
+            
+            if data.videoMode {
+                if let muteState = state.muteState {
+                    if muteState.mutedByYou {
+                        images.append(GroupCallTheme.video_status_muted_red)
+                    } else {
+                        images.append(GroupCallTheme.video_status_muted_gray)
+                    }
+                } else if !data.videoMode {
+                    if data.isSpeaking {
+                        images.append(GroupCallTheme.video_status_unmuted_green)
+                    } else if data.wantsToSpeak {
+                        images.append(GroupCallTheme.video_status_unmuted_accent)
+                    } else {
+                        images.append(GroupCallTheme.video_status_unmuted_gray)
+                    }
+                }
+            }
+            
             if hasVideo {
                 if let endpoint = data.videoEndpoint {
                     if baseEndpoint == nil || baseEndpoint == endpoint {
@@ -264,12 +283,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                             }
                         }
                     }
-                    
                 }
             } else {
                 if let muteState = state.muteState, muteState.mutedByYou {
                     images.append(GroupCallTheme.status_muted)
-                } else {
+                } else if !data.videoMode {
                     if data.isSpeaking {
                         images.append(GroupCallTheme.status_unmuted_green)
                     } else if data.wantsToSpeak {
@@ -470,8 +488,8 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         nameContainer.frame = NSMakeRect(0, 0, containerView.frame.width, max(imagesView.frame.height, titleView.frame.height))
         nameContainer.centerX(y: containerView.frame.height - nameContainer.frame.height - 8)
         
-        imagesView.setFrameOrigin(NSMakePoint(nameContainer.frame.width - imagesView.frame.width - 8, 0))
-        titleView.setFrameOrigin(NSMakePoint(8, 0))
+        imagesView.setFrameOrigin(NSMakePoint(8, 0))
+        titleView.setFrameOrigin(NSMakePoint(imagesView.frame.maxX + 8, 0))
 
         
         pinnedFrameView?.frame = containerView.bounds
@@ -832,7 +850,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             button.sizeToFit(.zero, NSMakeSize(28, 28), thatFit: true)
         }
         button.userInteractionEnabled = item.actionInteractionEnabled
-
+        button.isHidden = item.data.videoMode
         photoView.update(item.audioLevel, data: item.data, activityColor: item.activityColor, account: item.account, animated: animated)
 
         titleView.update(item.titleLayout)
