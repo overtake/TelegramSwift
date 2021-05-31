@@ -33,13 +33,15 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     fileprivate let volume: TextViewLayout?
     fileprivate let audioLevel:(PeerId)->Signal<Float?, NoError>?
     fileprivate private(set) var buttonImage: (CGImage, CGImage?)? = nil
-    private let baseEndpoint: String?
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, baseEndpoint: String?, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?) {
+    fileprivate let baseEndpoint: String?
+    fileprivate let focusVideo:(String?)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, data: PeerGroupCallData, baseEndpoint: String?, canManageCall: Bool, isInvited: Bool, isLastItem: Bool, drawLine: Bool, viewType: GeneralViewType, action: @escaping()->Void, invite:@escaping(PeerId)->Void, contextMenu:@escaping()->Signal<[ContextMenuItem], NoError>, takeVideo:@escaping(PeerId, VideoSourceMacMode?, GroupCallUIState.ActiveVideo.Mode)->NSView?, audioLevel:@escaping(PeerId)->Signal<Float?, NoError>?, focusVideo: @escaping(String?)->Void) {
         self.data = data
         self.audioLevel = audioLevel
         self.account = account
         self.canManageCall = canManageCall
         self.invite = invite
+        self.focusVideo = focusVideo
         self._contextMenu = contextMenu
         self.isInvited = isInvited
         self.drawLine = drawLine
@@ -409,8 +411,8 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         speakingView.layer?.borderColor = GroupCallTheme.speakActiveColor.cgColor
     
         containerView.set(handler: { [weak self] _ in
-            if let event = NSApp.currentEvent {
-                self?.showContextMenu(event)
+            if let item = self?.item as? GroupCallParticipantRowItem {
+                item.focusVideo(item.baseEndpoint)
             }
         }, for: .Click)
         
