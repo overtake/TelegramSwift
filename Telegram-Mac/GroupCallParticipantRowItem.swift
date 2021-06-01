@@ -242,7 +242,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                     } else {
                         images.append(GroupCallTheme.video_status_muted_gray)
                     }
-                } else if !data.videoMode {
+                } else {
                     if data.isSpeaking {
                         images.append(GroupCallTheme.video_status_unmuted_green)
                     } else if data.wantsToSpeak {

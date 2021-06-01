@@ -53,7 +53,7 @@ struct GroupCallTheme {
     static let video_status_unmuted_gray = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
     static let video_status_unmuted_accent = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.accent)
 
-    
+    static let video_back = NSImage(named: "Icon_ChatNavigationBack")!.precomposed(NSColor.white)
 
     
     static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))

@@ -1088,10 +1088,10 @@ final class GroupCallUIController : ViewController {
                 } else {
                     if let endpointId = endpointId {
                         current.focused = .init(id: endpointId, time: Date().timeIntervalSince1970)
+                        current.permanent = nil
                     } else {
                         current.focused = nil
                     }
-                    current.permanent = nil
                 }
                 return current
             }
@@ -1287,7 +1287,7 @@ final class GroupCallUIController : ViewController {
             } else if state.pinnedData.permanent == nil {
                 let members = state.activeVideoMembers[.main] ?? []
                 if let active = members.first(where: { $0.isSpeaking }) {
-                    let endpointId: String
+                    var endpointId: String
                     if let endpoint = active.videoEndpoint {
                         endpointId = endpoint
                     } else if let endpoint = active.presentationEndpoint {
@@ -1295,11 +1295,12 @@ final class GroupCallUIController : ViewController {
                     } else {
                         fatalError("sounds impossible, but at the end it happened.")
                     }
-                    let canSwitch: Bool
+                    var canSwitch: Bool = false
                     if let current = state.pinnedData.focused {
-                        canSwitch = current.id != endpointId && (Date().timeIntervalSince1970 - current.time) > 5.0
-                    } else {
-                        canSwitch = true
+                        let member = members.first(where: { $0.videoEndpoint == endpointId || $0.presentationEndpoint == endpointId })
+                        if active.peer.id != member?.peer.id {
+                            canSwitch = current.id != endpointId && (Date().timeIntervalSince1970 - current.time) > 5.0
+                        }
                     }
                     if canSwitch {
                         DispatchQueue.main.async {
