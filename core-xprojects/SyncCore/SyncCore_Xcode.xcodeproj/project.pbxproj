@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		274DDF3726666172004AFBE2 /* wallapersState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274DDF3626666172004AFBE2 /* wallapersState.swift */; };
 		A701F7BA236B295F002ABF81 /* SyncCore.h in Headers */ = {isa = PBXBuildFile; fileRef = A701F7B8236B295F002ABF81 /* SyncCore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		A701F856236B2A11002ABF81 /* TelegramGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A701F7C9236B2A11002ABF81 /* TelegramGroup.swift */; };
 		A701F857236B2A11002ABF81 /* OutgoingContentInfoMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = A701F7CA236B2A11002ABF81 /* OutgoingContentInfoMessageAttribute.swift */; };
@@ -161,6 +162,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		274DDF3626666172004AFBE2 /* wallapersState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = wallapersState.swift; sourceTree = "<group>"; };
 		A701F7B5236B295F002ABF81 /* SyncCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SyncCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A701F7B8236B295F002ABF81 /* SyncCore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyncCore.h; sourceTree = "<group>"; };
 		A701F7B9236B295F002ABF81 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -361,6 +363,7 @@
 		A701F7C8236B2A11002ABF81 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				274DDF3626666172004AFBE2 /* wallapersState.swift */,
 				A76157FB258A0CDE00B7FCFD /* EmojiSearchQueryMessageAttribute.swift */,
 				D0D1391E25223790005FCF35 /* ValidationMessageAttribute.swift */,
 				D048EDD424FCFBEC00977606 /* ReplyThreadMessageAttribute.swift */,
@@ -606,6 +609,7 @@
 				A701F879236B2A11002ABF81 /* TextEntitiesMessageAttribute.swift in Sources */,
 				A701F8BB236B2A12002ABF81 /* ContentRequiresValidationMessageAttribute.swift in Sources */,
 				A701F87B236B2A11002ABF81 /* TelegramMediaWebpage.swift in Sources */,
+				274DDF3726666172004AFBE2 /* wallapersState.swift in Sources */,
 				A701F8A1236B2A11002ABF81 /* SynchronizeSavedStickersOperation.swift in Sources */,
 				A701F85D236B2A11002ABF81 /* AccountBackupDataAttribute.swift in Sources */,
 				A701F895236B2A11002ABF81 /* TemporaryTwoStepPasswordToken.swift in Sources */,

@@ -5,35 +5,31 @@ import SyncCore
 import SwiftSignalKit
 
 
-struct PresentationGroupCallRequestedVideo {
-    enum Quality {
+public struct PresentationGroupCallRequestedVideo {
+    public enum Quality {
         case thumbnail
         case medium
         case full
     }
 
-    var audioSsrc: UInt32
-    var endpointId: String
-    var videoInformation: String
-    var quality: Quality
+    public struct SsrcGroup {
+        public var semantics: String
+        public var ssrcs: [UInt32]
+    }
+
+    public var audioSsrc: UInt32
+    public var endpointId: String
+    public var ssrcGroups: [SsrcGroup]
+    public var quality: Quality
 }
-extension GroupCallParticipantsContext.Participant {
+
+public extension GroupCallParticipantsContext.Participant {
     var videoEndpointId: String? {
-        if let jsonParams = self.videoJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let endpoint = json["endpoint"] as? String {
-                return endpoint
-            }
-        }
-        return nil
+        return self.videoDescription?.endpointId
     }
 
     var presentationEndpointId: String? {
-        if let jsonParams = self.presentationJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let endpoint = json["endpoint"] as? String {
-                return endpoint
-            }
-        }
-        return nil
+        return self.presentationDescription?.endpointId
     }
 }
 
@@ -42,29 +38,26 @@ extension GroupCallParticipantsContext.Participant {
         guard let audioSsrc = self.ssrc else {
             return nil
         }
-        guard let videoInformation = self.videoJsonDescription else {
+        guard let videoDescription = self.videoDescription else {
             return nil
         }
-        guard let videoEndpointId = self.videoEndpointId else {
-            return nil
-        }
-        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: videoEndpointId, videoInformation: videoInformation, quality: quality)
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: videoDescription.endpointId, ssrcGroups: videoDescription.ssrcGroups.map { group in
+            PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
+        }, quality: quality)
     }
 
     func requestedPresentationVideoChannel(quality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
         guard let audioSsrc = self.ssrc else {
             return nil
         }
-        guard let videoInformation = self.presentationJsonDescription else {
+        guard let presentationDescription = self.presentationDescription else {
             return nil
         }
-        guard let presentationEndpointId = self.presentationEndpointId else {
-            return nil
-        }
-        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: presentationEndpointId, videoInformation: videoInformation, quality: quality)
+        return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: presentationDescription.endpointId, ssrcGroups: presentationDescription.ssrcGroups.map { group in
+            PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
+        }, quality: quality)
     }
 }
-
 
 
 final class PresentationCallVideoView {
