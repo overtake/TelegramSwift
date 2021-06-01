@@ -1532,36 +1532,34 @@ final class GroupCallUIController : ViewController {
                         
                         for type in types {
                             strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                                DispatchQueue.main.async {
-                                    guard let videoView = videoView else {
-                                        return
-                                    }
-                                    var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
-                                    
-                                    switch type {
-                                    case .main:
-                                        videoView.setVideoContentMode(.resizeAspect)
-                                    case .list:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
-                                    case .backstage:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
-                                    case .profile:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
-                                    }
-                                    
-                                    videoView.setOnFirstFrameReceived( { [weak self] f in
-                                        if let videoViewValue = videoViewValue {
-                                            self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
-                                            updateActiveVideoViews { current in
-                                                var current = current
-                                                current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
-                                                current.index -= 1
-                                                return current
-                                            }
-                                        }
-                                        videoViewValue = nil
-                                    })
+                                guard let videoView = videoView else {
+                                    return
                                 }
+                                var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
+                                
+                                switch type {
+                                case .main:
+                                    videoView.setVideoContentMode(.resizeAspect)
+                                case .list:
+                                    videoView.setVideoContentMode(.resizeAspectFill)
+                                case .backstage:
+                                    videoView.setVideoContentMode(.resizeAspectFill)
+                                case .profile:
+                                    videoView.setVideoContentMode(.resizeAspectFill)
+                                }
+                                
+                                videoView.setOnFirstFrameReceived( { [weak self] f in
+                                    if let videoViewValue = videoViewValue {
+                                        self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
+                                        updateActiveVideoViews { current in
+                                            var current = current
+                                            current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
+                                            current.index -= 1
+                                            return current
+                                        }
+                                    }
+                                    videoViewValue = nil
+                                })
                             })
                         }
                     }

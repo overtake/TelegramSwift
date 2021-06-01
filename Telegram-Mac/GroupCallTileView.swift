@@ -276,13 +276,13 @@ final class GroupCallTileView: View {
         self.prevState = state
         self.pinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
         
-//        for (i, view) in views.enumerated() {
-//            if let pinnedIndex = pinnedIndex, i == pinnedIndex {
-//                view.layer?.zPosition = 1000
-//            } else {
-//                view.layer?.zPosition = CGFloat(i)
-//            }
-//        }
+        for (i, view) in views.enumerated() {
+            if let pinnedIndex = pinnedIndex, i == pinnedIndex {
+                view.layer?.zPosition = 1000
+            } else {
+                view.layer?.zPosition = CGFloat(i)
+            }
+        }
                 
         
         updateLayout(size: frame.size, transition: transition)

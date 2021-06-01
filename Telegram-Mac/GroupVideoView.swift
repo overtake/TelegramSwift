@@ -22,6 +22,7 @@ final class GroupVideoView: View {
     
     private var isMirrored: Bool = false {
         didSet {
+            CATransaction.begin()
             if isMirrored {
                 let rect = self.videoViewContainer.bounds
                 var fr = CATransform3DIdentity
@@ -32,6 +33,7 @@ final class GroupVideoView: View {
             } else {
                 self.videoViewContainer.layer?.sublayerTransform = CATransform3DIdentity
             }
+            CATransaction.commit()
         }
     }
     
@@ -48,20 +50,16 @@ final class GroupVideoView: View {
         
         
         videoView.setOnOrientationUpdated({ [weak self] _, _ in
-            Queue.mainQueue().async {
-                guard let strongSelf = self else {
-                    return
-                }
-                if let size = strongSelf.validLayout {
-                    strongSelf.updateLayout(size: size, transition: .immediate)
-                }
+            guard let strongSelf = self else {
+                return
+            }
+            if let size = strongSelf.validLayout {
+                strongSelf.updateLayout(size: size, transition: .immediate)
             }
         })
         
         videoView.setOnIsMirroredUpdated({ [weak self] isMirrored in
-            DispatchQueue.main.async {
-                self?.isMirrored = isMirrored
-            }
+            self?.isMirrored = isMirrored
         })
     }
     
@@ -87,9 +85,6 @@ final class GroupVideoView: View {
         updateLayout(size: frame.size, transition: .immediate)
     }
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
-        guard self.validLayout != size else {
-            return
-        }
         self.validLayout = size
         
         transition.updateFrame(view: self.videoViewContainer, frame: focus(size))
