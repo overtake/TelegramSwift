@@ -285,6 +285,7 @@ open class Window: NSWindow {
     
     private let visibleObserver: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
 
+    public var acceptFirstMouse: Bool = true
 
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     public var keyWindowUpdater: Signal<Bool, NoError> {

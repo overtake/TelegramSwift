@@ -243,7 +243,7 @@ final class GroupCallTitleView : Control {
                     view = GroupCallRecordingView(frame: .zero)
                     backgroundView.addSubview(view)
                     self.recordingView = view
-                    
+                    updateLayout(size: frame.size, transition: .immediate)
                     if animated {
                         recordingView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }

@@ -595,7 +595,7 @@ final class GroupCallControlsView : View {
 
         self.currentState = callState
         
-        let transition: ContainedViewLayoutTransition = !animated ? .immediate : .animated(duration: 0.2, curve: .easeInOut)
+        let transition: ContainedViewLayoutTransition = !animated ? .immediate : .animated(duration: 0.2, curve: .spring)
         
         updateLayout(size: frame.size, transition: transition)
     }

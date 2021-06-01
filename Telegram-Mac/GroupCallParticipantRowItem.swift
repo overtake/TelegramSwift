@@ -286,7 +286,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                 }
             } else {
                 if let muteState = state.muteState, muteState.mutedByYou {
-                    images.append(GroupCallTheme.status_muted)
+                    images.append(GroupCallTheme.status_muted_red)
                 } else if !data.videoMode {
                     if data.isSpeaking {
                         images.append(GroupCallTheme.status_unmuted_green)
@@ -306,6 +306,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             return [GroupCallTheme.videoBox_muted_locked]
         }
         var images:[CGImage] = []
+        
+        if let _ = data.state?.muteState {
+            images.append(GroupCallTheme.videoBox_muted)
+        } else if data.state == nil {
+            images.append(GroupCallTheme.videoBox_muted)
+        } else {
+            images.append(GroupCallTheme.videoBox_unmuted)
+        }
 
         if let endpoint = data.videoEndpoint {
             if baseEndpoint == nil || baseEndpoint == endpoint {
@@ -318,13 +326,6 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             }
         }
         
-        if let _ = data.state?.muteState {
-            images.append(GroupCallTheme.videoBox_muted)
-        } else if data.state == nil {
-            images.append(GroupCallTheme.videoBox_muted)
-        } else {
-            images.append(GroupCallTheme.videoBox_unmuted)
-        }
         return images
     }
     
