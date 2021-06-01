@@ -323,7 +323,7 @@ final class GroupCallMainVideoContainerView: Control {
                 }, for: .SingleClick)
                 
                 if currentPinView.layer?.opacity != 0, animated {
-                    layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    currentPinView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
             currentPinView.update(self.isPinned, animated: animated)
