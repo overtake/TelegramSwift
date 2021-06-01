@@ -445,6 +445,8 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         containerView.set(handler: { [weak self] _ in
             self?.updateColors()
         }, for: .Highlight)
+        
+        containerView.scaleOnClick = true
     }
     
     
