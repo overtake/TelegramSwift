@@ -93,6 +93,57 @@ private final class PinView : Control {
     }
 }
 
+private final class BackView : Control {
+    private let imageView:ImageView = ImageView()
+    private var textView: TextView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        
+        addSubview(textView)
+
+        
+        backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(0.9)
+        imageView.isEventLess = true
+        scaleOnClick = true
+        set(background: GroupCallTheme.windowBackground.withAlphaComponent(0.7), for: .Highlight)
+        
+        let textLayout = TextViewLayout(.initialize(string: L10n.navigationBack, color: GroupCallTheme.customTheme.textColor, font: .medium(.title)))
+        textLayout.measure(width: .greatestFiniteMagnitude)
+        textView.update(textLayout)
+        
+        imageView.animates = false
+        imageView.image = GroupCallTheme.video_back
+        imageView.sizeToFit()
+
+        setFrameSize(NSMakeSize(imageView.frame.width + textView.frame.width + 30, 30))
+        
+        layer?.cornerRadius = frame.height / 2
+        
+        imageView.isEventLess = true
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+
+        layout()
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: imageView, frame: imageView.centerFrameY(x: 10))
+        let textFrame = textView.centerFrameY(x: frame.width - textView.frame.width - 10, addition: -1)
+        transition.updateFrame(view: textView, frame: textFrame)
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 
 struct DominantVideo : Equatable {
     
@@ -124,7 +175,6 @@ final class GroupCallMainVideoContainerView: Control {
     private(set) var currentPeer: DominantVideo?
     
     let shadowView: ShadowView = ShadowView()
-    private let pinView: PinView = PinView(frame: .zero)
     
     private var validLayout: CGSize?
     
@@ -136,7 +186,9 @@ final class GroupCallMainVideoContainerView: Control {
     
     private var arguments: GroupCallUIArguments?
     
-    
+    private var backView: BackView?
+    private var pinView: PinView?
+
     
     init(call: PresentationGroupCall) {
         self.call = call
@@ -173,23 +225,13 @@ final class GroupCallMainVideoContainerView: Control {
         
         addSubview(speakingView)
         
-        addSubview(pinView)
         
-        pinView.set(handler: { [weak self] _ in
-            if let strongSelf = self, let dominant = strongSelf.currentPeer {
-                if !strongSelf.isPinned {
-                    self?.arguments?.pinVideo(dominant)
-                } else {
-                    self?.arguments?.unpinVideo(dominant.mode)
-                }
-            }
-        }, for: .Click)
         
         self.set(handler: { [weak self] _ in
-            if let dominant = self?.currentPeer {
+            if let dominant = self?.currentPeer, self?.isPinned == false {
                 self?.arguments?.focusVideo(dominant.endpointId)
             }
-        }, for: .Click)
+        }, for: .SingleClick)
         
         self.set(handler: { [weak self] control in
             if let data = self?.participant {
@@ -199,24 +241,27 @@ final class GroupCallMainVideoContainerView: Control {
             }
         }, for: .RightDown)
         
-        self.pinView.layer?.opacity = 0
+      
         
         self.set(handler: { [weak self] control in
-            self?.pinView.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
+            self?.pinView?.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
+            self?.backView?.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
         }, for: .Hover)
         
         self.set(handler: { [weak self] control in
-            self?.pinView.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
+            self?.pinView?.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
+            self?.backView?.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
         }, for: .Highlight)
         
         self.set(handler: { [weak self] control in
-            self?.pinView.change(opacity: 0, animated: true)
+            self?.pinView?.change(opacity: 0, animated: true)
+            self?.backView?.change(opacity: 0, animated: true)
         }, for: .Normal)
         
     }
     
     private var pinIsVisible: Bool {
-        return (self.isFocused || self.isPinned)
+        return (self.isFocused || self.isPinned) && !isAlone
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -237,26 +282,106 @@ final class GroupCallMainVideoContainerView: Control {
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         
-        self.pinView.change(opacity: self.mouseInside() && self.pinIsVisible ? 1 : 0, animated: animated)
+        self.pinView?.change(opacity: self.mouseInside() && self.pinIsVisible ? 1 : 0, animated: animated)
+        self.backView?.change(opacity: self.mouseInside() && self.pinIsVisible ? 1 : 0, animated: animated)
     }
     
     private var participant: PeerGroupCallData?
     
     private var isPinned: Bool = false
     private var isFocused: Bool = false
-    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, resizeMode: CALayerContentsGravity, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, isPinned: Bool, isFocused: Bool, arguments: GroupCallUIArguments?) {
+    private var isAlone: Bool = false
+    func updatePeer(peer: DominantVideo?, participant: PeerGroupCallData?, resizeMode: CALayerContentsGravity, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode, isPinned: Bool, isFocused: Bool, isAlone: Bool, arguments: GroupCallUIArguments?) {
         
        
         self.isFocused = isFocused
         self.isPinned = isPinned
+        self.isAlone = isAlone
         self.arguments = arguments
         
         
-        self.pinView.update(isPinned, animated: animated)
+        if self.pinIsVisible {
+            let currentPinView: PinView
+            if let current = self.pinView {
+                currentPinView = current
+            } else {
+                currentPinView = PinView(frame: .zero)
+                let pinnedSize = currentPinView.size(isPinned)
+                let pinRect = CGRect(origin: CGPoint(x: frame.width - pinnedSize.width - 10, y: 10), size: pinnedSize)
+                currentPinView.frame = pinRect
+                currentPinView.layer?.opacity = self.mouseInside() && pinIsVisible ? 1 : 0
+                self.pinView = currentPinView
+                addSubview(currentPinView)
+                currentPinView.set(handler: { [weak self] _ in
+                    if let strongSelf = self, let dominant = strongSelf.currentPeer {
+                        if !strongSelf.isPinned {
+                            self?.arguments?.pinVideo(dominant)
+                        } else {
+                            self?.arguments?.unpinVideo(dominant.mode)
+                        }
+                    }
+                }, for: .SingleClick)
+                
+                if currentPinView.layer?.opacity != 0, animated {
+                    layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            currentPinView.update(self.isPinned, animated: animated)
+            
+            
+        } else {
+            if let view = pinView {
+                self.pinView = nil
+                if animated {
+                    if view.layer?.opacity != 0 {
+                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                            view?.removeFromSuperview()
+                        })
+                    }
+                } else {
+                    view.removeFromSuperview()
+                }
+            }
+        }
         
-        self.pinView.change(opacity: self.mouseInside() && pinIsVisible ? 1 : 0, animated: animated)
+        if isFocused && !isAlone {
+            let currentBackView: BackView
+            if let current = self.backView {
+                currentBackView = current
+            } else {
+                currentBackView = BackView(frame: .zero)
+                currentBackView.frame = NSMakeRect(10, 10, currentBackView.frame.width, currentBackView.frame.height)
+                currentBackView.layer?.opacity = self.mouseInside() && pinIsVisible ? 1 : 0
+                self.backView = currentBackView
+                addSubview(currentBackView)
+                currentBackView.set(handler: { [weak self] _ in
+                    self?.arguments?.focusVideo(nil)
+                }, for: .SingleClick)
+                
+                if currentBackView.layer?.opacity != 0, animated {
+                    currentBackView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+        } else {
+            if let view = backView {
+                self.backView = nil
+                if animated {
+                    if view.layer?.opacity != 0 {
+                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                            view?.removeFromSuperview()
+                        })
+                    }
+                } else {
+                    view.removeFromSuperview()
+                }
+            }
+        }
+        
+//        self.pinView.update(isPinned, animated: animated)
+//
+        self.pinView?.change(opacity: self.mouseInside() && pinIsVisible ? 1 : 0, animated: animated)
+        self.backView?.change(opacity: self.mouseInside() && pinIsVisible ? 1 : 0, animated: animated)
 
-//        self.userInteractionEnabled = arguments?.videosCount() != 1 
         
         
         let showSpeakingView = participant?.isSpeaking == true && (participant?.state?.muteState?.mutedByYou == nil || participant?.state?.muteState?.mutedByYou == false)
@@ -396,12 +521,17 @@ final class GroupCallMainVideoContainerView: Control {
 
         transition.updateFrame(view: speakingView, frame: bounds)
         
-        
-        let pinnedSize = pinView.size(self.isPinned)
-        
-        let pinRect = CGRect(origin: CGPoint(x: frame.width - pinnedSize.width - 10, y: 10), size: pinnedSize)
-        transition.updateFrame(view: pinView, frame: pinRect)
-        pinView.updateLayout(size: pinRect.size, transition: transition)
+        if let pinView = pinView {
+            let pinnedSize = pinView.size(self.isPinned)
+            let pinRect = CGRect(origin: CGPoint(x: frame.width - pinnedSize.width - 10, y: 10), size: pinnedSize)
+            transition.updateFrame(view: pinView, frame: pinRect)
+            pinView.updateLayout(size: pinRect.size, transition: transition)
+        }
+        if let backView = self.backView {
+            let backRect = NSMakeRect(10, 10, backView.frame.width, backView.frame.height)
+            transition.updateFrame(view: backView, frame: backRect)
+            backView.updateLayout(size: backRect.size, transition: transition)
+        }
     }
     
     deinit {

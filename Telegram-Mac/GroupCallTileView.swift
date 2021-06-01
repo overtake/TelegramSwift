@@ -184,6 +184,7 @@ final class GroupCallTileView: View {
         let isFocused: Bool
         let resizeMode: CALayerContentsGravity
         let index: Int
+        let alone: Bool
     }
 
     
@@ -236,7 +237,7 @@ final class GroupCallTileView: View {
                         let resizeMode: CALayerContentsGravity = state.isFullScreen ? .resizeAspect : .resizeAspectFill
                         
                         let video = DominantVideo(member.peer.id, endpointId, source, pinVideo?.pinMode)
-                        items.append(.init(video: video, member: member, isFullScreen: state.isFullScreen, isPinned: pinVideo?.pinMode == .permanent, isFocused: pinVideo?.pinMode == .focused || activeVideos.count == 1, resizeMode: resizeMode, index: activeVideo.index))
+                        items.append(.init(video: video, member: member, isFullScreen: state.isFullScreen, isPinned: pinVideo?.pinMode == .permanent, isFocused: pinVideo?.pinMode == .focused || activeVideos.count == 1, resizeMode: resizeMode, index: activeVideo.index, alone: activeVideos.count == 1))
                     }
                 }
             }
@@ -275,13 +276,13 @@ final class GroupCallTileView: View {
         self.prevState = state
         self.pinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
         
-        for (i, view) in views.enumerated() {
-            if let pinnedIndex = pinnedIndex, i == pinnedIndex {
-                view.layer?.zPosition = 1000
-            } else {
-                view.layer?.zPosition = CGFloat(i)
-            }
-        }
+//        for (i, view) in views.enumerated() {
+//            if let pinnedIndex = pinnedIndex, i == pinnedIndex {
+//                view.layer?.zPosition = 1000
+//            } else {
+//                view.layer?.zPosition = CGFloat(i)
+//            }
+//        }
                 
         
         updateLayout(size: frame.size, transition: transition)
@@ -314,7 +315,7 @@ final class GroupCallTileView: View {
             addSubview(view, positioned: .above, relativeTo: self.subviews[index - 1])
         }
         
-        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated && prevView != nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, arguments: self.arguments)
+        view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated && prevView != nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, isAlone: item.alone, arguments: self.arguments)
         
         self.views.insert(view, at: index)
         
@@ -326,7 +327,7 @@ final class GroupCallTileView: View {
         if let prevFrame = prevFrame {
             self.views[index].frame = prevFrame
         }
-        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, arguments: self.arguments)
+        self.views[index].updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, isAlone: item.alone, arguments: self.arguments)
     }
     
     
