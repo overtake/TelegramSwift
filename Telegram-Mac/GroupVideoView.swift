@@ -85,6 +85,9 @@ final class GroupVideoView: View {
         updateLayout(size: frame.size, transition: .immediate)
     }
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+        guard self.validLayout != size else {
+            return
+        }
         self.validLayout = size
         
         transition.updateFrame(view: self.videoViewContainer, frame: focus(size))

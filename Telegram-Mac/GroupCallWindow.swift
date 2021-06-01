@@ -111,6 +111,9 @@ struct GroupCallTheme {
 
     static let status_muted = NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
     
+    static let status_muted_red = NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
+
+    
     static let status_unmuted_accent = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.blueStatusColor)
     static let status_unmuted_green = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
     static let status_unmuted_gray = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
@@ -192,6 +195,7 @@ final class GroupCallWindow : Window {
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled, .resizable], backing: .buffered, defer: true)
         self.minSize = GroupCallTheme.minSize
         self.name = "GroupCallWindow5"
+        self.acceptFirstMouse = false
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .hidden
         self.animationBehavior = .alertPanel

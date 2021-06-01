@@ -43,7 +43,7 @@ final class GroupCallUIArguments {
     let canUnpinVideo:(PeerId, VideoSourceMacMode)->Bool
     let setVolume: (PeerId, Double, Bool) -> Void
     let pinVideo:(DominantVideo)->Void
-    let unpinVideo:(VideoSourceMacMode)->Void
+    let unpinVideo:()->Void
     let isPinnedVideo:(PeerId, VideoSourceMacMode)->Bool
     let getAccountPeerId: ()->PeerId?
     let cancelShareScreencast: ()->Void
@@ -73,7 +73,7 @@ final class GroupCallUIArguments {
     isSharingScreencast: @escaping(PeerId)->Bool,
     canUnpinVideo:@escaping(PeerId, VideoSourceMacMode)->Bool,
     pinVideo:@escaping(DominantVideo)->Void,
-    unpinVideo:@escaping(VideoSourceMacMode)->Void,
+    unpinVideo:@escaping()->Void,
     isPinnedVideo:@escaping(PeerId, VideoSourceMacMode)->Bool,
     setVolume: @escaping(PeerId, Double, Bool)->Void,
     getAccountPeerId: @escaping()->PeerId?,
@@ -404,7 +404,12 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     var indexes:[PeerId: Int] = [:]
     
     for value in activeParticipants {
-        indexes[value.peer.id] = startIndex - 1 - index
+        
+        var peerIndex = startIndex - 1 - index
+        if activeVideoViews.contains(where: { $0.endpointId == value.videoEndpointId || $0.endpointId == value.presentationEndpointId }) {
+            peerIndex += 1000
+        }
+        indexes[value.peer.id] = peerIndex
         index += 1
     }
     
@@ -943,7 +948,7 @@ final class GroupCallUIController : ViewController {
                 return current
             }
             self?.genericView.peersTable.scroll(to: .up(true))
-        }, unpinVideo: { _ in
+        }, unpinVideo: {
             updateDominant { current in
                 var current = current
                 if let permanent = current.permanent {
@@ -1080,21 +1085,22 @@ final class GroupCallUIController : ViewController {
                 current.dismissed.insert(tooltip)
                 return current
             }
-        }, focusVideo: { endpointId in
+        }, focusVideo: { [weak self] endpointId in
             updateDominant { current in
                 var current = current
-                if current.focused?.id == endpointId {
+                if current.focused?.id == endpointId && endpointId != nil {
                     current.focused = nil
                 } else {
                     if let endpointId = endpointId {
                         current.focused = .init(id: endpointId, time: Date().timeIntervalSince1970)
-                        current.permanent = nil
                     } else {
                         current.focused = nil
                     }
+                    current.permanent = nil
                 }
                 return current
             }
+            self?.genericView.peersTable.scroll(to: .up(true))
         })
         
         contextMenuItems = { [weak arguments] data in
@@ -1155,7 +1161,7 @@ final class GroupCallUIController : ViewController {
                         }))
                     } else if arguments.canUnpinVideo(data.peer.id, .video) {
                         items.append(ContextMenuItem(L10n.voiceChatUnpinVideo, handler: {
-                            arguments.unpinVideo(.video)
+                            arguments.unpinVideo()
                         }))
                     }
                 }
@@ -1166,7 +1172,7 @@ final class GroupCallUIController : ViewController {
                         }))
                     } else if arguments.canUnpinVideo(data.peer.id, .screencast) {
                         items.append(ContextMenuItem(L10n.voiceChatUnpinScreencast, handler: {
-                            arguments.unpinVideo(.screencast)
+                            arguments.unpinVideo()
                         }))
                     }
                 }
@@ -1286,7 +1292,7 @@ final class GroupCallUIController : ViewController {
                 }
             } else if state.pinnedData.permanent == nil {
                 let members = state.activeVideoMembers[.main] ?? []
-                if let active = members.first(where: { $0.isSpeaking }) {
+                if let active = members.first(where: { $0.isSpeaking && $0.accountPeerId != $0.peer.id }) {
                     var endpointId: String
                     if let endpoint = active.videoEndpoint {
                         endpointId = endpoint
@@ -1297,7 +1303,7 @@ final class GroupCallUIController : ViewController {
                     }
                     var canSwitch: Bool = false
                     if let current = state.pinnedData.focused {
-                        let member = members.first(where: { $0.videoEndpoint == endpointId || $0.presentationEndpoint == endpointId })
+                        let member = members.first(where: { $0.videoEndpoint == current.id || $0.presentationEndpoint == current.id })
                         if active.peer.id != member?.peer.id {
                             canSwitch = current.id != endpointId && (Date().timeIntervalSince1970 - current.time) > 5.0
                         }
@@ -1532,34 +1538,36 @@ final class GroupCallUIController : ViewController {
                         
                         for type in types {
                             strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                                guard let videoView = videoView else {
-                                    return
-                                }
-                                var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
-                                
-                                switch type {
-                                case .main:
-                                    videoView.setVideoContentMode(.resizeAspect)
-                                case .list:
-                                    videoView.setVideoContentMode(.resizeAspectFill)
-                                case .backstage:
-                                    videoView.setVideoContentMode(.resizeAspectFill)
-                                case .profile:
-                                    videoView.setVideoContentMode(.resizeAspectFill)
-                                }
-                                
-                                videoView.setOnFirstFrameReceived( { [weak self] f in
-                                    if let videoViewValue = videoViewValue {
-                                        self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
-                                        updateActiveVideoViews { current in
-                                            var current = current
-                                            current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
-                                            current.index -= 1
-                                            return current
-                                        }
+                                DispatchQueue.main.async {
+                                    guard let videoView = videoView else {
+                                        return
                                     }
-                                    videoViewValue = nil
-                                })
+                                    var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
+                                    
+                                    switch type {
+                                    case .main:
+                                        videoView.setVideoContentMode(.resizeAspect)
+                                    case .list:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    case .backstage:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    case .profile:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    }
+                                    
+                                    videoView.setOnFirstFrameReceived( { [weak self] f in
+                                        if let videoViewValue = videoViewValue {
+                                            self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
+                                            updateActiveVideoViews { current in
+                                                var current = current
+                                                current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
+                                                current.index -= 1
+                                                return current
+                                            }
+                                        }
+                                        videoViewValue = nil
+                                    })
+                                }
                             })
                         }
                     }

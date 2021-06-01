@@ -317,7 +317,7 @@ final class GroupCallMainVideoContainerView: Control {
                         if !strongSelf.isPinned {
                             self?.arguments?.pinVideo(dominant)
                         } else {
-                            self?.arguments?.unpinVideo(dominant.mode)
+                            self?.arguments?.unpinVideo()
                         }
                     }
                 }, for: .SingleClick)
@@ -344,7 +344,7 @@ final class GroupCallMainVideoContainerView: Control {
             }
         }
         
-        if isFocused && !isAlone {
+        if pinIsVisible {
             let currentBackView: BackView
             if let current = self.backView {
                 currentBackView = current
