@@ -261,7 +261,7 @@ final class GroupCallMainVideoContainerView: Control {
     }
     
     private var pinIsVisible: Bool {
-        return (self.isFocused || self.isPinned) && !isAlone
+        return ((self.isFocused && !isAlone) || self.isPinned)
     }
     
     override var mouseDownCanMoveWindow: Bool {

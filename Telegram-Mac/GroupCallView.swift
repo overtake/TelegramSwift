@@ -334,7 +334,6 @@ final class GroupCallView : View {
        
         let previousState = self.state
         if !transition.isEmpty {
-            NSLog("\(transition.animated), \(transition.description)")
             peersTable.merge(with: transition)
         }
         
