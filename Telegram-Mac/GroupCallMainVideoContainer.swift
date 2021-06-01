@@ -116,7 +116,7 @@ private final class BackView : Control {
         imageView.image = GroupCallTheme.video_back
         imageView.sizeToFit()
 
-        setFrameSize(NSMakeSize(imageView.frame.width + textView.frame.width + 30, 30))
+        setFrameSize(NSMakeSize(imageView.frame.width + textView.frame.width + 25, 30))
         
         layer?.cornerRadius = frame.height / 2
         
