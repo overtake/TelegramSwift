@@ -80,29 +80,17 @@ private extension GroupCallParticipantsContext.Participant {
         if let ssrc = self.ssrc {
             participantSsrcs.insert(ssrc)
         }
-        if let jsonParams = self.videoJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let groups = json["ssrc-groups"] as? [Any] {
-                for group in groups {
-                    if let group = group as? [String: Any] {
-                        if let groupSources = group["sources"] as? [UInt32] {
-                            for source in groupSources {
-                                participantSsrcs.insert(source)
-                            }
-                        }
-                    }
+        if let videoDescription = self.videoDescription {
+            for group in videoDescription.ssrcGroups {
+                for ssrc in group.ssrcs {
+                    participantSsrcs.insert(ssrc)
                 }
             }
         }
-        if let jsonParams = self.presentationJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let groups = json["ssrc-groups"] as? [Any] {
-                for group in groups {
-                    if let group = group as? [String: Any] {
-                        if let groupSources = group["sources"] as? [UInt32] {
-                            for source in groupSources {
-                                participantSsrcs.insert(source)
-                            }
-                        }
-                    }
+        if let presentationDescription = self.presentationDescription {
+            for group in presentationDescription.ssrcGroups {
+                for ssrc in group.ssrcs {
+                    participantSsrcs.insert(ssrc)
                 }
             }
         }
@@ -111,16 +99,10 @@ private extension GroupCallParticipantsContext.Participant {
 
     var videoSsrcs: Set<UInt32> {
         var participantSsrcs = Set<UInt32>()
-        if let jsonParams = self.videoJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let groups = json["ssrc-groups"] as? [Any] {
-                for group in groups {
-                    if let group = group as? [String: Any] {
-                        if let groupSources = group["sources"] as? [UInt32] {
-                            for source in groupSources {
-                                participantSsrcs.insert(source)
-                            }
-                        }
-                    }
+        if let videoDescription = self.videoDescription {
+            for group in videoDescription.ssrcGroups {
+                for ssrc in group.ssrcs {
+                    participantSsrcs.insert(ssrc)
                 }
             }
         }
@@ -129,16 +111,10 @@ private extension GroupCallParticipantsContext.Participant {
 
     var presentationSsrcs: Set<UInt32> {
         var participantSsrcs = Set<UInt32>()
-        if let jsonParams = self.presentationJsonDescription, let jsonData = jsonParams.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any] {
-            if let groups = json["ssrc-groups"] as? [Any] {
-                for group in groups {
-                    if let group = group as? [String: Any] {
-                        if let groupSources = group["sources"] as? [UInt32] {
-                            for source in groupSources {
-                                participantSsrcs.insert(source)
-                            }
-                        }
-                    }
+        if let presentationDescription = self.presentationDescription {
+            for group in presentationDescription.ssrcGroups {
+                for ssrc in group.ssrcs {
+                    participantSsrcs.insert(ssrc)
                 }
             }
         }
@@ -799,11 +775,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                         }
                                     }
                                 } else if case .joined = participantUpdate.participationStatusChange {
-                                    if let ssrc = participantUpdate.ssrc {
-                                        addedParticipants.append((ssrc, participantUpdate.videoJsonDescription, participantUpdate.presentationJsonDescription))
-                                    }
                                 } else if let ssrc = participantUpdate.ssrc, strongSelf.ssrcMapping[ssrc] == nil {
-                                    addedParticipants.append((ssrc, participantUpdate.videoJsonDescription, participantUpdate.presentationJsonDescription))
                                 }
                             }
                         case let .call(isTerminated, _, _, _, _, _):
@@ -982,8 +954,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         participants.append(GroupCallParticipantsContext.Participant(
                             peer: myPeer,
                             ssrc: nil,
-                            videoJsonDescription: nil,
-                            presentationJsonDescription: nil,
+                            videoDescription: nil,
+                            presentationDescription: nil,
                             joinTimestamp: strongSelf.temporaryJoinTimestamp,
                             raiseHandRating: strongSelf.temporaryRaiseHandRating,
                             hasRaiseHand: strongSelf.temporaryHasRaiseHand,
@@ -1064,8 +1036,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     participants.append(GroupCallParticipantsContext.Participant(
                         peer: myPeer,
                         ssrc: nil,
-                        videoJsonDescription: nil,
-                        presentationJsonDescription: nil,
+                        videoDescription: nil,
+                        presentationDescription: nil,
                         joinTimestamp: strongSelf.temporaryJoinTimestamp,
                         raiseHandRating: strongSelf.temporaryRaiseHandRating,
                         hasRaiseHand: strongSelf.temporaryHasRaiseHand,
@@ -1530,8 +1502,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             participants.append(GroupCallParticipantsContext.Participant(
                                 peer: myPeer,
                                 ssrc: nil,
-                                videoJsonDescription: nil,
-                                presentationJsonDescription: nil,
+                                videoDescription: nil,
+                                presentationDescription: nil,
                                 joinTimestamp: strongSelf.temporaryJoinTimestamp,
                                 raiseHandRating: strongSelf.temporaryRaiseHandRating,
                                 hasRaiseHand: strongSelf.temporaryHasRaiseHand,
@@ -1594,9 +1566,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                     strongSelf.genericCallContext?.setVolume(ssrc: ssrc, volume: Double(volume) / 10000.0)
                                 } else if participant.muteState?.mutedByYou == true {
                                     strongSelf.genericCallContext?.setVolume(ssrc: ssrc, volume: 0.0)
-                                }
-                                if participant.videoJsonDescription == nil {
-                                    strongSelf.genericCallContext?.removeIncomingVideoSource(ssrc)
                                 }
                             }
                         }
@@ -1801,8 +1770,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         participants.append(GroupCallParticipantsContext.Participant(
                             peer: myPeer,
                             ssrc: nil,
-                            videoJsonDescription: nil,
-                            presentationJsonDescription: nil,
+                            videoDescription: nil,
+                            presentationDescription: nil,
                             joinTimestamp: strongSelf.temporaryJoinTimestamp,
                             raiseHandRating: strongSelf.temporaryRaiseHandRating,
                             hasRaiseHand: strongSelf.temporaryHasRaiseHand,
@@ -1892,31 +1861,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         audioSsrc: audioSsrc,
                         videoDescription: nil
                     ))
-                }
-
-                if let videoDescription = participant.videoJsonDescription, !videoDescription.isEmpty {
-                    let videoSsrcs = participant.videoSsrcs
-                    if !videoSsrcs.intersection(remainingSsrcs).isEmpty {
-                        remainingSsrcs.subtract(videoSsrcs)
-
-                        result.append(OngoingGroupCallContext.MediaChannelDescription(
-                            kind: .video,
-                            audioSsrc: audioSsrc,
-                            videoDescription: videoDescription
-                        ))
-                    }
-                }
-                if let videoDescription = participant.presentationJsonDescription, !videoDescription.isEmpty {
-                    let videoSsrcs = participant.presentationSsrcs
-                    if !videoSsrcs.intersection(remainingSsrcs).isEmpty {
-                        remainingSsrcs.subtract(videoSsrcs)
-
-                        result.append(OngoingGroupCallContext.MediaChannelDescription(
-                            kind: .video,
-                            audioSsrc: audioSsrc,
-                            videoDescription: videoDescription
-                        ))
-                    }
                 }
             }
         }
@@ -2329,7 +2273,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
             return OngoingGroupCallContext.VideoChannel(
                 audioSsrc: item.audioSsrc,
-                videoDescription: item.videoInformation,
+                endpointId: item.endpointId,
+                ssrcGroups: item.ssrcGroups.map { group in
+                    return OngoingGroupCallContext.VideoChannel.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
+                },
                 quality: mappedQuality
             )
         })
@@ -2578,7 +2525,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         case .screencast:
             context = self.screencastCallContext
         }
-        context?.makeIncomingVideoView(endpointId: endpointId, completion: { view in
+        context?.makeIncomingVideoView(endpointId: endpointId, requestClone: false, completion: { view, _ in
             if let view = view {
                 let setOnFirstFrameReceived = view.setOnFirstFrameReceived
                 let setOnOrientationUpdated = view.setOnOrientationUpdated
