@@ -28,7 +28,7 @@ struct VoiceChatTile {
 func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex: Int? = nil) -> [VoiceChatTile] {
     
     var tiles:[VoiceChatTile] = []
-    let minSize: NSSize = NSMakeSize(240, 160)
+    let minSize: NSSize = NSMakeSize(240, 135)
     
     func optimalCellSize(_ size: NSSize, count: Int) -> (size: NSSize, cols: Int, rows: Int) {
         var size: NSSize = frameSize
@@ -50,12 +50,16 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
                 }
                 
                 var rows: Int = Int(ceil(Float(count) / Float(cols)))
-                if frameSize.height / CGFloat(rows) < minSize.height {
+                if floor(frameSize.height / CGFloat(rows)) <= minSize.height {
                     cols = Int(max(floor(frameSize.width / minSize.width), 2))
                     rows = Int(ceil(Float(count) / Float(cols)))
-                    return (size: NSMakeSize(frameSize.width / CGFloat(cols), minSize.height), cols: cols, rows: rows)
+                    var height = minSize.height
+                    if CGFloat(rows) * minSize.height < frameSize.height {
+                        height = frameSize.height / CGFloat(rows)
+                    }
+                    return (size: NSMakeSize(frameSize.width / CGFloat(cols), height), cols: cols, rows: rows)
                 }
-                if CGFloat(rows) * size.height > frameSize.height {
+                if floor(CGFloat(rows) * size.height) > floor(frameSize.height) {
                     size = NSMakeSize(frameSize.width / CGFloat(cols), frameSize.height / CGFloat(rows))
                 } else {
                     size = NSMakeSize(frameSize.width / CGFloat(cols), frameSize.height / CGFloat(rows))
@@ -65,13 +69,13 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
         }
     }
     
-    let data = optimalCellSize(frameSize, count: count)
-    
+    var data = optimalCellSize(frameSize, count: count)
+    data.size = NSMakeSize(floor(data.size.width), floor(data.size.height))
     
     var point: CGPoint = .zero
     var index: Int = 0
     let inset: CGFloat = 5
-    let insetSize = NSMakeSize(CGFloat((data.cols - 1) * 5) / CGFloat(data.cols), CGFloat((data.rows - 1) * 5) / CGFloat(data.rows))
+    let insetSize = NSMakeSize(floor(CGFloat((data.cols - 1) * 5) / CGFloat(data.cols)), floor(CGFloat((data.rows - 1) * 5) / CGFloat(data.rows)))
 
     
     let firstIsSuperior = data.rows * data.cols > count && data.cols == 2
@@ -265,9 +269,9 @@ final class GroupCallTileView: View {
             }
         }
         if prevPinnedIndex != nil, pinnedIndex != nil, prevPinnedIndex != pinnedIndex {
-            updateLayout(size: size, transition: .immediate)
+            updateLayout(size: getSize(size), transition: .immediate)
         } else {
-            updateLayout(size: size, transition: transition)
+            updateLayout(size: getSize(size), transition: transition)
         }
     }
     

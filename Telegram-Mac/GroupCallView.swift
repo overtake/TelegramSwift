@@ -430,7 +430,12 @@ final class GroupCallView : View {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                 }
             }
+            
+            let wasEmpty = current.subviews.isEmpty
             current.update(state: state, transition: transition, size: mainVideoRect.size, animated: animated, controlsMode: self.controlsMode)
+            if wasEmpty, wasEmpty != current.subviews.isEmpty {
+                current.frame = current.getSize(mainVideoRect.size).bounds
+            }
             
         } else {
             if let tileView = self.tileView {
