@@ -28,33 +28,38 @@ struct VoiceChatTile {
 func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex: Int? = nil) -> [VoiceChatTile] {
     
     var tiles:[VoiceChatTile] = []
-//    let minSize: NSSize = NSMakeSize(160, 100)
+    let minSize: NSSize = NSMakeSize(240, 160)
     
-    func optimalCellSize(_ size: NSSize, count: Int) -> (size: NSSize, rows: Int, cols: Int) {
+    func optimalCellSize(_ size: NSSize, count: Int) -> (size: NSSize, cols: Int, rows: Int) {
         var size: NSSize = frameSize
-        var rows: Int = 2
+        var cols: Int = 2
         while true {
             if count == 0 {
-                return (size: size, rows: 0, cols: 0)
+                return (size: size, cols: 0, rows: 0)
             } else if count == 1 {
-                return (size: size, rows: 1, cols: 1)
+                return (size: size, cols: 1, rows: 1)
             } else if count == 2 {
                 if !isFullscreen {
-                    return (size: NSMakeSize(frameSize.width / 2, frameSize.height), rows: 2, cols: 1)
+                    return (size: NSMakeSize(frameSize.width / 2, frameSize.height), cols: 2, rows: 1)
                 } else {
-                    return (size: NSMakeSize(frameSize.width, frameSize.height / 2), rows: 1, cols: 2)
+                    return (size: NSMakeSize(frameSize.width, frameSize.height / 2), cols: 1, rows: 2)
                 }
             } else {
                 if size.width / size.height > 2 {
-                    rows += Int(floor(size.width / size.height / 3.0))
+                    cols += Int(floor(size.width / size.height / 3.0))
                 }
-
-                let cols: Int = Int(ceil(Float(count) / Float(rows)))
-                if CGFloat(cols) * size.height > frameSize.height {
-                    size = NSMakeSize(frameSize.width / CGFloat(rows), frameSize.height / CGFloat(cols))
+                
+                var rows: Int = Int(ceil(Float(count) / Float(cols)))
+                if frameSize.height / CGFloat(rows) < minSize.height {
+                    cols = Int(max(floor(frameSize.width / minSize.width), 2))
+                    rows = Int(ceil(Float(count) / Float(cols)))
+                    return (size: NSMakeSize(frameSize.width / CGFloat(cols), minSize.height), cols: cols, rows: rows)
+                }
+                if CGFloat(rows) * size.height > frameSize.height {
+                    size = NSMakeSize(frameSize.width / CGFloat(cols), frameSize.height / CGFloat(rows))
                 } else {
-                    size = NSMakeSize(frameSize.width / CGFloat(rows), frameSize.height / CGFloat(cols))
-                    return (size: size, rows: rows, cols: cols)
+                    size = NSMakeSize(frameSize.width / CGFloat(cols), frameSize.height / CGFloat(rows))
+                    return (size: size, cols: cols, rows: rows)
                 }
             }
         }
@@ -66,19 +71,19 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
     var point: CGPoint = .zero
     var index: Int = 0
     let inset: CGFloat = 5
-    let insetSize = NSMakeSize(CGFloat((data.rows - 1) * 5) / CGFloat(data.rows), CGFloat((data.cols - 1) * 5) / CGFloat(data.cols))
+    let insetSize = NSMakeSize(CGFloat((data.cols - 1) * 5) / CGFloat(data.cols), CGFloat((data.rows - 1) * 5) / CGFloat(data.rows))
 
     
-    let firstIsSuperior = data.cols * data.rows > count && data.rows == 2
+    let firstIsSuperior = data.rows * data.cols > count && data.cols == 2
     
-    if data.cols * data.rows > count && data.rows == 2 {
+    if data.rows * data.cols > count && data.cols == 2 {
         tiles.append(.init(rect: CGRect(origin: point, size: CGSize(width: frameSize.width, height: data.size.height - insetSize.height)), index: index))
         point.y += (data.size.height - insetSize.height) + inset
         index += 1
     }
     
-    for _ in 0 ..< data.cols {
-        for _ in 0 ..< data.rows {
+    for _ in 0 ..< data.rows {
+        for _ in 0 ..< data.cols {
             if index < count {
                 let size = (data.size - insetSize)
                 tiles.append(.init(rect: CGRect(origin: point, size: size), index: index))
@@ -90,31 +95,23 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
         point.y += data.size.height - insetSize.height + inset
     }
     
-    let getPos:(Int) -> (row: Int, col: Int) = { index in
+    let getPos:(Int) -> (col: Int, row: Int) = { index in
         
         if index == 0 {
-            return (row: 0, col: 0)
+            return (col: 0, row: 0)
         }
         
-        var index = index
-        if data.cols * data.rows > count && data.rows == 2, index > 0 {
-            index += 1
+        let index = index
+        
+        let row = Int(floor(Float(index) / Float(data.cols)))
+        
+        
+        if data.rows * data.cols > count && data.cols <= 2 {
+            let col = (index - 1) % data.cols
+            return (col: col, row: col == 0 ? row + 1 : row)
+        } else {
+            return (col: index % data.cols, row: row)
         }
-        
-        var col = Int(floor(Float(index) / Float(data.rows)))
-        
-        
-        if col * data.rows - index > 0 {
-            col += 1
-        }
-        
-//        for row in data.rows {
-//
-//        }
-        
-        
-        
-        return (row: index % data.rows, col: col)
     }
     
     if let pinnedIndex = pinnedIndex {
@@ -123,7 +120,7 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
             let pos = getPos(i)
             var tile = tiles[i]
             
-            let farAway = (row: CGFloat(pos.row - pinnedPos.row), col: CGFloat(pos.col - pinnedPos.col))
+            let farAway = (col: CGFloat(pos.col - pinnedPos.col), row: CGFloat(pos.row - pinnedPos.row))
             
             if i == pinnedIndex {
                 tile.rect = frameSize.bounds
@@ -134,31 +131,14 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
                 if i == 0 && firstIsSuperior {
                     x = 0
                 } else {
-                    x += farAway.row * frameSize.width
-                    x += max(0, farAway.row - 1) * inset
+                    x += farAway.col * frameSize.width
+                    x += max(0, farAway.col - 1) * inset
                 }
-                y += farAway.col * frameSize.height
-                y += max(0, farAway.col - 1) * inset
+                y += farAway.row * frameSize.height
+                y += max(0, farAway.row - 1) * inset
 
                 tile.rect = CGRect(origin: CGPoint(x: x, y: y), size: frameSize)
             }
-            
-            /*
-             else if i < pinnedIndex {
-                 if pos.col != pinnedPos.col {
-                     tile.rect = tile.rect.offsetBy(dx: 0, dy: -tile.rect.maxY)
-                 } else {
-                     tile.rect = tile.rect.offsetBy(dx: -tile.rect.maxX, dy: 0)
-                 }
-             } else {
-                 if pos.col != pinnedPos.col {
-                     tile.rect = tile.rect.offsetBy(dx: 0, dy: frameSize.height - tile.rect.minY)
-                 } else {
-                     tile.rect = tile.rect.offsetBy(dx: frameSize.width - tile.rect.minX, dy: 0)
-                 }
-             }
-             */
-            
             tiles[i] = tile
         }
     }
@@ -202,16 +182,17 @@ final class GroupCallTileView: View {
         self.layer?.cornerRadius = 4
     }
     
-    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
+    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
         
         self.controlsMode = controlsMode
         
         var items:[TileEntry] = []
         
-//        let previousPinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
-
         
         let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
+        
+        let prevPinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
+
         
         let activeMembers = state.videoActive(.main)
         
@@ -283,11 +264,22 @@ final class GroupCallTileView: View {
                 view.layer?.zPosition = CGFloat(i)
             }
         }
-                
+        if prevPinnedIndex != nil, pinnedIndex != nil, prevPinnedIndex != pinnedIndex {
+            updateLayout(size: size, transition: .immediate)
+        } else {
+            updateLayout(size: size, transition: transition)
+        }
+    }
+    
+    func getSize(_ size: NSSize) -> NSSize {
         
-        updateLayout(size: frame.size, transition: transition)
-
+        let tiles = tileViews(items.count, isFullscreen: prevState?.isFullScreen ?? false, frameSize: size, pinnedIndex: pinnedIndex)
         
+        if let tile = tiles.last, pinnedIndex == nil {
+            return NSMakeSize(size.width, tile.rect.maxY)
+        } else {
+            return size
+        }
     }
     
     private func deleteItem(at index: Int, animated: Bool) -> GroupCallMainVideoContainerView {

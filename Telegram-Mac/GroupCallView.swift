@@ -32,6 +32,8 @@ final class GroupCallView : View {
     private var scheduleView: GroupCallScheduleView?
     private var tileView: GroupCallTileView?
 
+    private var scrollView = ScrollView()
+    
     private var speakingTooltipView: GroupCallSpeakingTooltipView?
     
     var arguments: GroupCallUIArguments? {
@@ -40,27 +42,19 @@ final class GroupCallView : View {
         }
     }
     
-    override func viewDidMoveToWindow() {
-        if window == nil {
-            var bp:Int = 0
-            bp += 1
-        }
-    }
-    
-    deinit {
-        var bp:Int = 0
-        bp += 1
-    }
-    
     
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(scrollView)
+        addSubview(titleView)
         addSubview(peersTableContainer)
         addSubview(peersTable)
-        addSubview(titleView)
         addSubview(controlsContainer)
                 
+        
+        scrollView.background = .clear
+        scrollView.layer?.cornerRadius = 10
         peersTableContainer.layer?.cornerRadius = 10
         updateLocalizationAndTheme(theme: theme)
         
@@ -220,11 +214,15 @@ final class GroupCallView : View {
         titleView.updateLayout(size: titleRect.size, transition: transition)
         
         controlsContainer.updateLayout(size: controlsContainer.frame.size, transition: transition)
-        if let tileView = tileView {
-            transition.updateFrame(view: tileView, frame: mainVideoRect)
-            tileView.updateLayout(size: mainVideoRect.size, transition: transition)
+       
+        if let tileView = self.tileView {
+            let size = tileView.getSize(mainVideoRect.size)
+            transition.updateFrame(view: tileView, frame: size.bounds)
+            tileView.updateLayout(size: size, transition: transition)
         }
-        
+        transition.updateFrame(view: scrollView.clipView, frame: mainVideoRect.size.bounds)
+        transition.updateFrame(view: scrollView, frame: mainVideoRect)
+
         
         if let scheduleView = self.scheduleView {
             let rect = tableRect
@@ -428,12 +426,12 @@ final class GroupCallView : View {
             } else {
                 current = GroupCallTileView(call: call, arguments: arguments, frame: mainVideoRect)
                 self.tileView = current
-                addSubview(current, positioned: .below, relativeTo: titleView)
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                 }
             }
-            current.update(state: state, transition: transition, animated: animated, controlsMode: self.controlsMode)
+            current.update(state: state, transition: transition, size: mainVideoRect.size, animated: animated, controlsMode: self.controlsMode)
+            
         } else {
             if let tileView = self.tileView {
                 self.tileView = nil
@@ -446,6 +444,9 @@ final class GroupCallView : View {
                 }
             }
         }
+        scrollView.isHidden = self.tileView == nil
+        scrollView.documentView = self.tileView
+
         
         
         if previousState?.tooltipSpeaker != state.tooltipSpeaker {

@@ -1855,6 +1855,11 @@ final class GroupCallUIController : ViewController {
             return .invokeNext
         }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
         
+        window.set(handler: { [weak arguments] event in
+            arguments?.focusVideo(nil)
+            return .invokeNext
+        }, with: self, for: .Escape, priority: .modal)
+        
     }
     
     override func readyOnce() {
