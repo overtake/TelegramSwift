@@ -35,6 +35,7 @@
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
 		275045E525EE271D00872D20 /* GroupCallDisplayAsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */; };
 		2756EF1D25C463F10062303D /* LegacyReachability.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2756EF1C25C463F10062303D /* LegacyReachability.framework */; };
+		275FD30E266A20FC008EBC99 /* GroupCallTileRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
 		2763A162261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A161261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs */; };
@@ -1110,6 +1111,7 @@
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
 		2756EF1C25C463F10062303D /* LegacyReachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LegacyReachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileRowItem.swift; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
 		2763A161261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_cancel_reminder.tgs; sourceTree = "<group>"; };
@@ -2242,6 +2244,7 @@
 				D0E7BD7C256BC9460068644D /* GroupCallParticipantRowItem.swift */,
 				276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */,
 				278E86D3265D0F330006685D /* GroupCallAvatarView.swift */,
+				275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5323,6 +5326,7 @@
 				C2AF01131F01543200D8AC1D /* ExportProxyModalController.swift in Sources */,
 				C2F6190D1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift in Sources */,
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
+				275FD30E266A20FC008EBC99 /* GroupCallTileRowItem.swift in Sources */,
 				C2016F681EAE0A68003AF981 /* CallWindowController.swift in Sources */,
 				9FDA713220E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift in Sources */,
 				2713B223260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift in Sources */,

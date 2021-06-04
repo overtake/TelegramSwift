@@ -59,6 +59,7 @@ final class GroupCallUIArguments {
     let contextMenuItems:(PeerGroupCallData)->[ContextMenuItem]
     let dismissTooltip:(GroupCallUIState.ControlsTooltip)->Void
     let focusVideo: (String?)->Void
+    let takeTileView:() -> (NSSize, GroupCallTileView)?
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -89,7 +90,8 @@ final class GroupCallUIArguments {
     togglePeersHidden: @escaping()->Void,
     contextMenuItems:@escaping(PeerGroupCallData)->[ContextMenuItem],
     dismissTooltip:@escaping(GroupCallUIState.ControlsTooltip)->Void,
-    focusVideo: @escaping(String?)->Void) {
+    focusVideo: @escaping(String?)->Void,
+    takeTileView:@escaping() -> (NSSize, GroupCallTileView)?) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -121,6 +123,7 @@ final class GroupCallUIArguments {
         self.contextMenuItems = contextMenuItems
         self.dismissTooltip = dismissTooltip
         self.focusVideo = focusVideo
+        self.takeTileView = takeTileView
     }
 }
 
@@ -520,13 +523,25 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
     let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
+    if !state.isFullScreen {
+        entries.append(.custom(sectionId: 0, index: -1, value: .none, identifier: .init("tile"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return GroupCallTileRowItem(initialSize, stableId: stableId, takeView: arguments.takeTileView)
+        }))
+    }
+    
     if canInvite {
         
         struct Tuple : Equatable {
             let viewType: GeneralViewType
             let videoMode: Bool
         }
-        let viewType = GeneralViewType.singleItem.withUpdatedInsets(NSEdgeInsetsMake(12, 16, 0, 0))
+        
+        let viewType: GeneralViewType
+        if entries.isEmpty {
+            viewType = GeneralViewType.singleItem.withUpdatedInsets(NSEdgeInsetsMake(12, 16, 0, 0))
+        } else {
+            viewType = GeneralViewType.firstItem.withUpdatedInsets(NSEdgeInsetsMake(12, 16, 0, 0))
+        }
         let tuple = Tuple(viewType: viewType, videoMode: false)
         
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("invite"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
@@ -1101,6 +1116,11 @@ final class GroupCallUIController : ViewController {
                 return current
             }
             self?.genericView.peersTable.scroll(to: .up(true))
+        }, takeTileView: { [weak self] in
+            if let `self` = self, let view = self.genericView.tileView {
+                return (self.genericView.mainVideoRect.size, view)
+            }
+            return nil
         })
         
         contextMenuItems = { [weak arguments] data in

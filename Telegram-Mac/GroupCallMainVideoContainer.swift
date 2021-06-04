@@ -179,8 +179,8 @@ final class GroupCallMainVideoContainerView: Control {
     private var validLayout: CGSize?
     
     private let nameView: TextView = TextView()
-    private var statusView: TextView = TextView()
-
+    private let statusView = ImageView()
+    
     private let speakingView: View = View()
     private let audioLevelDisposable = MetaDisposable()
     
@@ -220,11 +220,9 @@ final class GroupCallMainVideoContainerView: Control {
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         
-        statusView.userInteractionEnabled = false
-        statusView.isSelectable = false
-        
+        statusView.isEventLess = true
+                
         addSubview(speakingView)
-        
         
         
         self.set(handler: { [weak self] _ in
@@ -281,7 +279,6 @@ final class GroupCallMainVideoContainerView: Control {
         
         nameView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
         statusView.change(opacity: controlsMode == .normal ? 1 : 0, animated: animated)
-        
         self.pinView?.change(opacity: self.mouseInside() && self.pinIsVisible ? 1 : 0, animated: animated)
         self.backView?.change(opacity: self.mouseInside() && self.pinIsVisible ? 1 : 0, animated: animated)
     }
@@ -393,6 +390,8 @@ final class GroupCallMainVideoContainerView: Control {
         transition.updateAlpha(view: shadowView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: nameView, alpha: controlsMode == .normal ? 1 : 0)
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
+        
+        
         if participant != self.participant, let participant = participant, let peer = peer {
             self.participant = participant
             let text: String
@@ -404,42 +403,10 @@ final class GroupCallMainVideoContainerView: Control {
             let nameLayout = TextViewLayout(.initialize(string: text, color: NSColor.white.withAlphaComponent(1), font: .medium(.short)), maximumNumberOfLines: 1)
             nameLayout.measure(width: frame.width - 20)
             self.nameView.update(nameLayout)
-                        
             
-            let status = participant.videoStatus(peer.mode)
-            
-            
-            if self.statusView.layout?.attributedString.string != status {
-                let statusLayout = TextViewLayout(.initialize(string: status, color: NSColor.white.withAlphaComponent(0.7), font: .normal(.short)), maximumNumberOfLines: 1)
-                
-                statusLayout.measure(width: frame.width - nameView.frame.width - 30)
-                
-                let statusView = TextView()
-                statusView.update(statusLayout)
-                statusView.userInteractionEnabled = false
-                statusView.isSelectable = false
-                statusView.layer?.opacity = controlsMode == .normal ? 1 : 0
-                
-                statusView.frame = CGRect(origin: NSMakePoint(nameView.frame.width + 20, frame.height - statusView.frame.height - 10), size: self.statusView.frame.size)
-                self.addSubview(statusView)
-                
-                let previous = self.statusView
-                self.statusView = statusView
-                if animated, controlsMode == .normal {
-                    previous.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak previous] _ in
-                        previous?.removeFromSuperview()
-                    })
-                    statusView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    statusView.layer?.animatePosition(from: statusView.frame.origin - NSMakePoint(10, 0), to: statusView.frame.origin)
-
-                    previous.layer?.animatePosition(from: previous.frame.origin, to: previous.frame.origin + NSMakePoint(10, 0))
-                } else {
-                    previous.removeFromSuperview()
-                }
-            }
-                        
+            self.statusView.image = participant.state?.muteState == nil ? GroupCallTheme.videoBox_unmuted : GroupCallTheme.videoBox_muted
+            self.statusView.sizeToFit()
         }
-
         self.currentPeer = peer
         if let peer = peer {
            
@@ -511,14 +478,11 @@ final class GroupCallMainVideoContainerView: Control {
         
         
         self.nameView.resize(size.width - 20)
-        self.statusView.resize(size.width - 30 - self.nameView.frame.width)
 
         
-        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
-        transition.updateFrame(view: self.statusView, frame: CGRect(origin: NSMakePoint(self.nameView.frame.maxX + 10, self.nameView.frame.minY), size: self.statusView.frame.size))
+        transition.updateFrame(view: statusView, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(statusView.frame.maxX + 10, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
         
-        
-
         transition.updateFrame(view: speakingView, frame: bounds)
         
         if let pinView = pinView {

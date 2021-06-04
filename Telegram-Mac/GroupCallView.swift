@@ -30,7 +30,7 @@ final class GroupCallView : View {
     private let controlsContainer = GroupCallControlsView(frame: .init(x: 0, y: 0, width: 360, height: 320))
     
     private var scheduleView: GroupCallScheduleView?
-    private var tileView: GroupCallTileView?
+    private(set) var tileView: GroupCallTileView?
 
     private var scrollView = ScrollView()
     
@@ -52,6 +52,7 @@ final class GroupCallView : View {
         addSubview(peersTable)
         addSubview(controlsContainer)
                 
+        scrollView.wantsLayer = true
         
         scrollView.background = .clear
         scrollView.layer?.cornerRadius = 10
@@ -70,6 +71,18 @@ final class GroupCallView : View {
             }
             self.peersTableContainer.frame = self.substrateRect()
         }))
+        
+        updateLayout(size: frame.size, transition: .immediate)
+        
+        
+        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification in
+            let bounds = self?.scrollView.contentView.bounds
+            if bounds?.minY == 0 {
+                var bp = 0
+                bp += 1
+            }
+            NSLog("bounds: \(bounds)")
+        })
     }
     
     private func substrateRect() -> NSRect {
@@ -87,10 +100,18 @@ final class GroupCallView : View {
             if isVertical == true {
                 offset += item.height
             }
+            if let item = item as? GroupCallTileRowItem {
+                offset += item.height
+            }
             return isVertical == nil || isVertical == true
         })
         h = min(h, self.peersTable.frame.height)
         h -= offset
+        if h < 0 {
+            offset = -h
+            h = 0
+        }
+        
         let point = tableRect.origin + NSMakePoint(0, offset)
         return .init(origin: point, size: NSMakeSize(self.peersTable.frame.width, h))
 
@@ -220,7 +241,8 @@ final class GroupCallView : View {
             transition.updateFrame(view: tileView, frame: size.bounds)
             tileView.updateLayout(size: size, transition: transition)
         }
-        transition.updateFrame(view: scrollView.clipView, frame: mainVideoRect.size.bounds)
+        let clipRect = mainVideoRect.size.bounds
+        transition.updateFrame(view: scrollView.contentView, frame: clipRect)
         transition.updateFrame(view: scrollView, frame: mainVideoRect)
 
         
@@ -242,11 +264,11 @@ final class GroupCallView : View {
         var size = peersTable.frame.size
         let width = min(frame.width - 40, 600)
         
-        if let state = state, !state.videoActive(.main).isEmpty {
-            if isFullScreen {
+        if let state = state, !state.videoActive(.main).isEmpty || state.mode == .video {
+            if isFullScreen && !state.videoActive(.main).isEmpty {
                 size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 5)
             } else {
-                size = NSMakeSize(width, frame.height - 180 - mainVideoRect.height)
+                size = NSMakeSize(width, frame.height - 180)
             }
         } else {
             size = NSMakeSize(width, frame.height - 271)
@@ -256,7 +278,7 @@ final class GroupCallView : View {
         
         if let state = state, !state.videoActive(.main).isEmpty {
             if !isFullScreen {
-                rect.origin.y = mainVideoRect.maxY + 5
+                rect.origin.y = 54
             } else {
                 rect.origin.x = frame.width - size.width - 5
                 rect.origin.y = 54
@@ -325,15 +347,13 @@ final class GroupCallView : View {
     
     var tempFullScreen: Bool? = nil
     
-    func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
+    func applyUpdates(_ state: GroupCallUIState, _ tableTransition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
                 
         let duration: Double = 0.3
         
        
         let previousState = self.state
-        if !transition.isEmpty {
-            peersTable.merge(with: transition)
-        }
+        
         
         if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
@@ -424,33 +444,40 @@ final class GroupCallView : View {
             if let tileView = self.tileView {
                 current = tileView
             } else {
-                current = GroupCallTileView(call: call, arguments: arguments, frame: mainVideoRect)
+                current = GroupCallTileView(call: call, arguments: arguments, frame: mainVideoRect.size.bounds)
                 self.tileView = current
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                 }
             }
             
-            let wasEmpty = current.subviews.isEmpty
             current.update(state: state, transition: transition, size: mainVideoRect.size, animated: animated, controlsMode: self.controlsMode)
-            if wasEmpty, wasEmpty != current.subviews.isEmpty {
-                current.frame = current.getSize(mainVideoRect.size).bounds
-            }
             
+            if state.isFullScreen {
+                if scrollView.documentView != self.tileView {
+                    scrollView.documentView = self.tileView
+                }
+            } else {
+                scrollView.documentView = nil
+            }
+
         } else {
             if let tileView = self.tileView {
                 self.tileView = nil
                 if animated {
-                    tileView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak tileView] _ in
+                    tileView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak tileView, weak scrollView] _ in
                         tileView?.removeFromSuperview()
+                        if scrollView?.documentView == tileView {
+                            scrollView?.documentView = nil
+                        }
                     })
                 } else {
                     tileView.removeFromSuperview()
+                    scrollView.documentView = nil
                 }
             }
         }
         scrollView.isHidden = self.tileView == nil
-        scrollView.documentView = self.tileView
 
         
         
@@ -491,6 +518,10 @@ final class GroupCallView : View {
                     }
                 }
             }
+        }
+        
+        if !tableTransition.isEmpty {
+            peersTable.merge(with: tableTransition)
         }
         
         updateLayout(size: frame.size, transition: transition)
