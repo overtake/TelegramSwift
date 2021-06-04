@@ -172,6 +172,7 @@ final class GroupCallTileView: View {
     }
     
     struct Transition {
+        let size: NSSize
         let prevPinnedIndex: Int?
         let pinnedIndex: Int?
         let prevTiles:[VoiceChatTile]
@@ -278,13 +279,14 @@ final class GroupCallTileView: View {
                 view.layer?.zPosition = CGFloat(i)
             }
         }
+        
+        let size = getSize(size)
+        
         if prevPinnedIndex != nil, pinnedIndex != nil, prevPinnedIndex != pinnedIndex {
-            updateLayout(size: getSize(size), transition: .immediate)
-        } else {
-            updateLayout(size: getSize(size), transition: transition)
+            updateLayout(size: size, transition: .immediate)
         }
         
-        return Transition(prevPinnedIndex: prevPinnedIndex, pinnedIndex: pinnedIndex, prevTiles: prevTilesOpaque, tiles: tiles)
+        return Transition(size: size, prevPinnedIndex: prevPinnedIndex, pinnedIndex: pinnedIndex, prevTiles: prevTilesOpaque, tiles: tiles)
     }
     
     func getSize(_ size: NSSize) -> NSSize {
@@ -354,6 +356,17 @@ final class GroupCallTileView: View {
             transition.updateFrame(view: views[tile.index], frame: tile.rect)
             views[tile.index].updateLayout(size: tile.rect.size, transition: transition)
         }
+    }
+    
+    func makeTemporaryOffset(_ makeRect: (NSRect)->NSRect, pinnedIndex: Int?, size: NSSize) {
+        let tiles:[VoiceChatTile] = tileViews(items.count, isFullscreen: prevState?.isFullScreen ?? false, frameSize: size, pinnedIndex: pinnedIndex)
+        
+        for tile in tiles {
+            let rect = makeRect(tile.rect)
+            views[tile.index].frame = rect
+            views[tile.index].updateLayout(size: rect.size, transition: .immediate)
+        }
+
     }
     
     func updateMode(controlsMode: GroupCallView.ControlsMode, controlsState: GroupCallControlsView.Mode, animated: Bool) {

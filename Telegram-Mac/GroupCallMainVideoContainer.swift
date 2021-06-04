@@ -392,7 +392,7 @@ final class GroupCallMainVideoContainerView: Control {
         transition.updateAlpha(view: statusView, alpha: controlsMode == .normal ? 1 : 0)
         
         
-        if participant != self.participant, let participant = participant, let peer = peer {
+        if participant != self.participant, let participant = participant {
             self.participant = participant
             let text: String
             if participant.peer.id == participant.accountPeerId {

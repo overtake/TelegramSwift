@@ -75,7 +75,7 @@ public final class OngoingCallVideoCapturer {
     }
     
     public func makeOutgoingVideoView(completion: @escaping (OngoingCallContextPresentationCallVideoView?) -> Void) {
-        self.impl.makeOutgoingVideoView { view in
+        self.impl.makeOutgoingVideoView(false, completion: { view, _ in
             if let view = view {
                 completion(OngoingCallContextPresentationCallVideoView(
                     view: view, setOnFirstFrameReceived: { [weak view] f in
@@ -104,7 +104,7 @@ public final class OngoingCallVideoCapturer {
             } else {
                 completion(nil)
             }
-        }
+        })
     }
     
     public func setIsVideoEnabled(_ value: Bool) {
