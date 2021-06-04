@@ -2233,7 +2233,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.hasVideo = true
         if let videoCapturer = self.videoCapturer {
             self.genericCallContext?.requestVideo(videoCapturer)
-            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: false)
+            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: false, isVideoPaused: false)
         }
     }
     
@@ -2242,7 +2242,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         if let _ = self.videoCapturer {
             self.videoCapturer = nil
             self.genericCallContext?.disableVideo()
-            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: true)
+            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: true, isVideoPaused: false)
         }
     }
 

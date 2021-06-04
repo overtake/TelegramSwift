@@ -81,7 +81,7 @@ final class GroupCallView : View {
                 var bp = 0
                 bp += 1
             }
-            NSLog("bounds: \(bounds)")
+//            NSLog("bounds: \(bounds)")
         })
     }
     
@@ -238,35 +238,41 @@ final class GroupCallView : View {
        
         if let tileView = self.tileView {
             let size = tileView.getSize(videoRect.size)
-            let clipView = tileView.enclosingScrollView?.contentView as? TGClipView
-            var offset = tileView.enclosingScrollView?.contentOffset ?? .zero
-            transition.updateFrame(view: tileView, frame: size.bounds)
-            tileView.updateLayout(size: size, transition: transition)
-            
-            
-            let videoRect = isFullScreen ? self.videoRect : tableRect
-            
-            if case let .animated(duration, curve) = transition {
-                if let current = self.currentTileTransition, let clipView = clipView {
-                    if current.prevPinnedIndex == nil && current.pinnedIndex != nil {
-                        clipView.layer?.animateBounds(from: CGRect(origin: offset, size: size), to: size.bounds, duration: duration, timingFunction: curve.timingFunction)
-                    } else if let index = current.prevPinnedIndex, current.pinnedIndex == nil {
-                        let tile = current.prevTiles[index]
-                        offset = CGPoint(x: 0, y: max(0, min(tile.rect.midY - videoRect.height / 2, size.height - videoRect.height)))
-                        if tile.rect.maxY > videoRect.height {
-                            if offset != .zero {
-                                clipView.scroll(to: offset)
-                                clipView.layer?.animateBounds(from: size.bounds, to: CGRect(origin: offset, size: size), duration: duration, timingFunction: curve.timingFunction)
-                            }
-                        }
-                    }
-                }
+            var rect = videoRect
+            if tileView.superview != self {
+                rect = size.bounds
             }
+            transition.updateFrame(view: tileView, frame: rect)
+            tileView.updateLayout(size: rect.size, transition: transition)
             
-            self.currentTileTransition = nil
             
-//            tileView.enclosingScrollView?.contentView.scroll(to: offset)
-
+//            if case let .animated(duration, curve) = transition {
+//                if let current = self.currentTileTransition, let clipView = clipView {
+//                    if current.prevPinnedIndex == nil, let index = current.pinnedIndex {
+//                        clipView.layer?.animateBounds(from: CGRect(origin: offset, size: size), to: size.bounds, duration: duration, timingFunction: curve.timingFunction)
+//                    } else if let index = current.prevPinnedIndex, current.pinnedIndex == nil {
+//
+//                    }
+//                }
+//            }
+            
+//            if case let .animated(duration, curve) = transition {
+//                if let current = self.currentTileTransition, let clipView = clipView {
+//                    if current.prevPinnedIndex == nil, let index = current.pinnedIndex {
+//                        offset.y -= current.tiles[index].rect.height / 2
+//                        clipView.layer?.animateBounds(from: CGRect(origin: offset, size: size), to: size.bounds, duration: duration, timingFunction: curve.timingFunction)
+//                    } else if let index = current.prevPinnedIndex, current.pinnedIndex == nil {
+//                        let tile = current.prevTiles[index]
+//                        offset = CGPoint(x: 0, y: max(0, min(tile.rect.midY - videoRect.height / 2, size.height - videoRect.height)))
+//                        if tile.rect.maxY > videoRect.height {
+//                            if offset != .zero {
+//                                clipView.scroll(to: offset)
+//                                clipView.layer?.animateBounds(from: size.bounds, to: CGRect(origin: offset, size: size), duration: duration, timingFunction: curve.timingFunction)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
         let clipRect = videoRect.size.bounds
         transition.updateFrame(view: scrollView.contentView, frame: clipRect)
@@ -374,7 +380,7 @@ final class GroupCallView : View {
     
     var tempFullScreen: Bool? = nil
     
-    private var currentTileTransition: GroupCallTileView.Transition?
+    private var saveScrollInset: (GroupCallTileView.Transition, CGPoint)?
     
     func applyUpdates(_ state: GroupCallUIState, _ tableTransition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
                 
@@ -383,6 +389,7 @@ final class GroupCallView : View {
        
         let previousState = self.state
         
+       
         
         if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
@@ -482,12 +489,43 @@ final class GroupCallView : View {
             
             let transition = current.update(state: state, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
             
-            self.currentTileTransition = transition
             
             
             if state.isFullScreen {
-                if scrollView.documentView != self.tileView {
-                    scrollView.documentView = self.tileView
+                if transition.pinnedIndex == nil {
+                    if scrollView.documentView != self.tileView {
+                        scrollView.documentView = self.tileView
+                    }
+                    if let saveScrollInset = saveScrollInset {
+                        if let prevIndex = transition.prevPinnedIndex {
+                            current.frame = transition.size.bounds
+                            let oldSize = saveScrollInset.0.size
+                            let coef = NSMakePoint(transition.size.width / oldSize.width, transition.size.height / oldSize.height)
+                            let offset = saveScrollInset.1
+                            current.makeTemporaryOffset({
+                                CGRect(origin: CGPoint(x: $0.minX * coef.x, y: $0.minY * coef.y), size: $0.size).offsetBy(dx: offset.x, dy: offset.y)
+                            }, pinnedIndex: prevIndex, size: videoRect.size)
+                            
+                            
+                            scrollView.contentView.scroll(to: offset)
+                        }
+                    }
+                    self.saveScrollInset = nil
+                    
+                } else {
+                    
+                    if current.superview != self {
+
+                        if transition.prevPinnedIndex == nil {
+                            let offset = current.enclosingScrollView?.contentOffset ?? .zero
+                            current.frame = videoRect
+                            current.makeTemporaryOffset({
+                                $0.offsetBy(dx: -offset.x, dy: -offset.y)
+                            }, pinnedIndex: nil, size: videoRect.size)
+                            self.saveScrollInset = (transition, offset)
+                        }
+                        self.addSubview(current, positioned: .below, relativeTo: titleView)
+                    }
                 }
             } else {
                 scrollView.documentView = nil
@@ -551,10 +589,12 @@ final class GroupCallView : View {
                 }
             }
         }
-        
+
+        CATransaction.begin()
         if !tableTransition.isEmpty {
             peersTable.merge(with: tableTransition)
         }
+        CATransaction.commit()
         
         updateLayout(size: frame.size, transition: transition)
         updateUIAfterFullScreenUpdated(state, reloadTable: false)
