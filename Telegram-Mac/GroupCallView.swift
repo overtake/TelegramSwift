@@ -237,13 +237,40 @@ final class GroupCallView : View {
         controlsContainer.updateLayout(size: controlsContainer.frame.size, transition: transition)
        
         if let tileView = self.tileView {
-            let size = tileView.getSize(mainVideoRect.size)
+            let size = tileView.getSize(videoRect.size)
+            let clipView = tileView.enclosingScrollView?.contentView as? TGClipView
+            var offset = tileView.enclosingScrollView?.contentOffset ?? .zero
             transition.updateFrame(view: tileView, frame: size.bounds)
             tileView.updateLayout(size: size, transition: transition)
+            
+            
+            let videoRect = isFullScreen ? self.videoRect : tableRect
+            
+            if case let .animated(duration, curve) = transition {
+                if let current = self.currentTileTransition, let clipView = clipView {
+                    if current.prevPinnedIndex == nil && current.pinnedIndex != nil {
+                        clipView.layer?.animateBounds(from: CGRect(origin: offset, size: size), to: size.bounds, duration: duration, timingFunction: curve.timingFunction)
+                    } else if let index = current.prevPinnedIndex, current.pinnedIndex == nil {
+                        let tile = current.prevTiles[index]
+                        offset = CGPoint(x: 0, y: max(0, min(tile.rect.midY - videoRect.height / 2, size.height - videoRect.height)))
+                        if tile.rect.maxY > videoRect.height {
+                            if offset != .zero {
+                                clipView.scroll(to: offset)
+                                clipView.layer?.animateBounds(from: size.bounds, to: CGRect(origin: offset, size: size), duration: duration, timingFunction: curve.timingFunction)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            self.currentTileTransition = nil
+            
+//            tileView.enclosingScrollView?.contentView.scroll(to: offset)
+
         }
-        let clipRect = mainVideoRect.size.bounds
+        let clipRect = videoRect.size.bounds
         transition.updateFrame(view: scrollView.contentView, frame: clipRect)
-        transition.updateFrame(view: scrollView, frame: mainVideoRect)
+        transition.updateFrame(view: scrollView, frame: videoRect)
 
         
         if let scheduleView = self.scheduleView {
@@ -307,8 +334,8 @@ final class GroupCallView : View {
     }
     
     var isFullScreen: Bool {
-        if let tempVertical = tempFullScreen {
-            return tempVertical
+        if let state = state {
+            return state.isFullScreen
         }
         if frame.width >= GroupCallTheme.fullScreenThreshold {
             return true
@@ -316,7 +343,7 @@ final class GroupCallView : View {
         return false
     }
     
-    var mainVideoRect: NSRect {
+    var videoRect: NSRect {
         var rect: CGRect
         if isFullScreen, let state = state {
             let tableWidth: CGFloat
@@ -346,6 +373,8 @@ final class GroupCallView : View {
     var markWasScheduled: Bool? = false
     
     var tempFullScreen: Bool? = nil
+    
+    private var currentTileTransition: GroupCallTileView.Transition?
     
     func applyUpdates(_ state: GroupCallUIState, _ tableTransition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
                 
@@ -444,14 +473,17 @@ final class GroupCallView : View {
             if let tileView = self.tileView {
                 current = tileView
             } else {
-                current = GroupCallTileView(call: call, arguments: arguments, frame: mainVideoRect.size.bounds)
+                current = GroupCallTileView(call: call, arguments: arguments, frame: videoRect.size.bounds)
                 self.tileView = current
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                 }
             }
             
-            current.update(state: state, transition: transition, size: mainVideoRect.size, animated: animated, controlsMode: self.controlsMode)
+            let transition = current.update(state: state, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
+            
+            self.currentTileTransition = transition
+            
             
             if state.isFullScreen {
                 if scrollView.documentView != self.tileView {

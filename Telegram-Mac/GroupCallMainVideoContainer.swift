@@ -457,9 +457,7 @@ final class GroupCallMainVideoContainerView: Control {
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
         
-        guard let window = window else {
-            return
-        }
+        
         self.validLayout = size
         if let currentVideoView = self.currentVideoView {
             transition.updateFrame(view: currentVideoView, frame: size.bounds)
@@ -470,18 +468,21 @@ final class GroupCallMainVideoContainerView: Control {
             transition.updateFrame(view: backstageView, frame: size.bounds)
             backstageView.updateLayout(size: size, transition: transition)
         }
-        transition.updateFrame(view: backstage, frame: window.frame.size.bounds)
+    
+        if let window = window {
+            transition.updateFrame(view: backstage, frame: window.frame.size.bounds)
+        }
         
 
         
         transition.updateFrame(view: shadowView, frame: CGRect(origin: NSMakePoint(0, size.height - 50), size: NSMakeSize(size.width, 50)))
         
         
-        self.nameView.resize(size.width - 20)
+        self.nameView.resize(size.width - 40)
 
         
         transition.updateFrame(view: statusView, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
-        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(statusView.frame.maxX + 10, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(statusView.frame.maxX + 5, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
         
         transition.updateFrame(view: speakingView, frame: bounds)
         

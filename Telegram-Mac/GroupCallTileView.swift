@@ -170,6 +170,13 @@ final class GroupCallTileView: View {
         let index: Int
         let alone: Bool
     }
+    
+    struct Transition {
+        let prevPinnedIndex: Int?
+        let pinnedIndex: Int?
+        let prevTiles:[VoiceChatTile]
+        let tiles:[VoiceChatTile]
+    }
 
     
     private var views: [GroupCallMainVideoContainerView] = []
@@ -186,7 +193,7 @@ final class GroupCallTileView: View {
         self.layer?.cornerRadius = 4
     }
     
-    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) {
+    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) -> Transition {
         
         self.controlsMode = controlsMode
         
@@ -194,6 +201,9 @@ final class GroupCallTileView: View {
         
         
         let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
+        
+        let prevTilesOpaque = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: nil)
+
         
         let prevPinnedIndex = self.items.firstIndex(where: { $0.isPinned || $0.isFocused })
 
@@ -273,6 +283,8 @@ final class GroupCallTileView: View {
         } else {
             updateLayout(size: getSize(size), transition: transition)
         }
+        
+        return Transition(prevPinnedIndex: prevPinnedIndex, pinnedIndex: pinnedIndex, prevTiles: prevTilesOpaque, tiles: tiles)
     }
     
     func getSize(_ size: NSSize) -> NSSize {
@@ -312,7 +324,8 @@ final class GroupCallTileView: View {
         }
         
         view.updatePeer(peer: item.video, participant: item.member, resizeMode: item.resizeMode, transition: animated && prevView != nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate, animated: animated, controlsMode: self.controlsMode, isPinned: item.isPinned, isFocused: item.isFocused, isAlone: item.alone, arguments: self.arguments)
-        
+        view.updateLayout(size: view.frame.size, transition: .immediate)
+
         self.views.insert(view, at: index)
         
         if animated && prevFrame == nil {

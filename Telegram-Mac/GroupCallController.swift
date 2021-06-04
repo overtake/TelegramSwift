@@ -1118,7 +1118,7 @@ final class GroupCallUIController : ViewController {
             self?.genericView.peersTable.scroll(to: .up(true))
         }, takeTileView: { [weak self] in
             if let `self` = self, let view = self.genericView.tileView {
-                return (self.genericView.mainVideoRect.size, view)
+                return (self.genericView.videoRect.size, view)
             }
             return nil
         })
@@ -1500,7 +1500,7 @@ final class GroupCallUIController : ViewController {
                 return member.videoEndpointId != nil || member.presentationEndpointId != nil
             } ?? []
             
-            let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.mainVideoRect.size)
+            let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.videoRect.size)
 
             
             var items:[PresentationGroupCallRequestedVideo] = []
