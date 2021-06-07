@@ -93,6 +93,10 @@ final class GroupCallUIState : Equatable {
         var focused: Focused? = nil
         var excludePins: Set<String> = Set()
         var focusedTime: TimeInterval?
+        
+        var isEmpty: Bool {
+            return permanent != nil || focused != nil
+        }
     }
 
     let memberDatas:[PeerGroupCallData]
