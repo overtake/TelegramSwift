@@ -70,12 +70,14 @@ final class GroupCallView : View {
                     var rect = NSMakeRect(0, 54, min(frame.width - 40, 600), frame.height - 271)
                     rect.origin.x = focus(rect.size).minX
                 }
+                if rect != .zero {
+                    let path = CGMutablePath()
+                    path.addRoundedRect(in: rect, cornerWidth: 10, cornerHeight: 10)
+                    ctx.addPath(path)
+                    ctx.clip()
+                    ctx.clear(rect)
+                }
             }
-            let path = CGMutablePath()
-            path.addRoundedRect(in: rect, cornerWidth: 10, cornerHeight: 10)
-            ctx.addPath(path)
-            ctx.clip()
-            ctx.clear(rect)
         }
     }
     
