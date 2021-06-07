@@ -523,11 +523,11 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
     let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
-    if !state.isFullScreen {
-        entries.append(.custom(sectionId: 0, index: -1, value: .none, identifier: .init("tile"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return GroupCallTileRowItem(initialSize, stableId: stableId, takeView: arguments.takeTileView)
-        }))
-    }
+//    if !state.isFullScreen {
+//        entries.append(.custom(sectionId: 0, index: -1, value: .none, identifier: .init("tile"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+//            return GroupCallTileRowItem(initialSize, stableId: stableId, takeView: arguments.takeTileView)
+//        }))
+//    }
     
     if canInvite {
         
@@ -1057,34 +1057,34 @@ final class GroupCallUIController : ViewController {
             }
             self?.data.call.toggleScheduledSubscription(subscribe)
         }, toggleScreenMode: { [weak self, weak window] in
-            guard let strongSelf = self, let window = window else {
-                return
-            }
-            
-            let invoke:()->Void = { [weak strongSelf, weak window] in
-                guard let strongSelf = strongSelf, let window = window, let state = strongSelf.genericView.state else {
-                    return
-                }
-                let isFullScreen = strongSelf.genericView.isFullScreen
-                var rect: CGRect
-                if isFullScreen {
-                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
-                } else {
-                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
-                }
-                rect.size.height = window.frame.height
-
-                strongSelf.genericView.tempFullScreen = !isFullScreen
-                strongSelf.applyUpdates(state.withUpdatedFullScreen(!isFullScreen), .init(deleted: [], inserted: [], updated: []), strongSelf.data.call, animated: true)
-                window.setFrame(rect, display: true, animate: true)
-                strongSelf.genericView.tempFullScreen = nil
-            }
-            if window.isFullScreen {
-                window.toggleFullScreen(nil)
-                window._windowDidExitFullScreen = invoke
-            } else {
-                invoke()
-            }
+//            guard let strongSelf = self, let window = window else {
+//                return
+//            }
+//
+//            let invoke:()->Void = { [weak strongSelf, weak window] in
+//                guard let strongSelf = strongSelf, let window = window, let state = strongSelf.genericView.state else {
+//                    return
+//                }
+//                let isFullScreen = strongSelf.genericView.isFullScreen
+//                var rect: CGRect
+//                if isFullScreen {
+//                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
+//                } else {
+//                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
+//                }
+//                rect.size.height = window.frame.height
+//
+//                strongSelf.genericView.tempFullScreen = !isFullScreen
+//                strongSelf.applyUpdates(state.withUpdatedFullScreen(!isFullScreen), .init(deleted: [], inserted: [], updated: []), strongSelf.data.call, animated: true)
+//                window.setFrame(rect, display: true, animate: true)
+//                strongSelf.genericView.tempFullScreen = nil
+//            }
+//            if window.isFullScreen {
+//                window.toggleFullScreen(nil)
+//                window._windowDidExitFullScreen = invoke
+//            } else {
+//                invoke()
+//            }
             
         }, switchCamera: { peer in
             

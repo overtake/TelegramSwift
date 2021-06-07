@@ -1841,7 +1841,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updating = true
         updateScroll(visibleRows())
         self.previousScroll = nil
-       // CATransaction.begin()
+        CATransaction.begin()
     }
     
     public func endUpdates() -> Void {
@@ -1849,7 +1849,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         updateScroll(visibleRows())
         self.previousScroll = nil
         
-    //    CATransaction.commit()
+        CATransaction.commit()
     }
     
     public func rectOf(item:TableRowItem) -> NSRect {

@@ -42,18 +42,60 @@ final class GroupCallView : View {
         }
     }
     
+    private final class Content : View {
+        
+        var state: GroupCallUIState? {
+            didSet {
+                needsDisplay = true
+            }
+        }
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            ctx.setFillColor(GroupCallTheme.windowBackground.cgColor)
+            ctx.fill(bounds)
+            
+            var rect: CGRect = .zero
+
+            if let state = self.state {
+                switch state.mode {
+                case .video:
+                    if state.videoActive(.main).isEmpty || !state.isFullScreen {
+                        rect = NSMakeRect(0, 54, min(frame.width - 40, 600), frame.height - 180)
+                        rect.origin.x = focus(rect.size).minX
+                    } else {
+                        rect = NSMakeRect(5, 54, frame.width - 10, frame.height - 5 - 54)
+                    }
+                    
+                case .voice:
+                    var rect = NSMakeRect(0, 54, min(frame.width - 40, 600), frame.height - 271)
+                    rect.origin.x = focus(rect.size).minX
+                }
+            }
+            let path = CGMutablePath()
+            path.addRoundedRect(in: rect, cornerWidth: 10, cornerHeight: 10)
+            ctx.addPath(path)
+            ctx.clip()
+            ctx.clear(rect)
+        }
+    }
+    
+    private let content = Content()
     
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(scrollView)
-        addSubview(titleView)
+        
         addSubview(peersTableContainer)
         addSubview(peersTable)
-        addSubview(controlsContainer)
-                
-        scrollView.wantsLayer = true
         
+        addSubview(content)
+
+        addSubview(controlsContainer)
+        addSubview(titleView)
+
+        content.isEventLess = true
+                
         scrollView.background = .clear
         scrollView.layer?.cornerRadius = 10
         peersTableContainer.layer?.cornerRadius = 10
@@ -72,17 +114,80 @@ final class GroupCallView : View {
             self.peersTableContainer.frame = self.substrateRect()
         }))
         
+        
+        peersTable.applyExternalScroll = { [weak self] event in
+            guard let strongSelf = self, !strongSelf.isFullScreen, let state = strongSelf.state else {
+                return false
+            }
+            
+            if state.videoActive(.main).isEmpty {
+                return false
+            }
+            if state.pinnedData.focused != nil || state.pinnedData.permanent != nil {
+                return false
+            }
+            
+            if strongSelf.peersTable.documentOffset.y > 0 {
+                return false
+            }
+
+            
+            let local = strongSelf.scrollTempOffset
+            
+            var scrollTempOffset = local
+            
+
+            
+            scrollTempOffset += -event.scrollingDeltaY
+            
+            
+            strongSelf.scrollTempOffset = min(max(0, scrollTempOffset), strongSelf.videoRect.height + 5)
+
+            strongSelf.updateLayout(size: strongSelf.frame.size, transition: .immediate)
+            
+            if strongSelf.tableRect.minY == strongSelf.titleView.frame.maxY {
+                return false
+            }
+            
+            return true
+        }
+        
+        scrollView.applyExternalScroll = { [weak self] event in
+            
+            guard let strongSelf = self, let state = strongSelf.state, let tileView = strongSelf.tileView else {
+                return false
+            }
+            
+            if !state.isFullScreen {
+                return strongSelf.peersTable.applyExternalScroll?(event) ?? false
+            }
+            
+            let local = strongSelf.scrollTempOffset
+            
+            var scrollTempOffset = local
+            
+            scrollTempOffset += -event.scrollingDeltaY
+            
+            strongSelf.scrollTempOffset = min(max(0, scrollTempOffset), -(strongSelf.frame.height - tileView.frame.height - strongSelf.titleView.frame.height - 5))
+            
+            strongSelf.updateLayout(size: strongSelf.frame.size, transition: .immediate)
+
+            
+            return true
+        }
+
+        
         updateLayout(size: frame.size, transition: .immediate)
         
         
-        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification in
-            let bounds = self?.scrollView.contentView.bounds
-            if bounds?.minY == 0 {
-                var bp = 0
-                bp += 1
-            }
+//        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification in
+//            let bounds = self?.scrollView.contentView.bounds
+//            if bounds?.minY == 0 {
+//                var bp = 0
+//                bp += 1
+//            }
 //            NSLog("bounds: \(bounds)")
-        })
+//        })
     }
     
     private func substrateRect() -> NSRect {
@@ -244,40 +349,16 @@ final class GroupCallView : View {
             }
             transition.updateFrame(view: tileView, frame: rect)
             tileView.updateLayout(size: rect.size, transition: transition)
-            
-            
-//            if case let .animated(duration, curve) = transition {
-//                if let current = self.currentTileTransition, let clipView = clipView {
-//                    if current.prevPinnedIndex == nil, let index = current.pinnedIndex {
-//                        clipView.layer?.animateBounds(from: CGRect(origin: offset, size: size), to: size.bounds, duration: duration, timingFunction: curve.timingFunction)
-//                    } else if let index = current.prevPinnedIndex, current.pinnedIndex == nil {
-//
-//                    }
-//                }
-//            }
-            
-//            if case let .animated(duration, curve) = transition {
-//                if let current = self.currentTileTransition, let clipView = clipView {
-//                    if current.prevPinnedIndex == nil, let index = current.pinnedIndex {
-//                        offset.y -= current.tiles[index].rect.height / 2
-//                        clipView.layer?.animateBounds(from: CGRect(origin: offset, size: size), to: size.bounds, duration: duration, timingFunction: curve.timingFunction)
-//                    } else if let index = current.prevPinnedIndex, current.pinnedIndex == nil {
-//                        let tile = current.prevTiles[index]
-//                        offset = CGPoint(x: 0, y: max(0, min(tile.rect.midY - videoRect.height / 2, size.height - videoRect.height)))
-//                        if tile.rect.maxY > videoRect.height {
-//                            if offset != .zero {
-//                                clipView.scroll(to: offset)
-//                                clipView.layer?.animateBounds(from: size.bounds, to: CGRect(origin: offset, size: size), duration: duration, timingFunction: curve.timingFunction)
-//                            }
-//                        }
-//                    }
-//                }
-//            }
+    
         }
-        let clipRect = videoRect.size.bounds
+        var clipRect = videoRect.size.bounds
+        var scrollRect = videoRect
+        scrollRect.size.height += 5
         transition.updateFrame(view: scrollView.contentView, frame: clipRect)
-        transition.updateFrame(view: scrollView, frame: videoRect)
-
+        transition.updateFrame(view: scrollView, frame: scrollRect)
+        
+        transition.updateFrame(view: content, frame: bounds)
+        
         
         if let scheduleView = self.scheduleView {
             let rect = tableRect
@@ -297,11 +378,13 @@ final class GroupCallView : View {
         var size = peersTable.frame.size
         let width = min(frame.width - 40, 600)
         
-        if let state = state, !state.videoActive(.main).isEmpty || state.mode == .video {
-            if isFullScreen && !state.videoActive(.main).isEmpty {
+        if let state = state, !state.videoActive(.main).isEmpty {
+            if isFullScreen {
                 size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 5)
             } else {
-                size = NSMakeSize(width, frame.height - 180)
+                var videoHeight = max(200, frame.height - 180 - 200)
+                videoHeight -= (self.scrollTempOffset)
+                size = NSMakeSize(width, frame.height - 180 - max(0, videoHeight) - 5)
             }
         } else {
             size = NSMakeSize(width, frame.height - 271)
@@ -311,7 +394,7 @@ final class GroupCallView : View {
         
         if let state = state, !state.videoActive(.main).isEmpty {
             if !isFullScreen {
-                rect.origin.y = 54
+                rect.origin.y = videoRect.maxY + 5
             } else {
                 rect.origin.x = frame.width - size.width - 5
                 rect.origin.y = 54
@@ -354,22 +437,32 @@ final class GroupCallView : View {
         if isFullScreen, let state = state {
             let tableWidth: CGFloat
             tableWidth = (GroupCallTheme.tileTableWidth + 20)
-
             
             if state.hideParticipants, isFullScreen {
                 let width = frame.width - 10
-                let height = frame.height - 54 - 5
-                rect = CGRect(origin: .init(x: 5, y: 54), size: .init(width: width, height: height))
+                var height = frame.height - 5 - 54
+                if let tileView = tileView {
+                    height = tileView.getSize(NSMakeSize(width, height)).height
+                }
+                rect = CGRect(origin: .init(x: 5, y: 54 - scrollTempOffset), size: .init(width: width, height: height))
             } else {
                 let width = frame.width - tableWidth + 5
-                let height = frame.height - 54 - 5
-                rect = CGRect(origin: .init(x: 5, y: 54), size: .init(width: width, height: height))
+                var height = frame.height - 5 - 54
+                if let tileView = tileView {
+                    height = tileView.getSize(NSMakeSize(width, height)).height
+                }
+                rect = CGRect(origin: .init(x: 5, y: 54 - scrollTempOffset), size: .init(width: width, height: height))
             }
             
         } else {
             let width = min(frame.width - 40, 600)
-            rect = focus(NSMakeSize(width, max(200, frame.height - 180 - 200)))
-            rect.origin.y = 54
+            
+            var height = max(200, frame.height - 180 - 200)
+            if let tileView = tileView {
+                height = tileView.getSize(NSMakeSize(width, height)).height
+            }
+            rect = focus(NSMakeSize(width, height))
+            rect.origin.y = 54 - scrollTempOffset
         }
         return rect
     }
@@ -378,7 +471,22 @@ final class GroupCallView : View {
     
     var markWasScheduled: Bool? = false
     
-    var tempFullScreen: Bool? = nil
+    private var _scrollTempOffset: CGFloat = 0
+    private var scrollTempOffset: CGFloat {
+        get {
+            if let state = state {
+                if state.pinnedData.isEmpty {
+                    return 0
+                } else {
+                    return _scrollTempOffset
+                }
+            }
+            return 0
+        }
+        set {
+            _scrollTempOffset = newValue
+        }
+    }
     
     private var saveScrollInset: (GroupCallTileView.Transition, CGPoint)?
     
@@ -386,10 +494,7 @@ final class GroupCallView : View {
                 
         let duration: Double = 0.3
         
-       
         let previousState = self.state
-        
-       
         
         if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
@@ -407,10 +512,7 @@ final class GroupCallView : View {
                
             }
         }
-        
         self.state = state
-
-        
         titleView.update(state.peer, state, call.account, recordClick: { [weak self, weak state] in
             if let state = state {
                 self?.arguments?.recordClick(state.state)
@@ -446,7 +548,6 @@ final class GroupCallView : View {
                 }
             }
         }
-        
         scheduleView?.update(state, arguments: arguments, animated: animated)
 
         if animated {
@@ -455,8 +556,8 @@ final class GroupCallView : View {
             if previousState?.state.scheduleTimestamp != state.state.scheduleTimestamp {
                 let remove: Bool = state.state.scheduleTimestamp != nil
                 if !remove {
-                    self.addSubview(peersTableContainer)
-                    self.addSubview(peersTable)
+                    self.addSubview(peersTableContainer, positioned: .below, relativeTo: content)
+                    self.addSubview(peersTable, positioned: .below, relativeTo: content)
                 }
                 self.peersTable.layer?.animateAlpha(from: from, to: to, duration: duration, removeOnCompletion: false, completion: { [weak self] _ in
                     if remove {
@@ -470,8 +571,8 @@ final class GroupCallView : View {
                 peersTable.removeFromSuperview()
                 peersTableContainer.removeFromSuperview()
             } else if peersTable.superview == nil {
-                addSubview(peersTableContainer)
-                addSubview(peersTable)
+                addSubview(peersTableContainer, positioned: .below, relativeTo: content)
+                addSubview(peersTable, positioned: .below, relativeTo: content)
             }
         }
         
@@ -487,63 +588,52 @@ final class GroupCallView : View {
                 }
             }
             
-            let transition = current.update(state: state, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
+            let _ = current.update(state: state, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
+                        
+            self.addSubview(current, positioned: .below, relativeTo: content)
             
-            
-            
-            if state.isFullScreen {
-                if transition.pinnedIndex == nil {
-                    if scrollView.documentView != self.tileView {
-                        scrollView.documentView = self.tileView
-                    }
-                    if let saveScrollInset = saveScrollInset {
-                        if let prevIndex = transition.prevPinnedIndex {
-                            current.frame = transition.size.bounds
-                            let oldSize = saveScrollInset.0.size
-                            let coef = NSMakePoint(transition.size.width / oldSize.width, transition.size.height / oldSize.height)
-                            let offset = saveScrollInset.1
-                            current.makeTemporaryOffset({
-                                CGRect(origin: CGPoint(x: $0.minX * coef.x, y: $0.minY * coef.y), size: $0.size).offsetBy(dx: offset.x, dy: offset.y)
-                            }, pinnedIndex: prevIndex, size: videoRect.size)
-                            
-                            
-                            scrollView.contentView.scroll(to: offset)
-                        }
-                    }
-                    self.saveScrollInset = nil
-                    
-                } else {
-                    
-                    if current.superview != self {
-
-                        if transition.prevPinnedIndex == nil {
-                            let offset = current.enclosingScrollView?.contentOffset ?? .zero
-                            current.frame = videoRect
-                            current.makeTemporaryOffset({
-                                $0.offsetBy(dx: -offset.x, dy: -offset.y)
-                            }, pinnedIndex: nil, size: videoRect.size)
-                            self.saveScrollInset = (transition, offset)
-                        }
-                        self.addSubview(current, positioned: .below, relativeTo: titleView)
-                    }
-                }
-            } else {
-                scrollView.documentView = nil
-            }
+//            if transition.pinnedIndex == nil  {
+//
+//                if let saveScrollInset = saveScrollInset {
+//                    if let prevIndex = transition.prevPinnedIndex {
+//                        current.frame = transition.size.bounds
+//                        let oldSize = saveScrollInset.0.size
+//                        let coef = NSMakePoint(transition.size.width / oldSize.width, transition.size.height / oldSize.height)
+//                        let offset = saveScrollInset.1
+//                        current.makeTemporaryOffset({
+//                            CGRect(origin: CGPoint(x: $0.minX * coef.x, y: $0.minY * coef.y), size: $0.size).offsetBy(dx: offset.x, dy: offset.y)
+//                        }, pinnedIndex: prevIndex, size: videoRect.size)
+//
+//
+//                        scrollView.contentView.scroll(to: offset)
+//                    }
+//                }
+//                self.saveScrollInset = nil
+//
+//            } else {
+//
+//                if current.superview != self {
+//                    if transition.prevPinnedIndex == nil {
+//                        let offset = current.enclosingScrollView?.contentOffset ?? .zero
+//                        current.frame = videoRect
+//                        current.makeTemporaryOffset({
+//                            $0.offsetBy(dx: -offset.x, dy: -offset.y)
+//                        }, pinnedIndex: nil, size: videoRect.size)
+//                        self.saveScrollInset = (transition, offset)
+//                    }
+//                    self.addSubview(current, positioned: .below, relativeTo: content)
+//                }
+//            }
 
         } else {
             if let tileView = self.tileView {
                 self.tileView = nil
                 if animated {
-                    tileView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak tileView, weak scrollView] _ in
+                    tileView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak tileView] _ in
                         tileView?.removeFromSuperview()
-                        if scrollView?.documentView == tileView {
-                            scrollView?.documentView = nil
-                        }
                     })
                 } else {
                     tileView.removeFromSuperview()
-                    scrollView.documentView = nil
                 }
             }
         }
@@ -589,6 +679,8 @@ final class GroupCallView : View {
                 }
             }
         }
+        
+        content.state = state
 
         CATransaction.begin()
         if !tableTransition.isEmpty {
