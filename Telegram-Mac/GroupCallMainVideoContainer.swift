@@ -190,6 +190,8 @@ final class GroupCallMainVideoContainerView: Control {
     private var pinView: PinView?
 
     
+    private var pausedTextView: TextView?
+    
     init(call: PresentationGroupCall) {
         self.call = call
         super.init()
@@ -393,7 +395,6 @@ final class GroupCallMainVideoContainerView: Control {
         
         
         if participant != self.participant, let participant = participant {
-            self.participant = participant
             let text: String
             if participant.peer.id == participant.accountPeerId {
                 text = L10n.voiceChatStatusYou
@@ -410,33 +411,66 @@ final class GroupCallMainVideoContainerView: Control {
         self.currentPeer = peer
         if let peer = peer {
            
-            guard let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView else {
-                return
-            }
-            
-            guard let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView else {
-                return
-            }
+            let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView
+            let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView
             
             
             
-            
-
-//            videoView.videoView.setVideoContentMode(resizeMode)
-
-            
-            if self.currentVideoView != videoView || videoView.superview != self {
+            if let videoView = videoView, self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {
                     currentVideoView.removeFromSuperview()
                 }
                 self.currentVideoView = videoView
                 self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
             }
+            if let videoView = videoView {
+                let isPaused = participant?.isVideoPaused(peer.endpointId) == true
+                let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
+                if prevIsPaused != isPaused {
+                    if isPaused {
+                        self.pausedTextView?.removeFromSuperview()
+                        self.pausedTextView = TextView()
+                        
+                        let layout = TextViewLayout(.initialize(string: peer.mode == .video ? L10n.voiceChatVideoPaused : L10n.voiceChatScreencastPaused, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+                        layout.measure(width: .greatestFiniteMagnitude)
+                        self.pausedTextView?.update(layout)
+                        self.pausedTextView?.frame = focus(layout.layoutSize)
+                        addSubview(self.pausedTextView!)
+                        if animated {
+                            if videoView.superview != nil {
+                                videoView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak videoView] completion in
+                                    if completion {
+                                        videoView?.removeFromSuperview()
+                                    }
+                                    videoView?.layer?.removeAnimation(forKey: "opacity")
+                                })
+                            }
+                            pausedTextView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        } else {
+                            videoView.removeFromSuperview()
+                        }
+                    } else {
+                        if animated {
+                            videoView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                        if let pausedTextView = pausedTextView {
+                            self.pausedTextView = nil
+                            if animated {
+                                pausedTextView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pausedTextView] _ in
+                                    pausedTextView?.removeFromSuperview()
+                                })
+                            } else {
+                                pausedTextView.removeFromSuperview()
+                            }
+                        }
+                    }
+                }
+            }
+            
             
             self.currentVideoView?.gravity = resizeMode
 
-            
-            if self.backstageView != backstageView || backstageVideo.superview != self {
+            if let backstageVideo = backstageVideo, self.backstageView != backstageView || backstageVideo.superview != self {
                 if let backstageVideo = self.backstageView {
                     backstageVideo.removeFromSuperview()
                 }
@@ -451,7 +485,8 @@ final class GroupCallMainVideoContainerView: Control {
                 self.currentVideoView = nil
             }
         }
-        
+        self.participant = participant
+
         self.updateLayout(size: self.frame.size, transition: transition)
     }
     
@@ -485,6 +520,10 @@ final class GroupCallMainVideoContainerView: Control {
         transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(statusView.frame.maxX + 5, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
         
         transition.updateFrame(view: speakingView, frame: bounds)
+        
+        if let pausedTextView = pausedTextView {
+            transition.updateFrame(view: pausedTextView, frame: focus(pausedTextView.frame.size))
+        }
         
         if let pinView = pinView {
             let pinnedSize = pinView.size(self.isPinned)

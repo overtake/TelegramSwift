@@ -205,6 +205,15 @@ struct PeerGroupCallData : Equatable, Comparable {
         }
     }
     
+    func isVideoPaused(_ endpointId: String?) -> Bool {
+        if self.state?.videoDescription?.endpointId == endpointId {
+            return self.state?.videoDescription?.isPaused == true
+        }
+        if self.state?.presentationDescription?.endpointId == endpointId {
+            return self.state?.presentationDescription?.isPaused == true
+        }
+        return false
+    }
     
     func videoStatus(_ mode: VideoSourceMacMode) -> String {
         var string:String = L10n.voiceChatStatusListening
