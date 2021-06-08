@@ -50,6 +50,11 @@ final class GroupCallView : View {
             }
         }
         
+        override func layout() {
+            super.layout()
+            needsDisplay = true
+        }
+        
         override func draw(_ layer: CALayer, in ctx: CGContext) {
             ctx.setFillColor(GroupCallTheme.windowBackground.cgColor)
             ctx.fill(bounds)
@@ -130,6 +135,9 @@ final class GroupCallView : View {
             }
             
             if strongSelf.peersTable.documentOffset.y > 0 {
+                return false
+            }
+            if strongSelf.peersTable.listHeight + strongSelf.videoRect.height < strongSelf.frame.height - 180 {
                 return false
             }
 
@@ -380,16 +388,24 @@ final class GroupCallView : View {
         var size = peersTable.frame.size
         let width = min(frame.width - 40, 600)
         
-        if let state = state, !state.videoActive(.main).isEmpty {
-            if isFullScreen {
-                size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 5)
+        if let state = state {
+            if !state.videoActive(.main).isEmpty {
+                if isFullScreen {
+                    size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 5)
+                } else {
+                    var videoHeight = max(200, frame.height - 180 - 200)
+                    videoHeight -= (self.scrollTempOffset)
+                    size = NSMakeSize(width, frame.height - 180 - max(0, videoHeight) - 5)
+                }
             } else {
-                var videoHeight = max(200, frame.height - 180 - 200)
-                videoHeight -= (self.scrollTempOffset)
-                size = NSMakeSize(width, frame.height - 180 - max(0, videoHeight) - 5)
+                switch state.mode {
+                case .voice:
+                    size = NSMakeSize(width, frame.height - 271)
+                case .video:
+                    size = NSMakeSize(width, frame.height - 180)
+                }
             }
-        } else {
-            size = NSMakeSize(width, frame.height - 271)
+            
         }
         var rect = focus(size)
         rect.origin.y = 54
@@ -497,6 +513,10 @@ final class GroupCallView : View {
         let duration: Double = 0.3
         
         let previousState = self.state
+        
+        if previousState?.isFullScreen != state.isFullScreen {
+            self.scrollTempOffset = 0
+        }
         
         if let previousState = previousState {
             if let markWasScheduled = self.markWasScheduled, !state.state.canManageCall {
