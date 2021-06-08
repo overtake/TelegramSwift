@@ -55,6 +55,7 @@ struct GroupCallTheme {
 
     static let video_back = NSImage(named: "Icon_ChatNavigationBack")!.precomposed(NSColor.white)
 
+    static let video_paused = NSImage(named: "Icon_VoiceChat_PausedVideo")!.precomposed(NSColor.white)
     
     static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
     static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(NSColor.white.withAlphaComponent(0.8))

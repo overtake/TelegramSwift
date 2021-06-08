@@ -586,6 +586,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     self.addSubview(expandView!, positioned: .below, relativeTo: containerView)
                 }
                 expandView?.updateLocalizationAndTheme(theme: theme)
+            } else {
+                if let expandView = expandView {
+                    expandView.removeFromSuperview()
+                }
             }
         }
         

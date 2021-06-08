@@ -920,7 +920,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         let visibleItems = self.visibleItems()
-        
+        beginTableUpdates()
         for i in range.min ..< range.max {
             let item = self.item(at: i)
             let before = item.heightValue
@@ -931,6 +931,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 noteHeightOfRow(i, false)
             }
         }
+        endTableUpdates()
         if !tableView.inLiveResize && oldWidth != 0 {
             saveScrollState(visibleItems)
         }
@@ -1763,8 +1764,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     public func reloadData(row:Int, animated:Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false) -> Void {
+        beginTableUpdates()
         if let view = self.viewNecessary(at: row) {
             let item = self.item(at: row)
+            
             if view.isKind(of: item.viewClass()) && !presentAsNew {
                 if view.frame.height != item.heightValue {
                     NSAnimationContext.current.duration = animated ? 0.2 : 0.0
@@ -1790,16 +1793,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NSAnimationContext.current.timingFunction = nil
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
+        endTableUpdates()
         //self.moveItem(from: row, to: row)
     }
     
     fileprivate func reloadHeightItems() {
+        beginTableUpdates()
         self.enumerateItems { item -> Bool in
             if item.reloadOnTableHeightChanged {
                 self.reloadData(row: item.index)
             }
             return true
         }
+        endTableUpdates()
     }
     
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
