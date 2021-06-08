@@ -428,8 +428,12 @@ final class GroupCallMainVideoContainerView: Control {
                         let layout = TextViewLayout(.initialize(string: peer.mode == .video ? L10n.voiceChatVideoPaused : L10n.voiceChatScreencastPaused, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
                         layout.measure(width: .greatestFiniteMagnitude)
                         self.pausedTextView?.update(layout)
-                        self.pausedTextView?.frame = focus(layout.layoutSize)
                         addSubview(self.pausedTextView!)
+                        addSubview(self.pausedImageView!)
+                        
+                        
+                        self.pausedImageView!.frame = focus(pausedImageView!.frame.size).offsetBy(dx: 0, dy: -10)
+                        self.pausedTextView!.frame = self.pausedTextView!.centerFrameX(y: self.pausedImageView!.frame.maxY + 5)
                         if animated {
                             if videoView.superview != nil {
                                 videoView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak videoView] completion in
@@ -440,6 +444,7 @@ final class GroupCallMainVideoContainerView: Control {
                                 })
                             }
                             pausedTextView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            pausedImageView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         } else {
                             videoView.removeFromSuperview()
                         }
@@ -455,6 +460,16 @@ final class GroupCallMainVideoContainerView: Control {
                                 })
                             } else {
                                 pausedTextView.removeFromSuperview()
+                            }
+                        }
+                        if let pausedImageView = pausedImageView {
+                            self.pausedImageView = nil
+                            if animated {
+                                pausedImageView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pausedImageView] _ in
+                                    pausedImageView?.removeFromSuperview()
+                                })
+                            } else {
+                                pausedImageView.removeFromSuperview()
                             }
                         }
                     }
@@ -515,9 +530,13 @@ final class GroupCallMainVideoContainerView: Control {
         
         transition.updateFrame(view: speakingView, frame: bounds)
         
-        if let pausedTextView = pausedTextView {
-            transition.updateFrame(view: pausedTextView, frame: focus(pausedTextView.frame.size))
+        if let pausedImageView = pausedImageView {
+            transition.updateFrame(view: pausedImageView, frame: focus(pausedImageView.frame.size).offsetBy(dx: 0, dy: -10))
+            if let pausedTextView = pausedTextView {
+                transition.updateFrame(view: pausedTextView, frame: pausedTextView.centerFrameX(y: pausedImageView.frame.maxY + 5))
+            }
         }
+        
         
         if let pinView = pinView {
             let pinnedSize = pinView.size(self.isPinned)
