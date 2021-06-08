@@ -58,9 +58,7 @@ final class GroupCallView : View {
         override func draw(_ layer: CALayer, in ctx: CGContext) {
             ctx.setFillColor(GroupCallTheme.windowBackground.cgColor)
             ctx.fill(bounds)
-            
             var rect: CGRect = .zero
-
             if let state = self.state {
                 switch state.mode {
                 case .video:
@@ -70,7 +68,6 @@ final class GroupCallView : View {
                     } else {
                         rect = NSMakeRect(5, 54, frame.width - 10, frame.height - 5 - 54)
                     }
-                    
                 case .voice:
                     rect = NSMakeRect(0, 54, min(frame.width - 40, 600), frame.height - 271)
                     rect.origin.x = focus(rect.size).minX
@@ -108,7 +105,6 @@ final class GroupCallView : View {
         peersTableContainer.layer?.cornerRadius = 10
         updateLocalizationAndTheme(theme: theme)
         
-
         peersTable._mouseDownCanMoveWindow = true
         
         peersTable.getBackgroundColor = {
@@ -361,7 +357,7 @@ final class GroupCallView : View {
             tileView.updateLayout(size: rect.size, transition: transition)
     
         }
-        var clipRect = videoRect.size.bounds
+        let clipRect = videoRect.size.bounds
         var scrollRect = videoRect
         scrollRect.size.height += 5
         transition.updateFrame(view: scrollView.contentView, frame: clipRect)

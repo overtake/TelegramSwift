@@ -143,8 +143,6 @@ private final class BackView : Control {
     }
 }
 
-
-
 struct DominantVideo : Equatable {
     
     enum PinMode {
@@ -170,7 +168,6 @@ final class GroupCallMainVideoContainerView: Control {
     private(set) var backstageView: GroupVideoView?
     private let backstage: NSVisualEffectView = NSVisualEffectView(frame: .zero)
 
-    
     private(set) var currentVideoView: GroupVideoView?
     private(set) var currentPeer: DominantVideo?
     
@@ -191,6 +188,8 @@ final class GroupCallMainVideoContainerView: Control {
 
     
     private var pausedTextView: TextView?
+    private var pausedImageView: ImageView?
+    
     
     init(call: PresentationGroupCall) {
         self.call = call
@@ -200,7 +199,6 @@ final class GroupCallMainVideoContainerView: Control {
         speakingView.layer?.cornerRadius = 10
         speakingView.layer?.borderWidth = 2
         speakingView.layer?.borderColor = GroupCallTheme.speakActiveColor.cgColor
-        
         
         self.backgroundColor =  GroupCallTheme.membersColor
         addSubview(shadowView)
@@ -226,7 +224,6 @@ final class GroupCallMainVideoContainerView: Control {
                 
         addSubview(speakingView)
         
-        
         self.set(handler: { [weak self] _ in
             if let dominant = self?.currentPeer, self?.isPinned == false {
                 self?.arguments?.focusVideo(dominant.endpointId)
@@ -240,9 +237,7 @@ final class GroupCallMainVideoContainerView: Control {
                 }
             }
         }, for: .RightDown)
-        
-      
-        
+                
         self.set(handler: { [weak self] control in
             self?.pinView?.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
             self?.backView?.change(opacity: self?.pinIsVisible == true ? 1 : 0, animated: true)
@@ -375,9 +370,7 @@ final class GroupCallMainVideoContainerView: Control {
                 }
             }
         }
-        
-//        self.pinView.update(isPinned, animated: animated)
-//
+
         self.pinView?.change(opacity: self.mouseInside() && pinIsVisible ? 1 : 0, animated: animated)
         self.backView?.change(opacity: self.mouseInside() && pinIsVisible ? 1 : 0, animated: animated)
 
@@ -413,9 +406,7 @@ final class GroupCallMainVideoContainerView: Control {
            
             let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView
             let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView
-            
-            
-            
+                        
             if let videoView = videoView, self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {
                     currentVideoView.removeFromSuperview()
@@ -429,8 +420,11 @@ final class GroupCallMainVideoContainerView: Control {
                 if prevIsPaused != isPaused {
                     if isPaused {
                         self.pausedTextView?.removeFromSuperview()
+                        self.pausedImageView?.removeFromSuperview()
                         self.pausedTextView = TextView()
-                        
+                        self.pausedImageView = ImageView()
+                        self.pausedImageView?.image = GroupCallTheme.video_paused
+                        self.pausedImageView?.sizeToFit()
                         let layout = TextViewLayout(.initialize(string: peer.mode == .video ? L10n.voiceChatVideoPaused : L10n.voiceChatScreencastPaused, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
                         layout.measure(width: .greatestFiniteMagnitude)
                         self.pausedTextView?.update(layout)
