@@ -72,7 +72,7 @@ final class GroupCallView : View {
                     }
                     
                 case .voice:
-                    var rect = NSMakeRect(0, 54, min(frame.width - 40, 600), frame.height - 271)
+                    rect = NSMakeRect(0, 54, min(frame.width - 40, 600), frame.height - 271)
                     rect.origin.x = focus(rect.size).minX
                 }
                 if rect != .zero {

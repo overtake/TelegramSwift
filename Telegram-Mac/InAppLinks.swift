@@ -976,62 +976,53 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if !value.isEmpty {
                             let component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
                             if let context = context {
-                                if component.count == 6, component.rangeOfCharacter(from: CharacterSet(charactersIn: "0123456789abcdefABCDEF").inverted) == nil, let color = NSColor(hexString: "#\(component)") {
-                                    return .wallpaper(link: urlString, context: context, preview: .color(color))
-                                } else {
-                                    
-                                    let (vars, emptyVars) = urlVars(with: value)
-
-                                    var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
-                                    
-                                    if let r = rotation {
-                                        let available:[Int32] = [0, 45, 90, 135, 180, 225, 270, 310]
-                                        if !available.contains(r) {
-                                            rotation = nil
-                                        }
+                                let (vars, emptyVars) = urlVars(with: value)
+                                var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
+                                
+                                if let r = rotation {
+                                    let available:[Int32] = [0, 45, 90, 135, 180, 225, 270, 310]
+                                    if !available.contains(r) {
+                                        rotation = nil
                                     }
-                                    
-                                    let components = component.components(separatedBy: "?").first?.components(separatedBy: "-") ?? []
-                                    if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
-                                        return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor, rotation))
-                                    }
-                                    
-                                    var blur: Bool = false
-                                    var intensity: Int32? = 80
-                                    var color: UInt32? = nil
-                                    var bottomColor: UInt32? = nil
-
-                                    if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
-                                        let components = bgcolor.components(separatedBy: "-")
-                                        if components.count == 2 {
-                                            if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
-                                                color = rgb
-                                            }
-                                            if let rgb = NSColor(hexString: "#\(components[1])")?.argb {
-                                                bottomColor = rgb
-                                            }
-                                        } else if components.count == 1 {
-                                            if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
-                                                color = rgb
-                                            }
-                                        }
-                                    }
-                                    if let intensityString = vars["intensity"] {
-                                        intensity = Int32(intensityString)
-                                    }
-                                    if let mode = vars["mode"] {
-                                        blur = mode.contains("blur")
-                                    }
-                                    
-                                    let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: [color, bottomColor].compactMap { $0 }, intensity: intensity, rotation: rotation)
-                                    
-                                    var slug = component
-                                    if let index = component.range(of: "?") {
-                                        slug = String(component[component.startIndex ..< index.lowerBound])
-                                    }
-
-                                    return .wallpaper(link: urlString, context: context, preview: .slug(slug, settings))
                                 }
+                                
+                                
+                                var blur: Bool = false
+                                var intensity: Int32? = 80
+                                var color: UInt32? = nil
+                                var bottomColor: UInt32? = nil
+
+                                if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
+                                    let components = bgcolor.components(separatedBy: "~")
+                                    if components.count > 1 {
+                                        if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
+                                            color = rgb
+                                        }
+                                        if let rgb = NSColor(hexString: "#\(components.last!)")?.argb {
+                                            bottomColor = rgb
+                                        }
+                                    } else if components.count == 1 {
+                                        if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
+                                            color = rgb
+                                        }
+                                    }
+                                }
+                                if let intensityString = vars["intensity"] {
+                                    intensity = Int32(intensityString)
+                                }
+                                if let mode = vars["mode"] {
+                                    blur = mode.contains("blur")
+                                }
+                                
+                                let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: [color, bottomColor].compactMap { $0 }, intensity: intensity, rotation: rotation)
+                                
+                                var slug = component
+                                if let index = component.range(of: "?") {
+                                    slug = String(component[component.startIndex ..< index.lowerBound])
+                                }
+
+                                return .wallpaper(link: urlString, context: context, preview: .slug(slug, settings))
+
                             }
                         }
                         return .external(link: urlString, false)
@@ -1282,16 +1273,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
 
                         
                         if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
-                            let components = bgcolor.components(separatedBy: "-")
-                            if components.count == 2 {
-                                if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
+                            let components = bgcolor.components(separatedBy: "~")
+                            if components.count > 1 {
+                                if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
                                     color = rgb
                                 }
-                                if let rgb = NSColor(hexString: "#\(components[1])")?.argb {
+                                if let rgb = NSColor(hexString: "#\(components.last!)")?.argb {
                                     bottomColor = rgb
                                 }
                             } else if components.count == 1 {
-                                if let rgb = NSColor(hexString: "#\(components[0])")?.argb {
+                                if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
                                     color = rgb
                                 }
                             }
@@ -1309,7 +1300,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     }
                     if let context = context, let value = vars["color"] {
                         return .wallpaper(link: urlString, context: context, preview: .slug(value, WallpaperSettings()))
-                    } else if let context = context, let component = vars["gradient"] {
+                    } else if let context = context {
                         
                         var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
                         
@@ -1320,8 +1311,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                         
-                        let components = component.components(separatedBy: "?").first?.components(separatedBy: "-") ?? []
-                        if components.count == 2, let topColor = NSColor(hexString: "#\(components[0])"), let bottomColor = NSColor(hexString: "#\(components[1])")  {
+                        let components = vars["bg_color"]?.components(separatedBy: "~") ?? []
+                        if components.count > 0, let topColor = NSColor(hexString: "#\(components.first!)"), let bottomColor = NSColor(hexString: "#\(components.last!)")  {
                             return .wallpaper(link: urlString, context: context, preview: .gradient(topColor, bottomColor, rotation))
                         }
                     }

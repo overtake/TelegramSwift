@@ -9263,6 +9263,8 @@ internal final class L10n {
   internal static var voiceChatScheduledHeader: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.Header") }
   /// Late For
   internal static var voiceChatScheduledHeaderLate: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.HeaderLate") }
+  /// Screencast is paused
+  internal static var voiceChatScreencastPaused: String  { return L10n.tr("Localizable", "VoiceChat.Screencast.Paused") }
   /// Voice Chat
   internal static var voiceChatScreencastConfirmHeader: String  { return L10n.tr("Localizable", "VoiceChat.Screencast.Confirm.Header") }
   /// Continue
@@ -9451,6 +9453,8 @@ internal final class L10n {
   internal static var voiceChatTooltipErrorScreenUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Error.ScreenUnavailable") }
   /// Video share is not available right now. Please try again.
   internal static var voiceChatTooltipErrorVideoUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.Tooltip.Error.VideoUnavailable") }
+  /// Video is paused
+  internal static var voiceChatVideoPaused: String  { return L10n.tr("Localizable", "VoiceChat.Video.Paused") }
   /// Pin
   internal static var voiceChatVideoShortPin: String  { return L10n.tr("Localizable", "VoiceChat.Video.ShortPin") }
   /// Unpin
