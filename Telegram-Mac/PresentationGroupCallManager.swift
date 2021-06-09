@@ -20,7 +20,8 @@ public struct PresentationGroupCallRequestedVideo {
     public var audioSsrc: UInt32
     public var endpointId: String
     public var ssrcGroups: [SsrcGroup]
-    public var quality: Quality
+    public var minQuality: Quality
+    public var maxQuality: Quality
 }
 
 public extension GroupCallParticipantsContext.Participant {
@@ -34,7 +35,7 @@ public extension GroupCallParticipantsContext.Participant {
 }
 
 extension GroupCallParticipantsContext.Participant {
-    func requestedVideoChannel(quality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
+    func requestedVideoChannel(minQuality: PresentationGroupCallRequestedVideo.Quality, maxQuality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
         guard let audioSsrc = self.ssrc else {
             return nil
         }
@@ -43,10 +44,10 @@ extension GroupCallParticipantsContext.Participant {
         }
         return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: videoDescription.endpointId, ssrcGroups: videoDescription.ssrcGroups.map { group in
             PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
-        }, quality: quality)
+        }, minQuality: minQuality, maxQuality: maxQuality)
     }
 
-    func requestedPresentationVideoChannel(quality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
+    func requestedPresentationVideoChannel(minQuality: PresentationGroupCallRequestedVideo.Quality, maxQuality: PresentationGroupCallRequestedVideo.Quality) -> PresentationGroupCallRequestedVideo? {
         guard let audioSsrc = self.ssrc else {
             return nil
         }
@@ -55,7 +56,7 @@ extension GroupCallParticipantsContext.Participant {
         }
         return PresentationGroupCallRequestedVideo(audioSsrc: audioSsrc, endpointId: presentationDescription.endpointId, ssrcGroups: presentationDescription.ssrcGroups.map { group in
             PresentationGroupCallRequestedVideo.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
-        }, quality: quality)
+        }, minQuality: minQuality, maxQuality: maxQuality)
     }
 }
 

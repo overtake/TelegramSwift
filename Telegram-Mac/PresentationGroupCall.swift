@@ -2260,16 +2260,25 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
     }
 
-    func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo]) {
+    public func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo]) {
         self.genericCallContext?.setRequestedVideoChannels(items.compactMap { item -> OngoingGroupCallContext.VideoChannel in
-            let mappedQuality: OngoingGroupCallContext.VideoChannel.Quality
-            switch item.quality {
+            let mappedMinQuality: OngoingGroupCallContext.VideoChannel.Quality
+            let mappedMaxQuality: OngoingGroupCallContext.VideoChannel.Quality
+            switch item.minQuality {
             case .thumbnail:
-                mappedQuality = .thumbnail
+                mappedMinQuality = .thumbnail
             case .medium:
-                mappedQuality = .medium
+                mappedMinQuality = .medium
             case .full:
-                mappedQuality = .full
+                mappedMinQuality = .full
+            }
+            switch item.maxQuality {
+            case .thumbnail:
+                mappedMaxQuality = .thumbnail
+            case .medium:
+                mappedMaxQuality = .medium
+            case .full:
+                mappedMaxQuality = .full
             }
             return OngoingGroupCallContext.VideoChannel(
                 audioSsrc: item.audioSsrc,
@@ -2277,7 +2286,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 ssrcGroups: item.ssrcGroups.map { group in
                     return OngoingGroupCallContext.VideoChannel.SsrcGroup(semantics: group.semantics, ssrcs: group.ssrcs)
                 },
-                quality: mappedQuality
+                minQuality: mappedMinQuality,
+                maxQuality: mappedMaxQuality
             )
         })
     }

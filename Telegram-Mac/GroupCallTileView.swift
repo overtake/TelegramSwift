@@ -15,7 +15,7 @@ struct VoiceChatTile {
     
     var bestQuality: PresentationGroupCallRequestedVideo.Quality {
         if rect.width > 480 || rect.height > 480 {
-            return .full
+            return .medium
         } else if rect.width > 160 || rect.height > 160 {
             return .medium
         } else {

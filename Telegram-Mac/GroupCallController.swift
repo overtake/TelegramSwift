@@ -1516,8 +1516,8 @@ final class GroupCallUIController : ViewController {
                         
             for (i, member) in videoMembers.enumerated() {
                 
-                var videoQuality: PresentationGroupCallRequestedVideo.Quality = tiles[i].bestQuality
-                var screencastQuality: PresentationGroupCallRequestedVideo.Quality = tiles[i].bestQuality
+                var videoQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
+                var screencastQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
 
                 let dominant = dominant.permanent ?? dominant.focused?.id
                 if let dominant = dominant {
@@ -1531,10 +1531,21 @@ final class GroupCallUIController : ViewController {
                     }
                 }
                 
-                if let item = member.requestedVideoChannel(quality: videoQuality) {
+                let minVideo: PresentationGroupCallRequestedVideo.Quality = .thumbnail
+                let maxVideo: PresentationGroupCallRequestedVideo.Quality = videoQuality
+
+                
+                if let item = member.requestedVideoChannel(minQuality: minVideo, maxQuality: maxVideo) {
                     items.append(item)
                 }
-                if let item = member.requestedPresentationVideoChannel(quality: screencastQuality) {
+                
+                var minScreencast: PresentationGroupCallRequestedVideo.Quality = .thumbnail
+                let maxScreencast: PresentationGroupCallRequestedVideo.Quality = screencastQuality
+
+                if maxScreencast == .full {
+                    minScreencast = .full
+                }
+                if let item = member.requestedPresentationVideoChannel(minQuality: minScreencast, maxQuality: maxScreencast) {
                     items.append(item)
                 }
             }
@@ -1847,20 +1858,20 @@ final class GroupCallUIController : ViewController {
             timer.start()
         }
         
-        window.set(mouseHandler: { [weak self] event in
-            self?.genericView.updateMouse(event: event, animated: true, isReal: true)
-            launchIdleTimer()
-            return .rejected
-        }, with: self, for: .mouseEntered, priority: .modal)
+//        window.set(mouseHandler: { [weak self] event in
+//            self?.genericView.updateMouse(animated: true, isReal: true)
+//            launchIdleTimer()
+//            return .rejected
+//        }, with: self, for: .mouseEntered, priority: .modal)
         
         window.set(mouseHandler: { [weak self]  event in
-            self?.genericView.updateMouse(event: event, animated: true, isReal: true)
+            self?.genericView.updateMouse(animated: true, isReal: true)
             launchIdleTimer()
             return .rejected
         }, with: self, for: .mouseMoved, priority: .modal)
         
-        window.set(mouseHandler: { [weak self]  event in
-            self?.genericView.updateMouse(event: event, animated: true, isReal: true)
+        window.set(mouseHandler: { [weak self] event in
+            self?.genericView.updateMouse(animated: true, isReal: true)
             launchIdleTimer()
             return .rejected
         }, with: self, for: .mouseExited, priority: .modal)
