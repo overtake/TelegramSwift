@@ -214,6 +214,11 @@ final class GroupCallMainVideoContainerView: Control {
         backstage.wantsLayer = true
         backstage.material = .dark
         backstage.blendingMode = .withinWindow
+        if #available(OSX 10.12, *) {
+            backstage.isEmphasized = true
+        } else {
+            // Fallback on earlier versions
+        }
         backstage.state = .active
         
         

@@ -239,7 +239,7 @@ final class GroupCallView : View {
         titleView.backgroundColor = .clear
     }
     
-    func updateMouse(event: NSEvent, animated: Bool, isReal: Bool) {
+    func updateMouse(animated: Bool, isReal: Bool) {
         guard let window = self.window else {
             return
         }
@@ -268,6 +268,7 @@ final class GroupCallView : View {
         let previousMode = self.controlsMode
         self.controlsMode = mode
         
+
        // if previousMode != mode {
             controlsContainer.change(opacity: mode == .invisible && isFullScreen && state?.controlsTooltip == nil ? 0 : 1, animated: animated)
             tileView?.updateMode(controlsMode: mode, controlsState: controlsContainer.mode, animated: animated)
@@ -291,26 +292,25 @@ final class GroupCallView : View {
         let previousMode = self.controlsMode
         self.controlsMode = mode
         
-        if previousMode != mode {
-            controlsContainer.change(opacity: mode == .invisible && isFullScreen && state?.controlsTooltip == nil ? 0 : 1, animated: true)
-            
-            
-            var videosMode: ControlsMode
-            if !isFullScreen {
-                if NSPointInRect(location, frame) && mouseInside() {
-                    videosMode = .normal
-                } else {
-                    videosMode = .invisible
-                }
+        controlsContainer.change(opacity: mode == .invisible && isFullScreen && state?.controlsTooltip == nil ? 0 : 1, animated: true)
+        
+        
+        
+        var videosMode: ControlsMode
+        if !isFullScreen {
+            if NSPointInRect(location, frame) && mouseInside() {
+                videosMode = .normal
             } else {
-                videosMode = mode
+                videosMode = .invisible
             }
-            
-            self.controlsMode = videosMode
-            
-            tileView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
-
+        } else {
+            videosMode = mode
         }
+        
+            self.controlsMode = videosMode
+        
+        tileView?.updateMode(controlsMode: videosMode, controlsState: controlsContainer.mode, animated: true)
+
     }
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
@@ -685,6 +685,12 @@ final class GroupCallView : View {
                         current.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                     }
                     presented = true
+                    
+                    current.set(handler: { [weak self] _ in
+                        if tooltipSpeaker.hasVideo {
+                            self?.arguments?.focusVideo(tooltipSpeaker.videoEndpoint ?? tooltipSpeaker.presentationEndpoint)
+                        }
+                    }, for: .Click)
                 }
                 current.setPeer(data: tooltipSpeaker, account: call.account, audioLevel: arguments?.audioLevel ?? { _ in return nil })
                 
@@ -719,9 +725,7 @@ final class GroupCallView : View {
         
         peersTable.layer?.cornerRadius = isVertical ? 0 : 10
                 
-        if let event = NSApp.currentEvent {
-            updateMouse(event: event, animated: false, isReal: false)
-        }
+        updateMouse(animated: false, isReal: false)
     }
 
     required init?(coder: NSCoder) {

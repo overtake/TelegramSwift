@@ -25,6 +25,9 @@ final class GroupCallSpeakingTooltipView: Control {
         
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
+        avatarView.isEventLess = true
+        backgroundView.isEventLess = true
+        scaleOnClick = true
     }
     
     func setPeer(data: PeerGroupCallData, account: Account, audioLevel:(PeerId)->Signal<Float?, NoError>?) {
@@ -32,9 +35,9 @@ final class GroupCallSpeakingTooltipView: Control {
                 
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.voiceChatTooltipIsSpeaking(data.peer.compactDisplayTitle), color: GroupCallTheme.customTheme.textColor, font: .normal(.text))
+        _ = attr.append(string: L10n.voiceChatTooltipIsSpeaking(data.peer.compactDisplayTitle.prefix(25)), color: GroupCallTheme.customTheme.textColor, font: .normal(.text))
         attr.detectBoldColorInString(with: .medium(.text))
-        let layout = TextViewLayout(attr)
+        let layout = TextViewLayout(attr, maximumNumberOfLines: 1)
         layout.measure(width: 200)
         nameView.update(layout)
                 
