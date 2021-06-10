@@ -1032,6 +1032,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
 - (NSRect) highlightRectForRange:(NSRange)aRange
     {
+        if (aRange.location > self.string.length || self.string.length == 0) {
+            return NSZeroRect;
+        }
         NSRange r = aRange;
         NSRange startLineRange = [[self string] lineRangeForRange:NSMakeRange(r.location, 0)];
         NSInteger er = NSMaxRange(r)-1;

@@ -142,10 +142,20 @@ final class GroupCallTitleView : Control {
         
         transition.updateFrame(view: statusView, frame:  statusView.centerFrameX(y: backgroundView.frame.midY))
 
+        
+        var add: CGFloat = 0
+        if !self.pinWindow.isHidden {
+            add += self.pinWindow.frame.width + 5
+        }
+        if !self.hidePeers.isHidden {
+            add += self.hidePeers.frame.width + 5
+        }
+        
         if let recordingView = recordingView {
             
             let layout = titleView.layout
-            layout?.measure(width: backgroundView.frame.width - 125 - recordingView.frame.width - 10 - 30)
+            
+            layout?.measure(width: backgroundView.frame.width - 125 - recordingView.frame.width - 10 - 30 - add)
             titleView.update(layout)
             
             let rect = backgroundView.focus(titleView.frame.size)
@@ -157,7 +167,7 @@ final class GroupCallTitleView : Control {
         } else {
             
             let layout = titleView.layout
-            layout?.measure(width: backgroundView.frame.width - 125)
+            layout?.measure(width: backgroundView.frame.width - 125 - add)
             titleView.update(layout)
             
             let rect = backgroundView.focus(titleView.frame.size)

@@ -251,7 +251,6 @@ final class DesktopCapturerWindow : Window {
         
         var first: Bool = true
         
-        listController.loadViewIfNeeded()
         
         listController.updateDesktopSelected = { [weak self] wrap, manager in
             self?.genericView.updatePreview(wrap.source as! DesktopCaptureSourceMac, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
@@ -263,8 +262,10 @@ final class DesktopCapturerWindow : Window {
             first = false
         }
         
+        listController.loadViewIfNeeded()
+        
         self.listController.excludeWindowNumber = self.windowNumber
-        self.genericView.listView = listController.genericView
+        self.genericView.listView = listController.view
 
         
         self.genericView.cancel.set(handler: { [weak self] _ in
