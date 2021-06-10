@@ -439,7 +439,7 @@ final class GroupCallMainVideoContainerView: Control {
                         addSubview(self.pausedImageView!)
                         
                         
-                        self.pausedImageView!.frame = focus(pausedImageView!.frame.size).offsetBy(dx: 0, dy: -10)
+                        self.pausedImageView!.frame = focus(pausedImageView!.frame.size).offsetBy(dx: 0, dy: -5)
                         self.pausedTextView!.frame = self.pausedTextView!.centerFrameX(y: self.pausedImageView!.frame.maxY + 5)
                         if animated {
                             if videoView.superview != nil {
@@ -537,8 +537,8 @@ final class GroupCallMainVideoContainerView: Control {
         self.nameView.resize(size.width - 40)
 
         
-        transition.updateFrame(view: statusView, frame: CGRect(origin: NSMakePoint(10, size.height - 10 - self.statusView.frame.height), size: self.statusView.frame.size))
-        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(statusView.frame.maxX + 5, size.height - 10 - self.nameView.frame.height), size: self.nameView.frame.size))
+        transition.updateFrame(view: statusView, frame: CGRect(origin: NSMakePoint(5, size.height - 5 - self.statusView.frame.height), size: self.statusView.frame.size))
+        transition.updateFrame(view: self.nameView, frame: CGRect(origin: NSMakePoint(statusView.frame.maxX + 5, size.height - 5 - self.nameView.frame.height), size: self.nameView.frame.size))
         
         transition.updateFrame(view: speakingView, frame: bounds)
         

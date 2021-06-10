@@ -1515,7 +1515,6 @@ final class GroupCallUIController : ViewController {
             var items:[PresentationGroupCallRequestedVideo] = []
                         
             for (i, member) in videoMembers.enumerated() {
-                
                 var videoQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
                 var screencastQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
 

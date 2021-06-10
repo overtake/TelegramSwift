@@ -168,7 +168,25 @@ private func entries(_ state: DesktopCaptureListState, screens: DesktopCaptureSo
     return entries
 }
 
-final class DesktopCapturerListController: GenericViewController<HorizontalTableView> {
+private final class DesktopCaptureListView : View {
+    fileprivate let tableView: HorizontalTableView
+    required init(frame frameRect: NSRect) {
+        tableView = HorizontalTableView(frame: frameRect.size.bounds, isFlipped: true, bottomInset: 0, drawBorder: false)
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        tableView.frame = bounds
+    }
+}
+
+final class DesktopCapturerListController: ViewController {
     
     private let windows = DesktopCaptureSourceManagerMac(_w: ())
     private let screens = DesktopCaptureSourceManagerMac(_s: ())
@@ -186,6 +204,10 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
         self.mode = mode
         super.init(frame: .init(origin: .zero, size: size))
         self.bar = .init(height: 0)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return DesktopCaptureListView.self
     }
     
     var excludeWindowNumber: Int = 0
@@ -367,10 +389,10 @@ final class DesktopCapturerListController: GenericViewController<HorizontalTable
 
     }
     
-    override func initializer() -> HorizontalTableView {
-        return HorizontalTableView(frame: bounds, isFlipped: true, bottomInset: 0, drawBorder: false)
+    private var genericView: HorizontalTableView {
+        return (self.view as! DesktopCaptureListView).tableView
     }
-    
+
     deinit {
         disposable.dispose()
         updateDisposable?.dispose()
