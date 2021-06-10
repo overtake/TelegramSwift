@@ -92,6 +92,7 @@ private final class ChatListExpandView: View {
         titleView.isSelectable = false
 
         self.addSubview(titleView)
+        updateLocalizationAndTheme(theme: theme)
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let titleLayout = TextViewLayout(.initialize(string: L10n.chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)

@@ -116,6 +116,13 @@ public final class OngoingCallVideoCapturer {
             DispatchQueue.main.async(execute: onError)
         })
     }
+    public func setOnPause(_ onPause: @escaping(Bool)->Void) {
+        self.impl.setOnPause({ pause in
+            DispatchQueue.main.async(execute: {
+                onPause(pause)
+            })
+        })
+    }
 
     public func switchVideoInput(_ deviceId: String) {
         self.impl.switchVideoInput(deviceId)
