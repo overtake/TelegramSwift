@@ -411,16 +411,18 @@ final class GroupCallMainVideoContainerView: Control {
            
             let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView
             let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView
-                        
+            let isPaused = participant?.isVideoPaused(peer.endpointId) == true
+
             if let videoView = videoView, self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {
                     currentVideoView.removeFromSuperview()
                 }
                 self.currentVideoView = videoView
-                self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
+                if !isPaused {
+                    self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
+                }
             }
             if let videoView = videoView {
-                let isPaused = participant?.isVideoPaused(peer.endpointId) == true
                 let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
                 if prevIsPaused != isPaused {
                     if isPaused {
@@ -491,12 +493,17 @@ final class GroupCallMainVideoContainerView: Control {
                 backstageVideo.videoView.setVideoContentMode(.resizeAspectFill)
                 self.backstageView = backstageVideo
                 self.addSubview(backstageVideo, positioned: .below, relativeTo: self.currentVideoView)
-                self.addSubview(backstage, positioned: .above, relativeTo: backstageVideo)
             }
+            self.addSubview(backstage, positioned: .above, relativeTo: backstageVideo)
         } else {
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()
                 self.currentVideoView = nil
+            }
+            if let backstageView = self.backstageView {
+                backstageView.removeFromSuperview()
+                self.backstageView = nil
+                backstage.removeFromSuperview()
             }
         }
         self.participant = participant

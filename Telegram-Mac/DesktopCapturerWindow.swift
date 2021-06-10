@@ -250,6 +250,9 @@ final class DesktopCapturerWindow : Window {
         self.toolbar?.showsBaselineSeparator = false
         
         var first: Bool = true
+        
+        listController.loadViewIfNeeded()
+        
         listController.updateDesktopSelected = { [weak self] wrap, manager in
             self?.genericView.updatePreview(wrap.source as! DesktopCaptureSourceMac, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
             first = false
