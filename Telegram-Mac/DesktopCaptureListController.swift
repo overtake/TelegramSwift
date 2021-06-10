@@ -194,8 +194,6 @@ final class DesktopCapturerListController: ViewController {
     private var updateDisposable: Disposable?
     private let disposable: MetaDisposable = MetaDisposable()
     private let devicesDisposable = MetaDisposable()
-    var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManagerMac)->Void)? = nil
-    var updateCameraSelected:((DesktopCapturerObjectWrapper)->Void)? = nil
 
     private let mode: VideoSourceMacMode
     private let devices: DevicesContext
@@ -204,7 +202,12 @@ final class DesktopCapturerListController: ViewController {
         self.mode = mode
         super.init(frame: .init(origin: .zero, size: size))
         self.bar = .init(height: 0)
+        loadViewIfNeeded()
     }
+    
+    var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManagerMac)->Void)? = nil
+    var updateCameraSelected:((DesktopCapturerObjectWrapper)->Void)? = nil
+
     
     override func viewClass() -> AnyClass {
         return DesktopCaptureListView.self
@@ -220,7 +223,7 @@ final class DesktopCapturerListController: ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let actionsDisposable = DisposableSet()
-
+        
         var hasCameraAccess = false
         var requestCamera = false
         if #available(OSX 10.14, *) {
@@ -322,13 +325,15 @@ final class DesktopCapturerListController: ViewController {
             return true
         })
         
-        actionsDisposable.add(updateSelected.start(next: { [weak self, weak screens] selected in
-            if let selected = selected as? DesktopCaptureSourceMac, let screens = screens {
-                self?.updateDesktopSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.sharing }), screens)
-            } else if let selected = selected as? CameraCaptureDevice {
-                self?.updateCameraSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.camera }))
-            }
-        }))
+        DispatchQueue.main.async {
+            actionsDisposable.add(updateSelected.start(next: { [weak self, weak screens] selected in
+                if let selected = selected as? DesktopCaptureSourceMac, let screens = screens {
+                    self?.updateDesktopSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.sharing }), screens)
+                } else if let selected = selected as? CameraCaptureDevice {
+                    self?.updateCameraSelected?(DesktopCapturerObjectWrapper(source: selected, isAvailableToStream: stateValue.with { $0.access.camera }))
+                }
+            }))
+        }
         
         switch mode {
         case .screencast:
