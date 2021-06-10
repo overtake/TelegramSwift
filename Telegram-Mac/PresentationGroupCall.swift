@@ -2140,8 +2140,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.presentationIsPaused = paused
-            strongSelf.participantsContext?.updateVideoState(peerId: strongSelf.joinAsPeerId, isVideoMuted: nil, isVideoPaused: false, isPresentationPaused: strongSelf.presentationIsPaused)
+            strongSelf.participantsContext?.updateVideoState(peerId: strongSelf.joinAsPeerId, isVideoMuted: nil, isVideoPaused: false, isPresentationPaused: paused)
         })
 
         let screencastCallContext = OngoingGroupCallContext(
@@ -2241,7 +2240,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.hasVideo = true
         if let videoCapturer = self.videoCapturer {
             self.genericCallContext?.requestVideo(videoCapturer)
-            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: false, isVideoPaused: false, isPresentationPaused: self.presentationIsPaused)
+            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: false, isVideoPaused: false, isPresentationPaused: nil)
         }
     }
     
@@ -2250,7 +2249,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         if let _ = self.videoCapturer {
             self.videoCapturer = nil
             self.genericCallContext?.disableVideo()
-            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: true, isVideoPaused: false, isPresentationPaused: self.presentationIsPaused)
+            self.participantsContext?.updateVideoState(peerId: self.joinAsPeerId, isVideoMuted: true, isVideoPaused: false, isPresentationPaused: nil)
         }
     }
 
@@ -2481,7 +2480,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var currentMyAudioLevelTimestamp: Double = 0.0
     private var isSendingTyping: Bool = false
     
-    private var presentationIsPaused: Bool = false
     
     private func restartMyAudioLevelTimer() {
         self.myAudioLevelTimer?.invalidate()
