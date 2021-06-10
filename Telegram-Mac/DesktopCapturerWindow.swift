@@ -262,7 +262,6 @@ final class DesktopCapturerWindow : Window {
             first = false
         }
         
-        listController.loadViewIfNeeded()
         
         self.listController.excludeWindowNumber = self.windowNumber
         self.genericView.listView = listController.view
