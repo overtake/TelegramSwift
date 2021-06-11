@@ -188,8 +188,8 @@ private final class DesktopCaptureListView : View {
 
 final class DesktopCapturerListController {
     
-    private let windows = DesktopCaptureSourceManagerMac(_w: ())
-    private let screens = DesktopCaptureSourceManagerMac(_s: ())
+    private var windows: DesktopCaptureSourceManagerMac!
+    private var screens: DesktopCaptureSourceManagerMac!
 
     private var updateDisposable: Disposable?
     private let disposable: MetaDisposable = MetaDisposable()
@@ -216,23 +216,6 @@ final class DesktopCapturerListController {
             if !NSIsEmptyRect(frame) {
                 _frame = frame
             }
-            self.loadView()
-            
-            return
-        }
-    }
-    var view:NSView {
-        get {
-            if(_view == nil) {
-                loadView();
-            }
-            
-            return _view!;
-        }
-       
-    }
-    func loadView() -> Void {
-        if(_view == nil) {
             let vz = viewClass() as! NSView.Type
             _view = vz.init(frame: _frame);
             _view?.autoresizingMask = [.width,.height]
@@ -243,7 +226,15 @@ final class DesktopCapturerListController {
 
             
             viewDidLoad()
+            
+            return
         }
+    }
+    var view:NSView {
+        get {
+            return _view!;
+        }
+       
     }
 
     @objc func viewFrameChanged(_ notification:Notification) {
@@ -272,6 +263,10 @@ final class DesktopCapturerListController {
     }
     
     func viewDidLoad() {
+        
+        self.windows = DesktopCaptureSourceManagerMac(_w: ())
+        self.screens = DesktopCaptureSourceManagerMac(_s: ())
+
         let actionsDisposable = DisposableSet()
         
         var hasCameraAccess = false
