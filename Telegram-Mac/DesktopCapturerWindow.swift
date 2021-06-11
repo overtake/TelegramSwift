@@ -222,12 +222,12 @@ private final class DesktopCapturerView : View {
 
 final class DesktopCapturerWindow : Window {
     
-    private let listController: DesktopCapturerListController
+    private let listController: DesktopCaptureListUI
     let mode: VideoSourceMacMode
     init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac)->Void, devices: DevicesContext) {
         self.mode = mode
         let size = NSMakeSize(700, 600)
-        listController = DesktopCapturerListController(size: NSMakeSize(size.width, 90), devices: devices, mode: mode)
+        listController = DesktopCaptureListUI(size: NSMakeSize(size.width, 90), devices: devices, mode: mode)
         
         var rect: NSRect = .init(origin: .zero, size: size)
         if let screen = NSScreen.main {

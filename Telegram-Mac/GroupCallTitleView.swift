@@ -12,6 +12,55 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+private final class GroupCallSpeakingView : View {
+    private let animationView: View = View()
+    private let textView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(animationView)
+        addSubview(textView)
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        let animation = CAKeyframeAnimation(keyPath: "contents")
+        animationView.layer?.contents = GroupCallTheme.titleSpeakingAnimation.first
+        animationView.setFrameSize(GroupCallTheme.titleSpeakingAnimation.first!.backingSize)
+        
+        animation.values = GroupCallTheme.titleSpeakingAnimation
+        animation.duration = 0.7
+        
+        animationView.layer?.removeAllAnimations()
+        animation.repeatCount = .infinity
+        animation.isRemovedOnCompletion = false
+        animationView.layer?.add(animation, forKey: "contents")
+    }
+    
+    func update(_ peers:[PeerGroupCallData], maxWidth: CGFloat, animated: Bool) {
+        let text: String = peers.map { $0.peer.compactDisplayTitle }.joined(separator: ",")
+        
+        let layout = TextViewLayout(.initialize(string: text, color: GroupCallTheme.greenStatusColor, font: .normal(.text)), maximumNumberOfLines: 1)
+        
+        layout.measure(width: maxWidth)
+        textView.update(layout)
+        
+        self.change(size: NSMakeSize(animationView.frame.width + textView.frame.width, max(animationView.frame.height, textView.frame.height)), animated: animated)
+        
+        needsLayout = true
+
+    }
+    
+    override func layout() {
+        super.layout()
+        animationView.centerY(x: 0, addition: -3)
+        textView.centerY(x: animationView.frame.maxX - 2)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private final class GroupCallRecordingView : Control {
     private let indicator: View = View()
     required init(frame frameRect: NSRect) {
@@ -74,6 +123,7 @@ final class GroupCallTitleView : Control {
     fileprivate let titleView: TextView = TextView()
     fileprivate let statusView: DynamicCounterTextView = DynamicCounterTextView()
     private var recordingView: GroupCallRecordingView?
+    private var speakingView: GroupCallSpeakingView?
     let pinWindow = ImageButton()
     let hidePeers = ImageButton()
     private let backgroundView: View = View()
@@ -142,6 +192,10 @@ final class GroupCallTitleView : Control {
         
         transition.updateFrame(view: statusView, frame:  statusView.centerFrameX(y: backgroundView.frame.midY))
 
+        if let speakingView = speakingView {
+            transition.updateFrame(view: speakingView, frame:  speakingView.centerFrameX(y: backgroundView.frame.midY))
+        }
+
         
         var add: CGFloat = 0
         if !self.pinWindow.isHidden {
@@ -203,8 +257,42 @@ final class GroupCallTitleView : Control {
         let participantsUpdated = state.summaryState?.participantCount != currentState?.summaryState?.participantCount || state.state.scheduleTimestamp != currentState?.state.scheduleTimestamp
         
        
+        let speaking = state.memberDatas.filter({ $0.isSpeaking && $0.peer.id != peer.id })
+        if !speaking.isEmpty {
+            let current: GroupCallSpeakingView
+            var presented = false
+            if let view = self.speakingView {
+                current = view
+            } else {
+                current = GroupCallSpeakingView(frame: .zero)
+                self.speakingView = current
+                addSubview(current)
+                
+                presented = true
+                                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(speaking, maxWidth: 200, animated: animated)
+            if presented {
+                current.frame = current.centerFrameX(y: backgroundView.frame.midY)
+            }
+        } else {
+            if let speakingView = self.speakingView {
+                self.speakingView = nil
+                if animated {
+                    speakingView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak speakingView] _ in
+                        speakingView?.removeFromSuperview()
+                    })
+                } else {
+                    speakingView.removeFromSuperview()
+                }
+            }
+        }
         
-        
+        statusView.change(opacity: speakingView == nil ? 1 : 0, animated: animated)
+
                 
         let hidePeers = state.hideParticipants
         let oldHidePeers = currentState?.hideParticipants == true
@@ -322,6 +410,7 @@ final class GroupCallTitleView : Control {
             
         }, for: .Click)
 
+        
     }
     
     required init?(coder: NSCoder) {

@@ -186,7 +186,7 @@ private final class DesktopCaptureListView : View {
     }
 }
 
-final class DesktopCapturerListController {
+final class DesktopCaptureListUI {
     
     private var windows: DesktopCaptureSourceManagerMac!
     private var screens: DesktopCaptureSourceManagerMac!
