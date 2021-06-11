@@ -173,6 +173,7 @@ struct PeerGroupCallData : Equatable, Comparable {
     let activeVideos:Set<ActiveVideo>
     let adminIds: Set<PeerId>
     
+    let isFullscreen: Bool
     
     let videoEndpointId: String?
     let presentationEndpointId: String?
@@ -318,6 +319,9 @@ struct PeerGroupCallData : Equatable, Comparable {
         if lhs.presentationEndpointId != rhs.presentationEndpointId {
             return false
         }
+        if lhs.isFullscreen != rhs.isFullscreen {
+            return false
+        }
         
         return true
     }
@@ -395,7 +399,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
 
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: hasVideo(accountPeerId), activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: hasVideo(accountPeerId), activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil))
         index += 1
     } 
 
@@ -410,7 +414,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         
         
         
-        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: activityIndex, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), activeVideos: activeVideos, adminIds: state.adminIds, videoEndpointId: value.videoEndpointId, presentationEndpointId: value.presentationEndpointId))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: activityIndex, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), activeVideos: activeVideos, adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: value.videoEndpointId, presentationEndpointId: value.presentationEndpointId))
     }
     
     var indexes:[PeerId: Int] = [:]
@@ -456,7 +460,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: false, activeVideos: Set(), adminIds: state.adminIds, videoEndpointId: nil, presentationEndpointId: nil))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: false, activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil))
             index += 1
         }
     }
@@ -473,20 +477,20 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         mode = .voice
     }
     var tooltipSpeaker: PeerGroupCallData? = nil
-    if !activeVideoViews.isEmpty {
+    if !activeVideoViews.isEmpty && isFullScreen {
         if current != nil {
             if let previous = previous?.tooltipSpeaker {
                 let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
-                if let member = member, member.isSpeaking {
+                if let member = member, member.isSpeaking, member.hasVideo {
                     tooltipSpeaker = previous
                 }
             }
             if tooltipSpeaker == nil {
-                tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
+                tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.hasVideo && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
             }
         }
         if tooltipSpeaker == nil && current == nil {
-            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId && $0.videoEndpoint == nil && $0.presentationEndpointId == nil })
+            tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.hasVideo && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId && $0.videoEndpoint == nil && $0.presentationEndpointId == nil })
         }
     }
     
@@ -1913,7 +1917,9 @@ final class GroupCallUIController : ViewController {
 
     
     private func applyUpdates(_ state: GroupCallUIState, _ transition: TableUpdateTransition, _ call: PresentationGroupCall, animated: Bool) {
+        CATransaction.begin()
         self.genericView.applyUpdates(state, transition, call, animated: transition.animated)
+        CATransaction.commit()
         canManageCall = state.state.canManageCall
         
         

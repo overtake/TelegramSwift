@@ -2892,7 +2892,7 @@ func requestScreenCaptureAccess() -> Bool {
     if #available(OSX 10.15, *) {
         return CGRequestScreenCaptureAccess()
     } else {
-        return true
+        return screenCaptureAvailable()
     }
 }
 

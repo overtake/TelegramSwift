@@ -366,6 +366,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = (
 					"-Dcelt_iir=rnnoise_celt_iir",
 					"-D_celt_autocorr=rnnoise__celt_autocorr",
@@ -418,6 +419,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = (
 					"-Dcelt_iir=rnnoise_celt_iir",
 					"-D_celt_autocorr=rnnoise__celt_autocorr",
@@ -532,6 +534,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = (
 					"-Dcelt_iir=rnnoise_celt_iir",
 					"-D_celt_autocorr=rnnoise__celt_autocorr",
@@ -639,6 +642,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = (
 					"-Dcelt_iir=rnnoise_celt_iir",
 					"-D_celt_autocorr=rnnoise__celt_autocorr",
@@ -746,6 +750,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = (
 					"-Dcelt_iir=rnnoise_celt_iir",
 					"-D_celt_autocorr=rnnoise__celt_autocorr",
@@ -853,6 +858,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACH_O_TYPE = staticlib;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_CFLAGS = (
 					"-Dcelt_iir=rnnoise_celt_iir",
 					"-D_celt_autocorr=rnnoise__celt_autocorr",
