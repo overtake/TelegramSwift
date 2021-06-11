@@ -186,7 +186,7 @@ private final class DesktopCaptureListView : View {
     }
 }
 
-final class DesktopCapturerListController: ViewController {
+final class DesktopCapturerListController {
     
     private let windows = DesktopCaptureSourceManagerMac(_w: ())
     private let screens = DesktopCaptureSourceManagerMac(_s: ())
@@ -197,19 +197,70 @@ final class DesktopCapturerListController: ViewController {
 
     private let mode: VideoSourceMacMode
     private let devices: DevicesContext
+    private var _frame: NSRect
+    private var _view:NSView?
+    
+    private var onDeinit: (()->Void)? = nil
+    private let atomicSize:Atomic<NSSize> = Atomic(value:NSZeroSize)
+
     init(size: NSSize, devices: DevicesContext, mode: VideoSourceMacMode) {
+        _frame = size.bounds
         self.devices = devices
         self.mode = mode
-        super.init(frame: .init(origin: .zero, size: size))
-        self.bar = .init(height: 0)
         loadViewIfNeeded()
+    }
+    
+    func loadViewIfNeeded(_ frame:NSRect = NSZeroRect) -> Void {
+        
+         guard _view != nil else {
+            if !NSIsEmptyRect(frame) {
+                _frame = frame
+            }
+            self.loadView()
+            
+            return
+        }
+    }
+    var view:NSView {
+        get {
+            if(_view == nil) {
+                loadView();
+            }
+            
+            return _view!;
+        }
+       
+    }
+    func loadView() -> Void {
+        if(_view == nil) {
+            let vz = viewClass() as! NSView.Type
+            _view = vz.init(frame: _frame);
+            _view?.autoresizingMask = [.width,.height]
+                        
+            NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: _view!)
+            
+            _ = atomicSize.swap(_view!.frame.size)
+
+            
+            viewDidLoad()
+        }
+    }
+
+    @objc func viewFrameChanged(_ notification:Notification) {
+        if atomicSize.with({ $0 != view.frame.size }) {
+            viewDidResized(view.frame.size)
+        }
+    }
+    
+    private func viewDidResized(_ size:NSSize) {
+        _ = atomicSize.swap(size)
     }
     
     var updateDesktopSelected:((DesktopCapturerObjectWrapper, DesktopCaptureSourceManagerMac)->Void)? = nil
     var updateCameraSelected:((DesktopCapturerObjectWrapper)->Void)? = nil
 
     
-    override func viewClass() -> AnyClass {
+    private func viewClass() -> AnyClass {
         return DesktopCaptureListView.self
     }
     
@@ -220,8 +271,7 @@ final class DesktopCapturerListController: ViewController {
         return self.getCurrentlySelected?()
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    func viewDidLoad() {
         let actionsDisposable = DisposableSet()
         
         var hasCameraAccess = false
@@ -394,6 +444,19 @@ final class DesktopCapturerListController: ViewController {
 
     }
     
+    private let _ready = Promise<Bool>()
+    var ready: Promise<Bool> {
+        return self._ready
+    }
+    public var didSetReady:Bool = false
+    
+    private func readyOnce() -> Void {
+        if !didSetReady {
+            didSetReady = true
+            ready.set(.single(true))
+        }
+    }
+    
     private var genericView: HorizontalTableView {
         return (self.view as! DesktopCaptureListView).tableView
     }
@@ -402,6 +465,7 @@ final class DesktopCapturerListController: ViewController {
         disposable.dispose()
         updateDisposable?.dispose()
         devicesDisposable.dispose()
+        onDeinit?()
     }
     
 }
