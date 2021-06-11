@@ -93,7 +93,7 @@
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		27AAFCBF2649288E000B1053 /* GroupCallTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */; };
-		27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */; };
+		27B15D2F259B2DA700C7F280 /* DesktopCaptureListUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D2E259B2DA700C7F280 /* DesktopCaptureListUI.swift */; };
 		27B15D32259B373800C7F280 /* DesktopCapturePreviewItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */; };
 		27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8AFE926380B4D0044C71B /* screenon.tgs */; };
 		27B8AFEC26380B4E0044C71B /* screenoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27B8AFEA26380B4E0044C71B /* screenoff.tgs */; };
@@ -1169,7 +1169,7 @@
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
 		27AAFCBE2649288E000B1053 /* GroupCallTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileView.swift; sourceTree = "<group>"; };
-		27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListController.swift; sourceTree = "<group>"; };
+		27B15D2E259B2DA700C7F280 /* DesktopCaptureListUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCaptureListUI.swift; sourceTree = "<group>"; };
 		27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturePreviewItem.swift; sourceTree = "<group>"; };
 		27B8AFE926380B4D0044C71B /* screenon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = screenon.tgs; sourceTree = "<group>"; };
 		27B8AFEA26380B4E0044C71B /* screenoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = screenoff.tgs; sourceTree = "<group>"; };
@@ -2309,7 +2309,7 @@
 		27B15D2D259B28C700C7F280 /* capturer */ = {
 			isa = PBXGroup;
 			children = (
-				27B15D2E259B2DA700C7F280 /* DesktopCaptureListController.swift */,
+				27B15D2E259B2DA700C7F280 /* DesktopCaptureListUI.swift */,
 				27B15D31259B373800C7F280 /* DesktopCapturePreviewItem.swift */,
 				27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */,
 			);
@@ -5877,7 +5877,7 @@
 				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
 				276A1D59265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift in Sources */,
-				27B15D2F259B2DA700C7F280 /* DesktopCaptureListController.swift in Sources */,
+				27B15D2F259B2DA700C7F280 /* DesktopCaptureListUI.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
 				C236ADDE1F7D318700E8C71A /* TGVideoCameraMovieRecorder.m in Sources */,
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
