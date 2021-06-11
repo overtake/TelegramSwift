@@ -418,11 +418,13 @@ final class GroupCallMainVideoContainerView: Control {
                     currentVideoView.removeFromSuperview()
                 }
                 self.currentVideoView = videoView
-                if !isPaused {
-                    self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
-                }
+                self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
             }
+            
             if let videoView = videoView {
+                
+                videoView.change(opacity: isPaused ? 0 : 1, animated: animated)
+                
                 let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
                 if prevIsPaused != isPaused {
                     if isPaused {
@@ -442,23 +444,10 @@ final class GroupCallMainVideoContainerView: Control {
                         self.pausedImageView!.frame = focus(pausedImageView!.frame.size).offsetBy(dx: 0, dy: -5)
                         self.pausedTextView!.frame = self.pausedTextView!.centerFrameX(y: self.pausedImageView!.frame.maxY + 5)
                         if animated {
-                            if videoView.superview != nil {
-                                videoView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak videoView] completion in
-                                    if completion {
-                                        videoView?.removeFromSuperview()
-                                    }
-                                    videoView?.layer?.removeAnimation(forKey: "opacity")
-                                })
-                            }
                             pausedTextView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                             pausedImageView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                        } else {
-                            videoView.removeFromSuperview()
                         }
                     } else {
-                        if animated {
-                            videoView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                        }
                         if let pausedTextView = pausedTextView {
                             self.pausedTextView = nil
                             if animated {
@@ -492,9 +481,9 @@ final class GroupCallMainVideoContainerView: Control {
                 }
                 backstageVideo.videoView.setVideoContentMode(.resizeAspectFill)
                 self.backstageView = backstageVideo
-                self.addSubview(backstageVideo, positioned: .below, relativeTo: self.currentVideoView)
+                self.addSubview(backstageVideo, positioned: .below, relativeTo: currentVideoView)
+                self.addSubview(backstage, positioned: .above, relativeTo: backstageVideo)
             }
-            self.addSubview(backstage, positioned: .above, relativeTo: backstageVideo)
         } else {
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()

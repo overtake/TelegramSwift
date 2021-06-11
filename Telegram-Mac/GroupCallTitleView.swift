@@ -37,7 +37,7 @@ private final class GroupCallSpeakingView : View {
     }
     
     func update(_ peers:[PeerGroupCallData], maxWidth: CGFloat, animated: Bool) {
-        let text: String = peers.map { $0.peer.compactDisplayTitle }.joined(separator: ",")
+        let text: String = peers.map { $0.peer.compactDisplayTitle }.joined(separator: ", ")
         
         let layout = TextViewLayout(.initialize(string: text, color: GroupCallTheme.greenStatusColor, font: .normal(.text)), maximumNumberOfLines: 1)
         
@@ -258,7 +258,7 @@ final class GroupCallTitleView : Control {
         
        
         let speaking = state.memberDatas.filter({ $0.isSpeaking && $0.peer.id != peer.id })
-        if !speaking.isEmpty {
+        if (!state.isFullScreen || state.tooltipSpeaker == nil) && !speaking.isEmpty {
             let current: GroupCallSpeakingView
             var presented = false
             if let view = self.speakingView {

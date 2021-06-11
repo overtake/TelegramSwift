@@ -14,9 +14,10 @@ struct VoiceChatTile {
     fileprivate(set) var index: Int
     
     var bestQuality: PresentationGroupCallRequestedVideo.Quality {
-        if rect.width > 480 || rect.height > 480 {
-            return .medium
-        } else if rect.width > 160 || rect.height > 160 {
+        let option = min(rect.width, rect.height)
+        if option > 720 {
+            return .full
+        } else if option > 240 {
             return .medium
         } else {
             return .thumbnail
@@ -200,6 +201,8 @@ final class GroupCallTileView: View {
         
         var items:[TileEntry] = []
         
+        let prevItems = self.items
+        
         
         let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
         
@@ -282,7 +285,26 @@ final class GroupCallTileView: View {
         
         let size = getSize(size)
         
-        if prevPinnedIndex != nil, pinnedIndex != nil, prevPinnedIndex != pinnedIndex {
+        var update: Bool = false
+         if prevPinnedIndex != nil, pinnedIndex != nil, prevPinnedIndex != pinnedIndex {
+            update = true
+         } else if let index = pinnedIndex {
+            let contains = prevItems.contains(where: { tile in
+                tile.video.endpointId == items[index].video.endpointId
+            })
+            if !contains {
+                update = true
+            }
+         } else if pinnedIndex == nil, let index = prevPinnedIndex {
+            let contains = items.contains(where: { tile in
+                tile.video.endpointId == prevItems[index].video.endpointId
+            })
+            if !contains {
+                update = true
+            }
+         }
+        
+        if update {
             updateLayout(size: size, transition: .immediate)
         }
         
@@ -294,7 +316,11 @@ final class GroupCallTileView: View {
         let tiles = tileViews(items.count, isFullscreen: prevState?.isFullScreen ?? false, frameSize: size, pinnedIndex: pinnedIndex)
         
         if let tile = tiles.last, pinnedIndex == nil {
-            return NSMakeSize(size.width, tile.rect.maxY)
+            if tile.rect.maxY - size.height < 4 {
+                return NSMakeSize(size.width, size.height)
+            } else {
+                return NSMakeSize(size.width, tile.rect.maxY)
+            }
         } else {
             return size
         }
