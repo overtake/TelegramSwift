@@ -45,6 +45,8 @@ struct GroupCallTheme {
         return grayStatusColor
     }
     
+    static let titleSpeakingAnimation = recordVoiceActivityAnimation(GroupCallTheme.greenStatusColor)
+    
     static let video_status_muted_red = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
     static let video_status_muted_accent = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.greenStatusColor)
     static let video_status_muted_gray = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
