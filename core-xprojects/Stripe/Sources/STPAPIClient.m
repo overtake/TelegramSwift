@@ -130,7 +130,7 @@ static NSString *const stripeAPIVersion = @"2015-10-12";
     [STPAPIPostRequest<STPToken *> startWithAPIClient:self
                                              endpoint:tokenEndpoint
                                              postData:data
-                                           serializer:[STPToken new]
+                                           serializer:[[STPToken alloc] init]
                                            completion:^(STPToken *object, NSHTTPURLResponse *response, NSError *error) {
                                                completion(object, error);
                                            }];

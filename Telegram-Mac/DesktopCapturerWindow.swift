@@ -284,8 +284,20 @@ final class DesktopCaptureListUI {
             hasCameraAccess = true
         }
 
-        let initialState = DesktopCaptureListState(cameras: [], screens: mode == .screencast ? screens.list() : [], windows: mode == .screencast ? windows.list() : [], selected: nil, access: .init(sharing: mode == .screencast ? requestScreenCaptureAccess() : false, camera: hasCameraAccess))
+        var sList:[DesktopCaptureSourceMac] = []
+        var wList: [DesktopCaptureSourceMac] = []
+        var sharingAccess: Bool = false
 
+        switch mode {
+        case .screencast:
+            sList = screens.list()
+            sharingAccess = requestScreenCaptureAccess()
+        case .video:
+            wList = windows.list()
+        }
+        
+        
+        let initialState = DesktopCaptureListState(cameras: [], screens: sList, windows: wList, selected: nil, access: .init(sharing: sharingAccess, camera: hasCameraAccess))
 
 
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
