@@ -291,9 +291,10 @@ final class DesktopCaptureListUI {
         switch mode {
         case .screencast:
             sList = screens.list()
+            wList = windows.list()
             sharingAccess = requestScreenCaptureAccess()
         case .video:
-            wList = windows.list()
+            break
         }
         
         

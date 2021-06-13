@@ -2889,8 +2889,12 @@ func screenCaptureAvailable() -> Bool {
 }
 
 func requestScreenCaptureAccess() -> Bool {
-    if #available(OSX 10.15, *) {
-        return CGRequestScreenCaptureAccess()
+    if #available(OSX 11.0, *) {
+        if !CGPreflightScreenCaptureAccess() {
+            return CGRequestScreenCaptureAccess()
+        } else {
+            return true
+        }
     } else {
         return screenCaptureAvailable()
     }
