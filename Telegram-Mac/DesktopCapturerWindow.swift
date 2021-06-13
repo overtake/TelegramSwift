@@ -752,8 +752,9 @@ final class DesktopCapturerWindow : Window {
         self.genericView.share.set(handler: { [weak self] _ in
             self?.orderOut(nil)
             if let source = self?.listController.selected {
+                let select = self?.select
                 delay(1.0, closure: {
-                    self?.select(source)
+                    select?(source)
                 })
             }
         }, for: .Click)
