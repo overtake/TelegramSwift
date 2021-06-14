@@ -8,6 +8,10 @@
 
 import Foundation
 import TGUIKit
+import TelegramCore
+import Postbox
+import SwiftSignalKit
+import SyncCore
 
 struct VoiceChatTile {
     fileprivate(set) var rect: NSRect
@@ -152,6 +156,81 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
 }
 
 
+private final class LimitView : View {
+    private let effectView: NSVisualEffectView = NSVisualEffectView()
+    private let textView = TextView()
+    private let imageView = TransformImageView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        addSubview(effectView)
+        addSubview(textView)
+        effectView.wantsLayer = true
+        effectView.material = .dark
+        effectView.blendingMode = .withinWindow
+        if #available(OSX 10.12, *) {
+            effectView.isEmphasized = true
+        }
+        effectView.state = .active
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+    }
+    
+    func update(_ peer: Peer, size: NSSize, account: Account) {
+        let profileImageRepresentations:[TelegramMediaImageRepresentation]
+        if let peer = peer as? TelegramChannel {
+            profileImageRepresentations = peer.profileImageRepresentations
+        } else if let peer = peer as? TelegramUser {
+            profileImageRepresentations = peer.profileImageRepresentations
+        } else if let peer = peer as? TelegramGroup {
+            profileImageRepresentations = peer.profileImageRepresentations
+        } else {
+            profileImageRepresentations = []
+        }
+        
+        let id = profileImageRepresentations.first?.resource.id.hashValue ?? Int(peer.id.toInt64())
+        let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: MediaId.Id(id)), representations: profileImageRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            
+        
+        if let dimension = profileImageRepresentations.last?.dimensions.size {
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: false)
+            self.imageView.setSignal(chatMessagePhoto(account: account, imageReference: ImageMediaReference.standalone(media: media), peer: peer, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
+                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+            })
+            self.imageView.set(arguments: arguments)
+            
+            if let reference = PeerReference(peer) {
+                _ = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
+            }
+        } else {
+            self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: account, peer: peer) |> map { TransformImageResult($0, true) })
+        }
+        
+        let layout = TextViewLayout(.initialize(string: L10n.voiceChatTooltipErrorVideoUnavailable(30), color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+        layout.measure(width: size.width - 40)
+        textView.update(layout)
+        
+        needsLayout = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        effectView.frame = bounds
+        imageView.frame = bounds
+        
+        textView.resize(frame.width - 40)
+        textView.center()
+        
+    }
+}
+
 
 final class GroupCallTileView: View {
     
@@ -188,14 +267,17 @@ final class GroupCallTileView: View {
     private var arguments: GroupCallUIArguments? = nil
     private var prevState: GroupCallUIState?
     private var pinnedIndex: Int? = nil
+    
+    private var limitView: LimitView? = nil
+    
     init(call: PresentationGroupCall, arguments: GroupCallUIArguments?, frame: NSRect) {
         self.call = call
         self.arguments = arguments
         super.init(frame: frame)
-        self.layer?.cornerRadius = 4
+        self.layer?.cornerRadius = 10
     }
     
-    func update(state: GroupCallUIState, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) -> Transition {
+    func update(state: GroupCallUIState, account: Account, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) -> Transition {
         
         self.controlsMode = controlsMode
         
@@ -308,6 +390,33 @@ final class GroupCallTileView: View {
             updateLayout(size: size, transition: .immediate)
         }
         
+        if tiles.isEmpty {
+            let current: LimitView
+            if let v = self.limitView {
+                current = v
+            } else {
+                current = LimitView(frame: size.bounds)
+                self.limitView = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 2, duration: 0.2)
+                }
+            }
+            current.update(state.peer, size: size, account: account)
+        } else {
+            if let view = self.limitView {
+                self.limitView = nil
+                if animated {
+                    view.layer?.animateAlpha(from: 2, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                        view?.removeFromSuperview()
+                    })
+                } else {
+                    view.removeFromSuperview()
+                }
+            }
+        }
+        
         return Transition(size: size, prevPinnedIndex: prevPinnedIndex, pinnedIndex: pinnedIndex, prevTiles: prevTilesOpaque, tiles: tiles)
     }
     
@@ -322,6 +431,9 @@ final class GroupCallTileView: View {
                 return NSMakeSize(size.width, tile.rect.maxY)
             }
         } else {
+            if tiles.isEmpty {
+                return NSMakeSize(size.width, 200)
+            }
             return size
         }
     }
@@ -382,6 +494,8 @@ final class GroupCallTileView: View {
             transition.updateFrame(view: views[tile.index], frame: tile.rect)
             views[tile.index].updateLayout(size: tile.rect.size, transition: transition)
         }
+        
+        limitView?.frame = bounds
     }
     
     func makeTemporaryOffset(_ makeRect: (NSRect)->NSRect, pinnedIndex: Int?, size: NSSize) {

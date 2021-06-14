@@ -406,7 +406,7 @@ final class GroupCallView : View {
         var rect = focus(size)
         rect.origin.y = 54
         
-        if let state = state, !state.videoActive(.main).isEmpty {
+        if let state = state, (!state.videoActive(.main).isEmpty || state.cantRunVideo) {
             if !isFullScreen {
                 rect.origin.y = videoRect.maxY + 5
             } else {
@@ -594,7 +594,7 @@ final class GroupCallView : View {
             }
         }
         
-        if !state.videoActive(.main).isEmpty {
+        if !state.videoActive(.main).isEmpty || state.cantRunVideo {
             let current: GroupCallTileView
             if let tileView = self.tileView {
                 current = tileView
@@ -606,43 +606,9 @@ final class GroupCallView : View {
                 }
             }
             
-            let _ = current.update(state: state, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
+            let _ = current.update(state: state, account: call.account, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
                         
             self.addSubview(current, positioned: .below, relativeTo: content)
-            
-//            if transition.pinnedIndex == nil  {
-//
-//                if let saveScrollInset = saveScrollInset {
-//                    if let prevIndex = transition.prevPinnedIndex {
-//                        current.frame = transition.size.bounds
-//                        let oldSize = saveScrollInset.0.size
-//                        let coef = NSMakePoint(transition.size.width / oldSize.width, transition.size.height / oldSize.height)
-//                        let offset = saveScrollInset.1
-//                        current.makeTemporaryOffset({
-//                            CGRect(origin: CGPoint(x: $0.minX * coef.x, y: $0.minY * coef.y), size: $0.size).offsetBy(dx: offset.x, dy: offset.y)
-//                        }, pinnedIndex: prevIndex, size: videoRect.size)
-//
-//
-//                        scrollView.contentView.scroll(to: offset)
-//                    }
-//                }
-//                self.saveScrollInset = nil
-//
-//            } else {
-//
-//                if current.superview != self {
-//                    if transition.prevPinnedIndex == nil {
-//                        let offset = current.enclosingScrollView?.contentOffset ?? .zero
-//                        current.frame = videoRect
-//                        current.makeTemporaryOffset({
-//                            $0.offsetBy(dx: -offset.x, dy: -offset.y)
-//                        }, pinnedIndex: nil, size: videoRect.size)
-//                        self.saveScrollInset = (transition, offset)
-//                    }
-//                    self.addSubview(current, positioned: .below, relativeTo: content)
-//                }
-//            }
-
         } else {
             if let tileView = self.tileView {
                 self.tileView = nil
