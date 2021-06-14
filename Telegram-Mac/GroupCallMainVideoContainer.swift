@@ -336,6 +336,8 @@ final class GroupCallMainVideoContainerView: Control {
                         view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
                             view?.removeFromSuperview()
                         })
+                    } else {
+                        view.removeFromSuperview()
                     }
                 } else {
                     view.removeFromSuperview()
@@ -369,6 +371,8 @@ final class GroupCallMainVideoContainerView: Control {
                         view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
                             view?.removeFromSuperview()
                         })
+                    } else {
+                        view.removeFromSuperview()
                     }
                 } else {
                     view.removeFromSuperview()

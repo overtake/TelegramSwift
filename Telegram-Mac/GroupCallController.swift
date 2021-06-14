@@ -469,13 +469,19 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     let mode: GroupCallUIState.Mode
     let isVideoEnabled = summaryState?.info?.isVideoEnabled ?? false
     
-    
-    switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
-    case true:
-        mode = .video
-    case false:
+    let main = activeParticipants.first(where: { $0.peer.id == accountPeerId })
+
+    if main?.joinedVideo == false {
         mode = .voice
+    } else {
+        switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
+        case true:
+            mode = .video
+        case false:
+            mode = .voice
+        }
     }
+    
     var tooltipSpeaker: PeerGroupCallData? = nil
     if !activeVideoViews.isEmpty && isFullScreen {
         if current != nil {
@@ -522,7 +528,8 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     }
     
     
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed)
+    
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled)
 }
 
 
@@ -536,11 +543,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
     let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
-//    if !state.isFullScreen {
-//        entries.append(.custom(sectionId: 0, index: -1, value: .none, identifier: .init("tile"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-//            return GroupCallTileRowItem(initialSize, stableId: stableId, takeView: arguments.takeTileView)
-//        }))
-//    }
     
     if canInvite {
         
@@ -560,8 +562,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         entries.append(.custom(sectionId: 0, index: index, value: .none, identifier: InputDataIdentifier("invite"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return GroupCallInviteRowItem(initialSize, height: 42, stableId: stableId, videoMode: tuple.videoMode, viewType: viewType, action: arguments.inviteMembers)
         }))
-//        index += 1
-//
     }
 
     for (i, data) in members.enumerated() {
@@ -634,7 +634,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
                     return .single(arguments.contextMenuItems(tuple.data))
                 }, takeVideo: arguments.takeVideo, audioLevel: arguments.audioLevel, focusVideo: arguments.focusVideo)
             }))
-            //        index += 1
         }
         
 
@@ -851,9 +850,9 @@ final class GroupCallUIController : ViewController {
             if !state.isVideoEnabled {
                 switch mode {
                 case .video:
-                    alert(for: window, info: L10n.voiceChatTooltipErrorVideoUnavailable)
+                    alert(for: window, info: L10n.voiceChatTooltipErrorVideoUnavailable(30))
                 case .screencast:
-                    alert(for: window, info: L10n.voiceChatTooltipErrorScreenUnavailable)
+                    alert(for: window, info: L10n.voiceChatTooltipErrorScreenUnavailable(30))
                 }
                 return
             }
@@ -1508,9 +1507,10 @@ final class GroupCallUIController : ViewController {
             }
             let types:[GroupCallUIState.ActiveVideo.Mode] = GroupCallUIState.ActiveVideo.allModes
 
+            let mainMember = members?.participants.first(where: { $0.peer.id == accountId })
             
             let videoMembers: [GroupCallParticipantsContext.Participant] = members?.participants.filter { member in
-                return member.videoEndpointId != nil || member.presentationEndpointId != nil
+                return (member.videoEndpointId != nil || member.presentationEndpointId != nil) && mainMember?.joinedVideo == true
             } ?? []
             
             let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.videoRect.size)

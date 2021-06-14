@@ -501,6 +501,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     private var temporaryActivityRank: Int?
     private var temporaryRaiseHandRating: Int64?
     private var temporaryHasRaiseHand: Bool = false
+    private var temporaryVideoJoined: Bool = true
     private var temporaryMuteState: GroupCallParticipantsContext.Participant.MuteState?
     
     private var internalState: InternalState = .requesting
@@ -963,7 +964,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             activityRank: strongSelf.temporaryActivityRank,
                             muteState: strongSelf.temporaryMuteState ?? GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
                             volume: nil,
-                            about: about
+                            about: about,
+                            joinedVideo: strongSelf.temporaryVideoJoined
                         ))
                         participants.sort(by: { GroupCallParticipantsContext.Participant.compare(lhs: $0, rhs: $1, sortAscending: state.sortAscending) })
                     }
@@ -1045,7 +1047,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         activityRank: strongSelf.temporaryActivityRank,
                         muteState: strongSelf.temporaryMuteState ?? GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
                         volume: nil,
-                        about: about
+                        about: about,
+                        joinedVideo: strongSelf.temporaryVideoJoined
                     ))
                 }
 
@@ -1511,7 +1514,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 activityRank: strongSelf.temporaryActivityRank,
                                 muteState: strongSelf.temporaryMuteState ?? GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
                                 volume: nil,
-                                about: about
+                                about: about,
+                                joinedVideo: strongSelf.temporaryVideoJoined
                             ))
                             participants.sort(by: { GroupCallParticipantsContext.Participant.compare(lhs: $0, rhs: $1, sortAscending: state.sortAscending) })
                         }
@@ -1779,7 +1783,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             activityRank: strongSelf.temporaryActivityRank,
                             muteState: strongSelf.temporaryMuteState ?? GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false),
                             volume: nil,
-                            about: about
+                            about: about,
+                            joinedVideo: strongSelf.temporaryVideoJoined
                         ))
                     }
 
@@ -1978,6 +1983,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     if participant.peer.id == previousPeerId {
                         strongSelf.temporaryJoinTimestamp = participant.joinTimestamp
                         strongSelf.temporaryActivityTimestamp = participant.activityTimestamp
+                        strongSelf.temporaryVideoJoined = participant.joinedVideo
                         strongSelf.temporaryActivityRank = participant.activityRank
                         strongSelf.temporaryRaiseHandRating = participant.raiseHandRating
                         strongSelf.temporaryHasRaiseHand = participant.hasRaiseHand
