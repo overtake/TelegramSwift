@@ -36,7 +36,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>217733</string>
+	<string>217743</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -54,6 +54,8 @@
 	<string>Copyright © 2016 Telegram. All rights reserved.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need access to your location so that you can send your current locations and setup Auto-Night theme</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need access to your location so that you can send your current locations.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSMicrophoneUsageDescription</key>
