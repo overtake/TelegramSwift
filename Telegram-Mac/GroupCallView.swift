@@ -100,6 +100,9 @@ final class GroupCallView : View {
 
         content.isEventLess = true
                 
+        scrollView.clipView._mouseDownCanMoveWindow = true
+        scrollView._mouseDownCanMoveWindow = true
+        
         scrollView.background = .clear
         scrollView.layer?.cornerRadius = 10
         peersTableContainer.layer?.cornerRadius = 10

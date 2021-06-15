@@ -156,8 +156,16 @@ func tileViews(_ count: Int, isFullscreen: Bool, frameSize: NSSize, pinnedIndex:
 }
 
 
+
 private final class LimitView : View {
-    private let effectView: NSVisualEffectView = NSVisualEffectView()
+    
+    private class V : NSVisualEffectView {
+        override var mouseDownCanMoveWindow: Bool {
+            return true
+        }
+    }
+    
+    private let effectView: NSVisualEffectView = V()
     private let textView = TextView()
     private let imageView = TransformImageView()
     private let thumbView = ImageView()

@@ -86,6 +86,11 @@ open class ScrollView: NSScrollView{
 //    }
     
     
+    public var _mouseDownCanMoveWindow: Bool = false
+    public override var mouseDownCanMoveWindow: Bool {
+        return _mouseDownCanMoveWindow
+    }
+    
     public var clipView:TGClipView {
         return self.contentView as! TGClipView
     }
