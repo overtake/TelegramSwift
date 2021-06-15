@@ -19,9 +19,9 @@ struct VoiceChatTile {
     
     var bestQuality: PresentationGroupCallRequestedVideo.Quality {
         let option = min(rect.width, rect.height)
-        if option > 720 {
+        if option > 500 {
             return .full
-        } else if option > 240 {
+        } else if option > 160 {
             return .medium
         } else {
             return .thumbnail
@@ -535,5 +535,8 @@ final class GroupCallTileView: View {
     
     required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
+    }
+    public override var mouseDownCanMoveWindow: Bool {
+        return true
     }
 }

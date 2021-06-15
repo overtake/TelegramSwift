@@ -495,12 +495,15 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             if let previous = previous?.tooltipSpeaker {
                 let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
                 if let member = member, member.isSpeaking, member.hasVideo {
-                    tooltipSpeaker = previous
+                    if current?.peerId != previous.peer.id {
+                        tooltipSpeaker = previous
+                    }
                 }
             }
             if tooltipSpeaker == nil {
                 tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.hasVideo && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId })
             }
+            
         }
         if tooltipSpeaker == nil && current == nil {
             tooltipSpeaker = memberDatas.first(where: { $0.isSpeaking && $0.hasVideo && $0.peer.id != $0.accountPeerId && $0.peer.id != current?.peerId && $0.videoEndpoint == nil && $0.presentationEndpointId == nil })
