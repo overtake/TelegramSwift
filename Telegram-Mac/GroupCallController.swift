@@ -327,8 +327,6 @@ struct PeerGroupCallData : Equatable, Comparable {
     }
     
     static func <(lhs: PeerGroupCallData, rhs: PeerGroupCallData) -> Bool {
-        
-
         if lhs.activityTimestamp != rhs.activityTimestamp {
             return lhs.activityTimestamp > rhs.activityTimestamp
         }
@@ -529,7 +527,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     
     
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled)
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled)
 }
 
 
@@ -1374,11 +1372,14 @@ final class GroupCallUIController : ViewController {
                 } else {
                     raisedHandDisplayDisposables[member.peer.id]?.dispose()
                     raisedHandDisplayDisposables[member.peer.id] = nil
-                    updateDisplayedRaisedHands { current in
-                        var current = current
-                        current.remove(member.peer.id)
-                        return current
+                    DispatchQueue.main.async {
+                        updateDisplayedRaisedHands { current in
+                            var current = current
+                            current.remove(member.peer.id)
+                            return current
+                        }
                     }
+                    
                 }
             }
             DispatchQueue.main.async {
@@ -1501,138 +1502,150 @@ final class GroupCallUIController : ViewController {
         
                 
         actionsDisposable.add(videoData.start(next: { [weak self] members, dominant, isFullScreen, accountId, stateVersion, size, videoSources in
-            
-            guard let strongSelf = self else {
-                return
-            }
-            let types:[GroupCallUIState.ActiveVideo.Mode] = GroupCallUIState.ActiveVideo.allModes
-
-            let mainMember = members?.participants.first(where: { $0.peer.id == accountId })
-            
-            let videoMembers: [GroupCallParticipantsContext.Participant] = members?.participants.filter { member in
-                return (member.videoEndpointId != nil || member.presentationEndpointId != nil) && mainMember?.joinedVideo == true
-            } ?? []
-            
-            let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.videoRect.size)
-
-            
-            var items:[PresentationGroupCallRequestedVideo] = []
-                        
-            for (i, member) in videoMembers.enumerated() {
-                var videoQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
-                var screencastQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
-
-                let dominant = dominant.permanent ?? dominant.focused?.id
-                if let dominant = dominant {
-                    videoQuality = .thumbnail
-                    screencastQuality = .thumbnail
-                    if dominant == member.videoEndpointId {
-                        videoQuality = .full
-                    }
-                    if dominant == member.presentationEndpointId {
-                        screencastQuality = .full
-                    }
+            DispatchQueue.main.async {
+                guard let strongSelf = self else {
+                    return
                 }
+                let types:[GroupCallUIState.ActiveVideo.Mode] = GroupCallUIState.ActiveVideo.allModes
+
+                let mainMember = members?.participants.first(where: { $0.peer.id == accountId })
                 
-                let minVideo: PresentationGroupCallRequestedVideo.Quality = .thumbnail
-                let maxVideo: PresentationGroupCallRequestedVideo.Quality = videoQuality
+                let videoMembers: [GroupCallParticipantsContext.Participant] = members?.participants.filter { member in
+                    return (member.videoEndpointId != nil || member.presentationEndpointId != nil) && mainMember?.joinedVideo == true
+                } ?? []
+                
+                let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.videoRect.size)
 
                 
-                if let item = member.requestedVideoChannel(minQuality: minVideo, maxQuality: maxVideo) {
-                    items.append(item)
-                }
-                
-                var minScreencast: PresentationGroupCallRequestedVideo.Quality = .thumbnail
-                let maxScreencast: PresentationGroupCallRequestedVideo.Quality = screencastQuality
+                var items:[PresentationGroupCallRequestedVideo] = []
+                            
+                for (i, member) in videoMembers.enumerated() {
+                    var videoQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
+                    var screencastQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
 
-                if maxScreencast == .full {
-                    minScreencast = .full
-                }
-                if let item = member.requestedPresentationVideoChannel(minQuality: minScreencast, maxQuality: maxScreencast) {
-                    items.append(item)
-                }
-            }
-            
-            var validSources = Set<String>()
-            for item in items {
-                let endpointId = item.endpointId
-                let member = members?.participants.first(where: { participant in
-                    if participant.peer.id == accountId {
-                        if participant.videoEndpointId == item.endpointId {
-                            return videoSources.video != nil
+                    let dominant = dominant.permanent ?? dominant.focused?.id
+                    if let dominant = dominant {
+                        videoQuality = .thumbnail
+                        screencastQuality = .thumbnail
+                        if dominant == member.videoEndpointId {
+                            videoQuality = .full
                         }
-                        if participant.presentationEndpointId == item.endpointId {
-                            return videoSources.screencast != nil
+                        if dominant == member.presentationEndpointId {
+                            screencastQuality = .full
                         }
                     }
-                    return participant.videoEndpointId == item.endpointId || participant.presentationEndpointId == item.endpointId
-                })
+                    
+                    let minVideo: PresentationGroupCallRequestedVideo.Quality = .thumbnail
+                    let maxVideo: PresentationGroupCallRequestedVideo.Quality = videoQuality
 
-                if let member = member {
-                    validSources.insert(endpointId)
-                    if !strongSelf.requestedVideoSources.contains(endpointId) {
-                        strongSelf.requestedVideoSources.insert(endpointId)
-                        
-                        let isScreencast = member.presentationEndpointId == endpointId
-                        let videoMode: VideoSourceMacMode = isScreencast ? .screencast : .video
-                        let takeVideoMode: GroupCallVideoMode = isScreencast && member.peer.id == accountId ? .screencast : .video
-                                            
-                        
-                        
-                        for type in types {
-                            strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                                DispatchQueue.main.async {
-                                    guard let videoView = videoView else {
-                                        return
-                                    }
-                                    var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
-                                    
-                                    switch type {
-                                    case .main:
-                                        videoView.setVideoContentMode(.resizeAspect)
-                                    case .list:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
-                                    case .backstage:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
-                                    case .profile:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
-                                    }
-                                    
-                                    videoView.setOnFirstFrameReceived( { [weak self] f in
-                                        if let videoViewValue = videoViewValue {
-                                            self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
-                                            updateActiveVideoViews { current in
-                                                var current = current
-                                                current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
-                                                current.index -= 1
-                                                return current
-                                            }
+                    
+                    if let item = member.requestedVideoChannel(minQuality: minVideo, maxQuality: maxVideo) {
+                        items.append(item)
+                    }
+                    
+                    var minScreencast: PresentationGroupCallRequestedVideo.Quality = .thumbnail
+                    let maxScreencast: PresentationGroupCallRequestedVideo.Quality = screencastQuality
+
+                    if maxScreencast == .full {
+                        minScreencast = .full
+                    }
+                    if let item = member.requestedPresentationVideoChannel(minQuality: minScreencast, maxQuality: maxScreencast) {
+                        items.append(item)
+                    }
+                }
+                
+                var validSources = Set<String>()
+                for item in items {
+                    let endpointId = item.endpointId
+                    let member = members?.participants.first(where: { participant in
+                        if participant.peer.id == accountId {
+                            if participant.videoEndpointId == item.endpointId {
+                                return videoSources.video != nil
+                            }
+                            if participant.presentationEndpointId == item.endpointId {
+                                return videoSources.screencast != nil
+                            }
+                        }
+                        return participant.videoEndpointId == item.endpointId || participant.presentationEndpointId == item.endpointId
+                    })
+
+                    if let member = member {
+                        validSources.insert(endpointId)
+                        if !strongSelf.requestedVideoSources.contains(endpointId) {
+                            strongSelf.requestedVideoSources.insert(endpointId)
+                            
+                            let isScreencast = member.presentationEndpointId == endpointId
+                            let videoMode: VideoSourceMacMode = isScreencast ? .screencast : .video
+                            let takeVideoMode: GroupCallVideoMode = isScreencast && member.peer.id == accountId ? .screencast : .video
+                                                
+                            
+                            
+                            for type in types {
+                                strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
+                                    DispatchQueue.main.async {
+                                        guard let videoView = videoView else {
+                                            return
                                         }
-                                        videoViewValue = nil
-                                    })
-                                }
-                            })
+                                        var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
+                                        
+                                        switch type {
+                                        case .main:
+                                            videoView.setVideoContentMode(.resizeAspect)
+                                        case .list:
+                                            videoView.setVideoContentMode(.resizeAspectFill)
+                                        case .backstage:
+                                            videoView.setVideoContentMode(.resizeAspectFill)
+                                        case .profile:
+                                            videoView.setVideoContentMode(.resizeAspectFill)
+                                        }
+                                        
+                                        videoView.setOnFirstFrameReceived( { [weak self] f in
+                                            if let videoViewValue = videoViewValue {
+                                                self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
+                                                updateActiveVideoViews { current in
+                                                    var current = current
+                                                    current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
+                                                    current.index -= 1
+                                                    return current
+                                                }
+                                            }
+                                            videoViewValue = nil
+                                        })
+                                    }
+                                })
+                            }
                         }
                     }
                 }
-            }
-            for i in (0 ..< strongSelf.videoViews.count).reversed() {
-                if !validSources.contains(strongSelf.videoViews[i].0.endpointId) {
-                    let endpointId = strongSelf.videoViews[i].0.endpointId
-                    strongSelf.videoViews.remove(at: i)
-                    strongSelf.requestedVideoSources.remove(endpointId)
-                    updateActiveVideoViews { current in
-                        var current = current
-                        current.set.removeAll(where: {
-                            $0.endpointId == endpointId
-                        })
-                        return current
+                for i in (0 ..< strongSelf.videoViews.count).reversed() {
+                    if !validSources.contains(strongSelf.videoViews[i].0.endpointId) {
+                        let endpointId = strongSelf.videoViews[i].0.endpointId
+                        strongSelf.videoViews.remove(at: i)
+                        strongSelf.requestedVideoSources.remove(endpointId)
+                        updateActiveVideoViews { current in
+                            var current = current
+                            current.set.removeAll(where: {
+                                $0.endpointId == endpointId
+                            })
+                            return current
+                        }
                     }
                 }
+                
+                items = items.filter({ item in
+                    if let mainMember = mainMember {
+                        if mainMember.videoEndpointId == item.endpointId {
+                            return false
+                        }
+                        if mainMember.presentationEndpointId == item.endpointId {
+                            return false
+                        }
+                    }
+                    return true
+                })
+                
+                self?.data.call.setRequestedVideoList(items: items)
             }
-            
-            self?.data.call.setRequestedVideoList(items: items)
-
         }))
         
                 
