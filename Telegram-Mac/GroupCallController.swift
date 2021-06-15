@@ -16,7 +16,16 @@ import HotKey
 import TgVoipWebrtc
 
 
-
+final class GroupCallsConfig {
+    let videoLimit: Int
+    init(_ config: AppConfiguration) {
+        if let data = config.data, let value = data["groupcall_video_participants_max"] as? Double {
+            self.videoLimit = Int(value)
+        } else {
+            videoLimit = 30
+        }
+    }
+}
 
 private struct Tooltips : Equatable {
     var dismissed: Set<GroupCallUIState.ControlsTooltip>
@@ -824,7 +833,7 @@ final class GroupCallUIController : ViewController {
                 }
             }))
         }, shareSource: { [weak self] mode, takeFirst in
-            guard let state = self?.genericView.state, let window = self?.window else {
+            guard let state = self?.genericView.state, let window = self?.window, let data = self?.data else {
                 return
             }
             
@@ -846,11 +855,12 @@ final class GroupCallUIController : ViewController {
             }
             
             if !state.isVideoEnabled {
+                let config = GroupCallsConfig(data.call.accountContext.appConfiguration)
                 switch mode {
                 case .video:
-                    alert(for: window, info: L10n.voiceChatTooltipErrorVideoUnavailable(30))
+                    alert(for: window, info: L10n.voiceChatTooltipErrorVideoUnavailable(config.videoLimit))
                 case .screencast:
-                    alert(for: window, info: L10n.voiceChatTooltipErrorScreenUnavailable(30))
+                    alert(for: window, info: L10n.voiceChatTooltipErrorScreenUnavailable(config.videoLimit))
                 }
                 return
             }

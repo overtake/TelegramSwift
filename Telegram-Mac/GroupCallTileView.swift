@@ -160,11 +160,14 @@ private final class LimitView : View {
     private let effectView: NSVisualEffectView = NSVisualEffectView()
     private let textView = TextView()
     private let imageView = TransformImageView()
+    private let thumbView = ImageView()
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
         addSubview(effectView)
         addSubview(textView)
+        addSubview(thumbView)
         effectView.wantsLayer = true
         effectView.material = .dark
         effectView.blendingMode = .withinWindow
@@ -177,7 +180,7 @@ private final class LimitView : View {
         textView.isSelectable = false
     }
     
-    func update(_ peer: Peer, size: NSSize, account: Account) {
+    func update(_ peer: Peer, size: NSSize, context: AccountContext) {
         let profileImageRepresentations:[TelegramMediaImageRepresentation]
         if let peer = peer as? TelegramChannel {
             profileImageRepresentations = peer.profileImageRepresentations
@@ -197,24 +200,29 @@ private final class LimitView : View {
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: size, intrinsicInsets: NSEdgeInsets())
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: false)
-            self.imageView.setSignal(chatMessagePhoto(account: account, imageReference: ImageMediaReference.standalone(media: media), peer: peer, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
+            self.imageView.setSignal(chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: media), peer: peer, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
                 cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
             })
             self.imageView.set(arguments: arguments)
             
             if let reference = PeerReference(peer) {
-                _ = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
+                _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
             }
         } else {
-            self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: account, peer: peer) |> map { TransformImageResult($0, true) })
+            self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: context.account, peer: peer) |> map { TransformImageResult($0, true) })
         }
         
-        let layout = TextViewLayout(.initialize(string: L10n.voiceChatTooltipErrorVideoUnavailable(30), color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+        let config = GroupCallsConfig(context.appConfiguration)
+        
+        let layout = TextViewLayout(.initialize(string: L10n.voiceChatTooltipErrorVideoUnavailable(config.videoLimit), color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
         layout.measure(width: size.width - 40)
         textView.update(layout)
         
+        thumbView.image = GroupCallTheme.video_limit
+        thumbView.sizeToFit()
         needsLayout = true
     }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -222,12 +230,16 @@ private final class LimitView : View {
     
     override func layout() {
         super.layout()
+                
         effectView.frame = bounds
         imageView.frame = bounds
+        thumbView.center()
+        thumbView.setFrameOrigin(NSMakePoint(thumbView.frame.minX, thumbView.frame.minY - 20))
         
         textView.resize(frame.width - 40)
         textView.center()
-        
+        textView.setFrameOrigin(NSMakePoint(textView.frame.minX, textView.frame.minY + 20))
+
     }
 }
 
@@ -277,8 +289,9 @@ final class GroupCallTileView: View {
         self.layer?.cornerRadius = 10
     }
     
-    func update(state: GroupCallUIState, account: Account, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) -> Transition {
+    func update(state: GroupCallUIState, context: AccountContext, transition: ContainedViewLayoutTransition, size: NSSize, animated: Bool, controlsMode: GroupCallView.ControlsMode) -> Transition {
         
+                
         self.controlsMode = controlsMode
         
         var items:[TileEntry] = []
@@ -403,7 +416,7 @@ final class GroupCallTileView: View {
                     current.layer?.animateAlpha(from: 0, to: 2, duration: 0.2)
                 }
             }
-            current.update(state.peer, size: size, account: account)
+            current.update(state.peer, size: size, context: context)
         } else {
             if let view = self.limitView {
                 self.limitView = nil
