@@ -129,7 +129,9 @@ final class GroupCallView : View {
             if state.pinnedData.focused != nil || state.pinnedData.permanent != nil {
                 return false
             }
-            
+            if state.videoActive(.main).count == 1 {
+                return false
+            }
             if strongSelf.peersTable.documentOffset.y > 0 {
                 return false
             }

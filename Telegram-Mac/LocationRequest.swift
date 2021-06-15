@@ -34,16 +34,7 @@ private class UserLocationRequest : NSObject, CLLocationManagerDelegate {
         manager.delegate = self
         
         if CLLocationManager.locationServicesEnabled() {
-            switch CLLocationManager.authorizationStatus() {
-            case .authorizedAlways:
-                manager.startUpdatingLocation()
-            case .denied:
-                error.set(.denied)
-            case .restricted:
-                error.set(.restricted)
-            case .notDetermined:
-                manager.startUpdatingLocation()
-            }
+            self.locationManager(manager, didChangeAuthorization: CLLocationManager.authorizationStatus())
         } else {
             error.set(.disabled)
         }
@@ -51,22 +42,24 @@ private class UserLocationRequest : NSObject, CLLocationManagerDelegate {
 
     @objc func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         switch status {
-        case .authorizedAlways:
+        case .authorizedAlways, .authorizedWhenInUse:
             manager.startUpdatingLocation()
         case .denied:
             error.set(.denied)
-        case .notDetermined:
-            manager.startUpdatingLocation()
         case .restricted:
             error.set(.restricted)
-        case .authorizedWhenInUse:
-             manager.startUpdatingLocation()
+        case .notDetermined:
+            if #available(macOS 10.15, *) {
+                manager.requestWhenInUseAuthorization()
+            } else {
+                manager.startUpdatingLocation()
+            }
+        @unknown default:
+            error.set(.denied)
         }
     }
 
     @objc func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        var bp:Int = 0
-        bp += 1
         self.error.set(.wifiRequired)
     }
 

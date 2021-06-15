@@ -577,9 +577,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
 
     override func set(item:TableRowItem, animated:Bool = false) {
-        
-        let oldItem = self.item as? ChatListRowItem
-        
+                
         if let item = item as? ChatListRowItem {
             if item.isCollapsed {
                 if expandView == nil {
