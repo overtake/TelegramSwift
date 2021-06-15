@@ -584,8 +584,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isCollapsed {
                 if expandView == nil {
                     expandView = ChatListExpandView(frame: NSMakeRect(0, frame.height, frame.width, item.height))
-                    self.addSubview(expandView!, positioned: .below, relativeTo: containerView)
                 }
+                self.addSubview(expandView!, positioned: .below, relativeTo: containerView)
                 expandView?.updateLocalizationAndTheme(theme: theme)
             } else {
                 if let expandView = expandView {
