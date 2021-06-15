@@ -1171,7 +1171,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         needsLayouItemsOnNextTransition = false
     }
     
-    public var _mouseDownCanMoveWindow: Bool = false {
+    public override var _mouseDownCanMoveWindow: Bool {
         didSet {
             clipView._mouseDownCanMoveWindow = _mouseDownCanMoveWindow
             tableView._mouseDownCanMoveWindow = _mouseDownCanMoveWindow

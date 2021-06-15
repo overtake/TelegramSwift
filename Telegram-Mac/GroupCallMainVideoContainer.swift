@@ -166,7 +166,14 @@ final class GroupCallMainVideoContainerView: Control {
     private let call: PresentationGroupCall
     
     private(set) var backstageView: GroupVideoView?
-    private let backstage: NSVisualEffectView = NSVisualEffectView(frame: .zero)
+    
+    private class V : NSVisualEffectView {
+        override var mouseDownCanMoveWindow: Bool {
+            return true
+        }
+    }
+    
+    private let backstage: NSVisualEffectView = V(frame: .zero)
 
     private(set) var currentVideoView: GroupVideoView?
     private(set) var currentPeer: DominantVideo?
@@ -211,13 +218,13 @@ final class GroupCallMainVideoContainerView: Control {
         addSubview(nameView)
         addSubview(statusView)
         
+        self.forceMouseDownCanMoveWindow = true
+        
         backstage.wantsLayer = true
         backstage.material = .dark
         backstage.blendingMode = .withinWindow
         if #available(OSX 10.12, *) {
             backstage.isEmphasized = true
-        } else {
-            // Fallback on earlier versions
         }
         backstage.state = .active
         
@@ -559,6 +566,7 @@ final class GroupCallMainVideoContainerView: Control {
     deinit {
         audioLevelDisposable.dispose()
     }
+    
     
     override func layout() {
         super.layout()
