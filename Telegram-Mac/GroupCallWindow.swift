@@ -122,6 +122,9 @@ struct GroupCallTheme {
     static let status_unmuted_gray = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
 
 
+    static let video_limit = NSImage(named: "Icon_VoiceChat_VideoLimit")!.precomposed(.white)
+
+    
     static let video_on = NSImage(named: "Icon_GroupCall_VideoOn")!.precomposed(.white)
     static let video_off = NSImage(named: "Icon_GroupCall_VideoOff")!.precomposed(.white)
     

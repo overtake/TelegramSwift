@@ -606,7 +606,7 @@ final class GroupCallView : View {
                 }
             }
             
-            let _ = current.update(state: state, account: call.account, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
+            let _ = current.update(state: state, context: call.accountContext, transition: transition, size: videoRect.size, animated: animated, controlsMode: self.controlsMode)
                         
             self.addSubview(current, positioned: .below, relativeTo: content)
         } else {
