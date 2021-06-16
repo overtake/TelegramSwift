@@ -382,6 +382,10 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         }
     }
     
+    if current == nil {
+        var bp = 0
+        bp += 1
+    }
     
     
     func hasVideo(_ peerId: PeerId) -> Bool {
@@ -464,6 +468,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     for value in rest {
         addMember(value, indexes[value.peer.id]!, false)
     }
+
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
@@ -573,7 +578,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
             return GroupCallInviteRowItem(initialSize, height: 42, stableId: stableId, videoMode: tuple.videoMode, viewType: viewType, action: arguments.inviteMembers)
         }))
     }
-
     for (i, data) in members.enumerated() {
 
         let drawLine = i != members.count - 1
@@ -615,23 +619,34 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
         
        
-        for (stableId, baseEndpoint) in duplicates {
+        for (i, (stableId, baseEndpoint)) in duplicates.enumerated() {
             
             let tuple = Tuple(drawLine: drawLine, data: data, canManageCall: state.state.canManageCall, adminIds: state.state.adminIds, viewType: viewType, baseEndpoint: baseEndpoint)
 
-            let comparable = InputDataComparableIndex(data: data, compare: { lhs, rhs in
-                let lhs = lhs as? PeerGroupCallData
-                let rhs = rhs as? PeerGroupCallData
+            struct TupleIndex {
+                let data: PeerGroupCallData
+                let index: Int
+            }
+            
+            let index = TupleIndex(data: data, index: i)
+            
+            let comparable = InputDataComparableIndex(data: index, compare: { lhs, rhs in
+                let lhs = lhs as? TupleIndex
+                let rhs = rhs as? TupleIndex
                 if let lhs = lhs, let rhs = rhs {
-                    return lhs < rhs
+                    if lhs.data == rhs.data {
+                        return lhs.index < rhs.index
+                    } else {
+                        return lhs.data < rhs.data
+                    }
                 } else {
                     return false
                 }
             }, equatable: { lhs, rhs in
-                let lhs = lhs as? PeerGroupCallData
-                let rhs = rhs as? PeerGroupCallData
+                let lhs = lhs as? TupleIndex
+                let rhs = rhs as? TupleIndex
                 if let lhs = lhs, let rhs = rhs {
-                    return lhs.state == rhs.state
+                    return lhs.data == rhs.data && lhs.index == rhs.index
                 } else {
                     return false
                 }
@@ -648,7 +663,7 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
         
 
     }
-    
+
     return entries
 }
 
@@ -1079,38 +1094,8 @@ final class GroupCallUIController : ViewController {
                 showModalText(for: window, text: L10n.voiceChatTooltipSubscribe)
             }
             self?.data.call.toggleScheduledSubscription(subscribe)
-        }, toggleScreenMode: { [weak self, weak window] in
-//            guard let strongSelf = self, let window = window else {
-//                return
-//            }
-//
-//            let invoke:()->Void = { [weak strongSelf, weak window] in
-//                guard let strongSelf = strongSelf, let window = window, let state = strongSelf.genericView.state else {
-//                    return
-//                }
-//                let isFullScreen = strongSelf.genericView.isFullScreen
-//                var rect: CGRect
-//                if isFullScreen {
-//                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minSize)
-//                } else {
-//                    rect = CGRect(origin: window.frame.origin, size: GroupCallTheme.minFullScreenSize)
-//                }
-//                rect.size.height = window.frame.height
-//
-//                strongSelf.genericView.tempFullScreen = !isFullScreen
-//                strongSelf.applyUpdates(state.withUpdatedFullScreen(!isFullScreen), .init(deleted: [], inserted: [], updated: []), strongSelf.data.call, animated: true)
-//                window.setFrame(rect, display: true, animate: true)
-//                strongSelf.genericView.tempFullScreen = nil
-//            }
-//            if window.isFullScreen {
-//                window.toggleFullScreen(nil)
-//                window._windowDidExitFullScreen = invoke
-//            } else {
-//                invoke()
-//            }
-            
-        }, switchCamera: { peer in
-            
+        }, toggleScreenMode: {
+        }, switchCamera: { _ in
         }, togglePeersHidden: {
             updateHideParticipants {
                 !$0
@@ -1595,36 +1580,34 @@ final class GroupCallUIController : ViewController {
                             
                             for type in types {
                                 strongSelf.data.call.makeVideoView(endpointId: endpointId, videoMode: takeVideoMode, completion: { videoView in
-                                    DispatchQueue.main.async {
-                                        guard let videoView = videoView else {
-                                            return
-                                        }
-                                        var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
-                                        
-                                        switch type {
-                                        case .main:
-                                            videoView.setVideoContentMode(.resizeAspect)
-                                        case .list:
-                                            videoView.setVideoContentMode(.resizeAspectFill)
-                                        case .backstage:
-                                            videoView.setVideoContentMode(.resizeAspectFill)
-                                        case .profile:
-                                            videoView.setVideoContentMode(.resizeAspectFill)
-                                        }
-                                        
-                                        videoView.setOnFirstFrameReceived( { [weak self] f in
-                                            if let videoViewValue = videoViewValue {
-                                                self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
-                                                updateActiveVideoViews { current in
-                                                    var current = current
-                                                    current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
-                                                    current.index -= 1
-                                                    return current
-                                                }
-                                            }
-                                            videoViewValue = nil
-                                        })
+                                    guard let videoView = videoView else {
+                                        return
                                     }
+                                    var videoViewValue: GroupVideoView? = GroupVideoView(videoView: videoView)
+                                    
+                                    switch type {
+                                    case .main:
+                                        videoView.setVideoContentMode(.resizeAspect)
+                                    case .list:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    case .backstage:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    case .profile:
+                                        videoView.setVideoContentMode(.resizeAspectFill)
+                                    }
+                                    
+                                    videoView.setOnFirstFrameReceived( { [weak self] f in
+                                        if let videoViewValue = videoViewValue {
+                                            self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
+                                            updateActiveVideoViews { current in
+                                                var current = current
+                                                current.set.append(.init(endpointId: endpointId, mode: type, index: current.index))
+                                                current.index -= 1
+                                                return current
+                                            }
+                                        }
+                                        videoViewValue = nil
+                                    })
                                 })
                             }
                         }
@@ -1734,7 +1717,6 @@ final class GroupCallUIController : ViewController {
         let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> mapToQueue { state, appAppearance in
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
             let previous = previousEntries.swap(current)
-            
             let signal = prepareInputDataTransition(left: previous, right: current, animated: abs(current.count - previous.count) <= 10 && state.isWindowVisible && state.isFullScreen == previousIsFullScreen, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputArguments, onMainQueue: false, animateEverything: true)
             
             previousIsFullScreen = state.isFullScreen
@@ -1747,6 +1729,17 @@ final class GroupCallUIController : ViewController {
                 return
             }
             let state = value.0
+
+            if state == currentState {
+                var bp = 0
+                bp += 1
+            }
+            
+            if value.1.inserted.count == 2, value.1.updated.count == 1, value.1.deleted.count == 0 {
+                var bp = 0
+                bp += 1
+            }
+            
             
             if currentState == nil {
                 _ = strongSelf.disableScreenSleep()
@@ -1758,6 +1751,7 @@ final class GroupCallUIController : ViewController {
             applyTooltipsAndSounds(currentState, state)
             checkVideo(currentState, state)
             pinUpdater(currentState, state)
+            
             
             currentState = state
 
