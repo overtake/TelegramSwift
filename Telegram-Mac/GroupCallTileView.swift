@@ -307,7 +307,7 @@ final class GroupCallTileView: View {
         let prevItems = self.items
         
         
-        let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned }))
+        let prevTiles = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: self.items.firstIndex(where: { $0.isPinned || $0.isFocused }))
         
         let prevTilesOpaque = tileViews(self.items.count, isFullscreen: prevState?.isFullScreen ?? state.isFullScreen, frameSize: frame.size, pinnedIndex: nil)
 
@@ -389,18 +389,31 @@ final class GroupCallTileView: View {
         let size = getSize(size)
         
         var update: Bool = false
-         if prevPinnedIndex != nil, pinnedIndex != nil, prevPinnedIndex != pinnedIndex {
+        
+        
+        
+        var prevPinnedId: String?
+        if let prevPinnedIndex = prevPinnedIndex {
+            prevPinnedId = prevItems[prevPinnedIndex].video.endpointId
+        }
+        
+        var pinnedId: String?
+        if let pinnedIndex = pinnedIndex {
+            pinnedId = items[pinnedIndex].video.endpointId
+        }
+        
+         if prevPinnedId != nil, pinnedId != nil, prevPinnedId != pinnedId {
             update = true
-         } else if let index = pinnedIndex {
+         } else if let pinnedId = pinnedId {
             let contains = prevItems.contains(where: { tile in
-                tile.video.endpointId == items[index].video.endpointId
+                tile.video.endpointId == pinnedId
             })
             if !contains {
                 update = true
             }
-         } else if pinnedIndex == nil, let index = prevPinnedIndex {
+         } else if pinnedId == nil, let prevPinnedId = prevPinnedId {
             let contains = items.contains(where: { tile in
-                tile.video.endpointId == prevItems[index].video.endpointId
+                tile.video.endpointId == prevPinnedId
             })
             if !contains {
                 update = true
@@ -510,6 +523,7 @@ final class GroupCallTileView: View {
 
         
         let tiles:[VoiceChatTile] = tileViews(items.count, isFullscreen: prevState?.isFullScreen ?? false, frameSize: size, pinnedIndex: pinnedIndex)
+        
         
         for tile in tiles {
             transition.updateFrame(view: views[tile.index], frame: tile.rect)
