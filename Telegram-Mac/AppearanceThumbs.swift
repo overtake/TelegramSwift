@@ -101,7 +101,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
-                case let .gradient(top, bottom, rotation):
+                case let .gradient(_, top, bottom, rotation):
                     backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
                 case let .image(representation, settings):
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {

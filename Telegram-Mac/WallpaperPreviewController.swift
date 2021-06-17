@@ -626,7 +626,7 @@ private final class WallpaperPreviewView: View {
                 case let .file(_, _, settings, _):
                     self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, colors: [color.argb, color.darker(amount: 0.3).argb], intensity: settings.intensity, rotation: settings.rotation))
                 default:
-                    self.wallpaper = .gradient(color.argb, color.darker(amount: 0.3).argb, nil)
+                    self.wallpaper = .gradient(nil, color.argb, color.darker(amount: 0.3).argb, nil)
                 }
                 self.colorPicker.updateMode(.gradient(top: color, bottom: color.darker(amount: 0.5), rotation: nil), animated: true)
             case .gradient:
@@ -681,7 +681,7 @@ private final class WallpaperPreviewView: View {
         case let .file(_, _, settings, _):
             colorPicker.colorPicker.color = settings.colors.first != nil ? NSColor(UInt32(settings.colors.first!)) :  NSColor(hexString: "#ffffff")!
             colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
-        case let .gradient(t, b, r):
+        case let .gradient(_, t, b, r):
             let top = NSColor(UInt32(t))
             let bottom = NSColor(UInt32(b))
             colorPicker.colorPicker.color = top
@@ -712,7 +712,7 @@ private final class WallpaperPreviewView: View {
                     case let .file(_, _, settings, _):
                         self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, colors: [color.argb, bottom.argb], intensity: settings.intensity, rotation: rotation))
                     default:
-                        self.wallpaper = .gradient(color.argb, bottom.argb, rotation)
+                        self.wallpaper = .gradient(nil, color.argb, bottom.argb, rotation)
                     }
                     self.colorPicker.updateMode(.gradient(top: color, bottom: bottom, rotation: rotation), animated: true)
                     self.patternsController.color = ([color, bottom], rotation)
@@ -721,7 +721,7 @@ private final class WallpaperPreviewView: View {
                     case let .file(_, _, settings, _):
                         self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, colors: [top.argb, color.argb], intensity: settings.intensity, rotation: rotation))
                     default:
-                        self.wallpaper = .gradient(top.argb, color.argb, rotation)
+                        self.wallpaper = .gradient(nil, top.argb, color.argb, rotation)
                     }
                     self.colorPicker.updateMode(.gradient(top: top, bottom: color, rotation: rotation), animated: true)
                     self.patternsController.color = ([top, color], rotation)
@@ -762,7 +762,7 @@ private final class WallpaperPreviewView: View {
                 switch self.wallpaper {
                 case let .color(color):
                      self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(colors: [color], intensity: self.patternsController.intensity))
-                case let .gradient(t, b, r):
+                case let .gradient(_, t, b, r):
                     self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(colors: [NSColor(argb: t).withAlphaComponent(1.0).argb, NSColor(argb: b).withAlphaComponent(1.0).argb], intensity: self.patternsController.intensity, rotation: r))
                 case let .file(_, _, settings, _):
                     self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(colors: settings.colors, intensity: self.patternsController.intensity, rotation: settings.rotation))
@@ -777,7 +777,7 @@ private final class WallpaperPreviewView: View {
                     if settings.colors.count == 1 {
                         self.wallpaper = Wallpaper.color(settings.colors.first!)
                     } else if let t = settings.colors.first, let b = settings.colors.last {
-                        self.wallpaper = Wallpaper.gradient(t, b, nil)
+                        self.wallpaper = Wallpaper.gradient(nil, t, b, nil)
                     }
                 default:
                     break
@@ -986,7 +986,7 @@ private final class WallpaperPreviewView: View {
             var rotation:Int32? = nil
             
             switch self.wallpaper {
-            case let .gradient(t, b, r):
+            case let .gradient(_, t, b, r):
                 colorPicker.updateMode(.gradient(top: NSColor(argb: t), bottom: NSColor(argb: b), rotation: r), animated: false)
                 rotation = r
             case let .file(_, _, settings, _):
@@ -1056,7 +1056,7 @@ private final class WallpaperPreviewView: View {
             backgroundView.backgroundMode = .plain
         case let .color(color):
             backgroundView.backgroundMode = .color(color: NSColor(UInt32(color)))
-        case let .gradient(t, b, r):
+        case let .gradient(_, t, b, r):
             let top = NSColor(argb: t)
             let bottom = NSColor(argb: b)
             backgroundView.backgroundMode = .gradient(top: top, bottom: bottom, rotation: r)
@@ -1106,7 +1106,7 @@ private final class WallpaperPreviewView: View {
             self.blurCheckbox.update(by: image)
             self.colorCheckbox.update(by: image)
             self.patternCheckbox.update(by: image)
-        case let .gradient(t, b, _):
+        case let .gradient(_, t, b, _):
             self.imageView.isHidden = true
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
@@ -1583,7 +1583,7 @@ class WallpaperPreviewController: ModalViewController {
             var color = NSColor(argb: color).hexString.lowercased()
             color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
             showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(color)")), for: context.window)
-        case let .gradient(t, b, r):
+        case let .gradient(_, t, b, r):
             let top = NSColor(argb: t).hexString.lowercased()
             let bottom = NSColor(argb: b).hexString.lowercased()
             
@@ -1611,7 +1611,7 @@ class WallpaperPreviewController: ModalViewController {
         switch wallpaper {
         case let .color(color):
             genericView.patternsController.color = ([NSColor(argb: color)], nil)
-        case let .gradient(t, b, r):
+        case let .gradient(_, t, b, r):
             genericView.patternsController.color = ([NSColor(argb: t), NSColor(argb: b)], r)
         case let .file(_, _, settings, isPattern):
             if isPattern {

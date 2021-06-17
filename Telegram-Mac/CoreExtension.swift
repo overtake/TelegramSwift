@@ -3222,8 +3222,8 @@ extension TelegramWallpaper {
             t = .color(color)
         case let .file(values):
             t = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
-        case let .gradient(colors, settings):
-            t = .gradient(colors.first!, colors.last!, settings.rotation)
+        case let .gradient(id, colors, settings):
+            t = .gradient(id, colors.first!, colors.last!, settings.rotation)
         case let .image(reps, settings):
             t = .image(reps, settings: settings)
         }
@@ -3238,8 +3238,8 @@ extension Wallpaper {
             return .builtin(WallpaperSettings())
         case let .color(color):
             return .color(color)
-        case let .gradient(top, bottom, rotation):
-            return .gradient([top, bottom], WallpaperSettings(rotation: rotation))
+        case let .gradient(id, top, bottom, rotation):
+            return .gradient(id, [top, bottom], WallpaperSettings(rotation: rotation))
         default:
             break
         }

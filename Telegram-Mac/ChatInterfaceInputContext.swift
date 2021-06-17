@@ -222,6 +222,7 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         if chatPresentationInterfaceState.state == .editing && (possibleTypes != [.contextRequest] && possibleTypes != [.mention] && possibleTypes != [.emoji]) {
             return .none
         }
+        
         var possibleQueryRange = possibleQueryRange
 //        if possibleQueryRange.upperBound > inputState.inputText.endIndex {
 //            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
@@ -235,7 +236,9 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
 //            return .none
 //        }
 
-
+        if chatPresentationInterfaceState.botMenu?.revealed == true {
+            return .command("")
+        }
         
         let value = inputState.inputText[possibleQueryRange]
         let query = String(value) 
@@ -262,6 +265,10 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         return .none
 
     } else {
-        return .none
+        if chatPresentationInterfaceState.botMenu?.revealed == true {
+            return .command("")
+        } else {
+            return .none
+        }
     }
 }

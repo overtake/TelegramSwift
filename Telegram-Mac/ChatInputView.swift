@@ -75,6 +75,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private let rtfAttachmentsDisposable = MetaDisposable()
     
+    private var botMenuView: ChatInputMenuView?
+    
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init(frame: frameRect)
@@ -199,7 +201,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if value.effectiveInput != oldValue.effectiveInput {
                 updateInput(value, prevState: oldValue, animated)
             }
-            updateAttachments(value.interfaceState,animated)
+            updateAttachments(value,animated)
             
             var urlPreviewChanged:Bool
             if value.urlPreview?.0 != oldValue.urlPreview?.0 {
@@ -425,8 +427,30 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
     }
     
-    func updateAttachments(_ inputState:ChatInterfaceState, _ animated:Bool = true) -> Void {
-        
+    func updateAttachments(_ inputState:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
+        if let botMenu = inputState.botMenu {
+            let current: ChatInputMenuView
+            if let view = self.botMenuView {
+                current = view
+            } else {
+                current = ChatInputMenuView(frame: NSMakeRect(0, 0, 60, contentView.frame.height))
+                self.botMenuView = current
+                contentView.addSubview(current)
+            }
+            current.chatInteraction = self.chatInteraction
+            current.update(botMenu, animated: animated)
+        } else {
+            if let view = self.botMenuView {
+                self.botMenuView = nil
+                if animated {
+                    view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                        view?.removeFromSuperview()
+                    })
+                } else {
+                    view.removeFromSuperview()
+                }
+            }
+        }
     }
     
     
@@ -445,6 +469,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.setFrameSize(textViewSize(textView))
         actionsView.setFrameSize(NSWidth(actionsView.frame), NSHeight(actionsView.frame))
         attachView.setFrameSize(NSWidth(attachView.frame), NSHeight(attachView.frame))
+        
+        if let botMenuView = botMenuView {
+            botMenuView.setFrameSize(NSWidth(botMenuView.frame), NSHeight(botMenuView.frame))
+        }
+        
         _ts.setFrameSize(frame.width, .borderSize)
         
         accessory.measureSize(frame.width - 40.0)
@@ -468,10 +497,21 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         super.layout()
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
         bottomView.setFrameOrigin(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight)
-        textView.setFrameSize(NSMakeSize(frame.width - actionsView.frame.width - attachView.frame.width, textView.frame.height))
         contentView.setFrameOrigin(0, bottomInset)
         actionsView.setFrameOrigin(frame.width - actionsView.frame.width, 0)
-        attachView.setFrameOrigin(0, 0)
+        
+        var leftInset: CGFloat = 0
+        
+        if let botMenuView = botMenuView {
+            botMenuView.setFrameOrigin(.zero)
+            leftInset += botMenuView.frame.width
+        }
+        
+        attachView.setFrameOrigin(NSMakePoint(leftInset, 0))
+        leftInset += attachView.frame.width
+        
+        textView.setFrameOrigin(NSMakePoint(leftInset, yInset))
+        
         _ts.setFrameOrigin(0, frame.height - .borderSize)
         if let additionBlockedActionView = additionBlockedActionView {
             additionBlockedActionView.centerY(x: frame.width - additionBlockedActionView.frame.width - 22)
@@ -653,7 +693,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
-        return NSMakeSize(NSWidth(contentView.frame) - NSWidth(actionsView.frame) - NSWidth(attachView.frame), NSHeight(textView.frame))
+        var leftInset: CGFloat = attachView.frame.width
+        if let botMenu = self.botMenuView {
+            leftInset += botMenu.frame.width
+        }
+        return NSMakeSize(contentView.frame.width - actionsView.frame.width - leftInset, textView.frame.height)
     }
     
     func textViewIsTypingEnabled() -> Bool {

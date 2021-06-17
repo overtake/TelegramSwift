@@ -99,7 +99,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
             self.label.isHidden = true
             self.backgroundMode = .color(color: NSColor(UInt32(color)))
           //  backgroundColor = NSColor(UInt32(color))
-        case let .gradient(t, b, r):
+        case let .gradient(_, t, b, r):
             self.imageView.isHidden = true
             self.label.isHidden = true
             let top = NSColor(argb: t)
