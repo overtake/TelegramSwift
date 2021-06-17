@@ -2761,6 +2761,8 @@ internal final class L10n {
   internal static func chatWebpageMediaCount1(_ p1: Int, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Chat.Webpage.MediaCount1", p1, p2)
   }
+  /// Menu
+  internal static var chatInputBotMenu: String  { return L10n.tr("Localizable", "ChatInput.BotMenu") }
   /// Show Next
   internal static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
   /// Archived Chats

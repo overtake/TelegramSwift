@@ -3701,6 +3701,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present
                                     .withUpdatedBlocked(cachedData.isBlocked)
                                     .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
+                                    .updateBotMenu { current in
+                                        if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
+                                            var current = current ?? .init(commands: [], revealed: false)
+                                            current.commands = botInfo.commands
+                                            return current
+                                        }
+                                        return nil
+                                    }
 //                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                             } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                                 present = present
@@ -3880,6 +3888,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     .withUpdatedBlocked(cachedData.isBlocked)
                                     .withUpdatedPeerStatusSettings(contactStatus)
                                     .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
+                                    .updateBotMenu { current in
+                                        if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
+                                            var current = current ?? .init(commands: [], revealed: false)
+                                            current.commands = botInfo.commands
+                                            return current
+                                        }
+                                        return nil
+                                    }
                             } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                 present = present
                                     .withUpdatedPeerStatusSettings(contactStatus)
@@ -4796,7 +4812,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         var result:KeyHandlerResult = .rejected
-        if chatInteraction.presentation.reportMode != nil {
+        if chatInteraction.presentation.botMenu?.revealed == true {
+            self.chatInteraction.update({
+                $0.updateBotMenu({ current in
+                    var current = current
+                    current?.revealed = false
+                    return current
+                })
+            })
+            result = .invoked
+        } else if chatInteraction.presentation.reportMode != nil {
             self.changeState()
             result = .invoked
         } else if chatInteraction.presentation.state == .selecting {
@@ -5561,7 +5586,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 editButton?.isHidden = value.selectionState != nil || value.reportMode != nil
             }
             
-            if value.effectiveInput != oldValue.effectiveInput || force {
+            if value.effectiveInput != oldValue.effectiveInput || value.botMenu != oldValue.botMenu || force {
                 if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(chatInteraction.presentation, context: self.context, currentQuery: self.contextQueryState?.0) {
                     self.contextQueryState?.1.dispose()
                     var inScope = true
