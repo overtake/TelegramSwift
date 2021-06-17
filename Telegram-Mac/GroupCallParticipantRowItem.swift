@@ -208,7 +208,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         if isVertical {
             titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
         } else {
-            let width = data.isFullscreen ? GroupCallTheme.tileTableWidth - 20 : width - 20
+            let width = (data.isFullscreen && data.videoMode) ? GroupCallTheme.tileTableWidth - 20 : width - 20
             
             titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right)
             statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - inset)
