@@ -30,11 +30,6 @@
 		2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF025D6DDDC00717AA1 /* DesktopCaptureSource.h */; };
 		2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */; };
 		2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 2774C564262F19F4006E6F26 /* SignalingEncryption.h */; };
-		277C349F267A781800B1CAA7 /* TGRTCMTLRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 277C349D267A781800B1CAA7 /* TGRTCMTLRenderer.mm */; };
-		277C34A0267A781800B1CAA7 /* TGRTCMTLRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 277C349E267A781800B1CAA7 /* TGRTCMTLRenderer.h */; };
-		277C34A2267A78AA00B1CAA7 /* TGRTCMTLRenderer+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 277C34A1267A78AA00B1CAA7 /* TGRTCMTLRenderer+Private.h */; };
-		277C34A5267A79A900B1CAA7 /* TGRTCMTLI420Renderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 277C34A3267A79A900B1CAA7 /* TGRTCMTLI420Renderer.mm */; };
-		277C34A6267A79A900B1CAA7 /* TGRTCMTLI420Renderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 277C34A4267A79A900B1CAA7 /* TGRTCMTLI420Renderer.h */; };
 		27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A0A4DF25F764FA00B789AF /* ffmpeg.framework */; };
 		27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167F926203A56000B8449 /* NativeNetworkingImpl.h */; };
 		27C1680026203A56000B8449 /* Signaling.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167FA26203A56000B8449 /* Signaling.h */; };
@@ -48,6 +43,11 @@
 		27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */; };
 		27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D7ABA725EFD113008DB916 /* StreamingPart.h */; };
 		27D7ABAA25EFD113008DB916 /* StreamingPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D7ABA825EFD113008DB916 /* StreamingPart.cpp */; };
+		27DCF4C6267CE3230019EC49 /* TGRTCMTLRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4C1267CE3230019EC49 /* TGRTCMTLRenderer.mm */; };
+		27DCF4C7267CE3230019EC49 /* TGRTCMTLI420Renderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4C2267CE3230019EC49 /* TGRTCMTLI420Renderer.mm */; };
+		27DCF4C8267CE3230019EC49 /* TGRTCMTLRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DCF4C3267CE3230019EC49 /* TGRTCMTLRenderer.h */; };
+		27DCF4C9267CE3230019EC49 /* TGRTCMTLI420Renderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DCF4C4267CE3230019EC49 /* TGRTCMTLI420Renderer.h */; };
+		27DCF4CA267CE3230019EC49 /* TGRTCMTLRenderer+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DCF4C5267CE3230019EC49 /* TGRTCMTLRenderer+Private.h */; };
 		D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */; };
 		D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */; };
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
@@ -111,11 +111,6 @@
 		2767ADF025D6DDDC00717AA1 /* DesktopCaptureSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSource.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSource.h; sourceTree = "<group>"; };
 		2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SignalingEncryption.cpp; sourceTree = "<group>"; };
 		2774C564262F19F4006E6F26 /* SignalingEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalingEncryption.h; sourceTree = "<group>"; };
-		277C349D267A781800B1CAA7 /* TGRTCMTLRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCMTLRenderer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCMTLRenderer.mm; sourceTree = "<group>"; };
-		277C349E267A781800B1CAA7 /* TGRTCMTLRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGRTCMTLRenderer.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCMTLRenderer.h; sourceTree = "<group>"; };
-		277C34A1267A78AA00B1CAA7 /* TGRTCMTLRenderer+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "TGRTCMTLRenderer+Private.h"; path = "../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCMTLRenderer+Private.h"; sourceTree = "<group>"; };
-		277C34A3267A79A900B1CAA7 /* TGRTCMTLI420Renderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGRTCMTLI420Renderer.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCMTLI420Renderer.mm; sourceTree = "<group>"; };
-		277C34A4267A79A900B1CAA7 /* TGRTCMTLI420Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGRTCMTLI420Renderer.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGRTCMTLI420Renderer.h; sourceTree = "<group>"; };
 		27A0A4DF25F764FA00B789AF /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C167F926203A56000B8449 /* NativeNetworkingImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeNetworkingImpl.h; sourceTree = "<group>"; };
 		27C167FA26203A56000B8449 /* Signaling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Signaling.h; sourceTree = "<group>"; };
@@ -129,6 +124,11 @@
 		27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D7ABA725EFD113008DB916 /* StreamingPart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamingPart.h; sourceTree = "<group>"; };
 		27D7ABA825EFD113008DB916 /* StreamingPart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StreamingPart.cpp; sourceTree = "<group>"; };
+		27DCF4C1267CE3230019EC49 /* TGRTCMTLRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCMTLRenderer.mm; sourceTree = "<group>"; };
+		27DCF4C2267CE3230019EC49 /* TGRTCMTLI420Renderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCMTLI420Renderer.mm; sourceTree = "<group>"; };
+		27DCF4C3267CE3230019EC49 /* TGRTCMTLRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCMTLRenderer.h; sourceTree = "<group>"; };
+		27DCF4C4267CE3230019EC49 /* TGRTCMTLI420Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCMTLI420Renderer.h; sourceTree = "<group>"; };
+		27DCF4C5267CE3230019EC49 /* TGRTCMTLRenderer+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TGRTCMTLRenderer+Private.h"; sourceTree = "<group>"; };
 		D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptedConnection.cpp; path = ../../submodules/tgcalls/tgcalls/EncryptedConnection.cpp; sourceTree = "<group>"; };
 		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
@@ -229,6 +229,19 @@
 			path = ../../submodules/tgcalls/tgcalls/v2;
 			sourceTree = "<group>";
 		};
+		27DCF4C0267CE3230019EC49 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				27DCF4C1267CE3230019EC49 /* TGRTCMTLRenderer.mm */,
+				27DCF4C2267CE3230019EC49 /* TGRTCMTLI420Renderer.mm */,
+				27DCF4C3267CE3230019EC49 /* TGRTCMTLRenderer.h */,
+				27DCF4C4267CE3230019EC49 /* TGRTCMTLI420Renderer.h */,
+				27DCF4C5267CE3230019EC49 /* TGRTCMTLRenderer+Private.h */,
+			);
+			name = macOS;
+			path = ../platform/darwin/macOS;
+			sourceTree = "<group>";
+		};
 		D06E367F24A4FD4900C7D03A = {
 			isa = PBXGroup;
 			children = (
@@ -261,11 +274,6 @@
 				273F3236265B97F2005D918E /* VideoSampleBufferViewMac.h */,
 				273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
-				277C349E267A781800B1CAA7 /* TGRTCMTLRenderer.h */,
-				277C34A1267A78AA00B1CAA7 /* TGRTCMTLRenderer+Private.h */,
-				277C349D267A781800B1CAA7 /* TGRTCMTLRenderer.mm */,
-				277C34A4267A79A900B1CAA7 /* TGRTCMTLI420Renderer.h */,
-				277C34A3267A79A900B1CAA7 /* TGRTCMTLI420Renderer.mm */,
 				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
 				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
 				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
@@ -330,6 +338,7 @@
 		D0E7BD1C256A7E0D0068644D /* group */ = {
 			isa = PBXGroup;
 			children = (
+				27DCF4C0267CE3230019EC49 /* macOS */,
 				274BB567263AE0AA00620D03 /* GroupJoinPayload.h */,
 				274BB566263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp */,
 				274BB565263AE0AA00620D03 /* GroupJoinPayloadInternal.h */,
@@ -354,9 +363,11 @@
 			files = (
 				D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
+				27DCF4CA267CE3230019EC49 /* TGRTCMTLRenderer+Private.h in Headers */,
 				271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */,
 				2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */,
 				274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */,
+				27DCF4C9267CE3230019EC49 /* TGRTCMTLI420Renderer.h in Headers */,
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
 				27C1680226203A56000B8449 /* InstanceV2Impl.h in Headers */,
@@ -364,7 +375,7 @@
 				273F3238265B97F2005D918E /* VideoSampleBufferViewMac.h in Headers */,
 				27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */,
 				2767ADF625D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h in Headers */,
-				277C34A0267A781800B1CAA7 /* TGRTCMTLRenderer.h in Headers */,
+				27DCF4C8267CE3230019EC49 /* TGRTCMTLRenderer.h in Headers */,
 				274BB56A263AE0AA00620D03 /* GroupJoinPayload.h in Headers */,
 				27D0067E25AF266400EE3EB1 /* GroupNetworkManager.h in Headers */,
 				27328D8C2660E8AD00E3B7D8 /* DarwinVideoSource.h in Headers */,
@@ -372,8 +383,6 @@
 				27335F0925C833D400FD040C /* GroupInstanceCustomImpl.h in Headers */,
 				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
 				27C1680026203A56000B8449 /* Signaling.h in Headers */,
-				277C34A2267A78AA00B1CAA7 /* TGRTCMTLRenderer+Private.h in Headers */,
-				277C34A6267A79A900B1CAA7 /* TGRTCMTLI420Renderer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -454,14 +463,14 @@
 				D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */,
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
-				277C349F267A781800B1CAA7 /* TGRTCMTLRenderer.mm in Sources */,
+				27DCF4C6267CE3230019EC49 /* TGRTCMTLRenderer.mm in Sources */,
 				271503ED2631677B004FB0E0 /* DesktopCaptureSourceHelper.cpp in Sources */,
 				271504102631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm in Sources */,
 				271503EE2631677B004FB0E0 /* DesktopCaptureSource.cpp in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
 				27C1680326203A56000B8449 /* InstanceV2Impl.cpp in Sources */,
 				2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */,
-				277C34A5267A79A900B1CAA7 /* TGRTCMTLI420Renderer.mm in Sources */,
+				27DCF4C7267CE3230019EC49 /* TGRTCMTLI420Renderer.mm in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
