@@ -55,6 +55,7 @@ final class GroupCallUIArguments {
     let unpinVideo:()->Void
     let isPinnedVideo:(PeerId, VideoSourceMacMode)->Bool
     let getAccountPeerId: ()->PeerId?
+    let getAccount:()->Account
     let cancelShareScreencast: ()->Void
     let cancelShareVideo: ()->Void
     let toggleRaiseHand:()->Void
@@ -87,6 +88,7 @@ final class GroupCallUIArguments {
     isPinnedVideo:@escaping(PeerId, VideoSourceMacMode)->Bool,
     setVolume: @escaping(PeerId, Double, Bool)->Void,
     getAccountPeerId: @escaping()->PeerId?,
+    getAccount: @escaping() -> Account,
     cancelShareScreencast: @escaping()->Void,
     cancelShareVideo: @escaping()->Void,
     toggleRaiseHand:@escaping()->Void,
@@ -119,6 +121,7 @@ final class GroupCallUIArguments {
         self.isPinnedVideo = isPinnedVideo
         self.setVolume = setVolume
         self.getAccountPeerId = getAccountPeerId
+        self.getAccount = getAccount
         self.cancelShareVideo = cancelShareVideo
         self.cancelShareScreencast = cancelShareScreencast
         self.toggleRaiseHand = toggleRaiseHand
@@ -380,11 +383,6 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
             let pinMode: DominantVideo.PinMode = dominantSpeaker == pinnedData.permanent ? .permanent : .focused
             current = .init(peer.peer.id, dominantSpeaker, peer.videoEndpointId == dominantSpeaker ? .video : .screencast, pinMode)
         }
-    }
-    
-    if current == nil {
-        var bp = 0
-        bp += 1
     }
     
     
@@ -902,6 +900,14 @@ final class GroupCallUIController : ViewController {
                 }
             }
             
+            let toggleMicro:(Bool)->Void = { [weak self] value in
+                if value != self?.genericView.state?.isMuted {
+                    delay(0.2, closure: {
+                        self?.data.call.toggleIsMuted()
+                    })
+                }
+            }
+            
             let select:(VideoSourceMac)->Void = { source in
                 updateVideoSources { current in
                     var current = current
@@ -956,8 +962,9 @@ final class GroupCallUIController : ViewController {
                 self?.sharing?.orderOut(nil)
                 confirmSource(mode, { accept in
                     if accept {
-                        let sharing = presentDesktopCapturerWindow(mode: mode, select: { source in
+                        let sharing = presentDesktopCapturerWindow(mode: mode, select: { source, wantsToSpeak in
                             select(source)
+                            toggleMicro(wantsToSpeak)
                         }, devices: sharedContext.devicesContext)
                         self?.sharing = sharing
                         sharing?.level = self?.window?.level ?? .normal
@@ -1025,6 +1032,8 @@ final class GroupCallUIController : ViewController {
             }
         }, getAccountPeerId:{ [weak self] in
             return self?.data.call.joinAsPeerId
+        }, getAccount: {
+            return account
         }, cancelShareScreencast: { [weak self] in
             updateVideoSources { current in
                 var current = current
@@ -1271,12 +1280,12 @@ final class GroupCallUIController : ViewController {
                         
             let videoMembers: [PeerGroupCallData] = state.memberDatas
                 .filter { member in
-                return member.presentationEndpoint != nil
+                return member.presentationEndpoint != nil && member.peer.id != member.accountPeerId
             }
             
             let prevPresenting = previous?.memberDatas
                 .filter { member in
-                return member.presentationEndpoint != nil
+                    return member.presentationEndpoint != nil && member.peer.id != member.accountPeerId
             } ?? []
             let presenting = videoMembers
             

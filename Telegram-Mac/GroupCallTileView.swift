@@ -187,7 +187,7 @@ private final class LimitView : View {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
     }
-    
+    private var dimension: CGSize?
     func update(_ peer: Peer, size: NSSize, context: AccountContext) {
         let profileImageRepresentations:[TelegramMediaImageRepresentation]
         if let peer = peer as? TelegramChannel {
@@ -205,13 +205,13 @@ private final class LimitView : View {
             
         
         if let dimension = profileImageRepresentations.last?.dimensions.size {
-            
+            self.dimension = dimension
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            self.imageView.set(arguments: arguments)
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: self.backingScaleFactor), clearInstantly: false)
-            self.imageView.setSignal(chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: media), peer: peer, scale: self.backingScaleFactor), clearInstantly: false, animate: true, cacheImage: { result in
+            self.imageView.setSignal(chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: media), peer: peer, scale: self.backingScaleFactor), clearInstantly: false, animate: false, cacheImage: { result in
                 cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
             })
-            self.imageView.set(arguments: arguments)
             
             if let reference = PeerReference(peer) {
                 _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
@@ -238,6 +238,11 @@ private final class LimitView : View {
     
     override func layout() {
         super.layout()
+        
+        if let dimension = self.dimension {
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimension, boundingSize: frame.size, intrinsicInsets: NSEdgeInsets())
+            self.imageView.set(arguments: arguments)
+        }
                 
         effectView.frame = bounds
         imageView.frame = bounds

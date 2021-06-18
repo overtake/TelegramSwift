@@ -9265,6 +9265,8 @@ internal final class L10n {
   internal static var voiceChatScheduledHeader: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.Header") }
   /// Late For
   internal static var voiceChatScheduledHeaderLate: String  { return L10n.tr("Localizable", "VoiceChat.Scheduled.HeaderLate") }
+  /// Unavailable to share your screen, please grant access is [System Settings](screen).
+  internal static var voiceChatScreenShareUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.ScreenShare.Unavailable") }
   /// Screencast is Paused
   internal static var voiceChatScreencastPaused: String  { return L10n.tr("Localizable", "VoiceChat.Screencast.Paused") }
   /// Voice Chat
@@ -9339,6 +9341,10 @@ internal final class L10n {
   internal static var voiceChatShareScreenMutedError: String  { return L10n.tr("Localizable", "VoiceChat.ShareScreen.MutedError") }
   /// You can't share video right now. Please ask to speak.
   internal static var voiceChatShareVideoMutedError: String  { return L10n.tr("Localizable", "VoiceChat.ShareVideo.MutedError") }
+  /// You are sharing your screen
+  internal static var voiceChatSharingPlaceholder: String  { return L10n.tr("Localizable", "VoiceChat.Sharing.Placeholder") }
+  /// Stop
+  internal static var voiceChatSharingStop: String  { return L10n.tr("Localizable", "VoiceChat.Sharing.Stop") }
   /// Connecting...
   internal static var voiceChatStatusConnecting: String  { return L10n.tr("Localizable", "VoiceChat.Status.Connecting") }
   /// invited
@@ -9477,6 +9483,8 @@ internal final class L10n {
   internal static var voiceChatVideoVideoSourceCancel: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Cancel") }
   /// Share
   internal static var voiceChatVideoVideoSourceShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Share") }
+  /// Unavailable to share your camera, please grant access is [System Settings](camera).
+  internal static var voiceChatVideoShareUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.VideoShare.Unavailable") }
   /// Audio Title (Optional)
   internal static var voiecChatSettingsRecordPlaceholder: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Placeholder") }
   /// RECORD VOICE CHAT

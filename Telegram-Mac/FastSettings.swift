@@ -135,6 +135,8 @@ class FastSettings {
     private static let kNoticeAdChannel = "kNoticeAdChannel"
     private static let kPlayingRate = "kPlayingRate"
 
+    private static let kSVCShareMicro = "kSVCShareMicro"
+
 
     private static let kVolumeRate = "kVolumeRate"
     
@@ -238,6 +240,16 @@ class FastSettings {
     static func toggleIsNeedCollage(_ enable: Bool) -> Void {
         UserDefaults.standard.set(enable, forKey: kNeedCollage)
         UserDefaults.standard.synchronize()
+    }
+    
+    static var vcShareMicro: Bool {
+        if let value = UserDefaults.standard.value(forKey: kSVCShareMicro) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func updateVCShareMicro(_ value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: kSVCShareMicro)
     }
     
     static func toggleRecordingState() {
