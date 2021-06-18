@@ -158,6 +158,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 return L10n.messagesPlaceholderReply
             }
         }
+        if let replyMarkup = chatInteraction.presentation.keyboardButtonsMessage?.replyMarkup {
+            if let placeholder = replyMarkup.placeholder {
+                return placeholder
+            }
+        }
         if let peer = chatInteraction.presentation.peer {
             if let peer = peer as? TelegramChannel {
                 if peer.hasPermission(.canBeAnonymous) {

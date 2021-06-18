@@ -347,6 +347,7 @@
 		27B96B752636F05E000811F5 /* RateCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B96A222636F05E000811F5 /* RateCall.swift */; };
 		27B96B762636F05E000811F5 /* MessageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B96A232636F05E000811F5 /* MessageUtils.swift */; };
 		27B96B772636F05E000811F5 /* RecentlySearchedPeerIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27B96A242636F05E000811F5 /* RecentlySearchedPeerIds.swift */; };
+		27DCF4BF267CE0900019EC49 /* ImportStickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BE267CE0900019EC49 /* ImportStickers.swift */; };
 		A7919034240CF9C7002011CA /* Reachability.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919033240CF9C7002011CA /* Reachability.framework */; };
 		A7919036240CF9CC002011CA /* CryptoUtils.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919035240CF9CC002011CA /* CryptoUtils.framework */; };
 		A7919038240CF9D1002011CA /* NetworkLogging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7919037240CF9D1002011CA /* NetworkLogging.framework */; };
@@ -699,6 +700,7 @@
 		27B96A222636F05E000811F5 /* RateCall.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RateCall.swift; sourceTree = "<group>"; };
 		27B96A232636F05E000811F5 /* MessageUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageUtils.swift; sourceTree = "<group>"; };
 		27B96A242636F05E000811F5 /* RecentlySearchedPeerIds.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentlySearchedPeerIds.swift; sourceTree = "<group>"; };
+		27DCF4BE267CE0900019EC49 /* ImportStickers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImportStickers.swift; sourceTree = "<group>"; };
 		A76D02EE25C4048500FCE1B5 /* LegacyReachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LegacyReachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919033240CF9C7002011CA /* Reachability.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Reachability.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7919035240CF9CC002011CA /* CryptoUtils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CryptoUtils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1105,6 +1107,7 @@
 			children = (
 				27B969AB2636F05E000811F5 /* StickerPack.swift */,
 				27B969AC2636F05E000811F5 /* SearchStickers.swift */,
+				27DCF4BE267CE0900019EC49 /* ImportStickers.swift */,
 				27B969AD2636F05E000811F5 /* TelegramEngineStickers.swift */,
 				27B969AE2636F05E000811F5 /* LoadedStickerPack.swift */,
 				27B969AF2636F05E000811F5 /* StickerPackInteractiveOperations.swift */,
@@ -1459,6 +1462,7 @@
 				27B96B2F2636F05E000811F5 /* SuggestedLocalizationEntry.swift in Sources */,
 				27B96B5A2636F05E000811F5 /* TelegramDeviceContactImportInfo.swift in Sources */,
 				27B96A5D2636F05E000811F5 /* Suggestions.swift in Sources */,
+				27DCF4BF267CE0900019EC49 /* ImportStickers.swift in Sources */,
 				27B96A282636F05E000811F5 /* ContentSettings.swift in Sources */,
 				27B96ABE2636F05E000811F5 /* AppChangelog.swift in Sources */,
 				27B96B312636F05E000811F5 /* LocalizationPreview.swift in Sources */,
