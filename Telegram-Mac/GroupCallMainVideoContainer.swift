@@ -11,6 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import SyncCore
 
 private final class PinView : Control {
     private let imageView:ImageView = ImageView()
@@ -143,6 +144,63 @@ private final class BackView : Control {
     }
 }
 
+private final class SelfPresentationPlaceholder : View {
+    private let textView = TextView()
+    private let button = TitleButton()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        addSubview(button)
+        
+        button.autohighlight = false
+        button.scaleOnClick = true
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+    }
+        
+    func update(stop: @escaping()->Void) {
+        
+        let textLayout = TextViewLayout(.initialize(string: L10n.voiceChatSharingPlaceholder, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+        textLayout.measure(width: frame.width - 40)
+        textView.update(textLayout)
+        
+        button.set(text: L10n.voiceChatSharingStop, for: .Normal)
+        button.set(font: .medium(.text), for: .Normal)
+        button.set(color: GroupCallTheme.customTheme.textColor, for: .Normal)
+        button.sizeToFit(NSMakeSize(50, 10), .zero, thatFit: false)
+        button.set(background: GroupCallTheme.customTheme.accentColor, for: .Normal)
+        button.set(background: GroupCallTheme.customTheme.accentColor.withAlphaComponent(0.8), for: .Highlight)
+        button.layer?.cornerRadius = 4
+        
+        button.removeAllHandlers()
+        button.set(handler: { _ in
+            stop()
+        }, for: .SingleClick)
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        textView.resize(frame.width - 40)
+        var textRect = size.bounds.focus(textView.frame.size)
+        textRect.origin.y = frame.midY - textView.frame.height - 5
+        transition.updateFrame(view: textView, frame: textRect)
+        
+        var buttonRect = size.bounds.focus(button.frame.size)
+        buttonRect.origin.y = frame.midY + 5
+        transition.updateFrame(view: button, frame: buttonRect)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 struct DominantVideo : Equatable {
     
     enum PinMode {
@@ -197,6 +255,8 @@ final class GroupCallMainVideoContainerView: Control {
     private var pausedTextView: TextView?
     private var pausedImageView: ImageView?
     
+    
+    private var selfPresentationPlaceholder: SelfPresentationPlaceholder?
     
     init(call: PresentationGroupCall) {
         self.call = call
@@ -419,7 +479,42 @@ final class GroupCallMainVideoContainerView: Control {
         }
         self.currentPeer = peer
         if let peer = peer {
-           
+            
+            let selfPresentation = peer.peerId == arguments?.getAccountPeerId() && peer.mode == .screencast
+            
+            if selfPresentation {
+                
+                let current: SelfPresentationPlaceholder
+                if let c = self.selfPresentationPlaceholder {
+                    current = c
+                } else {
+                    current = SelfPresentationPlaceholder.init(frame: self.bounds)
+                    self.selfPresentationPlaceholder = current
+                    addSubview(current)
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+            
+                
+                current.update(stop: { [weak arguments] in
+                    arguments?.cancelShareScreencast()
+                })
+            } else {
+                if let view = self.selfPresentationPlaceholder {
+                    self.selfPresentationPlaceholder = nil
+                    if animated {
+                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                            view?.removeFromSuperview()
+                        })
+                    } else {
+                        view.removeFromSuperview()
+                    }
+                }
+            }
+
+            
             let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView
             let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView
             let isPaused = participant?.isVideoPaused(peer.endpointId) == true
@@ -434,7 +529,7 @@ final class GroupCallMainVideoContainerView: Control {
             
             if let videoView = videoView {
                 
-                videoView.change(opacity: isPaused ? 0 : 1, animated: animated)
+                videoView.change(opacity: isPaused || selfPresentation ? 0 : 1, animated: animated)
                 
                 let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
                 if prevIsPaused != isPaused {
@@ -495,7 +590,14 @@ final class GroupCallMainVideoContainerView: Control {
                 self.addSubview(backstageVideo, positioned: .below, relativeTo: currentVideoView)
                 self.addSubview(backstage, positioned: .above, relativeTo: backstageVideo)
             }
+            
+            
         } else {
+            if let view = self.selfPresentationPlaceholder {
+                view.removeFromSuperview()
+                self.selfPresentationPlaceholder = nil
+            }
+            
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()
                 self.currentVideoView = nil
@@ -560,6 +662,11 @@ final class GroupCallMainVideoContainerView: Control {
             let backRect = NSMakeRect(10, 10, backView.frame.width, backView.frame.height)
             transition.updateFrame(view: backView, frame: backRect)
             backView.updateLayout(size: backRect.size, transition: transition)
+        }
+        
+        if let view = self.selfPresentationPlaceholder {
+            transition.updateFrame(view: view, frame: size.bounds)
+            view.updateLayout(size: size, transition: transition)
         }
     }
     

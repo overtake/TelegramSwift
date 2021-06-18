@@ -682,6 +682,12 @@ class APController : NSResponder {
             return state.volume
         }
     }
+    fileprivate var _commandCenter: Any? = nil
+    
+    @available(macOS 10.12.2, *)
+    private func commandCenter()->AudioCommandCenter? {
+        return self._commandCenter as? AudioCommandCenter
+    }
     
     init(context: AccountContext, streamable: Bool, baseRate: Double, volume: Float) {
         self.context = context
@@ -689,6 +695,7 @@ class APController : NSResponder {
         self.streamable = streamable
         self.state.baseRate = baseRate
         super.init()
+        
     }
 
     @objc open func windowDidBecomeKey() {
@@ -1145,6 +1152,10 @@ class APChatController : APController {
         self.index = index
         self.messages = messages
         super.init(context: context, streamable: streamable, baseRate: baseRate, volume: volume)
+        
+        if #available(macOS 10.12.2, *) {
+            self._commandCenter = AudioCommandCenter(self)
+        }
     }
     
     
