@@ -78,7 +78,7 @@ private final class DesktopCapturerView : View {
     
     fileprivate class Micro : Control {
         
-        var isOn: Bool = FastSettings.vcShareMicro {
+        var isOn: Bool = true {
             didSet {
                 if isOn != oldValue {
                     toggle(animated: true)
@@ -359,8 +359,9 @@ final class DesktopCapturerWindow : Window {
             self?.orderOut(nil)
             if let source = self?.listController.selected {
                 let select = self?.select
+                let wantsToSpeak = self?.genericView.micro.isOn ?? false
                 delay(1.0, closure: {
-                    select?(source, self?.genericView.micro.isOn ?? false)
+                    select?(source, wantsToSpeak)
                 })
             }
         }, for: .Click)
@@ -417,7 +418,7 @@ func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(Vi
     
     switch mode {
     case .video:
-        let devices = AVCaptureDevice.devices(for: .video).filter({ $0.isConnected && !$0.isSuspended })
+        let devices = DALDevices()
         if devices.isEmpty {
             return nil
         }

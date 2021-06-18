@@ -10,7 +10,7 @@ import Foundation
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-
+import CoreMediaIO
 
 struct IODevices {
     let camera: [AVCaptureDevice]
@@ -34,7 +34,7 @@ private func devicesList() -> Signal<IODevices, NoError> {
         let defAudioDevice = AVCaptureDevice.default(for: .audio)
         let defVideoDevice = AVCaptureDevice.default(for: .video)
         
-        var videoDevices = AVCaptureDevice.devices(for: .video)
+        var videoDevices = DALDevices()
         var audioDevices = AVCaptureDevice.devices(for: .audio)
         
         if !videoDevices.isEmpty, let device = defVideoDevice {
@@ -52,6 +52,22 @@ private func devicesList() -> Signal<IODevices, NoError> {
         return EmptyDisposable
     } |> runOn(.concurrentDefaultQueue())
     
+}
+
+
+func sizeof <T> (_ : T.Type) -> Int
+{
+    return (MemoryLayout<T>.size)
+}
+
+func sizeof <T> (_ : T) -> Int
+{
+    return (MemoryLayout<T>.size)
+}
+
+func sizeof <T> (_ value : [T]) -> Int
+{
+    return (MemoryLayout<T>.size * value.count)
 }
 
 
@@ -118,6 +134,30 @@ final class DevicesContext : NSObject {
         super.init()
         
 
+//        var prop : CMIOObjectPropertyAddress = CMIOObjectPropertyAddress(
+//                mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
+//                mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+//                mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster))
+//        
+//        var allow: UInt32 = 1
+//        CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject),
+//                                &prop, 0, nil,
+//                                UInt32(sizeof(allow)), &allow );
+        
+
+        
+        /*
+         
+         CMIOObjectPropertyAddress prop = {
+                 kCMIOHardwarePropertyAllowScreenCaptureDevices,
+                 kCMIOObjectPropertyScopeGlobal,
+                 kCMIOObjectPropertyElementMaster
+             };
+             UInt32 allow = 1;
+             CMIOObjectSetPropertyData(kCMIOObjectSystemObject,
+                                     &prop, 0, NULL,
+                                     sizeof(allow), &allow );
+         */
     
         NotificationCenter.default.addObserver(forName: NSNotification.Name.AVCaptureDeviceWasConnected, object: nil, queue: nil, using: { [weak self] _ in
             self?.update()
