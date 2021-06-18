@@ -149,7 +149,7 @@ struct GroupCallTheme {
     static let hide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
 
     static let smallTableWidth: CGFloat = 160
-    static let fullScreenThreshold: CGFloat = 630
+    static let fullScreenThreshold: CGFloat = 500
 
     static let tileTableWidth: CGFloat = 200
     

@@ -901,8 +901,8 @@ final class GroupCallUIController : ViewController {
             }
             
             let toggleMicro:(Bool)->Void = { [weak self] value in
-                if value != self?.genericView.state?.isMuted {
-                    delay(0.2, closure: {
+                if !value != self?.genericView.state?.isMuted {
+                    delay(0.5, closure: {
                         self?.data.call.toggleIsMuted()
                     })
                 }
@@ -1551,8 +1551,12 @@ final class GroupCallUIController : ViewController {
                     }
                     
                     var minScreencast: PresentationGroupCallRequestedVideo.Quality = .thumbnail
-                    let maxScreencast: PresentationGroupCallRequestedVideo.Quality = screencastQuality
+                    var maxScreencast: PresentationGroupCallRequestedVideo.Quality = screencastQuality
 
+                    if maxScreencast == .medium {
+                        maxScreencast = .full
+                    }
+                    
                     if maxScreencast == .full {
                         minScreencast = .full
                     }

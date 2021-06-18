@@ -151,3 +151,9 @@ func fs(_ path:String) -> Int32? {
 
 
 
+func DALDevices() -> [AVCaptureDevice] {
+    let video = AVCaptureDevice.devices(for: .video)
+    let muxed:[AVCaptureDevice] = []//AVCaptureDevice.devices(for: .muxed)
+    // && $0.hasMediaType(.video)
+    return (video + muxed).filter { $0.isConnected && !$0.isSuspended }
+}

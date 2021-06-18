@@ -1778,7 +1778,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 }
                 return value
-            }.updatedUrlPreview(nil)
+            }.updatedUrlPreview(nil).updateBotMenu({ current in
+                var current = current
+                current?.revealed = false
+                return current
+            })
             
            })
             self?.chatInteraction.saveState(scrollState: self?.immediateScrollState())

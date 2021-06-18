@@ -161,7 +161,7 @@ private final class SelfPresentationPlaceholder : View {
         
     func update(stop: @escaping()->Void) {
         
-        let textLayout = TextViewLayout(.initialize(string: L10n.voiceChatSharingPlaceholder, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+        let textLayout = TextViewLayout(.initialize(string: L10n.voiceChatSharingPlaceholder, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)), alignment: .center)
         textLayout.measure(width: frame.width - 40)
         textView.update(textLayout)
         

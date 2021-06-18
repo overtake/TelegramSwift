@@ -106,7 +106,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         let defVideoDevice = AVCaptureDevice.default(for: .video)
         
         
-        var videoDevices = AVCaptureDevice.devices(for: .video)
+        var videoDevices = DALDevices()
         var audioDevices = AVCaptureDevice.devices(for: .audio)
 
         if !videoDevices.isEmpty, let device = defVideoDevice {

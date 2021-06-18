@@ -132,6 +132,12 @@ final class GroupCallView : View {
             if state.pinnedData.focused != nil || state.pinnedData.permanent != nil {
                 return false
             }
+            
+            let tileHeight = strongSelf.tileView?.frame.height ?? 0
+            
+            if tileHeight <= 280 {
+                return false
+            }
             if state.videoActive(.main).count == 1 {
                 return false
             }
@@ -394,7 +400,7 @@ final class GroupCallView : View {
                 if isFullScreen {
                     size = NSMakeSize(GroupCallTheme.tileTableWidth, frame.height - 54 - 5)
                 } else {
-                    var videoHeight = max(200, frame.height - 180 - 200)
+                    var videoHeight = max(160, frame.height - 180 - 200)
                     videoHeight -= (self.scrollTempOffset)
                     size = NSMakeSize(width, frame.height - 180 - max(0, videoHeight) - 5)
                 }
