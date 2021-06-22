@@ -359,7 +359,7 @@ class PCallSession {
         self.isVideo = initialState?.type == .video
         self.isVideo = self.isVideo || startWithVideo
         
-        let devices = DALDevices()
+        let devices = AVCaptureDevice.devices(for: .video).filter({ $0.isConnected && !$0.isSuspended })
         
         self.isVideoPossible = isVideoPossible && !devices.isEmpty
         

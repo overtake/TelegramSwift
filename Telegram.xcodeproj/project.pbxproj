@@ -113,6 +113,7 @@
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
 		27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */; };
 		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
+		27E434142680C57900B05CB1 /* CoreMediaVideoTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E434132680C57900B05CB1 /* CoreMediaVideoTest.swift */; };
 		27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E59979261B3F5800228411 /* CurrencyFormatter.swift */; };
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
@@ -1194,6 +1195,8 @@
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
 		27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCommandCenter.swift; sourceTree = "<group>"; };
 		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
+		27E434132680C57900B05CB1 /* CoreMediaVideoTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreMediaVideoTest.swift; sourceTree = "<group>"; };
+		27E4343C2680D38600B05CB1 /* CoreMediaMacCapture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CoreMediaMacCapture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E59979261B3F5800228411 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
@@ -4476,6 +4479,7 @@
 				27CD09752624D33100ECB8EF /* animated-webp */,
 				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
 				A7F28336239A808500742C20 /* TemplateController.swift */,
+				27E434132680C57900B05CB1 /* CoreMediaVideoTest.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -4657,6 +4661,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27E4343C2680D38600B05CB1 /* CoreMediaMacCapture.framework */,
 				272C182F267D00350030B5FB /* CoreMediaIO.framework */,
 				27D1D62D2611FB0D00684DEA /* rnnoise.framework */,
 				278FA43725E8D5CD00280629 /* Stripe.framework */,
@@ -5894,6 +5899,7 @@
 				D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */,
 				D0530D4024E693A5003273BC /* CameraViews.swift in Sources */,
 				C2B1A1271DA3D84900ACB1DD /* ChatInputAccessory.swift in Sources */,
+				27E434142680C57900B05CB1 /* CoreMediaVideoTest.swift in Sources */,
 				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
 				276A1D59265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift in Sources */,

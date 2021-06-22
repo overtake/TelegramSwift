@@ -243,8 +243,8 @@ private final class DesktopCapturerView : View {
             }
             let captureLayer = AVCaptureVideoPreviewLayer(session: session)
             captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
-            captureLayer.connection?.isVideoMirrored = true
-            captureLayer.videoGravity = .resizeAspectFill
+            captureLayer.connection?.isVideoMirrored = shouldBeMirrored(source.device)
+            captureLayer.videoGravity = .resizeAspect
             view.layer = captureLayer
 
 
@@ -408,6 +408,12 @@ extension VideoSourceMac {
     var mode: VideoSourceMacMode {
         if self is DesktopCaptureSourceMac {
             return .screencast
+        } else if let device = self as? CameraCaptureDevice {
+            if device.device.hasMediaType(.muxed) {
+                return .screencast
+            } else {
+                return .video
+            }
         } else {
             return .video
         }
@@ -418,7 +424,7 @@ func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(Vi
     
     switch mode {
     case .video:
-        let devices = DALDevices()
+        let devices = AVCaptureDevice.devices(for: .video).filter({ $0.isConnected && !$0.isSuspended })
         if devices.isEmpty {
             return nil
         }

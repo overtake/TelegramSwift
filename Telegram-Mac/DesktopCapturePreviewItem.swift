@@ -352,7 +352,7 @@ final class DesktopCapturePreviewView : HorizontalRowView {
                     let captureLayer = AVCaptureVideoPreviewLayer()
                     captureLayer.session = session
                     captureLayer.connection?.automaticallyAdjustsVideoMirroring = false
-                    captureLayer.connection?.isVideoMirrored = true
+                    captureLayer.connection?.isVideoMirrored = shouldBeMirrored(item.source.device)
                     captureLayer.videoGravity = .resizeAspectFill
                     view = View()
                     view.layer = captureLayer

@@ -15,6 +15,12 @@
 		271503F52631679B004FB0E0 /* DesktopSharingCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 271503F12631679B004FB0E0 /* DesktopSharingCapturer.h */; };
 		271504102631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2715040E2631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm */; };
 		271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 2715040F2631799A004FB0E0 /* DesktopCaptureSourceViewMac.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		271999D62681F1E2000DE2B7 /* TGCMIOCapturer.m in Sources */ = {isa = PBXBuildFile; fileRef = 271999D02681F1E2000DE2B7 /* TGCMIOCapturer.m */; };
+		271999D72681F1E2000DE2B7 /* TGCMIOCapturer.h in Headers */ = {isa = PBXBuildFile; fileRef = 271999D12681F1E2000DE2B7 /* TGCMIOCapturer.h */; };
+		271999D82681F1E2000DE2B7 /* VideoCMIOCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 271999D22681F1E2000DE2B7 /* VideoCMIOCapture.mm */; };
+		271999D92681F1E2000DE2B7 /* TGCMIODevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 271999D32681F1E2000DE2B7 /* TGCMIODevice.h */; };
+		271999DA2681F1E2000DE2B7 /* TGCMIODevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 271999D42681F1E2000DE2B7 /* TGCMIODevice.mm */; };
+		271999DB2681F1E2000DE2B7 /* VideoCMIOCapture.h in Headers */ = {isa = PBXBuildFile; fileRef = 271999D52681F1E2000DE2B7 /* VideoCMIOCapture.h */; };
 		27328D8C2660E8AD00E3B7D8 /* DarwinVideoSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */; };
 		27328D8D2660E8AD00E3B7D8 /* DarwinVideoSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */; };
 		27335F0825C833D400FD040C /* GroupInstanceCustomImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */; };
@@ -96,6 +102,12 @@
 		271503F12631679B004FB0E0 /* DesktopSharingCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopSharingCapturer.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopSharingCapturer.h; sourceTree = "<group>"; };
 		2715040E2631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DesktopCaptureSourceViewMac.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopCaptureSourceViewMac.mm; sourceTree = "<group>"; };
 		2715040F2631799A004FB0E0 /* DesktopCaptureSourceViewMac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceViewMac.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DesktopCaptureSourceViewMac.h; sourceTree = "<group>"; };
+		271999D02681F1E2000DE2B7 /* TGCMIOCapturer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TGCMIOCapturer.m; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGCMIOCapturer.m; sourceTree = "<group>"; };
+		271999D12681F1E2000DE2B7 /* TGCMIOCapturer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGCMIOCapturer.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGCMIOCapturer.h; sourceTree = "<group>"; };
+		271999D22681F1E2000DE2B7 /* VideoCMIOCapture.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoCMIOCapture.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoCMIOCapture.mm; sourceTree = "<group>"; };
+		271999D32681F1E2000DE2B7 /* TGCMIODevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGCMIODevice.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGCMIODevice.h; sourceTree = "<group>"; };
+		271999D42681F1E2000DE2B7 /* TGCMIODevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGCMIODevice.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGCMIODevice.mm; sourceTree = "<group>"; };
+		271999D52681F1E2000DE2B7 /* VideoCMIOCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoCMIOCapture.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoCMIOCapture.h; sourceTree = "<group>"; };
 		27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DarwinVideoSource.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinVideoSource.h; sourceTree = "<group>"; };
 		27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DarwinVideoSource.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinVideoSource.mm; sourceTree = "<group>"; };
 		27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupInstanceCustomImpl.cpp; sourceTree = "<group>"; };
@@ -129,6 +141,7 @@
 		27DCF4C3267CE3230019EC49 /* TGRTCMTLRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCMTLRenderer.h; sourceTree = "<group>"; };
 		27DCF4C4267CE3230019EC49 /* TGRTCMTLI420Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCMTLI420Renderer.h; sourceTree = "<group>"; };
 		27DCF4C5267CE3230019EC49 /* TGRTCMTLRenderer+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TGRTCMTLRenderer+Private.h"; sourceTree = "<group>"; };
+		27E4344C2680DF1700B05CB1 /* CoreMediaMacCapture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CoreMediaMacCapture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptedConnection.cpp; path = ../../submodules/tgcalls/tgcalls/EncryptedConnection.cpp; sourceTree = "<group>"; };
 		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
@@ -271,6 +284,12 @@
 				D0E3685124DAA0E2009896D4 /* TGRTCCVPixelBuffer.mm */,
 				D0D751AC24BE3A140037D73A /* VideoCameraCapturerMac.mm */,
 				D0D751A824BE3A140037D73A /* VideoCapturerInterfaceImpl.mm */,
+				271999D12681F1E2000DE2B7 /* TGCMIOCapturer.h */,
+				271999D02681F1E2000DE2B7 /* TGCMIOCapturer.m */,
+				271999D32681F1E2000DE2B7 /* TGCMIODevice.h */,
+				271999D42681F1E2000DE2B7 /* TGCMIODevice.mm */,
+				271999D52681F1E2000DE2B7 /* VideoCMIOCapture.h */,
+				271999D22681F1E2000DE2B7 /* VideoCMIOCapture.mm */,
 				273F3236265B97F2005D918E /* VideoSampleBufferViewMac.h */,
 				273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
@@ -318,6 +337,7 @@
 		D06E36A324A4FDA000C7D03A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27E4344C2680DF1700B05CB1 /* CoreMediaMacCapture.framework */,
 				27A0A4DF25F764FA00B789AF /* ffmpeg.framework */,
 				27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */,
 				2702A834259BD7F6007F1DDD /* SSignalKit.framework */,
@@ -362,11 +382,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0E7BD20256A7E0D0068644D /* GroupInstanceImpl.h in Headers */,
+				271999D72681F1E2000DE2B7 /* TGCMIOCapturer.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
 				27DCF4CA267CE3230019EC49 /* TGRTCMTLRenderer+Private.h in Headers */,
 				271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */,
+				271999DB2681F1E2000DE2B7 /* VideoCMIOCapture.h in Headers */,
 				2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */,
 				274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */,
+				271999D92681F1E2000DE2B7 /* TGCMIODevice.h in Headers */,
 				27DCF4C9267CE3230019EC49 /* TGRTCMTLI420Renderer.h in Headers */,
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
@@ -465,6 +488,7 @@
 				D0D751C424BE3AC70037D73A /* VideoCaptureInterface.cpp in Sources */,
 				27DCF4C6267CE3230019EC49 /* TGRTCMTLRenderer.mm in Sources */,
 				271503ED2631677B004FB0E0 /* DesktopCaptureSourceHelper.cpp in Sources */,
+				271999D82681F1E2000DE2B7 /* VideoCMIOCapture.mm in Sources */,
 				271504102631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm in Sources */,
 				271503EE2631677B004FB0E0 /* DesktopCaptureSource.cpp in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
@@ -473,6 +497,7 @@
 				27DCF4C7267CE3230019EC49 /* TGRTCMTLI420Renderer.mm in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
+				271999D62681F1E2000DE2B7 /* TGCMIOCapturer.m in Sources */,
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
 				274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */,
@@ -499,6 +524,7 @@
 				D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */,
 				D0D751B624BE3A140037D73A /* DarwinInterface.mm in Sources */,
 				D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */,
+				271999DA2681F1E2000DE2B7 /* TGCMIODevice.mm in Sources */,
 				D0D751CC24BE3AD40037D73A /* InstanceImplLegacy.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

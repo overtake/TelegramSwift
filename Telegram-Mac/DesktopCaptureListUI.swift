@@ -315,8 +315,18 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
                 return current
             }
         }
+                
+        let muxedDevices = devices.signal |> deliverOnMainQueue |> map { devices in
+            
+            updateState { current in
+                var current = current
+                current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected && $0.hasMediaType(.muxed) }.map { CameraCaptureDevice($0) }
+                return current
+            }
+            
+        }
         
-        let updateSignal = Signal<NoValue, NoError> { [weak windows, weak screens] subscriber in
+        let updateSignal = (Signal<NoValue, NoError> { [weak windows, weak screens] subscriber in
             
             updateState { current in
                 var current = current
@@ -328,7 +338,7 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
             subscriber.putCompletion()
             
             return EmptyDisposable
-        }
+        } |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart
         
         let updateSelected: Signal<VideoSourceMac?, NoError> = statePromise.get() |> map { $0.selected } |> distinctUntilChanged(isEqual:  { lhs, rhs in
             if let lhs = lhs, let rhs = rhs {
@@ -348,12 +358,12 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
         
         switch mode {
         case .screencast:
-            self.updateDisposable = ((updateSignal |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart).start()
+            self.updateDisposable = combineLatest(updateSignal, muxedDevices).start()
         case .video:
             devicesDisposable.set((devices.signal |> deliverOnMainQueue).start(next: { devices in
                 updateState { current in
                     var current = current
-                    current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected }.map { CameraCaptureDevice($0) }
+                    current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected && $0.hasMediaType(.video) }.map { CameraCaptureDevice($0) }
                     return current
                 }
                 checkSelected()

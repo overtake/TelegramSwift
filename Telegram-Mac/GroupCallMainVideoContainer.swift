@@ -488,7 +488,7 @@ final class GroupCallMainVideoContainerView: Control {
                 if let c = self.selfPresentationPlaceholder {
                     current = c
                 } else {
-                    current = SelfPresentationPlaceholder.init(frame: self.bounds)
+                    current = SelfPresentationPlaceholder(frame: self.bounds)
                     self.selfPresentationPlaceholder = current
                     addSubview(current)
                     
@@ -517,7 +517,7 @@ final class GroupCallMainVideoContainerView: Control {
             
             let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView
             let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView
-            let isPaused = participant?.isVideoPaused(peer.endpointId) == true
+            let isPaused = participant?.isVideoPaused(peer.endpointId) == true && !selfPresentation
 
             if let videoView = videoView, self.currentVideoView != videoView || videoView.superview != self {
                 if let currentVideoView = self.currentVideoView {

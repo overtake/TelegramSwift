@@ -134,15 +134,15 @@ final class DevicesContext : NSObject {
         super.init()
         
 
-//        var prop : CMIOObjectPropertyAddress = CMIOObjectPropertyAddress(
-//                mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
-//                mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
-//                mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster))
-//        
-//        var allow: UInt32 = 1
-//        CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject),
-//                                &prop, 0, nil,
-//                                UInt32(sizeof(allow)), &allow );
+        var prop : CMIOObjectPropertyAddress = CMIOObjectPropertyAddress(
+                mSelector: CMIOObjectPropertySelector(kCMIOHardwarePropertyAllowScreenCaptureDevices),
+                mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeGlobal),
+                mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementMaster))
+        
+        var allow: UInt32 = 1
+        CMIOObjectSetPropertyData(CMIOObjectID(kCMIOObjectSystemObject),
+                                &prop, 0, nil,
+                                UInt32(sizeof(allow)), &allow );
         
 
         
