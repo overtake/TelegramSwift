@@ -418,13 +418,13 @@ class WPArticleContentView: WPContentView {
                             imageView?.layer?.cornerRadius = .cornerRadius
                             imageView?.background = color
                             removeImageView = false
-                        case let .gradient(_, top, bottom, gradient):
+                        case let .gradient(_, top, bottom, settings):
                             if gradientView == nil {
                                 gradientView = BackgroundView(frame: NSZeroRect)
                                 self.addSubview(gradientView!)
                             }
                             gradientView?.layer?.cornerRadius = .cornerRadius
-                            gradientView?.backgroundMode = .gradient(top: top, bottom: bottom, rotation: gradient)
+                            gradientView?.backgroundMode = .gradient(top: top, bottom: bottom, rotation: settings.rotation)
                             removeImageView = true
                             removeGradientView = false
                         default:
