@@ -43,10 +43,7 @@ private final class ThemePreviewView : BackgroundView {
             })
         }))
         
-        tableView.afterSetupItem = { [weak self] view, item in
-            guard let `self` = self else {
-                return
-            }
+        tableView.afterSetupItem = { view, item in
             if let view = view as? ChatRowView {
                 view.updateBackground(animated: false, item: view.item)
             }
@@ -61,7 +58,6 @@ private final class ThemePreviewView : BackgroundView {
         self.segmentControl.view.center()
         tableView.frame = NSMakeRect(0, 50, frame.width, frame.height - 50)
         
-        
     }
     
     required init?(coder: NSCoder) {
@@ -73,7 +69,6 @@ private final class ThemePreviewView : BackgroundView {
     }
     
     fileprivate func addTableItems(_ context: AccountContext, theme: TelegramPresentationTheme) {
-        
         self.tableView.getBackgroundColor = {
             if theme.bubbled {
                 return .clear
@@ -81,10 +76,6 @@ private final class ThemePreviewView : BackgroundView {
                 return theme.chatBackground
             }
         }
-        
-       
-        
-        
         segmentContainer.backgroundColor = theme.colors.background
         segmentContainer.borderColor = theme.colors.border
         segmentContainer.border = [.Bottom]
@@ -97,7 +88,6 @@ private final class ThemePreviewView : BackgroundView {
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
         
-        
         chatInteraction.getGradientOffsetRect = { [weak self] in
             guard let `self` = self else {
                 return .zero
@@ -105,44 +95,35 @@ private final class ThemePreviewView : BackgroundView {
             let offset = self.tableView.scrollPosition().current.rect.origin
             return CGRect(origin: offset, size: NSMakeSize(350, 400))
         }
-        
         let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
         let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
-        
-        
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 18 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreview1, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
         let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
-
-        
         
         let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreview2), attributes: [ReplyMessageAttribute(messageId: firstMessage.id, threadMessageId: nil)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [])
-        
+
         let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
         let thridMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreview3, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
         
         let thridEntry: ChatHistoryEntry = .MessageEntry(thridMessage, MessageIndex(thridMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
-        
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
         let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction, theme: theme)
         let item3 = ChatRowItem.item(frame.size, from: thridEntry, interaction: chatInteraction, theme: theme)
         
-        
         _ = item2.makeSize(frame.width, oldWidth: 0)
         _ = item3.makeSize(frame.width, oldWidth: 0)
         _ = item1.makeSize(frame.width, oldWidth: 0)
-        
         
         tableView.beginTableUpdates()
         _ = tableView.addItem(item: item3)
         _ = tableView.addItem(item: item2)
         _ = tableView.addItem(item: item1)
         tableView.endTableUpdates()
-        
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
@@ -161,6 +142,9 @@ enum ThemePreviewSource {
     case localTheme(TelegramPresentationTheme, name: String?)
     case cloudTheme(TelegramTheme)
 }
+
+
+
 
 
 class ThemePreviewModalController: ModalViewController {
