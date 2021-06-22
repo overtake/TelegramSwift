@@ -29,6 +29,7 @@ private final class Arguments {
     let stopRecording:()->Void
     let resetLink:()->Void
     let setNoiseSuppression:(Bool)->Void
+    let reduceMotions:(Bool)->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -42,7 +43,8 @@ private final class Arguments {
          startRecording: @escaping()->Void,
          stopRecording: @escaping()->Void,
          resetLink: @escaping()->Void,
-         setNoiseSuppression:@escaping(Bool)->Void) {
+         setNoiseSuppression:@escaping(Bool)->Void,
+         reduceMotions:@escaping(Bool)->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -57,6 +59,7 @@ private final class Arguments {
         self.stopRecording = stopRecording
         self.resetLink = resetLink
         self.setNoiseSuppression = setNoiseSuppression
+        self.reduceMotions = reduceMotions
     }
 }
 
@@ -139,6 +142,8 @@ private let _id_input_record_title = InputDataIdentifier("_id_input_record_title
 
 private let _id_listening_link = InputDataIdentifier("_id_listening_link")
 private let _id_speaking_link = InputDataIdentifier("_id_speaking_link")
+
+private let _id_reduce_motion = InputDataIdentifier("_id_reduce_motion")
 
 private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
@@ -469,6 +474,21 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
         arguments.setNoiseSuppression(!settings.noiseSuppression)
     }, theme: theme)))
     index += 1
+    
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    sectionId += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiecChatReduceMotionHeader), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reduce_motion, data: InputDataGeneralData(name: L10n.voiecChatReduceMotionText, color: theme.textColor, type: .switchable(!settings.visualEffects), viewType: .singleItem, enabled: true, action: {
+        arguments.reduceMotions(!settings.visualEffects)
+    }, theme: theme)))
+    index += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiecChatReduceMotionDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
+    index += 1
+
 
     if state.canManageCall {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
@@ -729,6 +749,10 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         }, setNoiseSuppression: { value in
             _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
                 $0.withUpdatedNoiseSuppression(value)
+            }).start()
+        }, reduceMotions: { value in
+            _ = updateVoiceCallSettingsSettingsInteractively(accountManager: sharedContext.accountManager, {
+                $0.withUpdatedVisualEffects(value)
             }).start()
         })
         

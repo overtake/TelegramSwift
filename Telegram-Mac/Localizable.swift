@@ -9485,6 +9485,12 @@ internal final class L10n {
   internal static var voiceChatVideoVideoSourceShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Share") }
   /// Unavailable to share your camera, please grant access is [System Settings](camera).
   internal static var voiceChatVideoShareUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.VideoShare.Unavailable") }
+  /// You can reduce motion for better perfomance.
+  internal static var voiecChatReduceMotionDesc: String  { return L10n.tr("Localizable", "VoiecChat.ReduceMotion.Desc") }
+  /// REDUCE MOTION
+  internal static var voiecChatReduceMotionHeader: String  { return L10n.tr("Localizable", "VoiecChat.ReduceMotion.Header") }
+  /// Reduce Motion
+  internal static var voiecChatReduceMotionText: String  { return L10n.tr("Localizable", "VoiecChat.ReduceMotion.Text") }
   /// Audio Title (Optional)
   internal static var voiecChatSettingsRecordPlaceholder: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Placeholder") }
   /// RECORD VOICE CHAT
