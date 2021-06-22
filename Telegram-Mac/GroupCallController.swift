@@ -1538,9 +1538,13 @@ final class GroupCallUIController : ViewController {
                         screencastQuality = .thumbnail
                         if dominant == member.videoEndpointId {
                             videoQuality = .full
+                        } else {
+                            videoQuality = .thumbnail
                         }
                         if dominant == member.presentationEndpointId {
                             screencastQuality = .full
+                        } else {
+                            screencastQuality = .thumbnail
                         }
                     }
                     
