@@ -694,24 +694,6 @@ public extension NSView {
             return
         }
         
-        if self is NSVisualEffectView {
-            let sub = self.layer?.sublayers ?? []
-            for layer in sub {
-                if animated {
-                    var presentBounds:NSRect = layer.bounds
-                    let presentation = layer.presentation()
-                    if let presentation = presentation, layer.animation(forKey:"bounds") != nil {
-                        presentBounds.size.width = NSWidth(presentation.bounds)
-                        presentBounds.size.height = NSHeight(presentation.bounds)
-                    }
-                    layer.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
-
-                    
-                } else {
-                    layer.removeAnimation(forKey: "bounds")
-                }
-            }
-        }
         
         if animated {
             var presentBounds:NSRect = self.layer?.bounds ?? self.bounds

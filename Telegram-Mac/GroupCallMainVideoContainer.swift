@@ -536,8 +536,10 @@ final class GroupCallMainVideoContainerView: Control {
                     if !(view is NSVisualEffectView) {
                         view?.removeFromSuperview()
                         let visualEffect = NSVisualEffectView(frame: bounds)
+                        visualEffect.layerContentsRedrawPolicy = .duringViewResize
                         visualEffect.wantsLayer = true
                         visualEffect.material = .dark
+                        
                         visualEffect.blendingMode = .withinWindow
                         if #available(OSX 10.12, *) {
                             visualEffect.isEmphasized = true
@@ -669,10 +671,9 @@ final class GroupCallMainVideoContainerView: Control {
             backstageView.updateLayout(size: size, transition: transition)
         }
     
-        if let window = window, let backstage = backstage {
+        if let backstage = backstage, let window = window {
             transition.updateFrame(view: backstage, frame: window.frame.size.bounds)
         }
-        
 
         
         transition.updateFrame(view: shadowView, frame: CGRect(origin: NSMakePoint(0, size.height - 50), size: NSMakeSize(size.width, 50)))
