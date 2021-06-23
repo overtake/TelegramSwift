@@ -467,26 +467,22 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsNoiseTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPerfomanceHeader), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseText, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseSuppression, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
         arguments.setNoiseSuppression(!settings.noiseSuppression)
     }, theme: theme)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
+
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiecChatReduceMotionHeader), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reduce_motion, data: InputDataGeneralData(name: L10n.voiecChatReduceMotionText, color: theme.textColor, type: .switchable(!settings.visualEffects), viewType: .singleItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reduce_motion, data: InputDataGeneralData(name: L10n.voiceChatSettingsReduceMotion, color: theme.textColor, type: .switchable(!settings.visualEffects), viewType: .singleItem, enabled: true, action: {
         arguments.reduceMotions(!settings.visualEffects)
     }, theme: theme)))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiecChatReduceMotionDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPerfomanceDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
     index += 1
 
 
