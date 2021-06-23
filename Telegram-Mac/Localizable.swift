@@ -9283,16 +9283,16 @@ internal final class L10n {
   internal static var voiceChatSettingsEnd: String  { return L10n.tr("Localizable", "VoiceChat.Settings.End") }
   /// MODE
   internal static var voiceChatSettingsInputMode: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode") }
-  /// Enabled
-  internal static var voiceChatSettingsNoiseText: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseText") }
-  /// NOISE SUPPRESSION
-  internal static var voiceChatSettingsNoiseTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseTitle") }
+  /// Noise Suppression
+  internal static var voiceChatSettingsNoiseSuppression: String  { return L10n.tr("Localizable", "VoiceChat.Settings.NoiseSuppression") }
   /// New participants are muted
   internal static var voiceChatSettingsOnlyAdmins: String  { return L10n.tr("Localizable", "VoiceChat.Settings.OnlyAdmins") }
   /// OUTPUT
   internal static var voiceChatSettingsOutput: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output") }
   /// SHORTCUT
   internal static var voiceChatSettingsPushToTalk: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk") }
+  /// Reduce Motion
+  internal static var voiceChatSettingsReduceMotion: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ReduceMotion") }
   /// Revoke Speakers Link
   internal static var voiceChatSettingsResetLink: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink") }
   /// VOICE CHAT TITLE
@@ -9315,6 +9315,10 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeSoundEffects: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.SoundEffects") }
   /// Output Device
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
+  /// You can reduce motion and disable noise suppression for better perfomance.
+  internal static var voiceChatSettingsPerfomanceDesc: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Perfomance.Desc") }
+  /// PERFOMANCE
+  internal static var voiceChatSettingsPerfomanceHeader: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Perfomance.Header") }
   /// PERMISSIONS
   internal static var voiceChatSettingsPermissionsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Permissions.Title") }
   /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor](input)
@@ -9485,12 +9489,6 @@ internal final class L10n {
   internal static var voiceChatVideoVideoSourceShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Share") }
   /// Unavailable to share your camera, please grant access is [System Settings](camera).
   internal static var voiceChatVideoShareUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.VideoShare.Unavailable") }
-  /// You can reduce motion for better perfomance.
-  internal static var voiecChatReduceMotionDesc: String  { return L10n.tr("Localizable", "VoiecChat.ReduceMotion.Desc") }
-  /// REDUCE MOTION
-  internal static var voiecChatReduceMotionHeader: String  { return L10n.tr("Localizable", "VoiecChat.ReduceMotion.Header") }
-  /// Reduce Motion
-  internal static var voiecChatReduceMotionText: String  { return L10n.tr("Localizable", "VoiecChat.ReduceMotion.Text") }
   /// Audio Title (Optional)
   internal static var voiecChatSettingsRecordPlaceholder: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Placeholder") }
   /// RECORD VOICE CHAT

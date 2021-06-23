@@ -1524,13 +1524,14 @@ final class GroupCallUIController : ViewController {
                 } ?? []
                 
                 let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.videoRect.size)
-
+                
+                let selectBest = videoMembers.filter { $0.peer.id != accountId }.count == 1
                 
                 var items:[PresentationGroupCallRequestedVideo] = []
                             
                 for (i, member) in videoMembers.enumerated() {
-                    var videoQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
-                    var screencastQuality: PresentationGroupCallRequestedVideo.Quality = videoMembers.count == 1 ? .full : tiles[i].bestQuality
+                    var videoQuality: PresentationGroupCallRequestedVideo.Quality = selectBest ? .full : tiles[i].bestQuality
+                    var screencastQuality: PresentationGroupCallRequestedVideo.Quality = selectBest ? .full : tiles[i].bestQuality
 
                     let dominant = dominant.permanent ?? dominant.focused?.id
                     if let dominant = dominant {
