@@ -470,14 +470,14 @@ private func groupCallSettingsEntries(state: PresentationGroupCallState, devices
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.voiceChatSettingsPerfomanceHeader), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseSuppression, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: L10n.voiceChatSettingsNoiseSuppression, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .firstItem, enabled: true, action: {
         arguments.setNoiseSuppression(!settings.noiseSuppression)
     }, theme: theme)))
     index += 1
     
 
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reduce_motion, data: InputDataGeneralData(name: L10n.voiceChatSettingsReduceMotion, color: theme.textColor, type: .switchable(!settings.visualEffects), viewType: .singleItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reduce_motion, data: InputDataGeneralData(name: L10n.voiceChatSettingsReduceMotion, color: theme.textColor, type: .switchable(!settings.visualEffects), viewType: .lastItem, enabled: true, action: {
         arguments.reduceMotions(!settings.visualEffects)
     }, theme: theme)))
     index += 1
