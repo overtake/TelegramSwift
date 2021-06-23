@@ -43,6 +43,11 @@ public extension ContainedViewLayoutTransition {
             }
         case let .animated(duration, curve):
 
+            var curve = curve
+            
+            if view is NSVisualEffectView {
+                curve = .legacy
+            }
             switch curve {
             case .legacy:
                 NSAnimationContext.runAnimationGroup({ ctx in
