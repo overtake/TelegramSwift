@@ -1241,6 +1241,7 @@ private final class MetalRenderer: View {
         
         commandBuffer.present(drawable)
         commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
     
 }
