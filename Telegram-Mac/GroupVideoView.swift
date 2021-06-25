@@ -98,17 +98,8 @@ final class GroupVideoView: View {
         let aspect = videoView.getAspect()
         
         var videoRect: CGRect = .zero
-        switch gravity {
-        case .resizeAspect:
-            videoRect = focus(size)
-        case .resizeAspectFill:
-            var boundingSize = size
-            boundingSize = NSMakeSize(max(size.width, size.height) * aspect, max(size.width, size.height))
-            boundingSize = boundingSize.aspectFilled(size)
-            videoRect = focus(boundingSize)
-        default:
-            break
-        }
+        videoRect = focus(size)
+
         transition.updateFrame(view: self.videoView.view, frame: videoRect)
         for subview in self.videoView.view.subviews {
             transition.updateFrame(view: subview, frame: videoRect.size.bounds)
