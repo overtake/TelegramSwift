@@ -340,6 +340,23 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
             return EmptyDisposable
         } |> then(.complete() |> suspendAwareDelay(2, queue: .mainQueue()))) |> restart
         
+        let updateAccess = (Signal<NoValue, NoError> { subscriber in
+            
+            updateState { current in
+                var current = current
+                if #available(macOS 10.14, *) {
+                    current.access = .init(sharing: screenCaptureAvailable(), camera: AVCaptureDevice.authorizationStatus(for: .video) == .authorized)
+                } else {
+                    current.access = .init(sharing: screenCaptureAvailable(), camera: true)
+                }
+                return current
+            }
+            checkSelected()
+            subscriber.putCompletion()
+            
+            return EmptyDisposable
+        } |> then(.complete() |> suspendAwareDelay(5, queue: .mainQueue()))) |> restart
+        
         let updateSelected: Signal<VideoSourceMac?, NoError> = statePromise.get() |> map { $0.selected } |> distinctUntilChanged(isEqual:  { lhs, rhs in
             if let lhs = lhs, let rhs = rhs {
                 return lhs.isEqual(rhs)
@@ -369,6 +386,8 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
                 checkSelected()
             }))
         }
+        
+        actionsDisposable.add(updateAccess.start())
         
         let arguments = DesktopCaptureListArguments(selectDesktop: { source, manager in
             updateState { current in
