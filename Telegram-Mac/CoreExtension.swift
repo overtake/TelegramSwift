@@ -837,7 +837,9 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
     }
 }
 
-func canForwardMessage(_ message:Message, account:Account) -> Bool {
+func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
+    
+    let account = chatInteraction.context.account
     
     if message.peers[message.id.peerId] is TelegramSecretChat {
         return false
@@ -853,9 +855,16 @@ func canForwardMessage(_ message:Message, account:Account) -> Bool {
     if message.media.first is TelegramMediaAction {
         return false
     }
+    
+    
+    
     if let peer = message.peers[message.id.peerId] as? TelegramUser {
-        if peer.isUser, let _ = message.autoremoveAttribute {
-            return false
+        if peer.isUser, let timer = message.autoremoveAttribute {
+            if !chatInteraction.hasSetDestructiveTimer {
+                return false
+            } else if timer.timeout <= 60 {
+                return false;
+            }
         }
     }
     

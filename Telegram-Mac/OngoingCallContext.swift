@@ -840,6 +840,11 @@ final class OngoingCallContext {
                                 view?.setOnIsMirroredUpdated { value in
                                     f?(value)
                                 }
+                            },
+                            setIsPaused: { [weak view] paused in
+                                view?.setIsPaused(paused)
+                            }, renderToSize: { [weak view] size, animated in
+                                view?.render(to: size, animated: animated)
                             }
                         ))
                     } else {

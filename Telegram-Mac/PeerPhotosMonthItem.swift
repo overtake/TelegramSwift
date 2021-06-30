@@ -178,7 +178,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
         let layoutItem = layoutItems.first(where: { NSPointInRect(location, $0.frame) })
         if let layoutItem = layoutItem {
             let message = layoutItem.message
-            if canForwardMessage(message, account: context.account) {
+            if canForwardMessage(message, chatInteraction: chatInteraction) {
                 items.append(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
                     self?.chatInteraction.forwardMessages([message.id])
                 }))

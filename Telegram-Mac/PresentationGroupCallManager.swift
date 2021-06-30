@@ -78,7 +78,9 @@ final class PresentationCallVideoView {
     public let setOnOrientationUpdated: (((Orientation, CGFloat) -> Void)?) -> Void
     public let setVideoContentMode:(CALayerContentsGravity)->Void
     public let setOnIsMirroredUpdated: (((Bool) -> Void)?) -> Void
-    
+    public let setIsPaused: (Bool) -> Void
+    public let renderToSize: (NSSize, Bool) -> Void
+
     public init(
         holder: AnyObject,
         view: NSView,
@@ -87,7 +89,9 @@ final class PresentationCallVideoView {
         getAspect: @escaping () -> CGFloat,
         setVideoContentMode:@escaping(CALayerContentsGravity)->Void,
         setOnOrientationUpdated: @escaping (((Orientation, CGFloat) -> Void)?) -> Void,
-        setOnIsMirroredUpdated: @escaping (((Bool) -> Void)?) -> Void
+        setOnIsMirroredUpdated: @escaping (((Bool) -> Void)?) -> Void,
+        setIsPaused: @escaping(Bool)->Void,
+        renderToSize: @escaping(NSSize, Bool) -> Void
     ) {
         self.holder = holder
         self.view = view
@@ -97,6 +101,8 @@ final class PresentationCallVideoView {
         self.setOnOrientationUpdated = setOnOrientationUpdated
         self.setOnIsMirroredUpdated = setOnIsMirroredUpdated
         self.setVideoContentMode = setVideoContentMode
+        self.setIsPaused = setIsPaused
+        self.renderToSize = renderToSize
     }
 }
 

@@ -1610,8 +1610,6 @@ final class GroupCallUIController : ViewController {
                                         videoView.setVideoContentMode(.resizeAspect)
                                     case .list:
                                         videoView.setVideoContentMode(.resizeAspectFill)
-                                    case .backstage:
-                                        videoView.setVideoContentMode(.resizeAspectFill)
                                     case .profile:
                                         videoView.setVideoContentMode(.resizeAspectFill)
                                     }

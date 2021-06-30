@@ -2391,7 +2391,7 @@ class ChatRowItem: TableRowItem {
     }
     func forwardAction() -> Bool {
         if chatInteraction.presentation.state != .selecting, let message = message {
-            if canForwardMessage(message, account: context.account) {
+            if canForwardMessage(message, chatInteraction: chatInteraction) {
                 chatInteraction.forwardMessages([message.id])
                 return true
             }
@@ -2632,7 +2632,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     }
    
     
-    if canForwardMessage(message, account: account) {
+    if canForwardMessage(message, chatInteraction: chatInteraction) {
         items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
         }))
@@ -2657,7 +2657,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
 
     
-    if canForwardMessage(message, account: account), chatInteraction.peerId != account.peerId, chatInteraction.mode == .history {
+    if canForwardMessage(message, chatInteraction: chatInteraction), chatInteraction.peerId != account.peerId, chatInteraction.mode == .history {
         items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: { [unowned chatInteraction] in
             _ = Sender.forwardMessages(messageIds: [message.id], context: chatInteraction.context, peerId: account.peerId).start()
         }))

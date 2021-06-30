@@ -518,7 +518,6 @@ final class GroupCallMainVideoContainerView: Control {
 
             
             let videoView = arguments?.takeVideo(peer.peerId, peer.mode, .main) as? GroupVideoView
-            let backstageVideo = arguments?.takeVideo(peer.peerId, peer.mode, .backstage) as? GroupVideoView
             let isPaused = participant?.isVideoPaused(peer.endpointId) == true && !selfPresentation
 
             if let videoView = videoView, self.currentVideoView != videoView || videoView.superview != self {
@@ -613,20 +612,6 @@ final class GroupCallMainVideoContainerView: Control {
             
             
             self.currentVideoView?.gravity = resizeMode
-
-            if participant?.visualEffects == true {
-                if let backstageVideo = backstageVideo, self.backstageView != backstageView || backstageVideo.superview != self {
-                    if let backstageVideo = self.backstageView {
-                        backstageVideo.removeFromSuperview()
-                    }
-                    backstageVideo.videoView.setVideoContentMode(.resizeAspectFill)
-                    self.backstageView = backstageVideo
-                    self.addSubview(backstageVideo, positioned: .below, relativeTo: currentVideoView)
-                }
-            } else {
-                self.backstageView?.removeFromSuperview()
-                self.backstageView = nil
-            }
             
             if let backstage = backstage {
                 if let backstageView = backstageView {

@@ -653,15 +653,18 @@
                     loadSelectionMessagesDisposable.set((context.account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
                         var canDelete:Bool = !ids.isEmpty
                         var canForward:Bool = !ids.isEmpty
-                        for message in messages {
-                            if !canDeleteMessage(message, account: context.account, mode: .history) {
-                                canDelete = false
+                        if let interactions = self?.interactions {
+                            for message in messages {
+                                if !canDeleteMessage(message, account: context.account, mode: .history) {
+                                    canDelete = false
+                                }
+                                if !canForwardMessage(message, chatInteraction: interactions) {
+                                    canForward = false
+                                }
                             }
-                            if !canForwardMessage(message, account: context.account) {
-                                canForward = false
-                            }
+                            interactions.update({$0.withUpdatedBasicActions((canDelete, canForward))})
                         }
-                        self?.interactions.update({$0.withUpdatedBasicActions((canDelete, canForward))})
+                       
                     }))
                 } else {
                     interactions.update({$0.withUpdatedBasicActions((false, false))})

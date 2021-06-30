@@ -2608,6 +2608,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         setOnIsMirroredUpdated { value in
                             f?(value)
                         }
+                    }, setIsPaused: { [weak view] paused in
+                        view?.setIsPaused(paused)
+                    }, renderToSize: { [weak view] size, animated in
+                        view?.renderToSize(size, animated)
                     }
                 ))
             } else {

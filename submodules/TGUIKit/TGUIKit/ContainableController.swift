@@ -31,6 +31,31 @@ public extension ContainedViewLayoutTransitionCurve {
 public enum ContainedViewLayoutTransition {
     case immediate
     case animated(duration: Double, curve: ContainedViewLayoutTransitionCurve)
+    
+    public var isAnimated: Bool {
+        switch self {
+        case .immediate:
+            return false
+        case .animated:
+            return true
+        }
+    }
+    public var duration: Double {
+        switch self {
+        case .immediate:
+            return 0
+        case let .animated(duration, _):
+            return duration
+        }
+    }
+    public var timingFunction:CAMediaTimingFunctionName  {
+        switch self {
+        case .immediate:
+            return .linear
+        case let .animated(_, curve):
+            return curve.timingFunction
+        }
+    }
 }
 
 public extension ContainedViewLayoutTransition {
@@ -58,15 +83,14 @@ public extension ContainedViewLayoutTransition {
                     completion?(true)
                 })
             default:
-                view._change(size: frame.size, animated: true, duration: duration, timingFunction: .easeInEaseOut)
-                view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: .easeInEaseOut, completion: { completed in
-                    completion?(true)
+                
+                CATransaction.begin()
+                view._change(size: frame.size, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
+                    completion?(completed)
                 })
+                view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: curve.timingFunction)
+                CATransaction.commit()
             }
-            
-            
-           
-            view.animator().frame = frame
         }
     }
     

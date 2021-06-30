@@ -45,7 +45,8 @@ public final class OngoingCallContextPresentationCallVideoView {
     public let setOnOrientationUpdated: (((OngoingCallVideoOrientation, CGFloat) -> Void)?) -> Void
     public let setVideoContentMode: (CALayerContentsGravity) -> Void
     public let setOnIsMirroredUpdated: (((Bool) -> Void)?) -> Void
-
+    public let setIsPaused: (Bool) -> Void
+    public let renderToSize:(NSSize, Bool)->Void
     public init(
         view: NSView,
         setOnFirstFrameReceived: @escaping (((Float) -> Void)?) -> Void,
@@ -53,7 +54,9 @@ public final class OngoingCallContextPresentationCallVideoView {
         getAspect: @escaping () -> CGFloat,
         setOnOrientationUpdated: @escaping (((OngoingCallVideoOrientation, CGFloat) -> Void)?) -> Void,
         setVideoContentMode: @escaping(CALayerContentsGravity) -> Void,
-        setOnIsMirroredUpdated: @escaping (((Bool) -> Void)?) -> Void
+        setOnIsMirroredUpdated: @escaping (((Bool) -> Void)?) -> Void,
+        setIsPaused: @escaping(Bool) -> Void,
+        renderToSize: @escaping(NSSize, Bool) -> Void
         ) {
         self.view = view
         self.setOnFirstFrameReceived = setOnFirstFrameReceived
@@ -62,6 +65,8 @@ public final class OngoingCallContextPresentationCallVideoView {
         self.setOnOrientationUpdated = setOnOrientationUpdated
         self.setVideoContentMode = setVideoContentMode
         self.setOnIsMirroredUpdated = setOnIsMirroredUpdated
+        self.setIsPaused = setIsPaused
+        self.renderToSize = renderToSize
     }
 }
 
@@ -99,6 +104,11 @@ public final class OngoingCallVideoCapturer {
                         view?.setOnIsMirroredUpdated { value in
                             f?(value)
                         }
+                    }, setIsPaused: { [weak view] paused in
+                        view?.setIsPaused(paused)
+                    },
+                    renderToSize: { [weak view] size, animated in
+                        view?.render(to: size, animated: animated)
                     }
                 ))
             } else {

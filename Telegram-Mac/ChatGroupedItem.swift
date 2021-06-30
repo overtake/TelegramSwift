@@ -501,7 +501,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         var canForward: Bool = true
         for message in layout.messages {
-            if !canForwardMessage(message, account: context.account) {
+            if !canForwardMessage(message, chatInteraction: chatInteraction) {
                 canForward = false
                 break
             }
