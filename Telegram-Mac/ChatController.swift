@@ -5510,15 +5510,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     loadSelectionMessagesDisposable.set((context.account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
                         var canDelete:Bool = !ids.isEmpty
                         var canForward:Bool = !ids.isEmpty
-                        for message in messages {
-                            if !canDeleteMessage(message, account: context.account, mode: mode) {
-                                canDelete = false
+                        if let chatInteraction = self?.chatInteraction {
+                            for message in messages {
+                                if !canDeleteMessage(message, account: context.account, mode: mode) {
+                                    canDelete = false
+                                }
+                                if !canForwardMessage(message, chatInteraction: chatInteraction) {
+                                    canForward = false
+                                }
                             }
-                            if !canForwardMessage(message, account: context.account) {
-                                canForward = false
-                            }
+                            chatInteraction.update({$0.withUpdatedBasicActions((canDelete, canForward))})
                         }
-                        self?.chatInteraction.update({$0.withUpdatedBasicActions((canDelete, canForward))})
+                        
                     }))
                 } else {
                     DispatchQueue.main.async { [weak self] in

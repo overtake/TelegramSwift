@@ -36,6 +36,8 @@
 		2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF025D6DDDC00717AA1 /* DesktopCaptureSource.h */; };
 		2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */; };
 		2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 2774C564262F19F4006E6F26 /* SignalingEncryption.h */; };
+		277CBFAB268B4E9F0082ACA2 /* objc_video_encoder_factory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 277CBFA9268B4E9F0082ACA2 /* objc_video_encoder_factory.mm */; };
+		277CBFAC268B4E9F0082ACA2 /* objc_video_encoder_factory.h in Headers */ = {isa = PBXBuildFile; fileRef = 277CBFAA268B4E9F0082ACA2 /* objc_video_encoder_factory.h */; };
 		27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A0A4DF25F764FA00B789AF /* ffmpeg.framework */; };
 		27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167F926203A56000B8449 /* NativeNetworkingImpl.h */; };
 		27C1680026203A56000B8449 /* Signaling.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167FA26203A56000B8449 /* Signaling.h */; };
@@ -54,6 +56,8 @@
 		27E6DAFB26860663003D6164 /* TGRTCMTLRenderer+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E6DAF626860663003D6164 /* TGRTCMTLRenderer+Private.h */; };
 		27E6DAFC26860663003D6164 /* TGRTCMTLI420Renderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E6DAF726860663003D6164 /* TGRTCMTLI420Renderer.h */; };
 		27E6DAFD26860663003D6164 /* TGRTCMTLRenderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DAF826860663003D6164 /* TGRTCMTLRenderer.mm */; };
+		27E6DB11268A10D5003D6164 /* TGRTCMetalContextHolder.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E6DB0F268A10D5003D6164 /* TGRTCMetalContextHolder.h */; };
+		27E6DB12268A10D5003D6164 /* TGRTCMetalContextHolder.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB10268A10D5003D6164 /* TGRTCMetalContextHolder.m */; };
 		D00602F924CF3D4F00206226 /* EncryptedConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */; };
 		D00602FB24CF3D5C00206226 /* LogSinkImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */; };
 		D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00602FC24CF3D6600206226 /* CryptoHelper.cpp */; };
@@ -123,6 +127,8 @@
 		2767ADF025D6DDDC00717AA1 /* DesktopCaptureSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSource.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSource.h; sourceTree = "<group>"; };
 		2774C563262F19F4006E6F26 /* SignalingEncryption.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SignalingEncryption.cpp; sourceTree = "<group>"; };
 		2774C564262F19F4006E6F26 /* SignalingEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalingEncryption.h; sourceTree = "<group>"; };
+		277CBFA9268B4E9F0082ACA2 /* objc_video_encoder_factory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = objc_video_encoder_factory.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/objc_video_encoder_factory.mm; sourceTree = "<group>"; };
+		277CBFAA268B4E9F0082ACA2 /* objc_video_encoder_factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = objc_video_encoder_factory.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/objc_video_encoder_factory.h; sourceTree = "<group>"; };
 		27A0A4DF25F764FA00B789AF /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C167F926203A56000B8449 /* NativeNetworkingImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeNetworkingImpl.h; sourceTree = "<group>"; };
 		27C167FA26203A56000B8449 /* Signaling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Signaling.h; sourceTree = "<group>"; };
@@ -142,6 +148,8 @@
 		27E6DAF626860663003D6164 /* TGRTCMTLRenderer+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "TGRTCMTLRenderer+Private.h"; sourceTree = "<group>"; };
 		27E6DAF726860663003D6164 /* TGRTCMTLI420Renderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCMTLI420Renderer.h; sourceTree = "<group>"; };
 		27E6DAF826860663003D6164 /* TGRTCMTLRenderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCMTLRenderer.mm; sourceTree = "<group>"; };
+		27E6DB0F268A10D5003D6164 /* TGRTCMetalContextHolder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TGRTCMetalContextHolder.h; sourceTree = "<group>"; };
+		27E6DB10268A10D5003D6164 /* TGRTCMetalContextHolder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TGRTCMetalContextHolder.m; sourceTree = "<group>"; };
 		D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EncryptedConnection.cpp; path = ../../submodules/tgcalls/tgcalls/EncryptedConnection.cpp; sourceTree = "<group>"; };
 		D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = LogSinkImpl.cpp; path = ../../submodules/tgcalls/tgcalls/LogSinkImpl.cpp; sourceTree = "<group>"; };
 		D00602FC24CF3D6600206226 /* CryptoHelper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CryptoHelper.cpp; path = ../../submodules/tgcalls/tgcalls/CryptoHelper.cpp; sourceTree = "<group>"; };
@@ -250,6 +258,8 @@
 				27E6DAF426860663003D6164 /* TGRTCMTLRenderer.h */,
 				27E6DAF826860663003D6164 /* TGRTCMTLRenderer.mm */,
 				27E6DAF626860663003D6164 /* TGRTCMTLRenderer+Private.h */,
+				27E6DB0F268A10D5003D6164 /* TGRTCMetalContextHolder.h */,
+				27E6DB10268A10D5003D6164 /* TGRTCMetalContextHolder.m */,
 			);
 			name = macOS;
 			path = ../platform/darwin/macOS;
@@ -272,6 +282,8 @@
 				D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */,
 				D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */,
 				D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */,
+				277CBFAA268B4E9F0082ACA2 /* objc_video_encoder_factory.h */,
+				277CBFA9268B4E9F0082ACA2 /* objc_video_encoder_factory.mm */,
 				D0D751AD24BE3A140037D73A /* DarwinInterface.mm */,
 				27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */,
 				27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */,
@@ -385,6 +397,7 @@
 				271999D72681F1E2000DE2B7 /* TGCMIOCapturer.h in Headers */,
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
 				271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */,
+				277CBFAC268B4E9F0082ACA2 /* objc_video_encoder_factory.h in Headers */,
 				271999DB2681F1E2000DE2B7 /* VideoCMIOCapture.h in Headers */,
 				2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */,
 				274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */,
@@ -404,6 +417,7 @@
 				271503F52631679B004FB0E0 /* DesktopSharingCapturer.h in Headers */,
 				27E6DAF926860663003D6164 /* TGRTCMTLRenderer.h in Headers */,
 				27335F0925C833D400FD040C /* GroupInstanceCustomImpl.h in Headers */,
+				27E6DB11268A10D5003D6164 /* TGRTCMetalContextHolder.h in Headers */,
 				D06E369A24A4FD4A00C7D03A /* TgVoipWebrtc.h in Headers */,
 				27C1680026203A56000B8449 /* Signaling.h in Headers */,
 			);
@@ -442,6 +456,7 @@
 				TargetAttributes = {
 					D06E368824A4FD4900C7D03A = {
 						CreatedOnToolsVersion = 10.3;
+						LastSwiftMigration = 1250;
 					};
 				};
 			};
@@ -479,10 +494,12 @@
 			files = (
 				27D0068325AF26AE00EE3EB1 /* StaticThreads.cpp in Sources */,
 				27328D8D2660E8AD00E3B7D8 /* DarwinVideoSource.mm in Sources */,
+				27E6DB12268A10D5003D6164 /* TGRTCMetalContextHolder.m in Sources */,
 				271503F42631679B004FB0E0 /* DesktopSharingCapturer.mm in Sources */,
 				D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */,
 				D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */,
 				D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */,
+				277CBFAB268B4E9F0082ACA2 /* objc_video_encoder_factory.mm in Sources */,
 				27E6DAFA26860663003D6164 /* TGRTCMTLI420Renderer.mm in Sources */,
 				D0D751C324BE3AC70037D73A /* ThreadLocalObject.cpp in Sources */,
 				D00602FF24CF3D7500206226 /* Message.cpp in Sources */,
@@ -659,6 +676,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -714,6 +732,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = DebugAppStore;
@@ -724,6 +743,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -852,6 +872,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -983,6 +1004,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1107,6 +1129,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1235,6 +1258,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1289,6 +1313,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.telegram.TgVoipWebrtc;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Github;

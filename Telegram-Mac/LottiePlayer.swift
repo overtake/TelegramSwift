@@ -1034,7 +1034,12 @@ final class MetalContext {
     let vertexBuffer: MTLBuffer
     let sampler: MTLSamplerState
     
+    let displayId: CGDirectDisplayID
+    
     init?() {
+        
+        self.displayId = CGMainDisplayID()
+        
         if let device = CGDirectDisplayCopyCurrentMetalDevice(CGMainDisplayID()) {
             self.device = device
         } else {
@@ -1086,7 +1091,7 @@ fragment float4 basic_fragment(
             pipelineStateDescriptor.fragmentFunction = fragmentProgram
             pipelineStateDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
             
-            self.pipelineState = try! device.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
+            self.pipelineState = try device.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
             
             
             let vertexData: [Float] = [
@@ -1106,9 +1111,9 @@ fragment float4 basic_fragment(
             sampler.magFilter             = MTLSamplerMinMagFilter.nearest
             sampler.mipFilter             = MTLSamplerMipFilter.nearest
             sampler.maxAnisotropy         = 1
-            sampler.sAddressMode          = MTLSamplerAddressMode.clampToEdge
-            sampler.tAddressMode          = MTLSamplerAddressMode.clampToEdge
-            sampler.rAddressMode          = MTLSamplerAddressMode.clampToEdge
+            sampler.sAddressMode          = MTLSamplerAddressMode.clampToZero
+            sampler.tAddressMode          = MTLSamplerAddressMode.clampToZero
+            sampler.rAddressMode          = MTLSamplerAddressMode.clampToZero
             sampler.normalizedCoordinates = true
             sampler.lodMinClamp           = 0.0
             sampler.lodMaxClamp           = .greatestFiniteMagnitude
@@ -1120,12 +1125,22 @@ fragment float4 basic_fragment(
     }
 }
 
+private var metalContext: MetalContext?
+
+
 private final class ContextHolder {
     private var useCount: Int = 0
     
     let context: MetalContext
     init?() {
-        guard let context = MetalContext() else {
+        
+        if metalContext == nil {
+            metalContext = MetalContext()
+        } else if metalContext?.displayId != CGMainDisplayID() {
+            metalContext = MetalContext()
+        }
+        
+        guard let context = metalContext else {
             return nil
         }
         self.context = context
@@ -1226,10 +1241,7 @@ private final class MetalRenderer: View {
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         renderPassDescriptor.colorAttachments[0].loadAction = .clear
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
-        
-       
-        
-        
+               
         let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         
         renderEncoder.setRenderPipelineState(self.context.pipelineState)
@@ -1243,7 +1255,6 @@ private final class MetalRenderer: View {
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
     }
-    
 }
 
 private final class LottieFallbackView: NSView {

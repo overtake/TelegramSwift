@@ -47,7 +47,7 @@ class PeerMediaRowItem: GeneralRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
         var items:[ContextMenuItem] = []
-        if canForwardMessage(message, account: interface.context.account) {
+        if canForwardMessage(message, chatInteraction: interface) {
             items.append(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.forwardMessages([strongSelf.message.id])

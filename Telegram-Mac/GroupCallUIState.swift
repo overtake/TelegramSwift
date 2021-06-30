@@ -34,12 +34,11 @@ final class GroupCallUIState : Equatable {
         enum Mode : Int {
             case main
             case list
-            case backstage
             case profile
         }
         
         static var allModes:[Mode] {
-            return [.backstage, .list, .main]
+            return [.list, .main]
         }
  
         let endpointId: String
@@ -157,7 +156,7 @@ final class GroupCallUIState : Equatable {
         self.visualEffects = visualEffects
         var modeMembers:[GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]] = [:]
         
-        let modes:[GroupCallUIState.ActiveVideo.Mode] = [.backstage, .list, .main]
+        let modes:[GroupCallUIState.ActiveVideo.Mode] = [.list, .main]
         
         for mode in modes {
             var members:[PeerGroupCallData] = []

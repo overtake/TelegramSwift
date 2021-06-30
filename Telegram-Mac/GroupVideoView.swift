@@ -20,6 +20,8 @@ final class GroupVideoView: View {
     var initialGravity: CALayerContentsGravity? = nil
     private var validLayout: CGSize?
     
+    private var videoAnimator: DisplayLinkAnimator?
+    
     private var isMirrored: Bool = false {
         didSet {
             CATransaction.begin()
@@ -61,6 +63,8 @@ final class GroupVideoView: View {
         videoView.setOnIsMirroredUpdated({ [weak self] isMirrored in
             self?.isMirrored = isMirrored
         })
+        
+//        videoView.setIsPaused(true);
     }
     
     override var mouseDownCanMoveWindow: Bool {
@@ -94,20 +98,39 @@ final class GroupVideoView: View {
         }
         self.validLayout = size
         
-        transition.updateFrame(view: self.videoViewContainer, frame: focus(size))
-        let aspect = videoView.getAspect()
-        
         var videoRect: CGRect = .zero
         videoRect = focus(size)
+        
+        transition.updateFrame(view: self.videoViewContainer, frame: videoRect)
+        
+        if transition.isAnimated, let layer = videoView.view.layer as? CAMetalLayer {
+            let videoView = videoView
+                        
+//            layer.contentsGravity = .resize
+            
+            transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView, weak layer] _ in
+                videoView?.setIsPaused(false)
+//                layer?.contentsGravity = .resizeAspectFill
+            })
 
-        transition.updateFrame(view: self.videoView.view, frame: videoRect)
+            videoView.setIsPaused(true)
+
+//            layer.animateScaleX(from: size.width / prevSize.width, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+//
+//            layer.animateScaleY(from: prevDrawableSize.height / drawableSize.height, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+
+        } else {
+            transition.updateFrame(view: videoView.view, frame: videoRect)
+        }
+        
+
         for subview in self.videoView.view.subviews {
             transition.updateFrame(view: subview, frame: videoRect.size.bounds)
         }
         
         var fr = CATransform3DIdentity
         if isMirrored {
-            let rect = self.videoViewContainer.bounds
+            let rect = videoRect
             fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
             fr = CATransform3DScale(fr, -1, 1, 1)
             fr = CATransform3DTranslate(fr, -(rect.width / 2), 0, 0)
