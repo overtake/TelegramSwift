@@ -103,21 +103,28 @@ final class GroupVideoView: View {
         
         transition.updateFrame(view: self.videoViewContainer, frame: videoRect)
         
-        if transition.isAnimated, let layer = videoView.view.layer as? CAMetalLayer {
+        if transition.isAnimated {
             let videoView = videoView
                         
-//            layer.contentsGravity = .resize
             
-            transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView, weak layer] _ in
+//            let prevSize = videoView.view.frame.size
+//
+//            let dif = videoRect.size - prevSize
+            
+            transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView] _ in
                 videoView?.setIsPaused(false)
-//                layer?.contentsGravity = .resizeAspectFill
             })
 
             videoView.setIsPaused(true)
 
-//            layer.animateScaleX(from: size.width / prevSize.width, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+//            self.videoAnimator = DisplayLinkAnimator(duration: transition.duration, from: 0, to: 1, update: { [weak videoView] value in
 //
-//            layer.animateScaleY(from: prevDrawableSize.height / drawableSize.height, to: 1, duration: transition.duration, timingFunction: transition.timingFunction)
+//                let newSize = prevSize + NSMakeSize(dif.width * value, dif.height * value)
+//                videoView?.view.setFrameSize(newSize)
+//            }, completion: {
+//
+//            })
+//
 
         } else {
             transition.updateFrame(view: videoView.view, frame: videoRect)
