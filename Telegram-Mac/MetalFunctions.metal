@@ -63,7 +63,33 @@ fragment float4 fragmentColorConversion(
     return float4(out);
 }
          
+
+float4 ditherNoise(texture2d<float, access::sample> texture, sampler sampler, float2 uv, float4 color) {
+    
+    float textureSize = 256;
+    float noiseGrain = 0.002;
+    
+    float width = texture.get_width();
+    float height = texture.get_width();
+    
+    float xPixel = (1 / width);
+    float yPixel = (1 / height);
+    
+    
+    float2 noiseTextureCoord = float2(uv.x + textureSize * xPixel, uv.y + textureSize * yPixel);
+    float noiseClamped = texture.sample(sampler, noiseTextureCoord).r;
+    float noiseIntensity = (noiseClamped * 4.) - 2.;
+    float3 lumcoeff = float3(0.299, 0.587, 0.114);
+    float luminance = dot(color.rgb, lumcoeff);
+    float lum = smoothstep(0.2, 0.0, luminance) + luminance;
+    float3 noiseColor = mix(float3(noiseIntensity), float3(0.0), pow(lum, 4.0));
+
+    color.rgb = color.rgb + noiseColor * noiseGrain;
+    return color;
+}
+
 /*
+ 
  [[nodiscard]] ShaderPart FragmentDitherNoise() {
      const auto size = QString::number(kNoiseTextureSize);
      return {
@@ -82,7 +108,6 @@ fragment float4 fragmentColorConversion(
  )",
      };
  }
-
  */
 
 float2 doScale(float2 uv, float2 scale) {
@@ -180,6 +205,7 @@ fragment float4 transformAndBlend(TwoInputVertexIO fragmentInput [[stage_in]],
     
     if (out1.a == 0) {
         out2 = float4(applyBoxBlur(backgroundTexture, sourceSampler2, uv2, false));
+//        out2 = ditherNoise(backgroundTexture, sourceSampler2, uv2, out2);
     }
     
     float4 outputColor;
@@ -201,7 +227,3 @@ fragment float4 fragmentPlain(Varyings in[[stage_in]],
     return inputTexture.sample(sampler, in.texcoord);
 }
 
-/*
- 
- 
- */

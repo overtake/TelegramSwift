@@ -110,12 +110,16 @@ final class GroupVideoView: View {
 //            let prevSize = videoView.view.frame.size
 //
 //            let dif = videoRect.size - prevSize
-            
+            if videoRect.width < videoView.view.frame.width {
+                videoView.setIsPaused(true)
+            }
+
             transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView] _ in
                 videoView?.setIsPaused(false)
             })
-
-            videoView.setIsPaused(true)
+            if videoRect.width > videoView.view.frame.width {
+                videoView.setIsPaused(true)
+            }
 
 //            self.videoAnimator = DisplayLinkAnimator(duration: transition.duration, from: 0, to: 1, update: { [weak videoView] value in
 //
