@@ -259,7 +259,7 @@ final class DesktopCapturePreviewView : HorizontalRowView {
         if let item = item as? DesktopCapturePreviewItem {
             if let manager = item.manager {
                 if visibleRect != .zero, item.isAvailable, window != nil {
-                    disposable.set(delaySignal(0.1).start(completed: { [weak manager, weak item] in
+                    disposable.set(delaySignal(0.03).start(completed: { [weak manager, weak item] in
                         if let item = item {
                             manager?.start(item.scope)
                         }
