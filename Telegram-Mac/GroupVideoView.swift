@@ -104,7 +104,7 @@ final class GroupVideoView: View {
         transition.updateFrame(view: self.videoViewContainer, frame: videoRect)
         
         if transition.isAnimated {
-            let videoView = videoView
+            let videoView = self.videoView
                         
             
 //            let prevSize = videoView.view.frame.size
