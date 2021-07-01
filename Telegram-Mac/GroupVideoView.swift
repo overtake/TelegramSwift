@@ -67,6 +67,10 @@ final class GroupVideoView: View {
 //        videoView.setIsPaused(true);
     }
     
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+    }
+    
     override var mouseDownCanMoveWindow: Bool {
         return true
     }
@@ -104,31 +108,32 @@ final class GroupVideoView: View {
         transition.updateFrame(view: self.videoViewContainer, frame: videoRect)
         
         if transition.isAnimated {
+            let frameRect = self.videoView.view.frame
             let videoView = self.videoView
                         
-            
-//            let prevSize = videoView.view.frame.size
 //
-//            let dif = videoRect.size - prevSize
-            if videoRect.width < videoView.view.frame.width {
-                videoView.setIsPaused(true)
-            }
+//            let pauseNow = videoRect.width > frameRect.width || videoRect.height < frameRect.height
+//
+//            videoView.setIsPaused(pauseNow)
 
             transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView] _ in
                 videoView?.setIsPaused(false)
             })
-            if videoRect.width > videoView.view.frame.width {
-                videoView.setIsPaused(true)
-            }
 
-//            self.videoAnimator = DisplayLinkAnimator(duration: transition.duration, from: 0, to: 1, update: { [weak videoView] value in
+            videoView.setIsPaused(true)
+
+            let prevSize = frameRect.size
+            let dif = videoRect.size - prevSize
+            
+            
+//            self.videoAnimator = DisplayLinkAnimator(duration: transition.duration, from: 0, to: 1, timingFunction: .init(name: transition.timingFunction), update: { [weak videoView] value in
 //
 //                let newSize = prevSize + NSMakeSize(dif.width * value, dif.height * value)
 //                videoView?.view.setFrameSize(newSize)
 //            }, completion: {
 //
 //            })
-//
+
 
         } else {
             transition.updateFrame(view: videoView.view, frame: videoRect)

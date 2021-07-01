@@ -13,26 +13,57 @@ public enum ShadowDirection {
     case vertical(Bool)
 }
 public class ShadowView: View {
-    public var direction: ShadowDirection = .vertical(true)
-    public var shadowBackground: NSColor = .white {
+    
+    
+    public override init() {
+        super.init(frame: .zero)
+        setup()
+    }
+    public required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setup()
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var gradient: CAGradientLayer {
+        return self.layer as! CAGradientLayer
+    }
+    
+    private func setup() {
+        self.layer = CAGradientLayer()
+        self.shadowBackground = .white
+    }
+    
+    public var direction: ShadowDirection = .vertical(true) {
         didSet {
-            needsDisplay = true
+            self.update()
         }
     }
-    override public func draw(_ layer: CALayer, in ctx: CGContext) {
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: NSArray(array: [shadowBackground.withAlphaComponent(0).cgColor, shadowBackground.cgColor]), locations: nil)!
-        
-        switch direction {
-        case .vertical:
-            ctx.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: layer.bounds.height), options: CGGradientDrawingOptions())
-        case let .horizontal(reversed):
-            if reversed {
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: layer.bounds.height), end: CGPoint(x: layer.bounds.width, y: layer.bounds.height), options: CGGradientDrawingOptions())
-            } else {
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: layer.bounds.width, y: layer.bounds.height), end: CGPoint(x: 0, y: layer.bounds.height), options: CGGradientDrawingOptions())
-            }
+    public var shadowBackground: NSColor = .white {
+        didSet {
+            self.update()
         }
     }
     
+    private func update() {
+        self.gradient.colors = [shadowBackground.withAlphaComponent(0).cgColor, shadowBackground.cgColor];
+//            self.gradient.locations = [0.0, 1.0];
+
+        switch direction {
+        case .vertical:
+            self.gradient.startPoint = CGPoint(x: 0, y: 0)
+            self.gradient.endPoint = CGPoint(x: 0.0, y: 1)
+        case let .horizontal(reversed):
+            if reversed {
+                self.gradient.startPoint = CGPoint(x: 0, y: 1)
+                self.gradient.endPoint = CGPoint(x: 1, y: 1)
+            } else {
+                self.gradient.startPoint = CGPoint(x: 1, y: 1)
+                self.gradient.endPoint = CGPoint(x: 0, y: 1)
+            }
+        }
+    }
 }
