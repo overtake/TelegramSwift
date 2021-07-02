@@ -114,8 +114,8 @@ final class GroupVideoView: View {
             videoView.setIsPaused(true)
 
             transition.updateFrame(view: videoView.view, frame: videoRect, completion: { [weak videoView] _ in
-                videoView?.setIsPaused(false)
                 videoView?.renderToSize(videoRect.size, false)
+                videoView?.setIsPaused(false)
             })
         } else {
             transition.updateFrame(view: videoView.view, frame: videoRect)
