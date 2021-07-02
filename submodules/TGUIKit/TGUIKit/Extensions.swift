@@ -694,18 +694,24 @@ public extension NSView {
             return
         }
         
-        
-        if animated {
-            var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
-            let presentation = self.layer?.presentation()
-            if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
-                presentBounds.size.width = NSWidth(presentation.bounds)
-                presentBounds.size.height = NSHeight(presentation.bounds)
+        func animate(_ layer: CALayer, main: Bool) -> Void {
+            if animated {
+                var presentBounds:NSRect = layer.bounds
+                let presentation = layer.presentation()
+                if let presentation = presentation, layer.animation(forKey:"bounds") != nil {
+                    presentBounds.size.width = NSWidth(presentation.bounds)
+                    presentBounds.size.height = NSHeight(presentation.bounds)
+                }
+                layer.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: main ? completion : nil)
+            } else {
+                layer.removeAnimation(forKey: "bounds")
             }
-            self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
-        } else {
-            self.layer?.removeAnimation(forKey: "bounds")
         }
+        
+        if let layer = self.layer {
+            animate(layer, main: true)
+        }
+
         
         if save {
             self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
