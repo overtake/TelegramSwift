@@ -119,7 +119,7 @@ float2 doScale(float2 uv, float2 scale) {
 }
 float4 applyBoxBlur(texture2d<float, access::sample> texture, sampler sampler, float2 uv, bool vertical) {
     
-    int radius = 60;
+    int radius = 30;
     int diameter = 2 * radius + 1;
     
     const float3 satLuminanceWeighting = float3(0.2126, 0.7152, 0.0722);

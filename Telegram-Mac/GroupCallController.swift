@@ -70,6 +70,7 @@ final class GroupCallUIArguments {
     let dismissTooltip:(GroupCallUIState.ControlsTooltip)->Void
     let focusVideo: (String?)->Void
     let takeTileView:() -> (NSSize, GroupCallTileView)?
+    let getSource:(VideoSourceMacMode)->VideoSourceMac?
     init(leave:@escaping()->Void,
     settings:@escaping()->Void,
     invite:@escaping(PeerId)->Void,
@@ -102,7 +103,8 @@ final class GroupCallUIArguments {
     contextMenuItems:@escaping(PeerGroupCallData)->[ContextMenuItem],
     dismissTooltip:@escaping(GroupCallUIState.ControlsTooltip)->Void,
     focusVideo: @escaping(String?)->Void,
-    takeTileView:@escaping() -> (NSSize, GroupCallTileView)?) {
+    takeTileView:@escaping() -> (NSSize, GroupCallTileView)?,
+    getSource:@escaping(VideoSourceMacMode)->VideoSourceMac?) {
         self.leave = leave
         self.invite = invite
         self.mute = mute
@@ -136,6 +138,7 @@ final class GroupCallUIArguments {
         self.dismissTooltip = dismissTooltip
         self.focusVideo = focusVideo
         self.takeTileView = takeTileView
+        self.getSource = getSource
     }
 }
 
@@ -1140,6 +1143,15 @@ final class GroupCallUIController : ViewController {
                 return (self.genericView.videoRect.size, view)
             }
             return nil
+        }, getSource: { mode in
+            return videoSourcesValue.with { value in
+                switch mode {
+                case .screencast:
+                    return value.screencast
+                case .video:
+                    return value.video
+                }
+            }
         })
         
         contextMenuItems = { [weak arguments] data in
