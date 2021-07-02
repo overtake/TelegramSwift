@@ -103,7 +103,10 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
                 }
                 return fetchCachedPatternWallpaperMaskRepresentation(resource: resource, resourceData: data, representation: representation)
         }
+    } else if let resource = resource as? MapSnapshotMediaResource, let _ = representation as? MapSnapshotMediaResourceRepresentation {
+        return fetchMapSnapshotResource(resource: resource)
     }
+
 
 
 

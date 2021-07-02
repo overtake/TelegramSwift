@@ -95,12 +95,12 @@ class ChatMapContentView: ChatMediaContentView {
         
         
         
-        if let parameters = parameters as? ChatMediaMapLayoutParameters {
+        if let parameters = parameters as? ChatMediaMapLayoutParameters, let resource = parameters.resource as? MapSnapshotMediaResource {
             
             imageView.setSignal(signal: cachedMedia(media: media, arguments: parameters.arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
             mediaUpdated = mediaUpdated && !self.imageView.hasImage
             
-            imageView.setSignal( chatWebpageSnippetPhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: parameters.image) : ImageMediaReference.standalone(media: parameters.image), scale: backingScaleFactor, small: parameters.isVenue), clearInstantly: false, animate: mediaUpdated, cacheImage: { [weak media] result in
+            imageView.setSignal( chatMapSnapshotImage(account: context.account, resource: resource), clearInstantly: false, animate: mediaUpdated, cacheImage: { [weak media] result in
                 if let media = media {
                     cacheMedia(result, media: media, arguments: parameters.arguments, scale: System.backingScale, positionFlags: positionFlags)
                 }

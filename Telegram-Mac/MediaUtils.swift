@@ -3581,3 +3581,90 @@ func prepareTextAttachments(_ attachments: [NSTextAttachment]) -> Signal<[URL], 
         }
     } |> runOn(prepareQueue)
 }
+
+
+
+
+func chatMapSnapshotData(account: Account, resource: MapSnapshotMediaResource) -> Signal<Data?, NoError> {
+    return Signal<Data?, NoError> { subscriber in
+        let dataDisposable = account.postbox.mediaBox.cachedResourceRepresentation(resource, representation: MapSnapshotMediaResourceRepresentation(), complete: true).start(next: { next in
+            if next.size != 0 {
+                subscriber.putNext(next.size == 0 ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: []))
+            }
+        }, error: subscriber.putError, completed: subscriber.putCompletion)
+        
+        return ActionDisposable {
+            dataDisposable.dispose()
+        }
+    }
+}
+
+
+public func chatMapSnapshotImage(account: Account, resource: MapSnapshotMediaResource) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMapSnapshotData(account: account, resource: resource)
+    
+    return signal |> map { data in
+        return ImageDataTransformation(data: ImageRenderData(nil, data, data != nil), execute: { arguments, data in
+            
+            let fullSizeData = data.fullSizeData
+
+            let context = DrawingContext(size: arguments.drawingSize, scale: arguments.scale, clear: true)
+            
+            var fullSizeImage: CGImage?
+            if let fullSizeData = fullSizeData {
+                let options = NSMutableDictionary()
+                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, nil), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
+                    fullSizeImage = image
+                }
+                
+                if let fullSizeImage = fullSizeImage {
+                    let drawingRect = arguments.drawingRect
+                    var fittedSize = CGSize(width: CGFloat(fullSizeImage.width), height: CGFloat(fullSizeImage.height)).aspectFilled(drawingRect.size)
+                    if abs(fittedSize.width - arguments.boundingSize.width).isLessThanOrEqualTo(CGFloat(1.0)) {
+                        fittedSize.width = arguments.boundingSize.width
+                    }
+                    if abs(fittedSize.height - arguments.boundingSize.height).isLessThanOrEqualTo(CGFloat(1.0)) {
+                        fittedSize.height = arguments.boundingSize.height
+                    }
+                    
+                    let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                    
+                    context.withFlippedContext { c in
+                        c.setBlendMode(.copy)
+                        if arguments.imageSize.width < arguments.boundingSize.width || arguments.imageSize.height < arguments.boundingSize.height {
+                            c.fill(arguments.drawingRect)
+                        }
+                        
+                        c.setBlendMode(.copy)
+                        
+                        c.interpolationQuality = .medium
+                        c.draw(fullSizeImage, in: fittedRect)
+                        
+                        c.setBlendMode(.normal)
+                    }
+                } else {
+                    context.withFlippedContext { c in
+                        c.setBlendMode(.copy)
+                        if let empty = arguments.emptyColor {
+                            switch empty {
+                            case let .color(color):
+                                c.setFillColor(color.cgColor)
+                            default:
+                                c.setFillColor(.white)
+                            }
+                        } else {
+                            c.setFillColor(.white)
+                        }
+                        c.fill(arguments.drawingRect)
+                        
+                        c.setBlendMode(.normal)
+                    }
+                }
+            }
+            addCorners(context, arguments: arguments, scale: arguments.scale)
+            
+            return context
+        })
+    }
+}
