@@ -1249,6 +1249,8 @@ private final class MetalRenderer: View {
         renderEncoder.setFragmentTexture(self.texture, index: 0)
         renderEncoder.setFragmentSamplerState(self.context.sampler, index: 0)
         renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6, instanceCount: 1)
+        
+        
         renderEncoder.endEncoding()
         
         commandBuffer.present(drawable)
