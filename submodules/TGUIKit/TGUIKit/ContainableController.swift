@@ -9,9 +9,21 @@
 import Cocoa
 
 public enum ContainedViewLayoutTransitionCurve {
+    case linear
     case easeInOut
     case spring
     case legacy
+}
+
+private let listViewAnimationCurveSystem: (CGFloat) -> CGFloat = { t in
+    return bezierPoint(0.23, 1.0, 0.32, 1.0, t)
+}
+let listViewAnimationCurveEaseInOut: (CGFloat) -> CGFloat = { t in
+    return bezierPoint(0.42, 0.0, 0.58, 1.0, t)
+}
+
+private let listViewAnimationCurveLinear: (CGFloat) -> CGFloat = { t in
+    return t
 }
 
 public extension ContainedViewLayoutTransitionCurve {
@@ -23,10 +35,29 @@ public extension ContainedViewLayoutTransitionCurve {
             return CAMediaTimingFunctionName.spring
         case .legacy:
             return CAMediaTimingFunctionName.easeInEaseOut
+        case .linear:
+            return CAMediaTimingFunctionName.linear
         }
     }
-    
+    func solve(at offset: CGFloat) -> CGFloat {
+        switch self {
+        case .easeInOut:
+            return listViewAnimationCurveEaseInOut(offset)
+        case .spring:
+            return listViewAnimationCurveSystem(offset)
+        case .legacy:
+             return listViewAnimationCurveEaseInOut(offset)
+        case .linear:
+            return listViewAnimationCurveLinear(offset)
+        }
+    }
 }
+
+
+
+
+
+
 
 public enum ContainedViewLayoutTransition {
     case immediate

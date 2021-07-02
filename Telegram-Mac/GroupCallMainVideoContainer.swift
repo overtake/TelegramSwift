@@ -482,7 +482,13 @@ final class GroupCallMainVideoContainerView: Control {
         self.currentPeer = peer
         if let peer = peer {
             
-            let selfPresentation = peer.peerId == arguments?.getAccountPeerId() && peer.mode == .screencast
+            var selfPresentation = peer.peerId == arguments?.getAccountPeerId() && peer.mode == .screencast
+            
+            if let source = arguments?.getSource(.screencast) {
+                if source.deviceIdKey().hasPrefix("desktop_capturer_window") {
+                    selfPresentation = false
+                }
+            }
             
             if selfPresentation {
                 

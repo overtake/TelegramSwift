@@ -32,6 +32,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     // entries
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(""), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return SoftwareGradientBackgroundItem(initialSize, stableId)
+    }))
+    sectionId += 1
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1

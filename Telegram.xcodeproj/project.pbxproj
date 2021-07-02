@@ -107,6 +107,8 @@
 		27C4089425B081B500372302 /* FireTimerControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089325B081B500372302 /* FireTimerControl.swift */; };
 		27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */; };
 		27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089925B0BD4E00372302 /* NumberSelectorController.swift */; };
+		27CF9607268F51A00086515A /* SoftwareGradientBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CF9606268F51A00086515A /* SoftwareGradientBackground.swift */; };
+		27CF9609268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CF9608268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
 		27D1D62E2611FB0D00684DEA /* rnnoise.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D1D62D2611FB0D00684DEA /* rnnoise.framework */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
@@ -1192,6 +1194,8 @@
 		27C4089325B081B500372302 /* FireTimerControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTimerControl.swift; sourceTree = "<group>"; };
 		27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureInviteLinkController.swift; sourceTree = "<group>"; };
 		27C4089925B0BD4E00372302 /* NumberSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberSelectorController.swift; sourceTree = "<group>"; };
+		27CF9606268F51A00086515A /* SoftwareGradientBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareGradientBackground.swift; sourceTree = "<group>"; };
+		27CF9608268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareGradientBackgroundItem.swift; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
 		27D1D62D2611FB0D00684DEA /* rnnoise.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = rnnoise.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
@@ -4485,6 +4489,8 @@
 				A71DC82C23858356000EEDE2 /* Spotlight.swift */,
 				A7F28336239A808500742C20 /* TemplateController.swift */,
 				27E434132680C57900B05CB1 /* CoreMediaVideoTest.swift */,
+				27CF9606268F51A00086515A /* SoftwareGradientBackground.swift */,
+				27CF9608268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -5571,6 +5577,7 @@
 				D0FCA7622434867400B72F18 /* PeerInfoHeadItem.swift in Sources */,
 				27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */,
 				C2271DBF1DAE563D001792B6 /* PeerInfoHeaderItem.swift in Sources */,
+				27CF9609268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift in Sources */,
 				A7F2831B239A496400742C20 /* ContextShowPeersHolder.swift in Sources */,
 				C2A71CED1DDB3C1000C69F73 /* ChatHeaderController.swift in Sources */,
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
@@ -5689,6 +5696,7 @@
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
 				9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */,
 				D0276B7D22BD6511003155D8 /* DisplayLink.swift in Sources */,
+				27CF9607268F51A00086515A /* SoftwareGradientBackground.swift in Sources */,
 				9F0B8F171FFB7F1A00073D3F /* AccentColorRowItem.swift in Sources */,
 				C2DF47EE1DE9A1F3003AA6C0 /* LoginViewController.swift in Sources */,
 				C2DE5D301F3CA7C00081EC1E /* InstantPageLinkSelectionView.swift in Sources */,

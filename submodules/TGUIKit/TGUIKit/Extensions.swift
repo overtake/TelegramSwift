@@ -910,6 +910,11 @@ public extension CGSize {
         return CGSize(width: self.width * scale, height: self.height * scale)
     }
     
+    var integralFloor: CGSize {
+        return CGSize(width: floor(self.width), height: floor(self.height))
+    }
+
+    
     func dividedByScreenScale() -> CGSize {
         let scale:CGFloat = System.backingScale
         return CGSize(width: self.width / scale, height: self.height / scale)

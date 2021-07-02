@@ -501,7 +501,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                             index += 1
                         }
                     }
-                case let .set(_, hasRecoveryEmail, _, _):
+                case let .set(_, hasRecoveryEmail, _, _, _):
                     
                     if state.tmpPwd == nil {
                         if let peer = peer, let form = encryptedForm {
@@ -2621,7 +2621,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 if let configuration = configuration {
                     let pending: TwoStepVerificationPendingEmail?
                     switch configuration {
-                    case let .set(_, _, pendingEmail, _):
+                    case let .set(_, _, pendingEmail, _, _):
                         pending = pendingEmail
                     case let .notSet(pendingEmail):
                         pending = pendingEmail
@@ -3710,7 +3710,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 if let email = email {
                                     configuration = .notSet(pendingEmail: TwoStepVerificationPendingEmail(pattern: email, codeLength: pendingEmail?.codeLength))
                                 } else {
-                                    configuration = .set(hint: hint, hasRecoveryEmail: false, pendingEmail: pendingEmail, hasSecureValues: false)
+                                    configuration = .set(hint: hint, hasRecoveryEmail: false, pendingEmail: pendingEmail, hasSecureValues: false, pendingResetTimestamp: nil)
                                 }
                                 
                                 updateState { current in
@@ -3988,7 +3988,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             switch passwordData {
             case let .notSet(pendingEmail):
                 hasPendingEmail = pendingEmail != nil
-            case let .set(_, _, pendingEmail, _):
+            case let .set(_, _, pendingEmail, _, _):
                 hasPendingEmail = pendingEmail != nil
             }
         }

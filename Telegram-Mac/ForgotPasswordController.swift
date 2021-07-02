@@ -85,7 +85,7 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager, accoun
                 }
                 
                 if code.length == 6 {
-                    disposable.set(showModalProgress(signal: performPasswordRecovery(accountManager: accountManager, account: account, code: code, syncContacts: false) |> deliverOnMainQueue, for: mainWindow).start(next: {
+                    disposable.set(showModalProgress(signal: performPasswordRecovery(accountManager: accountManager, account: account, code: code, syncContacts: false, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {
                         
                         updateState { state in
                             return state.withUpdatedChecking(false)
@@ -105,6 +105,8 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager, accoun
                             text = L10n.twoStepAuthEmailCodeInvalid
                         case .expired:
                             text = L10n.twoStepAuthEmailCodeExpired
+                        case .generic:
+                            text = L10n.unknownError
                         case .limitExceeded:
                             text = L10n.loginFloodWait
                         }

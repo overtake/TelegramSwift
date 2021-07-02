@@ -8999,6 +8999,10 @@ internal final class L10n {
   internal static var twoStepAuthErrorLimitExceeded: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.LimitExceeded") }
   /// Passwords don't match.\nPlease try again.
   internal static var twoStepAuthErrorPasswordsDontMatch: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.PasswordsDontMatch") }
+  /// Reset
+  internal static var twoStepAuthErrorHaventEmailReset: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.HaventEmail.Reset") }
+  /// Reset Password
+  internal static var twoStepAuthErrorHaventEmailResetHeader: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.HaventEmail.ResetHeader") }
   /// Capitalize
   internal static var uezBsLqGTitle: String  { return L10n.tr("Localizable", "UEZ-Bs-lqG.title") }
   /// Update Telegram
@@ -9315,10 +9319,10 @@ internal final class L10n {
   internal static var voiceChatSettingsInputModeSoundEffects: String  { return L10n.tr("Localizable", "VoiceChat.Settings.InputMode.SoundEffects") }
   /// Output Device
   internal static var voiceChatSettingsOutputDevice: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Output.Device") }
-  /// You can reduce motion and disable noise suppression for better perfomance.
-  internal static var voiceChatSettingsPerfomanceDesc: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Perfomance.Desc") }
-  /// PERFOMANCE
-  internal static var voiceChatSettingsPerfomanceHeader: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Perfomance.Header") }
+  /// Disabling noise suppression can increase performance.
+  internal static var voiceChatSettingsPerformanceDesc: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Performance.Desc") }
+  /// PERFORMANCE
+  internal static var voiceChatSettingsPerformanceHeader: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Performance.Header") }
   /// PERMISSIONS
   internal static var voiceChatSettingsPermissionsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Permissions.Title") }
   /// If you want this shortcut to work even when Telegram is not in focus\nPlease grant Telegram access to [Input Monitor](input)
