@@ -129,6 +129,8 @@ private final class ThemePreviewRowView : TableRowView {
             borderView.isHidden = item.theme.bubbled
         case let .color(color):
             borderView.isHidden = color != item.theme.colors.background
+        case .animated:
+            borderView.isHidden = false
         }
         
         var y: CGFloat = item.viewType.innerInset.top

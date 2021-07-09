@@ -84,7 +84,7 @@ final class ExpCardView<T> : View  where T:View {
         
         if theme.bubbled {
             switch theme.backgroundMode {
-            case .background, .tiled, .gradient:
+            case .background, .tiled, .gradient, .animated:
                 layer?.borderColor = .clear
             case .plain:
                 if theme.colors.chatBackground == theme.colors.background {
