@@ -889,7 +889,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             return context.account.postbox.loadedPeerWithId(peerId)
         } |> mapToSignal { peer -> Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> in
             if peer.isSupergroup {
-                return peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: peer.id) |> map { data in
+                return context.engine.peers.peerSpecificStickerPack(peerId: peer.id) |> map { data in
                     return Tuple2(data, peer)
                 }
             } else {

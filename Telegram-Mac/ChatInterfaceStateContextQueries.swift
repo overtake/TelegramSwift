@@ -142,7 +142,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             
             var inlineSignal: Signal<[(Peer, Double)], NoError> = .single([])
             if includeRecent {
-                inlineSignal = recentlyUsedInlineBots(postbox: context.account.postbox) |> take(1)
+                inlineSignal = context.engine.peers.recentlyUsedInlineBots() |> take(1)
             }
             
             let members: Signal<[Peer], NoError> = searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: query)
@@ -230,8 +230,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     signal = .single({ _ in return nil })
                 }
             }
-            
-            let participants = peerCommands(account: context.account, id: peer.id)
+            let participants = context.engine.peers.peerCommands(id: peer.id)
                 |> map { commands -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     let filteredCommands = commands.commands.filter { command in
                         if command.command.text.hasPrefix(normalizedQuery) {

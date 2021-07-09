@@ -2470,10 +2470,19 @@ func - (left: CGSize, right: CGSize) -> CGSize {
 }
 
 
-func freeSystemGygabytes() -> UInt64? {
+func freeSystemGigabytes() -> UInt64? {
     let attrs = try? FileManager.default.attributesOfFileSystem(forPath: "/")
     
     if let freeBytes = attrs?[FileAttributeKey.systemFreeSize] as? UInt64 {
+        return freeBytes / 1073741824
+    }
+    return nil
+}
+
+func systemSizeGigabytes() -> UInt64? {
+    let attrs = try? FileManager.default.attributesOfFileSystem(forPath: "/")
+    
+    if let freeBytes = attrs?[FileAttributeKey.systemSize] as? UInt64 {
         return freeBytes / 1073741824
     }
     return nil

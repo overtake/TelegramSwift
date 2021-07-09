@@ -345,27 +345,7 @@ class RecentSessionsController : TableViewController {
                 return $0.withUpdatedRemovingSessionId(sessionId)
             }
             
-            let applySessions: Signal<Void, TerminateSessionError> = sessionsPromise.get()
-                |> filter { $0 != nil }
-                |> take(1)
-                |> deliverOnMainQueue
-                |> mapToSignal { sessions -> Signal<Void, NoError> in
-                    if let sessions = sessions {
-                        var updatedSessions = sessions
-                        for i in 0 ..< updatedSessions.count {
-                            if updatedSessions[i].hash == sessionId {
-                                updatedSessions.remove(at: i)
-                                break
-                            }
-                        }
-                        sessionsPromise.set(.single(updatedSessions))
-                    }
-                    
-                    return .complete()
-                } |> mapError {_ in return .generic}
-
-            
-            removeSessionDisposable.set((terminateAccountSession(account: context.account, hash: sessionId) |> then(applySessions) |> deliverOnMainQueue).start(error: { _ in
+            removeSessionDisposable.set((context.activeSessionsContext.remove(hash: sessionId) |> deliverOnMainQueue).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingSessionId(nil)
                 }
@@ -376,7 +356,7 @@ class RecentSessionsController : TableViewController {
             }))
         }, terminateOthers: {
             confirm(for: context.window, information: L10n.recentSessionsConfirmTerminateOthers, successHandler: { _ in
-                _ = showModalProgress(signal: terminateOtherAccountSessions(account: context.account), for: context.window).start(error: { error in
+                _ = showModalProgress(signal: context.activeSessionsContext.removeOther(), for: context.window).start(error: { error in
                     
                 })
             })

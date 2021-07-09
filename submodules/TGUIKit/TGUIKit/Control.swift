@@ -84,7 +84,13 @@ open class Control: View {
                 apply(state: isSelected ? .Highlight : self.controlState)
             }
             updateState()
+            
+            updateSelected(isSelected)
         }
+    }
+    
+    open func updateSelected(_ isSelected: Bool) {
+        
     }
     
     open var animationStyle:AnimationStyle = AnimationStyle(duration:0.3, function:CAMediaTimingFunctionName.spring)

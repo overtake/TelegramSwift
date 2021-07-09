@@ -285,7 +285,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
     
     var scrollToOption = scrollToOption
     
-    let resultsContext: PollResultsContext = PollResultsContext(account: context.account, messageId: message.id, poll: poll)
+    let resultsContext: PollResultsContext = context.engine.messages.pollResults(messageId: message.id, poll: poll) 
 
     let initialState = PollResultState(results: nil, poll: poll, shouldLoadMore: nil, expandedOptions: [:])
     

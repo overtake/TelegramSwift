@@ -416,10 +416,11 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
                 if let names = updates.0 {
-                    signals.append(updateAccountPeerName(account: context.account, firstName: names.fn, lastName: names.ln))
+                    
+                    signals.append(context.engine.accountData.updateAccountPeerName(firstName: names.fn, lastName: names.ln))
                 }
                 if let about = updates.1 {
-                    signals.append(updateAbout(account: context.account, about: about) |> `catch` { _ in .complete()})
+                    signals.append(context.engine.accountData.updateAbout(about: about) |> `catch` { _ in .complete()})
                 }
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }

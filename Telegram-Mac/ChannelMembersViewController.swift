@@ -301,7 +301,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 return $0.withUpdatedRemovingPeerId(memberId)
             }
             
-            self?.removePeerDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)) |> deliverOnMainQueue).start(completed: {
+            self?.removePeerDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)) |> deliverOnMainQueue).start(completed: {
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
@@ -309,7 +309,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             }))
         }, addMembers: {
             let signal = selectModalPeers(window: context.window, context: context, title: L10n.channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
-                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: peers), for: mainWindow)
+                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: mainWindow)
             } |> deliverOnMainQueue
             
             actionsDisposable.add(signal.start(error: { error in
@@ -363,7 +363,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let peerView = context.account.viewTracker.peerView(peerId)
         
 
-        let (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { state in
+        let (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
             peersPromise.set(.single(state.list))
         })
         actionsDisposable.add(disposable)

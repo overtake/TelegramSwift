@@ -2489,7 +2489,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
                 case .thrid:
                     let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: author.id) |> `catch` { _ in return .complete() }
                     
-                    _ = showModalProgress(signal: combineLatest(reportPeerMessages(account: account, messageIds: [message.id], reason: .spam, message: ""), block), for: context.window).start()
+                    _ = showModalProgress(signal: combineLatest(context.engine.peers.reportPeerMessages(messageIds: [message.id], reason: .spam, message: ""), block), for: context.window).start()
                 case .basic:
                     _ = showModalProgress(signal: context.blockedPeersContext.add(peerId: author.id), for: context.window).start()
                 }
@@ -2561,7 +2561,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), !message.isScheduledMessage {
             items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: { [unowned chatInteraction] in
-                _ = showModalProgress(signal: exportMessageLink(account: account, peerId: peer.id, messageId: message.id, isThread: chatInteraction.mode.threadId != nil), for: context.window).start(next: { link in
+                _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: message.id, isThread: chatInteraction.mode.threadId != nil), for: context.window).start(next: { link in
                     if let link = link {
                         copyToClipboard(link)
                     }
@@ -2801,12 +2801,12 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId, message.isIncoming(account, theme.bubbled) {
                 var items = items
                 items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
-                    _ = showModalProgress(signal: fetchChannelParticipant(account: account, peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
+                    _ = showModalProgress(signal: context.engine.peers.fetchChannelParticipant(peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
                         if let participant = participant {
                             switch participant {
                             case let .member(memberId, _, _, _, _):
                                 showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: memberId, initialParticipant: participant, updated: { updatedRights in
-                                    _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: author.id, bannedRights: updatedRights).start()
+                                    _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: author.id, bannedRights: updatedRights).start()
                                 }), for: context.window)
                             default:
                                 break
@@ -2826,7 +2826,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
         if canReportMessage(message, account), chatInteraction.mode != .pinned {
             items.append(ContextMenuItem(L10n.messageContextReport, handler: {
                 _ = reportReasonSelector(context: context).start(next: { value in
-                    _ = showModalProgress(signal: reportPeerMessages(account: account, messageIds: [message.id], reason: value.reason, message: value.comment), for: context.window).start(completed: {
+                    _ = showModalProgress(signal: context.engine.peers.reportPeerMessages(messageIds: [message.id], reason: value.reason, message: value.comment), for: context.window).start(completed: {
                         alert(for: context.window, info: L10n.messageContextReportAlertOK)
                     })
                 })

@@ -232,7 +232,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func toggleSignatures( _ enabled: Bool) -> Void {
-        toggleSignaturesDisposable.set(toggleShouldChannelMessagesSignatures(account: context.account, peerId: peerId, enabled: enabled).start())
+        toggleSignaturesDisposable.set(context.engine.peers.toggleShouldChannelMessagesSignatures(peerId: peerId, enabled: enabled).start())
     }
     
     func members() -> Void {
@@ -474,7 +474,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 self?.pullNavigation()?.push(controller)
             } else {
                 showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
-                    _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
+                    _ = showModalProgress(signal: context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
                         showModalText(for: context.window, text: L10n.peerInfoChannelReported)
                     })
                 }), for: context.window)

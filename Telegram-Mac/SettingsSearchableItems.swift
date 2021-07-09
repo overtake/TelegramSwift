@@ -392,7 +392,7 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
     let icon: SettingsSearchableItemIcon = .privacy
     
     let presentPrivacySettings: (AccountContext, (SettingsSearchableItemPresentation, ViewController?) -> Void, PrivacyAndSecurityEntryTag?) -> Void = { context, present, itemTag in
-        present(.push, PrivacyAndSecurityViewController(context, initialSettings: (privacySettings, nil), focusOnItemTag: itemTag))
+        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag))
     }
     
     let presentSelectivePrivacySettings: (AccountContext, SelectivePrivacySettingsKind, @escaping (SettingsSearchableItemPresentation, ViewController?) -> Void) -> Void = { context, kind, present in
@@ -400,7 +400,7 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
         if let privacySettings = privacySettings {
             privacySignal = .single(privacySettings)
         } else {
-            privacySignal = requestAccountPrivacySettings(account: context.account)
+            privacySignal = context.engine.privacy.requestAccountPrivacySettings()
         }
         let callsSignal: Signal<(VoiceCallSettings, VoipConfiguration)?, NoError>
         if case .voiceCalls = kind {

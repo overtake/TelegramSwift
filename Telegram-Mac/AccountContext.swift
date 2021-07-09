@@ -52,7 +52,8 @@ final class AccountContextBindings {
     let displayUpgradeProgress:(CGFloat)->Void
     let callSession: ()->PCallSession?
     let groupCall: ()->GroupCallContext?
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }, callSession: @escaping()->PCallSession? = { return nil }, groupCall: @escaping()->GroupCallContext? = { return nil }) {
+    let getContext:()->AccountContext?
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }, callSession: @escaping()->PCallSession? = { return nil }, groupCall: @escaping()->GroupCallContext? = { return nil }, getContext:@escaping()->AccountContext? = { return nil }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -63,6 +64,7 @@ final class AccountContextBindings {
         self.displayUpgradeProgress = displayUpgradeProgress
         self.callSession = callSession
         self.groupCall = groupCall
+        self.getContext = getContext
     }
     #endif
 }
@@ -83,14 +85,12 @@ final class AccountContext {
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
-    let peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager()
+    let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     let chatUndoManager = ChatUndoManager()
     let blockedPeersContext: BlockedPeersContext
-    let activeSessionsContext: ActiveSessionsContext
     let cacheCleaner: AccountClearCache
-    
-    
- //   let walletPasscodeTimeoutContext: WalletPasscodeTimeoutContext
+    let activeSessionsContext: ActiveSessionsContext
+    let webSessions: WebSessionsContext
     #endif
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
@@ -183,21 +183,20 @@ final class AccountContext {
     let engine: TelegramEngine
 
     
-    //, tonContext: StoredTonContext?
     init(sharedContext: SharedAccountContext, window: Window, account: Account) {
         self.sharedContext = sharedContext
         self.account = account
         self.window = window
         self.engine = TelegramEngine(account: account)
-       // self.tonContext = tonContext
         #if !SHARE
+        self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManager(postbox: account.postbox)
         self.blockedPeersContext = BlockedPeersContext(account: account)
-        self.activeSessionsContext = ActiveSessionsContext(account: account)
         self.cacheCleaner = AccountClearCache(account: account)
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
-     //   self.walletPasscodeTimeoutContext = WalletPasscodeTimeoutContext(postbox: account.postbox)
+        self.activeSessionsContext = engine.privacy.activeSessions()
+        self.webSessions = engine.privacy.webSessions()
         #endif
         
         
@@ -297,7 +296,7 @@ final class AccountContext {
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
             
-            subscriber.putNext(freeSystemGygabytes())
+            subscriber.putNext(freeSystemGigabytes())
             subscriber.putCompletion()
             
             return ActionDisposable {
@@ -456,8 +455,8 @@ final class AccountContext {
 
     
     #if !SHARE
-    func composeCreateGroup() {
-        createGroup(with: self)
+    func composeCreateGroup(selectedPeers:Set<PeerId> = Set()) {
+        createGroup(with: self, selectedPeers: selectedPeers)
     }
     func composeCreateChannel() {
         createChannel(with: self)

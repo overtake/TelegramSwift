@@ -39,7 +39,7 @@ class ReplyModel: ChatAccessoryModel {
             if let message = view.message {
                 return .single(message)
             }
-            return getMessagesLoadIfNecessary([view.messageId], postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId) |> map {$0.first}
+            return context.engine.messages.getMessagesLoadIfNecessary([view.messageId]) |> map {$0.first}
         }
         
         if let replyMessage = replyMessage {

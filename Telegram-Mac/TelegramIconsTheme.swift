@@ -7674,6 +7674,201 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_info_voice_chat: CGImage {
+      if let image = cached.with({ $0["chat_info_voice_chat"] }) {
+          return image
+      } else {
+          let image = _chat_info_voice_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_info_voice_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_info_create_group: CGImage {
+      if let image = cached.with({ $0["chat_info_create_group"] }) {
+          return image
+      } else {
+          let image = _chat_info_create_group()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_info_create_group"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_system: CGImage {
+      if let image = cached.with({ $0["empty_chat_system"] }) {
+          return image
+      } else {
+          let image = _empty_chat_system()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_system"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_dark: CGImage {
+      if let image = cached.with({ $0["empty_chat_dark"] }) {
+          return image
+      } else {
+          let image = _empty_chat_dark()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_dark"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_light: CGImage {
+      if let image = cached.with({ $0["empty_chat_light"] }) {
+          return image
+      } else {
+          let image = _empty_chat_light()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_light"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_system_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_system_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_system_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_system_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_dark_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_dark_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_dark_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_dark_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_light_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_light_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_light_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_light_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_clear: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_clear"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_clear()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_clear"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_low: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_low"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_low()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_low"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_medium: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_medium"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_medium()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_medium"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_high: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_high"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_high()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_high"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_low_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_low_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_low_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_low_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_medium_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_medium_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_medium_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_medium_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_storage_high_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_storage_high_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_storage_high_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_storage_high_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8265,6 +8460,21 @@ final class TelegramIconsTheme {
   private let _audioplayer_volume_off: ()->CGImage
   private let _audioplayer_speed_x1: ()->CGImage
   private let _audioplayer_speed_x2: ()->CGImage
+  private let _chat_info_voice_chat: ()->CGImage
+  private let _chat_info_create_group: ()->CGImage
+  private let _empty_chat_system: ()->CGImage
+  private let _empty_chat_dark: ()->CGImage
+  private let _empty_chat_light: ()->CGImage
+  private let _empty_chat_system_active: ()->CGImage
+  private let _empty_chat_dark_active: ()->CGImage
+  private let _empty_chat_light_active: ()->CGImage
+  private let _empty_chat_storage_clear: ()->CGImage
+  private let _empty_chat_storage_low: ()->CGImage
+  private let _empty_chat_storage_medium: ()->CGImage
+  private let _empty_chat_storage_high: ()->CGImage
+  private let _empty_chat_storage_low_active: ()->CGImage
+  private let _empty_chat_storage_medium_active: ()->CGImage
+  private let _empty_chat_storage_high_active: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -8856,7 +9066,22 @@ final class TelegramIconsTheme {
       audioplayer_volume: @escaping()->CGImage,
       audioplayer_volume_off: @escaping()->CGImage,
       audioplayer_speed_x1: @escaping()->CGImage,
-      audioplayer_speed_x2: @escaping()->CGImage
+      audioplayer_speed_x2: @escaping()->CGImage,
+      chat_info_voice_chat: @escaping()->CGImage,
+      chat_info_create_group: @escaping()->CGImage,
+      empty_chat_system: @escaping()->CGImage,
+      empty_chat_dark: @escaping()->CGImage,
+      empty_chat_light: @escaping()->CGImage,
+      empty_chat_system_active: @escaping()->CGImage,
+      empty_chat_dark_active: @escaping()->CGImage,
+      empty_chat_light_active: @escaping()->CGImage,
+      empty_chat_storage_clear: @escaping()->CGImage,
+      empty_chat_storage_low: @escaping()->CGImage,
+      empty_chat_storage_medium: @escaping()->CGImage,
+      empty_chat_storage_high: @escaping()->CGImage,
+      empty_chat_storage_low_active: @escaping()->CGImage,
+      empty_chat_storage_medium_active: @escaping()->CGImage,
+      empty_chat_storage_high_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9448,5 +9673,20 @@ final class TelegramIconsTheme {
       self._audioplayer_volume_off = audioplayer_volume_off
       self._audioplayer_speed_x1 = audioplayer_speed_x1
       self._audioplayer_speed_x2 = audioplayer_speed_x2
+      self._chat_info_voice_chat = chat_info_voice_chat
+      self._chat_info_create_group = chat_info_create_group
+      self._empty_chat_system = empty_chat_system
+      self._empty_chat_dark = empty_chat_dark
+      self._empty_chat_light = empty_chat_light
+      self._empty_chat_system_active = empty_chat_system_active
+      self._empty_chat_dark_active = empty_chat_dark_active
+      self._empty_chat_light_active = empty_chat_light_active
+      self._empty_chat_storage_clear = empty_chat_storage_clear
+      self._empty_chat_storage_low = empty_chat_storage_low
+      self._empty_chat_storage_medium = empty_chat_storage_medium
+      self._empty_chat_storage_high = empty_chat_storage_high
+      self._empty_chat_storage_low_active = empty_chat_storage_low_active
+      self._empty_chat_storage_medium_active = empty_chat_storage_medium_active
+      self._empty_chat_storage_high_active = empty_chat_storage_high_active
   }
 }

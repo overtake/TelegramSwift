@@ -386,9 +386,9 @@ class ChannelEventFilterModalController: ModalViewController {
         super.viewDidLoad()
         
         let stateValue = self.stateValue
-        let statePromise = ValuePromise(stateValue.modify({$0}), ignoreRepeated: true)
+        let statePromise = ValuePromise(stateValue.with { $0 }, ignoreRepeated: true)
         let updateState: ((ChannelEventFilterState) -> ChannelEventFilterState) -> Void = { f in
-            statePromise.set(stateValue.modify { f($0) })
+            statePromise.set(stateValue.modify(f))
         }
         
         let arguments = ChannelFilterArguments(context: context, toggleFlags: { flags in

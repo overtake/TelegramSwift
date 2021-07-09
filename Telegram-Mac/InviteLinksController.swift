@@ -95,7 +95,7 @@ final class InviteLinkPeerManager {
         self.loadNext(true)
         if adminId == nil {
             self.loadCreators()
-            let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, updated: { [weak self] _ in
+            let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(peerId: peerId, updated: { [weak self] _ in
                 self?.loadCreators()
             })
             updateAdminsDisposable.set(disposable)

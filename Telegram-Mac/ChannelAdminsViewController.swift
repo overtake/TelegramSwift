@@ -369,7 +369,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         }
 
         
-        let adminsPromise = Promise<[RenderedChannelParticipant]?>(nil)
+        let adminsPromise = ValuePromise<[RenderedChannelParticipant]?>(nil)
 
         let updateState: ((ChannelAdminsControllerState) -> ChannelAdminsControllerState) -> Void = { [weak self] f in
             if let strongSelf = self {
@@ -403,14 +403,14 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                 return $0.withUpdatedRemovingPeerId(adminId)
             }
             if peerId.namespace == Namespaces.Peer.CloudGroup {
-                self?.removeAdminDisposable.set((removeGroupAdmin(account: context.account, peerId: peerId, adminId: adminId)
+                self?.removeAdminDisposable.set((context.engine.peers.removeGroupAdmin(peerId: peerId, adminId: adminId)
                     |> deliverOnMainQueue).start(completed: {
                         updateState {
                             return $0.withUpdatedRemovingPeerId(nil)
                         }
                     }))
             } else {
-                self?.removeAdminDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: nil, rank: nil)
+                self?.removeAdminDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: nil, rank: nil)
                     |> deliverOnMainQueue).start(completed: {
                         updateState {
                             return $0.withUpdatedRemovingPeerId(nil)
@@ -429,13 +429,13 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
 
         let membersAndLoadMoreControl: (Disposable, PeerChannelMemberCategoryControl?)
         if peerId.namespace == Namespaces.Peer.CloudChannel {
-            membersAndLoadMoreControl = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId) { membersState in
+            membersAndLoadMoreControl = context.peerChannelMemberCategoriesContextsManager.admins(peerId: peerId, updated: { membersState in
                 if case .loading = membersState.loadingState, membersState.list.isEmpty {
-                    adminsPromise.set(.single(nil))
+                    adminsPromise.set(nil)
                 } else {
-                    adminsPromise.set(.single(membersState.list))
+                    adminsPromise.set(membersState.list)
                 }
-            }
+            })
         } else {
             let membersDisposable = (peerView.get()
                 |> map { peerView -> [RenderedChannelParticipant]? in
@@ -474,7 +474,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                     }
                     return result
                 }).start(next: { members in
-                    adminsPromise.set(.single(members))
+                    adminsPromise.set(members)
                 })
             membersAndLoadMoreControl = (membersDisposable, nil)
         }

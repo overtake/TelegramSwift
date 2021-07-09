@@ -570,7 +570,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                 let signal: Signal<([Peer], Peer), NoError>
                 
                 if search.request.isEmpty {
-                    signal = combineLatest(recentPeers(account: account) |> map { recent -> [Peer] in
+                    signal = combineLatest(context.engine.peers.recentPeers() |> map { recent -> [Peer] in
                         switch recent {
                         case .disabled:
                             return []

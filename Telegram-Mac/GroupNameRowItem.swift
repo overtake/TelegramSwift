@@ -129,6 +129,9 @@ class GroupNameRowView : InputDataRowView {
         }
 
     }
+    override var firstResponder: NSResponder? {
+        return self.textView.inputView
+    }
     
     override func textViewTextDidChange(_ string: String) {
         super.textViewTextDidChange(string)

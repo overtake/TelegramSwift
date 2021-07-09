@@ -278,7 +278,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                 self?.pullNavigation()?.push(controller)
             } else {
                 showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
-                    _ = showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
+                    _ = showModalProgress(signal: context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
                         showModalText(for: context.window, text: L10n.peerInfoChannelReported)
                     })
                 }), for: context.window)
@@ -590,7 +590,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                             
                             if let peer = view.peers[peerId] {
                                 if peer.isGroup, let memberId = memberIds.first {
-                                    return addGroupMember(account: context.account, peerId: peerId, memberId: memberId)
+                                    return context.engine.peers.addGroupMember(peerId: peerId, memberId: memberId)
                                         |> deliverOnMainQueue
                                         |> afterCompleted {
                                             updateState { state in
@@ -617,7 +617,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                     }
                                     
                                 } else if peer.isSupergroup {
-                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(account: context.account, peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
+                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
                                         let text: String
                                         switch error {
                                         case .notMutualContact:
@@ -675,7 +675,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         
         showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
-            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
+            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
         }), for: context.window)
     }
     
@@ -721,7 +721,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                     }
                     
                     if peerId.namespace == Namespaces.Peer.CloudChannel {
-                        return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max))
+                        return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max))
                             |> afterDisposed {
                                 Queue.mainQueue().async {
                                     updateState { state in
@@ -734,7 +734,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                         }
                     }
                     
-                    return removePeerMember(account: context.account, peerId: peerId, memberId: memberId)
+                    return context.engine.peers.removePeerMember(peerId: peerId, memberId: memberId)
                         |> deliverOnMainQueue
                         |> afterDisposed {
                             updateState { state in

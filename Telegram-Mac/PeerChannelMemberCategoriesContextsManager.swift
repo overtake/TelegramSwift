@@ -43,13 +43,19 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
     fileprivate var onlineContexts: [PeerId: PeerChannelMembersOnlineContext] = [:]
     fileprivate var replyThreadHistoryContexts: [MessageId: ReplyThreadHistoryContext] = [:]
 
+    fileprivate let engine: TelegramEngine
+    fileprivate let account: Account
+    init(_ engine: TelegramEngine, account: Account) {
+        self.engine = engine
+        self.account = account
+    }
 
-    func getContext(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl) {
+    func getContext(peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl) {
         if let current = self.contexts[peerId] {
             return current.getContext(key: key, requestUpdate: requestUpdate, updated: updated)
         } else {
             var becameEmptyImpl: ((Bool) -> Void)?
-            let context = PeerChannelMemberCategoriesContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, becameEmpty: { value in
+            let context = PeerChannelMemberCategoriesContext(engine: engine, account: account, peerId: peerId, becameEmpty: { value in
                 becameEmptyImpl?(value)
             })
             becameEmptyImpl = { [weak self, weak context] value in
@@ -65,7 +71,7 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
         }
     }
     
-    func recentOnline(engine: TelegramEngine, accountPeerId: PeerId, peerId: PeerId, updated: @escaping (Int32) -> Void) -> Disposable {
+    func recentOnline(peerId: PeerId, updated: @escaping (Int32) -> Void) -> Disposable {
         let context: PeerChannelMembersOnlineContext
         if let current = self.onlineContexts[peerId] {
             context = current
@@ -141,9 +147,13 @@ private final class PeerChannelMemberCategoriesContextsManagerImpl {
 final class PeerChannelMemberCategoriesContextsManager {
     private let impl: QueueLocalObject<PeerChannelMemberCategoriesContextsManagerImpl>
     
-    init() {
+    private let engine: TelegramEngine
+    private let account: Account
+    init(_ engine: TelegramEngine, account: Account) {
+        self.engine = engine
+        self.account = account
         self.impl = QueueLocalObject(queue: Queue.mainQueue(), generate: {
-            return PeerChannelMemberCategoriesContextsManagerImpl()
+            return PeerChannelMemberCategoriesContextsManagerImpl(engine, account: account)
         })
     }
     
@@ -155,10 +165,10 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    private func getContext(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+    private func getContext(peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         assert(Queue.mainQueue().isCurrent())
         if let (disposable, control) = self.impl.syncWith({ impl in
-            return impl.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
+            return impl.getContext(peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
         }) {
             return (disposable, control)
         } else {
@@ -166,8 +176,8 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func transferOwnership(account: Account, peerId: PeerId, memberId: PeerId, password: String) -> Signal<Void, ChannelOwnershipTransferError> {
-        return updateChannelOwnership(account: account, accountStateManager: account.stateManager, channelId: peerId, memberId: memberId, password: password)
+    func transferOwnership(peerId: PeerId, memberId: PeerId, password: String) -> Signal<Void, ChannelOwnershipTransferError> {
+        return engine.peers.updateChannelOwnership(channelId: peerId, memberId: memberId, password: password)
             |> map(Optional.init)
             |> deliverOnMainQueue
             |> beforeNext { [weak self] results in
@@ -197,22 +207,22 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func mentions(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, threadMessageId: MessageId?, searchQuery: String? = nil, requestUpdate: Bool = true, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+    func mentions(peerId: PeerId, threadMessageId: MessageId?, searchQuery: String? = nil, requestUpdate: Bool = true, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         let key: PeerChannelMemberContextKey = .mentions(threadId: threadMessageId, query: searchQuery)
-        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
+        return self.getContext(peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
     }
     
-    func recent(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, searchQuery: String? = nil, requestUpdate: Bool = true, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+    func recent(peerId: PeerId, searchQuery: String? = nil, requestUpdate: Bool = true, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         let key: PeerChannelMemberContextKey
         if let searchQuery = searchQuery {
             key = .recentSearch(searchQuery)
         } else {
             key = .recent
         }
-        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
+        return self.getContext(peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
     }
     
-    func recentOnline(engine: TelegramEngine, accountPeerId: PeerId, peerId: PeerId) -> Signal<Int32, NoError> {
+    func recentOnline(peerId: PeerId) -> Signal<Int32, NoError> {
         return Signal { [weak self] subscriber in
             guard let strongSelf = self else {
                 subscriber.putNext(0)
@@ -220,7 +230,7 @@ final class PeerChannelMemberCategoriesContextsManager {
                 return EmptyDisposable
             }
             let disposable = strongSelf.impl.syncWith({ impl -> Disposable in
-                return impl.recentOnline(engine: engine, accountPeerId: accountPeerId, peerId: peerId, updated: { value in
+                return impl.recentOnline(peerId: peerId, updated: { value in
                     subscriber.putNext(value)
                 })
             })
@@ -230,11 +240,15 @@ final class PeerChannelMemberCategoriesContextsManager {
     }
 
     
-    func recentOnlineSmall(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId) -> Signal<Int32, NoError> {
+    func recentOnlineSmall(peerId: PeerId) -> Signal<Int32, NoError> {
+        let account = self.account
         return Signal { [weak self] subscriber in
+            guard let strongSelf = self else {
+                return EmptyDisposable
+            }
             var previousIds: Set<PeerId>?
             let statusesDisposable = MetaDisposable()
-            let disposableAndControl = self?.recent(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, updated: { state in
+            let disposableAndControl = self?.recent(peerId: peerId, updated: { state in
                 var idList: [PeerId] = []
                 for item in state.list {
                     idList.append(item.peer.id)
@@ -246,21 +260,20 @@ final class PeerChannelMemberCategoriesContextsManager {
                 if previousIds != updatedIds {
                     previousIds = updatedIds
                     let key: PostboxViewKey = .peerPresences(peerIds: updatedIds)
-                    statusesDisposable.set((postbox.combinedView(keys: [key])
+                    statusesDisposable.set((strongSelf.account.postbox.combinedView(keys: [key])
                         |> map { view -> Int32 in
                             var count: Int32 = 0
                             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                             if let presences = (view.views[key] as? PeerPresencesView)?.presences {
                                 for (_, presence) in presences {
                                     if let presence = presence as? TelegramUserPresence {
-                                        let relativeStatus = relativeUserPresenceStatus(presence, timeDifference: network.globalTime > 0 ? network.globalTime - timestamp : 0, relativeTo: Int32(timestamp))
+                                        let networkTime = account.network.globalTime > 0 ? account.network.globalTime - timestamp : 0
+                                        
+                                        let relativeStatus = relativeUserPresenceStatus(presence, timeDifference: networkTime, relativeTo: Int32(timestamp))
                                         sw: switch relativeStatus {
                                         case let .online(at: until):
                                             if until > Int32(timestamp) {
                                                 count += 1
-                                            } else {
-                                                var bp:Int = 0
-                                                bp += 1
                                             }
                                         default:
                                             break sw
@@ -285,24 +298,24 @@ final class PeerChannelMemberCategoriesContextsManager {
         
     }
     
-    func admins(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
-        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: .admins(searchQuery), requestUpdate: true, updated: updated)
+    func admins(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        return self.getContext(peerId: peerId, key: .admins(searchQuery), requestUpdate: true, updated: updated)
     }
     
-    func restricted(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
-        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: .restricted(searchQuery), requestUpdate: true, updated: updated)
+    func restricted(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        return self.getContext(peerId: peerId, key: .restricted(searchQuery), requestUpdate: true, updated: updated)
     }
     
-    func banned(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
-        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: .banned(searchQuery), requestUpdate: true, updated: updated)
+    func banned(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        return self.getContext(peerId: peerId, key: .banned(searchQuery), requestUpdate: true, updated: updated)
     }
     
-    func restrictedAndBanned(postbox: Postbox, network: Network, accountPeerId: PeerId, peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
-        return self.getContext(postbox: postbox, network: network, accountPeerId: accountPeerId, peerId: peerId, key: .restrictedAndBanned(searchQuery), requestUpdate: true, updated: updated)
+    func restrictedAndBanned(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        return self.getContext(peerId: peerId, key: .restrictedAndBanned(searchQuery), requestUpdate: true, updated: updated)
     }
     
-    func updateMemberBannedRights(account: Account, peerId: PeerId, memberId: PeerId, bannedRights: TelegramChatBannedRights?) -> Signal<Void, NoError> {
-        return updateChannelMemberBannedRights(account: account, peerId: peerId, memberId: memberId, rights: bannedRights)
+    func updateMemberBannedRights(peerId: PeerId, memberId: PeerId, bannedRights: TelegramChatBannedRights?) -> Signal<Void, NoError> {
+        return engine.peers.updateChannelMemberBannedRights(peerId: peerId, memberId: memberId, rights: bannedRights)
             |> deliverOnMainQueue
             |> beforeNext { [weak self] (previous, updated, isMember) in
                 if let strongSelf = self {
@@ -320,8 +333,8 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func updateMemberAdminRights(account: Account, peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<Void, NoError> {
-        return updateChannelAdminRights(account: account, peerId: peerId, adminId: memberId, rights: adminRights, rank: rank)
+    func updateMemberAdminRights(peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<Void, NoError> {
+        return engine.peers.updateChannelAdminRights(peerId: peerId, adminId: memberId, rights: adminRights, rank: rank)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, NoError> in
                 return .single(nil)
@@ -343,8 +356,8 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func addMember(account: Account, peerId: PeerId, memberId: PeerId) -> Signal<Void, NoError> {
-        return addChannelMember(account: account, peerId: peerId, memberId: memberId)
+    func addMember(peerId: PeerId, memberId: PeerId) -> Signal<Void, NoError> {
+        return engine.peers.addChannelMember(peerId: peerId, memberId: memberId)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, NoError> in
                 return .single(nil)
@@ -366,9 +379,9 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func addMembers(account: Account, peerId: PeerId, memberIds: [PeerId]) -> Signal<Void, AddChannelMemberError> {
+    func addMembers(peerId: PeerId, memberIds: [PeerId]) -> Signal<Void, AddChannelMemberError> {
         let signals: [Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError>] = memberIds.map({ memberId in
-            return addChannelMember(account: account, peerId: peerId, memberId: memberId)
+            return engine.peers.addChannelMember(peerId: peerId, memberId: memberId)
                 |> map(Optional.init)
                 |> `catch` { error -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError> in
                     if memberIds.count == 1 {

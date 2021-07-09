@@ -49,7 +49,7 @@ class AccountInfoItem: GeneralRowItem {
         super.init(initialSize, height: 90, stableId: stableId, action: action)
         
         self.photos = syncPeerPhotos(peerId: peer.id)
-        let signal = peerPhotos(account: context.account, peerId: peer.id, force: true) |> deliverOnMainQueue
+        let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
             self?.photos = photos
             self?.redraw()

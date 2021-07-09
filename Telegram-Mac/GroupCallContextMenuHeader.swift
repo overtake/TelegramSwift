@@ -146,7 +146,7 @@ final class GroupCallContextMenuHeaderView : View {
         descView?.setFrameOrigin(NSMakePoint(14, nameView.frame.maxY + 3))
     }
     
-    func setPeer(_ peer: Peer, about: String?, account: Account, videos: [NSView]) {
+    func setPeer(_ peer: Peer, about: String?, context: AccountContext, videos: [NSView]) {
 
         
         let name = TextViewLayout(.initialize(string: peer.displayTitle, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)), maximumNumberOfLines: 2)
@@ -172,17 +172,17 @@ final class GroupCallContextMenuHeaderView : View {
         layout()
         
         var photos = Array(syncPeerPhotos(peerId: peer.id).prefix(10))
-        let signal = peerPhotos(account: account, peerId: peer.id, force: true) |> deliverOnMainQueue
+        let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
                 
         for video in videos {
             let view = PhotoOrVideoView(frame: self.slider.bounds)
-            view.setPeer(peer, peerPhoto: nil, video: video, account: account)
+            view.setPeer(peer, peerPhoto: nil, video: video, account: context.account)
             self.slider.addSlide(view)
         }
         
         
         let view = PhotoOrVideoView(frame: self.slider.bounds)
-        view.setPeer(peer, peerPhoto: nil, video: nil, account: account)
+        view.setPeer(peer, peerPhoto: nil, video: nil, account: context.account)
         self.slider.addSlide(view)
         
         if photos.isEmpty {
@@ -203,7 +203,7 @@ final class GroupCallContextMenuHeaderView : View {
                 }
                 for photo in photos {
                     let view = PhotoOrVideoView(frame: self.slider.bounds)
-                    view.setPeer(peer, peerPhoto: photo, video: nil, account: account)
+                    view.setPeer(peer, peerPhoto: photo, video: nil, account: context.account)
                     self.slider.addSlide(view)
                 }
             }))
@@ -217,7 +217,7 @@ final class GroupCallContextMenuHeaderView : View {
             }
             for photo in photos {
                 let view = PhotoOrVideoView(frame: self.slider.bounds)
-                view.setPeer(peer, peerPhoto: photo, video: nil, account: account)
+                view.setPeer(peer, peerPhoto: photo, video: nil, account: context.account)
                 self.slider.addSlide(view)
             }
         }

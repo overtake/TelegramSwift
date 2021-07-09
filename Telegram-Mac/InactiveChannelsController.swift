@@ -155,7 +155,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
         close?()
         
         if !arguments.select.presentation.selected.isEmpty {
-            let removeSignal = combineLatest(arguments.select.presentation.selected.map { removePeerChat(account: context.account, peerId: $0, reportChatSpam: false)})
+            let removeSignal = combineLatest(arguments.select.presentation.selected.map { context.engine.peers.removePeerChat(peerId: $0, reportChatSpam: false)})
             let peers = arguments.select.presentation.peers.map { $0.value }
             let signal = context.account.postbox.transaction { transaction in
                 updatePeers(transaction: transaction, peers: peers, update: { _, updated in

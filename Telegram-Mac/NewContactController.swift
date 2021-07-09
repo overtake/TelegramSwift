@@ -124,7 +124,7 @@ func NewContactController(context: AccountContext, peerId: PeerId) -> InputDataM
     
     let addContact:()->Void = {
         let state = stateValue.with { $0 }
-        _ = showModalProgress(signal: addContactInteractively(account: context.account, peerId: peerId, firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phone ?? "", addToPrivacyExceptions: state.addToException), for: context.window).start(completed: {
+        _ = showModalProgress(signal: context.engine.contacts.addContactInteractively(peerId: peerId, firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phone ?? "", addToPrivacyExceptions: state.addToException), for: context.window).start(completed: {
             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 2.0).start()
         })
         dismiss?()

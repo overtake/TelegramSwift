@@ -26,12 +26,13 @@ func syncPeerPhotos(peerId: PeerId) -> [TelegramPeerPhoto] {
     return peerAvatars.with { $0[peerId].map { $0.photos } ?? [] }
 }
 
-func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal<[TelegramPeerPhoto], NoError> {
+func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) -> Signal<[TelegramPeerPhoto], NoError> {
     let photos = peerAvatars.with { $0[peerId] }
     if let photos = photos, photos.time > Date().timeIntervalSince1970, !force {
         return .single(photos.photos)
     } else {
-        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(requestPeerPhotos(postbox: account.postbox, network: account.network, peerId: peerId), account.postbox.peerView(id: peerId)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, peerView in
+        
+        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(context.engine.peers.requestPeerPhotos(peerId: peerId), context.account.postbox.peerView(id: peerId)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, peerView in
             return peerAvatars.modify { value in
                 var value = value
                 var photos = photos
@@ -51,8 +52,8 @@ func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal
 }
 
 
-func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: AnyHashable) -> Signal<(entries: [GalleryEntry], selected:Int), NoError> {
-    return combineLatest(queue: prepareQueue, peerPhotos(account: account, peerId: peerId, force: true), account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer in
+func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStableId: AnyHashable) -> Signal<(entries: [GalleryEntry], selected:Int), NoError> {
+    return combineLatest(queue: prepareQueue, peerPhotos(context: context, peerId: peerId, force: true), context.account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer in
         
         var entries: [GalleryEntry] = []
         

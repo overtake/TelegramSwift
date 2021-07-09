@@ -202,7 +202,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func GroupCallPeerController(account: Account, peer: Peer) -> InputDataModalController {
+func GroupCallPeerController(context: AccountContext, peer: Peer) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -213,10 +213,11 @@ func GroupCallPeerController(account: Account, peer: Peer) -> InputDataModalCont
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    let account = context.account
     
     var getWindow:(()->Window?)? = nil
     
-    actionsDisposable.add(account.viewTracker.peerView(peer.id, updateData: true).start(next: { peerView in
+    actionsDisposable.add(context.account.viewTracker.peerView(peer.id, updateData: true).start(next: { peerView in
         updateState { current in
             var current = current
             if let peer = peerViewMainPeer(peerView) {
@@ -233,7 +234,7 @@ func GroupCallPeerController(account: Account, peer: Peer) -> InputDataModalCont
         appDelegate?.navigateChat(peerId, account: account)
     }, joinChannel: { peerId in
         if let window = getWindow?() {
-            _ = showModalProgress(signal: joinChannel(account: account, peerId: peerId, hash: nil), for: window).start(error: { [weak window] error in
+            _ = showModalProgress(signal: context.engine.peers.joinChannel(peerId: peerId, hash: nil), for: window).start(error: { [weak window] error in
                 let text: String
                 switch error {
                 case .generic:
@@ -251,7 +252,7 @@ func GroupCallPeerController(account: Account, peer: Peer) -> InputDataModalCont
 
     }, leaveChannel: { peerId in
         if let window = getWindow?() {
-            _ = showModalProgress(signal: removePeerChat(account: account, peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: false), for: window).start()
+            _ = showModalProgress(signal: context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: false), for: window).start()
         }
     })
     

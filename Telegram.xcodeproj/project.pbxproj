@@ -39,6 +39,9 @@
 		275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC38267B8701009CF884 /* bot_menu_close.tgs */; };
 		275DDC3B267B8702009CF884 /* bot_close_menu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC39267B8702009CF884 /* bot_close_menu.tgs */; };
 		275FD30E266A20FC008EBC99 /* GroupCallTileRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */; };
+		2760E55626970513001C59F8 /* ExpCardStorageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55526970513001C59F8 /* ExpCardStorageController.swift */; };
+		2760E55926970672001C59F8 /* ExpCardButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55826970672001C59F8 /* ExpCardButton.swift */; };
+		2760E55B269706D7001C59F8 /* ExpCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55A269706D7001C59F8 /* ExpCardView.swift */; };
 		2763A159261C91B000C12762 /* DatePickerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2763A158261C91B000C12762 /* DatePickerRowItem.swift */; };
 		2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */; };
 		2763A162261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2763A161261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs */; };
@@ -128,6 +131,8 @@
 		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
 		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
 		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
+		27FFCEC52694BA58006CA024 /* ExpCardAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC42694BA58006CA024 /* ExpCardAppearance.swift */; };
+		27FFCEC72694BC95006CA024 /* ExpCardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC62694BC95006CA024 /* ExpCardController.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
 		9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */; };
 		9F0367F72273260A00456348 /* UndoTooltipController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367F62273260A00456348 /* UndoTooltipController.swift */; };
@@ -826,7 +831,6 @@
 		C2F6190D1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */; };
 		C2F8923D1E3FA51000D98B2D /* PasteboardUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */; };
 		C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F93A2C1F3C55C500BCD48F /* EmojiToleranceController.swift */; };
-		C2F952B01F8E1C840056E586 /* CachedAdminIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F952AF1F8E1C840056E586 /* CachedAdminIds.swift */; };
 		C2F9C4481F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F9C4471F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift */; };
 		C2F9C44C1F95FE58002B2CBF /* Markdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2F9C44B1F95FE58002B2CBF /* Markdown.swift */; };
 		C2FB2FAB1EBF73D00093C8BA /* RecentCallsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2FB2FAA1EBF73CF0093C8BA /* RecentCallsViewController.swift */; };
@@ -1126,6 +1130,9 @@
 		275DDC38267B8701009CF884 /* bot_menu_close.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_menu_close.tgs; sourceTree = "<group>"; };
 		275DDC39267B8702009CF884 /* bot_close_menu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_close_menu.tgs; sourceTree = "<group>"; };
 		275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileRowItem.swift; sourceTree = "<group>"; };
+		2760E55526970513001C59F8 /* ExpCardStorageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardStorageController.swift; sourceTree = "<group>"; };
+		2760E55826970672001C59F8 /* ExpCardButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardButton.swift; sourceTree = "<group>"; };
+		2760E55A269706D7001C59F8 /* ExpCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardView.swift; sourceTree = "<group>"; };
 		2763A158261C91B000C12762 /* DatePickerRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerRowItem.swift; sourceTree = "<group>"; };
 		2763A15B261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_start_chat_to_mute.tgs; sourceTree = "<group>"; };
 		2763A161261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_cancel_reminder.tgs; sourceTree = "<group>"; };
@@ -1215,6 +1222,8 @@
 		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
 		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
 		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
+		27FFCEC42694BA58006CA024 /* ExpCardAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardAppearance.swift; sourceTree = "<group>"; };
+		27FFCEC62694BC95006CA024 /* ExpCardController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardController.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
 		9F0367F12272108800456348 /* ProxyQRCodeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyQRCodeRowItem.swift; sourceTree = "<group>"; };
 		9F0367F62273260A00456348 /* UndoTooltipController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoTooltipController.swift; sourceTree = "<group>"; };
@@ -1963,7 +1972,6 @@
 		C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramAccountAuxiliaryMethods.swift; sourceTree = "<group>"; };
 		C2F8923C1E3FA51000D98B2D /* PasteboardUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteboardUtils.swift; sourceTree = "<group>"; };
 		C2F93A2C1F3C55C500BCD48F /* EmojiToleranceController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiToleranceController.swift; sourceTree = "<group>"; };
-		C2F952AF1F8E1C840056E586 /* CachedAdminIds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedAdminIds.swift; sourceTree = "<group>"; };
 		C2F9C4471F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationUnlockController.swift; sourceTree = "<group>"; };
 		C2F9C44B1F95FE58002B2CBF /* Markdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markdown.swift; sourceTree = "<group>"; };
 		C2FB2FAA1EBF73CF0093C8BA /* RecentCallsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentCallsViewController.swift; sourceTree = "<group>"; };
@@ -2251,6 +2259,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2760E55726970666001C59F8 /* views */ = {
+			isa = PBXGroup;
+			children = (
+				2760E55826970672001C59F8 /* ExpCardButton.swift */,
+				2760E55A269706D7001C59F8 /* ExpCardView.swift */,
+			);
+			name = views;
+			sourceTree = "<group>";
+		};
 		276B5978261C77C20029FD3F /* views */ = {
 			isa = PBXGroup;
 			children = (
@@ -2370,6 +2387,17 @@
 				270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */,
 			);
 			name = formatter;
+			sourceTree = "<group>";
+		};
+		27FFCEC32694BA2C006CA024 /* empty-cards */ = {
+			isa = PBXGroup;
+			children = (
+				2760E55726970666001C59F8 /* views */,
+				27FFCEC42694BA58006CA024 /* ExpCardAppearance.swift */,
+				27FFCEC62694BC95006CA024 /* ExpCardController.swift */,
+				2760E55526970513001C59F8 /* ExpCardStorageController.swift */,
+			);
+			name = "empty-cards";
 			sourceTree = "<group>";
 		};
 		9F0367E622707B6400456348 /* lottie */ = {
@@ -2781,7 +2809,6 @@
 				C2256D971DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift */,
 				C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */,
 				C295C65E1F75808600BA309D /* ChatAdditionController.swift */,
-				C2F952AF1F8E1C840056E586 /* CachedAdminIds.swift */,
 				9F153D1521F3662700B95D82 /* StoredMessageFromSearchPeer.swift */,
 				D0B6D72922AA65D3008E36FE /* NewContactController.swift */,
 				D00C73B52302C196004B1E2B /* ChatScheduleController.swift */,
@@ -3067,6 +3094,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				27FFCEC32694BA2C006CA024 /* empty-cards */,
 				9F10CE862060FFB7002DD61A /* secure-id */,
 				C20CAD131FE436C600EFF8BF /* appearance */,
 				C21BE3AD1FD0980200C1C849 /* developer */,
@@ -5219,7 +5247,6 @@
 				C2593FBF1F7D242E00F6D2B1 /* TGPaintShader.m in Sources */,
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
-				C2F952B01F8E1C840056E586 /* CachedAdminIds.swift in Sources */,
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
 				C22338451F823F8C004AD57C /* VideoCameraStructures.swift in Sources */,
 				C27AAFED1DEB1D72009B9629 /* SignalUtils.swift in Sources */,
@@ -5381,6 +5408,7 @@
 				C250B0391DB7BB2D004E9FBE /* MimeTypes.swift in Sources */,
 				C250BA8F1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift in Sources */,
 				271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */,
+				2760E55926970672001C59F8 /* ExpCardButton.swift in Sources */,
 				C271EBEB1EBA3BC90034792D /* PCallSession.swift in Sources */,
 				9F3D5F8622085B2000CB0CAA /* UpdaterNotifySettings.swift in Sources */,
 				C24DABC11E0834B7005EE404 /* XCDYouTubeVideoOperation.m in Sources */,
@@ -5690,6 +5718,7 @@
 				9F62AE81202D85E7007FB557 /* FetchManagerLocation.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* ChatGIFContentView.swift in Sources */,
 				A7E832192562CFC70095A167 /* VoiceBlobView.swift in Sources */,
+				2760E55626970513001C59F8 /* ExpCardStorageController.swift in Sources */,
 				D0D139252524A31E005FCF35 /* RepliesHeaderRowItem.swift in Sources */,
 				C276248C1D95AF7600FE5B2B /* ObjcUtils.m in Sources */,
 				276B5983261C79250029FD3F /* GroupCallTitleView.swift in Sources */,
@@ -5736,6 +5765,7 @@
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */,
+				27FFCEC52694BA58006CA024 /* ExpCardAppearance.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
 				9F4EEF8621D4FA68002C3B33 /* InstantPageArticleItem.swift in Sources */,
 				9F18DD94206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift in Sources */,
@@ -5866,6 +5896,7 @@
 				9FFAE502205A9154000C028E /* ManagedAudioSession.swift in Sources */,
 				C2AC9C181E1E687E0085C7DE /* GlobalBadgeNode.swift in Sources */,
 				270202C6261B3D7C00CFCE6D /* UITextField.swift in Sources */,
+				27FFCEC72694BC95006CA024 /* ExpCardController.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
@@ -5903,6 +5934,7 @@
 				D06C69552539F6BD00DD9005 /* LiveLocationViewController.swift in Sources */,
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,
 				9F1890932238F3DC00665EF5 /* DownloadedFilesPaths.swift in Sources */,
+				2760E55B269706D7001C59F8 /* ExpCardView.swift in Sources */,
 				C22B63591D967F4500085C19 /* TGModernGrowingTextView.m in Sources */,
 				27A9904A257A7435009044DB /* SoundEffectPlayQueue.swift in Sources */,
 				C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */,

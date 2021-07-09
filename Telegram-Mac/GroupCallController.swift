@@ -825,15 +825,15 @@ final class GroupCallUIController : ViewController {
         }, toggleSpeaker: { [weak self] in
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
-            guard let window = self?.window else {
+            guard let window = self?.window, let accountContext = self?.data.call.accountContext else {
                 return
             }
             let isChannel = self?.data.call.peer?.isChannel == true
             modernConfirm(for: window, account: account, peerId: peer.id, information: isChannel ? L10n.voiceChatRemovePeerConfirmChannel(peer.displayTitle) : L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
                 if peerId.namespace == Namespaces.Peer.CloudChannel {
-                    _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(account: account, peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
+                    _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
                 } else if let window = window {
-                    _ = showModalProgress(signal: removePeerMember(account: account, peerId: peerId, memberId: peer.id), for: window).start()
+                    _ = showModalProgress(signal: accountContext.engine.peers.removePeerMember(peerId: peerId, memberId: peer.id), for: window).start()
                 }
             }, appearance: darkPalette.appearance)
         }, openInfo: { [weak self] peer in
@@ -1154,7 +1154,7 @@ final class GroupCallUIController : ViewController {
             }
         })
         
-        contextMenuItems = { [weak arguments] data in
+        contextMenuItems = { [weak arguments, weak self] data in
             
             guard let arguments = arguments else {
                 return []
@@ -1162,7 +1162,7 @@ final class GroupCallUIController : ViewController {
             
             var items: [ContextMenuItem] = []
 
-            if let state = data.state {
+            if let state = data.state, let accountContext = self?.data.call.accountContext {
                 
                 let headerItem: ContextMenuItem = .init("headerItem", handler: {
 
@@ -1171,7 +1171,7 @@ final class GroupCallUIController : ViewController {
                 
                 let videos = [arguments.takeVideo(state.peer.id, .video, .profile), arguments.takeVideo(state.peer.id, .screencast, .profile)].compactMap { $0}
                 
-                headerView.setPeer(state.peer, about: data.about, account: account, videos: videos)
+                headerView.setPeer(state.peer, about: data.about, context: accountContext, videos: videos)
                 headerItem.view = headerView
 
 

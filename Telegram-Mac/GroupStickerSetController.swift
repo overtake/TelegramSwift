@@ -345,10 +345,9 @@ class GroupStickerSetController: TableViewController {
         }, openChat: { [weak self] peerId in
             self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId)))
         })
-        
         saveGroupStickerSet = { [weak self] in
             if let strongSelf = self {
-                actionsDisposable.add(showModalProgress(signal: updateGroupSpecificStickerset(postbox: context.account.postbox, network: context.account.network, peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: mainWindow).start(next: { [weak strongSelf] _ in
+                actionsDisposable.add(showModalProgress(signal: context.engine.peers.updateGroupSpecificStickerset(peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: context.window).start(next: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
                 }, error: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
@@ -366,7 +365,7 @@ class GroupStickerSetController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<GroupStickersetEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: peerId), appearanceSignal)
+        let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), context.engine.peers.peerSpecificStickerPack(peerId: peerId), appearanceSignal)
             |> map { state, view, specificPack, appearance -> TableUpdateTransition in
                 let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)

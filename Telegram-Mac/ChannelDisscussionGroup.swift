@@ -336,10 +336,10 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
                     return (value, nil)
                 }
                 |> mapToSignal { upgradedPeerId in
-                    return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: upgradedPeerId) |> mapError { value in return (nil, value) }
+                    return context.engine.peers.updateGroupDiscussionForChannel(channelId: channelId, groupId: upgradedPeerId) |> mapError { value in return (nil, value) }
                 }
         } else if updatePreHistory, let groupId = groupId {
-            signal = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: groupId, historyAvailableForNewMembers: true)
+            signal = context.engine.peers.updateChannelHistoryAvailabilitySettingsInteractively(peerId: groupId, historyAvailableForNewMembers: true)
                 |> mapError { error -> (ConvertGroupToSupergroupError?, ChannelDiscussionGroupError?) in
                     switch error {
                     case .generic:
@@ -348,10 +348,10 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
                         return (nil, .hasNotPermissions)
                     }
                 } |> mapToSignal { _ in
-                return updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId) |> mapError { value in return (nil, value) }
+                    return context.engine.peers.updateGroupDiscussionForChannel(channelId: channelId, groupId: groupId) |> mapError { value in return (nil, value) }
             }
         } else {
-            signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: channelId, groupId: groupId) |> mapError { value in return (nil, value) }
+            signal = context.engine.peers.updateGroupDiscussionForChannel(channelId: channelId, groupId: groupId) |> mapError { value in return (nil, value) }
         }
         
         actionsDisposable.add(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { result in
@@ -443,7 +443,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     }))
     
     
-    let availableSignal = peer.isChannel ? availableGroupsForChannelDiscussion(postbox: context.account.postbox, network: context.account.network) : .single([])
+    let availableSignal = peer.isChannel ? context.engine.peers.availableGroupsForChannelDiscussion() : .single([])
     
     actionsDisposable.add(availableSignal.start(next: { peers in
         updateState {

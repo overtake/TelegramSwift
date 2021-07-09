@@ -524,7 +524,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                 if let savedCredentialsToken = savedCredentialsToken {
                     pay(.saved(id: id, tempPassword: savedCredentialsToken.token))
                 } else {
-                    let _ = (cachedTwoStepPasswordToken(postbox: context.account.postbox)
+                    let _ = (context.engine.auth.cachedTwoStepPasswordToken()
                                                    |> deliverOnMainQueue).start(next: { token in
                         let timestamp = context.account.network.getApproximateRemoteTimestamp()
                         if let token = token, token.validUntilDate > timestamp - 1 * 60  {
@@ -532,7 +532,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                         } else {
                             showModal(with: InputPasswordController(context: context, title: L10n.checkoutPasswordEntryTitle, desc: L10n.checkoutPasswordEntryText(title), checker: { password in
                                 Signal { subscriber in
-                                    let checker = requestTemporaryTwoStepPasswordToken(account: context.account, password: password, period: 1 * 60, requiresBiometrics: false) |> deliverOnMainQueue
+                                    let checker = context.engine.auth.requestTemporaryTwoStepPasswordToken(password: password, period: 1 * 60, requiresBiometrics: false) |> deliverOnMainQueue
                                     return checker.start(next: { token in
                                         pay(.saved(id: id, tempPassword: token.token))
                                         subscriber.putCompletion()

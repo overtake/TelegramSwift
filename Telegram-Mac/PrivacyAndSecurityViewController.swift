@@ -537,7 +537,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PrivacyAndSecuri
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: [RecentAccountSession]?, passcodeData: PostboxAccessChallengeData, context: AccountContext) -> [PrivacyAndSecurityEntry] {
+private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityControllerState, contentConfiguration: ContentSettingsConfiguration?, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, blockedState: BlockedPeersContextState, proxy: ProxySettings, recentPeers: RecentPeers, configuration: TwoStepVeriticationAccessConfiguration?, activeSessions: ActiveSessionsContextState, passcodeData: PostboxAccessChallengeData, context: AccountContext) -> [PrivacyAndSecurityEntry] {
     var entries: [PrivacyAndSecurityEntry] = []
 
     var sectionId:Int = 1
@@ -647,8 +647,10 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
+    
+    
 
-    if let webSessions = webSessions, !webSessions.0.isEmpty {
+    if !webSessions.sessions.isEmpty {
         entries.append(.webAuthorizationsHeader(sectionId: sectionId))
         entries.append(.webAuthorizations(sectionId: sectionId, viewType: .singleItem))
         
@@ -675,17 +677,15 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
 
 
 class PrivacyAndSecurityViewController: TableViewController {
-    private let privacySettingsPromise = Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)>()
+    private let privacySettingsPromise = Promise<AccountPrivacySettings?>()
 
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        twoStepAccessConfiguration.set(twoStepVerificationConfiguration(account: context.account) |> map { TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)})
-        activeSessions.set(requestRecentAccountSessions(account: context.account) |> map(Optional.init))
+        twoStepAccessConfiguration.set(context.engine.auth.twoStepVerificationConfiguration() |> map { TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)})
     }
 
     private let twoStepAccessConfiguration: Promise<TwoStepVeriticationAccessConfiguration?> = Promise(nil)
-    private let activeSessions: Promise<[RecentAccountSession]?> = Promise(nil)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -724,17 +724,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
                     pushControllerImpl(SelectivePrivacySettingsController(context, kind: .presence, current: info.presence, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: updated, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: updated, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout)))
                                     }
                                     return .complete()
                             }
@@ -747,17 +747,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
                     pushControllerImpl(SelectivePrivacySettingsController(context, kind: .groupInvitations, current: info.groupInvitations, callSettings: nil, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: updated, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: updated, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout)))
                                     }
                                     return .complete()
                             }
@@ -770,17 +770,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
                     pushControllerImpl(SelectivePrivacySettingsController(context, kind: .voiceCalls, current: info.voiceCalls, callSettings: info.voiceCallsP2P, phoneDiscoveryEnabled: nil, updated: { updated, p2pUpdated, _ in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: updated, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: updated, voiceCallsP2P: p2pUpdated ?? value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout)))
                                     }
                                     return .complete()
                             }
@@ -793,17 +793,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
                     pushControllerImpl(SelectivePrivacySettingsController(context, kind: .profilePhoto, current: info.profilePhoto, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: updated, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: updated, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout)))
                                     }
                                     return .complete()
                             }
@@ -816,17 +816,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
                     pushControllerImpl(SelectivePrivacySettingsController(context, kind: .forwards, current: info.forwards, phoneDiscoveryEnabled: nil, updated: { updated, _, _ in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: updated, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: updated, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout)))
                                     }
                                     return .complete()
                             }
@@ -839,17 +839,17 @@ class PrivacyAndSecurityViewController: TableViewController {
             let signal = privacySettingsPromise.get()
                 |> take(1)
                 |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info, _ in
+            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] info in
                 if let info = info {
                     pushControllerImpl(SelectivePrivacySettingsController(context, kind: .phoneNumber, current: info.phoneNumber, phoneDiscoveryEnabled: info.phoneDiscoveryEnabled, updated: { updated, _, phoneDiscoveryEnabled in
                         if let currentInfoDisposable = currentInfoDisposable {
                             let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                                |> filter { $0.0 != nil }
+                                |> filter { $0 != nil }
                                 |> take(1)
                                 |> deliverOnMainQueue
-                                |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                |> mapToSignal { value -> Signal<Void, NoError> in
                                     if let value = value {
-                                        privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: updated, phoneDiscoveryEnabled: phoneDiscoveryEnabled!, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout), sessions)))
+                                        privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: updated, phoneDiscoveryEnabled: phoneDiscoveryEnabled!, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: value.accountRemovalTimeout)))
                                     }
                                     return .complete()
                             }
@@ -882,33 +882,14 @@ class PrivacyAndSecurityViewController: TableViewController {
                 self?.navigationController?.push(RecentSessionsController(context))
             }
         }, openWebAuthorizations: {
-
-            let signal = privacySettingsPromise.get()
-                |> take(1)
-                |> deliverOnMainQueue
-            currentInfoDisposable.set(signal.start(next: { [weak currentInfoDisposable] _, sessions in
-                pushControllerImpl(WebSessionsController(context, sessions, updated: { updated in
-                    if let currentInfoDisposable = currentInfoDisposable {
-                        let applySetting: Signal<Void, NoError> = privacySettingsPromise.get()
-                            |> take(1)
-                            |> deliverOnMainQueue
-                            |> mapToSignal { privacy, _ -> Signal<Void, NoError> in
-                                privacySettingsPromise.set(.single((privacy, updated)))
-                                return .complete()
-                        }
-                        currentInfoDisposable.set(applySetting.start())
-                    }
-                }))
-            }))
-
+            pushControllerImpl(WebSessionsController(context))
         }, setupAccountAutoremove: { [weak self] in
 
             if let strongSelf = self {
-
                 let signal = privacySettingsPromise.get()
                     |> take(1)
                     |> deliverOnMainQueue
-                updateAccountTimeoutDisposable.set(signal.start(next: { [weak updateAccountTimeoutDisposable, weak strongSelf] privacySettingsValue, _ in
+                updateAccountTimeoutDisposable.set(signal.start(next: { [weak updateAccountTimeoutDisposable, weak strongSelf] privacySettingsValue in
                     if let _ = privacySettingsValue, let strongSelf = strongSelf {
 
                         let timeoutAction: (Int32) -> Void = { timeout in
@@ -917,22 +898,18 @@ class PrivacyAndSecurityViewController: TableViewController {
                                     return $0.withUpdatedUpdatingAccountTimeoutValue(timeout)
                                 }
                                 let applyTimeout: Signal<Void, NoError> = privacySettingsPromise.get()
-                                    |> filter { $0.0 != nil }
+                                    |> filter { $0 != nil }
                                     |> take(1)
                                     |> deliverOnMainQueue
-                                    |> mapToSignal { value, sessions -> Signal<Void, NoError> in
+                                    |> mapToSignal { value -> Signal<Void, NoError> in
                                         if let value = value {
-                                            privacySettingsPromise.set(.single((AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: timeout), sessions)))
+                                            privacySettingsPromise.set(.single(AccountPrivacySettings(presence: value.presence, groupInvitations: value.groupInvitations, voiceCalls: value.voiceCalls, voiceCallsP2P: value.voiceCallsP2P, profilePhoto: value.profilePhoto, forwards: value.forwards, phoneNumber: value.phoneNumber, phoneDiscoveryEnabled: value.phoneDiscoveryEnabled, automaticallyArchiveAndMuteNonContacts: value.automaticallyArchiveAndMuteNonContacts, accountRemovalTimeout: timeout)))
                                         }
                                         return .complete()
                                 }
-                                updateAccountTimeoutDisposable.set((updateAccountRemovalTimeout(account: context.account, timeout: timeout)
+                                updateAccountTimeoutDisposable.set((context.engine.privacy.updateAccountRemovalTimeout(timeout: timeout)
                                     |> then(applyTimeout)
-                                    |> deliverOnMainQueue).start(completed: {
-//                                        updateState {
-//                                            return $0.withUpdatedUpdatingAccountTimeoutValue(nil)
-//                                        }
-                                    }))
+                                    |> deliverOnMainQueue).start())
                             }
                         }
                         let timeoutValues: [Int32] = [
@@ -984,7 +961,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                 pushControllerImpl(controller)
             }
         }, togglePeerSuggestions: { enabled in
-            _ = (updateRecentPeersEnabled(postbox: context.account.postbox, network: context.account.network, enabled: enabled) |> then(enabled ? managedUpdatedRecentPeers(accountPeerId: context.account.peerId, postbox: context.account.postbox, network: context.account.network) : Signal<Void, NoError>.complete())).start()
+            _ = (context.engine.peers.updateRecentPeersEnabled(enabled: enabled) |> then(enabled ? context.engine.peers.managedUpdatedRecentPeers() : Signal<Void, NoError>.complete())).start()
         }, clearCloudDrafts: {
             confirm(for: context.window, information: L10n.privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.messages.clearCloudDraftsInteractively(), for: context.window).start()
@@ -994,7 +971,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         }, toggleSecretChatWebPreview: { value in
             FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: value)
         }, toggleAutoArchive: { value in
-            _ = showModalProgress(signal: updateAccountAutoArchiveChats(account: context.account, value: value), for: context.window).start()
+            _ = showModalProgress(signal: context.engine.privacy.updateAccountAutoArchiveChats(value: value), for: context.window).start()
         })
 
 
@@ -1004,9 +981,9 @@ class PrivacyAndSecurityViewController: TableViewController {
         let contentConfiguration: Signal<ContentSettingsConfiguration?, NoError> = .single(nil) |> then(contentSettingsConfiguration(network: context.account.network) |> map(Optional.init))
 
         
-        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), contentConfiguration, appearanceSignal, settings, privacySettingsPromise.get(), combineLatest(queue: .mainQueue(), recentPeers(account: context.account), twoStepAccessConfiguration.get(), activeSessions.get(), context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
-        |> map { state, contentConfiguration, appearance, proxy, values, additional, blockedState -> TableUpdateTransition in
-            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: values.0, webSessions: values.1, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data, context: context).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let signal = combineLatest(queue: .mainQueue(), statePromise.get(), contentConfiguration, appearanceSignal, settings, privacySettingsPromise.get(), context.webSessions.state, combineLatest(queue: .mainQueue(), context.engine.peers.recentPeers(), twoStepAccessConfiguration.get(), context.activeSessionsContext.state, context.sharedContext.accountManager.accessChallengeData()), context.blockedPeersContext.state)
+        |> map { state, contentConfiguration, appearance, proxy, privacySettings, webSessions, additional, blockedState -> TableUpdateTransition in
+            let entries = privacyAndSecurityControllerEntries(state: state, contentConfiguration: contentConfiguration, privacySettings: privacySettings, webSessions: webSessions, blockedState: blockedState, proxy: proxy, recentPeers: additional.0, configuration: additional.1, activeSessions: additional.2, passcodeData: additional.3.data, context: context).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()
@@ -1029,13 +1006,11 @@ class PrivacyAndSecurityViewController: TableViewController {
     
     private var focusOnItemTag: PrivacyAndSecurityEntryTag?
     private let disposable = MetaDisposable()
-    init(_ context: AccountContext, initialSettings: (AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
+    init(_ context: AccountContext, initialSettings: AccountPrivacySettings?, focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
         self.focusOnItemTag = focusOnItemTag
         super.init(context)
         
-        let thenSignal:Signal<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?), NoError> = requestAccountPrivacySettings(account: context.account) |> map {
-            return ($0, initialSettings.1)
-        }
+        let thenSignal:Signal<AccountPrivacySettings?, NoError> = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
         
         self.privacySettingsPromise.set(.single(initialSettings) |> then(thenSignal))
     }

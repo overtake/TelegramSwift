@@ -200,47 +200,44 @@ private func prepareSessions(left:[AppearanceWrapperEntry<WebSessionEntry>], rig
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
-private func webAuthorizationEntries(authorizations: [WebAuthorization]?, peers:[PeerId : Peer], state: WebSessionsControllerState) -> [WebSessionEntry] {
+private func webAuthorizationEntries(webSessions: WebSessionsContextState, state: WebSessionsControllerState) -> [WebSessionEntry] {
     var entries: [WebSessionEntry] = []
     
-    if let authorizations = authorizations {
-        var sectionId:Int32 = 0
-        entries.append(.sectionId(sectionId))
-        sectionId += 1
-        
-        var index: Int32 = 1
-        
-        
-        entries.append(.logout(sectionId: sectionId, index: index, viewType: .singleItem))
+    
+    
+    var sectionId:Int32 = 0
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    
+    var index: Int32 = 1
+    
+    
+    entries.append(.logout(sectionId: sectionId, index: index, viewType: .singleItem))
+    index += 1
+    
+    entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLogoutAllDescription, viewType: .textBottomItem))
+    index += 1
+    
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
+    
+    
+    let authorizations = webSessions.sessions.filter {!state.removedSessions.contains($0.hash)}
+    
+    if authorizations.count > 0 {
+        entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLoggedInDescrpiption, viewType: .textTopItem))
         index += 1
-        
-        entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLogoutAllDescription, viewType: .textBottomItem))
-        index += 1
-        
-        entries.append(.sectionId(sectionId))
-        sectionId += 1
-        
-        
-        let authorizations = authorizations.filter {!state.removedSessions.contains($0.hash)}
-        
-        if authorizations.count > 0 {
-            entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLoggedInDescrpiption, viewType: .textTopItem))
+    }
+    
+    for auth in webSessions.sessions {
+        if let peer = webSessions.peers[auth.botId] {
+            entries.append(.session(sectionId: sectionId, index: index, authorization: auth, peer: peer, viewType: bestGeneralViewType(authorizations, for: auth)))
             index += 1
         }
-        
-        for auth in authorizations {
-            if let peer = peers[auth.botId] {
-                entries.append(.session(sectionId: sectionId, index: index, authorization: auth, peer: peer, viewType: bestGeneralViewType(authorizations, for: auth)))
-                index += 1
-            }
-        }
-        
-        entries.append(.sectionId(sectionId))
-        sectionId += 1
-        
-    } else {
-        entries.append(.loading)
     }
+    
+    entries.append(.sectionId(sectionId))
+    sectionId += 1
     
     
     return entries
@@ -257,23 +254,21 @@ class WebSessionsController: TableViewController {
         
         let state = Atomic(value: WebSessionsControllerState())
         
-       
+        let context = self.context
         
         let stateValue = ValuePromise(WebSessionsControllerState(), ignoreRepeated: true)
         
         let updateState:((WebSessionsControllerState)->WebSessionsControllerState)->Void = { f -> Void in
             stateValue.set(state.modify(f))
         }
-        
-        let network = context.account.network
-        
+                
         let arguments = WebSessionArguments(context: context, logoutSession: { session in
-            confirm(for: mainWindow, information: L10n.webAuthorizationsConfirmRevoke, successHandler: { result in
+            confirm(for: context.window, information: L10n.webAuthorizationsConfirmRevoke, successHandler: { result in
                 updateState { state in
                     return state.withUpdatedRemovingSessionId(session.hash)
                 }
                 
-                _ = showModalProgress(signal: terminateWebSession(network: network, hash: session.hash), for: mainWindow).start(next: { value in
+                _ = showModalProgress(signal: context.webSessions.remove(hash: session.hash), for: context.window).start(next: { value in
                     updateState { state in
                         return state.withUpdatedRemovedSessionId(session.hash).withUpdatedRemovingSessionId(nil)
                     }
@@ -281,10 +276,9 @@ class WebSessionsController: TableViewController {
             })
             
         }, logoutAll: { [weak self] in
-            confirm(for: mainWindow, information: L10n.webAuthorizationsConfirmRevokeAll, successHandler: { result in
-                self?.updated(nil)
+            confirm(for: context.window, information: L10n.webAuthorizationsConfirmRevokeAll, successHandler: { result in
                 self?.navigationController?.back()
-                _ = showModalProgress(signal: terminateAllWebSessions(network: network), for: mainWindow).start()
+                _ = showModalProgress(signal: context.webSessions.removeAll(), for: context.window).start()
             })
            
         })
@@ -292,22 +286,22 @@ class WebSessionsController: TableViewController {
         
         let previous: Atomic<[AppearanceWrapperEntry<WebSessionEntry>]> = Atomic(value: [])
         
-        let signal = combineLatest((Signal<([WebAuthorization], [PeerId: Peer])?, NoError>.single(defaultValue) |> deliverOnPrepareQueue |> then (webSessions(network: network) |> map {Optional($0)} |> deliverOnPrepareQueue)), appearanceSignal |> deliverOnPrepareQueue, stateValue.get() |> deliverOnPrepareQueue) |> map { values, appearance, state -> (TableUpdateTransition, ([WebAuthorization], [PeerId: Peer])?, WebSessionsControllerState) in
-            let entries = webAuthorizationEntries(authorizations: values?.0, peers: values?.1 ?? [:], state: state).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            return (prepareSessions(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: initialSize.modify{$0}), values, state)
+        let signal = combineLatest(context.webSessions.state, appearanceSignal, stateValue.get()) |> map { webSessions, appearance, state -> (TableUpdateTransition, WebSessionsContextState) in
+            let entries = webAuthorizationEntries(webSessions: webSessions, state: state).map {
+                AppearanceWrapperEntry(entry: $0, appearance: appearance)
+            }
+            
+            return (prepareSessions(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: initialSize.modify{$0}), webSessions)
             
         } |> deliverOnMainQueue |> afterDisposed {
             actionsDisposable.dispose()
         }
         
-        disposable.set(signal.start(next: { [weak self] transition, values, state in
+        disposable.set(signal.start(next: { [weak self] transition, state in
             self?.genericView.merge(with: transition)
             self?.readyOnce()
-            
-            let newValue = state.newState(from: values)
-            self?.updated(newValue)
-            
-            if newValue == nil || newValue?.0.isEmpty == true {
+                    
+            if state.sessions.isEmpty {
                 self?.navigationController?.back()
             }
         }))
@@ -316,15 +310,6 @@ class WebSessionsController: TableViewController {
     
     deinit {
         disposable.dispose()
-    }
-    
-    private let defaultValue: ([WebAuthorization], [PeerId : Peer])?
-    private let updated: (([WebAuthorization], [PeerId : Peer])?) -> Void
-    init(_ context: AccountContext, _ result: ([WebAuthorization], [PeerId : Peer])?, updated: @escaping(([WebAuthorization], [PeerId : Peer])?) -> Void) {
-        self.defaultValue = result
-        self.updated = updated
-        super.init(context)
-        
     }
     
 }

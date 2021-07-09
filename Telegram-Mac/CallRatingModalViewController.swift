@@ -97,13 +97,13 @@ private class CallRatingModalView: View {
 
 class CallRatingModalViewController: ModalViewController {
     
-    private let account:Account
+    private let context:AccountContext
     private let callId:CallId
     private var starsCount:Int32? = nil
     private let isVideo: Bool
     private let userInitiated: Bool
-    init(_ account: Account, callId:CallId, userInitiated: Bool, isVideo: Bool) {
-        self.account = account
+    init(_ context: AccountContext, callId:CallId, userInitiated: Bool, isVideo: Bool) {
+        self.context = context
         self.callId = callId
         self.isVideo = isVideo
         self.userInitiated = userInitiated
@@ -148,32 +148,32 @@ class CallRatingModalViewController: ModalViewController {
     private func saveRating(_ starsCount: Int) {
         self.close()
         if starsCount < 4, let window = self.window {
-            showModal(with: CallFeedbackController(account: account, callId: callId, starsCount: starsCount, userInitiated: userInitiated, isVideo: isVideo), for: window)
+            showModal(with: CallFeedbackController(context: context, callId: callId, starsCount: starsCount, userInitiated: userInitiated, isVideo: isVideo), for: window)
         } else {
-            let _ = rateCallAndSendLogs(account: account, callId: self.callId, starsCount: starsCount, comment: "", userInitiated: userInitiated, includeLogs: false).start()
+            let _ = rateCallAndSendLogs(context: context, callId: self.callId, starsCount: starsCount, comment: "", userInitiated: userInitiated, includeLogs: false).start()
         }
     }
 }
 
 
-func rateCallAndSendLogs(account: Account, callId: CallId, starsCount: Int, comment: String, userInitiated: Bool, includeLogs: Bool) -> Signal<Void, NoError> {
+func rateCallAndSendLogs(context: AccountContext, callId: CallId, starsCount: Int, comment: String, userInitiated: Bool, includeLogs: Bool) -> Signal<Void, NoError> {
     let peerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(4244000))
     
-    let rate = rateCall(account: account, callId: callId, starsCount: Int32(starsCount), comment: comment, userInitiated: userInitiated)
+    let rate = context.engine.calls.rateCall(callId: callId, starsCount: Int32(starsCount), comment: comment, userInitiated: userInitiated)
     if includeLogs {
         let id = arc4random64()
         let name = "\(callId.id)_\(callId.accessHash).log.json"
-        let path = callLogsPath(account: account) + "/" + name
+        let path = callLogsPath(account: context.account) + "/" + name
         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
         let message = EnqueueMessage.message(text: comment, attributes: [], mediaReference: .standalone(media: file), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)
         return rate
-            |> then(enqueueMessages(account: account, peerId: peerId, messages: [message])
+            |> then(enqueueMessages(account: context.account, peerId: peerId, messages: [message])
                 |> mapToSignal({ _ -> Signal<Void, NoError> in
                     return .single(Void())
                 }))
     } else if !comment.isEmpty {
         return rate
-            |> then(enqueueMessages(account: account, peerId: peerId, messages: [.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
+            |> then(enqueueMessages(account: context.account, peerId: peerId, messages: [.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
                 |> mapToSignal({ _ -> Signal<Void, NoError> in
                     return .single(Void())
                 }))

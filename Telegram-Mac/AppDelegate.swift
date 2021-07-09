@@ -460,9 +460,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             _ = autoNightSignal.start(next: { preference, _ in
                 
-                let isEnabled: Bool
-                
+                var isEnabled: Bool
+                var isDark: Bool = false
+
                 if let schedule = preference.schedule {
+                    
+                    isEnabled = true
+                    
                     let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
                     var now: time_t = time_t(nowTimestamp)
                     var timeinfoNow: tm = tm()
@@ -477,29 +481,30 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             if let sunrise = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: coordinate.latitude, longitude: coordinate.longitude) {
                                 let from = Int32(sunrise.sunset.timeIntervalSince1970 - sunrise.sunset.startOfDay.timeIntervalSince1970)
                                 let to = Int32(sunrise.sunrise.timeIntervalSince1970 - sunrise.sunrise.startOfDay.timeIntervalSince1970)
-                                isEnabled = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
+                                isDark = to > from && t >= from && t <= to || to < from && (t >= from || t <= to)
                             } else {
-                                isEnabled = false
+                                isDark = false
                             }
                         }
                     case let .timeSensitive(from, to):
                         let from = from * 60 * 60
                         let to = to * 60 * 60
-                        isEnabled = to > from && t >= from && t < to || to < from && (t >= from || t < to)
+                        isDark = to > from && t >= from && t < to || to < from && (t >= from || t < to)
                     }
                     
                 } else if preference.systemBased {
+                    isEnabled = true
                     if #available(OSX 10.14, *) {
                         switch systemAppearance.name {
                         case NSAppearance.Name.aqua:
-                            isEnabled = false
+                            isDark = false
                         case NSAppearance.Name.darkAqua:
-                            isEnabled = true
+                            isDark = true
                         default:
-                            isEnabled = false
+                            isDark = false
                         }
                     } else {
-                        isEnabled = false
+                        isDark = false
                     }
                 } else {
                     isEnabled = false
@@ -508,15 +513,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 _ = updateThemeInteractivetly(accountManager: accountManager, f: { settings -> ThemePaletteSettings in
                     var settings = settings
                     if isEnabled {
-                        if let theme = preference.theme.cloud {
-                            settings = settings.withUpdatedCloudTheme(theme.cloud).withUpdatedPalette(theme.palette).updateWallpaper { current in
-                                return ThemeWallpaper(wallpaper: theme.wallpaper.wallpaper, associated: theme.wallpaper)
+                        settings = settings.withUpdatedToDefault(dark: isDark)
+                        if isDark {
+                            if let theme = preference.theme.cloud {
+                                settings = settings.withUpdatedCloudTheme(theme.cloud).withUpdatedPalette(theme.palette).updateWallpaper { current in
+                                    return ThemeWallpaper(wallpaper: theme.wallpaper.wallpaper, associated: theme.wallpaper)
+                                }
+                            } else {
+                                settings = settings.withUpdatedPalette(preference.theme.local.palette).withUpdatedCloudTheme(nil).installDefaultWallpaper().installDefaultAccent()
                             }
-                        } else {
-                            settings = settings.withUpdatedPalette(preference.theme.local.palette).withUpdatedCloudTheme(nil).installDefaultWallpaper().installDefaultAccent()
                         }
-                    } else {
-                        settings = settings.withUpdatedToDefault(dark: settings.defaultIsDark)
                     }
                     return settings
                 }).start()

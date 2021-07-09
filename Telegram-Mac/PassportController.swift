@@ -2630,7 +2630,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         let code = stateValue.with { $0.emailCode }
                         let state = _stateValue
                         if !code.isEmpty {
-                            emailActivation.set(showModalProgress(signal: confirmTwoStepRecoveryEmail(network: context.account.network, code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                            emailActivation.set(showModalProgress(signal: context.engine.auth.confirmTwoStepRecoveryEmail(code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
                                 
                                 let text: String
                                 switch error {
@@ -2648,7 +2648,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 updateState { $0.withUpdatedEmailCodeError(InputDataValueError(description: text, target: .data)) }
                                 
                             }, completed: {
-                                passwordVerificationData.set( showModalProgress(signal: twoStepVerificationConfiguration(account: context.account) |> mapToSignal { config in
+                                passwordVerificationData.set( showModalProgress(signal: context.engine.auth.twoStepVerificationConfiguration() |> mapToSignal { config in
                                     if let password = state.password {
                                         switch password {
                                         case let .password(password, _):
@@ -2813,7 +2813,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 case .basic:
                                     break
                                 case .thrid:
-                                    _ = showModalProgress(signal: updateTwoStepVerificationPassword(network: context.account.network, currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
+                                    _ = showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
                                         updateState { current in
                                             return current.withUpdatedPassword(nil)
                                         }
@@ -2872,7 +2872,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                             case .basic:
                                 break
                             case .thrid:
-                                _ = showModalProgress(signal: updateTwoStepVerificationPassword(network: context.account.network, currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
+                                _ = showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
                                     updateState { current in
                                         return current.withUpdatedPassword(nil)
                                     }
@@ -3700,7 +3700,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         return current.withUpdatedPassword(.password(password: password, pendingEmail: nil))
                     }
 
-                    passwordVerificationData.set(.single(nil) |> then(updateTwoStepVerificationPassword(network: context.account.network, currentPassword: nil, updatedPassword: .password(password: password, hint: hint, email: email))
+                    passwordVerificationData.set(.single(nil) |> then(context.engine.auth.updateTwoStepVerificationPassword(currentPassword: nil, updatedPassword: .password(password: password, hint: hint, email: email))
                         |> `catch` {_ in return .complete()}
                         |> mapToSignal { result in
                             
@@ -3759,7 +3759,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         }, abortVerification: {
             emailActivation.set(nil)
 
-            passwordVerificationData.set(showModalProgress(signal: updateTwoStepVerificationPassword(network: context.account.network, currentPassword: nil, updatedPassword: .none)
+            passwordVerificationData.set(showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: nil, updatedPassword: .none)
                 |> `catch` {_ in .complete()}
                 |> mapToSignal { _ in
                     updateState { current in
@@ -3858,7 +3858,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             }
         }, forgotPassword: {
             confirm(for: mainWindow, header: L10n.passportResetPasswordConfirmHeader, information: L10n.passportResetPasswordConfirmText, okTitle: L10n.passportResetPasswordConfirmOK, successHandler: { _ in
-                recoverPasswordDisposable.set(showModalProgress(signal: requestTwoStepVerificationPasswordRecoveryCode(network: context.account.network) |> deliverOnMainQueue, for: mainWindow).start(next: { emailPattern in
+                recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: mainWindow).start(next: { emailPattern in
                     let promise:Promise<[InputDataEntry]> = Promise()
                     promise.set(combineLatest(Signal<[InputDataEntry], NoError>.single(recoverEmailEntries(emailPattern: emailPattern, unavailable: {
                         alert(for: mainWindow, info: L10n.twoStepAuthRecoveryFailed)
@@ -3872,7 +3872,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         
                         return .fail(.doSomething { f in
                             confirm(for: mainWindow, information: L10n.secureIdWarningDataLost, successHandler: { _ in
-                                recoverPasswordDisposable.set(showModalProgress(signal: recoverTwoStepVerificationPassword(network: context.account.network, code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                                recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
                                     f(.fail(.fields([_id_email_code : .shake])))
                                 }, completed: {
                                     updateState { current in
@@ -3952,7 +3952,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             }))
         }
         
-        passwordVerificationData.set(.single(nil) |> then(twoStepVerificationConfiguration(account: context.account) |> map {Optional($0)}))
+        passwordVerificationData.set(.single(nil) |> then(context.engine.auth.twoStepVerificationConfiguration() |> map {Optional($0)}))
 
         
         secureIdConfigurationDisposable.set(secureIdConfiguration(postbox: context.account.postbox, network: context.account.network).start(next: { configuration in

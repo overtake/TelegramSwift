@@ -163,7 +163,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
 }
 
 
-func cancelResetAccountController(account: Account, phone: String, data: CancelAccountResetData) -> InputDataModalController {
+func cancelResetAccountController(context: AccountContext, phone: String, data: CancelAccountResetData) -> InputDataModalController {
     
     
     let initialState = CancelResetAccountState(code: "", error: nil, checking: false, limit: 255)
@@ -223,7 +223,8 @@ func cancelResetAccountController(account: Account, phone: String, data: CancelA
             }
             
             if !checking {
-                confirmPhoneDisposable.set(showModalProgress(signal: requestCancelAccountReset(network: account.network, phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                
+                confirmPhoneDisposable.set(showModalProgress(signal: context.engine.auth.requestCancelAccountReset(phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
                         
                         let errorText: String
                         switch error {
@@ -270,7 +271,7 @@ func cancelResetAccountController(account: Account, phone: String, data: CancelA
                     |> take(1)
                     |> mapToSignal { _ -> Signal<Void, NoError> in
                         return Signal { subscriber in
-                            return requestNextCancelAccountResetOption(network: account.network, phoneNumber: phone, phoneCodeHash: data.hash).start(next: { next in
+                            return context.engine.auth.requestNextCancelAccountResetOption(phoneNumber: phone, phoneCodeHash: data.hash).start(next: { next in
                                 currentDataPromise?.set(.single(next))
                             }, error: { error in
                                 

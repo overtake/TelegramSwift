@@ -455,9 +455,9 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let cachedData = peerView.cachedData as? CachedChannelData {
             let onlineMemberCount:Signal<Int32?, NoError>
             if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(engine: context.engine, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerView.peerId) |> map(Optional.init) |> deliverOnMainQueue
             } else {
-                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerView.peerId)  |> map(Optional.init) |> deliverOnMainQueue
             }
             self.onlineMemberCountDisposable.set(onlineMemberCount.start(next: { [weak self] count in
                 guard let `self` = self else {
@@ -477,7 +477,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         if let peer = peer {
             self.photos = syncPeerPhotos(peerId: peer.id)
-            let signal = peerPhotos(account: context.account, peerId: peer.id, force: true) |> deliverOnMainQueue
+            let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
             var first: Bool = true
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
                 if self?.photos != photos {

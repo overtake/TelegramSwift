@@ -149,6 +149,8 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
         let categories = AutomaticMediaDownloadCategories(photo: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: nil), video: AutomaticMediaDownloadCategoryPeers(privateChats: true, groupChats: true, channels: true, fileSize: 10 * 1024 * 1024), files: AutomaticMediaDownloadCategoryPeers(privateChats: false, groupChats: false, channels: false, fileSize: 10 * 1024 * 1024))
         return AutomaticMediaDownloadSettings(categories: categories, automaticDownload: true, downloadFolder: "~/Downloads/".nsstring.expandingTildeInPath, automaticSaveDownloadedFiles: false)
     }
+
+    
     
     init(categories: AutomaticMediaDownloadCategories, automaticDownload: Bool, downloadFolder: String, automaticSaveDownloadedFiles: Bool) {
         self.categories = categories

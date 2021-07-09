@@ -128,7 +128,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case notifications(index: Int)
     case language(index: Int, current: String)
     case appearance(index: Int)
-    case privacy(index: Int, AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?)
+    case privacy(index: Int, AccountPrivacySettings?, WebSessionsContextState)
     case dataAndStorage(index: Int)
     case activeSessions(index: Int, activeSessions: Int)
     case passport(index: Int, peer: Peer)
@@ -291,16 +291,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .privacy(lhsIndex, lhsPrivacy, lhsWebSessions):
-            if case let .privacy(rhsIndex, rhsPrivacy, rhsWebSessions) = rhs {
-                if let lhsWebSessions = lhsWebSessions, let rhsWebSessions = rhsWebSessions {
-                    if lhsWebSessions.0 != rhsWebSessions.0 {
-                        return false
-                    }
-                } else if (lhsWebSessions != nil) != (rhsWebSessions != nil) {
-                    return false
-                }
-                return lhsIndex == rhsIndex && lhsPrivacy == rhsPrivacy
+        case let .privacy(index, privacy, webSessions):
+            if case .privacy(index, privacy, webSessions) = rhs {
+                return true
             } else {
                 return false
             }
@@ -447,7 +440,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case let .privacy(_,  privacySettings, webSessions):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, action: {
-                 arguments.presentController(PrivacyAndSecurityViewController(arguments.context, initialSettings: (privacySettings, webSessions)), true)
+                 arguments.presentController(PrivacyAndSecurityViewController(arguments.context, initialSettings: privacySettings), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case .dataAndStorage:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, action: {
@@ -533,7 +526,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: ([WebAuthorization], [PeerId : Peer])?, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool, hasFilters: Bool, sessionsCount: Int) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool, hasFilters: Bool, sessionsCount: Int) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -749,7 +742,7 @@ class LayoutAccountController : TableViewController {
         return true
     }
     
-    private let settings: Promise<(AccountPrivacySettings?, ([WebAuthorization], [PeerId : Peer])?, (ProxySettings, ConnectionStatus), Bool)> = Promise()
+    private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), Bool)> = Promise()
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
     fileprivate let hasWallet: Promise<Bool> = Promise(false)
@@ -766,7 +759,9 @@ class LayoutAccountController : TableViewController {
             return .clear
         }
         
-        settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: context.account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: context.account.network) |> map {Optional($0)}), proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
+        let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
+        
+        settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(privacySettings), context.webSessions.state, proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
             return context.account.network.connectionStatus |> map {(settings, $0)}
         }, passportPromise.get()))
         
@@ -831,6 +826,7 @@ class LayoutAccountController : TableViewController {
         let sessionsCount = context.activeSessionsContext.state |> map {
             $0.sessions.count
         }
+
         
         let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get(), hasFilters.get(), sessionsCount) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet, hasFilters, sessionsCount -> TableUpdateTransition in
             let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet, hasFilters: hasFilters, sessionsCount: sessionsCount).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
@@ -923,7 +919,7 @@ class LayoutAccountController : TableViewController {
         super.viewDidAppear(animated)
         (navigation as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         
-        passportPromise.set(twoStepAuthData(context.account.network) |> map { value in
+        passportPromise.set(context.engine.auth.twoStepAuthData() |> map { value in
             return value.hasSecretValues
         } |> `catch` { error -> Signal<Bool, NoError> in
                 return .single(false)
@@ -950,9 +946,9 @@ class LayoutAccountController : TableViewController {
         let context = self.context
         
         
-        
-        
-        settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(requestAccountPrivacySettings(account: context.account) |> map {Optional($0)}), Signal<([WebAuthorization], [PeerId : Peer])?, NoError>.single(nil) |> then(webSessions(network: context.account.network) |> map {Optional($0)}), proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
+        let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
+
+        settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(privacySettings), context.webSessions.state, proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
             return context.account.network.connectionStatus |> map {(settings, $0)}
         }, passportPromise.get()))
         

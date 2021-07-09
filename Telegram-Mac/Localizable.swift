@@ -183,6 +183,8 @@ internal final class L10n {
   internal static var alertOK: String  { return L10n.tr("Localizable", "Alert.OK") }
   /// Sorry, this user doesn't seem to exist.
   internal static var alertUserDoesntExists: String  { return L10n.tr("Localizable", "Alert.UserDoesntExists") }
+  /// Yes
+  internal static var alertYes: String  { return L10n.tr("Localizable", "Alert.Yes") }
   /// Update App
   internal static var alertButtonOKUpdateApp: String  { return L10n.tr("Localizable", "Alert.ButtonOK.UpdateApp") }
   /// Discard
@@ -1661,6 +1663,8 @@ internal final class L10n {
   internal static var chatContextClearScheduled: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled") }
   /// Copy Preformatted Block
   internal static var chatContextCopyBlock: String  { return L10n.tr("Localizable", "Chat.Context.CopyBlock") }
+  /// Create Group
+  internal static var chatContextCreateGroup: String  { return L10n.tr("Localizable", "Chat.Context.CreateGroup") }
   /// Unmute
   internal static var chatContextDisableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.DisableNotifications") }
   /// Edit
@@ -3701,6 +3705,56 @@ internal final class L10n {
   internal static var emojiSymbols: String  { return L10n.tr("Localizable", "Emoji.Symbols") }
   /// Travel & Places
   internal static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
+  /// Appearance
+  internal static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
+  /// Storage Usage
+  internal static var emptyChatStorageUsage: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage") }
+  /// Chat Mode
+  internal static var emptyChatAppearanceChatMode: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.ChatMode") }
+  /// Colorful
+  internal static var emptyChatAppearanceColorful: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.Colorful") }
+  /// Dark
+  internal static var emptyChatAppearanceDark: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.Dark") }
+  /// You can change these parameters and many others in Settings ⟶ [Appearance](appearance).
+  internal static var emptyChatAppearanceDesc: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.Desc") }
+  /// Light
+  internal static var emptyChatAppearanceLight: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.Light") }
+  /// Minimalism
+  internal static var emptyChatAppearanceMin: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.Min") }
+  /// System
+  internal static var emptyChatAppearanceSystem: String  { return L10n.tr("Localizable", "EmptyChat.Appearance.System") }
+  /// Next Tip
+  internal static var emptyChatNavigationNext: String  { return L10n.tr("Localizable", "EmptyChat.Navigation.Next") }
+  /// Previous Tip
+  internal static var emptyChatNavigationPrev: String  { return L10n.tr("Localizable", "EmptyChat.Navigation.Prev") }
+  /// Telegram uses **%@** of your storage.
+  internal static func emptyChatStorageUsageCacheDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmptyChat.StorageUsage.CacheDesc", p1)
+  }
+  /// Telegram cache is empty.
+  internal static var emptyChatStorageUsageCacheDescEmpty: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.CacheDescEmpty") }
+  /// Clear Cache
+  internal static var emptyChatStorageUsageClear: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clear") }
+  /// Clearing...
+  internal static var emptyChatStorageUsageClearing: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clearing") }
+  /// Network Usage
+  internal static var emptyChatStorageUsageData: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Data") }
+  /// More data and storage settings are available in\nSettings ⟶ [Data And Storage](storage).
+  internal static var emptyChatStorageUsageDesc: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Desc") }
+  /// Calculating...
+  internal static var emptyChatStorageUsageLoading: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Loading") }
+  /// Low
+  internal static var emptyChatStorageUsageLow: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Low") }
+  /// Normal
+  internal static var emptyChatStorageUsageNormal: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Normal") }
+  /// Telegram\n%@
+  internal static func emptyChatStorageUsageTooltipApp(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmptyChat.StorageUsage.Tooltip.App", p1)
+  }
+  /// System\n%@
+  internal static func emptyChatStorageUsageTooltipSystem(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmptyChat.StorageUsage.Tooltip.System", p1)
+  }
   /// • Up to %@ members
   internal static func emptyGroupInfoLine1(_ p1: String) -> String {
     return L10n.tr("Localizable", "EmptyGroupInfo.Line1", p1)
@@ -8875,6 +8929,8 @@ internal final class L10n {
   internal static var twoStepAuthEmailSkip: String  { return L10n.tr("Localizable", "TwoStep.AuthEmailSkip") }
   /// An error occured. Please try again later.
   internal static var twoStepAuthAnError: String  { return L10n.tr("Localizable", "TwoStepAuth.AnError") }
+  /// Cancel Reset
+  internal static var twoStepAuthCancelReset: String  { return L10n.tr("Localizable", "TwoStepAuth.CancelReset") }
   /// Change Recovery E-Mail
   internal static var twoStepAuthChangeEmail: String  { return L10n.tr("Localizable", "TwoStepAuth.ChangeEmail") }
   /// Change Password
@@ -8955,10 +9011,18 @@ internal final class L10n {
   internal static var twoStepAuthRecoveryUnavailable: String  { return L10n.tr("Localizable", "TwoStepAuth.RecoveryUnavailable") }
   /// Turn Password Off
   internal static var twoStepAuthRemovePassword: String  { return L10n.tr("Localizable", "TwoStepAuth.RemovePassword") }
+  /// Reset Password
+  internal static var twoStepAuthReset: String  { return L10n.tr("Localizable", "TwoStepAuth.Reset") }
   /// Since the account **%@** is active and protected by a password, we will delete it in 1 week for security purposes.\n\nYou can cancel this process at any time.\n\nYou'll be able to reset your account in:\n%@
   internal static func twoStepAuthResetDescription(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "TwoStepAuth.ResetDescription", p1, p2)
   }
+  /// You can reset your password in %@.
+  internal static func twoStepAuthResetPending(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TwoStepAuth.ResetPending", p1)
+  }
+  /// You have successfully reset your password. Do you want to create a new one?
+  internal static var twoStepAuthResetSuccess: String  { return L10n.tr("Localizable", "TwoStepAuth.ResetSuccess") }
   /// Set Additional Password
   internal static var twoStepAuthSetPassword: String  { return L10n.tr("Localizable", "TwoStepAuth.SetPassword") }
   /// You can set a password that will be required when you log in on a new device in addition to the code you get in the SMS.
@@ -8987,6 +9051,14 @@ internal final class L10n {
   internal static var twoStepAuthSetupPasswordEnterPasswordNew: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordEnterPasswordNew") }
   /// Your Password
   internal static var twoStepAuthSetupPasswordTitle: String  { return L10n.tr("Localizable", "TwoStepAuth.SetupPasswordTitle") }
+  /// Unable to reset password, please try again at %@
+  internal static func twoStepAuthUnableToReset(_ p1: String) -> String {
+    return L10n.tr("Localizable", "TwoStepAuth.UnableToReset", p1)
+  }
+  /// Cancel Reset
+  internal static var twoStepAuthCancelResetConfirm: String  { return L10n.tr("Localizable", "TwoStepAuth.CancelReset.Confirm") }
+  /// Cancel the password resetting process? If you proceed, the expired part of the 7-day delay will be lost.
+  internal static var twoStepAuthCancelResetText: String  { return L10n.tr("Localizable", "TwoStepAuth.CancelReset.Text") }
   /// Are you sure you want to disable your password?
   internal static var twoStepAuthConfirmDisablePassword: String  { return L10n.tr("Localizable", "TwoStepAuth.Confirm.DisablePassword") }
   /// An error occured. Please try again later.
@@ -9003,6 +9075,8 @@ internal final class L10n {
   internal static var twoStepAuthErrorHaventEmailReset: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.HaventEmail.Reset") }
   /// Reset Password
   internal static var twoStepAuthErrorHaventEmailResetHeader: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.HaventEmail.ResetHeader") }
+  /// Reset Password
+  internal static var twoStepAuthResetSuccessHeader: String  { return L10n.tr("Localizable", "TwoStepAuth.ResetSuccess.Header") }
   /// Capitalize
   internal static var uezBsLqGTitle: String  { return L10n.tr("Localizable", "UEZ-Bs-lqG.title") }
   /// Update Telegram

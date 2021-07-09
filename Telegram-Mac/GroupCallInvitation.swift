@@ -135,7 +135,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             let groupMembers:Signal<[Participant], NoError> = Signal { subscriber in
                 let disposable: Disposable
                 if peerId.namespace == Namespaces.Peer.CloudChannel {
-                    (disposable, _) = peerMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
+                    (disposable, _) = peerMemberContextsManager.recent(peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, updated:  { state in
                         if case .ready = state.loadingState {
                             subscriber.putNext(state.list.map {
                                 return Participant(peer: $0.peer, presence: $0.presences[$0.peer.id])
@@ -455,6 +455,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
         behaviour = GroupCallAddMembersBehaviour(data: data, window: window)
     }
     let account = data.call.account
+    let context = data.call.accountContext
     let callPeerId = data.call.peerId
     let peerMemberContextsManager = data.peerMemberContextsManager
 
@@ -476,11 +477,11 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                             |> take(1)
                         |> mapToSignal { _ in
                             if peerId.namespace == Namespaces.Peer.CloudChannel {
-                                return peerMemberContextsManager.addMember(account: account, peerId: callPeerId, memberId: peerId) |> map { _ in
+                                return peerMemberContextsManager.addMember(peerId: callPeerId, memberId: peerId) |> map { _ in
                                     return true
                                 }
                             } else {
-                                return addGroupMember(account: account, peerId: callPeerId, memberId: peerId)
+                                return context.engine.peers.addGroupMember(peerId: callPeerId, memberId: peerId)
                                 |> map {
                                     return true
                                 } |> `catch` { _ in

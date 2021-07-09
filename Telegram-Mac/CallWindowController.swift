@@ -1392,13 +1392,15 @@ func closeCall(minimisize: Bool = false) {
         if let controller = controller {
             controller.cleanup()
             let sharedContext = controller.session.sharedContext
-            let account = controller.session.account
             let isVideo = controller.session.isVideo
             _ = (controller.session.state |> take(1) |> deliverOnMainQueue).start(next: { [weak sharedContext] state in
                 switch state.state {
                 case let .terminated(callId, _, report):
                     if report, let callId = callId, let window = sharedContext?.bindings.rootNavigation().window {
-                        showModal(with: CallRatingModalViewController(account, callId: callId, userInitiated: false, isVideo: isVideo), for: window)
+                        let context = sharedContext?.bindings.getContext()
+                        if let context = context {
+                            showModal(with: CallRatingModalViewController(context, callId: callId, userInitiated: false, isVideo: isVideo), for: window)
+                        }
                     }
                 default:
                     break

@@ -204,7 +204,7 @@ class UserInfoArguments : PeerInfoArguments {
             let updateNames: Signal<Void, UpdateContactNameError>
             
             if let firstName = updateValues.firstName {
-                updateNames = showModalProgress(signal: updateContactName(account: context.account, peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: mainWindow)
+                updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: mainWindow)
             } else {
                 updateNames = .complete()
             }
@@ -256,9 +256,9 @@ class UserInfoArguments : PeerInfoArguments {
             return .single(false)
         }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { groupId -> Signal<PeerId, NoError> in
             if groupId.namespace == Namespaces.Peer.CloudGroup {
-                return showModalProgress(signal: addGroupMember(account: context.account, peerId: groupId, memberId: peerId), for: context.window) |> `catch` {_ in .complete()} |> map {groupId}
+                return showModalProgress(signal: context.engine.peers.addGroupMember(peerId: groupId, memberId: peerId), for: context.window) |> `catch` {_ in .complete()} |> map {groupId}
             } else {
-                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: groupId, memberId: peerId), for: context.window) |> map { groupId }
+                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: groupId, memberId: peerId), for: context.window) |> map { groupId }
             }
         }
         
@@ -364,7 +364,7 @@ class UserInfoArguments : PeerInfoArguments {
         deletePeerContactDisposable.set((confirmSignal(for: context.window, information: tr(L10n.peerInfoConfirmDeleteContact))
             |> filter {$0}
             |> mapToSignal { _ in
-                showModalProgress(signal: deleteContactPeerInteractively(account: context.account, peerId: peerId) |> deliverOnMainQueue, for: context.window)
+                showModalProgress(signal: context.engine.contacts.deleteContactPeerInteractively(peerId: peerId) |> deliverOnMainQueue, for: context.window)
             }).start(completed: { [weak self] in
                 self?.pullNavigation()?.back()
             }))
