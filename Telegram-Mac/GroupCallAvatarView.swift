@@ -45,7 +45,7 @@ final class GroupCallAvatarView : View {
     
     func update(_ audioLevel:(PeerId)->Signal<Float?, NoError>?, data: PeerGroupCallData, activityColor: NSColor, account: Account, animated: Bool) {
         self.timestamp = nil
-        if let audioLevel = audioLevel(data.peer.id) {
+        if let audioLevel = audioLevel(data.peer.id), data.isSpeaking {
             self.audioLevelDisposable.set(audioLevel.start(next: { [weak self] value in
                 self?.updateAudioLevel(value, data: data, animated: animated)
             }))

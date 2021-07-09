@@ -338,6 +338,8 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
                 chatServiceItemColor = getAverageColor(image)
             case .plain:
                 chatServiceItemColor = palette.chatBackground
+            case .animated:
+                chatServiceItemColor = palette.chatBackground
             }
         default:
             chatServiceItemColor = getAverageColor(palette.chatBackground)
@@ -1695,6 +1697,8 @@ class TelegramPresentationTheme : PresentationTheme {
                     chatServiceItemColor = getAverageColor(image)
                 case .plain:
                     chatServiceItemColor = colors.chatBackground
+                case .animated:
+                    chatServiceItemColor = colors.chatBackground
                 }
             } else {
                 chatServiceItemColor = colors.chatBackground
@@ -1725,6 +1729,8 @@ class TelegramPresentationTheme : PresentationTheme {
                 case .tiled:
                     chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
                 case .plain:
+                    chatServiceItemTextColor = colors.grayText
+                case .animated:
                     chatServiceItemTextColor = colors.grayText
                 }
             } else {

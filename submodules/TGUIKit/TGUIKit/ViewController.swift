@@ -80,18 +80,12 @@ open class BackgroundView: ImageView {
     
     private let gradient: BackgroundGradientView
 
+    private var animatedBackground: AnimatedGradientBackgroundView?
     public override init(frame frameRect: NSRect) {
         gradient = BackgroundGradientView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(gradient)
         autoresizesSubviews = false
-//        gradient.actions = [:]
-//
-//        gradient.bounds = NSMakeRect(0, 0, max(bounds.width, bounds.height), max(bounds.width, bounds.height))
-//        gradient.anchorPoint = NSMakePoint(0.5, 0.5)
-//        gradient.position = NSMakePoint(bounds.width / 2, bounds.height / 2)
-//        layer?.addSublayer(gradient)
-      //  self.layer?.disableActions()
         self.layer?.contentsGravity = .resizeAspectFill
     }
     
@@ -108,8 +102,7 @@ open class BackgroundView: ImageView {
         super.layout()
         gradient.frame = bounds
         _customHandler?.layout?(self)
-//        gradient.bounds = NSMakeRect(0, 0, max(frame.width, frame.height) * 2, max(frame.width, frame.height) * 2)
-//        gradient.position = NSMakePoint(frame.width / 2, frame.height / 2)
+        animatedBackground?.frame = bounds
     }
     
     
@@ -127,6 +120,7 @@ open class BackgroundView: ImageView {
     
     open var backgroundMode:TableBackgroundMode = .plain {
         didSet {
+            var animatedBackground: AnimatedGradientBackgroundView? = nil
             switch backgroundMode {
             case let .background(image):
                 layer?.backgroundColor = .clear
@@ -140,11 +134,26 @@ open class BackgroundView: ImageView {
                 gradient.values = (top: top.withAlphaComponent(1.0), bottom: bottom.withAlphaComponent(1.0), rotation: rotation)
                 layer?.contents = nil
                 gradient.isHidden = false
+            case .animated:
+                if let current = self.animatedBackground {
+                    animatedBackground = current
+                } else {
+                    animatedBackground = AnimatedGradientBackgroundView(colors: nil, useSharedAnimationPhase: true)
+                }
             default:
                 gradient.isHidden = true
                 gradient.values = nil
                 layer?.backgroundColor = presentation.colors.background.cgColor
                 layer?.contents = nil
+            }
+            
+            if let animatedBackground = animatedBackground {
+                self.animatedBackground?.removeFromSuperview()
+                self.animatedBackground = animatedBackground
+                addSubview(animatedBackground)
+            } else {
+                self.animatedBackground?.removeFromSuperview()
+                self.animatedBackground = nil
             }
         }
     }

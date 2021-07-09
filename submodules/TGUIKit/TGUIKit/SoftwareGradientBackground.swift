@@ -8,7 +8,6 @@
 
 import Foundation
 import Accelerate
-import TGUIKit
 import SwiftSignalKit
 private func shiftArray(array: [CGPoint], offset: Int) -> [CGPoint] {
     var newArray = array
@@ -166,12 +165,12 @@ private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoi
     return context.generateImage()!
 }
 
-public final class GradientBackgroundView: ImageView {
+public final class AnimatedGradientBackgroundView: ImageView {
     public final class CloneView: ImageView {
-        private weak var parentView: GradientBackgroundView?
+        private weak var parentView: AnimatedGradientBackgroundView?
         private var index: SparseBag<Weak<CloneView>>.Index?
 
-        public init(parentView: GradientBackgroundView) {
+        public init(parentView: AnimatedGradientBackgroundView) {
             self.parentView = parentView
 
             super.init(frame: parentView.frame)
@@ -203,7 +202,7 @@ public final class GradientBackgroundView: ImageView {
     ]
 
     public static func generatePreview(size: CGSize, colors: [NSColor]) -> CGImage {
-        let positions = gatherPositions(shiftArray(array: GradientBackgroundView.basePositions, offset: 0))
+        let positions = gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: 0))
         return generateGradient(size: size, colors: colors, positions: positions)
     }
 
@@ -254,12 +253,12 @@ public final class GradientBackgroundView: ImageView {
         ]
         self.colors = colors ?? defaultColors
 
-        super.init()
+        super.init(frame: .zero)
 
         self.addSubview(self.contentView)
 
         if useSharedAnimationPhase {
-            self.phase = GradientBackgroundView.sharedPhase
+            self.phase = AnimatedGradientBackgroundView.sharedPhase
         } else {
             self.phase = 0
         }
@@ -282,7 +281,7 @@ public final class GradientBackgroundView: ImageView {
 
         let imageSize = size.fitted(CGSize(width: 80.0, height: 80.0)).integralFloor
 
-        let positions = gatherPositions(shiftArray(array: GradientBackgroundView.basePositions, offset: self.phase % 8))
+        let positions = gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: self.phase % 8))
 
         if let validPhase = self.validPhase {
             if validPhase != self.phase || self.invalidated {
@@ -294,14 +293,14 @@ public final class GradientBackgroundView: ImageView {
                     let phaseCount = 4
                     var stepPhase = (self.phase + phaseCount) % 8
                     for _ in 0 ... phaseCount {
-                        steps.append(gatherPositions(shiftArray(array: GradientBackgroundView.basePositions, offset: stepPhase)))
+                        steps.append(gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: stepPhase)))
                         stepPhase = stepPhase - 1
                         if stepPhase < 0 {
                             stepPhase = 7
                         }
                     }
                 } else {
-                    steps.append(gatherPositions(shiftArray(array: GradientBackgroundView.basePositions, offset: validPhase % 8)))
+                    steps.append(gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: validPhase % 8)))
                     steps.append(positions)
                 }
 
@@ -342,7 +341,7 @@ public final class GradientBackgroundView: ImageView {
                         }
                     }
 
-                    self.dimmedImageParams = (imageSize, self.colors, gatherPositions(shiftArray(array: GradientBackgroundView.basePositions, offset: self.phase % 8)))
+                    self.dimmedImageParams = (imageSize, self.colors, gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: self.phase % 8)))
 
                     self.contentView.image = images.last
 
@@ -454,7 +453,7 @@ public final class GradientBackgroundView: ImageView {
             }
         }
         if self.useSharedAnimationPhase {
-            GradientBackgroundView.sharedPhase = self.phase
+            AnimatedGradientBackgroundView.sharedPhase = self.phase
         }
         if let size = self.validLayout {
             self.updateLayout(size: size, transition: transition, extendAnimation: extendAnimation)

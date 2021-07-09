@@ -56,7 +56,7 @@ public enum TableBackgroundMode {
     case gradient(top: NSColor, bottom: NSColor, rotation: Int32?)
     case background(image: NSImage)
     case tiled(image: NSImage)
-    
+    case animated
     public var hasWallpaper: Bool {
         switch self {
         case .plain:

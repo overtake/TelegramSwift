@@ -1334,7 +1334,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 
                 let mappedLevel = myLevel * 1.5
                 strongSelf.myAudioLevelPipe.putNext(mappedLevel)
-                strongSelf.processMyAudioLevel(level: mappedLevel, hasVoice: myLevelHasVoice)
+                strongSelf.processMyAudioLevel(level: mappedLevel, hasVoice: myLevelHasVoice && orignalMyLevelHasVoice)
                 strongSelf.isSpeakingPromise.set(orignalMyLevelHasVoice)
                 if !missingSsrcs.isEmpty {
                     strongSelf.participantsContext?.ensureHaveParticipants(ssrcs: missingSsrcs)

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		274CF53026988B8F009139CC /* SoftwareGradientBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274CF52F26988B8F009139CC /* SoftwareGradientBackground.swift */; };
 		27CBE70825BACBAA00560AC6 /* VolumeMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CBE70725BACBAA00560AC6 /* VolumeMenuItemView.swift */; };
 		9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */; };
 		9F4EEF9A21DCD260002C3B33 /* SliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF9921DCD260002C3B33 /* SliderView.swift */; };
@@ -119,6 +120,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		274CF52F26988B8F009139CC /* SoftwareGradientBackground.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SoftwareGradientBackground.swift; sourceTree = "<group>"; };
 		27CBE70725BACBAA00560AC6 /* VolumeMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMenuItemView.swift; sourceTree = "<group>"; };
 		9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalScrollView.swift; sourceTree = "<group>"; };
 		9F4EEF9921DCD260002C3B33 /* SliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SliderView.swift; sourceTree = "<group>"; };
@@ -555,6 +557,7 @@
 				D00746C2257646C40000DF74 /* InfiniteProgressView.swift */,
 				D00746C5257646D10000DF74 /* DynamicCounterTextView.swift */,
 				27CBE70725BACBAA00560AC6 /* VolumeMenuItemView.swift */,
+				274CF52F26988B8F009139CC /* SoftwareGradientBackground.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -697,6 +700,7 @@
 				C219E1EB1D8AD1470042F0C8 /* NavigationViewController.swift in Sources */,
 				C253A9761D9430A900CDC850 /* ImageView.swift in Sources */,
 				C24A37161F324A36004ADE5C /* ShadowView.swift in Sources */,
+				274CF53026988B8F009139CC /* SoftwareGradientBackground.swift in Sources */,
 				C2B1A1321DA57E8300ACB1DD /* EditableViewController.swift in Sources */,
 				C2167E5D1DC2534300F98E03 /* SelectingControl.swift in Sources */,
 				9F4EEF9A21DCD260002C3B33 /* SliderView.swift in Sources */,

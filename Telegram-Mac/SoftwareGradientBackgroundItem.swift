@@ -21,9 +21,9 @@ final class SoftwareGradientBackgroundItem : GeneralRowItem {
 
 
 private final class SoftwareGradientBackgroundView: TableRowView {
-    private let view: GradientBackgroundView
+    private let view: AnimatedGradientBackgroundView
     required init(frame frameRect: NSRect) {
-        view = GradientBackgroundView(colors: nil, useSharedAnimationPhase: true)
+        view = AnimatedGradientBackgroundView(colors: nil, useSharedAnimationPhase: true)
         super.init(frame: frameRect)
         addSubview(view)
     }
