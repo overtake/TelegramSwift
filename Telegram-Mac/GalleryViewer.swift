@@ -418,7 +418,7 @@ class GalleryViewer: NSResponder {
         
         let previous: Atomic<[GalleryEntry]> = Atomic(value: [])
         
-        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(account: context.account, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected) in
+        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(context: context, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected) in
             let (deleted, inserted, updated) = proccessEntriesWithoutReverse(previous.swap(entries), right: entries, { entry -> MGalleryItem in
                 switch entry {
                 case let .photo(_, _, photo, _, _, _, _):
@@ -728,7 +728,7 @@ class GalleryViewer: NSResponder {
             
             
             if let message = entries[selectedIndex].message, message.containsSecretMedia {
-                _ = (markMessageContentAsConsumedInteractively(postbox: context.account.postbox, messageId: message.id) |> delay(0.5, queue: Queue.concurrentDefaultQueue())).start()
+                _ = (context.engine.messages.markMessageContentAsConsumedInteractively(messageId: message.id) |> delay(0.5, queue: Queue.concurrentDefaultQueue())).start()
             }
             let indexes = indexes.modify({$0})
             
@@ -853,13 +853,17 @@ class GalleryViewer: NSResponder {
             let peerId = messages[0].id.peerId
             let messageIds = messages.map {$0.id}
             
-            let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: context.account, peerId: peerId)
-                |> `catch` {_ in return .complete()} |> map { admins -> [ChannelParticipant]? in
-                    return admins.map({$0.participant})
-            } : .single(nil)
+            let adminsPromise = ValuePromise<[RenderedChannelParticipant]>([])
+            _ = context.peerChannelMemberCategoriesContextsManager.admins(peerId: peerId, updated: { membersState in
+                if case .loading = membersState.loadingState, membersState.list.isEmpty {
+                    adminsPromise.set([])
+                } else {
+                    adminsPromise.set(membersState.list)
+                }
+            })
             
             
-            messagesActionDisposable.set((channelAdmin |> deliverOnMainQueue).start( next:{ [weak self] admins in
+            messagesActionDisposable.set((adminsPromise.get() |> deliverOnMainQueue).start( next:{ [weak self] admins in
                 guard let `self` = self else {return}
                 
                 var canDelete:Bool = true

@@ -65,7 +65,8 @@ class PeerInfoArguments {
     }
     
     func toggleNotifications(_ currentlyMuted: Bool) {
-        toggleNotificationsDisposable.set(togglePeerMuted(account: context.account, peerId: peerId).start())
+        
+        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId).start())
         
         pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? L10n.toastUnmuted : L10n.toastMuted))
     }
@@ -375,7 +376,7 @@ class PeerInfoController: EditableViewController<TableView> {
         
         let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
         if peerId.namespace == Namespaces.Peer.CloudChannel {
-            let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { state in
+            let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
                 channelMembersPromise.set(.single(state.list))
             })
             loadMoreControl = control

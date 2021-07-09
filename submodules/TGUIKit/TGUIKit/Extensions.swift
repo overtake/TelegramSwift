@@ -1535,6 +1535,12 @@ public extension NSColor {
     
 }
 
+public extension Int32 {
+    var isFuture: Bool {
+        return self > Int32(Date().timeIntervalSince1970)
+    }
+}
+
 public extension Int {
     
     func prettyFormatter(_ n: Int, iteration: Int, rounded: Bool = false) -> String {
@@ -2158,4 +2164,15 @@ extension NSEdgeInsets : Equatable {
 
 public func arc4random64() -> Int64 {
     return Int64.random(in: Int64.min ... Int64.max)
+}
+
+
+public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut) {
+    if animated {
+        view.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] _ in
+            view?.removeFromSuperview()
+        })
+    } else {
+        view.removeFromSuperview()
+    }
 }

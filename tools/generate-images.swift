@@ -657,8 +657,28 @@ func initialize() -> [String] {
     array.append("audioplayer_speed_x1")
     array.append("audioplayer_speed_x2")
 
+    array.append("chat_info_voice_chat")
+    
+    array.append("chat_info_create_group")
+    
+    array.append("empty_chat_system")
+    array.append("empty_chat_dark")
+    array.append("empty_chat_light")
+    array.append("empty_chat_system_active")
+    array.append("empty_chat_dark_active")
+    array.append("empty_chat_light_active")
     
     
+    array.append("empty_chat_storage_clear")
+    array.append("empty_chat_storage_low")
+    array.append("empty_chat_storage_medium")
+    array.append("empty_chat_storage_high")
+    array.append("empty_chat_storage_low_active")
+    array.append("empty_chat_storage_medium_active")
+    array.append("empty_chat_storage_high_active")
+    
+    
+
     return array
 }
 //swift ./tools/generate-images.swift

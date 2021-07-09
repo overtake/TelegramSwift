@@ -174,7 +174,43 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         let table = self.genericView
         let pictureValue = self.pictureValue
         let textValue = self.textValue
+        let context = self.context
         
+        if self.defaultText == "" && result.result.count < 5 {
+            let peers: Signal<String, NoError> = context.account.postbox.transaction { transaction in
+                let main = transaction.getPeer(context.peerId)
+                
+                let rest = result.result
+                .map {
+                    transaction.getPeer($0)
+                }
+                .compactMap { $0 }
+                .map { $0.compactDisplayTitle }
+                .joined(separator: ", ")
+                
+                if let main = main, !rest.isEmpty {
+                    return main.compactDisplayTitle + " & " + rest
+                } else {
+                    return ""
+                }
+                
+            } |> deliverOnMainQueue
+            
+            _ = peers.start(next: { [weak self] title in
+                self?.textValue.set(title)
+                delay(0.2, closure: { [weak self] in
+                    self?.genericView.enumerateItems(with: { item in
+                        if let item = item as? GroupNameRowItem {
+                            let textView = item.view?.firstResponder as? NSTextView
+                            textView?.selectAll(nil)
+                            return false
+                        }
+                        return true
+                    })
+                })
+                
+            })
+        }
 
         let entries = self.entries
         let arguments = CreateGroupArguments(context: context, choicePicture: { select in

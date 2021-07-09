@@ -496,16 +496,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
                 if payload.isEmpty {
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
-                        return showModalProgress(signal: addGroupMember(account: context.account, peerId: peerId, memberId: botPeerId), for: context.window)
+                        return showModalProgress(signal: context.engine.peers.addGroupMember(peerId: peerId, memberId: botPeerId), for: context.window)
                             |> map { (.none, peerId) }
                             |> `catch` { _ -> Signal<(StartBotInGroupResult, PeerId), NoError> in return .single((.none, peerId)) }
                     } else {
-                        return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: botPeerId), for: context.window)
+                        return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peerId, memberId: botPeerId), for: context.window)
                             |> map { _ in (.none, peerId) }
                             |> then(.single((.none, peerId)))
                     }
                 } else {
-                    return showModalProgress(signal: requestStartBotInGroup(account: context.account, botPeerId: botPeerId, groupPeerId: peerId, payload: payload), for: context.window)
+                    return showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId, groupPeerId: peerId, payload: payload), for: context.window)
                         |> map {
                             ($0, peerId)
                         }
@@ -586,8 +586,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
         afterComplete(true)
     case let .confirmPhone(_, context, phone, hash):
-        _ = showModalProgress(signal: requestCancelAccountResetData(network: context.account.network, hash: hash) |> deliverOnMainQueue, for: context.window).start(next: { data in
-            showModal(with: cancelResetAccountController(account: context.account, phone: phone, data: data), for: context.window)
+        _ = showModalProgress(signal: context.engine.auth.requestCancelAccountResetData(hash: hash) |> deliverOnMainQueue, for: context.window).start(next: { data in
+            showModal(with: cancelResetAccountController(context: context, phone: phone, data: data), for: context.window)
         }, error: { error in
             switch error {
             case .limitExceeded:
@@ -692,7 +692,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         case .folders:
             controller = ChatListFiltersListController(context: context)
         case .privacy:
-            controller = PrivacyAndSecurityViewController(context, initialSettings: (nil, nil), focusOnItemTag: .autoArchive)
+            controller = PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: .autoArchive)
         }
         context.sharedContext.bindings.rootNavigation().push(controller)
         afterComplete(true)

@@ -180,7 +180,7 @@ class PhoneNumberInputCodeController: TelegramGenericViewController<PhoneNumberI
     
     private func checkCode(_ code:String)->Void {
                 
-        changePhoneDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumber(account: context.account, phoneNumber: formattedNumber, phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: context.window).start(error: { [weak self] error in
+        changePhoneDisposable.set(showModalProgress(signal: context.engine.accountData.requestChangeAccountPhoneNumber(phoneNumber: formattedNumber, phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: context.window).start(error: { [weak self] error in
             var alertText: String = ""
             switch error {
             case .generic:

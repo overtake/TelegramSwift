@@ -178,7 +178,7 @@ private func callFeedbackControllerEntries(state: CallFeedbackState, isVideo: Bo
 
 }
 
-func CallFeedbackController(account: Account, callId: CallId, starsCount: Int, userInitiated: Bool, isVideo: Bool) -> ModalViewController {
+func CallFeedbackController(context: AccountContext, callId: CallId, starsCount: Int, userInitiated: Bool, isVideo: Bool) -> ModalViewController {
     
     let initialState = CallFeedbackState()
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -247,7 +247,7 @@ func CallFeedbackController(account: Account, callId: CallId, starsCount: Int, u
         }
         comment.append(hashtags)
         
-        let _ = rateCallAndSendLogs(account: account, callId: callId, starsCount: starsCount, comment: comment, userInitiated: userInitiated, includeLogs: state.includeLogs).start()
+        let _ = rateCallAndSendLogs(context: context, callId: callId, starsCount: starsCount, comment: comment, userInitiated: userInitiated, includeLogs: state.includeLogs).start()
         
         return .success(.custom({
             close?()

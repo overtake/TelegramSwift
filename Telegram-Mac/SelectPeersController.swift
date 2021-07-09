@@ -640,7 +640,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
             
             var isListLoading: Bool = false
             
-            let value = peerChannelMemberContextsManager.recent(postbox: account.postbox, network: account.network, accountPeerId: account.peerId, peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, requestUpdate: true, updated: { state in
+            let value = peerChannelMemberContextsManager.recent(peerId: peerId, searchQuery: search.request.isEmpty ? nil : search.request, requestUpdate: true, updated: { state in
                 
                 let applyList: Bool
                 
@@ -981,6 +981,8 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
     fileprivate let index: PeerNameIndex = .lastNameFirst
     private var previousGlobal:Atomic<[SelectPeerValue]> = Atomic(value: [])
    
+    var defaultSelected: Set<PeerId> = Set()
+    
     deinit {
         var bp:Int = 0
         bp += 1
@@ -1319,10 +1321,28 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
     }
     
     
-    init(titles: ComposeTitles, context: AccountContext, settings:SelectPeerSettings = [.contacts], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, isNewGroup: Bool = false) {
-        self.behavior = SelectContactsBehavior(settings: settings, excludePeerIds: excludePeerIds, limit: limit)
+    init(titles: ComposeTitles, context: AccountContext, settings:SelectPeerSettings = [.contacts], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, isNewGroup: Bool = false, selectedPeers:Set<PeerId> = Set()) {
+        let behavior = SelectContactsBehavior(settings: settings, excludePeerIds: excludePeerIds, limit: limit)
+        self.behavior = behavior
         self.isNewGroup = isNewGroup
         super.init(titles: titles, context: context)
+        
+        let peers = context.account.postbox.transaction { transaction in
+            return selectedPeers.map {
+                transaction.getPeer($0)
+            }.compactMap { $0 }
+        } |> deliverOnMainQueue
+        
+        _ = peers.start(next: { [weak self] peers in
+            self?.interactions.update { state in
+                var state = state
+                for peer in peers  {
+                    state = state.withToggledSelected(peer.id, peer: peer)
+                }
+                return state
+            }
+        })
+        
     }
 
     override func firstResponder() -> NSResponder? {

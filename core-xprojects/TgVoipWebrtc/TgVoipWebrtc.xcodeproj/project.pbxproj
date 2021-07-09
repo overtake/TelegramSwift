@@ -31,6 +31,7 @@
 		274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 274BB565263AE0AA00620D03 /* GroupJoinPayloadInternal.h */; };
 		274BB569263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 274BB566263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp */; };
 		274BB56A263AE0AA00620D03 /* GroupJoinPayload.h in Headers */ = {isa = PBXBuildFile; fileRef = 274BB567263AE0AA00620D03 /* GroupJoinPayload.h */; };
+		274CF52C26987D26009139CC /* FakeAudioDeviceModule.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 274CF52B26987D26009139CC /* FakeAudioDeviceModule.cpp */; };
 		2767ADF625D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADEC25D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h */; };
 		2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADED25D6DDDC00717AA1 /* DesktopCaptureSourceManager.h */; };
 		2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 2767ADF025D6DDDC00717AA1 /* DesktopCaptureSource.h */; };
@@ -122,6 +123,7 @@
 		274BB565263AE0AA00620D03 /* GroupJoinPayloadInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupJoinPayloadInternal.h; sourceTree = "<group>"; };
 		274BB566263AE0AA00620D03 /* GroupJoinPayloadInternal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupJoinPayloadInternal.cpp; sourceTree = "<group>"; };
 		274BB567263AE0AA00620D03 /* GroupJoinPayload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GroupJoinPayload.h; sourceTree = "<group>"; };
+		274CF52B26987D26009139CC /* FakeAudioDeviceModule.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FakeAudioDeviceModule.cpp; path = ../../submodules/tgcalls/tgcalls/FakeAudioDeviceModule.cpp; sourceTree = "<group>"; };
 		2767ADEC25D6DDDC00717AA1 /* DesktopCaptureSourceHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceHelper.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceHelper.h; sourceTree = "<group>"; };
 		2767ADED25D6DDDC00717AA1 /* DesktopCaptureSourceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSourceManager.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSourceManager.h; sourceTree = "<group>"; };
 		2767ADF025D6DDDC00717AA1 /* DesktopCaptureSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DesktopCaptureSource.h; path = ../../submodules/tgcalls/tgcalls/desktop_capturer/DesktopCaptureSource.h; sourceTree = "<group>"; };
@@ -305,6 +307,7 @@
 				273F3236265B97F2005D918E /* VideoSampleBufferViewMac.h */,
 				273F3235265B97F2005D918E /* VideoSampleBufferViewMac.mm */,
 				D0D751A524BE3A130037D73A /* VideoMetalViewMac.mm */,
+				274CF52B26987D26009139CC /* FakeAudioDeviceModule.cpp */,
 				D00B191F24E56FE2006CCB87 /* GLVideoViewMac.mm */,
 				D00602F824CF3D4F00206226 /* EncryptedConnection.cpp */,
 				D00602FA24CF3D5C00206226 /* LogSinkImpl.cpp */,
@@ -509,6 +512,7 @@
 				271504102631799A004FB0E0 /* DesktopCaptureSourceViewMac.mm in Sources */,
 				271503EE2631677B004FB0E0 /* DesktopCaptureSource.cpp in Sources */,
 				D0D751C524BE3AC70037D73A /* CodecSelectHelper.cpp in Sources */,
+				274CF52C26987D26009139CC /* FakeAudioDeviceModule.cpp in Sources */,
 				27C1680326203A56000B8449 /* InstanceV2Impl.cpp in Sources */,
 				2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,

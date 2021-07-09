@@ -476,7 +476,7 @@ class ShareMessageObject : ShareObject {
     
     override func shareLink() {
         if let link = link {
-           exportLinkDisposable.set(exportMessageLink(account: context.account, peerId: messageIds[0].peerId, messageId: messageIds[0]).start(next: { valueLink in
+            exportLinkDisposable.set(context.engine.messages.exportMessageLink(peerId: messageIds[0].peerId, messageId: messageIds[0]).start(next: { valueLink in
                 if let valueLink = valueLink {
                     copyToClipboard(valueLink)
                 } else {
@@ -1158,7 +1158,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             
              if query.request.isEmpty {
                 if !multipleSelection && query.state == .Focus {
-                    return combineLatest(context.account.postbox.loadedPeerWithId(context.peerId), recentPeers(account: context.account) |> deliverOnPrepareQueue, recentlySearchedPeers(postbox: context.account.postbox) |> deliverOnPrepareQueue) |> map { user, rawTop, recent -> TableUpdateTransition in
+                    return combineLatest(context.account.postbox.loadedPeerWithId(context.peerId), context.engine.peers.recentPeers() |> deliverOnPrepareQueue, context.engine.peers.recentlySearchedPeers() |> deliverOnPrepareQueue) |> map { user, rawTop, recent -> TableUpdateTransition in
                         
                         var entries:[SelectablePeersEntry] = []
                         

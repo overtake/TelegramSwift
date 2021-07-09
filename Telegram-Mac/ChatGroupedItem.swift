@@ -473,7 +473,7 @@ class ChatGroupedItem: ChatRowItem {
         if let message = layout.messages.last, !message.flags.contains(.Failed), !message.flags.contains(.Unsent), chatInteraction.mode == .history {
             if let peer = message.peers[message.id.peerId] as? TelegramChannel {
                 items.append(ContextMenuItem(L10n.messageContextCopyMessageLink1, handler: {
-                    _ = showModalProgress(signal: exportMessageLink(account: context.account, peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
+                    _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
                         if let link = link {
                             copyToClipboard(link)
                         }

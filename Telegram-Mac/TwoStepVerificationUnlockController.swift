@@ -217,7 +217,7 @@ private let _id_enter_email_code = InputDataIdentifier("enter_email_code")
 private let _id_set_password = InputDataIdentifier("set_password")
 private let _id_input_enter_email_code = InputDataIdentifier("_id_input_enter_email_code")
 
-private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVerificationUnlockSettingsControllerState, forgotPassword:@escaping()->Void, abort:@escaping()-> Void) -> [InputDataEntry] {
+private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVerificationUnlockSettingsControllerState, forgotPassword:@escaping()->Void, cancelReset:@escaping() -> Void, abort:@escaping()-> Void) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     var sectionId:Int32 = 0
     
@@ -250,19 +250,48 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetPasswordHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     index += 1
                 }
-            case let .set(hint, _, _, _):
+            case let .set(hint, hasRecoveryEmail, _, pendingResetTimestamp):
                 entries.append(.input(sectionId: sectionId, index: index, value: .string(state.passwordText), error: state.errors[_id_input_enter_pwd], identifier: _id_input_enter_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
                 index += 1
-                if hint.isEmpty {
-                    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
-                        forgotPassword()
-                    }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                if let timestamp = pendingResetTimestamp {
+                    
+                    if timestamp.isFuture {
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n" + L10n.twoStepAuthResetPending(autoremoveLocalized(Int(timestamp - Int32(Date().timeIntervalSince1970)))) + "\n[" + L10n.twoStepAuthCancelReset + "](reset)", linkHandler: { link in
+                            confirm(for: mainWindow, header: L10n.twoStepAuthCancelResetConfirm, information: L10n.twoStepAuthCancelResetText, okTitle: L10n.alertYes, cancelTitle: L10n.alertNO, successHandler: { _ in
+                                cancelReset()
+                            })
+                        }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                    } else {
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n" + "[" + L10n.twoStepAuthReset + "](reset)", linkHandler: { link in
+                            forgotPassword()
+                        }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                    }
+                    index += 1
+                    
                 } else {
-                    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHint(hint) + "\n\n" + L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
-                         forgotPassword()
-                    }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                    
+                    let forgot:()->Void = {
+                        if !hasRecoveryEmail {
+                            confirm(for: mainWindow, header: L10n.twoStepAuthErrorHaventEmailResetHeader, information: L10n.twoStepAuthErrorHaventEmail, okTitle: L10n.twoStepAuthErrorHaventEmailReset, successHandler: { _ in
+                                forgotPassword()
+                            })
+                        } else {
+                            forgotPassword()
+                        }
+                    }
+                    
+                    if hint.isEmpty {
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
+                            forgot()
+                        }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                    } else {
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHint(hint) + "\n\n" + L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
+                            forgot()
+                        }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                    }
+                    index += 1
                 }
-                index += 1
+               
             }
         } else {
             return [.loading]
@@ -336,7 +365,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
     
     switch mode {
     case .access:
-        actionsDisposable.add((twoStepVerificationConfiguration(account: context.account) |> map { TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)) } |> deliverOnMainQueue).start(next: { data in
+        actionsDisposable.add((context.engine.auth.twoStepVerificationConfiguration() |> map { TwoStepVerificationUnlockSettingsControllerData.access(configuration: TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)) } |> deliverOnMainQueue).start(next: { data in
             updateState {
                 $0.withUpdatedControllerData(data)
             }
@@ -374,7 +403,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                     context.hasPassportSettings.set(.single(false))
                     
                     if disablePassword {
-                        let resetPassword = updateTwoStepVerificationPassword(network: context.account.network, currentPassword: password, updatedPassword: .none) |> deliverOnMainQueue
+                        let resetPassword = context.engine.auth.updateTwoStepVerificationPassword(currentPassword: password, updatedPassword: .none) |> deliverOnMainQueue
                         
                         setupDisposable.set(resetPassword.start(next: { value in
                             updateState {
@@ -424,7 +453,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                     return state
                 }
                 if let code = code {
-                    setupDisposable.set((confirmTwoStepRecoveryEmail(network: context.account.network, code: code)
+                    setupDisposable.set((context.engine.auth.confirmTwoStepRecoveryEmail(code: code)
                         |> deliverOnMainQueue).start(error: { error in
                             updateState { state in
                                 return state.withUpdatedChecking(false)
@@ -485,9 +514,9 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
             
             return .fail(.doSomething(next: { f in
                 
-                checkDisposable.set((requestTwoStepVerifiationSettings(network: context.account.network, password: password)
+                checkDisposable.set((context.engine.auth.requestTwoStepVerifiationSettings(password: password)
                     |> mapToSignal { settings -> Signal<(TwoStepVerificationSettings, TwoStepVerificationPendingEmail?), AuthorizationPasswordVerificationError> in
-                        return twoStepVerificationConfiguration(account: context.account)
+                        return context.engine.auth.twoStepVerificationConfiguration()
                             |> mapError { _ -> AuthorizationPasswordVerificationError in
                                 return .generic
                             }
@@ -627,6 +656,20 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
         return .none
     }
     
+    let cancelReset: () -> Void = {
+        let _ = (context.engine.auth.declineTwoStepPasswordReset()
+            |> deliverOnMainQueue).start(completed: {
+                
+                _ = showModalProgress(signal: context.engine.auth.twoStepVerificationConfiguration(), for: context.window).start(next: { configuration in
+                    updateState {
+                        $0.withUpdatedControllerData(.access(configuration: .init(configuration: configuration, password: nil)))
+                    }
+                })
+
+        })
+    }
+    
+
     let forgotPassword:() -> Void = {
         
         let data = stateValue.with {$0.data}
@@ -634,13 +677,13 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
         case let .access(configuration):
             if let configuration = configuration {
                 switch configuration {
-                case let .set(_, hasRecoveryEmail, _, _):
+                case let .set(hint, hasRecoveryEmail, hasSecureValues, _):
                     if hasRecoveryEmail {
                         updateState { state in
                             return state.withUpdatedChecking(true)
                         }
                         
-                        setupResultDisposable.set((requestTwoStepVerificationPasswordRecoveryCode(network: context.account.network)
+                        setupResultDisposable.set((context.engine.auth.requestTwoStepVerificationPasswordRecoveryCode()
                             |> deliverOnMainQueue).start(next: { emailPattern in
                                 
                                 updateState { state in
@@ -658,10 +701,45 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                 alert(for: context.window, info: L10n.twoStepAuthAnError)
                             }))
                     } else {
-                        confirm(for: context.window, header: L10n.twoStepAuthErrorHaventEmailResetHeader, information: L10n.twoStepAuthErrorHaventEmail, okTitle: L10n.twoStepAuthErrorHaventEmailReset, successHandler: { _ in
-                            
-                        })
-                        // alert(for: context.window, info: L10n.twoStepAuthErrorHaventEmail)
+                        
+                        let reset:()->Void = {
+                            _ = showModalProgress(signal: context.engine.auth.requestTwoStepPasswordReset(), for: context.window).start(next: { result in
+                                switch result {
+                                case .done:
+                                    updateState {
+                                        $0.withUpdatedControllerData(.access(configuration: .notSet(pendingEmail: nil)))
+                                    }
+                                    confirm(for: context.window, header: L10n.twoStepAuthResetSuccessHeader, information: L10n.twoStepAuthResetSuccess, okTitle: L10n.alertYes, cancelTitle: L10n.alertNO, successHandler: { _ in
+                                        let controller = twoStepVerificationPasswordEntryController(context: context, mode: .setup, initialStage: nil, result: proccessEntryResult, presentController: presentController)
+                                        presentController((controller: controller, root: true, animated: true))
+                                    })
+                                case let .error(reason):
+                                    switch reason {
+                                    case let .limitExceeded(retryin):
+                                        if let retryin = retryin {
+                                            let formatter = DateFormatter()
+                                            formatter.dateStyle = .medium
+                                            formatter.timeStyle = .medium
+                                            formatter.timeZone = NSTimeZone.local
+                                            alert(for: context.window, info: L10n.twoStepAuthUnableToReset(formatter.string(from: Date.init(timeIntervalSince1970: TimeInterval(retryin)))))
+                                        } else {
+                                            alert(for: context.window, info: L10n.errorAnError)
+                                        }
+                                    default:
+                                        alert(for: context.window, info: L10n.errorAnError)
+                                    }
+                                case .declined:
+                                    break
+                                case let .waitingForReset(resetAtTimestamp):
+                                    updateState {
+                                        $0.withUpdatedControllerData(.access(configuration: .set(hint: hint, hasRecoveryEmail: hasRecoveryEmail, hasSecureValues: hasSecureValues, pendingResetTimestamp: resetAtTimestamp)))
+                                    }
+                                }
+                            })
+                        }
+                        
+                        reset()
+                        
                     }
                     
                 default:
@@ -677,7 +755,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
     
     let abort: () -> Void = {
         updateState { $0.withUpdatedChecking(true) }
-        let resetPassword = updateTwoStepVerificationPassword(network: context.account.network, currentPassword: nil, updatedPassword: .none) |> deliverOnMainQueue
+        let resetPassword = context.engine.auth.updateTwoStepVerificationPassword(currentPassword: nil, updatedPassword: .none) |> deliverOnMainQueue
         
         setupDisposable.set(resetPassword.start(next: { value in
             updateState { $0.withUpdatedChecking(false) }
@@ -687,8 +765,11 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
         }))
     }
     
-    let signal: Signal<[InputDataEntry], NoError> = statePromise.get() |> map { state -> [InputDataEntry] in
-        return twoStepVerificationUnlockSettingsControllerEntries(state: state, forgotPassword: forgotPassword, abort: abort)
+    let _repeat:Signal<Void, NoError> = (.single(Void()) |> then(.single(Void()) |> suspendAwareDelay(1, queue: Queue.concurrentDefaultQueue()))) |> restart
+
+    
+    let signal: Signal<[InputDataEntry], NoError> = combineLatest(statePromise.get(), _repeat) |> map { state, _ -> [InputDataEntry] in
+        return twoStepVerificationUnlockSettingsControllerEntries(state: state, forgotPassword: forgotPassword, cancelReset: cancelReset, abort: abort)
     }
     
     
@@ -894,7 +975,8 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
                 return $0.withUpdatedChecking(true)
             }
             
-            resetDisposable.set((recoverTwoStepVerificationPassword(network: context.account.network, code: code) |> deliverOnMainQueue).start(error: { error in
+            
+            resetDisposable.set((context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue).start(error: { error in
                 
                 let errorText: String
                 switch error {
@@ -902,7 +984,7 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
                     errorText = L10n.twoStepAuthGenericError
                 case .invalidCode:
                     errorText = L10n.twoStepAuthRecoveryCodeInvalid
-                case .codeExpired:
+                case .expired:
                     errorText = L10n.twoStepAuthRecoveryCodeExpired
                 case .limitExceeded:
                     errorText = L10n.twoStepAuthFloodError
@@ -1105,7 +1187,7 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                         currentPassword = current
                     }
 
-                    updatePasswordDisposable.set((updateTwoStepVerificationPassword(network: network, currentPassword: currentPassword, updatedPassword: .password(password: password, hint: hint, email: email)) |> deliverOnMainQueue).start(next: { update in
+                    updatePasswordDisposable.set((context.engine.auth.updateTwoStepVerificationPassword(currentPassword: currentPassword, updatedPassword: .password(password: password, hint: hint, email: email)) |> deliverOnMainQueue).start(next: { update in
                         updateState {
                             $0.withUpdatedUpdating(false)
                         }
@@ -1135,7 +1217,7 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                         
                     }))
                 case let .setupEmail(password, _):
-                    updatePasswordDisposable.set((updateTwoStepVerificationEmail(network: network, currentPassword: password, updatedEmail: email) |> deliverOnMainQueue).start(next: { update in
+                    updatePasswordDisposable.set((context.engine.auth.updateTwoStepVerificationEmail(currentPassword: password, updatedEmail: email) |> deliverOnMainQueue).start(next: { update in
                         updateState {
                             $0.withUpdatedUpdating(false)
                         }
@@ -1172,7 +1254,7 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                 updateState {
                     $0.withUpdatedUpdating(true)
                 }
-                updatePasswordDisposable.set((confirmTwoStepRecoveryEmail(network: network, code: code) |> deliverOnMainQueue).start(error: { error in
+                updatePasswordDisposable.set((context.engine.auth.confirmTwoStepRecoveryEmail(code: code) |> deliverOnMainQueue).start(error: { error in
                     updateState {
                         $0.withUpdatedUpdating(false)
                     }

@@ -55,8 +55,7 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
 //
 
             guard let strongSelf = self else {return}
-            
-            strongSelf.actionDisposable.set(showModalProgress(signal: requestChangeAccountPhoneNumberVerification(account: context.account, phoneNumber: phoneNumber) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak strongSelf] data in
+            strongSelf.actionDisposable.set(showModalProgress(signal: context.engine.accountData.requestChangeAccountPhoneNumberVerification(phoneNumber: phoneNumber) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak strongSelf] data in
                 
                 strongSelf?.navigationController?.push(PhoneNumberInputCodeController(context, data: data, formattedNumber: formatPhoneNumber(phoneNumber)))
                 

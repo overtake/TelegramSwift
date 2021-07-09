@@ -209,7 +209,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                                 guard let upgradedPeerId = upgradedPeerId else {
                                     return .single(nil)
                                 }
-                                return updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: upgradedPeerId, historyAvailableForNewMembers: value)
+                                return  context.engine.peers.updateChannelHistoryAvailabilitySettingsInteractively(peerId: upgradedPeerId, historyAvailableForNewMembers: value)
                                     |> mapError { _ in
                                         return ConvertGroupToSupergroupError.generic
                                     }
@@ -232,14 +232,14 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                         })
                         
                     } else {
-                        let signal: Signal<PeerId?, NoError> = updateChannelHistoryAvailabilitySettingsInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
+                        let signal: Signal<PeerId?, NoError> = context.engine.peers.updateChannelHistoryAvailabilitySettingsInteractively(peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
                         
                         if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId, let peer = peer as? TelegramChannel {
                             confirm(for: context.window, information: L10n.preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
                                 if peer.adminRights == nil || !peer.hasPermission(.pinMessages) {
                                     alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
                                 } else {
-                                    let signal = updateGroupDiscussionForChannel(network: context.account.network, postbox: context.account.postbox, channelId: linkedDiscussionPeerId, groupId: nil)
+                                    let signal =  context.engine.peers.updateGroupDiscussionForChannel(channelId: linkedDiscussionPeerId, groupId: nil)
                                         |> `catch` { _ in return .complete() }
                                         |> map { _ -> PeerId? in return nil }
                                         |> then(signal)

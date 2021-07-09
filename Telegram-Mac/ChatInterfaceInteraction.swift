@@ -262,7 +262,7 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func startBot(_ payload:String? = nil) {
-        startBotDisposable.set((requestStartBot(account: context.account, botPeerId: self.peerId, payload: payload) |> deliverOnMainQueue).start(completed: { [weak self] in
+        startBotDisposable.set((context.engine.messages.requestStartBot(botPeerId: self.peerId, payload: payload) |> deliverOnMainQueue).start(completed: { [weak self] in
             self?.update({$0.updatedInitialAction(nil)})
         }))
     }

@@ -1529,6 +1529,27 @@ class TelegramPresentationTheme : PresentationTheme {
     
     
     
+    private var _emptyChatNavigationPrev: CGImage?
+    private var _emptyChatNavigationNext: CGImage?
+    var emptyChatNavigationPrev: CGImage {
+        if let icon = _emptyChatNavigationPrev {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_GeneralNext")!.precomposed(self.chatServiceItemTextColor, flipHorizontal: true)
+            _emptyChatNavigationPrev = new
+            return new
+        }
+    }
+    var emptyChatNavigationNext: CGImage {
+        if let icon = _emptyChatNavigationNext {
+            return icon
+        } else {
+            let new = NSImage(named: "Icon_GeneralNext")!.precomposed(self.chatServiceItemTextColor)
+            _emptyChatNavigationNext = new
+            return new
+        }
+    }
+    
     private var _chatReadMarkServiceOverlayBubble1: CGImage?
     private var _chatReadMarkServiceOverlayBubble2: CGImage?
     var chatReadMarkServiceOverlayBubble1: CGImage {
@@ -2416,8 +2437,22 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                audioplayer_volume: { NSImage(named: "Icon_InlinePlayer_VolumeOn")!.precomposed(palette.accent) },
                                                audioplayer_volume_off: { NSImage(named: "Icon_InlinePlayer_VolumeOff")!.precomposed(palette.grayIcon) },
                                                audioplayer_speed_x1: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.grayIcon) },
-                                               audioplayer_speed_x2: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.accentIcon) }
-
+                                               audioplayer_speed_x2: { NSImage(named: "Icon_InlinePlayer_x2")!.precomposed(palette.accentIcon) },
+                                               chat_info_voice_chat: { NSImage(named: "Icon_VoiceChat_Title")!.precomposed(palette.accentIcon) },
+                                               chat_info_create_group: { NSImage(named: "Icon_NewGroup")!.precomposed(palette.accentIcon) },
+                                               empty_chat_system: { NSImage(named: "Icon_EmptyChat_System")!.precomposed(palette.text) },
+                                               empty_chat_dark: { NSImage(named: "Icon_EmptyChat_Dark")!.precomposed(palette.text) },
+                                               empty_chat_light: { NSImage(named: "Icon_EmptyChat_Light")!.precomposed(palette.text) },
+                                               empty_chat_system_active: { NSImage(named: "Icon_EmptyChat_System")!.precomposed(palette.accent) },
+                                               empty_chat_dark_active: { NSImage(named: "Icon_EmptyChat_Dark")!.precomposed(palette.accent) },
+                                               empty_chat_light_active: { NSImage(named: "Icon_EmptyChat_Light")!.precomposed(palette.accent) },
+                                               empty_chat_storage_clear: { NSImage(named: "Icon_EmptyChat_Storage_Clear")!.precomposed(palette.text) },
+                                               empty_chat_storage_low: { NSImage(named: "Icon_EmptyChat_Storage_Low")!.precomposed(palette.text) },
+                                               empty_chat_storage_medium: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.text) },
+                                               empty_chat_storage_high: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.text) },
+                                               empty_chat_storage_low_active: { NSImage(named: "Icon_EmptyChat_Storage_Low")!.precomposed(palette.accent) },
+                                               empty_chat_storage_medium_active: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.accent) },
+                                               empty_chat_storage_high_active: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.accent) }
     )
 
 }

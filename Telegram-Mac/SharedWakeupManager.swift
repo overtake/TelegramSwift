@@ -116,7 +116,13 @@ class SharedWakeupManager {
         
         for account in accounts {
             if !ringingStatesActivated.contains(account.id) {
-                _ = (account.callSessionManager.ringingStates() |> deliverOnMainQueue).start(next: { states in
+                
+                let combine = combineLatest(queue: .mainQueue(), account.stateManager.isUpdating, account.callSessionManager.ringingStates())
+                
+                _ = combine.start(next: { isUpdating, states in
+                    if isUpdating {
+                        return
+                    }
                     if let state = states.first {
                         if self.sharedContext.hasActiveCall {
                             account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))

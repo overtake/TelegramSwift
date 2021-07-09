@@ -280,3 +280,36 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
 }
 
 
+
+
+
+func themeInstallSource(context: AccountContext, source: ThemeSource) -> Signal<InstallThemeSource, NoError> {
+    
+    switch source {
+    case let .cloud(cloud):
+        if let file = cloud.file {
+            return cloudThemeData(context: context, theme: cloud, file: file) |> map { data in
+                return .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2))
+            }
+        } else {
+            return .single(.cloud(cloud, nil))
+        }
+    case let .local(palette, cloud):
+        let settings = themeSettingsView(accountManager: context.sharedContext.accountManager) |> take(1)
+        
+        return settings |> map { settings -> (Wallpaper, ColorPalette) in
+            let settings = settings
+                .withUpdatedPalette(palette)
+                .withUpdatedCloudTheme(cloud)
+                .installDefaultAccent()
+                .installDefaultWallpaper()
+            return (settings.wallpaper.wallpaper, settings.palette)
+        } |> map { wallpaper, palette in
+            if let cloud = cloud {
+                return .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper))
+            } else {
+                return .local(palette)
+            }
+        }
+    }
+}

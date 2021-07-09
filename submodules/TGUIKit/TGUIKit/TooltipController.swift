@@ -97,7 +97,7 @@ private final class TooltipView: View {
             self.button = nil
         }
         
-        let layout = TextViewLayout(text, alignment: .left, alwaysStaticItems: true)
+        let layout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         layout.measure(width: maxWidth - (self.button != nil ? self.button!.frame.width : 0))
         textView.update(layout)
         textContainer.change(size: NSMakeSize(max(40, layout.layoutSize.width + 18 + (self.button != nil ? self.button!.frame.width : 0)), max(layout.layoutSize.height + 8, button != nil ? 40 : 0)), animated: animated)

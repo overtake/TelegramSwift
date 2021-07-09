@@ -909,7 +909,7 @@ class ChatListRowItem: TableRowItem {
     
     static func toggleMuted(context: AccountContext, peerId: PeerId, isMuted: Bool) {
         if isMuted {
-            _ = togglePeerMuted(account: context.account, peerId: peerId).start()
+            _ = context.engine.peers.togglePeerMuted(peerId: peerId).start()
         } else {
             var options:[ModalOptionSet] = []
             
@@ -927,7 +927,7 @@ class ChatListRowItem: TableRowItem {
                 for (i, option) in result.enumerated() {
                     inner: switch option {
                     case .selected:
-                        _ = updatePeerMuteSetting(account: context.account, peerId: peerId, muteInterval: intervals[i]).start()
+                        _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: intervals[i]).start()
                         break
                     default:
                         break inner

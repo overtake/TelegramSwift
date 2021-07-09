@@ -1017,15 +1017,28 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
         }
     }
     
+    var timeInCondition = Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
+    
     if let peer = messageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
-            return (peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages))
+            if message.isScheduledMessage {
+                return peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
+            }
+            if peer.hasPermission(.pinMessages) {
+                timeInCondition = true
+            }
+            if peer.hasPermission(.editAllMessages) {
+                return timeInCondition
+            } else if peer.hasPermission(.sendMessages) {
+                return timeInCondition && message.author?.id == chatInteraction.context.peerId
+            }
+            return false
         } else if case .group = peer.info {
             if !message.flags.contains(.Incoming) {
                 if peer.hasPermission(.pinMessages) {
                     return true
                 }
-                return Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
+                return timeInCondition
             }
         }
     }
@@ -2358,7 +2371,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         
         return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> mapToSignal { result, location -> Signal<Bool, NoError> in
             
-            context.chatUndoManager.removePeerChat(account: context.account, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
+            context.chatUndoManager.removePeerChat(engine: context.engine, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
             if peer.isBot && result == .thrid {
                 _ = context.blockedPeersContext.add(peerId: peerId).start()
             }

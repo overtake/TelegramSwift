@@ -306,9 +306,9 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         let viewValue:Atomic<PeerView?> = Atomic(value: nil)
         
         let restrict:(PeerId, Bool) -> Void = { [weak self] memberId, unban in
-            let signal = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: unban ? nil : TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)) |> ignoreValues
+            let signal = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: unban ? nil : TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)) |> ignoreValues
             
-            self?.updatePeerDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(error: { _ in
+            self?.updatePeerDisposable.set(showModalProgress(signal: signal, for: context.window).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }
@@ -359,7 +359,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                 return $0.withUpdatedRemovingPeerId(memberId)
             }
             
-            let signal = context.peerChannelMemberCategoriesContextsManager.addMember(account: context.account, peerId: peerId, memberId: memberId) |> ignoreValues
+            let signal = context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peerId, memberId: memberId) |> ignoreValues
             
             self?.updatePeerDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(error: { _ in
                 updateState {
@@ -375,7 +375,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         let peerView = context.account.viewTracker.peerView(peerId)
         
         
-        var (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+        var (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(peerId: peerId, updated: { listState in
             if case .loading(true) = listState.loadingState, listState.list.isEmpty {
                 blacklistPromise.set(.single(nil))
             } else {
@@ -397,7 +397,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
             }
             strongSelf.inSearch = !strongSelf.inSearch
             
-            (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+            (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(peerId: peerId, updated: { listState in
                 if case .loading(true) = listState.loadingState, listState.list.isEmpty {
                     blacklistPromise.set(.single(nil))
                 } else {
@@ -408,12 +408,12 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
             
         }, updateState: { state in
             if !state.request.isEmpty {
-                (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.restrictedAndBanned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: peerId, searchQuery: state.request, updated: { listState in
+                (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.restrictedAndBanned(peerId: peerId, searchQuery: state.request, updated: { listState in
                     blacklistPromise.set(.single(listState.list))
                 })
                 listDisposable.set(disposable)
             } else {
-                (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { listState in
+                (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.banned(peerId: peerId, updated: { listState in
                     if case .loading(true) = listState.loadingState, listState.list.isEmpty {
                         blacklistPromise.set(.single(nil))
                     } else {

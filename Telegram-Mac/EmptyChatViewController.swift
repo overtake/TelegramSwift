@@ -10,17 +10,32 @@ import Cocoa
 import TGUIKit
 import TelegramCore
 import SyncCore
+import SwiftSignalKit
+
+
 
 class EmptyChatView : View {
     private let containerView: View = View()
     private let label:TextView = TextView()
     private let imageView:ImageView = ImageView()
+    
+    
+    var cards: NSView? {
+        didSet {
+            if let cards = cards {
+                addSubview(cards)
+            } else if let oldView = oldValue {
+                oldView.removeFromSuperview()
+            }
+        }
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.layer = CAGradientLayer()
         self.layer?.disableActions()
         
-        addSubview(containerView)
+       // addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(label)
         label.userInteractionEnabled = false
@@ -32,7 +47,6 @@ class EmptyChatView : View {
         super.updateLocalizationAndTheme(theme: theme)
         containerView.backgroundColor = theme.colors.background
         let theme = (theme as! TelegramPresentationTheme)
-        //theme.chatServiceItemColor
         
         self.background = .clear
         imageView.image = theme.icons.chatEmpty
@@ -62,6 +76,9 @@ class EmptyChatView : View {
         label.layout?.measure(width: frame.size.width - 20)
         label.update(label.layout)
         
+        cards?.frame = NSMakeRect(0, 0, frame.width, 370)
+        cards?.center()
+        
         if imageView.isHidden {
             
             label.setFrameSize(label.frame.width + 16, label.frame.height + 6)
@@ -78,16 +95,16 @@ class EmptyChatView : View {
             label.centerX(y: imageView.frame.maxY + 30)
             containerView.layer?.cornerRadius = 0
         }
-        
-        
-       
     }
 }
 
 class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     
     
+    
+    private let cards: ExpCardController
     override init(_ context: AccountContext) {
+        cards = ExpCardController(context)
         super.init(context)
         self.bar = NavigationBarStyle(height:0)
     }
@@ -137,8 +154,23 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         context.globalPeerHandler.set(.single(nil))
     }
     
+    override func backKeyAction() -> KeyHandlerResult {
+        return cards.backKeyAction()
+    }
+    override func nextKeyAction() -> KeyHandlerResult {
+        return cards.nextKeyAction()
+    }
+    
+    private let disposable = MetaDisposable()
+    
+    deinit {
+        disposable.dispose()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.readyOnce()
+        
+        self.ready.set(cards.ready.get())
+        self.genericView.cards = cards.view
     }
 }

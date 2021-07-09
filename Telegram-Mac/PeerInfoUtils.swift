@@ -47,6 +47,7 @@ extension Peer {
                 canEditMembers = true
                 canAddMembers = true
                 canReport = false
+                canMakeVoiceChat = true
             case .member:
                 break
             }

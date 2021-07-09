@@ -434,9 +434,9 @@
                 if let cachedData = peerView.cachedData as? CachedChannelData {
                     let onlineMemberCount:Signal<Int32?, NoError>
                     if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(engine: context.engine, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                     } else {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                     }
                     
                     self.onlineMemberCountDisposable.set(onlineMemberCount.start(next: { [weak self] count in
@@ -888,13 +888,18 @@
         
         interactions.deleteMessages = { [weak self] messageIds in
             if let strongSelf = self, let peer = strongSelf.peer {
-                let channelAdmin:Signal<[ChannelParticipant]?, NoError> = peer.isSupergroup ? channelAdmins(account: context.account, peerId: strongSelf.interactions.peerId)
-                    |> `catch` {_ in .complete()} |> map { admins -> [ChannelParticipant]? in
-                        return admins.map({$0.participant})
-                    } : .single(nil)
+                
+                let adminsPromise = ValuePromise<[RenderedChannelParticipant]>([])
+                _ = context.peerChannelMemberCategoriesContextsManager.admins(peerId: peerId, updated: { membersState in
+                    if case .loading = membersState.loadingState, membersState.list.isEmpty {
+                        adminsPromise.set([])
+                    } else {
+                        adminsPromise.set(membersState.list)
+                    }
+                })
                 
                 
-                self?.messagesActionDisposable.set(combineLatest(context.account.postbox.messagesAtIds(messageIds) |> deliverOnMainQueue, channelAdmin |> deliverOnMainQueue).start( next:{ [weak strongSelf] messages, admins in
+                self?.messagesActionDisposable.set(combineLatest(queue: .mainQueue(), context.account.postbox.messagesAtIds(messageIds), adminsPromise.get()).start( next:{ [weak strongSelf] messages, admins in
                     if let strongSelf = strongSelf {
                         var canDelete:Bool = true
                         var canDeleteForEveryone = true
@@ -936,7 +941,7 @@
                         let context = strongSelf.context
                         
                         if canDelete {
-                            let isAdmin = admins?.filter({$0.peerId == messages[0].author?.id}).first != nil
+                            let isAdmin = admins.filter({$0.peer.id == messages[0].author?.id}).first != nil
                             if mustManageDeleteMessages(messages, for: peer, account: strongSelf.context.account), let memberId = messages[0].author?.id, !isAdmin {
                                 
                                 let options:[ModalOptionSet] = [ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true),
@@ -950,10 +955,10 @@
                                         signals.append(context.engine.messages.deleteMessagesInteractively(messageIds: messages.map {$0.id}, type: .forEveryone))
                                     }
                                     if result[1] == .selected {
-                                        signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peer.id, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
+                                        signals.append(context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peer.id, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max)))
                                     }
                                     if result[2] == .selected {
-                                        signals.append(reportPeerMessages(account: context.account, messageIds: messageIds, reason: .spam, message: ""))
+                                        signals.append(context.engine.peers.reportPeerMessages(messageIds: messageIds, reason: .spam, message: ""))
                                     }
                                     if result[3] == .selected {
                                         signals.append(context.engine.messages.clearAuthorHistory(peerId: peer.id, memberId: memberId))

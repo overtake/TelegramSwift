@@ -702,14 +702,14 @@ class ChannelAdminController: TableModalViewController {
                 return current.withUpdatedUpdating(true)
             }
             if peerId.namespace == Namespaces.Peer.CloudGroup {
-                updateRightsDisposable.set((removeGroupAdmin(account: context.account, peerId: peerId, adminId: adminId)
+                updateRightsDisposable.set((context.engine.peers.removeGroupAdmin(peerId: peerId, adminId: adminId)
                     |> deliverOnMainQueue).start(error: { _ in
                     }, completed: {
                         updated(nil)
                         dismissImpl()
                     }))
             } else {
-                updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: nil, rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
+                updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: nil, rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
                     
                 }, completed: {
                     updated(nil)
@@ -733,7 +733,7 @@ class ChannelAdminController: TableModalViewController {
                 
                 let checkPassword:(PeerId)->Void = { peerId in
                     showModal(with: InputPasswordController(context: context, title: L10n.channelAdminTransferOwnershipPasswordTitle, desc: L10n.channelAdminTransferOwnershipPasswordDesc, checker: { pwd in
-                        return context.peerChannelMemberCategoriesContextsManager.transferOwnership(account: context.account, peerId: peerId, memberId: admin.id, password: pwd)
+                        return context.peerChannelMemberCategoriesContextsManager.transferOwnership(peerId: peerId, memberId: admin.id, password: pwd)
                             |> deliverOnMainQueue
                             |> ignoreValues
                             |> `catch` { error -> Signal<Never, InputPasswordValueError> in
@@ -753,7 +753,7 @@ class ChannelAdminController: TableModalViewController {
                 }
                 
                 let transfer:(PeerId, Bool, Bool)->Void = { _peerId, isGroup, convert in
-                    actionsDisposable.add(showModalProgress(signal: checkOwnershipTranfserAvailability(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, memberId: adminId), for: context.window).start(error: { error in
+                    actionsDisposable.add(showModalProgress(signal: context.engine.peers.checkOwnershipTranfserAvailability(memberId: adminId), for: context.window).start(error: { error in
                         let errorText: String?
                         var install2Fa = false
                         switch error {
@@ -944,7 +944,7 @@ class ChannelAdminController: TableModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { error in
+                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { error in
                                 
                             }, completed: {
                                 updated(TelegramChatAdminRights(rights: updateFlags))
@@ -984,7 +984,7 @@ class ChannelAdminController: TableModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
+                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
                                 
                             }, completed: {
                                 updated(TelegramChatAdminRights(rights: updateFlags))
@@ -1011,7 +1011,7 @@ class ChannelAdminController: TableModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((addGroupAdmin(account: context.account, peerId: peerId, adminId: adminId)
+                            updateRightsDisposable.set((context.engine.peers.addGroupAdmin(peerId: peerId, adminId: adminId)
                                 |> deliverOnMainQueue).start(completed: {
                                     dismissImpl()
                                 }))
@@ -1036,7 +1036,7 @@ class ChannelAdminController: TableModalViewController {
                                         return .single(nil)
                                     }
                                     
-                                    return  context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(account: context.account, peerId: upgradedPeerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank })
+                                    return  context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: upgradedPeerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank })
                                         |> mapToSignal { _ -> Signal<PeerId?, NoError> in
                                             return .complete()
                                         }
@@ -1051,8 +1051,7 @@ class ChannelAdminController: TableModalViewController {
                             
                             updateRightsDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { upgradedPeerId in
                                 if let upgradedPeerId = upgradedPeerId {
-                                    let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: upgradedPeerId, updated: { state in
-                                       
+                                    let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(peerId: upgradedPeerId, updated: { state in
                                         if case .ready = state.loadingState {
                                             upgradedToSupergroup(upgradedPeerId, {
                                                 

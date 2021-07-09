@@ -501,7 +501,7 @@ class SharedAccountContext {
             #if !SHARE
             spotlights.removeAll()
             for info in accounts {
-                spotlights[info.account.id] = SpotlightContext(account: info.account)
+                spotlights[info.account.id] = SpotlightContext(engine: TelegramEngine(account: info.account))
             }
             #endif
         })

@@ -524,7 +524,7 @@ final class ChannelPermissionsController : TableViewController {
                                 guard let upgradedPeerId = upgradedPeerId else {
                                     return .single(nil)
                                 }
-                                return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: upgradedPeerId, memberId: memberId, bannedRights: updatedRights)
+                                return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: upgradedPeerId, memberId: memberId, bannedRights: updatedRights)
                                     |> castError(ConvertGroupToSupergroupError.self)
                                     |> mapToSignal { _ -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return .complete()
@@ -533,7 +533,7 @@ final class ChannelPermissionsController : TableViewController {
                             }
                             |> deliverOnMainQueue
                     } else {
-                        signal = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: updatedRights)
+                        signal = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: updatedRights)
                             |> map {_ in return nil}
                             |> castError(ConvertGroupToSupergroupError.self)
                             |> deliverOnMainQueue
@@ -562,7 +562,7 @@ final class ChannelPermissionsController : TableViewController {
         }
         
         let peersPromise = Promise<[RenderedChannelParticipant]?>(nil)
-        let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.restricted(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { state in
+        let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.restricted(peerId: peerId, updated: { state in
             peersPromise.set(.single(state.list))
         })
         actionsDisposable.add(disposable)
@@ -604,7 +604,7 @@ final class ChannelPermissionsController : TableViewController {
                         }
                         let state = stateValue.with { $0 }
                         if let modifiedRightsFlags = state.modifiedRightsFlags {
-                            updateDefaultRightsDisposable.set((updateDefaultChannelMemberBannedRights(account: context.account, peerId: peerId, rights: TelegramChatBannedRights(flags: completeRights(modifiedRightsFlags), untilDate: Int32.max))
+                            updateDefaultRightsDisposable.set((context.engine.peers.updateDefaultChannelMemberBannedRights(peerId: peerId, rights: TelegramChatBannedRights(flags: completeRights(modifiedRightsFlags), untilDate: Int32.max))
                                 |> deliverOnMainQueue).start())
                         }
                     } else if let group = view.peers[peerId] as? TelegramGroup, let _ = view.cachedData as? CachedGroupData {
@@ -632,9 +632,10 @@ final class ChannelPermissionsController : TableViewController {
                             state.modifiedRightsFlags = effectiveRightsFlags
                             return state
                         }
+                        
                         let state = stateValue.with { $0 }
                         if let modifiedRightsFlags = state.modifiedRightsFlags {
-                            updateDefaultRightsDisposable.set((updateDefaultChannelMemberBannedRights(account: context.account, peerId: peerId, rights: TelegramChatBannedRights(flags: completeRights(modifiedRightsFlags), untilDate: Int32.max))
+                            updateDefaultRightsDisposable.set((context.engine.peers.updateDefaultChannelMemberBannedRights(peerId: peerId, rights: TelegramChatBannedRights(flags: completeRights(modifiedRightsFlags), untilDate: Int32.max))
                                 |> deliverOnMainQueue).start())
                         }
                     }
@@ -690,7 +691,7 @@ final class ChannelPermissionsController : TableViewController {
                 return state
             }
             
-            removePeerDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: nil)
+            removePeerDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: nil)
                 |> deliverOnMainQueue).start(error: { _ in
                     updateState { state in
                         var state = state
@@ -723,7 +724,7 @@ final class ChannelPermissionsController : TableViewController {
                         guard let upgradedPeerId = upgradedPeerId else {
                             return .fail(.generic)
                         }
-                        return updateChannelSlowModeInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: upgradedPeerId, timeout: value)
+                        return context.engine.peers.updateChannelSlowModeInteractively(peerId: upgradedPeerId, timeout: value)
                             |> map { _ in return Optional(upgradedPeerId) }
                             |> mapError { _ in
                                 return ConvertGroupToSupergroupError.generic
@@ -731,7 +732,7 @@ final class ChannelPermissionsController : TableViewController {
                     }
                 
             } else {
-                signal = updateChannelSlowModeInteractively(postbox: context.account.postbox, network: context.account.network, accountStateManager: context.account.stateManager, peerId: peerId, timeout: value)
+                signal = context.engine.peers.updateChannelSlowModeInteractively(peerId: peerId, timeout: value)
                     |> mapError { _ in return ConvertGroupToSupergroupError.generic }
                     |> map { _ in return nil }
             }

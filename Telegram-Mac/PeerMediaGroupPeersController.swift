@@ -445,7 +445,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
     }
 
     if peerId.namespace == Namespaces.Peer.CloudChannel {
-        let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.account.peerId, peerId: peerId, updated: { state in
+        let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
             channelMembersPromise.set(.single(state.list))
         })
         loadMoreControl = control
@@ -510,7 +510,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
                     }
                     
                     if peerId.namespace == Namespaces.Peer.CloudChannel {
-                        return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max))
+                        return context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: Int32.max))
                             |> afterDisposed {
                                 updateState { state in
                                     var state = state
@@ -520,7 +520,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
                         }
                     }
                     
-                    return removePeerMember(account: context.account, peerId: peerId, memberId: memberId)
+                    return context.engine.peers.removePeerMember(peerId: peerId, memberId: memberId)
                         |> deliverOnMainQueue
                         |> afterDisposed {
                             updateState { state in
@@ -545,7 +545,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peerId, initialParticipant: participant, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
     }, restrict: { participant in
         showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
-            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(account: context.account, peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
+            _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
         }), for: context.window)
     }, chatPreview: { peerId in
         showModal(with: ChatModalPreviewController(location: .peer(peerId), context: context), for: context.window)

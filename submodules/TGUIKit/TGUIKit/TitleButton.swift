@@ -176,7 +176,8 @@ public class TitleButton: ImageButton {
     public override func updateLayout() {
         super.updateLayout()
         
-        let textFocus:NSRect = focus(self.text.frame.size)
+        var textFocus:NSRect = focus(self.text.frame.size)
+        textFocus.origin.y -= 1
         if let _ = imageView.image {
             if let string = self.text.string as? String, !string.isEmpty {
                 let imageFocus:NSRect = focus(self.imageView.frame.size)

@@ -177,7 +177,7 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         let messageId = self.messageId
         
         showModal(with: ShareModalController(ShareCallbackObject(context, callback: { peerIds in
-            let signals = peerIds.map { forwardGameWithScore(account: context.account, messageId: messageId, to: $0) }
+            let signals = peerIds.map { context.engine.messages.forwardGameWithScore(messageId: messageId, to: $0) }
             return combineLatest(signals) |> map { _ in return } |> ignoreValues
         })), for: context.window)
     }

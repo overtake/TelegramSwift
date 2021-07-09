@@ -15,7 +15,7 @@ private let cacheQueue = Queue(name: "org.telegram.clearCacheQueue")
 private let cleanQueue = Queue(name: "org.telegram.cleanupQueue")
 
 
-private func scanFiles(at path: String, anyway: ((String, Int)) -> Void) {
+func scanFiles(at path: String, anyway: ((String, Int)) -> Void) {
     guard let enumerator = FileManager.default.enumerator(at: URL(fileURLWithPath: path), includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey], options: [.skipsSubdirectoryDescendants], errorHandler: nil) else {
         return
     }

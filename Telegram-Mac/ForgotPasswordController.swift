@@ -59,7 +59,7 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     return entries
 }
 
-func ForgotUnauthorizedPasswordController(accountManager: AccountManager, account: UnauthorizedAccount, emailPattern: String) -> InputDataModalController {
+func ForgotUnauthorizedPasswordController(accountManager: AccountManager, engine: TelegramEngineUnauthorized, emailPattern: String) -> InputDataModalController {
     
     
     let initialState = ForgotPasswordState(code: "", error: nil, checking: false)
@@ -85,7 +85,7 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager, accoun
                 }
                 
                 if code.length == 6 {
-                    disposable.set(showModalProgress(signal: performPasswordRecovery(accountManager: accountManager, account: account, code: code, syncContacts: false, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {
+                    disposable.set(showModalProgress(signal: engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: { _ in 
                         
                         updateState { state in
                             return state.withUpdatedChecking(false)

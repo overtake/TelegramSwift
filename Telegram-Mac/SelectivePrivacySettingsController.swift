@@ -644,10 +644,10 @@ class SelectivePrivacySettingsController: TableViewController {
                 
                 var updatePhoneDiscoverySignal: Signal<Void, NoError> = Signal.complete()
                 if let phoneDiscoveryEnabled = phoneDiscoveryEnabled {
-                    updatePhoneDiscoverySignal = updatePhoneNumberDiscovery(account: context.account, value: phoneDiscoveryEnabled)
+                    updatePhoneDiscoverySignal = context.engine.privacy.updatePhoneNumberDiscovery(value: phoneDiscoveryEnabled)
                 }
                 
-                let basic = updateSelectiveAccountPrivacySettings(account: context.account, type: type, settings: settings)
+                let basic = context.engine.privacy.updateSelectiveAccountPrivacySettings(type: type, settings: settings)
                 
 
                 updateSettingsDisposable.set(combineLatest(queue: .mainQueue(), updatePhoneDiscoverySignal, basic).start(completed: {

@@ -1291,7 +1291,7 @@ class APChatVoiceController : APChatController {
 
     override func play(with item: APSongItem) {
         super.play(with: item)
-        markAsConsumedDisposable.set(markMessageContentAsConsumedInteractively(postbox: account.postbox, messageId: item.entry.index.id).start())
+        markAsConsumedDisposable.set(context.engine.messages.markMessageContentAsConsumedInteractively(messageId: item.entry.index.id).start())
     }
 
     deinit {

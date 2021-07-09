@@ -477,7 +477,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
         case .emptySearch:
             return SearchEmptyRowItem(initialSize, stableId: ChatListSearchEntryStableId.emptySearch, border: [.Right])
         case let .topPeers(_, articlesEnabled, unreadArticles, selfPeer, peers, unread, online):
-            return PopularPeersRowItem(initialSize, stableId: entry.stableId, account: arguments.context.account, selfPeer: selfPeer, articlesEnabled: articlesEnabled, unreadArticles: unreadArticles, peers: peers, unread: unread, online: online, action: { type in
+            return PopularPeersRowItem(initialSize, stableId: entry.stableId, context: arguments.context, selfPeer: selfPeer, articlesEnabled: articlesEnabled, unreadArticles: unreadArticles, peers: peers, unread: unread, online: online, action: { type in
                 arguments.openTopPeer(type)
             })
         }
@@ -857,7 +857,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 
             } else {
 
-                let recently = recentlySearchedPeers(postbox: context.account.postbox) |> mapToSignal { recently -> Signal<[PeerView], NoError> in
+                let recently = context.engine.peers.recentlySearchedPeers() |> mapToSignal { recently -> Signal<[PeerView], NoError> in
                     return combineLatest(recently.map {context.account.viewTracker.peerView($0.peer.peerId)})
                 } |> map { peerViews -> [PeerView] in
                     return peerViews.filter { peerView in
@@ -882,7 +882,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     
                 } |> deliverOnPrepareQueue
                 
-                let top: Signal<([Peer], [PeerId : UnreadSearchBadge], [PeerId : Bool]), NoError> = recentPeers(account: context.account) |> mapToSignal { recent in
+                let top: Signal<([Peer], [PeerId : UnreadSearchBadge], [PeerId : Bool]), NoError> = context.engine.peers.recentPeers() |> mapToSignal { recent in
                     switch recent {
                     case .disabled:
                         return .single(([], [:], [:]))
@@ -1143,11 +1143,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         var setPeerAsTag:((Peer?)->Void)? = nil
         
         self.arguments = SearchControllerArguments(context: context, removeRecentPeerId: { peerId in
-            _ = removeRecentlySearchedPeer(postbox: context.account.postbox, peerId: peerId).start()
+            _ = context.engine.peers.removeRecentlySearchedPeer(peerId: peerId).start()
         }, clearRecent: {
             confirm(for: context.window, information: L10n.searchConfirmClearHistory, successHandler: { _ in
-                _ = (recentlySearchedPeers(postbox: context.account.postbox) |> take(1) |> mapToSignal {
-                    return combineLatest($0.map {removeRecentlySearchedPeer(postbox: context.account.postbox, peerId: $0.peer.peerId)})
+                _ = (context.engine.peers.recentlySearchedPeers() |> take(1) |> mapToSignal {
+                    return combineLatest($0.map {context.engine.peers.removeRecentlySearchedPeer(peerId: $0.peer.peerId)})
                 }).start()
             })
            
@@ -1155,7 +1155,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             switch type {
             case let .peer(peer, _, _):
                 open(peer.id, nil, false)
-                _ = addRecentlySearchedPeer(postbox: context.account.postbox, peerId: peer.id).start()
+                _ = context.engine.peers.addRecentlySearchedPeer(peerId: peer.id).start()
             case let .savedMessages(peer):
                 open(peer.id, nil, false)
             case .articles:
@@ -1287,7 +1287,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         if let peerId = peerId {
             recently = (searchQuery.get() |> take(1)) |> mapToSignal { [weak self] query -> Signal<Void, NoError> in
                 if let context = self?.context, !(item is ChatListMessageRowItem) {
-                    return addRecentlySearchedPeer(postbox: context.account.postbox, peerId: peerId)
+                    return context.engine.peers.addRecentlySearchedPeer(peerId: peerId)
                 }
                 return .single(Void())
             }

@@ -449,7 +449,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         searchButton.disableActions()
         callButton.disableActions()
         
-        videoAvatarDisposable.set(peerPhotos(account: chatInteraction.context.account, peerId: chatInteraction.chatLocation.peerId).start())
+        videoAvatarDisposable.set(peerPhotos(context: chatInteraction.context, peerId: chatInteraction.chatLocation.peerId).start())
         
         badgeNode = GlobalBadgeNode(chatInteraction.context.account, sharedContext: chatInteraction.context.sharedContext, excludePeerId: self.chatInteraction.peerId, view: View(), layoutChanged: {
         })
@@ -582,7 +582,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         
         if NSPointInRect(point, avatarControl.frame), chatInteraction.mode == .history, let peer = chatInteraction.presentation.mainPeer {
-           let signal = peerPhotos(account: chatInteraction.context.account, peerId: peer.id) |> deliverOnMainQueue
+           let signal = peerPhotos(context: chatInteraction.context, peerId: peer.id) |> deliverOnMainQueue
             videoAvatarDisposable.set(signal.start(next: { [weak self] photos in
                 self?.applyVideoAvatarIfNeeded(photos.first)
             }))
@@ -753,7 +753,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             
             if self.currentRepresentations != representations {
                 applyVideoAvatarIfNeeded(nil)
-                videoAvatarDisposable.set(peerPhotos(account: chatInteraction.context.account, peerId: peer.id, force: true).start())
+                videoAvatarDisposable.set(peerPhotos(context: chatInteraction.context, peerId: peer.id, force: true).start())
                 
                 
                 if let peerReference = PeerReference(peer) {

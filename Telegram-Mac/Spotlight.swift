@@ -91,22 +91,22 @@ private enum SpotlightItem : Identifiable, Comparable {
 
 
 final class SpotlightContext {
-    let account: Account
+    let engine: TelegramEngine
     private let disposable = MetaDisposable()
     private var previousItems:[SpotlightItem] = []
-    init(account: Account) {
-        self.account = account
+    init(engine: TelegramEngine) {
+        self.engine = engine
         if #available(macOS 10.12, *) {
-            let accountPeer = account.postbox.loadedPeerWithId(account.peerId)
+            let accountPeer = engine.account.postbox.loadedPeerWithId(engine.account.peerId)
             
             
-            let recently = recentlySearchedPeers(postbox: account.postbox) |> map {
+            let recently = engine.peers.recentlySearchedPeers() |> map {
                 $0.compactMap { $0.peer.chatMainPeer }
             } |> distinctUntilChanged(isEqual: { previous, current -> Bool in
                 return previous.count == current.count
             })
             
-            let peers:Signal<[Peer], NoError> = combineLatest(recently, recentPeers(account: account) |> mapToSignal { recent in
+            let peers:Signal<[Peer], NoError> = combineLatest(recently, engine.peers.recentPeers() |> mapToSignal { recent in
                 switch recent {
                 case .disabled:
                     return .single([])
@@ -132,7 +132,7 @@ final class SpotlightContext {
                 var items: [SpotlightItem] = []
                 for (i, peer) in peers.enumerated() {
                     if #available(OSX 10.13, *) {
-                        items.append(makeSearchItem(for: peer, index: i, accountPeer: accountPeer, accountId: account.id))
+                        items.append(makeSearchItem(for: peer, index: i, accountPeer: accountPeer, accountId: engine.account.id))
                     } else {
                         // Fallback on earlier versions
                     }

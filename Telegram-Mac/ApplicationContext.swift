@@ -295,6 +295,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return self?.rightController.callHeader?.contextObject as? PCallSession
         }, groupCall: { [weak self] in
             return self?.rightController.callHeader?.contextObject as? GroupCallContext
+        }, getContext: { [weak self] in
+            return self?.context
         })
         
         
@@ -584,7 +586,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }))
         
 
-        someActionsDisposable.add(managedUpdatedRecentPeers(accountPeerId: context.account.peerId, postbox: context.account.postbox, network: context.account.network).start())
+        someActionsDisposable.add(context.engine.peers.managedUpdatedRecentPeers().start())
         
         
        
