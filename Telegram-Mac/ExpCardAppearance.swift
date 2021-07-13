@@ -32,14 +32,13 @@ private final class ThemePreview : Control {
         
         func set(_ source: ThemeSource, bubbled: Bool, context: AccountContext) {
                         
-            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source) |> deliverOnMainQueue
+            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source, thumbSource: .expCard) |> deliverOnMainQueue
             
             self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled), clearInstantly: false)
 
             disposable.set(signal.start(next: { [weak self] image, data in
                 self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: false)
             }))
-            
         }
         
         deinit {
@@ -74,7 +73,7 @@ private final class ThemePreview : Control {
     }
     
     func update(_ text: String, source: ThemeSource, bubbled: Bool, context: AccountContext, isSelected: Bool) {
-        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.text)))
+        let layout = TextViewLayout(.initialize(string: text, color: isSelected ? theme.colors.accent : theme.colors.text, font: .medium(.text)))
         layout.measure(width: .greatestFiniteMagnitude)
         
         self.nameView.update(layout)

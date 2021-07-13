@@ -438,6 +438,13 @@ public final class AnimatedGradientBackgroundView: ImageView {
         }
     }
 
+    public override func layout() {
+        super.layout()
+        if frame.size != .zero {
+            self.updateLayout(size: frame.size, transition: .immediate)
+        }
+    }
+    
     public func animateEvent(transition: ContainedViewLayoutTransition, extendAnimation: Bool = false) {
         guard case let .animated(duration, _) = transition, duration > 0.001 else {
             return

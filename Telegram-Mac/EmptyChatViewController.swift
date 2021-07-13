@@ -35,7 +35,7 @@ class EmptyChatView : View {
         self.layer = CAGradientLayer()
         self.layer?.disableActions()
         
-       // addSubview(containerView)
+        addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(label)
         label.userInteractionEnabled = false
@@ -45,10 +45,7 @@ class EmptyChatView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        containerView.backgroundColor = theme.colors.background
         let theme = (theme as! TelegramPresentationTheme)
-        
-        self.background = .clear
         imageView.image = theme.icons.chatEmpty
         switch theme.controllerBackgroundMode {
         case .plain:
@@ -56,9 +53,6 @@ class EmptyChatView : View {
         default:
             imageView.isHidden = true
         }
-        
-        containerView.backgroundColor = imageView.isHidden ? .clear : theme.chatBackground
-
         
         imageView.sizeToFit()
         label.disableBackgroundDrawing = true
@@ -139,6 +133,36 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         updateBackgroundColor(theme.controllerBackgroundMode)
+    }
+    
+    override func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
+        super.updateBackgroundColor(backgroundMode)
+        var containerBg = self.backgroundColor
+        if theme.bubbled {
+            switch theme.backgroundMode {
+            case .background, .tiled, .gradient, .animated:
+                containerBg = .clear
+            case .plain:
+                if theme.colors.chatBackground == theme.colors.background {
+                    containerBg = theme.colors.border
+                } else {
+                    containerBg = .clear
+                }
+            case let .color(color):
+                if color == theme.colors.background {
+                    containerBg = theme.colors.border
+                } else {
+                    containerBg = .clear
+                }
+            }
+        } else {
+            if theme.colors.chatBackground == theme.colors.background {
+                containerBg = theme.colors.border
+            } else {
+                containerBg = .clear
+            }
+        }
+        self.backgroundColor = containerBg
     }
     
     override public var isOpaque: Bool {

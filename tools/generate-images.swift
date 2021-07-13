@@ -678,6 +678,13 @@ func initialize() -> [String] {
     array.append("empty_chat_storage_high_active")
     
     
+    array.append("empty_chat_stickers_none")
+    array.append("empty_chat_stickers_mysets")
+    array.append("empty_chat_stickers_allsets")
+    array.append("empty_chat_stickers_none_active")
+    array.append("empty_chat_stickers_mysets_active")
+    array.append("empty_chat_stickers_allsets_active")
+    
 
     return array
 }

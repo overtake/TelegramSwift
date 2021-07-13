@@ -80,7 +80,12 @@ open class BackgroundView: ImageView {
     
     private let gradient: BackgroundGradientView
 
-    private var animatedBackground: AnimatedGradientBackgroundView?
+    private var animatedBackground: AnimatedGradientBackgroundView? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
     public override init(frame frameRect: NSRect) {
         gradient = BackgroundGradientView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -105,6 +110,9 @@ open class BackgroundView: ImageView {
         animatedBackground?.frame = bounds
     }
     
+    public func doAction() {
+        self.animatedBackground?.animateEvent(transition: .animated(duration: 0.5, curve: .spring))
+    }
     
     open override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
@@ -139,6 +147,7 @@ open class BackgroundView: ImageView {
                     animatedBackground = current
                 } else {
                     animatedBackground = AnimatedGradientBackgroundView(colors: nil, useSharedAnimationPhase: true)
+                    animatedBackground?.frame = bounds
                 }
             default:
                 gradient.isHidden = true
@@ -150,7 +159,7 @@ open class BackgroundView: ImageView {
             if let animatedBackground = animatedBackground {
                 self.animatedBackground?.removeFromSuperview()
                 self.animatedBackground = animatedBackground
-                addSubview(animatedBackground)
+                self.addSubview(animatedBackground, positioned: .above, relativeTo: self.gradient)
             } else {
                 self.animatedBackground?.removeFromSuperview()
                 self.animatedBackground = nil
@@ -470,9 +479,9 @@ open class ViewController : NSObject {
         }
     }
     
-    public func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
+    open func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         switch backgroundMode {
-        case .background, .gradient:
+        case .background, .gradient, .animated:
             backgroundColor = .clear
         case let .color(color):
             backgroundColor = color
