@@ -2456,7 +2456,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                empty_chat_storage_low: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.text) },
                                                empty_chat_storage_medium: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.text) },
                                                empty_chat_storage_high: { NSImage(named: "Icon_EmptyChat_Storage_NoLimit")!.precomposed(palette.text) },
-                                               empty_chat_storage_low_active: { NSImage(named: "Icon_EmptyChat_Storage_Mediaum")!.precomposed(palette.accent) },
+                                               empty_chat_storage_low_active: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.accent) },
                                                empty_chat_storage_medium_active: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.accent) },
                                                empty_chat_storage_high_active: { NSImage(named: "Icon_EmptyChat_Storage_NoLimit")!.precomposed(palette.accent) },
                                                empty_chat_stickers_none: { NSImage(named: "Icon_EmptyChat_Stickers_None")!.precomposed(palette.text) },

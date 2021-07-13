@@ -181,7 +181,6 @@ fragment float4 scaleAndBlur(Varyings in[[stage_in]],
     
     float2 uv = doScale(in.texcoord, scale);
 
-    
     return float4(applyBoxBlur(inputTexture, sampler, uv, vertical));
 }
 

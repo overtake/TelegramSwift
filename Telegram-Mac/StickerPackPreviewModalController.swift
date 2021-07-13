@@ -210,11 +210,12 @@ class StickerPackPreviewModalController: ModalViewController {
     private let reference:StickerPackReference
     private let disposable: MetaDisposable = MetaDisposable()
     private var arguments:StickerPackArguments!
-   
-    init(_ context: AccountContext, peerId:PeerId?, reference:StickerPackReference) {
+    private var onAdd:(()->Void)? = nil
+    init(_ context: AccountContext, peerId:PeerId?, reference:StickerPackReference, onAdd:(()->Void)? = nil) {
         self.context = context
         self.peerId = peerId
         self.reference = reference
+        self.onAdd = onAdd
         super.init(frame: NSMakeRect(0, 0, 350, 400))
         bar = .init(height: 0)
         arguments = StickerPackArguments(context: context, send: { [weak self] media, view in
@@ -236,6 +237,7 @@ class StickerPackPreviewModalController: ModalViewController {
             } else {
                 _ = context.engine.stickers.removeStickerPackInteractively(id: info.id, option: .archive).start()
             }
+            self?.onAdd?()
             
         }, share: { [weak self] link in
             self?.close()

@@ -2483,7 +2483,7 @@ func systemSizeGigabytes() -> UInt64? {
     let attrs = try? FileManager.default.attributesOfFileSystem(forPath: "/")
     
     if let freeBytes = attrs?[FileAttributeKey.systemSize] as? UInt64 {
-        return freeBytes / 1073741824
+        return freeBytes / 1000000000
     }
     return nil
 }

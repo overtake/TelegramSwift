@@ -70,6 +70,7 @@ private final class ThemePreview : Control {
         container.isEventLess = true
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
+        self.scaleOnClick = true
     }
     
     func update(_ text: String, source: ThemeSource, bubbled: Bool, context: AccountContext, isSelected: Bool) {

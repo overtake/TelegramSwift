@@ -155,9 +155,10 @@ final class ExpCardListView: View {
                 if let prev = prev {
                     addSubview(prev)
                 }
+                prev?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 self.prev?.set(handler: { [weak self] _ in
                     self?._prev?()
-                }, for: .SingleClick)
+                }, for: .Click)
             }
         } else if let prev = self.prev {
             prev.userInteractionEnabled = false
@@ -170,9 +171,10 @@ final class ExpCardListView: View {
                 if let next = next {
                     addSubview(next)
                 }
+                next?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 self.next?.set(handler: { [weak self] _ in
                     self?._next?()
-                }, for: .SingleClick)
+                }, for: .Click)
             }
         } else if let next = self.next {
             next.userInteractionEnabled = false
