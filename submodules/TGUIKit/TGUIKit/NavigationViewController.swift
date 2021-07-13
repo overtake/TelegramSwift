@@ -374,6 +374,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
     }
     
+    public func doBackgroundAction() {
+        containerView.doAction()
+    }
     
     public func set(header:NavigationHeader?) {
         self.header?.hide(false)

@@ -278,7 +278,6 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
         var ccTask: (CCTaskData, Float)?
         var settings: CacheStorageSettings
         var diskSpace: DiskSpace
-        var downloadSettings: AutomaticMediaDownloadSettings
         static func ==(lhs:State, rhs: State) -> Bool {
             return false
         }
@@ -320,15 +319,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             case low
             case normal
         }
-        
-        var networkPreset: NetworkPreset {
-            if downloadSettings.automaticDownload {
-                return .normal
-            } else {
-                return .low
-            }
-            
-        }
+
     }
     
     private let disposable = MetaDisposable()
@@ -341,7 +332,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let initialState = State(settings: .defaultSettings, diskSpace: .init(free: 0, total: 0, app: 0), downloadSettings: .defaultSettings)
+        let initialState = State(settings: .defaultSettings, diskSpace: .init(free: 0, total: 0, app: 0))
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -359,7 +350,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             scanFiles(at: mediaPath, anyway: { file, fs in
                 totalSize += UInt64(fs)
             })
-            subscriber.putNext(.init(free: systemFree, total: systemSize, app: totalSize))
+            subscriber.putNext(.init(free: systemFree, total: systemSize + systemFree, app: totalSize))
             subscriber.putCompletion()
 
             return EmptyDisposable
@@ -399,11 +390,10 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             }
         }
         
-        let downloadSettings = automaticDownloadSettings(postbox: context.account.postbox)
         
-        let signal = combineLatest(queue: .mainQueue(), cacheSettingsPromise.get(), taskAndProgress, downloadSettings, appearanceSignal)
+        let signal = combineLatest(queue: .mainQueue(), cacheSettingsPromise.get(), taskAndProgress, appearanceSignal)
 
-        actionsDisposable.add(signal.start(next: { settings, ccTask, downloadSettings, appearance in
+        actionsDisposable.add(signal.start(next: { settings, ccTask, appearance in
             if ccTask == nil && stateValue.with({ $0.ccTask != nil }) {
                 DispatchQueue.main.async {
                     diskUpdater.set(diskSpaceUpdater)
@@ -413,7 +403,6 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
                 var current = current
                 current.settings = settings
                 current.ccTask = ccTask
-                current.downloadSettings = downloadSettings
                 return current
             }
         }))
@@ -437,34 +426,37 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             
             var buttons: [ExpCardData.Button] = []
             
-            let lowIsSelected = state.networkPreset == .low
-            let normalIsSelected = state.networkPreset == .normal
+            let lowIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 8
+            let normalIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 32
+            let highIsSelected = state.settings.defaultCacheStorageLimitGigabytes == .max
 
             buttons.append(.init(text: { L10n.emptyChatStorageUsageLow }, selected: {
                 return lowIsSelected
             }, image: {
                 return lowIsSelected ? theme.icons.empty_chat_storage_low_active : theme.icons.empty_chat_storage_low
             }, click: {
-                _ = updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, {
-                    $0.withUpdatedAutomaticDownload(false)
+                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(8)
                 }).start()
             }))
             
-//            buttons.append(.init(text: { L10n.emptyChatStorageUsageMedium }, selected: {
-//                return false
-//            }, image: {
-//                return theme.icons.empty_chat_storage_medium
-//            }, click: {
-//
-//            }))
-            
-            buttons.append(.init(text: { L10n.emptyChatStorageUsageNormal }, selected: {
+            buttons.append(.init(text: { L10n.emptyChatStorageUsageMedium }, selected: {
                 return normalIsSelected
             }, image: {
-                return normalIsSelected ? theme.icons.empty_chat_storage_high_active : theme.icons.empty_chat_storage_high
+                return normalIsSelected ?  theme.icons.empty_chat_storage_medium_active : theme.icons.empty_chat_storage_medium
             }, click: {
-                _ = updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, {
-                    $0.withUpdatedAutomaticDownload(true)
+                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(32)
+                }).start()
+            }))
+            
+            buttons.append(.init(text: { L10n.emptyChatStorageUsageNoLimit }, selected: {
+                return highIsSelected
+            }, image: {
+                return highIsSelected ? theme.icons.empty_chat_storage_high_active : theme.icons.empty_chat_storage_high
+            }, click: {
+                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(.max)
                 }).start()
             }))
             
@@ -477,5 +469,10 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             first = false
         }))
 
+    }
+    
+    deinit {
+        actionsDisposable.dispose()
+        disposable.dispose()
     }
 }

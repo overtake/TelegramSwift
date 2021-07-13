@@ -49,9 +49,7 @@ final class ExpCardView<T> : View  where T:View {
         addSubview(descView)
         
         layer?.cornerRadius = 20
-        
-        layer?.borderWidth = 1
-        
+                
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
@@ -78,34 +76,9 @@ final class ExpCardView<T> : View  where T:View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        let theme = theme as! TelegramPresentationTheme
         
         self.backgroundColor = theme.colors.background
         
-        if theme.bubbled {
-            switch theme.backgroundMode {
-            case .background, .tiled, .gradient, .animated:
-                layer?.borderColor = .clear
-            case .plain:
-                if theme.colors.chatBackground == theme.colors.background {
-                    layer?.borderColor = theme.colors.grayIcon.withAlphaComponent(0.6).cgColor
-                } else {
-                    layer?.borderColor = .clear
-                }
-            case let .color(color):
-                if color == theme.colors.background {
-                    layer?.borderColor = theme.colors.grayIcon.withAlphaComponent(0.6).cgColor
-                } else {
-                    layer?.borderColor = .clear
-                }
-            }
-        } else {
-            if theme.colors.chatBackground == theme.colors.background {
-                layer?.borderColor = theme.colors.grayIcon.withAlphaComponent(0.6).cgColor
-            } else {
-                layer?.borderColor = .clear
-            }
-        }
        
 
         guard let data = self.data else {

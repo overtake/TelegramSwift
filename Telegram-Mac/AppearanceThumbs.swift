@@ -242,13 +242,234 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
     } |> runOn(Queue.concurrentDefaultQueue())
 }
 
-func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source: ThemeSource) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {
+
+private func generateExpCardThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
+    return Signal { subscriber in
+        let image = generateImage(NSMakeSize(132, 86), rotatedContext: { size, ctx in
+            let rect = NSMakeRect(0, 0, size.width, size.height)
+            ctx.clear(rect)
+            ctx.round(size, 17)
+            
+            
+            let backgroundMode: TableBackgroundMode
+            if bubbled {
+                switch wallpaper {
+                case .builtin:
+                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                case let.color(color):
+                    backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
+                case let .gradient(_, top, bottom, rotation):
+                    backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+                case let .image(representation, settings):
+                    if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
+                        backgroundMode = .background(image: image)
+                    } else {
+                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                    }
+                    
+                case let .file(_, file, settings, isPattern):
+                    if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
+                        backgroundMode = .background(image: image)
+                    } else {
+                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                    }
+                case .none:
+                    backgroundMode = .color(color: palette.chatBackground)
+                case let .custom(representation, blurred):
+                    if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
+                        backgroundMode = .background(image: image)
+                    } else {
+                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+                    }
+                }
+            } else {
+                backgroundMode = .color(color: palette.chatBackground)
+            }
+            
+            func applyBubbles() {
+                
+                ctx.draw(NSImage(named: "Icon_ThemePreview_Dino")!.precomposed(flipVertical: true), in: NSMakeRect(10, 24, 24, 24))
+                ctx.draw(NSImage(named: "Icon_ThemePreview_Duck")!.precomposed(flipVertical: true), in: NSMakeRect(10, 54, 24, 24))
+
+                let bubble1 = generateImage(NSMakeSize(80, 38), rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.round(size, 12)
+                    ctx.setFillColor(palette.bubbleBackground_incoming.cgColor)
+                    ctx.fill(rect)
+                })!
+                
+                ctx.draw(bubble1, in: NSMakeRect(40, 10, 80, 38))
+                
+                let bubble1Text1 = generateImage(NSMakeSize(62, 6), rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.round(size, size.height / 2)
+                    ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                    ctx.fill(rect)
+                })!
+                ctx.draw(bubble1Text1, in: NSMakeRect(49, 19, 62, 6))
+                
+                let bubble1Text2 = generateImage(NSMakeSize(38, 6), rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.round(size, size.height / 2)
+                    ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                    ctx.fill(rect)
+                })!
+                ctx.draw(bubble1Text2, in: NSMakeRect(49, 33, 38, 6))
+
+                
+                let bubble2 = generateImage(NSMakeSize(54, 24), rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.round(size, 12)
+                    ctx.setFillColor(palette.bubbleBackground_incoming.cgColor)
+                    ctx.fill(rect)
+                })!
+                
+                ctx.draw(bubble2, in: NSMakeRect(40, 54, 54, 24))
+                
+                let bubble2Text1 = generateImage(NSMakeSize(36, 6), rotatedContext: { size, ctx in
+                    let rect = NSMakeRect(0, 0, size.width, size.height)
+                    ctx.clear(rect)
+                    ctx.round(size, size.height / 2)
+                    ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                    ctx.fill(rect)
+                })!
+                ctx.draw(bubble2Text1, in: NSMakeRect(49, 63, 36, 6))
+            }
+            
+            func applyPlain() {
+                ctx.draw(NSImage(named: "Icon_ThemePreview_Dino")!.precomposed(flipVertical: true), in: NSMakeRect(10, 10, 24, 24))
+                if true {
+                    let name1 = generateImage(NSMakeSize(32, 6), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, size.height / 2)
+                        ctx.setFillColor(palette.peerAvatarGreenTop.cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(name1, in: NSMakeRect(42, 13, name1.backingSize.width, name1.backingSize.height))
+                    
+                    let text1 = generateImage(NSMakeSize(80, 6), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, size.height / 2)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(text1, in: NSMakeRect(42, 25, text1.backingSize.width, text1.backingSize.height))
+                    
+                    let text2 = generateImage(NSMakeSize(48, 6), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, size.height / 2)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(text2, in: NSMakeRect(42, 37, text2.backingSize.width, text2.backingSize.height))
+
+                }
+                
+                if true {
+                    ctx.draw(NSImage(named: "Icon_ThemePreview_Duck")!.precomposed(flipVertical: true), in: NSMakeRect(10, 54, 24, 24))
+
+                    let name1 = generateImage(NSMakeSize(32, 6), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, size.height / 2)
+                        ctx.setFillColor(palette.peerAvatarVioletTop.cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(name1, in: NSMakeRect(42, 57, name1.backingSize.width, name1.backingSize.height))
+                    
+                    let text1 = generateImage(NSMakeSize(80, 6), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, size.height / 2)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(text1, in: NSMakeRect(42, 69, text1.backingSize.width, text1.backingSize.height))
+                }
+                
+                
+            }
+            
+            switch backgroundMode {
+            case let .background(image):
+                let imageSize = image.size.aspectFilled(NSMakeSize(300, 300))
+                ctx.saveGState()
+                ctx.translateBy(x: 1, y: -1)
+                ctx.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: rect.focus(imageSize))
+                ctx.restoreGState()
+                applyBubbles()
+            case let .color(color):
+                if bubbled {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
+                    applyBubbles()
+                } else {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
+                    applyPlain()
+                }
+            case let .gradient(values):
+                if bubbled {
+                    let colors = [values.top, values.bottom].reversed()
+                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.saveGState()
+                    ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
+                    ctx.rotate(by: CGFloat(values.rotation ?? 0) * CGFloat.pi / -180.0)
+                    ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                    ctx.restoreGState()
+                    applyBubbles()
+                } else {
+                    applyPlain()
+                }
+                
+            default:
+                break
+            }
+            
+        })!
+        
+        subscriber.putNext(image)
+        subscriber.putCompletion()
+        
+        return EmptyDisposable
+    } |> runOn(Queue.concurrentDefaultQueue())
+}
+
+enum AppearanceThumbSource {
+    case general
+    case expCard
+}
+
+func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source: ThemeSource, thumbSource: AppearanceThumbSource = .general) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {
+    
+    var thumbGenerator = generateThumb
+    switch thumbSource {
+    case .expCard:
+        thumbGenerator = generateExpCardThumb
+    case .general:
+        thumbGenerator = generateThumb
+    }
     
     switch source {
     case let .cloud(cloud):
         if let file = cloud.file {
             return cloudThemeData(context: context, theme: cloud, file: file) |> mapToSignal { data in
-                return generateThumb(palette: data.0, bubbled: bubbled, wallpaper: data.1) |> map { image in
+                return thumbGenerator(data.0, bubbled, data.1) |> map { image in
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2)))
                 }
             }
@@ -267,11 +488,11 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
             return (settings.wallpaper.wallpaper, settings.palette)
         } |> mapToSignal { wallpaper, palette in
             if let cloud = cloud {
-                return generateThumb(palette: palette, bubbled: bubbled, wallpaper: wallpaper) |> map { image in
+                return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
                 }
             } else {
-                return generateThumb(palette: palette, bubbled: bubbled, wallpaper: wallpaper) |> map { image in
+                return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
                     return (TransformImageResult(image, true), .local(palette))
                 }
             }

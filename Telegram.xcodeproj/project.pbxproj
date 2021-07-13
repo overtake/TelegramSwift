@@ -10,6 +10,7 @@
 		270202BF261A1BF500CFCE6D /* PaymentsTipsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202BE261A1BF500CFCE6D /* PaymentsTipsRowItem.swift */; };
 		270202C3261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */; };
 		270202C6261B3D7C00CFCE6D /* UITextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202C5261B3D7C00CFCE6D /* UITextField.swift */; };
+		270A262A269D8F1000B31B2B /* ExpCardStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* ExpCardStickersController.swift */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
 		2713B21F260A42FE00CE0EC6 /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */; };
@@ -1101,6 +1102,7 @@
 		270202BE261A1BF500CFCE6D /* PaymentsTipsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsTipsRowItem.swift; sourceTree = "<group>"; };
 		270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyUITextFieldDelegate.swift; sourceTree = "<group>"; };
 		270202C5261B3D7C00CFCE6D /* UITextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextField.swift; sourceTree = "<group>"; };
+		270A2629269D8F1000B31B2B /* ExpCardStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardStickersController.swift; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
 		2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaFrameSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaFrameSource.swift"; sourceTree = SOURCE_ROOT; };
@@ -2394,6 +2396,7 @@
 				27FFCEC42694BA58006CA024 /* ExpCardAppearance.swift */,
 				27FFCEC62694BC95006CA024 /* ExpCardController.swift */,
 				2760E55526970513001C59F8 /* ExpCardStorageController.swift */,
+				270A2629269D8F1000B31B2B /* ExpCardStickersController.swift */,
 			);
 			name = "empty-cards";
 			sourceTree = "<group>";
@@ -5858,6 +5861,7 @@
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				27949114260A41EB0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				C29E0EE01F4DC43100C0C7A8 /* InstantViewAppearance.swift in Sources */,
+				270A262A269D8F1000B31B2B /* ExpCardStickersController.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */,
 				D0C39EC5233A6077003CD402 /* GeneralBlockTextRowItem.swift in Sources */,

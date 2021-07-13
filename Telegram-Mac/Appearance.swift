@@ -2453,12 +2453,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                empty_chat_dark_active: { NSImage(named: "Icon_EmptyChat_Dark")!.precomposed(palette.accent) },
                                                empty_chat_light_active: { NSImage(named: "Icon_EmptyChat_Light")!.precomposed(palette.accent) },
                                                empty_chat_storage_clear: { NSImage(named: "Icon_EmptyChat_Storage_Clear")!.precomposed(palette.text) },
-                                               empty_chat_storage_low: { NSImage(named: "Icon_EmptyChat_Storage_Low")!.precomposed(palette.text) },
-                                               empty_chat_storage_medium: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.text) },
-                                               empty_chat_storage_high: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.text) },
-                                               empty_chat_storage_low_active: { NSImage(named: "Icon_EmptyChat_Storage_Low")!.precomposed(palette.accent) },
-                                               empty_chat_storage_medium_active: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.accent) },
-                                               empty_chat_storage_high_active: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.accent) }
+                                               empty_chat_storage_low: { NSImage(named: "Icon_EmptyChat_Storage_Medium")!.precomposed(palette.text) },
+                                               empty_chat_storage_medium: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.text) },
+                                               empty_chat_storage_high: { NSImage(named: "Icon_EmptyChat_Storage_NoLimit")!.precomposed(palette.text) },
+                                               empty_chat_storage_low_active: { NSImage(named: "Icon_EmptyChat_Storage_Mediaum")!.precomposed(palette.accent) },
+                                               empty_chat_storage_medium_active: { NSImage(named: "Icon_EmptyChat_Storage_High")!.precomposed(palette.accent) },
+                                               empty_chat_storage_high_active: { NSImage(named: "Icon_EmptyChat_Storage_NoLimit")!.precomposed(palette.accent) },
+                                               empty_chat_stickers_none: { NSImage(named: "Icon_EmptyChat_Stickers_None")!.precomposed(palette.text) },
+                                               empty_chat_stickers_mysets: { NSImage(named: "Icon_EmptyChat_Stickers_MySets")!.precomposed(palette.text) },
+                                               empty_chat_stickers_allsets: { NSImage(named: "Icon_EmptyChat_Stickers_AllSets")!.precomposed(palette.text) },
+                                               empty_chat_stickers_none_active: { NSImage(named: "Icon_EmptyChat_Stickers_None")!.precomposed(palette.accent) },
+                                               empty_chat_stickers_mysets_active: { NSImage(named: "Icon_EmptyChat_Stickers_MySets")!.precomposed(palette.accent) },
+                                               empty_chat_stickers_allsets_active: { NSImage(named: "Icon_EmptyChat_Stickers_AllSets")!.precomposed(palette.accent) }
     )
 
 }

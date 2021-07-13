@@ -7869,6 +7869,84 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var empty_chat_stickers_none: CGImage {
+      if let image = cached.with({ $0["empty_chat_stickers_none"] }) {
+          return image
+      } else {
+          let image = _empty_chat_stickers_none()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_stickers_none"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_stickers_mysets: CGImage {
+      if let image = cached.with({ $0["empty_chat_stickers_mysets"] }) {
+          return image
+      } else {
+          let image = _empty_chat_stickers_mysets()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_stickers_mysets"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_stickers_allsets: CGImage {
+      if let image = cached.with({ $0["empty_chat_stickers_allsets"] }) {
+          return image
+      } else {
+          let image = _empty_chat_stickers_allsets()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_stickers_allsets"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_stickers_none_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_stickers_none_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_stickers_none_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_stickers_none_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_stickers_mysets_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_stickers_mysets_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_stickers_mysets_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_stickers_mysets_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var empty_chat_stickers_allsets_active: CGImage {
+      if let image = cached.with({ $0["empty_chat_stickers_allsets_active"] }) {
+          return image
+      } else {
+          let image = _empty_chat_stickers_allsets_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["empty_chat_stickers_allsets_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8475,6 +8553,12 @@ final class TelegramIconsTheme {
   private let _empty_chat_storage_low_active: ()->CGImage
   private let _empty_chat_storage_medium_active: ()->CGImage
   private let _empty_chat_storage_high_active: ()->CGImage
+  private let _empty_chat_stickers_none: ()->CGImage
+  private let _empty_chat_stickers_mysets: ()->CGImage
+  private let _empty_chat_stickers_allsets: ()->CGImage
+  private let _empty_chat_stickers_none_active: ()->CGImage
+  private let _empty_chat_stickers_mysets_active: ()->CGImage
+  private let _empty_chat_stickers_allsets_active: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9081,7 +9165,13 @@ final class TelegramIconsTheme {
       empty_chat_storage_high: @escaping()->CGImage,
       empty_chat_storage_low_active: @escaping()->CGImage,
       empty_chat_storage_medium_active: @escaping()->CGImage,
-      empty_chat_storage_high_active: @escaping()->CGImage
+      empty_chat_storage_high_active: @escaping()->CGImage,
+      empty_chat_stickers_none: @escaping()->CGImage,
+      empty_chat_stickers_mysets: @escaping()->CGImage,
+      empty_chat_stickers_allsets: @escaping()->CGImage,
+      empty_chat_stickers_none_active: @escaping()->CGImage,
+      empty_chat_stickers_mysets_active: @escaping()->CGImage,
+      empty_chat_stickers_allsets_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9688,5 +9778,11 @@ final class TelegramIconsTheme {
       self._empty_chat_storage_low_active = empty_chat_storage_low_active
       self._empty_chat_storage_medium_active = empty_chat_storage_medium_active
       self._empty_chat_storage_high_active = empty_chat_storage_high_active
+      self._empty_chat_stickers_none = empty_chat_stickers_none
+      self._empty_chat_stickers_mysets = empty_chat_stickers_mysets
+      self._empty_chat_stickers_allsets = empty_chat_stickers_allsets
+      self._empty_chat_stickers_none_active = empty_chat_stickers_none_active
+      self._empty_chat_stickers_mysets_active = empty_chat_stickers_mysets_active
+      self._empty_chat_stickers_allsets_active = empty_chat_stickers_allsets_active
   }
 }

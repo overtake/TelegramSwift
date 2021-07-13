@@ -1158,7 +1158,7 @@ public extension CGImage {
     }
 }
 
-extension Array {
+public extension Array {
     static func fromCFArray(records : CFArray?) -> Array<Element>? {
         var result: [Element]?
         if let records = records {
@@ -1172,6 +1172,28 @@ extension Array {
             }
         }
         return result
+    }
+    func randomElements(_ count: Int) -> [Element] {
+        var indexes:[Int] = []
+        if self.count <= count {
+            return self.shuffled()
+        }
+        for _ in 0 ..< count {
+            var finding = true
+            while finding {
+                let index = Int.random(in: 0 ..< self.count)
+                if !indexes.contains(index) {
+                    indexes.append(index)
+                    finding = false
+                }
+            }
+        }
+        
+        return indexes.reduce([], { current, index in
+            var current = current
+            current.append(self[index])
+            return current
+        })
     }
 }
 

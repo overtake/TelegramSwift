@@ -238,15 +238,6 @@ final class ExpCardController : TelegramGenericViewController<ExpCardListView> {
         controller.loadViewIfNeeded()
     }
     
-    @discardableResult private func prev() -> Bool {
-        if selected > 0 {
-            selected -= 1
-            presentSelected(.rightToLeft)
-            return true
-        }
-        return false
-    }
-    
     private func presentSelected(_ mode: ExpCardListView.PresentMode) {
         let controller = controllers[selected]
         loadController(controller)
@@ -269,18 +260,26 @@ final class ExpCardController : TelegramGenericViewController<ExpCardListView> {
     @discardableResult private func next() -> Bool {
         if selected < controllers.count - 1 {
             selected += 1
+            presentSelected(.rightToLeft)
+            return true
+        }
+        return false
+    }
+    @discardableResult private func prev() -> Bool {
+        if selected > 0 {
+            selected -= 1
             presentSelected(.leftToRight)
             return true
         }
         return false
     }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         controllers.append(ExpCardAppearanceController(context))
         controllers.append(ExpCardStorageController(context))
-        
+        controllers.append(ExpCardStickersController(context))
+
         let current = controllers[selected]
         
         loadController(current)

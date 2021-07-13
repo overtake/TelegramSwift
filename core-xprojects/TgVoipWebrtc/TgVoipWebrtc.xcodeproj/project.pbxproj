@@ -21,6 +21,8 @@
 		271999D92681F1E2000DE2B7 /* TGCMIODevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 271999D32681F1E2000DE2B7 /* TGCMIODevice.h */; };
 		271999DA2681F1E2000DE2B7 /* TGCMIODevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 271999D42681F1E2000DE2B7 /* TGCMIODevice.mm */; };
 		271999DB2681F1E2000DE2B7 /* VideoCMIOCapture.h in Headers */ = {isa = PBXBuildFile; fileRef = 271999D52681F1E2000DE2B7 /* VideoCMIOCapture.h */; };
+		27237EC2269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27237EC0269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.h */; };
+		27237EC3269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27237EC1269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.cpp */; };
 		27328D8C2660E8AD00E3B7D8 /* DarwinVideoSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */; };
 		27328D8D2660E8AD00E3B7D8 /* DarwinVideoSource.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */; };
 		27335F0825C833D400FD040C /* GroupInstanceCustomImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */; };
@@ -39,6 +41,8 @@
 		2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 2774C564262F19F4006E6F26 /* SignalingEncryption.h */; };
 		277CBFAB268B4E9F0082ACA2 /* objc_video_encoder_factory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 277CBFA9268B4E9F0082ACA2 /* objc_video_encoder_factory.mm */; };
 		277CBFAC268B4E9F0082ACA2 /* objc_video_encoder_factory.h in Headers */ = {isa = PBXBuildFile; fileRef = 277CBFAA268B4E9F0082ACA2 /* objc_video_encoder_factory.h */; };
+		27863665269C6ECF006D98C6 /* TurnCustomizerImpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27863663269C6ECF006D98C6 /* TurnCustomizerImpl.cpp */; };
+		27863666269C6ECF006D98C6 /* TurnCustomizerImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27863664269C6ECF006D98C6 /* TurnCustomizerImpl.h */; };
 		27A0A4E025F764FA00B789AF /* ffmpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27A0A4DF25F764FA00B789AF /* ffmpeg.framework */; };
 		27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167F926203A56000B8449 /* NativeNetworkingImpl.h */; };
 		27C1680026203A56000B8449 /* Signaling.h in Headers */ = {isa = PBXBuildFile; fileRef = 27C167FA26203A56000B8449 /* Signaling.h */; };
@@ -113,6 +117,8 @@
 		271999D32681F1E2000DE2B7 /* TGCMIODevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TGCMIODevice.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGCMIODevice.h; sourceTree = "<group>"; };
 		271999D42681F1E2000DE2B7 /* TGCMIODevice.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = TGCMIODevice.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/TGCMIODevice.mm; sourceTree = "<group>"; };
 		271999D52681F1E2000DE2B7 /* VideoCMIOCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoCMIOCapture.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/VideoCMIOCapture.h; sourceTree = "<group>"; };
+		27237EC0269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SctpDataChannelProviderInterfaceImpl.h; path = ../../submodules/tgcalls/tgcalls/SctpDataChannelProviderInterfaceImpl.h; sourceTree = "<group>"; };
+		27237EC1269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SctpDataChannelProviderInterfaceImpl.cpp; path = ../../submodules/tgcalls/tgcalls/SctpDataChannelProviderInterfaceImpl.cpp; sourceTree = "<group>"; };
 		27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DarwinVideoSource.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinVideoSource.h; sourceTree = "<group>"; };
 		27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DarwinVideoSource.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/DarwinVideoSource.mm; sourceTree = "<group>"; };
 		27335F0625C833D300FD040C /* GroupInstanceCustomImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GroupInstanceCustomImpl.cpp; sourceTree = "<group>"; };
@@ -131,6 +137,8 @@
 		2774C564262F19F4006E6F26 /* SignalingEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SignalingEncryption.h; sourceTree = "<group>"; };
 		277CBFA9268B4E9F0082ACA2 /* objc_video_encoder_factory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = objc_video_encoder_factory.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/objc_video_encoder_factory.mm; sourceTree = "<group>"; };
 		277CBFAA268B4E9F0082ACA2 /* objc_video_encoder_factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = objc_video_encoder_factory.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/objc_video_encoder_factory.h; sourceTree = "<group>"; };
+		27863663269C6ECF006D98C6 /* TurnCustomizerImpl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TurnCustomizerImpl.cpp; path = ../../submodules/tgcalls/tgcalls/TurnCustomizerImpl.cpp; sourceTree = "<group>"; };
+		27863664269C6ECF006D98C6 /* TurnCustomizerImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TurnCustomizerImpl.h; path = ../../submodules/tgcalls/tgcalls/TurnCustomizerImpl.h; sourceTree = "<group>"; };
 		27A0A4DF25F764FA00B789AF /* ffmpeg.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = ffmpeg.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27C167F926203A56000B8449 /* NativeNetworkingImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NativeNetworkingImpl.h; sourceTree = "<group>"; };
 		27C167FA26203A56000B8449 /* Signaling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Signaling.h; sourceTree = "<group>"; };
@@ -280,6 +288,10 @@
 				D0D751BD24BE3AC70037D73A /* InstanceImpl.cpp */,
 				D0D751BC24BE3AC70037D73A /* Manager.cpp */,
 				D0D751B824BE3AC60037D73A /* MediaManager.cpp */,
+				27863663269C6ECF006D98C6 /* TurnCustomizerImpl.cpp */,
+				27863664269C6ECF006D98C6 /* TurnCustomizerImpl.h */,
+				27237EC1269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.cpp */,
+				27237EC0269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.h */,
 				D0D751B724BE3AC60037D73A /* NetworkManager.cpp */,
 				D0D751B924BE3AC60037D73A /* ThreadLocalObject.cpp */,
 				D0D751BA24BE3AC70037D73A /* VideoCaptureInterface.cpp */,
@@ -401,11 +413,13 @@
 				D0D751A224BE34B40037D73A /* OngoingCallThreadLocalContext.h in Headers */,
 				271504112631799A004FB0E0 /* DesktopCaptureSourceViewMac.h in Headers */,
 				277CBFAC268B4E9F0082ACA2 /* objc_video_encoder_factory.h in Headers */,
+				27237EC2269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.h in Headers */,
 				271999DB2681F1E2000DE2B7 /* VideoCMIOCapture.h in Headers */,
 				2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */,
 				274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */,
 				271999D92681F1E2000DE2B7 /* TGCMIODevice.h in Headers */,
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
+				27863666269C6ECF006D98C6 /* TurnCustomizerImpl.h in Headers */,
 				2767ADF725D6DDDC00717AA1 /* DesktopCaptureSourceManager.h in Headers */,
 				27C1680226203A56000B8449 /* InstanceV2Impl.h in Headers */,
 				27C167FF26203A56000B8449 /* NativeNetworkingImpl.h in Headers */,
@@ -501,6 +515,7 @@
 				271503F42631679B004FB0E0 /* DesktopSharingCapturer.mm in Sources */,
 				D0D751C124BE3AC70037D73A /* NetworkManager.cpp in Sources */,
 				D0D751C224BE3AC70037D73A /* MediaManager.cpp in Sources */,
+				27237EC3269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.cpp in Sources */,
 				D00602FD24CF3D6600206226 /* CryptoHelper.cpp in Sources */,
 				277CBFAB268B4E9F0082ACA2 /* objc_video_encoder_factory.mm in Sources */,
 				27E6DAFA26860663003D6164 /* TGRTCMTLI420Renderer.mm in Sources */,
@@ -516,6 +531,7 @@
 				27C1680326203A56000B8449 /* InstanceV2Impl.cpp in Sources */,
 				2774C565262F19F4006E6F26 /* SignalingEncryption.cpp in Sources */,
 				D0D751C624BE3AC70037D73A /* Manager.cpp in Sources */,
+				27863665269C6ECF006D98C6 /* TurnCustomizerImpl.cpp in Sources */,
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				271999D62681F1E2000DE2B7 /* TGCMIOCapturer.m in Sources */,
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,

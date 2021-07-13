@@ -1766,6 +1766,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let afterSentTransition = { [weak self] in
+            
+            
+            self?.navigationController?.doBackgroundAction()
+            
            self?.chatInteraction.update({ presentation in
             return presentation.updatedInputQueryResult({_ in return nil}).updatedInterfaceState { current in
                 

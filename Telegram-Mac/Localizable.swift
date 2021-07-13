@@ -3707,6 +3707,8 @@ internal final class L10n {
   internal static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Appearance
   internal static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
+  /// Suggest Stickers By Emoji
+  internal static var emptyChatStickers: String  { return L10n.tr("Localizable", "EmptyChat.Stickers") }
   /// Storage Usage
   internal static var emptyChatStorageUsage: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage") }
   /// Chat Mode
@@ -3727,6 +3729,16 @@ internal final class L10n {
   internal static var emptyChatNavigationNext: String  { return L10n.tr("Localizable", "EmptyChat.Navigation.Next") }
   /// Previous Tip
   internal static var emptyChatNavigationPrev: String  { return L10n.tr("Localizable", "EmptyChat.Navigation.Prev") }
+  /// All Sets
+  internal static var emptyChatStickersAllSets: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.AllSets") }
+  /// More trending stickers are available in\nSettings ⟶ Stickers ⟶ [Trending Stickers](trending).
+  internal static var emptyChatStickersDesc: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.Desc") }
+  /// My Sets
+  internal static var emptyChatStickersMySets: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.MySets") }
+  /// None
+  internal static var emptyChatStickersNone: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.None") }
+  /// Trending Stickers
+  internal static var emptyChatStickersTrending: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.Trending") }
   /// Telegram uses **%@** of your storage.
   internal static func emptyChatStorageUsageCacheDesc(_ p1: String) -> String {
     return L10n.tr("Localizable", "EmptyChat.StorageUsage.CacheDesc", p1)
@@ -3737,16 +3749,18 @@ internal final class L10n {
   internal static var emptyChatStorageUsageClear: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clear") }
   /// Clearing...
   internal static var emptyChatStorageUsageClearing: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clearing") }
-  /// Network Usage
+  /// Minimum Cache Size
   internal static var emptyChatStorageUsageData: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Data") }
   /// More data and storage settings are available in\nSettings ⟶ [Data And Storage](storage).
   internal static var emptyChatStorageUsageDesc: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Desc") }
   /// Calculating...
   internal static var emptyChatStorageUsageLoading: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Loading") }
-  /// Low
+  /// 8 GB
   internal static var emptyChatStorageUsageLow: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Low") }
-  /// Normal
-  internal static var emptyChatStorageUsageNormal: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Normal") }
+  /// 32 GB
+  internal static var emptyChatStorageUsageMedium: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Medium") }
+  /// No Limit
+  internal static var emptyChatStorageUsageNoLimit: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.NoLimit") }
   /// Telegram\n%@
   internal static func emptyChatStorageUsageTooltipApp(_ p1: String) -> String {
     return L10n.tr("Localizable", "EmptyChat.StorageUsage.Tooltip.App", p1)
