@@ -53,6 +53,12 @@ private final class ExpCardStickerView : Control {
         nameView.centerX(y: self.animatedView.frame.maxY + 6)
     }
     
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let data = self.data
+        self.data = data
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -64,7 +70,7 @@ final class ExpCardStickersContainer : View {
     private let stickers: View = View()
     private var timer: SwiftSignalKit.Timer? = nil
     
-    var previewPack:((FeaturedStickerPackItem)->Void)?
+    var previewPack:((FeaturedStickerPackItem, @escaping()->Void)->Void)?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -75,14 +81,14 @@ final class ExpCardStickersContainer : View {
         
     }
     private var state: ExpCardStickersController.State?
-        
+    private var elements:[FeaturedStickerPackItem]?
+    private var context: AccountContext?
     func update(_ state: ExpCardStickersController.State, context: AccountContext, animated: Bool) {
         self.state = state
+        self.context = context
         
-        timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
-            self?.reload(state, context: context, animated: true)
-        }, queue: .mainQueue())
-        timer?.start()
+        
+        runTimer()
         
         if !animated || stickers.subviews.isEmpty {
             self.reload(state, context: context, animated: animated)
@@ -91,9 +97,42 @@ final class ExpCardStickersContainer : View {
         updateLocalizationAndTheme(theme: theme)
     }
     
-    private func reload(_ state: ExpCardStickersController.State, context: AccountContext, animated: Bool) {
-        let random = state.stickers.randomElements(3)
-        
+    private func runTimer() {
+        guard let context = self.context, let state = self.state else {
+            return
+        }
+        timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
+            self?.reload(state, context: context, animated: true)
+        }, queue: .mainQueue())
+        timer?.start()
+    }
+    
+    func reload(ignore: Int? = nil) {
+        runTimer()
+        guard let context = self.context, let state = self.state else {
+            return
+        }
+        self.reload(state, ignore: ignore, context: context, animated: true)
+    }
+    
+    private func generateRandom(_ state: ExpCardStickersController.State, ignore: Int? = nil) -> [FeaturedStickerPackItem] {
+        if let ignore = ignore, var elements = self.elements {
+            let element = elements.remove(at: ignore)
+            while let randomElement = state.stickers.randomElement() {
+                if !elements.contains(where: { $0.info.id.id == element.info.id.id }) {
+                    elements.insert(randomElement, at: ignore)
+                    break
+                }
+            }
+            return elements
+        } else {
+            return state.stickers.randomElements(3)
+        }
+    }
+    
+    private func reload(_ state: ExpCardStickersController.State, ignore: Int? = nil, context: AccountContext, animated: Bool) {
+        let random = generateRandom(state, ignore: ignore)
+        self.elements = random
         var ignore:Set<Int> = Set()
         for (i, sticker) in self.stickers.subviews.enumerated() {
             if let sticker = sticker as? ExpCardStickerView {
@@ -114,7 +153,9 @@ final class ExpCardStickersContainer : View {
                     view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
                 view.set(handler: { [weak self] _ in
-                    self?.previewPack?(item)
+                    self?.previewPack?(item, { [weak self] in
+                        self?.reload(ignore: i)
+                    })
                 }, for: .Click)
             }
         }
@@ -187,8 +228,8 @@ final class ExpCardStickersController : TelegramGenericViewController<ExpCardVie
 
         self.genericView.dataView = ExpCardStickersContainer(frame: .zero)
         
-        self.genericView.dataView?.previewPack = { item in
-            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .id(id: item.info.id.id, accessHash: item.info.accessHash)), for: context.window)
+        self.genericView.dataView?.previewPack = { [weak self] item, f in
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .id(id: item.info.id.id, accessHash: item.info.accessHash), onAdd: f), for: context.window)
         }
         
         let initialState = State(settings: StickerSettings.defaultSettings)

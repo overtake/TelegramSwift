@@ -139,6 +139,7 @@ open class Control: View {
     
     public var controlState:ControlState = .Normal {
         didSet {
+            stateDidUpdated(controlState)
             if oldValue != controlState {
                 apply(state: isSelected ? .Highlight : controlState)
                 
@@ -174,16 +175,16 @@ open class Control: View {
         if animates {
             self.layer?.animateBackground()
         }
-        
-        stateDidUpdated(state)
     }
     private var previousState: ControlState?
     open func stateDidUpdated(_ state: ControlState) {
         if self.scaleOnClick {
-            if state == .Highlight {
-                self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
-            } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {
-                self.layer?.animateScaleSpring(from: 0.96, to: 1.0, duration: 0.3)
+            if state != previousState {
+                if state == .Highlight {
+                    self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
+                } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {
+                    self.layer?.animateScaleSpring(from: 0.96, to: 1.0, duration: 0.3)
+                }
             }
         }
         previousState = state

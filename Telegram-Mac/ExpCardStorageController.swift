@@ -350,7 +350,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             scanFiles(at: mediaPath, anyway: { file, fs in
                 totalSize += UInt64(fs)
             })
-            subscriber.putNext(.init(free: systemFree, total: systemSize + systemFree, app: totalSize))
+            subscriber.putNext(.init(free: systemFree, total: systemSize, app: totalSize))
             subscriber.putCompletion()
 
             return EmptyDisposable
