@@ -1323,7 +1323,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             myLevel = level
                             myLevelHasVoice = hasVoice
                         }
-                        result.append((peerId, ssrcValue, level, hasVoice))
+                        if peerId == strongSelf.joinAsPeerId, strongSelf.stateValue.muteState == nil {
+                            result.append((peerId, ssrcValue, level, hasVoice))
+                        }
                     } else if ssrcValue != 0 {
                         missingSsrcs.insert(ssrcValue)
                     }
@@ -1332,9 +1334,15 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             
                 strongSelf.speakingParticipantsContext.update(levels: result)
                 
-                let mappedLevel = myLevel * 1.5
-                strongSelf.myAudioLevelPipe.putNext(mappedLevel)
-                strongSelf.processMyAudioLevel(level: mappedLevel, hasVoice: myLevelHasVoice && orignalMyLevelHasVoice)
+                if strongSelf.stateValue.muteState == nil {
+                    let mappedLevel = myLevel * 1.5
+                    strongSelf.myAudioLevelPipe.putNext(mappedLevel)
+                    strongSelf.processMyAudioLevel(level: mappedLevel, hasVoice: myLevelHasVoice && orignalMyLevelHasVoice)
+                } else {
+                    strongSelf.myAudioLevelPipe.putNext(0)
+                    strongSelf.processMyAudioLevel(level: 0, hasVoice: false)
+                }
+                
                 strongSelf.isSpeakingPromise.set(orignalMyLevelHasVoice)
                 if !missingSsrcs.isEmpty {
                     strongSelf.participantsContext?.ensureHaveParticipants(ssrcs: missingSsrcs)
