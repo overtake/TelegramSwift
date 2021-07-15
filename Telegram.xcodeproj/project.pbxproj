@@ -123,7 +123,6 @@
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
 		27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB092689C71E003D6164 /* MetalFunctions.metal */; };
-		27E6DB0C2689F683003D6164 /* MetalPerformanceShaders.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 271999E62683C04B000DE2B7 /* MetalPerformanceShaders.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -2188,7 +2187,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E6DB0C2689F683003D6164 /* MetalPerformanceShaders.framework in Frameworks */,
 				272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */,
 				27D1D62E2611FB0D00684DEA /* rnnoise.framework in Frameworks */,
 				278FA43825E8D5CD00280629 /* Stripe.framework in Frameworks */,
@@ -6193,7 +6191,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6229,7 +6227,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
@@ -6353,7 +6351,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6387,7 +6385,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D BETA";
@@ -6421,7 +6419,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
@@ -6454,7 +6452,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D APP_STORE";
@@ -6576,7 +6574,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6609,7 +6607,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D STABLE";
@@ -6741,7 +6739,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -6777,7 +6775,7 @@
 				INFOPLIST_FILE = TelegramShare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "-D ALPHA";
@@ -6954,7 +6952,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7038,7 +7036,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8;
+				MARKETING_VERSION = 7.8.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
