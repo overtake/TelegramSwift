@@ -138,8 +138,8 @@ open class BackgroundView: ImageView {
                 layer?.backgroundColor = color.withAlphaComponent(1.0).cgColor
                 layer?.contents = nil
                 gradient.values = nil
-            case let .gradient(top, bottom, rotation):
-                gradient.values = (top: top.withAlphaComponent(1.0), bottom: bottom.withAlphaComponent(1.0), rotation: rotation)
+            case let .gradient(colors, rotation):
+                gradient.values = (top: colors.first!.withAlphaComponent(1.0), bottom: colors.last!.withAlphaComponent(1.0), rotation: rotation)
                 layer?.contents = nil
                 gradient.isHidden = false
             case .animated:

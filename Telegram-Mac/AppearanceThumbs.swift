@@ -101,8 +101,8 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
-                case let .gradient(_, top, bottom, rotation):
-                    backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+                case let .gradient(_, colors, rotation):
+                    backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0).withAlphaComponent(1.0) }, rotation: rotation)
                 case let .image(representation, settings):
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image)
@@ -207,9 +207,9 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     ctx.fill(rect)
                     applyPlain()
                 }
-            case let .gradient(values):
+            case let .gradient(colors, rotation):
                 if bubbled {
-                    let colors = [values.top, values.bottom].reversed()
+                    let colors = colors.reversed()
                     let gradientColors = colors.map { $0.cgColor } as CFArray
                     let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                     var locations: [CGFloat] = []
@@ -220,7 +220,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
                     ctx.saveGState()
                     ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
-                    ctx.rotate(by: CGFloat(values.rotation ?? 0) * CGFloat.pi / -180.0)
+                    ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
                     ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
                     ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
                     ctx.restoreGState()
@@ -258,8 +258,8 @@ private func generateExpCardThumb(palette: ColorPalette, bubbled: Bool, wallpape
                     backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
-                case let .gradient(_, top, bottom, rotation):
-                    backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+                case let .gradient(_, colors, rotation):
+                    backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0).withAlphaComponent(1.0) }, rotation: rotation)
                 case let .image(representation, settings):
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image)
@@ -415,9 +415,9 @@ private func generateExpCardThumb(palette: ColorPalette, bubbled: Bool, wallpape
                     ctx.fill(rect)
                     applyPlain()
                 }
-            case let .gradient(values):
+            case let .gradient(colors, rotation):
                 if bubbled {
-                    let colors = [values.top, values.bottom].reversed()
+                    let colors = colors.reversed()
                     let gradientColors = colors.map { $0.cgColor } as CFArray
                     let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                     var locations: [CGFloat] = []
@@ -428,7 +428,7 @@ private func generateExpCardThumb(palette: ColorPalette, bubbled: Bool, wallpape
                     let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
                     ctx.saveGState()
                     ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
-                    ctx.rotate(by: CGFloat(values.rotation ?? 0) * CGFloat.pi / -180.0)
+                    ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
                     ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
                     ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
                     ctx.restoreGState()

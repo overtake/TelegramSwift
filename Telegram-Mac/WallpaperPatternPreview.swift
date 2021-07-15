@@ -47,8 +47,8 @@ private class WallpaperPatternView : Control {
     func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: [NSColor], rotation: Int32?) {
         checkbox.isHidden = !isSelected
         self.pattern = pattern
-        if color.count == 2 {
-            backgroundView.backgroundMode = .gradient(top: color[0], bottom: color[1], rotation: rotation)
+        if color.count > 1 {
+            backgroundView.backgroundMode = .gradient(colors: color, rotation: rotation)
         } else {
             backgroundView.backgroundMode = .color(color: color[0])
         }
@@ -62,10 +62,15 @@ private class WallpaperPatternView : Control {
             imageView.isHidden = false
             
             let emptyColor: TransformImageEmptyColor
-            if color.count == 2 {
-                emptyColor = .gradient(top: color.first!.withAlphaComponent(color.first!.alpha == 0 ? 0.5 : color.first!.alpha), bottom: color.last!.withAlphaComponent(color.last!.alpha == 0 ? 0.5 : color.last!.alpha), rotation: rotation)
+            if color.count > 1 {
+                let colors = color.map {
+                    return $0.withAlphaComponent($0.alpha == 0 ? 0.5 : $0.alpha)
+                }
+                emptyColor = .gradient(colors: colors, intensity: colors.first!.alpha, rotation: rotation)
+            } else if let color = color.first {
+                emptyColor = .color(color)
             } else {
-                emptyColor = .color(color.first!)
+                emptyColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
             }
             
             imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor))
