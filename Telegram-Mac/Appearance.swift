@@ -255,8 +255,8 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
             case let .color(color):
                 ctx.setFillColor(color.cgColor)
                 ctx.fill(rect)
-            case let .gradient(top, bottom, rotation):
-                let colors = [top, bottom].reversed()
+            case let .gradient(colors, rotation):
+                let colors = colors.reversed()
                 
                 let gradientColors = colors.map { $0.cgColor } as CFArray
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -328,12 +328,11 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
                 } else {
                     chatServiceItemColor = color
                 }
-            case let .gradient(top, bottom, _):
-                if let blended = top.blended(withFraction: 0.5, of: bottom) {
-                    chatServiceItemColor = getAverageColor(blended)
-                } else {
-                    chatServiceItemColor = getAverageColor(top)
-                }
+            case let .gradient(colors, _):
+                let blended = colors.reduce(colors.first!, { color, with in
+                    return color.blended(withFraction: 0.5, of: with)!
+                })
+                chatServiceItemColor = getAverageColor(blended)
             case let .tiled(image):
                 chatServiceItemColor = getAverageColor(image)
             case .plain:
@@ -1176,7 +1175,7 @@ extension WallpaperSettings {
 enum Wallpaper : Equatable, PostboxCoding {
     case builtin
     case color(UInt32)
-    case gradient(Int64?, UInt32, UInt32, Int32?)
+    case gradient(Int64?, [UInt32], Int32?)
     case image([TelegramMediaImageRepresentation], settings: WallpaperSettings)
     case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
@@ -1193,7 +1192,7 @@ enum Wallpaper : Equatable, PostboxCoding {
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
         case let .gradient(id, colors, settings):
-            self = .gradient(id, colors.first!, colors.last!, settings.rotation)
+            self = .gradient(id, colors, settings.rotation)
         }
     }
     
@@ -1211,8 +1210,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             } else {
                 return false
             }
-        case let .gradient(id, top, bottom, rotation):
-            if case .gradient(id, top, bottom, rotation) = rhs {
+        case let .gradient(id, colors, rotation):
+            if case .gradient(id, colors, rotation) = rhs {
                 return true
             } else {
                 return false
@@ -1290,7 +1289,12 @@ enum Wallpaper : Equatable, PostboxCoding {
         case 5:
             self = .none
         case 6:
-            self = .gradient(decoder.decodeOptionalInt64ForKey("id"), UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0)), decoder.decodeOptionalInt32ForKey("cr"))
+            var colors = decoder.decodeInt32ArrayForKey("c").map { UInt32(bitPattern: $0) }
+            
+            if colors.isEmpty {
+                colors = [UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0))]
+            }
+            self = .gradient(decoder.decodeOptionalInt64ForKey("id"), colors, decoder.decodeOptionalInt32ForKey("cr"))
 
         default:
             assertionFailure()
@@ -1322,10 +1326,9 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
         case .none:
             encoder.encodeInt32(5, forKey: "v")
-        case let .gradient(id, top, bottom, rotation):
+        case let .gradient(id, colors, rotation):
             encoder.encodeInt32(6, forKey: "v")
-            encoder.encodeInt32(Int32(bitPattern: top), forKey: "ct")
-            encoder.encodeInt32(Int32(bitPattern: bottom), forKey: "cb")
+            encoder.encodeInt32Array(colors.map { Int32(bitPattern: $0) }, forKey: "c")
             if let rotation = rotation {
                 encoder.encodeInt32(rotation, forKey: "cr")
             } else {
@@ -1404,8 +1407,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             return values.settings
         case let .color(t):
             return WallpaperSettings(colors: [t])
-        case let .gradient(_, t, b, r):
-            return WallpaperSettings(colors: [t, b], rotation: r)
+        case let .gradient(_, colors, r):
+            return WallpaperSettings(colors: colors, rotation: r)
         default:
             return WallpaperSettings()
         }
@@ -1488,8 +1491,8 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
     case let.color(color):
         backgroundMode = .color(color: NSColor(color))
-    case let .gradient(_, top, bottom, rotation):
-        backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+    case let .gradient(_, colors, rotation):
+        backgroundMode = .gradient(colors: colors.map({ NSColor(argb: $0).withAlphaComponent(1.0) }), rotation: rotation)
     case let .image(representation, settings):
         if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
             backgroundMode = .background(image: image)
@@ -1687,12 +1690,12 @@ class TelegramPresentationTheme : PresentationTheme {
                     } else {
                         return color
                     }
-                case let .gradient(top, bottom, rotation):
-                    if let blended = top.blended(withFraction: 0.5, of: bottom) {
-                        return getAverageColor(blended)
-                    } else {
-                        return getAverageColor(top)
-                    }
+                case let .gradient(colors, _):
+                    let blended = colors.reduce(colors.first!, { color, with in
+                        return color.blended(withFraction: 0.5, of: with)!
+                    })
+                    return getAverageColor(blended)
+
                 case let .tiled(image):
                     chatServiceItemColor = getAverageColor(image)
                 case .plain:

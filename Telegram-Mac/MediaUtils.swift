@@ -3165,26 +3165,24 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
             if let combinedColor = arguments.emptyColor {
                 
                 let colors:[NSColor]
-                let color: NSColor
                 let intensity: CGFloat
                 let rotation: Int32?
                 switch combinedColor {
                 case let .color(combinedColor):
-                    color = combinedColor.withAlphaComponent(1.0)
+                    let color = combinedColor.withAlphaComponent(1.0)
                     intensity = combinedColor.alpha
                     colors = [color]
                     rotation = nil
-                case let .gradient(top, bottom, r):
-                    color = top.withAlphaComponent(1.0)
-                    intensity = top.alpha
-                    colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
-                    rotation = r
+                case let .gradient(_colors, _intensity, _rotation):
+                    intensity = _intensity
+                    colors = _colors.reversed().map { $0.withAlphaComponent(1.0) }
+                    rotation = _rotation
                 }
                 
                 let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
                 context.withFlippedContext { c in
                     c.setBlendMode(.copy)
-                    if colors.count == 1 {
+                    if colors.count == 1, let color = colors.first {
                         c.setFillColor(color.cgColor)
                         c.fill(arguments.drawingRect)
                     } else {
@@ -3213,7 +3211,7 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                         c.clip(to: fittedRect, mask: fullSizeImage)
                         
                         
-                        if colors.count == 1 {
+                        if colors.count == 1, let color = colors.first {
                             c.setFillColor(patternColor(for: color, intensity: intensity, prominent: prominent).cgColor)
                             c.fill(arguments.drawingRect)
                         } else {
