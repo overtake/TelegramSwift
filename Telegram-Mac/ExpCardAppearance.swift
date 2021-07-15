@@ -301,9 +301,7 @@ final class ExpCardAppearanceController : TelegramGenericViewController<ExpCardV
             })
             _ = update.start()
         }
-        
-        var isSystemBased: Bool = false
-        
+                
         disposable.set(combineLatest(nightSettings, statePromise.get(), appearanceSignal).start(next: { [weak self] night, state, _ in
             
             let isSystemBased: Bool = night.systemBased
