@@ -79,6 +79,8 @@ private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoi
     let width = Int(size.width)
     let height = Int(size.height)
 
+    
+//    NSLog("\(size), colors: \(colors.map { $0.hexString })")
     let rgbData = malloc(MemoryLayout<Float>.size * colors.count * 3)!
     defer {
         free(rgbData)
@@ -151,9 +153,9 @@ private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoi
             }
 
             let pixelBytes = lineBytes.advanced(by: x * 4)
-            pixelBytes.advanced(by: 0).pointee = UInt8(b / distanceSum * 255.0)
-            pixelBytes.advanced(by: 1).pointee = UInt8(g / distanceSum * 255.0)
-            pixelBytes.advanced(by: 2).pointee = UInt8(r / distanceSum * 255.0)
+            pixelBytes.advanced(by: 0).pointee = UInt8(min(b / distanceSum * 255.0, 255))
+            pixelBytes.advanced(by: 1).pointee = UInt8(min(g / distanceSum * 255.0, 255))
+            pixelBytes.advanced(by: 2).pointee = UInt8(min(r / distanceSum * 255.0, 255))
             pixelBytes.advanced(by: 3).pointee = 0xff
         }
     }
@@ -279,7 +281,7 @@ public final class AnimatedGradientBackgroundView: ImageView {
         let sizeUpdated = self.validLayout != size
         self.validLayout = size
 
-        let imageSize = size.fitted(CGSize(width: 80.0, height: 80.0)).integralFloor
+        let imageSize = size.fitted(CGSize(width: 32, height: 32)).integralFloor
 
         let positions = gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: self.phase % 8))
 

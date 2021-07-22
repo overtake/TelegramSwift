@@ -372,10 +372,13 @@ public class LinearProgressControl: Control {
         fetchingView.isEventLess = true
     }
     
+    public var highlightOnHover: Bool = true
     
     private func updateCursor() {
         if mouseInside() && onUserChanged != nil, style.highlightColor != .clear, isEnabled {
-            set(background: style.highlightColor.withAlphaComponent(0.2), for: .Hover)
+            if highlightOnHover {
+                set(background: style.highlightColor.withAlphaComponent(0.2), for: .Hover)
+            }
         } else {
             set(background: style.backgroundColor, for: .Hover)
         }

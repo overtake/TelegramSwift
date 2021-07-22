@@ -42,6 +42,10 @@ public final class TransformImageResult {
     }
 }
 
+enum AppearanceThumbSource : Int32 {
+    case general
+    case expCard
+}
 
 enum PhotoCacheKeyEntry : Hashable {
     case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
@@ -50,7 +54,7 @@ enum PhotoCacheKeyEntry : Hashable {
     case slot(SlotMachineValue, TransformImageArguments, CGFloat)
     case platformTheme(TelegramThemeSettings, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case messageId(stableId: Int64, TransformImageArguments, CGFloat, LayoutPositionFlags)
-    case theme(ThemeSource, Bool)
+    case theme(ThemeSource, Bool, AppearanceThumbSource)
     var hashValue:Int {
         return 0
     }
@@ -79,20 +83,20 @@ enum PhotoCacheKeyEntry : Hashable {
             return "slot-\(slot.left.hashValue)\(slot.center.hashValue)\(slot.right.hashValue)-\(transform)-\(scale)".nsstring
         case let .messageId(stableId, transform, scale, layout):
             return "messageId-\(stableId)-\(transform)-\(scale)-\(layout.rawValue)".nsstring
-        case let .theme(source, bubbled):
+        case let .theme(source, bubbled, thumbSource):
             switch source {
             case let .local(palette, cloud):
                 if let settings = cloud?.settings {
                     #if !SHARE
-                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(settings.desc)".nsstring
+                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(settings.desc)-\(thumbSource.rawValue)".nsstring
                     #else
                     return ""
                     #endif
                 }   else {
-                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(palette.accent.argb)".nsstring
+                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(palette.accent.argb)-\(thumbSource.rawValue)".nsstring
                 }
             case let .cloud(cloud):
-                return "theme-remote-\(cloud.id)\(String(describing: cloud.file?.id))-bubbled\(bubbled ? 1 : 0)".nsstring
+                return "theme-remote-\(cloud.id)\(String(describing: cloud.file?.id))-bubbled\(bubbled ? 1 : 0)-\(thumbSource.rawValue)".nsstring
             }
         case let .platformTheme(settings, arguments, scale, layout):
             #if !SHARE
@@ -165,8 +169,8 @@ enum PhotoCacheKeyEntry : Hashable {
             } else {
                 return false
             }
-        case let .theme(source, bubbled):
-            if case .theme(source, bubbled) = rhs {
+        case let .theme(source, bubbled, thumbSource):
+            if case .theme(source, bubbled, thumbSource) = rhs {
                 return true
             } else {
                 return false
@@ -353,8 +357,8 @@ func cacheMedia(_ result: TransformImageResult, messageId: Int64, arguments: Tra
     }
 }
 
-func cachedThemeThumb(source: ThemeSource, bubbled: Bool) -> Signal<TransformImageResult, NoError> {
-    let entry:PhotoCacheKeyEntry = .theme(source, bubbled)
+func cachedThemeThumb(source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Signal<TransformImageResult, NoError> {
+    let entry:PhotoCacheKeyEntry = .theme(source, bubbled, thumbSource)
     let value: CGImage?
     var full: Bool = false
     if let image = themeThums.cachedImage(for: entry) {
@@ -370,8 +374,8 @@ func cachedThemeThumb(source: ThemeSource, bubbled: Bool) -> Signal<TransformIma
     return .single(TransformImageResult(value, full))
 }
 
-func cacheThemeThumb(_ result: TransformImageResult, source: ThemeSource, bubbled: Bool) -> Void {
-    let entry:PhotoCacheKeyEntry = .theme(source, bubbled)
+func cacheThemeThumb(_ result: TransformImageResult, source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Void {
+    let entry:PhotoCacheKeyEntry = .theme(source, bubbled, thumbSource)
     
     if let image = result.image {
         if !result.highQuality {

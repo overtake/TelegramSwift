@@ -34,10 +34,11 @@ private final class ThemePreview : Control {
                         
             let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source, thumbSource: .expCard) |> deliverOnMainQueue
             
-            self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled), clearInstantly: false)
+            self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled, thumbSource: .expCard), clearInstantly: false)
 
             disposable.set(signal.start(next: { [weak self] image, data in
                 self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: false)
+                cacheThemeThumb(image, source: source, bubbled: bubbled, thumbSource: .expCard)
             }))
         }
         
@@ -47,7 +48,9 @@ private final class ThemePreview : Control {
         
         override func layout() {
             super.layout()
-            imageView.frame = bounds.insetBy(dx: 4, dy: 4)
+            if bounds.size.width >= 4 && bounds.size.height >= 4 {
+                imageView.frame = bounds.insetBy(dx: 4, dy: 4)
+            }
         }
         
         required init?(coder: NSCoder) {
@@ -83,7 +86,7 @@ private final class ThemePreview : Control {
         
         container.layer?.cornerRadius = 20
         container.layer?.borderWidth = isSelected ? 1.66 : 1
-        container.layer?.borderColor = isSelected ? theme.colors.accent.cgColor : theme.colors.grayText.withAlphaComponent(0.6).cgColor
+        container.layer?.borderColor = isSelected ? theme.colors.accent.cgColor : theme.colors.border.withAlphaComponent(0.6).cgColor
 
     }
     

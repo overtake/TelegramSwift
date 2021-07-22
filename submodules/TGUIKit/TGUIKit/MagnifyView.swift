@@ -102,8 +102,12 @@ open class MagnifyView : NSView {
     
     open override func layout() {
         super.layout()
-        containerView.setFrameSize(frame.size)
-        contentView.center()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: containerView, frame: bounds)
+        transition.updateFrame(view: contentView, frame: contentView.centerFrame())
     }
     
     required public init?(coder: NSCoder) {

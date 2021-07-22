@@ -195,8 +195,8 @@ class WPArticleLayout: WPLayout {
                             if let intensity = settings.intensity {
                                 patternIntensity = CGFloat(intensity) / 100.0
                             }
-                            if let bottomColor = settings.colors.last, settings.colors.count > 1 {
-                                emptyColor = .gradient(top: NSColor(argb: color).withAlphaComponent(patternIntensity), bottom: NSColor(rgb: bottomColor).withAlphaComponent(patternIntensity), rotation: settings.rotation)
+                            if settings.colors.count > 1 {
+                                emptyColor = .gradient(colors: settings.colors.map { NSColor(argb: $0) }, intensity: patternIntensity, rotation: settings.rotation)
                             } else {
                                 emptyColor = .color(NSColor(argb: color))
                             }

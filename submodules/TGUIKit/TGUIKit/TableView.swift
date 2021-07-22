@@ -53,10 +53,9 @@ public protocol RevealTableView {
 public enum TableBackgroundMode {
     case plain
     case color(color: NSColor)
-    case gradient(top: NSColor, bottom: NSColor, rotation: Int32?)
-    case background(image: NSImage)
+    case gradient(colors: [NSColor], rotation: Int32?)
+    case background(image: NSImage, colors: [NSColor]?, rotation: Int32?)
     case tiled(image: NSImage)
-    case animated
     public var hasWallpaper: Bool {
         switch self {
         case .plain:

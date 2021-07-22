@@ -565,8 +565,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         afterComplete(true)
     case let .wallpaper(_, context, preview):
         switch preview {
-        case let .gradient(id, top, bottom, settings):
-            let wallpaper: TelegramWallpaper = .gradient(id, [top.argb, bottom.rgb], settings)
+        case let .gradient(id, colors, settings):
+            let wallpaper: TelegramWallpaper = .gradient(id, colors.map { $0.argb }, settings)
             showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .color(color):
             let wallpaper: TelegramWallpaper = .color(color.argb)
@@ -809,7 +809,7 @@ struct inAppSecureIdRequest {
 enum WallpaperPreview {
     case color(NSColor)
     case slug(String, WallpaperSettings)
-    case gradient(Int64?, NSColor, NSColor, WallpaperSettings)
+    case gradient(Int64?, [NSColor], WallpaperSettings)
 }
 
 enum inAppLink {
@@ -989,36 +989,17 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 
                                 var blur: Bool = false
                                 var intensity: Int32? = 80
-                                var color: UInt32? = nil
-                                var bottomColor: UInt32? = nil
+                                var colors: [UInt32] = []
                                 
                                 if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
                                     let components = bgcolor.components(separatedBy: "~")
-                                    if components.count > 1 {
-                                        if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
-                                            color = rgb
-                                        }
-                                        if let rgb = NSColor(hexString: "#\(components.last!)")?.argb {
-                                            bottomColor = rgb
-                                        }
-                                    } else if components.count == 1 {
-                                        if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
-                                            color = rgb
-                                        }
+                                    colors = components.compactMap {
+                                        return NSColor(hexString: "#\($0)")?.argb
                                     }
                                 } else {
                                     let components = component.split(separator: "~")
-                                    if components.count > 1 {
-                                        if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
-                                            color = rgb
-                                        }
-                                        if let rgb = NSColor(hexString: "#\(components.last!)")?.argb {
-                                            bottomColor = rgb
-                                        }
-                                    } else if components.count == 1 {
-                                        if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
-                                            color = rgb
-                                        }
+                                    colors = components.compactMap {
+                                        return NSColor(hexString: "#\($0)")?.argb
                                     }
                                 }
                                 if let intensityString = vars["intensity"] {
@@ -1028,7 +1009,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     blur = mode.contains("blur")
                                 }
                                 
-                                let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: [color, bottomColor].compactMap { $0 }, intensity: intensity, rotation: rotation)
+                                let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: colors, intensity: intensity, rotation: rotation)
                                 
                                 
                                 var slug = component
@@ -1040,8 +1021,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 }
                                 
                                 var preview: WallpaperPreview = .slug(slug, settings)
-                                if let color = color, let bottomColor = bottomColor, slug == "" {
-                                    preview = .gradient(nil, NSColor(color), NSColor(bottomColor), settings)
+                                if !colors.isEmpty, slug == "" {
+                                    preview = .gradient(nil, colors.map { NSColor(argb: $0) }, settings)
                                 }
 
                                 return .wallpaper(link: urlString, context: context, preview: preview)
@@ -1282,8 +1263,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         
                         var blur: Bool = false
                         var intensity: Int32? = 80
-                        var color: UInt32? = nil
-                        var bottomColor: UInt32? = nil
+                        var colors: [UInt32] = []
                         
                         var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
                         
@@ -1297,17 +1277,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         
                         if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
                             let components = bgcolor.components(separatedBy: "~")
-                            if components.count > 1 {
-                                if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
-                                    color = rgb
-                                }
-                                if let rgb = NSColor(hexString: "#\(components.last!)")?.argb {
-                                    bottomColor = rgb
-                                }
-                            } else if components.count == 1 {
-                                if let rgb = NSColor(hexString: "#\(components.first!)")?.argb {
-                                    color = rgb
-                                }
+                            colors = components.compactMap {
+                                return NSColor(hexString: "#\($0)")?.argb
                             }
                         }
                         if let mode = vars["mode"] {
@@ -1317,7 +1288,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             intensity = Int32(intensityString)
                         }
                         
-                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: [color, bottomColor].compactMap { $0 }, intensity: intensity, rotation: rotation)
+                        let settings: WallpaperSettings = WallpaperSettings(blur: blur, motion: false, colors: colors, intensity: intensity, rotation: rotation)
                         
                         return .wallpaper(link: urlString, context: context, preview: .slug(value, settings))
                     }
@@ -1335,8 +1306,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                         
                         let components = vars["bg_color"]?.components(separatedBy: "~") ?? []
-                        if components.count > 0, let topColor = NSColor(hexString: "#\(components.first!)"), let bottomColor = NSColor(hexString: "#\(components.last!)")  {
-                            return .wallpaper(link: urlString, context: context, preview: .gradient(0, topColor, bottomColor, WallpaperSettings(rotation: rotation)))
+                        let colors = components.compactMap {
+                            return NSColor(hexString: "#\($0)")
+                        }
+                        if !colors.isEmpty  {
+                            return .wallpaper(link: urlString, context: context, preview: .gradient(0, colors, WallpaperSettings(rotation: rotation)))
                         }
                     }
                 case known_scheme[10]:
