@@ -212,10 +212,10 @@ NSImage * _Nullable drawSvgImageNano(NSData * _Nonnull data, CGSize size) {
                     CGContextSetLineJoin(context, kCGLineJoinBevel);
                     break;
                 case NSVG_JOIN_MITER:
-                    CGContextSetLineCap(context, kCGLineJoinMiter);
+                    CGContextSetLineJoin(context, kCGLineJoinMiter);
                     break;
                 case NSVG_JOIN_ROUND:
-                    CGContextSetLineCap(context, kCGLineJoinRound);
+                    CGContextSetLineJoin(context, kCGLineJoinRound);
                     break;
                 default:
                     break;

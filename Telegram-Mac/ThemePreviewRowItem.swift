@@ -100,13 +100,16 @@ class ThemePreviewRowItem: GeneralRowItem {
 private final class ThemePreviewRowView : TableRowView {
     private var containerView = GeneralRowContainerView(frame: NSZeroRect)
     private let backgroundView: BackgroundView
+    private let itemsView = View()
     private let borderView: View = View()
     required init(frame frameRect: NSRect) {
         backgroundView = BackgroundView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        backgroundView.useSharedAnimationPhase = false
         super.init(frame: frameRect)
         self.containerView.addSubview(self.backgroundView)
         self.containerView.addSubview(self.borderView)
         self.addSubview(containerView)
+        self.backgroundView.addSubview(itemsView)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -118,7 +121,8 @@ private final class ThemePreviewRowView : TableRowView {
         
         self.layout()
         
-        self.backgroundView.removeAllSubviews()
+        self.itemsView.removeAllSubviews()
+        
         
         switch item.theme.backgroundMode {
         case .background, .tiled:
@@ -129,8 +133,6 @@ private final class ThemePreviewRowView : TableRowView {
             borderView.isHidden = item.theme.bubbled
         case let .color(color):
             borderView.isHidden = color != item.theme.colors.background
-        case .animated:
-            borderView.isHidden = false
         }
         
         var y: CGFloat = item.viewType.innerInset.top
@@ -138,7 +140,7 @@ private final class ThemePreviewRowView : TableRowView {
             let vz = item.viewClass() as! TableRowView.Type
             let view = vz.init(frame:NSMakeRect(0, y, self.backgroundView.frame.width, item.height))
             view.set(item: item, animated: false)
-            self.backgroundView.addSubview(view)
+            self.itemsView.addSubview(view)
             
             if let view = view as? ChatRowView {
                 view.updateBackground(animated: false, item: view.item, rotated: true)
@@ -173,6 +175,7 @@ private final class ThemePreviewRowView : TableRowView {
         self.containerView.setCorners(item.viewType.corners)
         self.backgroundView.frame = self.containerView.bounds
         self.borderView.frame = NSMakeRect(0, self.containerView.frame.height - .borderSize, self.containerView.frame.width, .borderSize)
+        itemsView.frame = backgroundView.bounds
     }
     
     required init?(coder: NSCoder) {

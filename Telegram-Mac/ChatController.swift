@@ -1766,30 +1766,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let afterSentTransition = { [weak self] in
-            
-            
-            self?.navigationController?.doBackgroundAction()
-            
-           self?.chatInteraction.update({ presentation in
-            return presentation.updatedInputQueryResult({_ in return nil}).updatedInterfaceState { current in
+            self?.chatInteraction.update({ presentation in
+                return presentation.updatedInputQueryResult {_ in
+                    return nil
+                }.updatedInterfaceState { current in
                 
-                var value: ChatInterfaceState = current.withUpdatedReplyMessageId(nil).withUpdatedInputState(ChatTextInputState()).withUpdatedForwardMessageIds([]).withUpdatedComposeDisableUrlPreview(nil)
-            
-            
-                if let message = presentation.keyboardButtonsMessage, let replyMarkup = message.replyMarkup {
-                    if replyMarkup.flags.contains(.setupReply) {
-                        value = value.withUpdatedDismissedForceReplyId(message.id)
+                    var value: ChatInterfaceState = current.withUpdatedReplyMessageId(nil).withUpdatedInputState(ChatTextInputState()).withUpdatedForwardMessageIds([]).withUpdatedComposeDisableUrlPreview(nil)
+                
+                
+                    if let message = presentation.keyboardButtonsMessage, let replyMarkup = message.replyMarkup {
+                        if replyMarkup.flags.contains(.setupReply) {
+                            value = value.withUpdatedDismissedForceReplyId(message.id)
+                        }
                     }
-                }
-                return value
-            }.updatedUrlPreview(nil).updateBotMenu({ current in
-                var current = current
-                current?.revealed = false
-                return current
-            })
+                    return value
+                }.updatedUrlPreview(nil).updateBotMenu({ current in
+                    var current = current
+                    current?.revealed = false
+                    return current
+                })
             
-           })
+            })
             self?.chatInteraction.saveState(scrollState: self?.immediateScrollState())
+            self?.navigationController?.doBackgroundAction()
         }
         
         chatInteraction.jumpToDate = { [weak self] date in

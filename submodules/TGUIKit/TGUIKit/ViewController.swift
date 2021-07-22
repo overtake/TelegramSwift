@@ -10,7 +10,7 @@ import Foundation
 import SwiftSignalKit
 
 public final class BackgroundGradientView : View {
-    public var values:(top: NSColor, bottom: NSColor, rotation: Int32?)? {
+    public var values:(top: NSColor?, bottom: NSColor?, rotation: Int32?)? {
         didSet {
             needsDisplay = true
         }
@@ -38,9 +38,14 @@ public final class BackgroundGradientView : View {
         super.draw(layer, in: ctx)
         if let values = self.values {
             
-            let colors = [values.top, values.bottom].reversed()
+            let colors = Array([values.top, values.bottom].compactMap { $0?.cgColor }.reversed())
             
-            let gradientColors = colors.map { $0.cgColor } as CFArray
+            guard !colors.isEmpty else {
+                return
+            }
+            
+            let gradientColors = colors as CFArray
+            
             let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
             
             var locations: [CGFloat] = []
@@ -62,41 +67,39 @@ public final class BackgroundGradientView : View {
 }
 
 
-open class BackgroundView: ImageView {
+open class BackgroundView: View {
     
-    public var _customHandler:CustomViewHandlers?
-    
-    public var customHandler:CustomViewHandlers {
-        if _customHandler == nil {
-            _customHandler = CustomViewHandlers()
-        }
-        return _customHandler!
-    }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+        container.removeAllSubviews()
     }
     
-    private let gradient: BackgroundGradientView
-
-    private var animatedBackground: AnimatedGradientBackgroundView? {
-        didSet {
-            var bp = 0
-            bp += 1
-        }
-    }
-    public override init(frame frameRect: NSRect) {
-        gradient = BackgroundGradientView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+    private let imageView: ImageView = ImageView()
+    private var backgroundView: NSView?
+    
+    public var useSharedAnimationPhase: Bool = true
+    
+    private let container: View = View()
+    
+    public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(gradient)
+        imageView.frame = frameRect.size.bounds
+        container.addSubview(imageView)
         autoresizesSubviews = false
-        self.layer?.contentsGravity = .resizeAspectFill
+        imageView.contentGravity = .resizeAspectFill
+        imageView.layerUsesCoreImageFilters = true
+        self.addSubview(container)
     }
+    
+
+    var contentViews: [NSView] {
+        return self.subviews
+    }
+
     
     open override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
         super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        gradient.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
+        imageView.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
     }
     
     override init() {
@@ -105,13 +108,14 @@ open class BackgroundView: ImageView {
     
     open override func layout() {
         super.layout()
-        gradient.frame = bounds
         _customHandler?.layout?(self)
-        animatedBackground?.frame = bounds
+        self.updateLayout(size: frame.size, transition: .immediate)
     }
     
     public func doAction() {
-        self.animatedBackground?.animateEvent(transition: .animated(duration: 0.5, curve: .spring))
+        if let backgroundView = backgroundView as? AnimatedGradientBackgroundView {
+            backgroundView.animateEvent(transition: .animated(duration: 0.5, curve: .spring))
+        }
     }
     
     open override func viewDidChangeBackingProperties() {
@@ -128,48 +132,87 @@ open class BackgroundView: ImageView {
     
     open var backgroundMode:TableBackgroundMode = .plain {
         didSet {
-            var animatedBackground: AnimatedGradientBackgroundView? = nil
+            var backgroundView: NSView? = nil
             switch backgroundMode {
-            case let .background(image):
-                layer?.backgroundColor = .clear
-                layer?.contents = image
-                gradient.isHidden = true
+            case let .background(image, colors, rotation):
+                imageView.layer?.backgroundColor = .clear
+                imageView.layer?.contents = image
+                if let colors = colors, !colors.isEmpty {
+                    if colors.count > 2 {
+                        if let bg = self.backgroundView as? AnimatedGradientBackgroundView {
+                            backgroundView = bg
+                            bg.updateColors(colors: colors)
+                        } else {
+                            backgroundView = AnimatedGradientBackgroundView(colors: colors, useSharedAnimationPhase: useSharedAnimationPhase)
+                            backgroundView?.frame = bounds
+                        }
+                    } else {
+                        if let bg = self.backgroundView as? BackgroundGradientView {
+                            backgroundView = bg
+                        } else {
+                            let bg = BackgroundGradientView(frame: bounds)
+                            backgroundView = bg
+                        }
+                        (backgroundView as? BackgroundGradientView)?.values = (top: colors.first, bottom: colors.last, rotation: rotation)
+                    }
+                }
             case let .color(color):
-                layer?.backgroundColor = color.withAlphaComponent(1.0).cgColor
-                layer?.contents = nil
-                gradient.values = nil
-            case let .gradient(top, bottom, rotation):
-                gradient.values = (top: top.withAlphaComponent(1.0), bottom: bottom.withAlphaComponent(1.0), rotation: rotation)
-                layer?.contents = nil
-                gradient.isHidden = false
-            case .animated:
-                if let current = self.animatedBackground {
-                    animatedBackground = current
+                imageView.background = color.withAlphaComponent(1.0)
+                imageView.layer?.contents = nil
+            case let .gradient(colors, rotation):
+                imageView.image = nil
+                imageView.layer?.backgroundColor = .clear
+                if colors.count > 2 {
+                    if let bg = self.backgroundView as? AnimatedGradientBackgroundView {
+                        backgroundView = bg
+                        bg.updateColors(colors: colors)
+                    } else {
+                        backgroundView = AnimatedGradientBackgroundView(colors: colors, useSharedAnimationPhase: useSharedAnimationPhase)
+                        backgroundView?.frame = bounds
+                    }
                 } else {
-                    animatedBackground = AnimatedGradientBackgroundView(colors: nil, useSharedAnimationPhase: true)
-                    animatedBackground?.frame = bounds
+                    if let bg = self.backgroundView as? BackgroundGradientView {
+                        backgroundView = bg
+                    } else {
+                        let bg = BackgroundGradientView(frame: bounds)
+                        backgroundView = bg
+                    }
+                    (backgroundView as? BackgroundGradientView)?.values = (top: colors.first, bottom: colors.last, rotation: rotation)
                 }
             default:
-                gradient.isHidden = true
-                gradient.values = nil
-                layer?.backgroundColor = presentation.colors.background.cgColor
-                layer?.contents = nil
+                imageView.layer?.backgroundColor = presentation.colors.background.cgColor
+                imageView.layer?.contents = nil
             }
             
-            if let animatedBackground = animatedBackground {
-                self.animatedBackground?.removeFromSuperview()
-                self.animatedBackground = animatedBackground
-                self.addSubview(animatedBackground, positioned: .above, relativeTo: self.gradient)
+            
+            if let backgroundView = backgroundView {
+                self.backgroundView?.removeFromSuperview()
+                self.backgroundView = backgroundView
+                container.addSubview(backgroundView, positioned: .below, relativeTo: self.imageView)
+//                imageView.layer?.compositingFilter = "softLightBlendMode"
             } else {
-                self.animatedBackground?.removeFromSuperview()
-                self.animatedBackground = nil
+                self.backgroundView?.removeFromSuperview()
+                self.backgroundView = nil
+//                imageView.layer?.compositingFilter = nil
+            }
+        }
+    }
+    
+    public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: imageView, frame: bounds)
+        transition.updateFrame(view: container, frame: bounds)
+        if let backgroundView = backgroundView {
+            transition.updateFrame(view: backgroundView, frame: bounds)
+            if let backgroundView = backgroundView as? AnimatedGradientBackgroundView {
+                backgroundView.updateLayout(size: size, transition: transition)
             }
         }
     }
     
     override open func copy() -> Any {
-        let view = BackgroundView(frame: self.bounds)
+        let view = BackgroundView(frame: self.frame)
         view.backgroundMode = self.backgroundMode
+        view.updateLayout(size: view.frame.size, transition: .immediate)
         return view
     }
 }
@@ -405,7 +448,7 @@ open class ViewController : NSObject {
     
     open func updateLocalizationAndTheme(theme: PresentationTheme) {
         (view as? AppearanceViewProtocol)?.updateLocalizationAndTheme(theme: theme)
-        self.navigationController?.updateLocalizationAndTheme(theme: theme)
+      //  self.navigationController?.updateLocalizationAndTheme(theme: theme)
     }
     
     open func loadView() -> Void {
@@ -481,7 +524,7 @@ open class ViewController : NSObject {
     
     open func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         switch backgroundMode {
-        case .background, .gradient, .animated:
+        case .background, .gradient:
             backgroundColor = .clear
         case let .color(color):
             backgroundColor = color
@@ -786,6 +829,8 @@ open class ViewController : NSObject {
     public func addSubview(_ subview:NSView) -> Void {
         self.view.addSubview(subview)
     }
+    
+    
     
     public func removeFromSuperview() ->Void {
         if isLoaded() {

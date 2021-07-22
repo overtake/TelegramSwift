@@ -78,7 +78,7 @@ open class Control: View {
     
     public var appTooltip: String?
 
-    public var isSelected:Bool {
+    open var isSelected:Bool {
         didSet {
             if isSelected != oldValue {
                 apply(state: isSelected ? .Highlight : self.controlState)

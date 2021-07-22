@@ -238,25 +238,59 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         switch wallpaper {
         case .builtin, .file, .color, .gradient:
             switch backgroundMode {
-            case let .background(image):
+            case let .background(image, colors, rotation):
                 let imageSize = image.size.aspectFilled(size)
                 ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
                 ctx.scaleBy(x: 1.0, y: -1.0)
                 ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
 
+                if let colors = colors, !colors.isEmpty {
+                    if colors.count == 1, let color = colors.first {
+                        ctx.setFillColor(color.cgColor)
+                        ctx.fill(rect)
+                    } else {
+                        if colors.count <= 2 {
+                            let gradientColors = colors.map { $0.cgColor } as CFArray
+                            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+
+                            var locations: [CGFloat] = []
+                            for i in 0 ..< colors.count {
+                                locations.append(delta * CGFloat(i))
+                            }
+                            let colorSpace = CGColorSpaceCreateDeviceRGB()
+                            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                            
+                            ctx.saveGState()
+                            ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
+                            ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
+                            ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
+                            
+                            ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                            ctx.restoreGState()
+                        } else {
+                            let preview = AnimatedGradientBackgroundView.generatePreview(size: size.fitted(.init(width: 32, height: 32)), colors: colors)
+
+                            ctx.saveGState()
+                            ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                            ctx.scaleBy(x: 1.0, y: -1.0)
+                            ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                            ctx.draw(preview, in: size.bounds)
+                            ctx.restoreGState()
+                        }
+                    }
+                }
+                
                 ctx.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: rect.focus(imageSize))
                 
                 ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
                 ctx.scaleBy(x: 1.0, y: -1.0)
                 ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
 
-                
-                break
             case let .color(color):
                 ctx.setFillColor(color.cgColor)
                 ctx.fill(rect)
-            case let .gradient(top, bottom, rotation):
-                let colors = [top, bottom].reversed()
+            case let .gradient(colors, rotation):
+                let colors = colors.reversed()
                 
                 let gradientColors = colors.map { $0.cgColor } as CFArray
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -320,25 +354,29 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         switch wallpaper {
         case .builtin, .file, .color, .gradient:
             switch backgroundMode {
-            case let .background(image):
-                chatServiceItemColor = getAverageColor(image)
+            case let .background(image, colors, _):
+                if let colors = colors, let first = colors.first {
+                    let blended = colors.reduce(first, { color, with in
+                        return color.blended(withFraction: 0.5, of: with)!
+                    })
+                    chatServiceItemColor = getAverageColor(blended)
+                } else {
+                    chatServiceItemColor = getAverageColor(image)
+                }
             case let .color(color):
                 if color != palette.background {
                     chatServiceItemColor = getAverageColor(color)
                 } else {
                     chatServiceItemColor = color
                 }
-            case let .gradient(top, bottom, _):
-                if let blended = top.blended(withFraction: 0.5, of: bottom) {
-                    chatServiceItemColor = getAverageColor(blended)
-                } else {
-                    chatServiceItemColor = getAverageColor(top)
-                }
+            case let .gradient(colors, _):
+                let blended = colors.reduce(colors.first!, { color, with in
+                    return color.blended(withFraction: 0.5, of: with)!
+                })
+                chatServiceItemColor = getAverageColor(blended)
             case let .tiled(image):
                 chatServiceItemColor = getAverageColor(image)
             case .plain:
-                chatServiceItemColor = palette.chatBackground
-            case .animated:
                 chatServiceItemColor = palette.chatBackground
             }
         default:
@@ -1176,7 +1214,7 @@ extension WallpaperSettings {
 enum Wallpaper : Equatable, PostboxCoding {
     case builtin
     case color(UInt32)
-    case gradient(Int64?, UInt32, UInt32, Int32?)
+    case gradient(Int64?, [UInt32], Int32?)
     case image([TelegramMediaImageRepresentation], settings: WallpaperSettings)
     case file(slug: String, file: TelegramMediaFile, settings: WallpaperSettings, isPattern: Bool)
     case none
@@ -1193,7 +1231,7 @@ enum Wallpaper : Equatable, PostboxCoding {
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
         case let .gradient(id, colors, settings):
-            self = .gradient(id, colors.first!, colors.last!, settings.rotation)
+            self = .gradient(id, colors, settings.rotation)
         }
     }
     
@@ -1211,8 +1249,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             } else {
                 return false
             }
-        case let .gradient(id, top, bottom, rotation):
-            if case .gradient(id, top, bottom, rotation) = rhs {
+        case let .gradient(id, colors, rotation):
+            if case .gradient(id, colors, rotation) = rhs {
                 return true
             } else {
                 return false
@@ -1290,7 +1328,12 @@ enum Wallpaper : Equatable, PostboxCoding {
         case 5:
             self = .none
         case 6:
-            self = .gradient(decoder.decodeOptionalInt64ForKey("id"), UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0)), decoder.decodeOptionalInt32ForKey("cr"))
+            var colors = decoder.decodeInt32ArrayForKey("c").map { UInt32(bitPattern: $0) }
+            
+            if colors.isEmpty {
+                colors = [UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0))]
+            }
+            self = .gradient(decoder.decodeOptionalInt64ForKey("id"), colors, decoder.decodeOptionalInt32ForKey("cr"))
 
         default:
             assertionFailure()
@@ -1322,10 +1365,9 @@ enum Wallpaper : Equatable, PostboxCoding {
             encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
         case .none:
             encoder.encodeInt32(5, forKey: "v")
-        case let .gradient(id, top, bottom, rotation):
+        case let .gradient(id, colors, rotation):
             encoder.encodeInt32(6, forKey: "v")
-            encoder.encodeInt32(Int32(bitPattern: top), forKey: "ct")
-            encoder.encodeInt32(Int32(bitPattern: bottom), forKey: "cb")
+            encoder.encodeInt32Array(colors.map { Int32(bitPattern: $0) }, forKey: "c")
             if let rotation = rotation {
                 encoder.encodeInt32(rotation, forKey: "cr")
             } else {
@@ -1404,8 +1446,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             return values.settings
         case let .color(t):
             return WallpaperSettings(colors: [t])
-        case let .gradient(_, t, b, r):
-            return WallpaperSettings(colors: [t, b], rotation: r)
+        case let .gradient(_, colors, r):
+            return WallpaperSettings(colors: colors, rotation: r)
         default:
             return WallpaperSettings()
         }
@@ -1466,7 +1508,7 @@ func getAverageColor(_ image: NSImage) -> NSColor {
     return color
 }
 
-private func getAverageColor(_ color: NSColor) -> NSColor {
+func getAverageColor(_ color: NSColor) -> NSColor {
     var hue: CGFloat = 0.0
     var saturation: CGFloat = 0.0
     var brightness: CGFloat = 0.0
@@ -1485,31 +1527,31 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
     var backgroundMode: TableBackgroundMode
     switch wallpaper {
     case .builtin:
-        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
     case let.color(color):
         backgroundMode = .color(color: NSColor(color))
-    case let .gradient(_, top, bottom, rotation):
-        backgroundMode = .gradient(top: NSColor(argb: top).withAlphaComponent(1.0), bottom: NSColor(argb: bottom).withAlphaComponent(1.0), rotation: rotation)
+    case let .gradient(_, colors, rotation):
+        backgroundMode = .gradient(colors: colors.map({ NSColor(argb: $0).withAlphaComponent(1.0) }), rotation: rotation)
     case let .image(representation, settings):
         if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
-            backgroundMode = .background(image: image)
+            backgroundMode = .background(image: image, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
-            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: nil, rotation: nil)
         }
         
     case let .file(_, file, settings, _):
         if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
-            backgroundMode = .background(image: image)
+            backgroundMode = .background(image: image, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
-            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
         }
     case .none:
         backgroundMode = .color(color: palette.chatBackground)
     case let .custom(representation, blurred):
         if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
-            backgroundMode = .background(image: image)
+            backgroundMode = .background(image: image, colors: nil, rotation: nil)
         } else {
-            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"))
+            backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
         }
     }
     return backgroundMode
@@ -1679,25 +1721,30 @@ class TelegramPresentationTheme : PresentationTheme {
             let chatServiceItemColor: NSColor
             if bubbled {
                 switch backgroundMode {
-                case let .background(image):
-                    chatServiceItemColor = getAverageColor(image)
+                case let .background(image, colors, _):
+                    if let colors = colors, let first = colors.first {
+                        let blended = colors.reduce(first, { color, with in
+                            return color.blended(withFraction: 0.5, of: with)!
+                        })
+                        chatServiceItemColor = getAverageColor(blended)
+                    } else {
+                        chatServiceItemColor = getAverageColor(image)
+                    }
                 case let .color(color):
                     if color != colors.background {
-                        return getAverageColor(color)
+                        chatServiceItemColor = getAverageColor(color)
                     } else {
-                        return color
+                        chatServiceItemColor = color
                     }
-                case let .gradient(top, bottom, rotation):
-                    if let blended = top.blended(withFraction: 0.5, of: bottom) {
-                        return getAverageColor(blended)
-                    } else {
-                        return getAverageColor(top)
-                    }
+                case let .gradient(colors, _):
+                    let blended = colors.reduce(colors.first!, { color, with in
+                        return color.blended(withFraction: 0.5, of: with)!
+                    })
+                    chatServiceItemColor = getAverageColor(blended)
+
                 case let .tiled(image):
                     chatServiceItemColor = getAverageColor(image)
                 case .plain:
-                    chatServiceItemColor = colors.chatBackground
-                case .animated:
                     chatServiceItemColor = colors.chatBackground
                 }
             } else {
@@ -1730,8 +1777,6 @@ class TelegramPresentationTheme : PresentationTheme {
                     chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
                 case .plain:
                     chatServiceItemTextColor = colors.grayText
-                case .animated:
-                    chatServiceItemTextColor = colors.grayText
                 }
             } else {
                 chatServiceItemTextColor = colors.grayText
@@ -1741,6 +1786,7 @@ class TelegramPresentationTheme : PresentationTheme {
             return chatServiceItemTextColor
         }
     }
+    
     let fontSize: CGFloat
     
     var controllerBackgroundMode: TableBackgroundMode {
@@ -2275,7 +2321,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                wallpaper_color_close: { NSImage(named: "Icon_GradientClose")!.precomposed(palette.grayIcon) },
                                                wallpaper_color_add: { NSImage(named: "Icon_GradientAdd")!.precomposed(palette.grayIcon) },
                                                wallpaper_color_swap: { NSImage(named: "Icon_GradientSwap")!.precomposed(palette.grayIcon) },
-                                               wallpaper_color_rotate: { NSImage(named: "Icon_GradientRotate")!.precomposed(palette.grayIcon) },
+                                               wallpaper_color_rotate: { NSImage(named: "Icon_GradientRotate")!.precomposed(.white) },
+                                               wallpaper_color_play: { NSImage(named: "Icon_ChatMusicPlay")!.precomposed(.white) },
                                                login_cap: { NSImage(named: "Icon_LoginCap")!.precomposed(palette.accentIcon) },
                                                login_qr_cap: { NSImage(named: "Icon_loginQRCap")!.precomposed(palette.accentIcon) },
                                                login_qr_empty_cap: { generateLoginQrEmptyCap() },
