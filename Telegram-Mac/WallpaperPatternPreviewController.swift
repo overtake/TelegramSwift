@@ -1,102 +1,17 @@
 //
-//  WallpaperPatternPreview.swift
+//  WallpaperPatternPreviewController.swift
 //  Telegram
 //
-//  Created by Mikhail Filimonov on 29/01/2019.
-//  Copyright © 2019 Telegram. All rights reserved.
+//  Created by Mikhail Filimonov on 22.07.2021.
+//  Copyright © 2021 Telegram. All rights reserved.
 //
 
-import Cocoa
+import Foundation
 import TGUIKit
 import TelegramCore
 import SyncCore
 import Postbox
 import SwiftSignalKit
-
-private class WallpaperPatternView : Control {
-    private let backgroundView: BackgroundView
-    let imageView = TransformImageView()
-    let checkbox: ImageView = ImageView()
-    private let emptyTextView = TextView()
-    fileprivate var pattern: Wallpaper?
-    required init(frame frameRect: NSRect) {
-        backgroundView = BackgroundView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
-        super.init(frame: frameRect)
-        
-        addSubview(backgroundView)
-
-        
-        addSubview(imageView)
-        addSubview(checkbox)
-        checkbox.image = theme.icons.chatGroupToggleSelected
-        checkbox.sizeToFit()
-        self.layer?.cornerRadius = .cornerRadius
-
-        emptyTextView.userInteractionEnabled = false
-        emptyTextView.isSelectable = false
-    }
-    
-    override func layout() {
-        super.layout()
-        imageView.frame = bounds
-        emptyTextView.center()
-        checkbox.setFrameOrigin(NSMakePoint(frame.width - checkbox.frame.width - 5, 5))
-        backgroundView.frame = bounds
-    }
-    
-    func update(with pattern: Wallpaper?, isSelected: Bool, account: Account, color: [NSColor], rotation: Int32?) {
-        checkbox.isHidden = !isSelected
-        self.pattern = pattern
-        if color.count > 1 {
-            backgroundView.backgroundMode = .gradient(colors: color, rotation: rotation)
-        } else {
-            backgroundView.backgroundMode = .color(color: color[0])
-        }
-
-        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: color.first!.brightnessAdjustedColor, font: .normal(.title)))
-        layout.measure(width: 80)
-        emptyTextView.update(layout)
-        
-        if let pattern = pattern {
-            emptyTextView.isHidden = true
-            imageView.isHidden = false
-            
-            let emptyColor: TransformImageEmptyColor
-            if color.count > 1 {
-                let colors = color.map {
-                    return $0.withAlphaComponent($0.alpha == 0 ? 0.5 : $0.alpha)
-                }
-                emptyColor = .gradient(colors: colors, intensity: colors.first!.alpha, rotation: rotation)
-            } else if let color = color.first {
-                emptyColor = .color(color)
-            } else {
-                emptyColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
-            }
-            
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor))
-            switch pattern {
-            case let .file(_, file, _, _):
-                var representations:[TelegramMediaImageRepresentation] = []
-                if let dimensions = file.dimensions {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
-                } else {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 300, height: 300), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
-                }
-                imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false), animate: false, synchronousLoad: false)
-            default:
-                break
-            }
-        } else {
-            emptyTextView.isHidden = false
-            imageView.isHidden = true
-        }
-       
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
 
 final class WallpaperPatternPreviewView: View {
     private let documentView: View = View()
@@ -109,6 +24,8 @@ final class WallpaperPatternPreviewView: View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(scrollView)
+        
+        sliderView.highlightOnHover = false
         scrollView.documentView = documentView
         backgroundColor = theme.colors.background
         
@@ -143,19 +60,18 @@ final class WallpaperPatternPreviewView: View {
         addSubview(borderView)
     }
     
-    func updateColor(_ color: [NSColor], rotation: Int32?, account: Account) {
-        self.color = color
-        self.rotation = rotation
+    func updateColor(_ colors: [NSColor], rotation: Int32?, account: Account) {
+        self.colors = colors
         for subview in self.documentView.subviews {
             if let subview = (subview as? WallpaperPatternView) {
-                subview.update(with: subview.pattern, isSelected: !subview.checkbox.isHidden, account: account, color: color, rotation: rotation)
+                subview.update(with: subview.pattern, isSelected: !subview.checkbox.isHidden, account: account, colors: colors, rotation: rotation)
             }
         }
     }
     
-    fileprivate var color: [NSColor] = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
+    fileprivate var colors: [NSColor] = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
     fileprivate var rotation: Int32? = nil
-    
+
     func updateSelected(_ pattern: Wallpaper?) {
         
         for subview in self.documentView.subviews {
@@ -190,11 +106,11 @@ final class WallpaperPatternPreviewView: View {
         var x: CGFloat = 10
         for pattern in patterns {
             let patternView = WallpaperPatternView(frame: NSMakeRect(x, 10, 80, 80))
-            patternView.update(with: pattern, isSelected: pattern == selected, account: account, color: self.color, rotation: self.rotation)
+            patternView.update(with: pattern, isSelected: pattern == selected, account: account, colors: self.colors, rotation: self.rotation)
             patternView.set(handler: { [weak self] _ in
                 guard let `self` = self else {return}
                 select(pattern)
-                self.updateSelected(pattern)
+              //  self.updateSelected(pattern)
             }, for: .Click)
             documentView.addSubview(patternView)
             x += patternView.frame.width + 10
@@ -205,15 +121,27 @@ final class WallpaperPatternPreviewView: View {
     
     override func layout() {
         super.layout()
-        scrollView.frame = NSMakeRect(0, 0, frame.width, 100)
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        intensityContainerView.setFrameSize(frame.width - 80, intensityTextView.frame.height + 12 + 3)
-        sliderView.setFrameSize(NSMakeSize(intensityContainerView.frame.width - 20, 12))
-        intensityTextView.centerX(y: 0)
-        sliderView.centerX(y: intensityTextView.frame.height + 3)
+        let intensitySize = NSMakeSize(frame.width - 20, intensityTextView.frame.height + 12 + 3)
+        var intensityRect = focus(intensitySize)
+        intensityRect.origin.y = 110
         
-        intensityContainerView.centerX(y: 110)
-        borderView.frame = NSMakeRect(0, 0, frame.width, .borderSize)
+        transition.updateFrame(view: scrollView, frame: NSMakeRect(0, 0, frame.width, 100))
+        transition.updateFrame(view: intensityContainerView, frame: intensityRect)
+        
+        transition.updateFrame(view: intensityTextView, frame: intensityTextView.centerFrameX(y: 0))
+        transition.updateFrame(view: borderView, frame: NSMakeRect(0, 0, frame.width, .borderSize))
+
+        
+        let sliderSize = NSMakeSize(intensityContainerView.frame.width, 12)
+        var sliderRect = intensityContainerView.focus(sliderSize)
+        sliderRect.origin.y = intensityTextView.frame.height + 3
+        
+        transition.updateFrame(view: sliderView, frame: sliderRect)
         
     }
     
@@ -226,17 +154,17 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     private let disposable = MetaDisposable()
     private let context: AccountContext
     
-    var color: ([NSColor], Int32?) = ([NSColor(rgb: 0xd6e2ee, alpha: 0.5)], nil) {
+    var colors: ([NSColor], Int32?) = ([NSColor(rgb: 0xd6e2ee, alpha: 0.5)], nil) {
         didSet {
-            genericView.updateColor(color.0, rotation: color.1, account: context.account)
+            genericView.updateColor(self.colors.0, rotation: self.colors.1, account: context.account)
         }
     }
-
     
     var selected:((Wallpaper?) -> Void)?
     
     var intensity: Int32? = nil {
         didSet {
+            NSLog("intensity: \(intensity)")
             if oldValue != nil, oldValue != intensity {
                 self.selected?(pattern?.withUpdatedSettings(WallpaperSettings(colors: pattern?.settings.colors ?? [], intensity: intensity)))
             }
@@ -245,13 +173,13 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     
     var pattern: Wallpaper? {
         didSet {
-            let intensity = self.intensity ?? pattern?.settings.intensity
+            let intensity = self.intensity ?? pattern?.settings.intensity ?? 80
             self.intensity = intensity
             
             if let pattern = pattern {
                 switch pattern {
                 case .file:
-                    genericView.updateSelected(pattern)
+                    genericView.updateSelected(pattern.withUpdatedSettings(.init(colors: pattern.settings.colors, intensity: intensity, rotation: pattern.settings.rotation)))
                 default:
                     break
                 }

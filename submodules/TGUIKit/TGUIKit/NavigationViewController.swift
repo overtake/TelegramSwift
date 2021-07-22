@@ -375,7 +375,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     }
     
     public func doBackgroundAction() {
-        containerView.doAction()
+        DispatchQueue.main.async { [weak self] in
+            self?.containerView.doAction()
+        }
     }
     
     public func set(header:NavigationHeader?) {
@@ -1032,7 +1034,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     
                     previous.view.frame = NSMakeRect(0, previous.bar.height, self.frame.width, self.frame.height - previous.bar.height)
                     
-                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.containerView)
+                    self.containerView.addSubview(previous.view, positioned: .below, relativeTo: self.controller.view)
                     
                     
                     let prevBackgroundView = self.containerView.copy() as! NSView
@@ -1157,7 +1159,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     
                     
                     _new?.view._change(pos: NSMakePoint(self.containerView.frame.width, self.controller.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
-                    self.containerView.subviews[1]._change(pos: NSMakePoint(0, self.containerView.subviews[1].frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new, weak self] completed in
+                    self.containerView.contentViews[1]._change(pos: NSMakePoint(0, self.containerView.contentViews[1].frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak new, weak self] completed in
                         self?.controller.removeBackgroundCap()
                         new?.view.removeFromSuperview()
                         _new = nil

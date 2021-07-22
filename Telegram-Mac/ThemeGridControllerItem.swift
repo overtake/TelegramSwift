@@ -93,16 +93,17 @@ final class SettingsThemeWallpaperView: BackgroundView {
             
             self.imageView.set(arguments: arguments)
             
-            
+            self.backgroundMode = .gradient(colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+
         case let .color(color):
             self.imageView.isHidden = true
             self.label.isHidden = true
             self.backgroundMode = .color(color: NSColor(UInt32(color)))
           //  backgroundColor = NSColor(UInt32(color))
-        case let .gradient(_, colors, r):
+        case let .gradient(_, colors, rotation):
             self.imageView.isHidden = true
             self.label.isHidden = true
-            self.backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0) }, rotation: r)
+            self.backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0) }, rotation: rotation)
         case let .image(representations, _):
             self.label.isHidden = true
             self.imageView.isHidden = false

@@ -340,7 +340,7 @@ final class WallpaperColorPickerView: View {
         self.colorView.value = self.colorHSV.2
         self.brightnessView.hsv = self.colorHSV
         self.colorKnobView.hsv = self.colorHSV
-        
+        needsLayout = true
     }
     
     func updateKnobLayout(size: CGSize, panningColor: Bool) {

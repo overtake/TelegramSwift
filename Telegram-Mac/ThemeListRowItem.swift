@@ -121,7 +121,7 @@ private final class HorizontalThemeView : HorizontalRowView {
         
         overlay.removeAllHandlers()
         
-        var cachedData: InstallThemeSource? = cache.object(forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled).stringValue)?.source
+        var cachedData: InstallThemeSource? = cache.object(forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled, .general).stringValue)?.source
         
         overlay.set(handler: { [weak item] _ in
             if let cachedData = cachedData {
@@ -157,7 +157,7 @@ private final class HorizontalThemeView : HorizontalRowView {
             self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: animated)
             self?.progressIndicator.isHidden = true
             cacheThemeThumb(image, source: item.themeType, bubbled: item.theme.bubbled)
-            cache.setObject(ThemeCachedItem(source: data), forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled).stringValue)
+            cache.setObject(ThemeCachedItem(source: data), forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled, .general).stringValue)
             cachedData = data
         }))
         

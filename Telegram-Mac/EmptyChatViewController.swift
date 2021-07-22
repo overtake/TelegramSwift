@@ -140,7 +140,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         var containerBg = self.backgroundColor
         if theme.bubbled {
             switch theme.backgroundMode {
-            case .background, .tiled, .gradient, .animated:
+            case .background, .tiled, .gradient:
                 containerBg = .clear
             case .plain:
                 if theme.colors.chatBackground == theme.colors.background {

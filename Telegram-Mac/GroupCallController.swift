@@ -960,7 +960,6 @@ final class GroupCallUIController : ViewController {
                 }
                 return
             }
-            
             if let sharing = self?.sharing, sharing.mode == mode {
                 sharing.orderFront(nil)
             } else {
@@ -983,8 +982,6 @@ final class GroupCallUIController : ViewController {
                         }
                     }
                 })
-                
-               
             }
         }, takeVideo: { [weak self] peerId, mode, listMode in
             let views = self?.videoViews.filter { $0.0.peerId == peerId && $0.1 == listMode }

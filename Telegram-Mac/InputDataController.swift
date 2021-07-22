@@ -303,15 +303,15 @@ struct InputDataSignalValue {
     }
 }
 
-final class InputDataView : BackgroundView, AppearanceViewProtocol {
+final class InputDataView : BackgroundView {
     let tableView = TableView()
-    required override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
         tableView.frame = bounds
     }
     
-    func updateLocalizationAndTheme(theme: PresentationTheme) {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
     }
     
