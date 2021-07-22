@@ -194,9 +194,9 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        readyOnce()
+//        readyOnce()
         
-//        self.ready.set(cards.ready.get())
-//        self.genericView.cards = cards.view
+        self.ready.set(cards.ready.get())
+        self.genericView.cards = cards.view
     }
 }
