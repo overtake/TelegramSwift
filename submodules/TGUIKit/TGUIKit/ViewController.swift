@@ -71,7 +71,6 @@ open class BackgroundView: View {
     
     
     deinit {
-        container.removeAllSubviews()
     }
     
     private let imageView: ImageView = ImageView()
@@ -87,7 +86,6 @@ open class BackgroundView: View {
         container.addSubview(imageView)
         autoresizesSubviews = false
         imageView.contentGravity = .resizeAspectFill
-        imageView.layerUsesCoreImageFilters = true
         self.addSubview(container)
     }
     
