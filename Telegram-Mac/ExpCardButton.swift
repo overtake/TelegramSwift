@@ -49,7 +49,7 @@ final class ExpCardButton: Button {
         textView.update(textLayout)
 
         self.isSelected = isSelected
-        layer?.borderColor = isSelected ? theme.colors.accent.cgColor : theme.colors.grayText.withAlphaComponent(0.6).cgColor
+        layer?.borderColor = isSelected ? theme.colors.accent.cgColor : theme.colors.border.cgColor
         layer?.borderWidth = isSelected ? 1.66 : 1
         
         image.image = icon

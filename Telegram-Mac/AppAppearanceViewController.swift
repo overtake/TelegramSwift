@@ -323,7 +323,10 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                     } else {
                         settings = settings.withUpdatedDefaultDay(defaultTheme)
                     }
-                    return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark).withSavedAssociatedTheme()
+                    return settings
+                        .saveDefaultWallpaper()
+                        .withUpdatedDefaultIsDark(cached.palette.isDark)
+                        .withSavedAssociatedTheme()
                 }).start())
                 
                 applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())

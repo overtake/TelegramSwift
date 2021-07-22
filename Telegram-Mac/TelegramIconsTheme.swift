@@ -5503,6 +5503,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var wallpaper_color_play: CGImage {
+      if let image = cached.with({ $0["wallpaper_color_play"] }) {
+          return image
+      } else {
+          let image = _wallpaper_color_play()
+          _ = cached.modify { current in 
+              var current = current
+              current["wallpaper_color_play"] = image
+              return current
+          }
+          return image
+      }
+  }
   var login_cap: CGImage {
       if let image = cached.with({ $0["login_cap"] }) {
           return image
@@ -8371,6 +8384,7 @@ final class TelegramIconsTheme {
   private let _wallpaper_color_add: ()->CGImage
   private let _wallpaper_color_swap: ()->CGImage
   private let _wallpaper_color_rotate: ()->CGImage
+  private let _wallpaper_color_play: ()->CGImage
   private let _login_cap: ()->CGImage
   private let _login_qr_cap: ()->CGImage
   private let _login_qr_empty_cap: ()->CGImage
@@ -8984,6 +8998,7 @@ final class TelegramIconsTheme {
       wallpaper_color_add: @escaping()->CGImage,
       wallpaper_color_swap: @escaping()->CGImage,
       wallpaper_color_rotate: @escaping()->CGImage,
+      wallpaper_color_play: @escaping()->CGImage,
       login_cap: @escaping()->CGImage,
       login_qr_cap: @escaping()->CGImage,
       login_qr_empty_cap: @escaping()->CGImage,
@@ -9596,6 +9611,7 @@ final class TelegramIconsTheme {
       self._wallpaper_color_add = wallpaper_color_add
       self._wallpaper_color_swap = wallpaper_color_swap
       self._wallpaper_color_rotate = wallpaper_color_rotate
+      self._wallpaper_color_play = wallpaper_color_play
       self._login_cap = login_cap
       self._login_qr_cap = login_qr_cap
       self._login_qr_empty_cap = login_qr_empty_cap

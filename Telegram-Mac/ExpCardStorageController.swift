@@ -137,7 +137,7 @@ private final class ExpCardStorageProgress: View {
         
         path.addRoundedRect(in: bounds, cornerWidth: frame.height / 2, cornerHeight: frame.height / 2)
         
-        ctx.setStrokeColor(theme.colors.grayIcon.withAlphaComponent(0.6).cgColor)
+        ctx.setStrokeColor(theme.colors.border.cgColor)
         ctx.setLineWidth(1.0)
         
         ctx.addPath(path)
