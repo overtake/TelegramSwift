@@ -4,7 +4,7 @@ import RLottie
 import TGUIKit
 import Metal
 import TelegramCore
-import SyncCore
+
 import libwebp
 
 
@@ -268,10 +268,10 @@ private final class PlayerRenderer {
     private var animation: LottieAnimation
     private var layer: Atomic<RenderContainer?> = Atomic(value: nil)
     private let updateState:(LottiePlayerState)->Void
-    private let displayFrame: (RenderedFrame)->Void
+    private let displayFrame: (RenderedFrame, LottieRunLoop)->Void
     private var timer: SwiftSignalKit.Timer?
     private let release:()->Void
-    init(animation: LottieAnimation, displayFrame: @escaping(RenderedFrame)->Void, release:@escaping()->Void, updateState:@escaping(LottiePlayerState)->Void) {
+    init(animation: LottieAnimation, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState:@escaping(LottiePlayerState)->Void) {
         self.animation = animation
         self.displayFrame = displayFrame
         self.updateState = updateState
@@ -422,7 +422,7 @@ private final class PlayerRenderer {
                     if let current = current {
                         let displayFrame = renderer.displayFrame
                         let updateState = renderer.updateState
-                        displayFrame(current)
+                        displayFrame(current, .init(fps: fps))
                         playedCount += 1
                         if current.frame > 0 {
                             updateState(.playing)
@@ -594,7 +594,7 @@ private final class PlayerRenderer {
 private final class PlayerContext {
     private let rendererRef: QueueLocalObject<PlayerRenderer>
     fileprivate let animation: LottieAnimation
-    init(_ animation: LottieAnimation, displayFrame: @escaping(RenderedFrame)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
+    init(_ animation: LottieAnimation, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
         self.rendererRef = QueueLocalObject.init(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
@@ -1033,7 +1033,7 @@ final class MetalContext {
     let pipelineState: MTLRenderPipelineState
     let vertexBuffer: MTLBuffer
     let sampler: MTLSamplerState
-    
+//    let commandQueue: MTLCommandQueue?
     let displayId: CGDirectDisplayID
     
     init?() {
@@ -1042,6 +1042,7 @@ final class MetalContext {
         
         if let device = CGDirectDisplayCopyCurrentMetalDevice(CGMainDisplayID()) {
             self.device = device
+//            self.commandQueue = device.makeCommandQueue()
         } else {
             return nil
         }
@@ -1123,6 +1124,14 @@ fragment float4 basic_fragment(
             return nil
         }
     }
+    
+    private func loop() {
+        
+    }
+    
+    fileprivate func add(_ view: MetalRenderer) {
+        
+    }
 }
 
 private var metalContext: MetalContext?
@@ -1170,6 +1179,9 @@ private final class ContextHolder {
 private var holder: ContextHolder?
 
 
+struct LottieRunLoop {
+    let fps: Int
+}
 
 private final class MetalRenderer: View {
     private let texture: MTLTexture
@@ -1227,7 +1239,7 @@ private final class MetalRenderer: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func render(bytes: UnsafeRawPointer, size: NSSize, backingScale: Int) {
+    func render(bytes: UnsafeRawPointer, size: NSSize, backingScale: Int, runLoop: LottieRunLoop) {
         assertNotOnMainThread()
         let region = MTLRegionMake2D(0, 0, Int(size.width) * backingScale, Int(size.height) * backingScale)
         
@@ -1236,6 +1248,7 @@ private final class MetalRenderer: View {
         guard let drawable = metalLayer.nextDrawable(), let commandQueue = self.commandQueue, let commandBuffer = commandQueue.makeCommandBuffer() else {
             return
         }
+        
         
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
@@ -1384,9 +1397,9 @@ class LottiePlayerView : NSView {
                         cachedContext = nil
                     }
                     
-                    self.context = PlayerContext(animation, displayFrame: { frame in
+                    self.context = PlayerContext(animation, displayFrame: { frame, runLoop in
                         if let data = frame.data {
-                            layer.takeUnretainedValue().render(bytes: data, size: frame.size, backingScale: frame.backingScale)
+                            layer.takeUnretainedValue().render(bytes: data, size: frame.size, backingScale: frame.backingScale, runLoop: runLoop)
                         }
                     }, release: {
                         Queue.mainQueue().async {
@@ -1419,7 +1432,7 @@ class LottiePlayerView : NSView {
                     }
                     let layer = Unmanaged.passRetained(fallback)
                     
-                    self.context = PlayerContext(animation, displayFrame: { frame in
+                    self.context = PlayerContext(animation, displayFrame: { frame, _ in
                         
                         let image = frame.image
                         Queue.mainQueue().async {
