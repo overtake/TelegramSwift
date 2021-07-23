@@ -98,10 +98,10 @@ final class ExpCardStickersContainer : View {
     }
     
     private func runTimer() {
-        guard let context = self.context, let state = self.state else {
-            return
-        }
         timer = SwiftSignalKit.Timer(timeout: 60, repeat: true, completion: { [weak self] in
+            guard let context = self?.context, let state = self?.state else {
+                return
+            }
             self?.reload(state, context: context, animated: true)
         }, queue: .mainQueue())
         timer?.start()

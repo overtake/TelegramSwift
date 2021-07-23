@@ -1028,21 +1028,111 @@ final class LottieAnimation : Equatable {
     }
 }
 
+private struct RenderLoopItem {
+    weak private(set) var view: MetalRenderer?
+    let frame: RenderedFrame
+    
+    func render(_ commandBuffer: MTLCommandBuffer) -> MTLDrawable? {
+        return view?.draw(frame: frame, commandBuffer: commandBuffer)
+    }
+}
+
+
+private class Loops {
+    
+    
+    var data: [LottieRunLoop : Loop] = [:]
+    
+    func add(_ view: MetalRenderer, frame: RenderedFrame, runLoop: LottieRunLoop, commandQueue: MTLCommandQueue) {
+        let loop = getLoop(runLoop, commandQueue: commandQueue)
+        loop.append(.init(view: view, frame: frame))
+    }
+    func clean() {
+        data.removeAll()
+    }
+    private func getLoop(_ runLoop: LottieRunLoop, commandQueue: MTLCommandQueue) -> Loop {
+        var loop: Loop
+        if let c = data[runLoop] {
+            loop = c
+        } else {
+            loop = Loop(runLoop, commandQueue: commandQueue)
+            data[runLoop] = loop
+        }
+        return loop
+    }
+}
+
+private final class Loop {
+    var list:[RenderLoopItem] = []
+    
+    private let commandQueue: MTLCommandQueue
+
+    private var timer: SwiftSignalKit.Timer?
+    init(_ runLoop: LottieRunLoop, commandQueue: MTLCommandQueue) {
+        self.commandQueue = commandQueue
+        self.timer = SwiftSignalKit.Timer(timeout: 1 / TimeInterval(runLoop.fps), repeat: true, completion: { [weak self] in
+            self?.renderItems()
+        }, queue: stateQueue)
+        
+        self.timer?.start()
+    }
+    
+    private func renderItems() {
+        let commandBuffer = self.commandQueue.makeCommandBuffer()
+        if let commandBuffer = commandBuffer {
+            var drawables: [MTLDrawable] = []
+            while !self.list.isEmpty {
+                let item = self.list.removeLast()
+                let drawable = item.render(commandBuffer)
+                if let drawable = drawable {
+                    drawables.append(drawable)
+                }
+            }
+            
+            if drawables.isEmpty {
+                return
+            }
+
+            commandBuffer.addScheduledHandler { _ in
+                for drawable in drawables {
+                    drawable.present()
+                }
+            }
+            commandBuffer.commit()
+        } else {
+            self.list.removeAll()
+        }
+    }
+    
+    func append(_ item: RenderLoopItem) {
+        self.list.append(item)
+    }
+    
+}
+
+
 final class MetalContext {
+    
+  
+    
     let device: MTLDevice
     let pipelineState: MTLRenderPipelineState
     let vertexBuffer: MTLBuffer
     let sampler: MTLSamplerState
-//    let commandQueue: MTLCommandQueue?
+    let commandQueue: MTLCommandQueue?
     let displayId: CGDirectDisplayID
     
+    private var loops: QueueLocalObject<Loops>
+    
     init?() {
-        
+        self.loops = QueueLocalObject(queue: stateQueue, generate: {
+            return Loops()
+        })
         self.displayId = CGMainDisplayID()
         
         if let device = CGDirectDisplayCopyCurrentMetalDevice(CGMainDisplayID()) {
             self.device = device
-//            self.commandQueue = device.makeCommandQueue()
+            self.commandQueue = device.makeCommandQueue()
         } else {
             return nil
         }
@@ -1125,12 +1215,16 @@ fragment float4 basic_fragment(
         }
     }
     
-    private func loop() {
-        
+    func cleanLoops() {
+        self.loops.with { loops in
+            loops.clean()
+        }
     }
     
-    fileprivate func add(_ view: MetalRenderer) {
-        
+    fileprivate func add(_ view: MetalRenderer, frame: RenderedFrame, runLoop: LottieRunLoop, commandQueue: MTLCommandQueue) {
+        self.loops.with { loops in
+            loops.add(view, frame: frame, runLoop: runLoop, commandQueue: commandQueue)
+        }
     }
 }
 
@@ -1165,6 +1259,7 @@ private final class ContextHolder {
         
         if shouldRelease() {
             holder = nil
+            metalContext?.cleanLoops()
         }
     }
     func shouldRelease() -> Bool {
@@ -1179,18 +1274,20 @@ private final class ContextHolder {
 private var holder: ContextHolder?
 
 
-struct LottieRunLoop {
+struct LottieRunLoop : Hashable {
     let fps: Int
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(fps)
+    }
 }
 
 private final class MetalRenderer: View {
     private let texture: MTLTexture
-    private let commandQueue: MTLCommandQueue?
     private let metalLayer: CAMetalLayer = CAMetalLayer()
     private let context: MetalContext
     init(animation: LottieAnimation, context: MetalContext) {
         self.context = context
-        self.commandQueue = context.device.makeCommandQueue()
         let textureDesc: MTLTextureDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .bgra8Unorm, width: Int(animation.size.width) * animation.backingScale, height: Int(animation.size.height) * animation.backingScale, mipmapped: false)
         textureDesc.sampleCount = 1
         textureDesc.textureType = .type2D
@@ -1239,16 +1336,18 @@ private final class MetalRenderer: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func render(bytes: UnsafeRawPointer, size: NSSize, backingScale: Int, runLoop: LottieRunLoop) {
-        assertNotOnMainThread()
+    func draw(frame: RenderedFrame, commandBuffer: MTLCommandBuffer) -> MTLDrawable? {
+        
+        guard let drawable = metalLayer.nextDrawable(), let bytes = frame.data else {
+            return nil
+        }
+        
+        let size: NSSize = frame.size
+        let backingScale: Int = frame.backingScale
+        
         let region = MTLRegionMake2D(0, 0, Int(size.width) * backingScale, Int(size.height) * backingScale)
         
         self.texture.replace(region: region, mipmapLevel: 0, withBytes: bytes, bytesPerRow: Int(size.width) * backingScale * 4)
-        
-        guard let drawable = metalLayer.nextDrawable(), let commandQueue = self.commandQueue, let commandBuffer = commandQueue.makeCommandBuffer() else {
-            return
-        }
-        
         
         let renderPassDescriptor = MTLRenderPassDescriptor()
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
@@ -1262,13 +1361,17 @@ private final class MetalRenderer: View {
         renderEncoder.setFragmentTexture(self.texture, index: 0)
         renderEncoder.setFragmentSamplerState(self.context.sampler, index: 0)
         renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6, instanceCount: 1)
-        
-        
         renderEncoder.endEncoding()
-        
-        commandBuffer.present(drawable)
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+                
+        return drawable
+    }
+
+    
+    func render(frame: RenderedFrame, runLoop: LottieRunLoop) {
+        guard let commandQueue = self.context.commandQueue else {
+            return
+        }
+        self.context.add(self, frame: frame, runLoop: runLoop, commandQueue: commandQueue)
     }
 }
 
@@ -1398,9 +1501,7 @@ class LottiePlayerView : NSView {
                     }
                     
                     self.context = PlayerContext(animation, displayFrame: { frame, runLoop in
-                        if let data = frame.data {
-                            layer.takeUnretainedValue().render(bytes: data, size: frame.size, backingScale: frame.backingScale, runLoop: runLoop)
-                        }
+                        layer.takeUnretainedValue().render(frame: frame, runLoop: runLoop)
                     }, release: {
                         Queue.mainQueue().async {
                             layer.takeRetainedValue().removeFromSuperview()
