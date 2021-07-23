@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import Postbox
-import SyncCore
+
 import TelegramCore
 import TgVoipWebrtc
 

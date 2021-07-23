@@ -9,7 +9,7 @@
 import Cocoa
 
 import TelegramCore
-import SyncCore
+
 
 enum InstantPageShape {
     case rect

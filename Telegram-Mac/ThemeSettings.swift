@@ -9,9 +9,9 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import TGUIKit
-import SyncCore
+
 
 public enum PresentationThemeParsingError: Error {
     case generic

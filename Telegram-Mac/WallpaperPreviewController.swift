@@ -10,9 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
-import SyncCore
+
 import CoreGraphics
 
 enum WallpaperPreviewMode : Equatable {

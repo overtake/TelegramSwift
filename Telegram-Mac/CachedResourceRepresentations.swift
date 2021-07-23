@@ -11,7 +11,7 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation {
     let size: CGSize?

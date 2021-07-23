@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 
@@ -158,7 +158,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter, isNew: isNew))
     }, removePreset: { filter in
         confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
-            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+            _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                 var filters = filters
                 filters.removeAll(where: { $0.id == filter.id })
                 return filters
@@ -166,7 +166,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         })
         
     }, addFeatured: { featured in
-        _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+        _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
             var filters = filters
             var new = ChatListFilter.new(excludeIds: filters.map { $0.id })
             new.data = featured.data
@@ -183,7 +183,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     
     let chatCountCache = Atomic<[ChatListFilterData: Int]>(value: [:])
     
-    let filtersWithCounts = chatListFilterPreferences(postbox: context.account.postbox)
+    let filtersWithCounts = chatListFilterPreferences(engine: context.engine)
         |> distinctUntilChanged
         |> mapToSignal { filters -> Signal<([(ChatListFilter, Int)], Bool), NoError> in
             return context.account.postbox.transaction { transaction -> ([(ChatListFilter, Int)], Bool) in
@@ -263,7 +263,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
             }, resort: { row in
                 
             }, complete: { from, to in
-                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
                     filters.move(at: from - range.location, to: to - range.location)
                     return filters

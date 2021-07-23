@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private final class SearchCacheData {
     
@@ -330,7 +330,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
                 return updated
             })
             } |> mapToSignal { _ -> Signal<TogglePeerChatPinnedResult, NoError> in
-                return toggleItemPinned(postbox: arguments.context.account.postbox, location: .group(.root), itemId: .peer(peer.id))
+                return arguments.context.engine.peers.toggleItemPinned(location: .group(.root), itemId: .peer(peer.id))
             } |> deliverOnMainQueue
         
         _ = updatePeer.start(next: { result in
@@ -368,13 +368,13 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
     let peerId = peer.id
     
     return .single(items) |> mapToSignal { items in
-        return chatListFilterPreferences(postbox: arguments.context.account.postbox) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
+        return chatListFilterPreferences(engine: arguments.context.engine) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
             var items = items
             var submenu: [ContextMenuItem] = []
             if peerId.namespace != Namespaces.Peer.SecretChat {
                 for item in filters.list {
                     submenu.append(ContextMenuItem(item.title, handler: {
-                        _ = updateChatListFiltersInteractively(postbox: arguments.context.account.postbox, { list in
+                        _ = arguments.context.engine.peers.updateChatListFiltersInteractively({ list in
                             var list = list
                             for (i, folder) in list.enumerated() {
                                 var folder = folder

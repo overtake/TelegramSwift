@@ -9,7 +9,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 final class InstantPagePeerReferenceItem: InstantPageItem {
    

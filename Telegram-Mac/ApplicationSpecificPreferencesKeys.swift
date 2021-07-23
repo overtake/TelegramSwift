@@ -9,8 +9,8 @@
 import Cocoa
 
 import TelegramCore
-import SyncCore
-import SyncCore
+
+
 private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case inAppNotificationSettings
     case baseAppSettings

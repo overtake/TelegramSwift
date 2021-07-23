@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 func getNotificationMessageId(userInfo:[String: Any], for prefix: String) -> MessageId? {

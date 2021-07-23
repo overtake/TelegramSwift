@@ -13,7 +13,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 private let _id_input_code = InputDataIdentifier("_id_input_code")
 

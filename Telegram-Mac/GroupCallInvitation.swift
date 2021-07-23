@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import Postbox
-import SyncCore
+
 import TelegramCore
 
 private final class InvitationArguments {
@@ -579,7 +579,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                         }
                     })
                 } else {
-                    _ = showModalProgress(signal: permanentExportedInvitation(account: account, peerId: callPeerId), for: window).start(next: { [weak window] link in
+                    _ = showModalProgress(signal: permanentExportedInvitation(context: context, peerId: callPeerId), for: window).start(next: { [weak window] link in
                         if let link = link, let window = window {
                             copyToClipboard(link.link)
                             showModalText(for: window, text: L10n.shareLinkCopied)

@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 
@@ -481,7 +481,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     let updateDisposable = MetaDisposable()
     
     let save:(Bool)->Void = { replace in
-        _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+        _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
             let filter = stateValue.with { $0.filter }
             var filters = filters
             if let index = filters.firstIndex(where: {$0.id == filter.id}) {
@@ -798,7 +798,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 alert(for: context.window, info: L10n.chatListFilterErrorEmpty)
                 f(.fail(.fields([_id_add_include : .shake])))
             } else {
-                _ = showModalProgress(signal: requestUpdateChatListFilter(postbox: context.account.postbox, network: context.account.network, id: filter.id, filter: filter), for: context.window).start(error: { error in
+                _ = showModalProgress(signal: context.engine.peers.requestUpdateChatListFilter(id: filter.id, filter: filter), for: context.window).start(error: { error in
                     switch error {
                     case .generic:
                         alert(for: context.window, info: L10n.unknownError)

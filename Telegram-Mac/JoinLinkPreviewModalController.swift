@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -165,7 +165,7 @@ class JoinLinkPreviewModalController: ModalViewController {
         let context = self.context
         return ModalInteractions(acceptTitle: L10n.joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: joinChatInteractively(with: strongSelf.joinhash, account: strongSelf.context.account), for: window).start(next: { [weak strongSelf] peerId in
+                _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: strongSelf.joinhash), for: window).start(next: { [weak strongSelf] peerId in
                     strongSelf?.interaction(peerId)
                     self?.close()
                 }, error: { error in

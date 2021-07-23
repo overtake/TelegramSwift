@@ -12,7 +12,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 
 
 private final class DisplayMeAsHeaderItem : GeneralRowItem {
@@ -262,7 +262,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
         
-    let list: Signal<[FoundPeer]?, NoError> = cachedGroupCallDisplayAsAvailablePeers(account: context.account, peerId: peerId) |> map(Optional.init)
+    let list: Signal<[FoundPeer]?, NoError> = context.engine.calls.cachedGroupCallDisplayAsAvailablePeers(peerId: peerId) |> map(Optional.init)
     let peerSignal = context.account.postbox.loadedPeerWithId(context.peerId)
     
     actionsDisposable.add(combineLatest(list, peerSignal).start(next: { list, peer in
@@ -348,7 +348,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 
 
 func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId, Date?)->Void, canBeScheduled: Bool = false) {
-    _ = showModalProgress(signal: cachedGroupCallDisplayAsAvailablePeers(account: context.account, peerId: peerId), for: context.window).start(next: { displayAsList in
+    _ = showModalProgress(signal: context.engine.calls.cachedGroupCallDisplayAsAvailablePeers(peerId: peerId), for: context.window).start(next: { displayAsList in
         showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion, canBeScheduled: canBeScheduled), for: context.window)
     })
 }

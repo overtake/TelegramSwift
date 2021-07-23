@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import SwiftSignalKit
-import SyncCore
+
 
 final class GroupCallPeerAvatarRowItem : GeneralRowItem {
     fileprivate let account: Account

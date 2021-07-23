@@ -10,7 +10,7 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 final class ReadArticle : PreferencesEntry, Equatable {
     static func == (lhs: ReadArticle, rhs: ReadArticle) -> Bool {

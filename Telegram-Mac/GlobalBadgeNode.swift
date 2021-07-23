@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 
 
@@ -133,7 +133,7 @@ class GlobalBadgeNode: Node {
         var s:Signal<Result, NoError>
         
         if let filter = filter {
-            s = chatListFilterItems(account: account, accountManager: sharedContext.accountManager) |> map { value in
+            s = chatListFilterItems(engine: TelegramEngine(account: account), accountManager: sharedContext.accountManager) |> map { value in
                 if let unread = value.count(for: filter) {
                     return Result(dockText: nil, total: Int32(unread.count))
                 } else {

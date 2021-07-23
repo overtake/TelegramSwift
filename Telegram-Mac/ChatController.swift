@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -1300,7 +1300,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         switch chatLocation {
         case let .peer(peerId):
             self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
-            let _ = checkPeerChatServiceActions(postbox: context.account.postbox, peerId: peerId).start()
+            let _ = context.engine.peers.checkPeerChatServiceActions(peerId: peerId).start()
         case let .replyThread(data):
             self.peerView.set(context.account.viewTracker.peerView(data.messageId.peerId, updateData: true) |> map {Optional($0)})
         }
@@ -1712,7 +1712,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return
                             }
                             if access {
-                                let state = ChatRecordingAudioState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
+                                let state = ChatRecordingAudioState(context: chatInteraction.context, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
                                 state.start()
                                 delay(0.1, closure: { [weak chatInteraction] in
                                     chatInteraction?.update({$0.withRecordingState(state)})
@@ -1735,7 +1735,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return
                             }
                             if access {
-                                let state = ChatRecordingVideoState(account: chatInteraction.context.account, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
+                                let state = ChatRecordingVideoState(context: chatInteraction.context, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
                                 showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: state.pipeline), for: context.window)
                                 chatInteraction.update({$0.withRecordingState(state)})
                             } else {
@@ -2412,10 +2412,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    if let message = outgoingMessageWithChatContextResult(to: chatInteraction.peerId, results: results, result: result, scheduleTime: atDate) {
-                        _ = (Sender.enqueue(message: message.withUpdatedReplyToMessageId(chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId), context: context, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, results: results, result: result, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId)
+                    
+                    if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
+
                 }
                 switch strongSelf.mode {
                 case .history, .replyThread:

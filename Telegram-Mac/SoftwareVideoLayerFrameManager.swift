@@ -11,7 +11,7 @@ import Foundation
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import CoreMedia
 

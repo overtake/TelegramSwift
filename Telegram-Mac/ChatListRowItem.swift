@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 
@@ -953,7 +953,7 @@ class ChatListRowItem: TableRowItem {
             }
             let context = context
             
-            _ = (toggleItemPinned(postbox: context.account.postbox, location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+            _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
                     confirm(for: context.window, information: L10n.chatListContextPinErrorNew2, okTitle: L10n.alertOK, cancelTitle: "", thridTitle: L10n.chatListContextPinErrorNewSetupFolders, successHandler: { result in
@@ -1136,7 +1136,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         return .single(items) |> mapToSignal { items in
-            return chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
+            return chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
                 
                 var items = items
                 
@@ -1150,7 +1150,7 @@ class ChatListRowItem: TableRowItem {
                         let menuItem = ContextMenuItem(item.title, handler: {
                             let isEnabled = item.data.includePeers.peers.contains(peerId) || item.data.includePeers.peers.count < 100
                             if isEnabled {
-                                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { list in
+                                _ = context.engine.peers.updateChatListFiltersInteractively({ list in
                                     var list = list
                                     for (i, folder) in list.enumerated() {
                                         var folder = folder

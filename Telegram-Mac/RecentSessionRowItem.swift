@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 class RecentSessionRowItem: GeneralRowItem {
     
     let session:RecentAccountSession

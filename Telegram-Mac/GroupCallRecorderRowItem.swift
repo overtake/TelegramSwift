@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 final class GroupCallRecorderRowItem : GeneralRowItem {
     

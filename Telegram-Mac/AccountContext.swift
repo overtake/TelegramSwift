@@ -10,9 +10,9 @@ import Foundation
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
-import SyncCore
+
 
 protocol ChatLocationContextHolder: class {
 }

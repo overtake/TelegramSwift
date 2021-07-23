@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 struct PossibleContextQueryTypes: OptionSet {

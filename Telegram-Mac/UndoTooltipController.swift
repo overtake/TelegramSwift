@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 
 

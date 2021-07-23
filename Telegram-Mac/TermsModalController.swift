@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -97,7 +97,7 @@ class TermsModalController: ModalViewController {
                 _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
                     guard let `self` = self else {return}
                     if let peerId = peerId {
-                        self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId)))
+                        self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId._asPeer().id)))
                     }
                 })
             }

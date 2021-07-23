@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+
 import TelegramCore
 import Postbox
 import TelegramApi
@@ -104,10 +104,10 @@ final class InviteLinkPeerManager {
     }
     
     func createPeerExportedInvitation(expireDate: Int32?, usageLimit: Int32?) -> Signal<NoValue, NoError> {
-        let account = self.context.account
+        let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = TelegramCore.createPeerExportedInvitation(account: account, peerId: peerId, expireDate: expireDate, usageLimit: usageLimit) |> deliverOnMainQueue
+            let signal = context.engine.peers.createPeerExportedInvitation(peerId: peerId, expireDate: expireDate, usageLimit: usageLimit) |> deliverOnMainQueue
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -125,10 +125,10 @@ final class InviteLinkPeerManager {
     }
     
     func editPeerExportedInvitation(link: ExportedInvitation, expireDate: Int32?, usageLimit: Int32?) -> Signal<NoValue, EditPeerExportedInvitationError> {
-        let account = self.context.account
+        let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = TelegramCore.editPeerExportedInvitation(account: account, peerId: peerId, link: link.link, expireDate: expireDate, usageLimit: usageLimit)
+            let signal = context.engine.peers.editPeerExportedInvitation(peerId: peerId, link: link.link, expireDate: expireDate, usageLimit: usageLimit)
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -147,12 +147,12 @@ final class InviteLinkPeerManager {
     }
 
     func revokePeerExportedInvitation(link: ExportedInvitation) -> Signal<NoValue, RevokePeerExportedInvitationError> {
-        let account = self.context.account
+        let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
             
             let signal: Signal<RevokeExportedInvitationResult?, RevokePeerExportedInvitationError>
-            signal = TelegramCore.revokePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
+            signal = context.engine.peers.revokePeerExportedInvitation(peerId: peerId, link: link.link)
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -187,10 +187,10 @@ final class InviteLinkPeerManager {
     }
 
     func deletePeerExportedInvitation(link: ExportedInvitation) -> Signal<Never, DeletePeerExportedInvitationError> {
-        let account = self.context.account
+        let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = TelegramCore.deletePeerExportedInvitation(account: account, peerId: peerId, link: link.link)
+            let signal = context.engine.peers.deletePeerExportedInvitation(peerId: peerId, link: link.link)
             let disposable = signal.start(error: { error in
                 subscriber.putError(error)
             }, completed: { [weak self] in
@@ -208,10 +208,10 @@ final class InviteLinkPeerManager {
     }
     
     func deleteAllRevokedPeerExportedInvitations() -> Signal<Never, NoError> {
-        let account = self.context.account
+        let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = TelegramCore.deleteAllRevokedPeerExportedInvitations(account: account, peerId: peerId, adminId: self?.adminId ?? account.peerId)
+            let signal = context.engine.peers.deleteAllRevokedPeerExportedInvitations(peerId: peerId, adminId: self?.adminId ?? context.peerId)
             let disposable = signal.start(completed: {
                 self?.updateState { state in
                     var state = state
@@ -228,7 +228,7 @@ final class InviteLinkPeerManager {
     }
 
     func loadCreators() {
-        let signal = peerExportedInvitationsCreators(account: context.account, peerId: peerId) |> deliverOnMainQueue
+        let signal = context.engine.peers.peerExportedInvitationsCreators(peerId: peerId) |> deliverOnMainQueue
         loadCreatorsDisposable.set(signal.start(next: { [weak self] creators in
             self?.updateState { state in
                 var state = state
@@ -252,7 +252,7 @@ final class InviteLinkPeerManager {
                 }
             }
             
-            let signal = TelegramCore.peerExportedInvitations(account: context.account, peerId: peerId, revoked: revoked, adminId: self.adminId, offsetLink: offsetLink) |> deliverOnMainQueue
+            let signal = context.engine.peers.direct_peerExportedInvitations(peerId: peerId, revoked: revoked, adminId: self.adminId, offsetLink: offsetLink) |> deliverOnMainQueue
             self.listDisposable.set(signal.start(next: { [weak self] list in
                 self?.updateState { state in
                     var state = state
@@ -282,7 +282,7 @@ final class InviteLinkPeerManager {
         if let cached = cached {
             return cached
         } else {
-            let value = PeerInvitationImportersContext(account: context.account, peerId: peerId, invite: link)
+            let value = context.engine.peers.peerInvitationImporters(peerId: peerId, invite: link)
             cachedImporters[link.link] = value
             return value
         }

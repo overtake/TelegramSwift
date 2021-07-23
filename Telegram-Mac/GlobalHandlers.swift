@@ -10,6 +10,6 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 let archiver: ArchiverContext = ArchiverContext()

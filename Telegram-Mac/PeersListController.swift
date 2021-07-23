@@ -10,9 +10,9 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
-import SyncCore
+
 
 final class RevealAllChatsView : Control {
     let textView: TextView = TextView()

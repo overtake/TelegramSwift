@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-import SyncCore
+
 
 class ChatListRevealItem: TableStickItem {
     fileprivate let action:((ChatListFilter?)->Void)?
@@ -211,7 +211,7 @@ final class ChatListRevealView : TableStickView {
         
         segmentView.resortRange = NSMakeRange(1, items.count - 1)
         segmentView.resortHandler = { from, to in
-            _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { state in
+            _ = context.engine.peers.updateChatListFiltersInteractively({ state in
                 var state = state
                 state.move(at: from - 1, to: to - 1)
                 return state

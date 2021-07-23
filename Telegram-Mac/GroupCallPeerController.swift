@@ -12,7 +12,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 
 private final class Arguments {
     let account: Account

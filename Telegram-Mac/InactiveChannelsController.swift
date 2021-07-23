@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private func localizedInactiveDate(_ timestamp: Int32) -> String {
     

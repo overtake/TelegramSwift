@@ -11,7 +11,7 @@ import SwiftSignalKit
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 
 
@@ -774,7 +774,7 @@ class InputContextHelper: NSObject {
                     messages.2(messages.1)
                 case let .contextRequestResult(peer, oldCollection):
                     if let oldCollection = oldCollection, let nextOffset = oldCollection.nextOffset {
-                        self.loadMoreDisposable.set((requestChatContextResults(account: context.account, botId: oldCollection.botId, peerId: self.chatInteraction.peerId, query: oldCollection.query, offset: nextOffset) |> delay(0.5, queue: Queue.mainQueue())).start(next: { [weak self] collection in
+                        self.loadMoreDisposable.set((context.engine.messages.requestChatContextResults(botId: oldCollection.botId, peerId: self.chatInteraction.peerId, query: oldCollection.query, offset: nextOffset) |> delay(0.5, queue: Queue.mainQueue())).start(next: { [weak self] collection in
                             guard let `self` = self else {return}
                             
                             if let collection = collection {

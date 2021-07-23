@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 import GraphCore
 
 private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState, peers: [PeerId : Peer]?, updateIsLoading: @escaping(InputDataIdentifier, Bool)->Void, revealSection: @escaping(UIStatsState.RevealSection)->Void, context: GroupStatsContext, accountContext: AccountContext, openPeerInfo: @escaping(PeerId)->Void, detailedDisposable: DisposableDict<InputDataIdentifier>) -> [InputDataEntry] {

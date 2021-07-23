@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 enum SelectivePrivacySettingsKind {

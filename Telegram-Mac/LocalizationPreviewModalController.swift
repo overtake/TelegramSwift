@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 
 private final class LocalizationPreviewView : Control {
     private let titleView: TextView = TextView()

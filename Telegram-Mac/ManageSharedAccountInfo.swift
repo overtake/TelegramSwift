@@ -9,9 +9,9 @@
 import Foundation
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
-import SyncCore
+
 private func accountInfo(account: Account) -> Signal<StoredAccountInfo, NoError> {
     let peerName = account.postbox.transaction { transaction -> String in
         guard let peer = transaction.getPeer(account.peerId) else {

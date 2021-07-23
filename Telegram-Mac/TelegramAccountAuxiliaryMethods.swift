@@ -8,7 +8,7 @@
 
 import Foundation
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerChatInputState: { interfaceState, inputState -> PeerChatInterfaceState? in

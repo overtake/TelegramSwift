@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import TGUIKit
@@ -102,7 +102,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         let signal: Signal<(PeerId, Bool)?, CreateChannelError> = showModalProgress(signal: context.engine.peers.createChannel(title: nameItem.currentText.string, description: descItem.currentText.string), for: window!, disposeAfterComplete: false) |> mapToSignal { peerId in
             if let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                let signal:Signal<(PeerId, Bool)?, CreateChannelError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                let signal:Signal<(PeerId, Bool)?, CreateChannelError> = context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                     return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                 }) |> mapError { _ in CreateChannelError.generic } |> map { value in
                     switch value {

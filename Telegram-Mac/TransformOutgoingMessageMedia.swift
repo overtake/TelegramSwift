@@ -8,11 +8,10 @@
 
 import Foundation
 import TelegramCore
-import SyncCore
 import Postbox
 import SwiftSignalKit
 import TGUIKit
-import SyncCore
+
 
 public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, reference: AnyMediaReference, opportunistic: Bool) -> Signal<AnyMediaReference?, NoError> {
     switch reference.media {

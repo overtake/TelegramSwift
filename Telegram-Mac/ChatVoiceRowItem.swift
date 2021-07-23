@@ -10,7 +10,7 @@ import Cocoa
 
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {

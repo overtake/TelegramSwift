@@ -12,7 +12,7 @@ import Foundation
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 final class InstantPageStoredDetailsState: PostboxCoding {
     let index: Int32

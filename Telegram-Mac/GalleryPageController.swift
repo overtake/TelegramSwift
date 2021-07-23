@@ -12,7 +12,7 @@ import SwiftSignalKit
 import AVFoundation
 import AVKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 fileprivate class GMagnifyView : MagnifyView  {

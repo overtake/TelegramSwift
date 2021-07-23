@@ -10,7 +10,6 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
 import SwiftSignalKit
 
 
@@ -135,7 +134,7 @@ class ChatStorageManagmentModalController: ModalViewController {
 
         
         
-        return ModalInteractions(acceptTitle: tr(L10n.storageClear(dataSizeString(Int(totalSize), formatting: DataSizeStringFormatting.current))), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: L10n.storageClear(dataSizeString(Int(totalSize), formatting: DataSizeStringFormatting.current)), accept: { [weak self] in
             if let strongSelf = self {
                 self?.clear(strongSelf.sizeIndex)
             }

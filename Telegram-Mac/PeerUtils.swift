@@ -8,9 +8,9 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
-import SyncCore
+
 
 let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(1271266957))
 let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(708513))

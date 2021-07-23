@@ -11,7 +11,7 @@ import WebKit
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 private class WeakGameScriptMessageHandler: NSObject, WKScriptMessageHandler {

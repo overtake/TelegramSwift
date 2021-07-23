@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 private final class StorageUsageControllerArguments {
@@ -394,9 +394,8 @@ class StorageUsageController: TableViewController {
             |> map { view -> CacheStorageSettings in
                 return view.entries[SharedDataKeys.cacheStorageSettings] as? CacheStorageSettings ?? CacheStorageSettings.defaultSettings
             })
-        
         let statsPromise = Promise<CacheUsageStatsResult?>()
-        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: context.account, additionalCachePaths: [], logFilesPath: ApiEnvironment.containerURL!.appendingPathComponent("logs").path) |> map { Optional($0) }))
+        statsPromise.set(.single(nil) |> then(context.engine.resources.collectCacheUsageStats(additionalCachePaths: [], logFilesPath: ApiEnvironment.containerURL!.appendingPathComponent("logs").path) |> map { Optional($0) }))
         
         let actionDisposables = DisposableSet()
         
@@ -462,7 +461,7 @@ class StorageUsageController: TableViewController {
                                 }
                                 statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize, tempPaths: stats.tempPaths, tempSize: stats.tempSize, immutableSize: stats.immutableSize))))
                                 
-                                clearDisposable.set(clearCachedMediaResources(account: context.account, mediaResourceIds: clearResourceIds).start())
+                                clearDisposable.set(context.engine.resources.clearCachedMediaResources(mediaResourceIds: clearResourceIds).start())
                             }
 
                         }), for: mainWindow)

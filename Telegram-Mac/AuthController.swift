@@ -2,7 +2,7 @@ import Foundation
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
 

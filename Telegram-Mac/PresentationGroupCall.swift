@@ -1,7 +1,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import AVFoundation
 import TelegramVoip
@@ -48,7 +48,7 @@ func getGroupCallPanelData(context: AccountContext, peerId: PeerId) -> Signal<Gr
                                             let disposable = MetaDisposable()
                                             let callContext = context.cachedGroupCallContexts
                                             callContext.impl.syncWith { impl in
-                                                let callContext = impl.get(account: context.account, peerId: peerId, call: activeCall)
+                                                let callContext = impl.get(context: context, peerId: peerId, call: activeCall)
                                                 disposable.set((callContext.context.panelData
                                                 |> deliverOnMainQueue).start(next: { panelData in
                                                     callContext.keep()
@@ -149,7 +149,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
         return self.panelDataPromise.get()
     }
     
-    init(account: Account, peerId: PeerId, call: CachedChannelData.ActiveCall) {
+    init(context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall) {
         self.panelDataPromise.set(.single(GroupCallPanelData(
             peerId: peerId,
             info: GroupCallInfo(
@@ -172,7 +172,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
             groupCall: nil
         )))
         
-        self.disposable = (getGroupCallParticipants(account: account, callId: call.id, accessHash: call.accessHash, offset: "", ssrcs: [], limit: 100, sortAscending: nil)
+        self.disposable = (context.engine.calls.getGroupCallParticipants(callId: call.id, accessHash: call.accessHash, offset: "", ssrcs: [], limit: 100, sortAscending: nil)
         |> map(Optional.init)
         |> `catch` { _ -> Signal<GroupCallParticipantsContext.State?, NoError> in
             return .single(nil)
@@ -181,10 +181,9 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
             guard let strongSelf = self, let state = state else {
                 return
             }
-            let context = GroupCallParticipantsContext(
-                account: account,
+            let context = context.engine.calls.groupCall(
                 peerId: peerId,
-                myPeerId: account.peerId,
+                myPeerId: context.account.peerId,
                 id: call.id,
                 accessHash: call.accessHash,
                 state: state,
@@ -242,12 +241,12 @@ final class AccountGroupCallContextCacheImpl: AccountGroupCallContextCache {
             self.queue = queue
         }
         
-        func get(account: Account, peerId: PeerId, call: CachedChannelData.ActiveCall) -> AccountGroupCallContextImpl.Proxy {
+        func get(context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall) -> AccountGroupCallContextImpl.Proxy {
             let result: Record
             if let current = self.contexts[call.id] {
                 result = current
             } else {
-                let context = AccountGroupCallContextImpl(account: account, peerId: peerId, call: call)
+                let context = AccountGroupCallContextImpl(context: context, peerId: peerId, call: call)
                 result = Record(context: context)
                 self.contexts[call.id] = result
             }
@@ -273,8 +272,8 @@ final class AccountGroupCallContextCacheImpl: AccountGroupCallContextCache {
             })
         }
 
-        func leaveInBackground(account: Account, id: Int64, accessHash: Int64, source: UInt32) {
-            let disposable = leaveGroupCall(account: account, callId: id, accessHash: accessHash, source: source).start()
+        func leaveInBackground(context: AccountContext, id: Int64, accessHash: Int64, source: UInt32) {
+            let disposable = context.engine.calls.leaveGroupCall(callId: id, accessHash: accessHash, source: source).start()
             self.leaveDisposables.add(disposable)
         }
     }
@@ -805,8 +804,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         })
         
-
-        self.displayAsPeersValue.set(cachedGroupCallDisplayAsAvailablePeers(account: account, peerId: peerId) |> map(Optional.init))
+        self.displayAsPeersValue.set(accountContext.engine.calls.cachedGroupCallDisplayAsAvailablePeers(peerId: peerId) |> map(Optional.init))
 
         
         self.summaryStatePromise.set(combineLatest(queue: .mainQueue(),
@@ -828,7 +826,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         })
         
         if let initialCall = initialCall, let temporaryParticipantsContext = self.accountContext.cachedGroupCallContexts.impl.syncWith({ impl in
-            impl.get(account: accountContext.account, peerId: peerId, call: initialCall)
+            impl.get(context: accountContext, peerId: peerId, call: initialCall)
         }) {
             self.switchToTemporaryParticipantsContext(sourceContext: temporaryParticipantsContext.context.participantsContext, oldMyPeerId: self.joinAsPeerId)
         } else {
@@ -908,7 +906,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         }
         if let sourceContext = sourceContext, let initialState = sourceContext.immediateState {
-            let temporaryParticipantsContext = GroupCallParticipantsContext(account: self.account, peerId: self.peerId, myPeerId: myPeerId, id: sourceContext.id, accessHash: sourceContext.accessHash, state: initialState, previousServiceState: sourceContext.serviceState)
+            let temporaryParticipantsContext = accountContext.engine.calls.groupCall(peerId: self.peerId, myPeerId: myPeerId, id: sourceContext.id, accessHash: sourceContext.accessHash, state: initialState, previousServiceState: sourceContext.serviceState)
             self.temporaryParticipantsContext = temporaryParticipantsContext
             self.participantsContextStateDisposable.set((combineLatest(queue: .mainQueue(),
                 myPeer,
@@ -1120,7 +1118,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         disposable.set(strongSelf.requestMediaChannelDescriptions(ssrcs: ssrcs, completion: completion))
                     }
                     return disposable
-                }, audioStreamData: OngoingGroupCallContext.AudioStreamData(account: self.accountContext.account, callId: callInfo.id, accessHash: callInfo.accessHash), rejoinNeeded: { [weak self] in
+                }, audioStreamData: OngoingGroupCallContext.AudioStreamData(engine: self.accountContext.engine, callId: callInfo.id, accessHash: callInfo.accessHash), rejoinNeeded: { [weak self] in
                     Queue.mainQueue().async {
                         guard let strongSelf = self else {
                             return
@@ -1189,8 +1187,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }
 
                 strongSelf.currentLocalSsrc = ssrc
-                strongSelf.requestDisposable.set((joinGroupCall(
-                    account: strongSelf.account,
+                strongSelf.requestDisposable.set((strongSelf.accountContext.engine.calls.joinGroupCall(
                     peerId: strongSelf.peerId,
                     joinAs: strongSelf.joinAsPeerId,
                     callId: callInfo.id,
@@ -1436,8 +1433,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     serviceState = participantsContext.serviceState
                 }
                 
-                let participantsContext = GroupCallParticipantsContext(
-                    account: self.accountContext.account,
+                let participantsContext = accountContext.engine.calls.groupCall(
                     peerId: self.peerId,
                     myPeerId: self.joinAsPeerId,
                     id: callInfo.id,
@@ -1752,8 +1748,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }
                 |> distinctUntilChanged
 
-                let participantsContext = GroupCallParticipantsContext(
-                    account: self.accountContext.account,
+                let participantsContext = accountContext.engine.calls.groupCall(
                     peerId: self.peerId,
                     myPeerId: self.joinAsPeerId,
                     id: callInfo.id,
@@ -1923,7 +1918,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
 
         if !remainingSsrcs.isEmpty, let callInfo = self.internalState.callInfo {
-            return (getGroupCallParticipants(account: self.account, callId: callInfo.id, accessHash: callInfo.accessHash, offset: "", ssrcs: Array(remainingSsrcs), limit: 100, sortAscending: callInfo.sortAscending)
+            return (accountContext.engine.calls.getGroupCallParticipants(callId: callInfo.id, accessHash: callInfo.accessHash, offset: "", ssrcs: Array(remainingSsrcs), limit: 100, sortAscending: callInfo.sortAscending)
             |> deliverOnMainQueue).start(next: { state in
                 extractMediaChannelDescriptions(remainingSsrcs: &remainingSsrcs, participants: state.participants, into: &result)
 
@@ -1941,7 +1936,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         if case let .established(callInfo, connectionMode, _, ssrc, _) = self.internalState, case .rtc = connectionMode {
-            let checkSignal = checkGroupCall(account: self.account, callId: callInfo.id, accessHash: callInfo.accessHash, ssrcs: [ssrc])
+            let checkSignal = accountContext.engine.calls.checkGroupCall(callId: callInfo.id, accessHash: callInfo.accessHash, ssrcs: [ssrc])
             
             self.checkCallDisposable = ((
                 checkSignal
@@ -2004,7 +1999,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
         
         if self.stateValue.scheduleTimestamp != nil {
-            updateGroupCallJoinAsDisposable.set(updateGroupCallJoinAsPeer(account: account, peerId: self.peerId, joinAs: peerId).start())
+            updateGroupCallJoinAsDisposable.set(accountContext.engine.calls.updateGroupCallJoinAsPeer(peerId: self.peerId, joinAs: peerId).start())
         }
         
         let _ = (self.accountContext.account.postbox.transaction { transaction -> Peer? in
@@ -2048,7 +2043,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.leaving = true
         if let callInfo = self.internalState.callInfo, let localSsrc = self.currentLocalSsrc {
             if terminateIfPossible {
-                self.leaveDisposable.set((stopGroupCall(account: self.account, peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash)
+                self.leaveDisposable.set((accountContext.engine.calls.stopGroupCall(peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash)
                 |> deliverOnMainQueue).start(completed: { [weak self] in
                     guard let strongSelf = self else {
                         return
@@ -2057,17 +2052,17 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }))
             } else {
                 let contexts = self.accountContext.cachedGroupCallContexts
-                let account = self.account
+                let accountContext = self.accountContext
                 let id = callInfo.id
                 let accessHash = callInfo.accessHash
                 let source = localSsrc
                 contexts.impl.with { impl in
-                    impl.leaveInBackground(account: account, id: id, accessHash: accessHash, source: source)
+                    impl.leaveInBackground(context: accountContext, id: id, accessHash: accessHash, source: source)
                 }
                 self.markAsCanBeRemoved()
             }
         } else if let callInfo = self.initialCall, terminateIfPossible {
-            self.leaveDisposable.set((stopGroupCall(account: self.account, peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash)
+            self.leaveDisposable.set((accountContext.engine.calls.stopGroupCall(peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash)
             |> deliverOnMainQueue).start(completed: { [weak self] in
                 guard let strongSelf = self else {
                     return
@@ -2226,8 +2221,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 return
             }
 
-            strongSelf.requestDisposable.set((joinGroupCallAsScreencast(
-                account: strongSelf.account,
+            strongSelf.requestDisposable.set((strongSelf.accountContext.engine.calls.joinGroupCallAsScreencast(
                 peerId: strongSelf.peerId,
                 callId: callInfo.id,
                 accessHash: callInfo.accessHash,
@@ -2264,8 +2258,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             let maybeCallInfo: GroupCallInfo? = self.internalState.callInfo
 
             if let callInfo = maybeCallInfo {
-                self.screencastJoinDisposable.set(leaveGroupCallAsScreencast(
-                    account: self.account,
+                self.screencastJoinDisposable.set(accountContext.engine.calls.leaveGroupCallAsScreencast(
                     callId: callInfo.id,
                     accessHash: callInfo.accessHash
                 ).start())
@@ -2417,7 +2410,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         
         let currentCall: Signal<GroupCallInfo?, CallError>
         if let initialCall = self.initialCall {
-            currentCall = getCurrentGroupCall(account: account, callId: initialCall.id, accessHash: initialCall.accessHash, peerId: peerId)
+            currentCall = accountContext.engine.calls.getCurrentGroupCall(callId: initialCall.id, accessHash: initialCall.accessHash, peerId: peerId)
             |> mapError { _ -> CallError in
                 return .generic
             }
@@ -2477,7 +2470,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         updatedInvitedPeers.insert(peerId, at: 0)
         self.invitedPeersValue = updatedInvitedPeers
         
-        let _ = inviteToGroupCall(account: self.account, callId: callInfo.id, accessHash: callInfo.accessHash, peerId: peerId).start()
+        let _ = accountContext.engine.calls.inviteToGroupCall(callId: callInfo.id, accessHash: callInfo.accessHash, peerId: peerId).start()
         
         return true
     }
@@ -2493,8 +2486,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         self.stateValue.title = title.isEmpty ? nil : title
-
-        var signal = editGroupCallTitle(account: account, callId: callInfo.id, accessHash: callInfo.accessHash, title: title)
+        
+        var signal = accountContext.engine.calls.editGroupCallTitle(callId: callInfo.id, accessHash: callInfo.accessHash, title: title)
         if !force {
             signal = signal |> delay(0.2, queue: .mainQueue())
         }
@@ -2502,7 +2495,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     }
     
     var inviteLinks: Signal<GroupCallInviteLinks?, NoError> {
-        let account = self.account
+        let accountContext = self.accountContext
         let internalStatePromise = self.internalStatePromise
         return self.state  |> take(1)
         |> map { state -> PeerId in
@@ -2520,7 +2513,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             } |> take(1)
             |> mapToSignal { state in
                 if let callInfo =  state.callInfo {
-                    return groupCallInviteLinks(account: account, callId: callInfo.id, accessHash: callInfo.accessHash)
+                    return accountContext.engine.calls.groupCallInviteLinks(callId: callInfo.id, accessHash: callInfo.accessHash)
                 } else {
                     return .complete()
                 }
@@ -2678,7 +2671,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.isScheduledStarted = true
         self.stateValue.scheduleTimestamp = nil
         
-        self.startDisposable.set((startScheduledGroupCall(account: self.account, peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash)
+        self.startDisposable.set((accountContext.engine.calls.startScheduledGroupCall(peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash)
         |> deliverOnMainQueue).start(next: { [weak self] callInfo in
             guard let strongSelf = self else {
                 return
@@ -2694,7 +2687,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         
         self.stateValue.subscribedToScheduled = subscribe
         
-        self.subscribeDisposable.set((toggleScheduledGroupCallSubscription(account: self.account, peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash, subscribe: subscribe)
+        self.subscribeDisposable.set((accountContext.engine.calls.toggleScheduledGroupCallSubscription(peerId: self.peerId, callId: callInfo.id, accessHash: callInfo.accessHash, subscribe: subscribe)
         |> deliverOnMainQueue).start())
     }
 
@@ -2749,7 +2742,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
                 } else {
                     scheduleDate = nil
                 }
-                disposable.set(createGroupCall(account: context.account, peerId: peerId, title: nil, scheduleDate: scheduleDate).start(next: { info in
+                disposable.set(context.engine.calls.createGroupCall(peerId: peerId, title: nil, scheduleDate: scheduleDate).start(next: { info in
                     subscriber.putNext((info, joinAs))
                     subscriber.putCompletion()
                 }, error: { error in

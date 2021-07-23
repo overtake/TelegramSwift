@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 
 
@@ -519,7 +519,7 @@ class ChatListController : PeersListController {
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.sharedContext.layout)
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, hiddenItems, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, hiddenItems, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
             let filterData = value.3
             
@@ -713,7 +713,7 @@ class ChatListController : PeersListController {
         
  
         
-        let filterView = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue
+        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
         switch mode {
         case .folder:
             self.updateFilter( {
@@ -899,13 +899,8 @@ class ChatListController : PeersListController {
             return item.isFixedItem || item.groupId != .root
         }
         
-        
-        
-         items.move(at: from - offset, to: to - offset)
-        
-        reorderDisposable.set(context.account.postbox.transaction { transaction -> Void in
-            _ = reorderPinnedItemIds(transaction: transaction, location: location, itemIds: items)
-        }.start())
+        items.move(at: from - offset, to: to - offset)
+        reorderDisposable.set(context.engine.peers.reorderPinnedItemIds(location: location, itemIds: items).start())
     }
     
     override var collectPinnedItems:[PinnedItemId] {
@@ -996,7 +991,7 @@ class ChatListController : PeersListController {
                 return configuration.isEnabled
         }
         
-        return combineLatest(chatListFilterPreferences(postbox: context.account.postbox), isEnabled)
+        return combineLatest(chatListFilterPreferences(engine: context.engine), isEnabled)
             |> take(1)
             |> deliverOnMainQueue
             |> map { [weak self] filters, isEnabled -> [SPopoverItem] in
@@ -1323,7 +1318,7 @@ class ChatListController : PeersListController {
         } else if force  {
             _openChat(index)
         } else {
-            let prefs = chatListFilterPreferences(postbox: context.account.postbox) |> deliverOnMainQueue |> take(1)
+            let prefs = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue |> take(1)
             
             _ = prefs.start(next: { [weak self] filters in
                 if filters.list.isEmpty {

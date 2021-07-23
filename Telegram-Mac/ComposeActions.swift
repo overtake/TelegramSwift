@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 
@@ -24,7 +24,7 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
     } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), CreateGroupError> in
             if let peerId = peerId, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                let signal:Signal<(PeerId?, Bool), NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                let signal:Signal<(PeerId?, Bool), NoError> = context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                     return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                 }) |> `catch` {_ in .complete()} |> map { value in
                     switch value {
@@ -84,7 +84,7 @@ func createSupergroup(with context: AccountContext, defaultText: String = "") ->
                 
                 if let picture = picture {
                     let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                    let signal:Signal<Void, NoError> = updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                    let signal:Signal<Void, NoError> = context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     }) |> `catch` { _ in .complete() } |> map { _ in }
                     additionalSignals.append(signal)

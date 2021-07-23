@@ -9,10 +9,10 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
-import SyncCore
+
 
 enum ThemeSource : Equatable {
     case local(ColorPalette, TelegramTheme?)
