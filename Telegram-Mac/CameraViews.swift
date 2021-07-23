@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+import TelegramCore
 import TelegramVoip
 
 enum CameraState : Equatable {

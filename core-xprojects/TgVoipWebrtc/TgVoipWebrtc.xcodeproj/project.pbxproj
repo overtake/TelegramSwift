@@ -56,6 +56,8 @@
 		27D7ABA525EFCF7B008DB916 /* TelegramCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */; };
 		27D7ABA925EFD113008DB916 /* StreamingPart.h in Headers */ = {isa = PBXBuildFile; fileRef = 27D7ABA725EFD113008DB916 /* StreamingPart.h */; };
 		27D7ABAA25EFD113008DB916 /* StreamingPart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27D7ABA825EFD113008DB916 /* StreamingPart.cpp */; };
+		27DF650A26AADFB2000753AC /* objc_video_decoder_factory.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650826AADFB2000753AC /* objc_video_decoder_factory.mm */; };
+		27DF650B26AADFB2000753AC /* objc_video_decoder_factory.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DF650926AADFB2000753AC /* objc_video_decoder_factory.h */; };
 		27E6DAF926860663003D6164 /* TGRTCMTLRenderer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E6DAF426860663003D6164 /* TGRTCMTLRenderer.h */; };
 		27E6DAFA26860663003D6164 /* TGRTCMTLI420Renderer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DAF526860663003D6164 /* TGRTCMTLI420Renderer.mm */; };
 		27E6DAFB26860663003D6164 /* TGRTCMTLRenderer+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E6DAF626860663003D6164 /* TGRTCMTLRenderer+Private.h */; };
@@ -152,6 +154,8 @@
 		27D7ABA425EFCF7B008DB916 /* TelegramCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TelegramCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27D7ABA725EFD113008DB916 /* StreamingPart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamingPart.h; sourceTree = "<group>"; };
 		27D7ABA825EFD113008DB916 /* StreamingPart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StreamingPart.cpp; sourceTree = "<group>"; };
+		27DF650826AADFB2000753AC /* objc_video_decoder_factory.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = objc_video_decoder_factory.mm; path = ../../submodules/tgcalls/tgcalls/platform/darwin/objc_video_decoder_factory.mm; sourceTree = "<group>"; };
+		27DF650926AADFB2000753AC /* objc_video_decoder_factory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = objc_video_decoder_factory.h; path = ../../submodules/tgcalls/tgcalls/platform/darwin/objc_video_decoder_factory.h; sourceTree = "<group>"; };
 		27E4344C2680DF1700B05CB1 /* CoreMediaMacCapture.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CoreMediaMacCapture.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		27E6DAF426860663003D6164 /* TGRTCMTLRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGRTCMTLRenderer.h; sourceTree = "<group>"; };
 		27E6DAF526860663003D6164 /* TGRTCMTLI420Renderer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TGRTCMTLI420Renderer.mm; sourceTree = "<group>"; };
@@ -298,6 +302,8 @@
 				D0D751BF24BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp */,
 				277CBFAA268B4E9F0082ACA2 /* objc_video_encoder_factory.h */,
 				277CBFA9268B4E9F0082ACA2 /* objc_video_encoder_factory.mm */,
+				27DF650926AADFB2000753AC /* objc_video_decoder_factory.h */,
+				27DF650826AADFB2000753AC /* objc_video_decoder_factory.mm */,
 				D0D751AD24BE3A140037D73A /* DarwinInterface.mm */,
 				27328D8A2660E8AD00E3B7D8 /* DarwinVideoSource.h */,
 				27328D8B2660E8AD00E3B7D8 /* DarwinVideoSource.mm */,
@@ -416,6 +422,7 @@
 				27237EC2269C70A400DF4C44 /* SctpDataChannelProviderInterfaceImpl.h in Headers */,
 				271999DB2681F1E2000DE2B7 /* VideoCMIOCapture.h in Headers */,
 				2774C566262F19F4006E6F26 /* SignalingEncryption.h in Headers */,
+				27DF650B26AADFB2000753AC /* objc_video_decoder_factory.h in Headers */,
 				274BB568263AE0AA00620D03 /* GroupJoinPayloadInternal.h in Headers */,
 				271999D92681F1E2000DE2B7 /* TGCMIODevice.h in Headers */,
 				2767ADFA25D6DDDC00717AA1 /* DesktopCaptureSource.h in Headers */,
@@ -535,6 +542,7 @@
 				D0D751C724BE3AC70037D73A /* InstanceImpl.cpp in Sources */,
 				271999D62681F1E2000DE2B7 /* TGCMIOCapturer.m in Sources */,
 				D0D751C924BE3AC70037D73A /* VideoCaptureInterfaceImpl.cpp in Sources */,
+				27DF650A26AADFB2000753AC /* objc_video_decoder_factory.mm in Sources */,
 				D0D751CA24BE3AC70037D73A /* Instance.cpp in Sources */,
 				27E6DAFD26860663003D6164 /* TGRTCMTLRenderer.mm in Sources */,
 				274340FA25A5BADE00A71071 /* AudioDeviceHelper.cpp in Sources */,

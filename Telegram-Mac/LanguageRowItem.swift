@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 class LanguageRowItem: GeneralRowItem {
     fileprivate let selected:Bool
     fileprivate let locale:TextViewLayout

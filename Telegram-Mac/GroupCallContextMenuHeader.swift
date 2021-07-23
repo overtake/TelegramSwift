@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 private final class PhotoOrVideoView: View {

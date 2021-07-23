@@ -13,7 +13,7 @@ import SwiftSignalKit
 import CoreMedia
 import AVFoundation
 import TelegramCore
-import SyncCore
+
 
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1

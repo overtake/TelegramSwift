@@ -9,11 +9,11 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import TGUIKit
-import SyncCore
+
 import MtProtoKit
 
 
@@ -3282,8 +3282,8 @@ extension CachedChannelData.LinkedDiscussionPeerId {
 }
 
 
-func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<ExportedInvitation?, NoError> {
-    return account.postbox.transaction { transaction -> ExportedInvitation? in
+func permanentExportedInvitation(context: AccountContext, peerId: PeerId) -> Signal<ExportedInvitation?, NoError> {
+    return context.account.postbox.transaction { transaction -> ExportedInvitation? in
         let cachedData = transaction.getPeerCachedData(peerId: peerId)
         if let cachedData = cachedData as? CachedChannelData {
             return cachedData.exportedInvitation
@@ -3294,7 +3294,7 @@ func permanentExportedInvitation(account: Account, peerId: PeerId) -> Signal<Exp
         return nil
     } |> mapToSignal { invitation in
         if invitation == nil {
-            return revokePersistentPeerExportedInvitation(account: account, peerId: peerId)
+            return context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId)
         } else {
             return .single(invitation)
         }

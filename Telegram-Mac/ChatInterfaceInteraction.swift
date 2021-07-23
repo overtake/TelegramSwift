@@ -9,7 +9,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 import SwiftSignalKit
 import MapKit
@@ -449,9 +449,9 @@ final class ChatInteraction : InterfaceObserver  {
                         }
                     }
                 }
-                let call: Signal<GroupCallPanelData?, GetCurrentGroupCallError> = updatedCurrentPeerGroupCall(account: context.account, peerId: peerId) |> mapToSignalPromotingError { call -> Signal<GroupCallSummary?, GetCurrentGroupCallError> in
+                let call: Signal<GroupCallPanelData?, GetCurrentGroupCallError> = context.engine.calls.updatedCurrentPeerGroupCall(peerId: peerId) |> mapToSignalPromotingError { call -> Signal<GroupCallSummary?, GetCurrentGroupCallError> in
                     if let call = call {
-                        return getCurrentGroupCall(account: context.account, callId: call.id, accessHash: call.accessHash, peerId: peerId)
+                        return context.engine.calls.getCurrentGroupCall(callId: call.id, accessHash: call.accessHash, peerId: peerId)
                     } else {
                         return .single(nil)
                     }

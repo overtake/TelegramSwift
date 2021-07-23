@@ -12,7 +12,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramApi
 import TelegramCore
-import SyncCore
+
 
 private struct PeerPhotos {
     let photos: [TelegramPeerPhoto]

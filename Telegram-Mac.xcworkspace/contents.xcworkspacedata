@@ -101,9 +101,6 @@
       location = "group:core-xprojects/Postbox/Postbox_Xcode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:core-xprojects/SyncCore/SyncCore_Xcode.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:core-xprojects/EncryptionProviderMac/EncryptionProvider_Xcode.xcodeproj">
    </FileRef>
    <FileRef

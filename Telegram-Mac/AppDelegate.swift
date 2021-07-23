@@ -3,7 +3,7 @@ import FFMpegBinding
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 import Quartz
 import MtProtoKit

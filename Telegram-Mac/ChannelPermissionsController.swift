@@ -13,7 +13,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private final class ChannelPermissionsControllerArguments {
     let context: AccountContext

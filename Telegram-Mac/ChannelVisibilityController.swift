@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 private enum CurrentChannelType {
@@ -826,7 +826,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             copyToClipboard(link)
         }, revokeLink: {
             confirm(for: context.window, header: L10n.channelRevokeLinkConfirmHeader, information: L10n.channelRevokeLinkConfirmText, okTitle: L10n.channelRevokeLinkConfirmOK, cancelTitle: L10n.modalCancel, successHandler: { _ in
-                 _ = showModalProgress(signal: revokePersistentPeerExportedInvitation(account: context.account, peerId: peerId), for: context.window).start()
+                _ = showModalProgress(signal: context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId), for: context.window).start()
             })
         }, share: { link in
             showModal(with: ShareModalController(ShareLinkObject.init(context, link: link)), for: context.window)

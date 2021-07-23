@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private var banHelp:[TelegramChatBannedRightsFlags] {
     var order:[TelegramChatBannedRightsFlags] = []

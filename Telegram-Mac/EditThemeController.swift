@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 private let _id_no_preview1 = InputDataIdentifier("_id_no_preview1")

@@ -10,7 +10,7 @@ import Cocoa
 
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -238,7 +238,8 @@ class LinkInvationController: TableViewController {
                 let signal = confirmSignal(for: mainWindow, information: info, okTitle: L10n.linkInvationConfirmOk)
                     |> filter {$0}
                     |> mapToSignal { _ -> Signal<Void, NoError> in
-                        return revokePersistentPeerExportedInvitation(account: context.account, peerId: peer.id) |> map { _ in return }
+                        
+                        return context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peer.id) |> map { _ in return }
                     }
                 self?.revokeLinkDisposable.set(signal.start())
             }

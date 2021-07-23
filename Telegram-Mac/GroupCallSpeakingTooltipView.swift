@@ -9,7 +9,7 @@
 import Foundation
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+
 import Postbox
 import TelegramCore
 

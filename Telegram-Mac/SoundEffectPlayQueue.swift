@@ -9,7 +9,7 @@
 import Foundation
 import SwiftSignalKit
 import Postbox
-import SyncCore
+
 import TelegramCore
 import TGUIKit
 final class SoundEffectPlay {

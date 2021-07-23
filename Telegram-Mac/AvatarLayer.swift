@@ -8,11 +8,11 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+
 
 private class AvatarNodeParameters: NSObject {
     let account: Account

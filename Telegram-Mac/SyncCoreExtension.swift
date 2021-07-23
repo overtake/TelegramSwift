@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-import SyncCore
+import TelegramCore
 
 extension PixelDimensions {
     var size: CGSize {

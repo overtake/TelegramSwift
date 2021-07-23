@@ -20,7 +20,7 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
         }))
         items.append(.init(L10n.chatListFilterAddChats, handler: {
             showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
-                return updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                return context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
                     filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(100)))
                     if let index = filters.firstIndex(where: {$0.id == filter.id }) {
@@ -33,7 +33,7 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
         }))
         items.append(.init(L10n.chatListFilterDelete, handler: {
             confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
-                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
                     filters.removeAll(where: { $0.id == filter.id })
                     return filters
@@ -217,7 +217,7 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<LeftSibarBarEntry>]> = Atomic(value: [])
                 
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, filterData, chatListFilterItems(account: context.account, accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { filterData, badges, appearance in
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, filterData, chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { filterData, badges, appearance in
             let entries = leftSidebarEntries(filterData, badges).map { AppearanceWrapperEntry.init(entry: $0, appearance: appearance) }
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments)
         } |> deliverOnMainQueue
@@ -235,7 +235,7 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
             let range = NSMakeRange(2, self.genericView.tableView.count - 2)
             
             self.genericView.tableView.resortController = TableResortController(resortRange: range, start: { _ in }, resort: { _ in }, complete: { from, to in
-                _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+                _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
                     filters.move(at: from - range.location, to: to - range.location)
                     return filters

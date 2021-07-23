@@ -8,11 +8,11 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 import TGUIKit
-import SyncCore
+
 
 
 struct AppearanceAccentColor : Equatable {

@@ -3,7 +3,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 import IOKit
 
@@ -604,7 +604,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         let foldersSemaphore = DispatchSemaphore(value: 0)
         var folders: ChatListFolders = ChatListFolders(list: [], sidebar: false)
             
-        _ = (chatListFilterPreferences(postbox: context.account.postbox) |> take(1)).start(next: { value in
+        _ = (chatListFilterPreferences(engine: context.engine) |> take(1)).start(next: { value in
             folders = value
             foldersSemaphore.signal()
         })
@@ -731,7 +731,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             context.sharedContext.showGroupCall(with: groupCallContext)
         }
         
-        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(postbox: context.account.postbox), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
+        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
         

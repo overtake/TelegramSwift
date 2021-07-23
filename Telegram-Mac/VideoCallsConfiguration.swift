@@ -1,4 +1,4 @@
-import SyncCore
+import TelegramCore
 
 struct VideoCallsConfiguration: Equatable {
     enum VideoCallsSupport {

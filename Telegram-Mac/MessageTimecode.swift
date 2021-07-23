@@ -2,7 +2,7 @@
 import Foundation
 import Cocoa
 import TelegramCore
-import SyncCore
+
 
 
 

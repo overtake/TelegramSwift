@@ -10,7 +10,7 @@ import Cocoa
 
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
@@ -48,7 +48,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         
-        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = recentlyUsedHashtags(postbox: context.account.postbox) |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = context.engine.messages.recentlyUsedHashtags() |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             let normalizedQuery = query.lowercased()
             var result: [String] = []
             for hashtag in hashtags {
@@ -142,7 +142,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             
             var inlineSignal: Signal<[(Peer, Double)], NoError> = .single([])
             if includeRecent {
-                inlineSignal = context.engine.peers.recentlyUsedInlineBots() |> take(1)
+                inlineSignal = context.engine.peers.recentlyUsedInlineBots() |> take(1) |> map {
+                    $0.map { ($0.0._asPeer(), $0.1) }
+                }
             }
             
             let members: Signal<[Peer], NoError> = searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: query)
@@ -265,9 +267,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         let contextBot = context.engine.peers.resolvePeerByName(name: addressName)
-            |> mapToSignal { peerId -> Signal<Peer?, NoError> in
-                if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId)
+            |> mapToSignal { peer -> Signal<Peer?, NoError> in
+                if let peer = peer {
+                    return context.account.postbox.loadedPeerWithId(peer._asPeer().id)
                         |> map { peer -> Peer? in
                             return peer
                         }
@@ -278,7 +280,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
             |> mapToSignal { peer -> Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> in
                 if let user = peer as? TelegramUser, let botInfo = user.botInfo, let _ = botInfo.inlinePlaceholder {
-                    let contextResults = requestChatContextResults(account: context.account, botId: user.id, peerId: chatPeer.id, query: query, offset: "")
+                    let contextResults = context.engine.messages.requestChatContextResults(botId: user.id, peerId: chatPeer.id, query: query, offset: "")
                         |> map { results -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                             return { _ in
                                 return .contextRequestResult(user, results?.results)

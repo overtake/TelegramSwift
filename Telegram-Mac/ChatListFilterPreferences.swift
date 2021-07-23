@@ -10,7 +10,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 
 
 extension ChatListFilter {
@@ -114,8 +114,9 @@ struct ChatListFolders : Equatable {
     let sidebar: Bool
 }
 
-func chatListFilterPreferences(postbox: Postbox) -> Signal<ChatListFolders, NoError> {
-    return combineLatest(updatedChatListFilters(postbox: postbox), chatListFolderSettings(postbox)) |> map {
+func chatListFilterPreferences(engine: TelegramEngine) -> Signal<ChatListFolders, NoError> {
+    
+    return combineLatest(engine.peers.updatedChatListFilters(), chatListFolderSettings(engine.account.postbox)) |> map {
         return ChatListFolders(list: $0, sidebar: $1.sidebar)
     }
 }
@@ -134,13 +135,12 @@ struct ChatListFilterBadges : Equatable {
     }
 }
 
-func chatListFilterItems(account: Account, accountManager: AccountManager) -> Signal<ChatListFilterBadges, NoError> {
+func chatListFilterItems(engine: TelegramEngine, accountManager: AccountManager) -> Signal<ChatListFilterBadges, NoError> {
     
     let settings = appNotificationSettings(accountManager: accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
         return lhs.badgeEnabled == rhs.badgeEnabled
     })
-    
-    return combineLatest(updatedChatListFilters(postbox: account.postbox), settings)
+    return combineLatest(engine.peers.updatedChatListFilters(), settings)
         |> mapToSignal { filters, inAppSettings -> Signal<(Int, [(ChatListFilter, Int, Bool)]), NoError> in
             
             if !inAppSettings.badgeEnabled {
@@ -173,8 +173,8 @@ func chatListFilterItems(account: Account, accountManager: AccountManager) -> Si
                 keys.append(.basicPeer(peerId))
             }
             
-            return combineLatest(queue: account.postbox.queue,
-                                 account.postbox.combinedView(keys: keys),
+            return combineLatest(queue: engine.account.postbox.queue,
+                                 engine.account.postbox.combinedView(keys: keys),
                                  Signal<Bool, NoError>.single(true)
                 )
                 |> map { view, _ -> (Int, [(ChatListFilter, Int, Bool)]) in
@@ -196,7 +196,7 @@ func chatListFilterItems(account: Account, accountManager: AccountManager) -> Si
                         case let .peer(peerId, state):
                             if let state = state, state.isUnread {
                                 if let peerView = view.views[.basicPeer(peerId)] as? BasicPeerView, let peer = peerView.peer {
-                                    let tag = account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
+                                    let tag = engine.account.postbox.seedConfiguration.peerSummaryCounterTags(peer, peerView.isContact)
                                     
                                     var peerCount = Int(state.count)
                                     if state.isUnread {
@@ -308,7 +308,7 @@ func chatListFilterItems(account: Account, accountManager: AccountManager) -> Si
         } |> map { value -> ChatListFilterBadges in
             return ChatListFilterBadges(total: value.0, filters: value.1.map { ChatListFilterBadge(filter: $0.0, count: max(0, $0.1), hasUnmutedUnread: $0.2) })
         } |> mapToSignal { badges -> Signal<ChatListFilterBadges, NoError> in
-            return renderedTotalUnreadCount(accountManager: accountManager, postbox: account.postbox) |> map {
+            return renderedTotalUnreadCount(accountManager: accountManager, postbox: engine.account.postbox) |> map {
                 return ChatListFilterBadges(total: Int(max($0.0, 0)), filters: badges.filters)
             }
         }

@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 class ChannelIntroView : NSScrollView, AppearanceViewProtocol {

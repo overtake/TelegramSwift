@@ -7,9 +7,9 @@
 //
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import TGUIKit
-import SyncCore
+
 #if !APP_STORE
     import Sparkle
 #endif

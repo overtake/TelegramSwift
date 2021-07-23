@@ -10,7 +10,7 @@ import Cocoa
 import Foundation
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import MtProtoKit
@@ -53,7 +53,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
     } else {
         return context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
             if let peerId = peerId {
-                return context.account.postbox.loadedPeerWithId(peerId) |> map(Optional.init)
+                return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> map(Optional.init)
             }
             return .single(nil)
         } |> deliverOnMainQueue
@@ -351,7 +351,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         } else {
             peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
                 if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId) |> mapError { _ in
+                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> mapError { _ in
                         return .doesntExists
                     }
                 }
@@ -453,7 +453,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         } else {
             let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
                 if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId) |> map {Optional($0)}
+                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> map {Optional($0)}
                 }
                 return .single(nil)
             } |> deliverOnMainQueue, for: context.window).start(next: { peer in
@@ -496,16 +496,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
                 if payload.isEmpty {
                     if peerId.namespace == Namespaces.Peer.CloudGroup {
-                        return showModalProgress(signal: context.engine.peers.addGroupMember(peerId: peerId, memberId: botPeerId), for: context.window)
+                        return showModalProgress(signal: context.engine.peers.addGroupMember(peerId: peerId, memberId: botPeerId._asPeer().id), for: context.window)
                             |> map { (.none, peerId) }
                             |> `catch` { _ -> Signal<(StartBotInGroupResult, PeerId), NoError> in return .single((.none, peerId)) }
                     } else {
-                        return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peerId, memberId: botPeerId), for: context.window)
+                        return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peerId, memberId: botPeerId._asPeer().id), for: context.window)
                             |> map { _ in (.none, peerId) }
                             |> then(.single((.none, peerId)))
                     }
                 } else {
-                    return showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId, groupPeerId: peerId, payload: payload), for: context.window)
+                    return showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: peerId, payload: payload), for: context.window)
                         |> map {
                             ($0, peerId)
                         }
@@ -532,7 +532,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         interaction(hashtag)
         afterComplete(true)
     case let .joinchat(_, hash, context, interaction):
-        _ = showModalProgress(signal: joinLinkInformation(hash, account: context.account), for: context.window).start(next: { (result) in
+        _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: context.window).start(next: { (result) in
             switch result {
             case let .alreadyJoined(peerId):
                 interaction(peerId, true, nil, nil)
@@ -670,7 +670,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         afterComplete(true)
     case let .unsupportedScheme(_, context, path):
-        _ = (getDeepLinkInfo(network: context.account.network, path: path) |> deliverOnMainQueue).start(next: { info in
+        _ = (context.engine.resolve.getDeepLinkInfo(path: path) |> deliverOnMainQueue).start(next: { info in
             if let info = info {
                updateAppAsYouWish(text: info.message, updateApp: info.updateApp)
             }

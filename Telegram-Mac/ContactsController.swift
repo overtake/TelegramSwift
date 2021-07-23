@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private enum ContactsControllerEntryId: Hashable {
     case peerId(Int64)

@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 private func searchSettingsEntries(context: AccountContext, items:[SettingsSearchableItem], recent: Bool) -> [InputDataEntry] {

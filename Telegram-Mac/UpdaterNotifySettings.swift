@@ -8,10 +8,10 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
-import SyncCore
+
 enum LaunchNavigation : PostboxCoding, Equatable {
     case chat(PeerId, necessary: Bool)
     case thread(MessageId, MessageId, necessary: Bool)

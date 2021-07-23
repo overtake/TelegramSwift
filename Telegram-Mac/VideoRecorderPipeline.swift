@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Accelerate
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 

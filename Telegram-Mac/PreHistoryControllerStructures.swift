@@ -9,4 +9,4 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+

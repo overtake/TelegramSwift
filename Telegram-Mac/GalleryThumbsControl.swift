@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 class GalleryThumbsControl: ViewController {
     private let interactions: GalleryInteractions

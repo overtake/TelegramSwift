@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 
 
 class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {

@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-import SyncCore
+
 
 struct VoiceChatTile {
     fileprivate(set) var rect: NSRect

@@ -11,7 +11,7 @@ import Postbox
 import TelegramCore
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+
 import Postbox
 
 private final class InviteLinkArguments {

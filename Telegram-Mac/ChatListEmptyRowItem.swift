@@ -11,7 +11,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 class ChatListEmptyRowItem: TableRowItem {
     private let _stableId: AnyHashable

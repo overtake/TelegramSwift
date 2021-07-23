@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Contacts
 import TelegramCore
-import SyncCore
+
 
 class VCardLocationRowItem: GeneralRowItem {
     fileprivate let address: CNLabeledValue<CNPostalAddress>

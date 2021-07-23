@@ -38,8 +38,8 @@ public enum TotalUnreadCountDisplayCategory: Int32 {
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
-import SyncCore
+
+
 
 struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let enabled: Bool
