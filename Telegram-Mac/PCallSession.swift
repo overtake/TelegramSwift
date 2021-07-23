@@ -313,7 +313,6 @@ class PCallSession {
     private let isVideoAvailable: Bool
     private var videoIsForceDisabled: Bool
     private(set) var isScreenCapture: Bool
-    private var didSetScreenCaptureAvailable: Bool? = nil
     private let enableStunMarking: Bool
     private let enableTCP: Bool
     public let preferredVideoCodec: String?
@@ -910,11 +909,11 @@ class PCallSession {
         }
     }
     
-    public func enableScreenCapture() {
+    public func enableScreenCapture(_ id: String) {
         
         let requestVideo: Bool = self.videoCapturer == nil
         if self.videoCapturer == nil {
-            let videoCapturer = OngoingCallVideoCapturer("screen_capture")
+            let videoCapturer = OngoingCallVideoCapturer(id)
             self.videoCapturer = videoCapturer
             self.videoIsForceDisabled = false
         }
@@ -926,7 +925,7 @@ class PCallSession {
             self.ongoingContext?.requestVideo(videoCapturer)
         }
         if !requestVideo {
-            self.videoCapturer?.switchVideoInput("screen_capture")
+            self.videoCapturer?.switchVideoInput(id)
         }
 //        setRequestedVideoAspect(Float(System.aspectRatio))
         
@@ -949,22 +948,21 @@ class PCallSession {
         }
     }
     
+    private weak var captureSelectWindow: DesktopCapturerWindow?
+    
     public func toggleScreenCapture() -> ScreenCaptureLaunchError? {
-        if didSetScreenCaptureAvailable == nil {
-            self.didSetScreenCaptureAvailable = screenCaptureAvailable()
-        }
-        let captureAvailable = didSetScreenCaptureAvailable!
-        if captureAvailable {
-            self.isScreenCapture = !self.isScreenCapture
-            if self.isScreenCapture {
-                self.enableScreenCapture()
+        if !self.isScreenCapture {
+            if let captureSelectWindow = captureSelectWindow {
+                captureSelectWindow.orderFrontRegardless()
             } else {
-                self.disableScreenCapture()
+                self.captureSelectWindow = presentDesktopCapturerWindow(mode: .screencast, select: { [weak self] source, value in
+                    self?.enableScreenCapture(source.deviceIdKey())
+                }, devices: sharedContext.devicesContext)
             }
-            return nil
         } else {
-            return .permission
+            self.disableScreenCapture()
         }
+        return nil
     }
     
     public func disableVideo() {

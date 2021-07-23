@@ -569,8 +569,10 @@ internal final class L10n {
   internal static var callCameraUnavailable: String  { return L10n.tr("Localizable", "Call.CameraUnavailable") }
   /// Close
   internal static var callClose: String  { return L10n.tr("Localizable", "Call.Close") }
-  /// End
+  /// Decline
   internal static var callDecline: String  { return L10n.tr("Localizable", "Call.Decline") }
+  /// End
+  internal static var callEnd: String  { return L10n.tr("Localizable", "Call.End") }
   /// Mute
   internal static var callMute: String  { return L10n.tr("Localizable", "Call.Mute") }
   /// %@'s app does not support calls. They need to update their app before you can call them.
@@ -3749,7 +3751,7 @@ internal final class L10n {
   internal static var emptyChatStorageUsageClear: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clear") }
   /// Clearing...
   internal static var emptyChatStorageUsageClearing: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clearing") }
-  /// Minimum Cache Size
+  /// Maximum Cache Size
   internal static var emptyChatStorageUsageData: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Data") }
   /// More data and storage settings are available in\nSettings ⟶ [Data And Storage](storage).
   internal static var emptyChatStorageUsageDesc: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Desc") }
