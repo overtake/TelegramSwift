@@ -625,7 +625,7 @@ private class PhoneCallWindowView : View {
         self.b_ScreenShare.updateWithData(CallControlData(text: L10n.callScreen, mode: ssBg, iconSize: NSMakeSize(50, 50)), animated: false)
         self.b_ScreenShare.updateLoading(outgoingCameraInitialized == .initializing && state.isScreenCapture, animated: animated)
         
-        self.b_ScreenShare.isHidden = true//!session.isVideoPossible
+        self.b_ScreenShare.isHidden = !session.isVideoPossible
         
         
         
@@ -660,10 +660,11 @@ private class PhoneCallWindowView : View {
                 activeView._change(pos: NSMakePoint(x, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
                 x += activeView.size.width + 45
             }
-            declineControl.updateWithData(CallControlData(text: L10n.callDecline, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: animated)
+            
+            declineControl.updateWithData(CallControlData(text: L10n.callEnd, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: animated)
             
         case .ringing:
-            break
+            declineControl.updateWithData(CallControlData(text: L10n.callDecline, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: animated)
         case .terminated(_, let reason, _):
             if let reason = reason, reason.recall {
                 self.acceptControl.isHidden = false
