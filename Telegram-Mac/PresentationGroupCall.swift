@@ -1320,9 +1320,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             myLevel = level
                             myLevelHasVoice = hasVoice
                         }
-                        if peerId == strongSelf.joinAsPeerId, strongSelf.stateValue.muteState == nil {
-                            result.append((peerId, ssrcValue, level, hasVoice))
-                        }
+                        result.append((peerId, ssrcValue, level, hasVoice))
                     } else if ssrcValue != 0 {
                         missingSsrcs.insert(ssrcValue)
                     }
