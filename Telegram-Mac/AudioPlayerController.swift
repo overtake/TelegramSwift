@@ -1152,10 +1152,6 @@ class APChatController : APController {
         self.index = index
         self.messages = messages
         super.init(context: context, streamable: streamable, baseRate: baseRate, volume: volume)
-        
-        if #available(macOS 10.12.2, *) {
-            self._commandCenter = AudioCommandCenter(self)
-        }
     }
     
     
@@ -1253,6 +1249,9 @@ class APChatMusicController : APChatController {
 
     init(context: AccountContext, chatLocationInput: ChatLocationInput, mode: ChatMode, index: MessageIndex?, baseRate: Double = 1.0, volume: Float = 1.0, messages: [Message] = []) {
         super.init(context: context, chatLocationInput: chatLocationInput, mode: mode, index: index, streamable: true, baseRate: baseRate, volume: volume, messages: messages)
+        if #available(macOS 10.12.2, *) {
+            self._commandCenter = AudioCommandCenter(self)
+        }
     }
 
     required init?(coder: NSCoder) {

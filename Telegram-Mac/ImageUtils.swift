@@ -45,22 +45,22 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                            subscriber.putNext((decodeTinyThumbnail(data: data), false, true))
                                        }
                                     
+                                    let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
+                                    
                                        let resourceDataDisposable = resourceData.start(next: { data in
                                            if data.complete {
                                                subscriber.putNext((try? Data(contentsOf: URL(fileURLWithPath: data.path)), true, false))
                                                subscriber.putCompletion()
-                                           }
-                                       }, error: { error in
-                                           subscriber.putError(error)
+                                           } 
                                        }, completed: {
                                            subscriber.putCompletion()
                                        })
                                        
-                                       let fetchedDataDisposable: Disposable
-                                       if let reference = PeerReference(peer) {
+                                        let fetchedDataDisposable: Disposable
+                                        if let message = message {
+                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
+                                        } else if let reference = PeerReference(peer) {
                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
-                                       } else if let message = message {
-                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
                                        } else {
                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
                                        }
@@ -108,6 +108,9 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                         }
                         #endif
                         if let image = image {
+                            if tiny {
+                                return .single((image, animated))
+                            }
                             return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
                                 return (image, animated)
                             }

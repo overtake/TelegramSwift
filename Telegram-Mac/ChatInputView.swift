@@ -15,7 +15,7 @@ import Postbox
 
 
 
-protocol ChatInputDelegate : class {
+protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
 }
 

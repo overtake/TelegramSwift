@@ -197,7 +197,7 @@
 {
     NSNumber *value = [self _vmBitrate];
     if (!value)
-        value = @(500);
+        value = @(1000);
     
     return value.integerValue;
 }
