@@ -1130,8 +1130,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             
                             var action: ChatInitialAction? = nil
                             
-                            if let t = params["t"], let timemark = Int32(t) {
-                                action = .openMedia(timemark)
+                            if let t = params["t"], let timemark = Double(t) {
+                                if Int(timemark) < Int32.max {
+                                    action = .openMedia(Int32(timemark))
+                                }
                             }
                             
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {

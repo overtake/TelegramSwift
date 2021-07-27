@@ -974,10 +974,22 @@ class ChatMessageItem: ChatRowItem {
                     let code = parseTimecodeString(nsString!.substring(with: range))
                     
                     var link = ""
-                    if let message = message, let peer = message.peers[message.id.peerId] {
-                        if let code = code {
-                            let address = peer.addressName ?? "\(message.id.peerId.id)"
-                            link = "t.me/\(address)/\(message.id.id)?t=\(code)"
+                    if let message = message {
+                        var peer: Peer?
+                        var messageId: MessageId?
+                        if let info = message.forwardInfo {
+                            peer = info.author
+                            messageId = info.sourceMessageId
+                        } else {
+                            peer = message.effectiveAuthor
+                            messageId = message.id
+                        }
+                        if let peer = peer, let messageId = messageId {
+                            if let code = code, peer.isChannel || peer.isSupergroup {
+                                let code = Int(round(code))
+                                let address = peer.addressName ?? "\(messageId.peerId.id)"
+                                link = "t.me/\(address)/\(messageId.id)?t=\(code)"
+                            }
                         }
                     }
                     
