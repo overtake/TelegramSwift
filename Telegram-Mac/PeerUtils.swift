@@ -25,7 +25,7 @@ extension ChatListFilterPeerCategories {
     static let excludeMuted = ChatListFilterPeerCategories(rawValue: 1 << 7)
     static let excludeArchived = ChatListFilterPeerCategories(rawValue: 1 << 8)
     
-    static let Namespace: Int32 = 10
+    static let Namespace: Int32 = 7
 }
 
 

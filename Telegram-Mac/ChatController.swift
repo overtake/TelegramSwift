@@ -2313,7 +2313,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
-                if toChat {
+                if toChat || action != nil {
                     
                     if peerId == strongSelf.chatInteraction.peerId {
                         if let postId = postId {
