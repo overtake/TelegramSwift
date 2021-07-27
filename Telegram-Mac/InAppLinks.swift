@@ -83,6 +83,7 @@ enum ChatInitialAction : Equatable {
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
     case joinVoiceChat(_ joinHash: String?)
+    case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
         case .selectToReport:
@@ -1126,12 +1127,19 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .external(link: urlString, false)
                         } else if let context = context {
                             let (params, _) = urlVars(with: url as String)
+                            
+                            var action: ChatInitialAction? = nil
+                            
+                            if let t = params["t"], let timemark = Int32(t) {
+                                action = .openMedia(timemark)
+                            }
+                            
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: name, context: context, threadId: post, commentId: comment)
                             } else if let thread = params[keyURLThreadId]?.nsstring.intValue, let comment = post {
                                  return .comments(link: urlString, username: name, context: context, threadId: thread, commentId: comment)
                             } else {
-                                return .followResolvedName(link: urlString, username: name, postId: post, context: context, action:nil, callback: openInfo)
+                                return .followResolvedName(link: urlString, username: name, postId: post, context: context, action: action, callback: openInfo)
                             }
                         }
                     }
