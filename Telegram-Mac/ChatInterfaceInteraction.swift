@@ -146,6 +146,8 @@ final class ChatInteraction : InterfaceObserver  {
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
+    var openFocusedMedia:(Int32?)->Void = { _ in return }
+    
     var push:(ViewController)->Void = { _ in }
     var back:()->Void = { }
 
@@ -424,6 +426,11 @@ final class ChatInteraction : InterfaceObserver  {
                 break
             case let .closeAfter(peek):
                break
+            case let .openMedia(timemark):
+                self.openFocusedMedia(timemark)
+                update({
+                    $0.withoutInitialAction()
+                })
             case let .selectToReport(reason):
                 update(animated: animated, {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)

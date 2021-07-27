@@ -2648,6 +2648,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }))
         }
         
+        chatInteraction.openFocusedMedia = { [weak self] timemark in
+            if let messageId = self?.messageId {
+                self?.genericView.tableView.enumerateItems(with: { item in
+                    if let item = item as? ChatMediaItem, item.message?.id == messageId {
+                        item.openMedia(timemark)
+                        return false
+                    }
+                    return true
+                })
+            }
+        }
+        
         chatInteraction.focusPinnedMessageId = { [weak self] messageId in
             self?.chatInteraction.focusMessageId(nil, messageId, .CenterActionEmpty { [weak self] _ in
                 self?.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(messageId)})
