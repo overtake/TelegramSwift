@@ -95,8 +95,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         renderer.orientation = .portrait
         renderer.mirror = true
         
-        if session.canSetSessionPreset(.vga640x480) {
-            session.sessionPreset = .vga640x480
+        if session.canSetSessionPreset(.hd1280x720) {
+            session.sessionPreset = .hd1280x720
         } else {
             session.sessionPreset = .medium
         }
@@ -138,8 +138,6 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         session.addOutput(videoOutput)
 
         audioOutput.setSampleBufferDelegate(self, queue: VideoRecorderPipeline.queue.queue)
-
-        //averagePowerForChannel
         
         
         session.addOutput(audioOutput)
@@ -147,9 +145,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         
         videoConnection = videoOutput.connection(with: .video)
         audioConnection = audioOutput.connection(with: .audio)
-        
-       
-        
+
         
         _configureFps()
     }
@@ -224,9 +220,11 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         
+        
+        
         let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
         
-        if self.skip.modify({min($0 + 1, 3)}) < 3 {
+        if self.skip.modify({ $0 + 1 }) < 10 {
             return
         }
         

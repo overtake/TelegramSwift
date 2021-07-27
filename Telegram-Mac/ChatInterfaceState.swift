@@ -41,7 +41,7 @@ struct ChatInterfaceSelectionState: Equatable {
     }
 }
 
-enum ChatTextInputAttribute : Equatable, PostboxCoding {
+enum ChatTextInputAttribute : Equatable, Comparable, PostboxCoding {
     case bold(Range<Int>)
     case strikethrough(Range<Int>)
     case italic(Range<Int>)
@@ -71,6 +71,31 @@ enum ChatTextInputAttribute : Equatable, PostboxCoding {
         default:
             fatalError("input attribute not supported")
         }
+    }
+    var weight: Int {
+        switch self {
+        case .bold:
+            return 0
+        case .italic:
+            return 1
+        case .pre:
+            return 2
+        case .code:
+            return 3
+        case .strikethrough:
+            return 4
+        case .uid:
+            return 5
+        case .url:
+            return 6
+        }
+    }
+    
+    static func <(lhs: ChatTextInputAttribute, rhs: ChatTextInputAttribute) -> Bool {
+        if lhs.weight != rhs.weight {
+            return lhs.weight < rhs.weight
+        }
+        return lhs.range.lowerBound < rhs.range.lowerBound
     }
 
     func encode(_ encoder: PostboxEncoder) {
@@ -237,7 +262,7 @@ final class ChatTextInputState: PostboxCoding, Equatable {
     init(inputText: String, selectionRange: Range<Int>, attributes:[ChatTextInputAttribute]) {
         self.inputText = inputText
         self.selectionRange = selectionRange
-        self.attributes = attributes
+        self.attributes = attributes.sorted(by: <)
     }
 
     init(inputText: String) {

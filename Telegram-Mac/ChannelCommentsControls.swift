@@ -40,7 +40,7 @@ final class AvatarContentView: View {
 
         
         
-        let signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: synchronousLoad)
+        let signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: synchronousLoad)
         
         let disposable = (signal
             |> deliverOnMainQueue).start(next: { [weak self] image in

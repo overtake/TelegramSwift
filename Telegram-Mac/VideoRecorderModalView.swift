@@ -37,7 +37,7 @@ class VideoRecorderModalView: View {
         captureContainer.setFrameSize(frameRect.width - 36, frameRect.height - 36)
         placeholderView.animates = false
         placeholderView.image = thumbnail ?? #imageLiteral(resourceName: "VideoMessagePlaceholder").precomposed()
-        placeholderView.sizeToFit()
+        placeholderView.frame = bounds
         captureContainer.addSubview(placeholderView)
         placeholderView.center()
         
