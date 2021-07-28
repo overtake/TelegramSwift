@@ -571,7 +571,9 @@ private class PhoneCallWindowView : View {
             break
         }
         
-//        let isMirrored = !state.isScreenCapture
+        let isMirrored = !state.isScreenCapture
+        self.outgoingVideoView.isMirrored = isMirrored
+        
 //        
 //        self.outgoingVideoView.videoView?.0?.setOnIsMirroredUpdated = { f in
 //            f(isMirrored)

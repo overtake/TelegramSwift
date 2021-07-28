@@ -271,6 +271,7 @@ private final class PlayerRenderer {
     private let displayFrame: (RenderedFrame, LottieRunLoop)->Void
     private var timer: SwiftSignalKit.Timer?
     private let release:()->Void
+    private var maxRefreshRate: Int = 60
     init(animation: LottieAnimation, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState:@escaping(LottiePlayerState)->Void) {
         self.animation = animation
         self.displayFrame = displayFrame
@@ -289,7 +290,8 @@ private final class PlayerRenderer {
     }
     
     
-    func initializeAndPlay() {
+    func initializeAndPlay(maxRefreshRate: Int) {
+        self.maxRefreshRate = maxRefreshRate
         self.updateState(.initializing)
         assert(animation.runOnQueue.isCurrent())
         
@@ -342,7 +344,7 @@ private final class PlayerRenderer {
         
         let maximum_renderer_frames: Int = Thread.isMainThread ? 2 : maximum_rendered_frames
         
-        let fps: Int = player.fps
+        let fps: Int = min(player.fps, maxRefreshRate)
         let mainFps: Int = player.mainFps
         
         let maxFrames:Int32 = 180
@@ -594,7 +596,7 @@ private final class PlayerRenderer {
 private final class PlayerContext {
     private let rendererRef: QueueLocalObject<PlayerRenderer>
     fileprivate let animation: LottieAnimation
-    init(_ animation: LottieAnimation, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
+    init(_ animation: LottieAnimation, maxRefreshRate: Int = 60, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
         self.rendererRef = QueueLocalObject.init(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
@@ -605,7 +607,7 @@ private final class PlayerContext {
         })
         
         self.rendererRef.with { renderer in
-            renderer.initializeAndPlay()
+            renderer.initializeAndPlay(maxRefreshRate: maxRefreshRate)
         }
     }
     
@@ -1121,7 +1123,7 @@ final class MetalContext {
     let sampler: MTLSamplerState
     let commandQueue: MTLCommandQueue?
     let displayId: CGDirectDisplayID
-    
+    let refreshRate: Int
     private var loops: QueueLocalObject<Loops>
     
     init?() {
@@ -1129,7 +1131,8 @@ final class MetalContext {
             return Loops()
         })
         self.displayId = CGMainDisplayID()
-        
+        let refreshRate = CGDisplayCopyDisplayMode(CGMainDisplayID())?.refreshRate ?? 30
+        self.refreshRate = Int(refreshRate)
         if let device = CGDirectDisplayCopyCurrentMetalDevice(CGMainDisplayID()) {
             self.device = device
             self.commandQueue = device.makeCommandQueue()
@@ -1500,7 +1503,7 @@ class LottiePlayerView : NSView {
                         cachedContext = nil
                     }
                     
-                    self.context = PlayerContext(animation, displayFrame: { frame, runLoop in
+                    self.context = PlayerContext(animation, maxRefreshRate: holder.context.refreshRate, displayFrame: { frame, runLoop in
                         layer.takeUnretainedValue().render(frame: frame, runLoop: runLoop)
                     }, release: {
                         Queue.mainQueue().async {
