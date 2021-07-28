@@ -174,6 +174,11 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         return true
     }
     
+    override class func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
+        var bp = 0
+        bp += 1
+    }
+    
     func previewPanel(_ panel: QLPreviewPanel!, sourceFrameOnScreenFor item: QLPreviewItem!) -> NSRect {
         
         if let stableId = stableId {
@@ -187,6 +192,8 @@ class QuickLookPreview : NSObject, QLPreviewPanelDelegate, QLPreviewPanelDataSou
         
        return NSZeroRect
     }
+    
+    	
     
     func previewPanel(_ panel: QLPreviewPanel!, transitionImageFor item: QLPreviewItem!, contentRect: UnsafeMutablePointer<NSRect>!) -> Any! {
         

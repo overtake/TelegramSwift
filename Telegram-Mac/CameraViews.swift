@@ -21,6 +21,24 @@ enum CameraState : Equatable {
 final class OutgoingVideoView : Control {
     
     private var progressIndicator: ProgressIndicator? = nil
+    private let videoContainer = View()
+    var isMirrored: Bool = false {
+        didSet {
+            CATransaction.begin()
+            if isMirrored {
+                let rect = videoContainer.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
+                fr = CATransform3DScale(fr, -1, 1, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), 0, 0)
+                videoContainer.layer?.sublayerTransform = fr
+            } else {
+                videoContainer.layer?.sublayerTransform = CATransform3DIdentity
+            }
+           
+            CATransaction.commit()
+        }
+    }
     
     var isMoved: Bool = false
     
@@ -41,7 +59,7 @@ final class OutgoingVideoView : Control {
                 
                 videoView.setVideoContentMode(.resizeAspectFill)
                 
-                addSubview(videoView.view, positioned: .below, relativeTo: self.overlay)
+                videoContainer.addSubview(videoView.view)
                 videoView.view.frame = self.bounds
                 videoView.view.layer?.cornerRadius = .cornerRadius
                 
@@ -86,12 +104,12 @@ final class OutgoingVideoView : Control {
     
     func unhideView(animated: Bool) {
         if let view = videoView?.0?.view, _hidden {
-            self.subviews.enumerated().forEach { _, view in
+            subviews.enumerated().forEach { _, view in
                 if !(view is Control) {
                     view.removeFromSuperview()
                 }
             }
-            addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+            videoContainer.addSubview(view, positioned: .below, relativeTo: self.subviews.first)
             view.layer?.animateScaleCenter(from: 0.2, to: 1.0, duration: 0.2)
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         }
@@ -139,11 +157,11 @@ final class OutgoingVideoView : Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        super.addSubview(overlay)
         self.overlay.forceMouseDownCanMoveWindow = true
-        
         self.layer?.cornerRadius = .cornerRadius
         self.layer?.masksToBounds = true
+        self.addSubview(videoContainer)
+        self.addSubview(overlay)
     }
     
     required init?(coder: NSCoder) {
@@ -152,15 +170,17 @@ final class OutgoingVideoView : Control {
     
     override func layout() {
         super.layout()
+        
+        self.videoContainer.frame = bounds
         self.overlay.frame = bounds
         self.videoView?.0?.view.frame = bounds
         self.progressIndicator?.center()
         self.disabledView?.frame = bounds
-        
+        let isMirrored = self.isMirrored
+        self.isMirrored = isMirrored
+
         if let textView = notAvailableView {
-            let layout = textView.layout
-            layout?.measure(width: frame.width - 40)
-            textView.update(layout)
+            textView.resize(frame.width - 40)
             textView.center()
         }
     }
@@ -176,7 +196,7 @@ final class OutgoingVideoView : Control {
                 current.layer?.cornerRadius = .cornerRadius
                 current.frame = bounds
                 self.disabledView = current
-                addSubview(current, positioned: .below, relativeTo: overlay)
+                self.addSubview(current, positioned: .below, relativeTo: overlay)
                 
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -238,15 +258,7 @@ final class OutgoingVideoView : Control {
     }
     
     private func updateCursorRects() {
-//        resetCursorRects()
-//        if let cursor = NSCursor.set_windowResizeNorthEastSouthWestCursor {
-//            addCursorRect(NSMakeRect(0, frame.height - 10, 10, 10), cursor: cursor)
-//            addCursorRect(NSMakeRect(frame.width - 10, 0, 10, 10), cursor: cursor)
-//        }
-//        if let cursor = NSCursor.set_windowResizeNorthWestSouthEastCursor {
-//            addCursorRect(NSMakeRect(0, 0, 10, 10), cursor: cursor)
-//            addCursorRect(NSMakeRect(frame.width - 10, frame.height - 10, 10, 10), cursor: cursor)
-//        }
+
     }
     
     override func cursorUpdate(with event: NSEvent) {
