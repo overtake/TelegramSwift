@@ -344,7 +344,7 @@ private final class PlayerRenderer {
         
         let maximum_renderer_frames: Int = Thread.isMainThread ? 2 : maximum_rendered_frames
         
-        let fps: Int = min(player.fps, maxRefreshRate)
+        let fps: Int = min(player.fps, max(30, maxRefreshRate))
         let mainFps: Int = player.mainFps
         
         let maxFrames:Int32 = 180
@@ -1131,9 +1131,12 @@ final class MetalContext {
             return Loops()
         })
         self.displayId = CGMainDisplayID()
-        let refreshRate = CGDisplayCopyDisplayMode(CGMainDisplayID())?.refreshRate ?? 30
+        var refreshRate = CGDisplayCopyDisplayMode(displayId)?.refreshRate ?? 60
+        if refreshRate == 0 {
+            refreshRate = 60
+        }
         self.refreshRate = Int(refreshRate)
-        if let device = CGDirectDisplayCopyCurrentMetalDevice(CGMainDisplayID()) {
+        if let device = CGDirectDisplayCopyCurrentMetalDevice(displayId) {
             self.device = device
             self.commandQueue = device.makeCommandQueue()
         } else {
