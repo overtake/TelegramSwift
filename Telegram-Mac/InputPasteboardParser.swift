@@ -167,6 +167,7 @@ class InputPasteboardParser: NSObject {
             var image:NSImage? = nil
             
             if files.isEmpty {
+                                                
                 if let images = pasteboard.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage], !images.isEmpty {
                     
                     if let representation = images[0].representations.first as? NSPDFImageRep {
