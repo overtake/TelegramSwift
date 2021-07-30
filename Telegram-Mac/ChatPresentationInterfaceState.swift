@@ -202,7 +202,7 @@ final class ChatRecordingVideoState : ChatRecordingState {
     init(context: AccountContext, liveUpload:Bool, autohold: Bool) {
         let id:Int64 = arc4random64()
         self.path = NSTemporaryDirectory() + "video_message\(id).mp4"
-        self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), liveUploading: liveUpload ? PreUploadManager(path, context: context, id: id) : nil)
+        self.pipeline = VideoRecorderPipeline(url: URL(fileURLWithPath: path), config: VideoMessageConfig.with(appConfiguration: context.appConfiguration), liveUploading: liveUpload ? PreUploadManager(path, context: context, id: id) : nil)
         super.init(autohold: autohold)
     }
     

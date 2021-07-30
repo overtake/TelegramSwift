@@ -502,6 +502,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
             badge.view = badgeNode
             badge.view?.needsDisplay = true
+            badge.onUpdate = { [weak self] in
+                self?.needsLayout = true
+            }
         } else {
             self.badgeNode?.removeFromSuperview()
             self.badgeNode = nil

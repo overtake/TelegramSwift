@@ -529,8 +529,37 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { _ -> KeyHandlerResult in
-
-            showModal(with: CoreMediaVideoIOTest(context: context), for: window)
+            
+            NSPasteboard.general.clearContents()
+            
+//            let image = NSImage(contentsOf: URL(fileURLWithPath: "/Users/mike/Desktop/test2.png"))
+//
+//            let tempImage = NSImage(data: image!.tiffRepresentation!)
+//
+//
+//            var imageData = tempImage!.tiffRepresentation(using: .none, factor: 1)!
+//            var d = Data(count: imageData.count)
+//            d.withUnsafeMutableBytes { bytes in
+//                imageData.copyBytes(to: bytes)
+//            }
+//            NSPasteboard.general.setData(d, forType: .png)
+//            d.resetBytes(in: d.startIndex ..< d.endIndex)
+//
+//            var data = NSPasteboard.general.data(forType: .png)!
+//            data.resetBytes(in: data.startIndex ..< data.endIndex)
+//
+//            var bp = 0
+//            bp + 1
+//
+            
+            /*
+             NSData *imageData = [self TIFFRepresentation];
+                NSBitmapImageRep *imageRep = [NSBitmapImageRep imageRepWithData:imageData];
+                NSDictionary *imageProps = [NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:1.0] forKey:NSImageCompressionFactor];
+                imageData = [imageRep representationUsingType:NSPNGFileType properties:imageProps];
+             */
+            
+//            showModal(with: CoreMediaVideoIOTest(context: context), for: window)
             
 //            filePanel(with: ["webp"], allowMultiple: false, for: window, completion: { values in
 //                if let first = values?.first {

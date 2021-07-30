@@ -19,8 +19,8 @@ typedef enum
 @interface TGMediaVideoConversionPresetSettings : NSObject
 
 + (CGSize)maximumSizeForPreset:(TGMediaVideoConversionPreset)preset;
-+ (NSDictionary *)videoSettingsForPreset:(TGMediaVideoConversionPreset)preset dimensions:(CGSize)dimensions;
-+ (NSDictionary *)audioSettingsForPreset:(TGMediaVideoConversionPreset)preset;
++ (NSDictionary *)videoSettingsForPreset:(TGMediaVideoConversionPreset)preset dimensions:(CGSize)dimensions bitrate:(int)bitrate;
++ (NSDictionary *)audioSettingsForPreset:(TGMediaVideoConversionPreset)preset bitrate:(int)bitrate;
 
 @end
 

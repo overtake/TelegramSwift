@@ -255,7 +255,7 @@ struct PeerGroupCallData : Equatable, Comparable {
             } else if let muteState = state.muteState, muteState.mutedByYou {
                 string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
                 color = GroupCallTheme.speakLockedColor
-            } else if isSpeaking {
+            } else if isSpeaking, state.muteState == nil {
                 string = L10n.voiceChatStatusSpeaking
                 color = GroupCallTheme.greenStatusColor
             } else {

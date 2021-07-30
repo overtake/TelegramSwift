@@ -24,6 +24,7 @@ class GlobalBadgeNode: Node {
     private var textLayout:(TextNodeLayout, TextNode)?
     var customLayout: Bool = false
     var xInset:CGFloat = 0
+    var onUpdate:(()->Void)?
     private var attributedString:NSAttributedString? {
         didSet {
             if let attributedString = attributedString {
@@ -54,6 +55,7 @@ class GlobalBadgeNode: Node {
                 }
             }
             view?.superview?.needsLayout = true
+            onUpdate?()
         }
     }
     

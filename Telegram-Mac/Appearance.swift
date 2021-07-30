@@ -1712,6 +1712,33 @@ class TelegramPresentationTheme : PresentationTheme {
             return new
         }
     }
+    private var _chat_toggle_selected: CGImage?
+    var chat_toggle_selected: CGImage {
+        if let icon = _chat_toggle_selected {
+            return icon
+        } else {
+            let new = generateChatGroupToggleSelected(foregroundColor: colors.accentIcon, backgroundColor: colors.underSelectedColor)
+            _chat_toggle_selected = new
+            return new
+        }
+    }
+    private var _chat_toggle_unselected: CGImage?
+    var chat_toggle_unselected: CGImage {
+        if let icon = _chat_toggle_unselected {
+            return icon
+        } else {
+            let new = generateChatGroupToggleUnselected(foregroundColor: chatBackground ==  chatServiceItemColor ? colors.grayIcon.withAlphaComponent(0.6) : chatServiceItemColor, backgroundColor: NSColor.black.withAlphaComponent(0.05))
+            _chat_toggle_unselected = new
+            return new
+        }
+    }
+    
+    /*
+     chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
+     chatToggleUnselected:  { generateChatGroupToggleUnselected(foregroundColor: palette.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)) },
+
+     */
+    
     
     private var _chatServiceItemColor: NSColor?
     var chatServiceItemColor: NSColor {
