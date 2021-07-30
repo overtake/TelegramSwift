@@ -649,7 +649,12 @@ func autoremoveLocalized(_ ttl: Int, roundToCeil: Bool = false) -> String {
         if roundToCeil {
             localized = L10n.timerWeeksCountable(Int(ceil(Float(ttl) / 60 / 60 / 24 / 7)))
         } else {
-            localized = L10n.timerWeeksCountable(ttl / 60 / 60 / 24 / 7)
+            let weeks = ttl / 60 / 60 / 24 / 7
+            if weeks >= 4 {
+                localized = L10n.timerMonthsCountable(weeks / 4)
+            } else {
+                localized = L10n.timerWeeksCountable(weeks)
+            }
         }
     }
     return localized
@@ -665,7 +670,12 @@ public func shortTimeIntervalString(value: Int32) -> String {
     } else if value <= 60 * 60 * 24 * 7 {
         return L10n.messageTimerShortDays("\(max(1, value / (60 * 60 * 24)))")
     } else {
-        return L10n.messageTimerShortWeeks("\(max(1, value / (60 * 60 * 24 * 7)))")
+        let weeks = max(1, value / (60 * 60 * 24 * 7))
+        if weeks < 4 {
+            return L10n.messageTimerShortWeeks("\(weeks)")
+        } else {
+            return L10n.messageTimerShortMonths("\(weeks / 4)")
+        }
     }
 }
 

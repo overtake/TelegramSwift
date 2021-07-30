@@ -467,18 +467,20 @@ internal final class L10n {
   internal static var autoNightSettingsSunriseDescNA: String  { return L10n.tr("Localizable", "AutoNight.Settings.Sunrise.Desc.NA") }
   /// Can't determine your location. Please check your system settings and try again.
   internal static var autoNightSettingsUpdateLocationError: String  { return L10n.tr("Localizable", "AutoNight.Settings.UpdateLocation.Error") }
-  /// After 1 Day
-  internal static var autoremoveMessagesDay: String  { return L10n.tr("Localizable", "AutoremoveMessages.Day") }
+  /// 1 Day
+  internal static var autoremoveMessagesDay1: String  { return L10n.tr("Localizable", "AutoremoveMessages.Day1") }
   /// Automatically delete messages sent in this chat after a certain period of time.
   internal static var autoremoveMessagesDesc: String  { return L10n.tr("Localizable", "AutoremoveMessages.Desc") }
   /// AUTO-DELETE MESSAGES
   internal static var autoremoveMessagesHeader: String  { return L10n.tr("Localizable", "AutoremoveMessages.Header") }
+  /// 1 Month
+  internal static var autoremoveMessagesMonth1: String  { return L10n.tr("Localizable", "AutoremoveMessages.Month1") }
   /// Never
   internal static var autoremoveMessagesNever: String  { return L10n.tr("Localizable", "AutoremoveMessages.Never") }
   /// Clear Chat History
   internal static var autoremoveMessagesTitle: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title") }
-  /// After 1 Week
-  internal static var autoremoveMessagesWeek: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week") }
+  /// 1 Week
+  internal static var autoremoveMessagesWeek1: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week1") }
   /// Auto-Deletion
   internal static var autoremoveMessagesTitleDeleteOnly: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title.DeleteOnly") }
   /// Preferences…
@@ -5176,6 +5178,10 @@ internal final class L10n {
   /// %@m
   internal static func messageTimerShortMinutes(_ p1: String) -> String {
     return L10n.tr("Localizable", "MessageTimer.ShortMinutes", p1)
+  }
+  /// %@mo
+  internal static func messageTimerShortMonths(_ p1: String) -> String {
+    return L10n.tr("Localizable", "MessageTimer.ShortMonths", p1)
   }
   /// %@s
   internal static func messageTimerShortSeconds(_ p1: String) -> String {
