@@ -39,9 +39,8 @@
     return preset != TGMediaVideoConversionPresetAnimation;
 }
 
-+ (NSDictionary *)audioSettingsForPreset:(TGMediaVideoConversionPreset)preset
++ (NSDictionary *)audioSettingsForPreset:(TGMediaVideoConversionPreset)preset bitrate:(int)bitrate
 {
-    NSInteger bitrate = [self _audioBitrateKbpsForPreset:preset];
     NSInteger channels = [self _audioChannelsCountForPreset:preset];
     
     AudioChannelLayout acl;
@@ -58,7 +57,7 @@
     };
 }
 
-+ (NSDictionary *)videoSettingsForPreset:(TGMediaVideoConversionPreset)preset dimensions:(CGSize)dimensions
++ (NSDictionary *)videoSettingsForPreset:(TGMediaVideoConversionPreset)preset dimensions:(CGSize)dimensions bitrate:(int)bitrate
 {
     NSDictionary *videoCleanApertureSettings = @
     {
@@ -76,7 +75,7 @@
     
     NSDictionary *codecSettings = @
     {
-    AVVideoAverageBitRateKey: @([self _videoBitrateKbpsForPreset:preset] * 1000),
+    AVVideoAverageBitRateKey: @(bitrate * 1000),
     AVVideoCleanApertureKey: videoCleanApertureSettings,
     AVVideoPixelAspectRatioKey: videoAspectRatioSettings
     };
@@ -262,7 +261,6 @@ typedef enum {
     CMTime _lastAudioTimeStamp;
     
     CMTime _timeOffset;
-    
     bool _wasPaused;
 }
 @end

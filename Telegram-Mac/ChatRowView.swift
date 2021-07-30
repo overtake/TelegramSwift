@@ -179,7 +179,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if selectingMode {
                 let force: Bool = selectingView == nil
                 if selectingView == nil {
-                    selectingView = SelectingControl(unselectedImage: item.presentation.icons.chatGroupToggleUnselected, selectedImage: item.presentation.icons.chatGroupToggleSelected, selected: item.isSelectedMessage)
+                    selectingView = SelectingControl(unselectedImage: item.presentation.chat_toggle_unselected, selectedImage: item.presentation.chat_toggle_selected, selected: item.isSelectedMessage)
                     selectingView?.setFrameOrigin(NSMakePoint(frame.width, selectingPoint(item).y))
                     selectingView?.layer?.opacity = 0
                     super.addSubview(selectingView!)

@@ -58,6 +58,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     let session: AVCaptureSession = AVCaptureSession()
     
+    let config: VideoMessageConfig
+    
     private var status: VideoCameraRecordingStatus = .idle {
         didSet {
             statePromise.set(status)
@@ -85,9 +87,10 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     static let videoMessageMaxDuration: Double = 60
 
     private let liveUploading: PreUploadManager?
-    init(url:URL, liveUploading: PreUploadManager?) {
+    init(url:URL, config: VideoMessageConfig, liveUploading: PreUploadManager?) {
         self.url = url
         self.liveUploading = liveUploading
+        self.config = config
         super.init()
         
         recorder = TGVideoCameraMovieRecorder(url: url, delegate: self, callbackQueue: VideoRecorderPipeline.queue.queue)
@@ -296,10 +299,10 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         status = .recording
         startTimeInterval = Date().timeIntervalSince1970
 
-        let audioSettings = TGMediaVideoConversionPresetSettings.audioSettings(for: TGMediaVideoConversionPresetVideoMessage)
+        let audioSettings = TGMediaVideoConversionPresetSettings.audioSettings(for: TGMediaVideoConversionPresetVideoMessage, bitrate: Int32(config.audioBitrate))
         recorder.addAudioTrack(withSourceFormatDescription: outputAudioFormatDescription, settings: audioSettings)
         let size: CGSize = TGMediaVideoConversionPresetSettings.maximumSize(for: TGMediaVideoConversionPresetVideoMessage)
-        let videoSettings = TGMediaVideoConversionPresetSettings.videoSettings(for: TGMediaVideoConversionPresetVideoMessage, dimensions: size)
+        let videoSettings = TGMediaVideoConversionPresetSettings.videoSettings(for: TGMediaVideoConversionPresetVideoMessage, dimensions: size, bitrate: Int32(config.videoBitrate))
         recorder.addVideoTrack(withSourceFormatDescription: outputVideoFormatDescription, transform: CGAffineTransform.identity, settings: videoSettings)
         
         recorder.prepareToRecord()
