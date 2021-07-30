@@ -1019,6 +1019,10 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         return false
     }
     
+    open var cornerRadius: CGFloat {
+        return 10
+    }
+    
     open var redirectMouseAfterClosing: Bool {
         return false
     }

@@ -464,7 +464,7 @@ public class Modal: NSObject {
         container = ModalContainerView(frame: containerRect)
         container.autoresizingMask = []
         container.autoresizesSubviews = true
-        container.layer?.cornerRadius = 10
+        container.layer?.cornerRadius = controller.cornerRadius
         container.layer?.shouldRasterize = true
         container.layer?.rasterizationScale = CGFloat(System.backingScale)
         container.backgroundColor = controller.containerBackground

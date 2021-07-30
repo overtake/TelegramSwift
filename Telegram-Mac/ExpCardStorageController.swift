@@ -269,7 +269,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
 
     struct State : Equatable {
         
-        struct DiskSpace {
+        struct DiskSpace : Equatable {
             var free: UInt64
             var total: UInt64
             var app: UInt64?
@@ -279,7 +279,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
         var settings: CacheStorageSettings
         var diskSpace: DiskSpace
         static func ==(lhs:State, rhs: State) -> Bool {
-            return false
+            return lhs.diskSpace == rhs.diskSpace && lhs.ccTask?.0 == rhs.ccTask?.0 && lhs.settings == rhs.settings
         }
         
         var progressValues:(values: [Int: CGFloat], tooltips: [Int: String]) {

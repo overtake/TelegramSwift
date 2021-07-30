@@ -70,10 +70,10 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
         index += 1
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), comparable: nil, item: { [weak arguments] initialSize, stableId in
-            let values:[Int32] = [0, .secondsInDay, .secondsInWeek]
+            let values:[Int32] = [0, .secondsInDay, .secondsInWeek, .secondsInMonth]
 
 
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesNever, L10n.autoremoveMessagesDay, L10n.autoremoveMessagesWeek], viewType: .singleItem, selectAction: { index in
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesNever, L10n.autoremoveMessagesDay1, L10n.autoremoveMessagesWeek1, L10n.autoremoveMessagesMonth1], viewType: .singleItem, selectAction: { index in
                 arguments?.setTimeout(values[index])
             })
         }))

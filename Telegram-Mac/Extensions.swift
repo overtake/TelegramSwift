@@ -2599,6 +2599,9 @@ extension Int32 {
     static var secondsInWeek: Int32 {
         return secondsInDay * 7
     }
+    static var secondsInMonth: Int32 {
+        return secondsInDay * 31
+    }
 }
 
 

@@ -276,7 +276,7 @@ public final class TextViewLayout : Equatable {
     public var maximumNumberOfLines:Int32
     public let truncationType:CTLineTruncationType
     public var cutout:TextViewCutout?
-    public var mayBlocked: Bool = true
+    public var mayBlocked: Bool = false
     fileprivate var blockImage:(CGPoint, CGImage?) = (CGPoint(), nil)
     
     public fileprivate(set) var lineSpacing:CGFloat?
@@ -1680,8 +1680,11 @@ public class TextView: Control, NSViewToolTipOwner {
     }
     
     
-    public func resize(_ width: CGFloat) {
+    public func resize(_ width: CGFloat, blockColor: NSColor? = nil) {
         self.layout?.measure(width: width)
+        if let blockColor = blockColor {
+            self.layout?.generateAutoBlock(backgroundColor: blockColor)
+        }
         self.update(self.layout)
     }
     

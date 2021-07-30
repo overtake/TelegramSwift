@@ -22,6 +22,7 @@ private class TouchIdContainerView : View {
         super.init(frame: frameRect)
         addSubview(button)
         
+        button.scaleOnClick = true
         button.autohighlight = false
         button.style = ControlStyle(font: .medium(.title), foregroundColor: .white, backgroundColor: theme.colors.accent, highlightColor: theme.colors.accent)
         button.set(font: .medium(.title), for: .Normal)
@@ -46,20 +47,20 @@ private class TouchIdContainerView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        let (text, layout) = TextNode.layoutText(NSAttributedString.initialize(string: L10n.passcodeOr, color: theme.colors.grayText, font: .normal(.title)), theme.colors.background, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+        let (text, layout) = TextNode.layoutText(NSAttributedString.initialize(string: L10n.passcodeOr, color: theme.chatServiceItemTextColor, font: .normal(.title)), theme.colors.background, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
         
         let f = focus(text.size)
         layout.draw(NSMakeRect(f.minX, 0, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
         
-        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.setFillColor(theme.chatServiceItemTextColor.cgColor)
         ctx.fill(NSMakeRect(0, floorToScreenPixels(backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
         
-        ctx.setFillColor(theme.colors.border.cgColor)
+        ctx.setFillColor(theme.chatServiceItemTextColor.cgColor)
         ctx.fill(NSMakeRect(f.maxX + 10, floorToScreenPixels(backingScaleFactor, f.height / 2), f.minX - 10, .borderSize))
     }
 }
 
-private final class PasscodeField : NSSecureTextField {
+final class PasscodeField : NSSecureTextField {
     
     override func resignFirstResponder() -> Bool {
         (self.delegate as? PasscodeLockView)?.controlTextDidBeginEditing(Notification(name: NSControl.textDidChangeNotification))
@@ -73,15 +74,19 @@ private final class PasscodeField : NSSecureTextField {
 }
 
 
-private class PasscodeLockView : Control, NSTextFieldDelegate {
+class PasscodeLockView : Control, NSTextFieldDelegate {
+    private let backgroundView: BackgroundView = BackgroundView(frame: .zero)
+    private let visualEffect: NSVisualEffectView = NSVisualEffectView(frame: .zero)
+
+    
     fileprivate let nameView:TextView = TextView()
-    fileprivate let input:PasscodeField
+    let input:PasscodeField
     private let nextButton:ImageButton = ImageButton()
     private var hasTouchId:Bool = false
     private let touchIdContainer:TouchIdContainerView = TouchIdContainerView(frame: NSMakeRect(0, 0, 240, 76))
     fileprivate let logoutTextView:TextView = TextView()
-    fileprivate let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
-    fileprivate var logoutImpl:() -> Void = {}
+    let value:ValuePromise<String> = ValuePromise(ignoreRepeated: false)
+    var logoutImpl:() -> Void = {}
     fileprivate var useTouchIdImpl:() -> Void = {}
     private let inputContainer: View = View()
     private var fieldState: SearchFieldState = .Focus
@@ -89,20 +94,30 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     required init(frame frameRect: NSRect) {
         input = PasscodeField(frame: NSZeroRect)
         input.stringValue = ""
+        backgroundView.useSharedAnimationPhase = false
         super.init(frame: frameRect)
+        
+        addSubview(backgroundView)
+       // addSubview(visualEffect)
+        
+        visualEffect.state = .active
+        visualEffect.blendingMode = .withinWindow
+        
         autoresizingMask = [.width, .height]
         self.backgroundColor = .clear
         
+        nextButton.autohighlight = false
         nextButton.set(background: theme.colors.accentIcon, for: .Normal)
         nextButton.set(image: theme.icons.passcodeLogin, for: .Normal)
         nextButton.setFrameSize(26, 26)
+        nextButton.scaleOnClick = true
         nextButton.layer?.cornerRadius = nextButton.frame.height / 2
         
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         addSubview(nextButton)
 
-        addSubview(nameView)
+//        addSubview(nameView)
         addSubview(inputContainer)
         addSubview(logoutTextView)
         addSubview(touchIdContainer)
@@ -113,8 +128,10 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         input.drawsBackground = false
         
-        input.textView?.insertionPointColor = theme.colors.text
-        
+        nameView.disableBackgroundDrawing = true
+        logoutTextView.disableBackgroundDrawing = true
+
+            
         inputContainer.backgroundColor = theme.colors.grayBackground
         inputContainer.layer?.cornerRadius = .cornerRadius
         inputContainer.addSubview(input)
@@ -127,23 +144,11 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.cell?.wraps = false
         input.cell?.isScrollable = true
         input.font = .normal(.title)
-        input.textColor = theme.colors.text
         input.textView?.insertionPointColor = theme.colors.grayText
         
         input.sizeToFit()
         
-        let logoutAttr = parseMarkdownIntoAttributedString(L10n.passcodeLostDescription, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
-        }))
-        
-        logoutTextView.isSelectable = false
-        
-        let logoutLayout = TextViewLayout(logoutAttr)
-        logoutLayout.interactions = TextViewInteractions(processURL:{ [weak self] _ in
-            self?.logoutImpl()
-        })
-        
-        logoutTextView.set(layout: logoutLayout)
+       
 
         input.target = self
         input.action = #selector(checkPasscode)
@@ -160,13 +165,87 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         layout()
     }
     
+    var containerBgColor: NSColor {
+        switch theme.controllerBackgroundMode {
+        case .gradient:
+            return theme.chatServiceItemColor
+        case .background:
+            return theme.chatServiceItemColor
+        default:
+            if theme.chatBackground == theme.chatServiceItemColor {
+                return theme.colors.grayBackground
+            }
+        }
+        return theme.chatServiceItemColor
+    }
+    
+    var secondaryColor: NSColor {
+        switch theme.controllerBackgroundMode {
+        case .gradient:
+            return theme.chatServiceItemTextColor
+        case .background:
+            return theme.chatServiceItemTextColor
+        default:
+            if theme.chatBackground == theme.chatServiceItemColor {
+                return theme.colors.text
+            }
+        }
+        return theme.chatServiceItemTextColor
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        let theme = theme as! TelegramPresentationTheme
         backgroundColor = theme.colors.background
-        logoutTextView.backgroundColor = theme.colors.background
-        input.backgroundColor = theme.colors.background
-        inputContainer.background = theme.colors.grayBackground
-        nameView.backgroundColor = theme.colors.background
+        input.backgroundColor = .clear
+        input.textView?.insertionPointColor = secondaryColor;
+        input.textColor = secondaryColor
+        inputContainer.background = containerBgColor
+        switch theme.controllerBackgroundMode {
+        case .gradient:
+            backgroundView.backgroundMode = theme.controllerBackgroundMode
+        case let .background(_, colors, rotation):
+            backgroundView.backgroundMode = .gradient(colors: colors ?? [], rotation: rotation)
+        default:
+            backgroundView.backgroundMode = .plain
+        }
+
+        let placeholder = NSMutableAttributedString()
+        _ = placeholder.append(string: L10n.passcodeEnterPasscodePlaceholder, color: theme.chatServiceItemTextColor, font: .normal(.title))
+        input.placeholderAttributedString = placeholder
+        
+        if #available(macOS 10.14, *) {
+            visualEffect.material = .underWindowBackground
+        } else {
+            visualEffect.material = theme.colors.isDark ? .ultraDark : .light
+        }
+        
+        let logoutAttr = parseMarkdownIntoAttributedString(L10n.passcodeLostDescription, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.chatServiceItemTextColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.chatServiceItemTextColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: secondaryColor == theme.chatServiceItemTextColor ? theme.chatServiceItemTextColor : theme.colors.link), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
+        }))
+        
+        logoutTextView.isSelectable = false
+        
+        let logoutLayout = TextViewLayout(logoutAttr, alignment: .center)
+        
+        logoutLayout.interactions = TextViewInteractions(processURL:{ [weak self] _ in
+            self?.logoutImpl()
+        })
+        logoutLayout.measure(width: frame.width - 40)
+        if theme.bubbled {
+            logoutLayout.generateAutoBlock(backgroundColor: theme.chatServiceItemColor)
+        }
+        logoutTextView.set(layout: logoutLayout)
+        
+        let layout = TextViewLayout(.initialize(string: L10n.passlockEnterYourPasscode, color: theme.chatServiceItemTextColor, font: .medium(17)), alignment: .center)
+        
+        layout.measure(width: frame.width - 40)
+        if theme.bubbled {
+            layout.generateAutoBlock(backgroundColor: theme.chatServiceItemColor)
+        }
+        nameView.update(layout)
+        
+        
     }
     
     override func mouseMoved(with event: NSEvent) {
@@ -175,16 +254,19 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     
     func controlTextDidChange(_ obj: Notification) {
         change(state: fieldState, animated: true)
+        backgroundView.doAction()
     }
     
 
     
     func controlTextDidBeginEditing(_ obj: Notification) {
         change(state: .Focus, animated: true)
+        input.textView?.insertionPointColor = secondaryColor
     }
     
     func controlTextDidEndEditing(_ obj: Notification) {
         window?.makeFirstResponder(input)
+        input.textView?.insertionPointColor = secondaryColor
     }
     
     private func change(state: SearchFieldState, animated: Bool) {
@@ -211,11 +293,6 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     func update(hasTouchId: Bool) {
         self.hasTouchId = hasTouchId
         
-        let layout = TextViewLayout(.initialize(string: L10n.passlockEnterYourPasscode, color: theme.colors.text, font: .medium(17)))
-        layout.measure(width: frame.width - 40)
-        nameView.update(layout)
-
-        let text = L10n.passcodeEnterPasscodePlaceholder
         if hasTouchId {
             showTouchIdUI()
         } else {
@@ -223,12 +300,14 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         }
         
         input.stringValue = ""
-        let placeholder = NSMutableAttributedString()
-        _ = placeholder.append(string: text, color: theme.colors.grayText, font: .normal(.title))
-        input.placeholderAttributedString = placeholder
+       
         
         needsLayout = true
 
+    }
+    func updateAndSetValue() {
+        self.value.set(self.input.stringValue)
+        self.backgroundView.doAction()
     }
     
     private func showTouchIdUI() {
@@ -243,23 +322,31 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
     override func layout() {
         super.layout()
         
+        backgroundView.frame = bounds
+        backgroundView.updateLayout(size: frame.size, transition: .immediate)
+        
+        visualEffect.frame = bounds
+
+        
         inputContainer.setFrameSize(200, 36)
         input.setFrameSize(inputContainer.frame.width - 20, input.frame.height)
         input.center()
         
         inputContainer.layer?.cornerRadius = inputContainer.frame.height / 2
         
-        logoutTextView.layout?.measure(width: frame.width - 40)
-        logoutTextView.update(logoutTextView.layout)
+        logoutTextView.resize(frame.width - 40, blockColor: theme.chatServiceItemColor)
+        nameView.resize(frame.width - 40, blockColor: theme.chatServiceItemColor)
         
-        nameView.center()
-        nameView.centerX(y: nameView.frame.minY - floorToScreenPixels(backingScaleFactor, (20 + input.frame.height + 60)/2.0) - 20)
-        logoutTextView.centerX(y:frame.height - logoutTextView.frame.height - 20)
         
-        inputContainer.centerX(y: nameView.frame.maxY + 30)
+        inputContainer.center()
+        inputContainer.setFrameOrigin(NSMakePoint(inputContainer.frame.minX - (nextButton.frame.width + 10) / 2, inputContainer.frame.minY))
         
-        touchIdContainer.centerX(y: inputContainer.frame.maxY + 20)
+        touchIdContainer.centerX(y: inputContainer.frame.maxY + 10)
         nextButton.setFrameOrigin(inputContainer.frame.maxX + 10, inputContainer.frame.minY + (inputContainer.frame.height - nextButton.frame.height) / 2)
+
+        nameView.centerX(y: inputContainer.frame.minY - nameView.frame.height - 10)
+        logoutTextView.centerX(y: frame.height - logoutTextView.frame.height - 10)
+        
         
         change(state: fieldState, animated: false)
     }
@@ -354,6 +441,10 @@ class PasscodeLockController: ModalViewController {
         }
     }
     
+    override var cornerRadius: CGFloat {
+        return 0
+    }
+    
     func invalidateTouchId() {
         laContext.invalidate()
     }
@@ -406,6 +497,11 @@ class PasscodeLockController: ModalViewController {
 
     
     override func escapeKeyAction() -> KeyHandlerResult {
+        return .invoked
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        self.genericView.updateAndSetValue()
         return .invoked
     }
     
