@@ -6201,7 +6201,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8.1;
+				MARKETING_VERSION = 7.9;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6361,7 +6361,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8.1;
+				MARKETING_VERSION = 7.9;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6584,7 +6584,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8.1;
+				MARKETING_VERSION = 7.9;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6749,7 +6749,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8.1;
+				MARKETING_VERSION = 7.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -6962,7 +6962,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8.1;
+				MARKETING_VERSION = 7.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7046,7 +7046,7 @@
 					"$(PROJECT_DIR)/core-xprojects/OpenSSLEncryption/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 7.8.1;
+				MARKETING_VERSION = 7.9;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
