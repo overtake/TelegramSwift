@@ -604,7 +604,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 var accept = abs(lhs.timestamp - rhs.timestamp) < simpleDif
                 accept = accept && chatDateId(for: lhs.timestamp) == chatDateId(for: rhs.timestamp)
                 accept = accept && lhs.author?.id == rhs.author?.id
-
+                
                 return accept
             }
             
