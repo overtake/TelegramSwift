@@ -213,6 +213,8 @@ class ChatControllerView : View, ChatInputDelegate {
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
     
+    private let floatingPhotosView: View = View()
+    
     private let gradientMaskView = BackgroundGradientView(frame: NSZeroRect)
     
     var headerState: ChatHeaderState {
@@ -240,6 +242,11 @@ class ChatControllerView : View, ChatInputDelegate {
 //        self.layer?.disableActions()
         
         addSubview(tableView)
+        addSubview(floatingPhotosView)
+        
+        floatingPhotosView.flip = false
+//        floatingPhotosView.backgroundColor = .random
+        
         addSubview(inputView)
         inputView.delegate = self
         self.autoresizesSubviews = false
@@ -309,6 +316,36 @@ class ChatControllerView : View, ChatInputDelegate {
         
     }
     
+    func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
+        CATransaction.begin()
+        var added:[NSView] = []
+        for value in values {
+            if let view = value.photoView {
+                view._change(pos: value.point, animated: animated && view.superview == floatingPhotosView, duration: 0.2, timingFunction: .easeOut)
+                if view.superview != floatingPhotosView {
+                    floatingPhotosView.addSubview(view)
+                    if animated {
+                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeOut)
+                        let moveAsNew = currentAnimationRows.first(where: {
+                            $0.index == value.items.first?.index
+                        })
+                        if let moveAsNew = moveAsNew {
+                            
+                            view.layer?.animatePosition(from: value.point - (moveAsNew.to - moveAsNew.from), to: value.point, duration: 0.2, timingFunction: .easeOut)
+                        }
+                    }
+                }
+                added.append(view)
+            }
+        }
+        let toRemove = floatingPhotosView.subviews.filter {
+            !added.contains($0)
+        }
+        for view in toRemove {
+            performSubviewRemoval(view, animated: animated, timingFunction: .easeOut)
+        }
+        CATransaction.commit()
+    }
     
     func updateScroller(_ historyState:ChatHistoryState) {
         self.historyState = historyState
@@ -452,6 +489,8 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, frame.height - inputView.frame.height - failed.frame.height - 6 - offset))
         }
+        
+        floatingPhotosView.frame = NSMakeRect(20, tableView.frame.minY, 36, tableView.frame.height)
     }
 
     override var responder: NSResponder? {
@@ -1067,6 +1106,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let dismissedPinnedIds = ValuePromise<ChatDismissedPins>(ChatDismissedPins(ids: [], tempMaxId: nil), ignoreRepeated: true)
 
 
+    private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
+    
+    
     
     private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
         return pollAnswersLoading.get()
@@ -1138,6 +1180,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var afterNextTransaction:(()->Void)?
     
+    private var currentAnimationRows:[TableAnimationInterface.AnimateItem] = []
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
     private let unsupportedMessageProcessingManager = ChatMessageThrottledProcessingManager()
@@ -1227,6 +1270,108 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
     }
     
+    private func updateFloatingPhotos(_ position: ScrollPosition, animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
+        
+        let offset = genericView.tableView.clipView.bounds.origin
+        
+        var floating: [ChatFloatingPhoto] = []
+        for groupped in grouppedFloatingPhotos {
+            let photoView = groupped.1
+            
+            var point: NSPoint = .zero
+            
+            let views = groupped.0.compactMap { $0.view }.filter { $0.visibleRect != .zero }
+            
+            guard !views.isEmpty else {
+                continue
+            }
+
+            let ph: CGFloat = 36
+            let gap: CGFloat = 10
+            let inset: CGFloat = 3
+            
+            
+            let lastMax = views[views.count - 1].frame.maxY - inset
+            let firstMin = views[0].frame.minY // - inset
+
+            if offset.y >= lastMax - ph - gap {
+                point.y = lastMax - offset.y - ph
+            } else if offset.y + gap > firstMin {
+                point.y = gap
+            } else {
+                point.y = firstMin - offset.y
+            }
+            
+            let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView)
+            floating.append(value)
+        }
+        genericView.updateFloating(floating, animated: animated, currentAnimationRows: currentAnimationRows)
+    }
+    
+    private func collectFloatingPhotos(animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem]) {
+        let peer = self.chatInteraction.peer
+        guard let peer = peer else {
+            self.grouppedFloatingPhotos = []
+            return
+        }
+        guard peer.isGroup || peer.isSupergroup, theme.bubbled else {
+            self.grouppedFloatingPhotos = []
+            return
+        }
+        let cached:[MessageId : NSView] = grouppedFloatingPhotos.reduce([:], { current, value in
+            var current = current
+            let item = value.0[value.0.count - 1]
+            let view = value.1
+            current[item.message!.id] = view
+            return current
+        })
+        
+        var groupped:[[ChatRowItem]] = []
+        var current:[ChatRowItem] = []
+        self.genericView.tableView.enumerateItems { item in
+            var skipOrFill = true
+            if let item = item as? ChatRowItem {
+                if item.isIncoming {
+                    let prev = current.last
+                    let sameAuthor = prev?.message?.author?.id == item.message?.author?.id
+                    var canGroup = false
+                    if sameAuthor {
+                        if case .Short = item.itemType {
+                            canGroup = true
+                        }
+                    }
+                    if prev == nil || canGroup {
+                        skipOrFill = false
+                        current.append(item)
+                    }
+                }
+            }
+            if skipOrFill {
+                if !current.isEmpty {
+                    groupped.append(current)
+                }
+                current = []
+
+                if let item = item as? ChatRowItem {
+                    if item.isIncoming {
+                        current.append(item)
+                    }
+                }
+            }
+            return true
+        }
+        if !current.isEmpty {
+            groupped.append(current)
+        }
+        self.grouppedFloatingPhotos = groupped.map { value in
+            let item = value[value.count - 1]
+            return (value, cached[item.message!.id] ?? ChatRowView.makePhotoView(item))
+        }
+        
+        self.updateFloatingPhotos(genericView.tableView.scrollPosition().current, animated: animated, currentAnimationRows: currentAnimationRows)
+    }
+
+    
 
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
@@ -1236,6 +1381,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.viewDidLoad()
         
         
+        self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.updateFloatingPhotos(position, animated: false)
+        }))
         
         self.undoTooltipControl.getYInset = { [weak self] in
             guard let `self` = self else {
@@ -1455,6 +1603,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             customThreadOutgoingReadState = .single(nil)
         }
 
+        let animatedRows:([TableAnimationInterface.AnimateItem])->Void = { [weak self] items in
+            self?.currentAnimationRows = items
+        }
         
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
@@ -1561,7 +1712,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             default:
                 break
             }
-            let animationInterface: TableAnimationInterface = TableAnimationInterface(nextTransaction.isExutable && view?.laterId == nil)
+    let animationInterface: TableAnimationInterface = TableAnimationInterface(nextTransaction.isExutable && view?.laterId == nil, true, animatedRows)
             let timeDifference = context.timeDifference
             let bigEmojiEnabled = context.sharedContext.baseSettings.bigEmoji
 
@@ -4543,7 +4694,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         genericView.change(state: isLoading ? .progress : .visible, animated: previousView.with { $0?.originalView != nil })
         
       
+        var items:[TableAnimationInterface.AnimateItem] = []
+        self.currentAnimationRows = []
         genericView.tableView.merge(with: transition)
+        
+        
+        
+        let animated: Bool
+        switch transition.state {
+        case let .none(interface):
+            animated = interface != nil
+        default:
+            animated = transition.animated
+        }
+        
+        collectFloatingPhotos(animated: animated, currentAnimationRows: currentAnimationRows)
         
         let _ = nextTransaction.execute()
 

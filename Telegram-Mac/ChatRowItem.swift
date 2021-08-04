@@ -14,6 +14,12 @@ import Postbox
 import SwiftSignalKit
 
 
+struct ChatFloatingPhoto {
+    var point: NSPoint
+    var items:[ChatRowItem]
+    weak var photoView: NSView?
+    
+}
 
 let simpleDif:Int32 = 10 * 60
 let forwardDif:Int32 = 10 * 60
@@ -46,8 +52,14 @@ enum ForwardItemType {
 }
 
 enum ChatItemType : Equatable {
-    case Full(rank: String?)
-    case Short
+    
+    enum Header {
+        case normal
+        case short
+    }
+    
+    case Full(rank: String?, header: Header)
+    case Short(rank: String?, header: Header)
 }
 
 enum ChatItemRenderType {
@@ -92,7 +104,7 @@ class ChatRowItem: TableRowItem {
         return []
     }
     
-    private(set) var itemType:ChatItemType = .Full(rank: nil)
+    private(set) var itemType:ChatItemType = .Full(rank: nil, header: .normal)
     
     var isFullItemType: Bool {
         if case .Full = itemType {
@@ -330,7 +342,7 @@ class ChatRowItem: TableRowItem {
                 height += additional
             }
    
-            if hasPhoto || replyModel?.isSideAccessory == true {
+            if replyModel?.isSideAccessory == true {
                 height = max(48, height)
             }
             
@@ -432,6 +444,12 @@ class ChatRowItem: TableRowItem {
         if isBubbled {
             if hasPhoto {
                 inset += 36 + 6
+            } else if self.isIncoming, let message = message {
+                if let peer = message.peers[message.id.peerId] {
+                    if peer.isGroup || peer.isSupergroup {
+                        inset += 36 + 6
+                    }
+                }
             }
         } else {
             inset += 36 + 10
@@ -1263,7 +1281,7 @@ class ChatRowItem: TableRowItem {
         self._avatarSynchronousValue = Thread.isMainThread
         var message: Message?
         var isRead: Bool = true
-        var itemType: ChatItemType = .Full(rank: nil)
+        var itemType: ChatItemType = .Full(rank: nil, header: .normal)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
         var object = object
@@ -1342,7 +1360,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if message?.id.peerId == context.peerId {
-            itemType = .Full(rank: nil)
+            itemType = .Full(rank: nil, header: .normal)
         }
         self.renderType = renderType
         self.message = message
@@ -1610,8 +1628,18 @@ class ChatRowItem: TableRowItem {
                 }
             }
             
-            if case let .Full(rank) = itemType {
-                
+            let fillName: Bool
+            let rank: String?
+            switch itemType {
+            case let .Full(r, header):
+                rank = r
+                fillName = header == .normal
+            case let .Short(r, header):
+                rank = r
+                fillName = header == .normal
+            }
+            
+            if fillName {
                 
                 let canFillAuthorName: Bool = ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
 
