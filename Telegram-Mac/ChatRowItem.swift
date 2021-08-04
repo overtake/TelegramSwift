@@ -898,6 +898,13 @@ class ChatRowItem: TableRowItem {
     
     var canFillAuthorName: Bool {
         if let message = message {
+            let fillName: Bool
+            switch itemType {
+            case let .Full(_, header):
+                fillName = header == .normal
+            case let .Short(_, header):
+                fillName = header == .normal && !theme.bubbled
+            }
             return ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
         }
         return true
@@ -1636,7 +1643,7 @@ class ChatRowItem: TableRowItem {
                 fillName = header == .normal
             case let .Short(r, header):
                 rank = r
-                fillName = header == .normal
+                fillName = header == .normal && theme.bubbled
             }
             
             if fillName {
@@ -1690,7 +1697,7 @@ class ChatRowItem: TableRowItem {
                     
                     
                     if let bot = message.inlinePeer, message.hasInlineAttribute, let address = bot.username {
-                        if message.forwardInfo?.psaType == nil {
+                        if message.forwardInfo?.psaType == nil, !isBubbled || hasBubble {
                             if attr.length > 0 {
                                 _ = attr.append(string: " ")
                             }

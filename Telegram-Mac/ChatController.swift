@@ -1362,9 +1362,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if !current.isEmpty {
             groupped.append(current)
         }
-        self.grouppedFloatingPhotos = groupped.map { value in
+        self.grouppedFloatingPhotos = groupped.compactMap { value in
             let item = value[value.count - 1]
-            return (value, cached[item.message!.id] ?? ChatRowView.makePhotoView(item))
+            let view = cached[item.message!.id] ?? ChatRowView.makePhotoView(item)
+            let control = view as? AvatarControl
+            control?.removeAllHandlers()
+            control?.set(handler: { [weak item] _ in
+                item?.openInfo()
+            }, for: .Click)
+            if let control = control {
+                return (value, control)
+            } else {
+                return nil
+            }
         }
         
         self.updateFloatingPhotos(genericView.tableView.scrollPosition().current, animated: animated, currentAnimationRows: currentAnimationRows)
