@@ -103,15 +103,15 @@ class ChatContactRowItem: ChatRowItem {
 
 class ChatContactRowView : ChatRowView {
     
-    private let photoView:AvatarControl = AvatarControl(font: .avatar(.title))
+    private let contactPhotoView:AvatarControl = AvatarControl(font: .avatar(.title))
     private let nameView: TextView = TextView()
     private let phoneView: TextView = TextView()
     private var actionButton: TitleButton?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(photoView)
-        photoView.setFrameSize(40,40)
+        addSubview(contactPhotoView)
+        contactPhotoView.setFrameSize(40,40)
         nameView.isSelectable = false
         addSubview(nameView)
         
@@ -133,10 +133,10 @@ class ChatContactRowView : ChatRowView {
     
     override func layout() {
         super.layout()
-        nameView.setFrameOrigin(50, photoView.frame.minY + 3)
+        nameView.setFrameOrigin(50, contactPhotoView.frame.minY + 3)
         phoneView.setFrameOrigin(50, nameView.frame.maxY + 1)
         
-        actionButton?.setFrameOrigin(0, photoView.frame.maxY + 6)
+        actionButton?.setFrameOrigin(0, contactPhotoView.frame.maxY + 6)
 
         
     }
@@ -145,10 +145,10 @@ class ChatContactRowView : ChatRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ChatContactRowItem {
-            photoView.setPeer(account: item.context.account, peer: item.contactPeer)
-            photoView.removeAllHandlers()
+            contactPhotoView.setPeer(account: item.context.account, peer: item.contactPeer)
+            contactPhotoView.removeAllHandlers()
             if let peerId = item.contactPeer?.id {
-                photoView.set(handler: { [weak item] control in
+                contactPhotoView.set(handler: { [weak item] control in
                     item?.chatInteraction.openInfo(peerId, false , nil, nil)
                 }, for: .Click)
             }

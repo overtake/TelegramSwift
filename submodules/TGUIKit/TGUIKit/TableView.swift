@@ -1813,7 +1813,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var item:TableRowItem = self.item(at:from);
         let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current.duration = animation != .none ? NSAnimationContext.current.duration : 0.0
+        NSAnimationContext.current.duration = animation != .none ? 0.2 : 0.0
         NSAnimationContext.current.timingFunction = animation != .none ? CAMediaTimingFunction(name: .easeOut) : nil
 
         if let change = changeItem {
