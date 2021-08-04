@@ -1309,8 +1309,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private func collectFloatingPhotos(animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem]) {
-        let peer = self.chatInteraction.peer
-        guard let peer = peer else {
+        guard let peer = self.chatInteraction.peer else {
             self.grouppedFloatingPhotos = []
             return
         }
