@@ -1777,6 +1777,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
     }
     
+    var hasRevealState: Bool {
+        return !swipingRightView.subviews.isEmpty
+    }
+    
     func moveReveal(delta: CGFloat) {
         if swipingRightView.subviews.isEmpty {
             initRevealState()
