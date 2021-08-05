@@ -898,13 +898,6 @@ class ChatRowItem: TableRowItem {
     
     var canFillAuthorName: Bool {
         if let message = message {
-            let fillName: Bool
-            switch itemType {
-            case let .Full(_, header):
-                fillName = header == .normal
-            case let .Short(_, header):
-                fillName = header == .normal && !theme.bubbled
-            }
             return ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
         }
         return true

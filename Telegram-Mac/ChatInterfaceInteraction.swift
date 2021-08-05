@@ -573,7 +573,10 @@ final class ChatInteraction : InterfaceObserver  {
         let timestamp = Int32(Date().timeIntervalSince1970)
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)
         
-        var s:Signal<Void, NoError> = updatePeerChatInterfaceState(account: context.account, peerId: peerId, threadId: mode.threadId64, state: interfaceState)
+        let updatedOpaqueData = try? EngineEncoder.encode(interfaceState)
+
+        var s:Signal<Never, NoError> =         context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: mode.threadId64, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, synchronizeableInputState: interfaceState.synchronizeableInputState))
+
         if !force && !interfaceState.inputState.inputText.isEmpty {
             s = s |> delay(10, queue: Queue.mainQueue())
         }

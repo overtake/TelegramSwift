@@ -609,15 +609,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
             
             if let next = next, !message.isAnonymousMessage {
-                if isSameGroup(message, next.message), let peer = message.peers[message.id.peerId] {
-                    if peer.isChannel {
-                        itemType = .Full(rank: rank, header: .normal)
+                if isSameGroup(message, next.message) {
+                    if let prev = prev {
+                        itemType = .Short(rank: rank, header: isSameGroup(message, prev.message) ? .short : .normal)
                     } else {
-                        if let prev = prev {
-                            itemType = .Short(rank: rank, header: isSameGroup(message, prev.message) ? .short : .normal)
-                        } else {
-                            itemType = .Short(rank: rank, header: .normal)
-                        }
+                        itemType = .Short(rank: rank, header: .normal)
                     }
                 } else {
                     if let prev = prev {
@@ -661,7 +657,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
         }
         
-        if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader  {
+        if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader, renderType != .bubble {
             itemType = .Full(rank: rank, header: .normal)
             if forwardType == .ShortHeader {
                 if let next = next  {
