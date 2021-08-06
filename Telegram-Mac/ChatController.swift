@@ -320,6 +320,14 @@ class ChatControllerView : View, ChatInputDelegate {
             })
         }))
         
+        tableView.onCAScroll = { [weak self] from, to in
+            guard let strongSelf = self else {
+                return
+            }
+            for view in strongSelf.floatingPhotosView.subviews {
+                view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, view.frame.minY - (from.minY - to.minY)), to: view.frame.origin, duration: 0.4, timingFunction: .spring)
+            }
+        }
     }
     
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
@@ -1300,7 +1308,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             
             let lastMax = views[views.count - 1].frame.maxY - inset
-            let firstMin = views[0].frame.minY
+            let firstMin = views[0].frame.minY + inset
 
             if offset.y >= lastMax - ph - gap {
                 point.y = lastMax - offset.y - ph

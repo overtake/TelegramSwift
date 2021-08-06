@@ -627,6 +627,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var rightBorder: View? = nil
     public var separator:TableSeparator = .none
     
+    public var onCAScroll:(NSRect, NSRect)->Void = { _, _ in }
+    
     public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
         didSet {
             if super.layer?.backgroundColor != .clear {
@@ -2860,7 +2862,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, _ toVisible:Bool = false, ignoreLayerAnimation: Bool = false, completion: @escaping(Bool)->Void = { _ in }) {
-       // if let index = self.index(of: item) {
         
         var rowRect:NSRect = bounds
         
@@ -3044,7 +3045,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self.areSuspended = false
                     self.enqueueTransitions()
                 })
-
+                self.onCAScroll(edgeRect, bounds)
             }
         } else {
             if let item = item, focus.focus {
