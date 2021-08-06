@@ -201,14 +201,8 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
         input.textView?.insertionPointColor = secondaryColor;
         input.textColor = secondaryColor
         inputContainer.background = containerBgColor
-        switch theme.controllerBackgroundMode {
-        case .gradient:
-            backgroundView.backgroundMode = theme.controllerBackgroundMode
-        case let .background(_, colors, rotation):
-            backgroundView.backgroundMode = .gradient(colors: colors ?? [], rotation: rotation)
-        default:
-            backgroundView.backgroundMode = .plain
-        }
+        backgroundView.backgroundMode = theme.controllerBackgroundMode
+
 
         let placeholder = NSMutableAttributedString()
         _ = placeholder.append(string: L10n.passcodeEnterPasscodePlaceholder, color: theme.chatServiceItemTextColor, font: .normal(.title))

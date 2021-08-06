@@ -1285,13 +1285,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         for groupped in grouppedFloatingPhotos {
             let photoView = groupped.1
             
-            var point: NSPoint = .init(x: 20, y: 0)
-            
             let views = groupped.0.compactMap { $0.view as? ChatRowView }.filter { $0.visibleRect != .zero }
             
             guard !views.isEmpty else {
                 continue
             }
+            
+            var point: NSPoint = .init(x: groupped.0[0].leftInset, y: 0)
+
 
             let ph: CGFloat = 36
             let gap: CGFloat = 10
@@ -1355,7 +1356,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.genericView.tableView.enumerateItems { item in
             var skipOrFill = true
             if let item = item as? ChatRowItem {
-                if item.isIncoming {
+                if item.canHasFloatingPhoto {
                     let prev = current.last
                     let sameAuthor = prev?.message?.author?.id == item.message?.author?.id
                     var canGroup = false
@@ -1377,7 +1378,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current = []
 
                 if let item = item as? ChatRowItem {
-                    if item.isIncoming {
+                    if item.canHasFloatingPhoto {
                         current.append(item)
                     }
                 }
@@ -1409,6 +1410,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
+        self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
     
     override func viewDidLoad() {

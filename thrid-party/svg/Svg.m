@@ -114,8 +114,8 @@ NSImage * _Nullable drawSvgImageNano(NSData * _Nonnull data, CGSize size) {
     
     startTime = [NSDate date];
     
-    NSColor *backgroundColor = [NSColor blackColor];
-    NSColor *foregroundColor = [NSColor whiteColor];
+    NSColor *backgroundColor = [NSColor whiteColor];
+    NSColor *foregroundColor = [NSColor blackColor];
     
     
     NSImage *result = [[NSImage alloc] initWithSize:size];

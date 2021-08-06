@@ -3181,8 +3181,9 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                 
                 let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
                 context.withFlippedContext { c in
+                    c.setBlendMode(.normal)
+
                     if !drawPatternOnly {
-                        c.setBlendMode(.normal)
                         if colors.count == 1, let color = colors.first {
                             c.setFillColor(color.cgColor)
                             c.fill(arguments.drawingRect)
@@ -3219,42 +3220,11 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                     }
                     
                     if let fullSizeImage = fullSizeImage {
-                        
-                        let image = generateImage(arguments.drawingSize, contextGenerator: { size, c in
-                            c.clear(fittedRect)
-                            c.interpolationQuality = .medium
-                            c.clip(to: fittedRect, mask: fullSizeImage)
-                            
-                            if colors.count == 1, let color = colors.first {
-                                c.setFillColor(patternColor(for: color, intensity: intensity, prominent: prominent).cgColor)
-                                c.fill(arguments.drawingRect)
-                            } else {
-                                let gradientColors = colors.map { patternColor(for: $0, intensity: intensity, prominent: prominent).cgColor } as CFArray
-                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                                
-                                var locations: [CGFloat] = []
-                                for i in 0 ..< colors.count {
-                                    locations.append(delta * CGFloat(i))
-                                }
-                                
-                                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-
-                                c.saveGState()
-                                c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                                c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
-                                c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-
-                                c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                                c.restoreGState()
-                            }
-                        })!
-//                        if colors.count > 1 && !drawPatternOnly {
-//                            c.setBlendMode(.softLight)
-//                            c.setFillColor(NSColor.white.cgColor)
-//                            c.fill(arguments.drawingRect)
-//                        }
-                        c.draw(image, in: arguments.drawingRect)
+                        if !drawPatternOnly {
+                            c.setBlendMode(.softLight)
+                            c.setAlpha(intensity)
+                        }
+                        c.draw(fullSizeImage, in: fittedRect)
                     }
                     
                 }

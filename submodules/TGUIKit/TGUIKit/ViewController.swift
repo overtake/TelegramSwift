@@ -73,7 +73,7 @@ open class BackgroundView: View {
     deinit {
     }
     
-    private let imageView: ImageView = ImageView()
+    private let imageView: CALayer = CALayer()
     private var backgroundView: NSView?
     
     public var useSharedAnimationPhase: Bool = true
@@ -82,10 +82,11 @@ open class BackgroundView: View {
     
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        imageView.disableActions()
         imageView.frame = frameRect.size.bounds
-        container.addSubview(imageView)
+//        container.addSubview(imageView)
         autoresizesSubviews = false
-        imageView.contentGravity = .resizeAspectFill
+        imageView.contentsGravity = .resizeAspectFill
         self.addSubview(container)
     }
     
@@ -97,7 +98,7 @@ open class BackgroundView: View {
     
     open override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
         super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        imageView.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
+        
     }
     
     override init() {
@@ -132,10 +133,13 @@ open class BackgroundView: View {
         didSet {
             var backgroundView: NSView? = nil
             switch backgroundMode {
-            case let .background(image, colors, rotation):
-                imageView.layer?.backgroundColor = .clear
-                imageView.layer?.contents = image
+            case let .background(image, intensity, colors, rotation):
+                imageView.backgroundColor = .clear
+                imageView.contents = image
                 if let colors = colors, !colors.isEmpty {
+                    imageView.opacity = Float((intensity ?? 50)) / 100.0
+                    imageView.compositingFilter = "softLightBlendMode"
+
                     if colors.count > 2 {
                         if let bg = self.backgroundView as? AnimatedGradientBackgroundView {
                             backgroundView = bg
@@ -153,13 +157,29 @@ open class BackgroundView: View {
                         }
                         (backgroundView as? BackgroundGradientView)?.values = (top: colors.first, bottom: colors.last, rotation: rotation)
                     }
+                } else {
+                    imageView.opacity = 1
+                    imageView.compositingFilter = nil
+                }
+                if let bg = backgroundView as? AnimatedGradientBackgroundView {
+                    bg.contentView.layer?.addSublayer(imageView)
+                } else if let bg = backgroundView as? BackgroundGradientView {
+                    bg.layer?.addSublayer(imageView)
+                } else {
+                    container.layer?.addSublayer(imageView)
                 }
             case let .color(color):
-                imageView.background = color.withAlphaComponent(1.0)
-                imageView.layer?.contents = nil
+                imageView.backgroundColor = color.withAlphaComponent(1.0).cgColor
+                imageView.compositingFilter = nil
+                imageView.contents = nil
+                imageView.opacity = 1
+                container.layer?.addSublayer(imageView)
             case let .gradient(colors, rotation):
-                imageView.image = nil
-                imageView.layer?.backgroundColor = .clear
+                imageView.contents = nil
+                imageView.backgroundColor = .clear
+                imageView.opacity = 1
+                imageView.compositingFilter = nil
+                imageView.removeFromSuperlayer()
                 if colors.count > 2 {
                     if let bg = self.backgroundView as? AnimatedGradientBackgroundView {
                         backgroundView = bg
@@ -178,15 +198,18 @@ open class BackgroundView: View {
                     (backgroundView as? BackgroundGradientView)?.values = (top: colors.first, bottom: colors.last, rotation: rotation)
                 }
             default:
-                imageView.layer?.backgroundColor = presentation.colors.background.cgColor
-                imageView.layer?.contents = nil
+                imageView.backgroundColor = presentation.colors.background.cgColor
+                imageView.contents = nil
+                imageView.compositingFilter = nil
+                imageView.opacity = 1
+                imageView.removeFromSuperlayer()
             }
             
             
             if let backgroundView = backgroundView {
                 self.backgroundView?.removeFromSuperview()
                 self.backgroundView = backgroundView
-                container.addSubview(backgroundView, positioned: .below, relativeTo: self.imageView)
+                container.addSubview(backgroundView)
 //                imageView.layer?.compositingFilter = "softLightBlendMode"
             } else {
                 self.backgroundView?.removeFromSuperview()
@@ -197,7 +220,8 @@ open class BackgroundView: View {
     }
     
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: imageView, frame: bounds)
+        imageView.frame = bounds
+        transition.updateFrame(layer: imageView, frame: bounds)
         transition.updateFrame(view: container, frame: bounds)
         if let backgroundView = backgroundView {
             transition.updateFrame(view: backgroundView, frame: bounds)

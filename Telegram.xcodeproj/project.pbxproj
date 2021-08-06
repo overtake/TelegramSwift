@@ -31,6 +31,7 @@
 		27335F0325C8295200FD040C /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0225C8295100FD040C /* GroupVideoView.swift */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273BE6CB26136D5200AAFE4E /* Mozjpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */; };
+		2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */ = {isa = PBXBuildFile; fileRef = 2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */; };
 		2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */; };
 		2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2744AE7125B58E6C00E8849F /* invitations.tgs */; };
 		2746926C26A99DD800B67817 /* WallpaperCheckboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2746926B26A99DD800B67817 /* WallpaperCheckboxView.swift */; };
@@ -192,7 +193,6 @@
 		9F153D1421F0C7F800B95D82 /* WallpaperPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F153D1321F0C7F800B95D82 /* WallpaperPreviewController.swift */; };
 		9F153D1621F3662700B95D82 /* StoredMessageFromSearchPeer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F153D1521F3662700B95D82 /* StoredMessageFromSearchPeer.swift */; };
 		9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */; };
-		9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */; };
 		9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */; };
 		9F17E5B9212F173900C25A65 /* AutoNightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */; };
 		9F17E5BB212F191F00C25A65 /* AutoNightThemePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F17E5BA212F191F00C25A65 /* AutoNightThemePreferences.swift */; };
@@ -1121,6 +1121,7 @@
 		273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperAdditionColorView.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
 		2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationController.swift; sourceTree = "<group>"; };
 		2744AE7125B58E6C00E8849F /* invitations.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = invitations.tgs; sourceTree = "<group>"; };
 		2746926B26A99DD800B67817 /* WallpaperCheckboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperCheckboxView.swift; sourceTree = "<group>"; };
@@ -1279,7 +1280,6 @@
 		9F153D1321F0C7F800B95D82 /* WallpaperPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPreviewController.swift; sourceTree = "<group>"; };
 		9F153D1521F3662700B95D82 /* StoredMessageFromSearchPeer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredMessageFromSearchPeer.swift; sourceTree = "<group>"; };
 		9F1668B72007E3BC00DD39FB /* ThemeGridControllerItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeGridControllerItem.swift; sourceTree = "<group>"; };
-		9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "builtin-wallpaper-0.jpg"; sourceTree = "<group>"; };
 		9F1668C72008F30900DD39FB /* ChatBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatBackgroundView.swift; sourceTree = "<group>"; };
 		9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoNightViewController.swift; sourceTree = "<group>"; };
 		9F17E5BA212F191F00C25A65 /* AutoNightThemePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoNightThemePreferences.swift; sourceTree = "<group>"; };
@@ -3706,9 +3706,9 @@
 				9F0367E622707B6400456348 /* lottie */,
 				9F0AE6B42199904400A8B53A /* sound_a.caf */,
 				9F3EAB3F20A5ED2F003FE7E3 /* ocr_nn.bin */,
-				9F1668C52008A97000DD39FB /* builtin-wallpaper-0.jpg */,
 				C2786FF21FEBF088001FB044 /* palettes */,
 				C23D0D781F1A609300AF5151 /* SFCompactRounded-Semibold.otf */,
+				2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */,
 				C27A6F721ECF610C00C65577 /* currencies.json */,
 				C2CFCAB81EBB4A1600843F6A /* voip */,
 				C23BC3671E9AA03E00D79F92 /* emoji11.txt */,
@@ -5025,7 +5025,6 @@
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
-				9F1668C62008A97000DD39FB /* builtin-wallpaper-0.jpg in Resources */,
 				27E969E02589172D00CB9F64 /* call up.mp3 in Resources */,
 				C2057FA51EBBCEA7000423DC /* voip_busy.caf in Resources */,
 				9F3EAB4520A5ED2F003FE7E3 /* ocr_nn.bin in Resources */,
@@ -5128,6 +5127,7 @@
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
 				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
+				2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

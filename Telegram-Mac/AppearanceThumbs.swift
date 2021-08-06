@@ -15,7 +15,7 @@ import Postbox
 
 private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
     switch backgroundMode {
-    case let .background(image, colors, rotation):
+    case let .background(image, intensity, colors, rotation):
         let imageSize = image.size.aspectFilled(NSMakeSize(300, 300))
         ctx.saveGState()
         ctx.translateBy(x: 1, y: -1)
@@ -52,11 +52,8 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
         }
         
         if let image = image._cgImage {
-//            if let colors = colors, !colors.isEmpty {
-//                ctx.setBlendMode(.softLight)
-//                ctx.setFillColor(.white)
-//                ctx.fill(rect.focus(imageSize))
-//            }
+            ctx.setBlendMode(.softLight)
+            ctx.setAlpha(CGFloat(intensity ?? 50) / 100.0)
             ctx.draw(image, in: rect.focus(imageSize))
         }
         ctx.restoreGState()
@@ -237,31 +234,31 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
             if bubbled {
                 switch wallpaper {
                 case .builtin:
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                    backgroundMode = TelegramPresentationTheme.defaultBackground
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
                 case let .gradient(_, colors, rotation):
                     backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0).withAlphaComponent(1.0) }, rotation: rotation)
                 case let .image(representation, settings):
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
-                        backgroundMode = .background(image: image, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                        backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                        backgroundMode = TelegramPresentationTheme.defaultBackground
                     }
                     
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
-                        backgroundMode = .background(image: image, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                        backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                        backgroundMode = TelegramPresentationTheme.defaultBackground
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
                 case let .custom(representation, blurred):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
-                        backgroundMode = .background(image: image, colors: nil, rotation: nil)
+                        backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
-                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                        backgroundMode = TelegramPresentationTheme.defaultBackground
                     }
                 }
             } else {
@@ -356,31 +353,31 @@ private func generateExpCardThumb(palette: ColorPalette, bubbled: Bool, wallpape
             if bubbled {
                 switch wallpaper {
                 case .builtin:
-                    backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                    backgroundMode = TelegramPresentationTheme.defaultBackground
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
                 case let .gradient(_, colors, rotation):
                     backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0).withAlphaComponent(1.0) }, rotation: rotation)
                 case let .image(representation, settings):
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
-                        backgroundMode = .background(image: image, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                        backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                        backgroundMode = TelegramPresentationTheme.defaultBackground
                     }
                     
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
-                        backgroundMode = .background(image: image, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                        backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: settings.rotation)
+                        backgroundMode = TelegramPresentationTheme.defaultBackground
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
                 case let .custom(representation, blurred):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
-                        backgroundMode = .background(image: image, colors: nil, rotation: nil)
+                        backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
-                        backgroundMode = .background(image: #imageLiteral(resourceName: "builtin-wallpaper-0.jpg"), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+                        backgroundMode = TelegramPresentationTheme.defaultBackground
                     }
                 }
             } else {
