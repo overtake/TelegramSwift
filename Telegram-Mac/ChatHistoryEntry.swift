@@ -611,10 +611,22 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         accept = false
                     }
                 }
+                if lhs.media.first is TelegramMediaAction {
+                    accept = false
+                }
+                if rhs.media.first is TelegramMediaAction {
+                    accept = false
+                }
+                if lhs.isAnonymousMessage {
+                    accept = false
+                }
+                if rhs.isAnonymousMessage {
+                    accept = false
+                }
                 return accept
             }
             
-            if let next = next, !message.isAnonymousMessage {
+            if let next = next {
                 if isSameGroup(message, next.message) {
                     if let prev = prev {
                         itemType = .Short(rank: rank, header: isSameGroup(message, prev.message) ? .short : .normal)

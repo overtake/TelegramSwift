@@ -53,7 +53,7 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
         
         if let image = image._cgImage {
             ctx.setBlendMode(.softLight)
-            ctx.setAlpha(CGFloat(intensity ?? 50) / 100.0)
+            ctx.setAlpha(CGFloat(intensity ?? 50) / 100.0 * 0.5)
             ctx.draw(image, in: rect.focus(imageSize))
         }
         ctx.restoreGState()

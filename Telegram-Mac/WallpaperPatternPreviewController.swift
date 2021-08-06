@@ -108,7 +108,6 @@ final class WallpaperPatternPreviewView: View {
             let patternView = WallpaperPatternView(frame: NSMakeRect(x, 10, 80, 80))
             patternView.update(with: pattern, isSelected: pattern == selected, account: account, colors: self.colors, rotation: self.rotation)
             patternView.set(handler: { [weak self] _ in
-                guard let `self` = self else {return}
                 select(pattern)
               //  self.updateSelected(pattern)
             }, for: .Click)
@@ -182,6 +181,8 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
                 default:
                     break
                 }
+            } else {
+                genericView.updateSelected(nil)
             }
         }
     }

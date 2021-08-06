@@ -460,7 +460,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
         
         let signal: Signal<([TableRowItem], ([ChannelAdminEventLogEntry], Bool, ChannelAdminEventLogUpdateType, Bool), Bool), NoError> = combineLatest(eventLogContext.get(), isGroup) |> map { result, isGroup in
             
-            let items = eventLogItems(result.0, isGroup: isGroup, peerId: peerId, initialSize: initialSize.with { $0 }, chatInteraction: chatInteraction)
+            let items = eventLogItems(result.0.reversed(), isGroup: isGroup, peerId: peerId, initialSize: initialSize.with { $0 }, chatInteraction: chatInteraction)
             
 
             return (items, result, isGroup)

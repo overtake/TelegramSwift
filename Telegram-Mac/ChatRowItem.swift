@@ -2806,7 +2806,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             
             
         }
-    } else if let image = message.media.first as? TelegramMediaImage {
+    } else if let image = message.media.first as? TelegramMediaImage, !message.containsSecretMedia {
         signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
             var items = items
             if let resource = image.representations.last?.resource {

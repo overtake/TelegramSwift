@@ -726,10 +726,6 @@ private final class WallpaperPreviewView: View {
             }
             
             if isPattern {
-                var patternIntensity: CGFloat = 0.5
-                if let intensity = settings.intensity {
-                    patternIntensity = CGFloat(intensity) / 100.0
-                }
                 self.rotateColors.update(settings.colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
             }
             

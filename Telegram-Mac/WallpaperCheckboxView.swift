@@ -112,6 +112,47 @@ private final class BlurCheckbox : View {
 
 
 final class WallpaperCheckboxView : Control {
+    
+    final class ColorsListView : View {
+        
+        var colors:[NSColor] = [] {
+            didSet {
+                needsDisplay = true
+            }
+        }
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            super.draw(layer, in: ctx)
+            
+            ctx.round(frame.size, frame.height / 2)
+            
+            if colors.count == 1 {
+                ctx.setFillColor(colors[0].cgColor)
+                ctx.fill(bounds)
+            } else if colors.count == 2 {
+                ctx.setFillColor(colors[0].cgColor)
+                ctx.fill(NSMakeRect(0, 0, frame.width / 2, frame.height))
+                ctx.setFillColor(colors[1].cgColor)
+                ctx.fill(NSMakeRect(frame.width / 2, 0, frame.width / 2, frame.height))
+            } else if colors.count == 3 {
+                
+            } else if colors.count == 4 {
+                ctx.setFillColor(colors[0].cgColor)
+                ctx.fill(NSMakeRect(0, 0, frame.width / 2, frame.height / 2))
+                
+                ctx.setFillColor(colors[1].cgColor)
+                ctx.fill(NSMakeRect(frame.width / 2, 0, frame.width / 2, frame.height / 2))
+                
+                ctx.setFillColor(colors[2].cgColor)
+                ctx.fill(NSMakeRect(0, frame.height / 2, frame.width / 2, frame.height / 2))
+                
+                ctx.setFillColor(colors[3].cgColor)
+                ctx.fill(NSMakeRect(frame.width / 2, frame.height / 2, frame.width / 2, frame.height / 2))
+
+            }
+        }
+    }
+    
     private let title:(TextNodeLayout,TextNode)
     fileprivate let checkbox: BlurCheckbox = BlurCheckbox(frame: NSMakeRect(0, 0, 16, 16))
     
@@ -123,6 +164,7 @@ final class WallpaperCheckboxView : Control {
             checkbox.set(isSelected: newValue, animated: false)
         }
     }
+    
     
     var isFullFilled: Bool = false {
         didSet {
