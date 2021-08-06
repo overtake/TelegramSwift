@@ -2919,7 +2919,7 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
                     
                     c.interpolationQuality = .medium
                     c.setBlendMode(.softLight)
-                    c.setAlpha(0.5)
+                    c.setAlpha(0.25)
                     c.draw(fullSizeImage, in: fittedRect)
                 }
             }
@@ -3229,7 +3229,7 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                     if let fullSizeImage = fullSizeImage {
                         if !drawPatternOnly {
                             c.setBlendMode(.softLight)
-                            c.setAlpha(intensity)
+                            c.setAlpha(intensity * 0.5)
                         }
                         c.draw(fullSizeImage, in: fittedRect)
                     }
