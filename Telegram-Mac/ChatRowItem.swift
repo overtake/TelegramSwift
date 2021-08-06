@@ -820,6 +820,14 @@ class ChatRowItem: TableRowItem {
     
     let isIncoming: Bool
     
+    var canHasFloatingPhoto: Bool {
+        if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
+            return false
+        } else {
+            return isIncoming
+        }
+    }
+    
     var isUnsent: Bool {
         if entry.additionalData.updatingMedia != nil {
             return true

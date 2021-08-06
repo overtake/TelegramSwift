@@ -172,9 +172,10 @@ enum WallpaperColorSelectMode : Equatable {
 private final class WallpaperPreviewView: View {
     private let updateStateDisposable = MetaDisposable()
     private let backgroundView: BackgroundView = BackgroundView(frame: NSZeroRect)
-    private let imageView: TransformImageView = TransformImageView()
-    let magnifyView: MagnifyView
+    private var image: CGImage?
     private let disposable = MetaDisposable()
+    private let loadImageDisposable = MetaDisposable()
+
     private var progressView: RadialProgressView?
     private let tableView: TableView
     private let documentView: NSView
@@ -205,25 +206,17 @@ private final class WallpaperPreviewView: View {
         }
     }
     
-    override func smartMagnify(with event: NSEvent) {
-        magnifyView.smartMagnify(with: event)
-    }
     
-    override func magnify(with event: NSEvent) {
-        magnifyView.magnify(with: event)
-    }
     
     required init(frame frameRect: NSRect, context: AccountContext, wallpaper: Wallpaper) {
         self.context = context
         self.wallpaper = wallpaper
         self.tableView = TableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height), isFlipped: false, drawBorder: false)
-        self.magnifyView = MagnifyView(imageView, contentSize: frameRect.size)
         self.documentView = tableView.documentView!
         self.patternsController = WallpaperPatternPreviewController(context: context)
         super.init(frame: frameRect)
         backgroundView.useSharedAnimationPhase = false
         addSubview(backgroundView)
-        addSubview(magnifyView)
         documentView.removeFromSuperview()
         addSubview(documentView)
         checkboxContainer.addSubview(blurCheckbox)
@@ -236,7 +229,6 @@ private final class WallpaperPreviewView: View {
         addSubview(colorPicker)
         addSubview(patternsController.view)
         
-        imageView.layer?.contentsGravity = .resizeAspectFill
         
         controlsBg.backgroundColor = theme.colors.background
         colorPicker.canUseGradient = true
@@ -476,18 +468,14 @@ private final class WallpaperPreviewView: View {
     }
     
     var croppedRect: NSRect {
-        
         let fittedSize = WallpaperDimensions.aspectFitted(imageSize)
-        let multiplier = NSMakeSize( imageSize.width / magnifyView.contentFrame.width, imageSize.height / magnifyView.contentFrame.height)
-        let magnifyRect = magnifyView.contentFrame.apply(multiplier: multiplier)
-        let fittedRect = NSMakeRect(abs(magnifyRect.minX), abs(magnifyRect.minY), fittedSize.width, fittedSize.height)
-    
-        return fittedRect.offsetBy(dx:(magnifyView.contentFrame.minX - magnifyView.contentFrameMagnified.minX) * multiplier.width, dy: (magnifyView.contentFrame.minY - magnifyView.contentFrameMagnified.minY) * multiplier.height)
+        return fittedSize.bounds
     }
     
     deinit {
         updateStateDisposable.dispose()
         disposable.dispose()
+        loadImageDisposable.dispose()
     }
     
     override func layout() {
@@ -534,9 +522,6 @@ private final class WallpaperPreviewView: View {
         
       
 
-                
-        transition.updateFrame(view: magnifyView, frame: bounds)
-        magnifyView.updateLayout(size: bounds.size, transition: transition)
         
         transition.updateFrame(view: tableView, frame: bounds)
         
@@ -550,16 +535,7 @@ private final class WallpaperPreviewView: View {
             }
         })
         
-        switch wallpaper {
-        case let .file(_, _, _, isPattern):
-            if isPattern {
-                magnifyView.contentSize = frame.size
-            } else {
-                magnifyView.contentSize = imageSize.aspectFilled(frame.size)
-            }
-        default:
-            magnifyView.contentSize = imageSize.aspectFilled(frame.size)
-        }
+       
         
         let backgroundSize: NSSize
         switch self.previewState  {
@@ -633,11 +609,11 @@ private final class WallpaperPreviewView: View {
         case .color:
             patternCheckbox.isSelected = false
             colorCheckbox.isSelected = true
-            updateBackground(wallpaper)
+            updateBackground(wallpaper, image: self.image)
         case .normal:
             patternCheckbox.isSelected = false
             colorCheckbox.isSelected = false
-            updateBackground(wallpaper)
+            updateBackground(wallpaper, image: self.image)
         case .pattern:
             if let selected = patternsController.pattern {
                 self.wallpaper = selected.withUpdatedSettings(self.wallpaper.settings)
@@ -645,13 +621,13 @@ private final class WallpaperPreviewView: View {
             patternCheckbox.isSelected = true
             colorCheckbox.isSelected = false
             
-            updateBackground(wallpaper)
+            updateBackground(wallpaper, image: self.image)
         }
         rotateColors.set(rotation: wallpaper.settings.rotation, animated: animated)
         updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
     }
     
-    private func updateBackground(_ wallpaper: Wallpaper) {
+    private func updateBackground(_ wallpaper: Wallpaper, image: CGImage?) {
         switch wallpaper {
         case .builtin:
             backgroundView.backgroundMode = .plain
@@ -660,20 +636,44 @@ private final class WallpaperPreviewView: View {
         case let .gradient(_, colors, rotation):
             backgroundView.backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0) }, rotation: rotation)
         case .image:
-            backgroundView.backgroundMode = .plain
+            if let image = image {
+                backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: nil, colors: nil, rotation: nil)
+            } else {
+                backgroundView.backgroundMode = .plain
+            }
         case let .file(_, _, settings, isPattern):
             if isPattern {
-                if settings.colors.count == 1 {
-                    backgroundView.backgroundMode = .color(color: NSColor(argb: settings.colors[0]))
+                if let image = image {
+                    backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                 } else {
                     backgroundView.backgroundMode = .gradient(colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                 }
             } else {
-                backgroundView.backgroundMode = .plain
+                if let image = image {
+                    backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: nil, colors: nil, rotation: nil)
+                } else {
+                    backgroundView.backgroundMode = .plain
+                }
             }
         default:
             backgroundView.backgroundMode = .plain
         }
+    }
+    
+    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, boundingSize: NSSize) {
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
+        
+        let signal = signal |> map {
+            return $0.execute(arguments, $0.data)?.generateImage()
+        } |> deliverOnMainQueue
+        
+        loadImageDisposable.set(signal.start(next: { [weak self] image in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.image = image
+            strongSelf.updateBackground(strongSelf.wallpaper, image: image)
+        }))
     }
     
     func updateState(synchronousLoad: Bool) {
@@ -681,25 +681,14 @@ private final class WallpaperPreviewView: View {
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         
         switch wallpaper {
-        case .builtin:
-            self.imageView.isHidden = false
-            blurCheckbox.isHidden = false
-            colorCheckbox.isHidden = true
-            patternCheckbox.isHidden = true
-            rotateColors.isHidden = true
-            let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: CGSize(), intrinsicInsets: NSEdgeInsets())
-            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
-            self.imageView.setSignal(settingsBuiltinWallpaperImage(account: context.account, scale: backingScaleFactor))
-            self.imageView.set(arguments: arguments)
         case .color:
-            self.imageView.isHidden = true
+            self.image = nil
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
             rotateColors.isHidden = true
         case let .gradient(_, colors, _):
-            self.imageView.isHidden = true
+            self.image = nil
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
@@ -708,7 +697,6 @@ private final class WallpaperPreviewView: View {
             self.rotateColors.update(colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
             
         case let .image(representations, settings):
-            self.imageView.isHidden = false
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
@@ -716,21 +704,18 @@ private final class WallpaperPreviewView: View {
             let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
+            
+            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), boundingSize: boundingSize)
 
-            self.imageView.setSignal(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), animate: true, synchronousLoad: synchronousLoad)
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)), intrinsicInsets: NSEdgeInsets()))
             
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
-            magnifyView.maxMagnify = 3.0
 
         case let .file(_, file, settings, isPattern):
-            self.imageView.isHidden = false
             blurCheckbox.isHidden = isPattern
 
             colorCheckbox.isHidden = !isPattern
             patternCheckbox.isHidden = !isPattern
             rotateColors.isHidden = !isPattern
-            var patternColor: TransformImageEmptyColor? = nil
             
             var representations:[TelegramMediaImageRepresentation] = []
             representations.append(contentsOf: file.previewRepresentations)
@@ -745,34 +730,24 @@ private final class WallpaperPreviewView: View {
                 if let intensity = settings.intensity {
                     patternIntensity = CGFloat(intensity) / 100.0
                 }
-                if settings.colors.count == 1 {
-                    patternColor = .color(NSColor(rgb: settings.colors.first!, alpha: patternIntensity))
-                } else if settings.colors.count > 1 {
-                    patternColor = .gradient(colors: settings.colors.map { NSColor(argb: $0) }, intensity: patternIntensity, rotation: settings.rotation)
-                } else {
-                    patternColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
-                }
                 self.rotateColors.update(settings.colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
             }
             
-            self.imageView.setSignal(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), animate: true, synchronousLoad: synchronousLoad)
-
-            
-            magnifyView.maxMagnify = !isPattern ? 3.0 : 1.0
-            
-           
-            
             let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.aspectFilled(frame.size)
+
+            
+            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), boundingSize: boundingSize)
+
+                        
             self.imageSize = dimensions
 
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
         default:
             break
         }
         
-        updateBackground(self.wallpaper)
+        updateBackground(self.wallpaper, image: self.image)
 
         
         if let updatedStatusSignal = updatedStatusSignal {
@@ -821,7 +796,7 @@ private final class WallpaperPreviewView: View {
         switch wallpaper {
         case .builtin, .file, .color, .gradient:
             switch backgroundView.backgroundMode {
-            case let .background(image, colors, _):
+            case let .background(image, _, colors, _):
                 if let colors = colors, let first = colors.first {
                     let blended = colors.reduce(first, { color, with in
                         return color.blended(withFraction: 0.5, of: with)!
@@ -1247,15 +1222,7 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.magnifyView.zoomOut()
-            return .invoked
-        }, with: self, for: .Minus, priority: .modal)
-        
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.magnifyView.zoomIn()
-            return .invoked
-        }, with: self, for: .Equal, priority: .modal)
+       
     }
     
 
@@ -1263,7 +1230,7 @@ class WallpaperPreviewController: ModalViewController {
         let context = self.context
         closeAllModals()
         
-        let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect, magnify: genericView.magnifyView.magnify) |> mapToSignal { wallpaper in
+        let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
             return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
         }
         

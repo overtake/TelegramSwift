@@ -164,7 +164,6 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     
     var intensity: Int32? = nil {
         didSet {
-            NSLog("intensity: \(intensity)")
             if oldValue != nil, oldValue != intensity {
                 self.selected?(pattern?.withUpdatedSettings(WallpaperSettings(colors: pattern?.settings.colors ?? [], intensity: intensity)))
             }

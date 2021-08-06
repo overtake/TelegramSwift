@@ -604,7 +604,13 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 var accept = abs(lhs.timestamp - rhs.timestamp) < simpleDif
                 accept = accept && chatDateId(for: lhs.timestamp) == chatDateId(for: rhs.timestamp)
                 accept = accept && lhs.author?.id == rhs.author?.id
-                
+                if let maxReadIndex = maxReadIndex {
+                    if maxReadIndex >= rhs.index && maxReadIndex < lhs.index {
+                        accept = false
+                    } else if maxReadIndex < rhs.index && maxReadIndex >= lhs.index {
+                        accept = false
+                    }
+                }
                 return accept
             }
             
