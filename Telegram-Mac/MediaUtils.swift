@@ -2876,8 +2876,10 @@ func chatMessagePhotoThumbnail(account: Account,  imageReference: ImageMediaRefe
 
 private func builtinWallpaperData() -> Signal<ImageRenderData, NoError> {
     return Signal { subscriber in
-        if let filePath = Bundle.main.path(forResource: "builtin-wallpaper-0", ofType: "jpg"), let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) {
-            subscriber.putNext(ImageRenderData(nil, data, true))
+        if let filePath = Bundle.main.path(forResource: "builtin-wallpaper-svg", ofType: nil), let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) {
+            if let data = TGGUnzipData(data, 8 * 1024 * 1024) {
+                subscriber.putNext(ImageRenderData(nil, data, true))
+            }
         }
         subscriber.putCompletion()
         
@@ -2891,12 +2893,8 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
             
             var fullSizeImage: CGImage?
-            if let fullSizeData = data.fullSizeData {
-                let options = NSMutableDictionary()
-                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
-                    fullSizeImage = image
-                }
+            if let data = data.fullSizeData, let image = drawSvgImageNano(data, arguments.drawingSize) {
+                fullSizeImage = image._cgImage
             }
             if let fullSizeImage = fullSizeImage {
                 let drawingRect = arguments.drawingRect
@@ -2910,9 +2908,18 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
                 
                 let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
                 
+                
                 context.withFlippedContext { c in
-                    c.setBlendMode(.copy)
+                    
+                    
+                    let preview = AnimatedGradientBackgroundView.generatePreview(size: arguments.drawingSize.fitted(.init(width: 30, height: 30)), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) })
+
+                    c.setBlendMode(.normal)
+                    c.draw(preview, in: fittedRect)
+                    
                     c.interpolationQuality = .medium
+                    c.setBlendMode(.softLight)
+                    c.setAlpha(0.5)
                     c.draw(fullSizeImage, in: fittedRect)
                 }
             }
