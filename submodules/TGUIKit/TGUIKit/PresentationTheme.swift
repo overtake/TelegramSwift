@@ -1363,6 +1363,7 @@ public class ColorPalette : Equatable {
             lightnessColor = blended
         }
         
+
         var bubbleBackground_outgoing:[NSColor] = []
         
         if let colors = color.messages, !colors.isEmpty {
@@ -2006,7 +2007,7 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             selectTextBubble_incoming: NSColor(0xCCDDEA),
                                             selectTextBubble_outgoing: NSColor(0xCCDDEA),
                                             bubbleBackground_incoming: NSColor(0xffffff),
-                                            bubbleBackground_outgoing: [NSColor(0xE1FFC7), NSColor(0x3d6a97), NSColor(0x3d6a97), NSColor(0xE1FFC7)],
+                                            bubbleBackground_outgoing: [NSColor(0xE1FFC7), NSColor(0xE1FFC7)],
                                             bubbleBorder_incoming: NSColor(0x86A9C9,0.5),
                                             bubbleBorder_outgoing: NSColor(0x86A9C9,0.5),
                                             grayTextBubble_incoming: NSColor(0x999999),
