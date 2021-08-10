@@ -268,8 +268,8 @@ class WPArticleContentView: WPContentView {
                     let isPattern: Bool
                     if let settings = layout.content.themeSettings, let wallpaper = settings.wallpaper {
                         switch wallpaper {
-                        case let .file(_, _, _, _, pattern, _, _, _, _):
-                            isPattern = pattern
+                        case let .file(file):
+                            isPattern = file.isPattern
                         default:
                             isPattern = false
                         }

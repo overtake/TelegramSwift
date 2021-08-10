@@ -205,8 +205,8 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
         let signal = telegramWallpapers(postbox: context.account.postbox, network: context.account.network) |> map { wallpapers -> [Wallpaper] in
             return wallpapers.compactMap { wallpaper in
                 switch wallpaper {
-                case let .file(_, _, _, _, isPattern, _, _, _, _):
-                    return isPattern ? Wallpaper(wallpaper) : nil
+                case let .file(file):
+                    return file.isPattern ? Wallpaper(wallpaper) : nil
                 default:
                     return nil
                 }

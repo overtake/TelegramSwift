@@ -1242,8 +1242,8 @@ enum Wallpaper : Equatable, PostboxCoding {
             self = .image(image, settings: settings)
         case let .file(values):
             self = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
-        case let .gradient(id, colors, settings):
-            self = .gradient(id, colors, settings.rotation)
+        case let .gradient(gradient):
+            self = .gradient(gradient.id, gradient.colors, gradient.settings.rotation)
         }
     }
     
