@@ -64,9 +64,9 @@ struct AssociatedWallpaper : PostboxCoding, Equatable {
     static func ==(lhs: AssociatedWallpaper, rhs: AssociatedWallpaper) -> Bool {
         if let lhsCloud = lhs.cloud, let rhsCloud = rhs.cloud {
             switch lhsCloud {
-            case let .file(id, accessHash, isCreator, isDefault, isPattern, isDark, slug, lhsFile, settings):
-                if case .file(id, accessHash, isCreator, isDefault, isPattern, isDark, slug, let rhsFile, settings) = rhsCloud {
-                    return lhsFile.isSemanticallyEqual(to: rhsFile) && lhs.wallpaper == rhs.wallpaper
+            case let .file(file):
+                if case .file(file) = rhsCloud {
+                    return true
                 } else {
                     return lhsCloud == rhsCloud && lhs.wallpaper == rhs.wallpaper
                 }

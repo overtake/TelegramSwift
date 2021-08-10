@@ -567,7 +567,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .wallpaper(_, context, preview):
         switch preview {
         case let .gradient(id, colors, settings):
-            let wallpaper: TelegramWallpaper = .gradient(id, colors.map { $0.argb }, settings)
+            let wallpaper: TelegramWallpaper = .gradient(.init(id: id, colors: colors.map { $0.argb }, settings: settings))
             showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .color(color):
             let wallpaper: TelegramWallpaper = .color(color.argb)
