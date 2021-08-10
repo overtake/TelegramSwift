@@ -136,6 +136,7 @@ open class BackgroundView: View {
             case let .background(image, intensity, colors, rotation):
                 imageView.backgroundColor = .clear
                 imageView.contents = image
+                let colors = colors?.map { $0.withAlphaComponent(1) }
                 if let colors = colors, !colors.isEmpty {
                     imageView.opacity = Float((intensity ?? 50)) / 100.0 * 0.5
                     imageView.compositingFilter = "softLightBlendMode"
@@ -175,6 +176,7 @@ open class BackgroundView: View {
                 imageView.opacity = 1
                 container.layer?.addSublayer(imageView)
             case let .gradient(colors, rotation):
+                let colors = colors.map { $0.withAlphaComponent(1) }
                 imageView.contents = nil
                 imageView.backgroundColor = .clear
                 imageView.opacity = 1
@@ -220,7 +222,6 @@ open class BackgroundView: View {
     }
     
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        imageView.frame = bounds
         transition.updateFrame(layer: imageView, frame: bounds)
         transition.updateFrame(view: container, frame: bounds)
         if let backgroundView = backgroundView {
