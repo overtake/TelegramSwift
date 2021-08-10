@@ -328,7 +328,7 @@ class ThemePreviewModalController: ModalViewController {
             } else {
                 settings = settings.withUpdatedDefaultDay(defaultTheme)
             }
-            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultAccent(color: PaletteAccentColor(colors.accent, (top: colors.bubbleBackgroundTop_outgoing, colors.bubbleBackgroundBottom_outgoing))).saveDefaultWallpaper().withSavedAssociatedTheme()
+            settings = settings.withUpdatedDefaultIsDark(colors.isDark).saveDefaultAccent(color: PaletteAccentColor(colors.accent, colors.bubbleBackground_outgoing)).saveDefaultWallpaper().withSavedAssociatedTheme()
             return settings
         }).start()
         

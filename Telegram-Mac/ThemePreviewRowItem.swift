@@ -62,7 +62,7 @@ class ThemePreviewRowItem: GeneralRowItem {
             guard let `self` = self else {
                 return .zero
             }
-            return CGRect(origin: NSMakePoint(0, self.height), size: NSMakeSize(self.width, 400))
+            return CGRect(origin: NSMakePoint(0, self.height), size: NSMakeSize(self.width, self.height))
         }
         
         _ = makeSize(initialSize.width, oldWidth: 0)

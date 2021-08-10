@@ -810,6 +810,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
         var forceHide = true
         
       
+        let engine = self.engine
         
         var settings:(ProxySettings, ConnectionStatus)? = nil
         
@@ -955,19 +956,14 @@ class AuthController : GenericViewController<AuthHeaderView> {
         
         }, requestPasswordRecovery: { [weak self] f in
             guard let `self` = self else {return}
-//            _ = showModalProgress(signal: requestPasswordRecovery(account: self.account) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] option in
-//                guard let `self` = self else {return}
-//                f(option)
-//                switch option {
-//                case let .email(pattern):
-//                    showModal(with: ForgotUnauthorizedPasswordController(accountManager: sharedContext.accountManager, engine: self.engine, emailPattern: pattern), for: mainWindow)
-//                default:
-//                    break
-//                }
-//            }, error: { error in
-//                var bp:Int = 0
-//                bp += 1
-//            })
+            
+            _ = showModalProgress(signal: engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] pattern in
+                guard let `self` = self else {return}
+                f(pattern)
+                showModal(with: ForgotUnauthorizedPasswordController(accountManager: sharedContext.accountManager, engine: self.engine, emailPattern: pattern), for: mainWindow)
+            }, error: { error in
+                alert(for: mainWindow, info: L10n.unknownError)
+            })
         }, resetAccount: { [weak self] in
             guard let `self` = self else {return}
             confirm(for: mainWindow, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in

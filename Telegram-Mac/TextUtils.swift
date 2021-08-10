@@ -146,7 +146,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
 
 func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
     
-    let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap(ChatInterfaceState.parse)
+    let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
+        ChatInterfaceState.parse($0, peerId: nil, context: nil)
+    })
     
     if let embeddedState = interfaceState, !embeddedState.inputState.inputText.isEmpty {
         let mutableAttributedText = NSMutableAttributedString()

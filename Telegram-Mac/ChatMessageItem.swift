@@ -993,8 +993,8 @@ class ChatMessageItem: ChatRowItem {
                         }
                     }
                     
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(link, { code in
-                        timecode(parseTimecodeString(code))
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(link, { _ in
+                        timecode(code)
                     }), range: range)
 
                 }

@@ -32,7 +32,7 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
                 ctx.draw(preview, in: rect.focus(NSMakeSize(200, 100)))
                 ctx.restoreGState()
                 
-            } else {
+            } else if colors.count > 1 {
                 let colors = colors.reversed()
                 let gradientColors = colors.map { $0.cgColor } as CFArray
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -48,13 +48,21 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
                 ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
                 ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
                 ctx.restoreGState()
+            } else if let color = colors.first {
+                ctx.setFillColor(color.cgColor)
+                ctx.fill(rect)
             }
         }
         
-        if let image = image._cgImage {
-            ctx.setBlendMode(.softLight)
-            ctx.setAlpha(CGFloat(intensity ?? 50) / 100.0 * 0.5)
-            ctx.draw(image, in: rect.focus(imageSize))
+        if let colors = colors, !colors.isEmpty {
+            if let image = image._cgImage {
+                ctx.setBlendMode(.softLight)
+                ctx.setAlpha(CGFloat(intensity ?? 50) / 100.0 * 0.5)
+                ctx.draw(image, in: rect.focus(imageSize))
+            }
+        } else {
+            var bp = 0
+            bp += 1
         }
         ctx.restoreGState()
     case let .color(color):
@@ -270,7 +278,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                 if let incoming = bubbleImage?.precomposed(palette.bubbleBackground_incoming, flipVertical: true) {
                     ctx.draw(incoming, in: NSMakeRect(7, 9, 48, 16))
                 }
-                if let outgoing = bubbleImage?.precomposed(palette.bubbleBackgroundTop_outgoing, bottomColor: palette.bubbleBackgroundBottom_outgoing, flipVertical: true, flipHorizontal: true) {
+                if let outgoing = bubbleImage?.precomposed(palette.bubbleBackground_outgoing, flipVertical: true, flipHorizontal: true) {
                     ctx.draw(outgoing, in: NSMakeRect(size.width - 57, size.height - 24, 48, 16))
                 }
             }
@@ -528,9 +536,19 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
                 }
             }
         } else if let palette = cloud.settings?.palette {
-            return localThemeData(context: context, theme: cloud, palette: palette) |> mapToSignal { data in
-                return thumbGenerator(data.0, bubbled, data.1) |> map { image in
-                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2)))
+            
+            let settings = themeSettingsView(accountManager: context.sharedContext.accountManager) |> take(1)
+            
+            return settings |> map { settings -> (Wallpaper, ColorPalette) in
+                let settings = settings
+                    .withUpdatedPalette(palette)
+                    .withUpdatedCloudTheme(cloud)
+                    .installDefaultAccent()
+                    .installDefaultWallpaper()
+                return (settings.wallpaper.wallpaper, settings.palette)
+            } |> mapToSignal { wallpaper, palette in
+                return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
                 }
             }
         } else {

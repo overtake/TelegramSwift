@@ -3859,7 +3859,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
             let opaqueState = initialData.storedInterfaceState.flatMap(_internal_decodeStoredChatInterfaceState)
             
-            let interfaceState = ChatInterfaceState.parse(opaqueState)
+            let interfaceState = ChatInterfaceState.parse(opaqueState, peerId: self.chatLocation.peerId, context: context)
             
             if let interfaceState = interfaceState {
                 self.chatInteraction.update(animated:false,{$0.updatedInterfaceState({_ in return interfaceState})})

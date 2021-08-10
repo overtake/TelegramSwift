@@ -478,7 +478,9 @@ class ChatListRowItem: TableRowItem {
                 embeddedState = nil
             }
         }
-        let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap(ChatInterfaceState.parse)
+        let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
+            ChatInterfaceState.parse($0, peerId: nil, context: nil)
+        })
         if let interfaceState = interfaceState {
             if interfaceState.inputState.inputText.isEmpty {
                 embeddedState = nil

@@ -327,7 +327,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             updateTheme(with: themeSettings, for: window)
             
             self.window.makeKeyAndOrderFront(self)
-            
+            NSApp.activate(ignoringOtherApps: true)
+
             showModal(with: ColdStartPasslockController(checkNextValue: { passcode in
                 appEncryption.applyPasscode(passcode)
                 if let params = appEncryption.decrypt() {

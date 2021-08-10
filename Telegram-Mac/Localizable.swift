@@ -295,12 +295,16 @@ internal final class L10n {
   internal static var appearanceSettingsAutoNightHeader: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNightHeader") }
   /// Bubbles Mode
   internal static var appearanceSettingsBubblesMode: String  { return L10n.tr("Localizable", "Appearance.Settings.BubblesMode") }
+  /// Accent
+  internal static var appearanceThemeAccent: String  { return L10n.tr("Localizable", "Appearance.Theme.Accent") }
   /// Edit
   internal static var appearanceThemeEdit: String  { return L10n.tr("Localizable", "Appearance.Theme.Edit") }
   /// Remove
   internal static var appearanceThemeRemove: String  { return L10n.tr("Localizable", "Appearance.Theme.Remove") }
   /// Share
   internal static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
+  /// Messages
+  internal static var appearanceThemeAccentMessages: String  { return L10n.tr("Localizable", "Appearance.Theme.Accent.Messages") }
   /// Follow System Appearance
   internal static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
   /// Good morning! 👋
@@ -5179,7 +5183,7 @@ internal final class L10n {
   internal static func messageTimerShortMinutes(_ p1: String) -> String {
     return L10n.tr("Localizable", "MessageTimer.ShortMinutes", p1)
   }
-  /// %@mo
+  /// %@M
   internal static func messageTimerShortMonths(_ p1: String) -> String {
     return L10n.tr("Localizable", "MessageTimer.ShortMonths", p1)
   }

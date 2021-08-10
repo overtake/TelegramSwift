@@ -838,9 +838,7 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
 }
 
 func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
-    
-    let account = chatInteraction.context.account
-    
+        
     if message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     }
@@ -3201,11 +3199,11 @@ extension TelegramThemeSettings {
     }
     
     var accent: PaletteAccentColor {
-        var messages: (top: NSColor, bottom: NSColor)?
+        var messages: [NSColor]?
         if let message = self.messageColors {
             let top = NSColor(argb: UInt32(bitPattern: message.top))
             let bottom = NSColor(argb: UInt32(bitPattern: message.bottom))
-            messages = (top: top, bottom: bottom)
+            messages = [top, bottom]
         } else {
             messages = nil
         }

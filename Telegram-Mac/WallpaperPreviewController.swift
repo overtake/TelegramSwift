@@ -257,10 +257,7 @@ private final class WallpaperPreviewView: View {
             }
             strongSelf.updateMode(mode, animated: true)
         }
-        
-        patternCheckbox.isFullFilled = true
-        colorCheckbox.isFullFilled = true
-        
+                
         tableView.backgroundColor = .clear
         tableView.layer?.backgroundColor = .clear
         
@@ -681,22 +678,25 @@ private final class WallpaperPreviewView: View {
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         
         switch wallpaper {
-        case .color:
+        case let .color(color):
             self.image = nil
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
+            self.patternCheckbox.hasPattern = false
             rotateColors.isHidden = true
+            self.colorCheckbox.colorsValue = [color].map { NSColor($0) }
         case let .gradient(_, colors, _):
             self.image = nil
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
             rotateColors.isHidden = false
-            
+            self.patternCheckbox.hasPattern = false
+            self.colorCheckbox.colorsValue = colors.map { NSColor($0) }
             self.rotateColors.update(colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
-            
         case let .image(representations, settings):
+            self.patternCheckbox.hasPattern = false
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
@@ -716,6 +716,12 @@ private final class WallpaperPreviewView: View {
             colorCheckbox.isHidden = !isPattern
             patternCheckbox.isHidden = !isPattern
             rotateColors.isHidden = !isPattern
+            
+            if isPattern {
+                self.colorCheckbox.colorsValue = settings.colors.map { NSColor($0) }
+            }
+
+            self.patternCheckbox.hasPattern = isPattern
             
             var representations:[TelegramMediaImageRepresentation] = []
             representations.append(contentsOf: file.previewRepresentations)
