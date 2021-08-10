@@ -58,19 +58,12 @@ private final class CatalinaSegmentItemView : Control {
         
         inactiveTextView.userInteractionEnabled = false
         inactiveTextView.isSelectable = false
-               
+        scaleOnClick = true
         
         set(handler: { _ in
             select()
         }, for: .SingleClick)
         
-        set(handler: { [weak self] _ in
-            self?.inactiveTextView.layer?.animateAlpha(from: 1, to: 0.8, duration: 0.2, removeOnCompletion: false)
-        }, for: .Down)
-        
-        set(handler: { [weak self] _ in
-            self?.inactiveTextView.layer?.animateAlpha(from: 0.8, to: 1.0, duration: 0.2, removeOnCompletion: true)
-        }, for: .Up)
     }
     
     
@@ -143,24 +136,6 @@ private class CatalinaSegmentedControlView: View {
         addSubview(itemsContainerView)
         button.layer?.cornerRadius = 8
         
-        button.set(handler: { [weak self] control in
-            control.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
-            guard let `self` = self else {
-                return
-            }
-            let itemView = self.itemsContainerView.subviews.compactMap { $0 as? CatalinaSegmentItemView }.first(where: { $0.isSelected })
-            itemView?.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
-
-        }, for: .Down)
-        
-        button.set(handler: { [weak self] control in
-            control.layer?.animateScaleCenter(from: 0.95, to: 1.0, duration: 0.2, removeOnCompletion: true)
-            guard let `self` = self else {
-               return
-            }
-            let itemView = self.itemsContainerView.subviews.compactMap { $0 as? CatalinaSegmentItemView }.first(where: { $0.isSelected })
-            itemView?.layer?.animateScaleCenter(from: 0.95, to: 1.0, duration: 0.2, removeOnCompletion: true)
-        }, for: .Up)
     }
     
     required public init?(coder: NSCoder) {
@@ -251,7 +226,6 @@ private class CatalinaSegmentedControlView: View {
 
 
 public class CatalinaStyledSegmentController: ViewController {
-
     private var items: [CatalinaSegmentedItem] = []
     private var selected: Int = 0
     

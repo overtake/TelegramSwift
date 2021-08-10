@@ -846,6 +846,10 @@ final class ChatEditState : Equatable {
 }
 
 
+struct ChatInterfaceTempState: Equatable {
+    let editState: ChatEditState?
+}
+
 
 struct ChatInterfaceState: Codable, Equatable {
     static func == (lhs: ChatInterfaceState, rhs: ChatInterfaceState) -> Bool {
@@ -881,17 +885,25 @@ struct ChatInterfaceState: Codable, Equatable {
     let messageActionsState: ChatInterfaceMessageActionsState
     
     
-    static func parse(_ state: OpaqueChatInterfaceState?) -> ChatInterfaceState? {
+    static func parse(_ state: OpaqueChatInterfaceState?, peerId: PeerId?, context: AccountContext?) -> ChatInterfaceState? {
         guard let state = state else {
             return nil
         }
         guard let opaqueData = state.opaqueData else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         }
         guard var decodedState = try? EngineDecoder.decode(ChatInterfaceState.self, from: opaqueData) else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         }
-        decodedState = decodedState.withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+        decodedState = decodedState
+            .withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            .updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         return decodedState
     }
 

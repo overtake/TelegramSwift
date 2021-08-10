@@ -570,6 +570,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil) {
         
+        let peerId = self.peerId
+        let context = context
         let timestamp = Int32(Date().timeIntervalSince1970)
         let interfaceState = presentation.interfaceState.withUpdatedTimestamp(timestamp).withUpdatedHistoryScrollState(scrollState)
         
@@ -581,7 +583,9 @@ final class ChatInteraction : InterfaceObserver  {
             s = s |> delay(10, queue: Queue.mainQueue())
         }
         
-        modifyDisposable.set(s.start())
+        modifyDisposable.set(s.start(completed: {
+            context.setChatInterfaceTempState(ChatInterfaceTempState(editState: interfaceState.editState), for: peerId)
+        }))
     }
     
     

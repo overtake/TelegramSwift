@@ -24,7 +24,7 @@ private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> 
                 let rect = NSMakeRect(0, 0, size.width, size.height)
                 ctx.clear(rect)
                 ctx.round(size, size.height / 2)
-                let colors = [messages.top, messages.bottom].reversed()
+                let colors = messages.reversed()
                 let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                 var locations: [CGFloat] = []

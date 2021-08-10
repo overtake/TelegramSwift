@@ -145,6 +145,9 @@ class FastSettings {
 
     private static let kLeftColumnWidth = "kLeftColumnWidth"
 
+    private static let kShowEmptyTips = "kShowEmptyTips"
+
+    
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -251,6 +254,19 @@ class FastSettings {
     static func updateVCShareMicro(_ value: Bool) {
         UserDefaults.standard.setValue(value, forKey: kSVCShareMicro)
     }
+    
+    static var emptyTips: Bool {
+        if let value = UserDefaults.standard.value(forKey: kShowEmptyTips) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func updateEmptyTips(_ value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: kShowEmptyTips)
+    }
+    
+    
+    
     
     static func toggleRecordingState() {
         UserDefaults.standard.set((recordingState == .voice ? RecordingStateSettings.video : RecordingStateSettings.voice).rawValue, forKey: kRecordingStateType)

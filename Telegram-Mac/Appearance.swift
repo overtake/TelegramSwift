@@ -61,23 +61,37 @@ func generateTextIcon(_ text: NSAttributedString) -> CGImage {
     })!
 }
 
-private func generateGradientBubble(_ top: NSColor, _ bottom: NSColor) -> CGImage {
-    
-    var bottom = bottom
-    var top = top
+private func generateGradientBubble(_ colors: [NSColor]) -> CGImage {
+    var colors = colors
     if !System.supportsTransparentFontDrawing {
-        bottom = top.blended(withFraction: 0.5, of: bottom)!
-        top = bottom
+        let blended = colors.reduce(colors.first!, {
+            $0.blended(withFraction: 0.5, of: $1)!
+        })
+        for (i, _) in colors.enumerated() {
+            colors[i] = blended
+        }
     }
     
     return generateImage(CGSize(width: 1.0, height: 100), opaque: true, scale: 1.0, rotatedContext: { size, context in
-        var locations: [CGFloat] = [0.0, 1.0]
-        let colors = [top.cgColor, bottom.cgColor] as NSArray
         
-        let colorSpace = deviceColorSpace
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
-        
-        context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+        if colors.count > 1 {
+            let colors = colors.map { $0.cgColor } as NSArray
+            
+            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+            
+            var locations: [CGFloat] = []
+            for i in 0 ..< colors.count {
+                locations.append(delta * CGFloat(i))
+            }
+
+            let colorSpace = deviceColorSpace
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+            
+            context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+        } else if let color = colors.first {
+            context.setFillColor(color.cgColor)
+            context.fill(size.bounds)
+        }
     })!
 }
 
@@ -400,8 +414,7 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
             
             let image = generateImage(NSMakeSize(150, 30), rotatedContext: { size, ctx in
                 ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-                
-                let data = messageBubbleImageModern(incoming: false, fillColor: palette.bubbleBackgroundTop_outgoing, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
+                let data = messageBubbleImageModern(incoming: false, fillColor: palette.blendedOutgoingColors, strokeColor: palette.bubbleBorder_outgoing, neighbors: .none)
                 
                 let layer = CALayer()
                 layer.frame = NSMakeRect(0, 0, 150, 30)
@@ -427,25 +440,23 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
             })!
             
             var bubble = image
-            if palette.bubbleBackgroundTop_outgoing != palette.bubbleBackgroundBottom_outgoing {
-                bubble = generateImage(NSMakeSize(150, 30), contextGenerator: { size, ctx in
-                    let colors = [palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing]
-                    let rect = NSMakeRect(0, 0, size.width, size.height)
-                    ctx.clear(rect)
-                    ctx.clip(to: rect, mask: image)
-                    
-                    let gradientColors = colors.map { $0.cgColor } as CFArray
-                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                    
-                    var locations: [CGFloat] = []
-                    for i in 0 ..< colors.count {
-                        locations.append(delta * CGFloat(i))
-                    }
-                    let colorSpace = CGColorSpaceCreateDeviceRGB()
-                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                })!
-            }
+            bubble = generateImage(NSMakeSize(150, 30), contextGenerator: { size, ctx in
+                let colors = palette.bubbleBackground_outgoing
+                let rect = NSMakeRect(0, 0, size.width, size.height)
+                ctx.clear(rect)
+                ctx.clip(to: rect, mask: image)
+                
+                let gradientColors = colors.map { $0.cgColor } as CFArray
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
+                }
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            })!
             ctx.draw(bubble, in: NSMakeRect(160, 230, 150, 30))
            
         }
@@ -1753,11 +1764,25 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
     
-    /*
-     chatToggleSelected:  { generateChatGroupToggleSelected(foregroundColor: palette.accentIcon, backgroundColor: palette.underSelectedColor) },
-     chatToggleUnselected:  { generateChatGroupToggleUnselected(foregroundColor: palette.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)) },
+    private var _empty_chat_showtips: CGImage?
+    var empty_chat_showtips: CGImage {
+        if let icon = _empty_chat_showtips {
+            return icon
+        } else {
+            _empty_chat_showtips = NSImage(named: "Icon_Empty_ShowTips")!.precomposed(chatServiceItemTextColor)
+            return _empty_chat_showtips!
+        }
+    }
+    private var _empty_chat_hidetips: CGImage?
+    var empty_chat_hidetips: CGImage {
+        if let icon = _empty_chat_hidetips {
+            return icon
+        } else {
+            _empty_chat_hidetips = NSImage(named: "Icon_Empty_CloseTips")!.precomposed(chatServiceItemTextColor)
+            return _empty_chat_hidetips!
+        }
+    }
 
-     */
     
     
     private var _chatServiceItemColor: NSColor?
@@ -1981,8 +2006,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMusicPause:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForeground) },
                                                chatMusicPauseBubble_incoming:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_incoming) },
                                                chatMusicPauseBubble_outgoing:  { #imageLiteral(resourceName: "Icon_ChatMusicPause").precomposed(palette.fileActivityForegroundBubble_outgoing) },
-                                               chatGradientBubble_incoming: { generateGradientBubble(palette.bubbleBackground_incoming, palette.bubbleBackground_incoming) },
-                                               chatGradientBubble_outgoing: { generateGradientBubble(palette.bubbleBackgroundTop_outgoing, palette.bubbleBackgroundBottom_outgoing) },
+                                               chatGradientBubble_incoming: { generateGradientBubble([palette.bubbleBackground_incoming]) },
+                                               chatGradientBubble_outgoing: { generateGradientBubble(palette.bubbleBackground_outgoing) },
                                                chatBubble_none_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .black, strokeColor: .clear, neighbors: .none) },
                                                chatBubble_none_outgoing_withInset: { messageBubbleImageModern(incoming: false, fillColor: .black, strokeColor: .clear, neighbors: .none) },
                                                chatBubbleBorder_none_incoming_withInset: { messageBubbleImageModern(incoming: true, fillColor: .clear, strokeColor: palette.bubbleBorder_incoming, neighbors: .none) },

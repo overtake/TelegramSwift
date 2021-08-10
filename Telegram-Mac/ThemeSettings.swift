@@ -23,6 +23,18 @@ private func parseColor(_ decoder: PostboxDecoder, _ key: String) -> NSColor? {
     }
     return nil
 }
+private func parseColorArray(_ decoder: PostboxDecoder, _ key: String) -> [NSColor]? {
+    let value = decoder.decodeInt32ArrayForKey(key)
+    let list = value.map {
+        NSColor(argb: UInt32(bitPattern: $0))
+    }
+    if list.isEmpty {
+        return nil
+    } else {
+        return list
+    }
+    return nil
+}
 
 
 extension PaletteWallpaper {
@@ -153,21 +165,28 @@ struct ThemeWallpaper : PostboxCoding, Equatable {
 extension PaletteAccentColor {
     static func initWith(decoder: PostboxDecoder) -> PaletteAccentColor {
         let accent = NSColor(argb: UInt32(bitPattern: decoder.decodeInt32ForKey("c", orElse: 0)))
-        var messages: (top: NSColor, bottom: NSColor)? = nil
-        if let rawTop = decoder.decodeOptionalInt32ForKey("bt"), let rawBottom = decoder.decodeOptionalInt32ForKey("bb") {
-            messages = (top: NSColor(argb: UInt32(bitPattern: rawTop)), bottom: NSColor(argb: UInt32(bitPattern: rawBottom)))
+        let messages: [NSColor]?
+        let colors = decoder.decodeInt32ArrayForKey("bc")
+        
+        if colors.isEmpty {
+            if let rawTop = decoder.decodeOptionalInt32ForKey("bt"), let rawBottom = decoder.decodeOptionalInt32ForKey("bb") {
+                messages = [NSColor(argb: UInt32(bitPattern: rawTop)), NSColor(argb: UInt32(bitPattern: rawBottom))]
+            } else {
+                messages = nil
+            }
+        } else {
+            messages = colors.map { NSColor(argb: UInt32(bitPattern: $0)) }
         }
+
         return PaletteAccentColor(accent, messages)
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeInt32(Int32(bitPattern: self.accent.argb), forKey: "c")
         if let messages = self.messages {
-            encoder.encodeInt32(Int32(bitPattern: messages.top.argb), forKey: "bt")
-            encoder.encodeInt32(Int32(bitPattern: messages.bottom.argb), forKey: "bb")
+            encoder.encodeInt32Array(messages.map { Int32(bitPattern: $0.argb) }, forKey: "bc")
         } else {
-            encoder.encodeNil(forKey: "bt")
-            encoder.encodeNil(forKey: "bb")
+            encoder.encodeNil(forKey: "bc")
         }
     }
 
@@ -192,12 +211,11 @@ extension ColorPalette  {
                 if let value = child.value as? NSColor {
                     var label = label
                     _ = label.removeFirst()
-                    if label == "selectTextBubble_outgoing" {
-                        var bp:Int = 0
-                        bp += 1
-                    }
-                    NSColor.init(argb: value.argb).hexString
                     encoder.encodeInt32(Int32(bitPattern: value.argb), forKey: label)
+                } else if let value = child.value as? [NSColor] {
+                    var label = label
+                    _ = label.removeFirst()
+                    encoder.encodeInt32Array(value.map { Int32(bitPattern: $0.argb) }, forKey: label)
                 }
             }
         }
@@ -219,8 +237,20 @@ extension ColorPalette  {
         let pw = PaletteWallpaper(decoder.decodeStringForKey("pw", orElse: "none"))
         
         
-        
         let accentList: [PaletteAccentColor] = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("accentList_1", decoder: { PaletteAccentColor.initWith(decoder: $0) })) ?? []
+        
+        let bubbleBackground_outgoing:[NSColor]
+        if let colors = parseColorArray(decoder, "bubbleBackground_outgoing") {
+            bubbleBackground_outgoing = colors
+        } else {
+            let colors = [parseColor(decoder, "bubbleBackgroundTop_outgoing"), parseColor(decoder, "bubbleBackgroundBottom_outgoing")].compactMap { $0 }
+            if colors.isEmpty {
+                bubbleBackground_outgoing = palette.bubbleBackground_outgoing
+            } else {
+                bubbleBackground_outgoing = colors
+            }
+        }
+        
         
         return ColorPalette(isNative: isNative,
                                     isDark: dark,
@@ -262,8 +292,7 @@ extension ColorPalette  {
                                     selectTextBubble_incoming: parseColor(decoder, "selectTextBubble_incoming") ?? palette.selectTextBubble_incoming,
                                     selectTextBubble_outgoing: parseColor(decoder, "selectTextBubble_outgoing") ?? palette.selectTextBubble_outgoing,
                                     bubbleBackground_incoming: parseColor(decoder, "bubbleBackground_incoming") ?? palette.bubbleBackground_incoming,
-                                    bubbleBackgroundTop_outgoing: parseColor(decoder, "bubbleBackgroundTop_outgoing") ?? palette.bubbleBackgroundTop_outgoing,
-                                    bubbleBackgroundBottom_outgoing: parseColor(decoder, "bubbleBackgroundBottom_outgoing") ?? palette.bubbleBackgroundTop_outgoing,
+                                    bubbleBackground_outgoing: bubbleBackground_outgoing,
                                     bubbleBorder_incoming: parseColor(decoder, "bubbleBorder_incoming") ?? palette.bubbleBorder_incoming,
                                     bubbleBorder_outgoing: parseColor(decoder, "bubbleBorder_outgoing") ?? palette.bubbleBorder_outgoing,
                                     grayTextBubble_incoming: parseColor(decoder, "grayTextBubble_incoming") ?? palette.grayTextBubble_incoming,

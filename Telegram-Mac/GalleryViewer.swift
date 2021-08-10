@@ -1190,7 +1190,7 @@ class GalleryViewer: NSResponder {
         //closePipVideo()
        // backgroundView.alphaValue = 0
         backgroundView._change(opacity: 0, animated: false)
-        self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
+        self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start(completed:  { [weak self] in
             if let strongSelf = self {
                 
                 if let startTime = strongSelf.contentInteractions?.timeCodeInitializer {
@@ -1223,10 +1223,10 @@ class GalleryViewer: NSResponder {
                         //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
                     }
                 }, addVideoTimebase: { stableId, view  in
-                   
+                    
                 })
             }
-        });
+        }));
         
     }
     
