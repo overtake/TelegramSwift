@@ -204,12 +204,10 @@ class CustomAccentColorModalController: ModalViewController {
         
         self.genericView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.appearanceThemeAccent, handler: { [weak self] in
             self?.updateSelectMode(.accent, animated: true)
-           // updateChatMode(true)
         }))
-        if theme.bubbled {
+        if theme.bubbled && System.supportsTransparentFontDrawing {
             self.genericView.segmentControl.add(segment: CatalinaSegmentedItem(title: L10n.appearanceThemeAccentMessages, handler: { [weak self] in
                 self?.updateSelectMode(.messages, animated: true)
-               // updateChatMode(false)
             }))
         }
 

@@ -905,11 +905,21 @@ final class GroupCallUIController : ViewController {
                 }
             }
             
-            let toggleMicro:(Bool)->Void = { [weak self] value in
-                if !value != self?.genericView.state?.isMuted {
-                    delay(0.5, closure: {
-                        self?.data.call.toggleIsMuted()
-                    })
+            let toggleMicro:(Bool, @escaping()->Void)->Void = { [weak self] value, f in
+                if let strongSelf = self {
+                    if !value != strongSelf.genericView.state?.isMuted {
+                        let signal = strongSelf.data.call.state
+                            |> map {
+                                ($0.muteState == nil && value) || ($0.muteState != nil && !value)
+                            } |> filter {
+                                $0
+                            } |> take(1)
+                            |> deliverOnMainQueue
+                        
+                        _ = signal.start(completed: f)
+                        
+                        strongSelf.data.call.toggleIsMuted()
+                    }
                 }
             }
             
@@ -967,8 +977,12 @@ final class GroupCallUIController : ViewController {
                 confirmSource(mode, { accept in
                     if accept {
                         let sharing = presentDesktopCapturerWindow(mode: mode, select: { source, wantsToSpeak in
-                            select(source)
-                            toggleMicro(wantsToSpeak)
+                            toggleMicro(wantsToSpeak, {
+                                select(source)
+                            })
+//                            DispatchQueue.main.async {
+//
+//                            }
                         }, devices: sharedContext.devicesContext)
                         self?.sharing = sharing
                         sharing?.level = self?.window?.level ?? .normal

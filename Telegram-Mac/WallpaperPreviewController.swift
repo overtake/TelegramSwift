@@ -639,7 +639,7 @@ private final class WallpaperPreviewView: View {
                 backgroundView.backgroundMode = .plain
             }
         case let .file(_, _, settings, isPattern):
-            if isPattern {
+            if isPattern, settings.colors.count > 2 {
                 if let image = image {
                     backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                 } else {
@@ -647,9 +647,9 @@ private final class WallpaperPreviewView: View {
                 }
             } else {
                 if let image = image {
-                    backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: nil, colors: nil, rotation: nil)
+                    backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                 } else {
-                    backgroundView.backgroundMode = .plain
+                    backgroundView.backgroundMode = .gradient(colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                 }
             }
         default:
