@@ -556,9 +556,9 @@ final class ChatTextInputState: Codable, Equatable {
             for (i, attr) in attributes.enumerated() {
                 let updated: ChatTextInputAttribute
                 if attr.range.lowerBound == 0 {
-                    updated = attr.updateRange(0 ..< attr.range.upperBound - symbolLength)
+                    updated = attr.updateRange(0 ..< max(attr.range.upperBound - symbolLength, 0))
                 } else {
-                    updated = attr.updateRange(attr.range.lowerBound - symbolLength ..< attr.range.upperBound - symbolLength)
+                    updated = attr.updateRange(attr.range.lowerBound - symbolLength ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound - symbolLength))
                 }
                 attributes[i] = updated
             }
