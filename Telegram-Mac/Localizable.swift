@@ -8297,6 +8297,8 @@ internal final class L10n {
   internal static var stickersSuggestNone: String  { return L10n.tr("Localizable", "Stickers.SuggestNone") }
   /// Suggest Stickers by Emoji
   internal static var stickersSuggestStickers: String  { return L10n.tr("Localizable", "Stickers.SuggestStickers") }
+  /// Trending Stickers
+  internal static var stickersTrending: String  { return L10n.tr("Localizable", "Stickers.Trending") }
   /// Clear Recent Stickers
   internal static var stickersConfirmClearRecentHeader: String  { return L10n.tr("Localizable", "Stickers.Confirm.ClearRecentHeader") }
   /// Clear

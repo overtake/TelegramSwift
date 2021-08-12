@@ -72,22 +72,28 @@ private func generateGradientBubble(_ colors: [NSColor]) -> CGImage {
         }
     }
     
-    return generateImage(CGSize(width: 1.0, height: 100), opaque: true, scale: 1.0, rotatedContext: { size, context in
+    return generateImage(CGSize(width: 32, height: 32), opaque: true, scale: 1.0, rotatedContext: { size, context in
         
         if colors.count > 1 {
-            let colors = colors.map { $0.cgColor } as NSArray
-            
-            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-            
-            var locations: [CGFloat] = []
-            for i in 0 ..< colors.count {
-                locations.append(delta * CGFloat(i))
-            }
+            if colors.count == 2 {
+                let colors = colors.map { $0.cgColor } as NSArray
+                
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
+                }
 
-            let colorSpace = deviceColorSpace
-            let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
-            
-            context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+                let colorSpace = deviceColorSpace
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+                
+                context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+            } else {
+                let preview = AnimatedGradientBackgroundView.generatePreview(size: NSMakeSize(32, 32), colors: colors)
+                context.draw(preview, in: size.bounds)
+            }
+           
         } else if let color = colors.first {
             context.setFillColor(color.cgColor)
             context.fill(size.bounds)
