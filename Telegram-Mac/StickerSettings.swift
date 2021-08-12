@@ -2,32 +2,37 @@ import Foundation
 import Postbox
 import SwiftSignalKit
 
-public enum EmojiStickerSuggestionMode: Int32 {
+enum EmojiStickerSuggestionMode: Int32 {
     case none
     case all
     case installed
 }
 
-public struct StickerSettings: PreferencesEntry, Equatable {
-    public var emojiStickerSuggestionMode: EmojiStickerSuggestionMode
-    
-    public static var defaultSettings: StickerSettings {
-        return StickerSettings(emojiStickerSuggestionMode: .all)
+struct StickerSettings: PreferencesEntry, Equatable {
+    var emojiStickerSuggestionMode: EmojiStickerSuggestionMode
+    var trendingClosedOn: Int64?
+    static var defaultSettings: StickerSettings {
+        return StickerSettings(emojiStickerSuggestionMode: .all, trendingClosedOn: nil)
     }
     
-    init(emojiStickerSuggestionMode: EmojiStickerSuggestionMode) {
+    init(emojiStickerSuggestionMode: EmojiStickerSuggestionMode, trendingClosedOn: Int64?) {
         self.emojiStickerSuggestionMode = emojiStickerSuggestionMode
+        self.trendingClosedOn = trendingClosedOn
     }
     
-    public init(decoder: PostboxDecoder) {
+    init(decoder: PostboxDecoder) {
         self.emojiStickerSuggestionMode = EmojiStickerSuggestionMode(rawValue: decoder.decodeInt32ForKey("emojiStickerSuggestionMode", orElse: 0))!
+        self.trendingClosedOn = decoder.decodeOptionalInt64ForKey("t.c.o1")
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
+    func encode(_ encoder: PostboxEncoder) {
         encoder.encodeInt32(self.emojiStickerSuggestionMode.rawValue, forKey: "emojiStickerSuggestionMode")
+        if let trendingClosedOn = self.trendingClosedOn {
+            encoder.encodeInt64(trendingClosedOn, forKey: "t.c.o1")
+        }
     }
     
-    public func isEqual(to: PreferencesEntry) -> Bool {
+    func isEqual(to: PreferencesEntry) -> Bool {
         if let to = to as? StickerSettings {
             return self == to
         } else {
@@ -35,12 +40,11 @@ public struct StickerSettings: PreferencesEntry, Equatable {
         }
     }
     
-    public static func ==(lhs: StickerSettings, rhs: StickerSettings) -> Bool {
-        return lhs.emojiStickerSuggestionMode == rhs.emojiStickerSuggestionMode
-    }
-    
     func withUpdatedEmojiStickerSuggestionMode(_ emojiStickerSuggestionMode: EmojiStickerSuggestionMode) -> StickerSettings {
-        return StickerSettings(emojiStickerSuggestionMode: emojiStickerSuggestionMode)
+        return StickerSettings(emojiStickerSuggestionMode: emojiStickerSuggestionMode, trendingClosedOn: self.trendingClosedOn)
+    }
+    func withUpdatedTrendingClosedOn(_ trendingClosedOn: Int64?) -> StickerSettings {
+        return StickerSettings(emojiStickerSuggestionMode: self.emojiStickerSuggestionMode, trendingClosedOn: trendingClosedOn)
     }
 }
 
@@ -55,5 +59,15 @@ func updateStickerSettingsInteractively(postbox: Postbox, _ f: @escaping (Sticke
             }
             return f(currentSettings)
         })
+    }
+}
+
+func stickerSettings(postbox: Postbox) -> Signal<StickerSettings, NoError> {
+    return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.stickerSettings]) |> map { preferencesView in
+        var stickerSettings = StickerSettings.defaultSettings
+        if let value = preferencesView.values[ApplicationSpecificPreferencesKeys.stickerSettings] as? StickerSettings {
+            stickerSettings = value
+        }
+        return stickerSettings
     }
 }

@@ -59,6 +59,7 @@
 		2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2764A5AC25DFBB4300F9A20D /* police.tgs */; };
 		2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */; };
 		276A1D59265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */; };
+		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
 		276B597A261C780F0029FD3F /* GroupCallMainVideoContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */; };
 		276B597D261C78AD0029FD3F /* GroupCallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B597C261C78AD0029FD3F /* GroupCallView.swift */; };
 		276B5980261C78F40029FD3F /* GroupCallUIState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276B597F261C78F40029FD3F /* GroupCallUIState.swift */; };
@@ -1149,6 +1150,7 @@
 		2764A5AC25DFBB4300F9A20D /* police.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = police.tgs; sourceTree = "<group>"; };
 		2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoDeleteContextMenuView.swift; sourceTree = "<group>"; };
 		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
+		276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackTrendingItem.swift; sourceTree = "<group>"; };
 		276B5979261C780F0029FD3F /* GroupCallMainVideoContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallMainVideoContainer.swift; sourceTree = "<group>"; };
 		276B597C261C78AD0029FD3F /* GroupCallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallView.swift; sourceTree = "<group>"; };
 		276B597F261C78F40029FD3F /* GroupCallUIState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallUIState.swift; sourceTree = "<group>"; };
@@ -4542,6 +4544,7 @@
 				D070DB8022D3638F008A0BBE /* StickersViewController.swift */,
 				D004167422D37AD00000566B /* StickerPackPanelRowItem.swift */,
 				D004167622D4AD3B0000566B /* StickerPackItems.swift */,
+				276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */,
 			);
 			name = "modern-stickers";
 			sourceTree = "<group>";
@@ -5465,6 +5468,7 @@
 				C24DABC01E0834B7005EE404 /* XCDYouTubeVideo.m in Sources */,
 				C2B1A1131D9FD2AE00ACB1DD /* ChatPresentationInterfaceState.swift in Sources */,
 				C2DE5D321F3CA8370081EC1E /* InstantPageTile.swift in Sources */,
+				276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */,
 				A7919138240D1077002011CA /* ChatListFilterPredicate.swift in Sources */,
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,

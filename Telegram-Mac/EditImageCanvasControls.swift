@@ -108,8 +108,8 @@ final class EditImageCanvasControlsView : View {
         super.layout()
         controlsContainer.setFrameSize(draw.frame.width + undo.frame.width + redo.frame.width + clear.frame.width, draw.frame.height)
         undo.setFrameOrigin(NSMakePoint(0, 0))
-        undo.setFrameOrigin(NSMakePoint(draw.frame.maxX, 0))
-        draw.setFrameOrigin(NSMakePoint(undo.frame.maxX, 0))
+        redo.setFrameOrigin(NSMakePoint(undo.frame.maxX, 0))
+        draw.setFrameOrigin(NSMakePoint(redo.frame.maxX, 0))
         clear.setFrameOrigin(NSMakePoint(draw.frame.maxX, 0))
         controlsContainer.center()
         
