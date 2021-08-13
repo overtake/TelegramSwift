@@ -33,7 +33,6 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
                 ctx.restoreGState()
                 
             } else if colors.count > 1 {
-                let colors = colors.reversed()
                 let gradientColors = colors.map { $0.cgColor } as CFArray
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                 var locations: [CGFloat] = []
