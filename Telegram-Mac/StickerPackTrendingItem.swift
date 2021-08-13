@@ -24,6 +24,10 @@ private final class FeaturedHorizontalItem : TableRowItem {
         super.init(initialSize)
     }
     
+    var unread: Bool {
+        return item.unread
+    }
+    
     override var stableId: AnyHashable {
         return item.topItems.first?.file.id?.id ?? arc4random64()
     }
@@ -119,7 +123,7 @@ private final class FeaturedAnimatedHorizontalView : HorizontalRowView {
                 self.contentNode = node.init(frame:NSZeroRect)
                 self.addSubview(self.contentNode!)
             }
-            unread.isHidden = !item.item.unread
+            unread.isHidden = !item.unread
             unread.backgroundColor = theme.colors.accent
             
             var file: TelegramMediaFile?
@@ -209,13 +213,14 @@ private final class FeaturedHorizontalView : HorizontalRowView {
             return
         }
         
-        guard let item = (item as? FeaturedHorizontalItem)?.item else {
+        guard let rowItem = item as? FeaturedHorizontalItem else {
             return
         }
         
-        unread.isHidden = !item.unread
+        unread.isHidden = !rowItem.unread
         unread.backgroundColor = theme.colors.accent
-
+        
+        let item = rowItem.item
         
         var thumbnailItem: TelegramMediaImageRepresentation?
         var resourceReference: MediaResourceReference?

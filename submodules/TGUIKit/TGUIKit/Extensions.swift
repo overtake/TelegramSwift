@@ -945,7 +945,10 @@ public extension NSImage {
             
             if !colors.isEmpty {
                 ctx.clip(to: rect, mask: cimage!)
-                if colors.count > 1 {
+                if colors.count > 2 {
+                    let preview = AnimatedGradientBackgroundView.generatePreview(size: NSMakeSize(32, 32), colors: colors)
+                    ctx.draw(preview, in: rect.focus(preview.size.aspectFilled(rect.size)))
+                } else if colors.count > 1 {
                     let rect = NSMakeRect(0, 0, rect.width, rect.height)
                     let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
                     let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)

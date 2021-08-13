@@ -94,11 +94,10 @@ class ChatInputAccessory: Node {
             
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages,account:account)
-            dismiss.set(handler: { [weak self] _ in
-                self?.dismissForward()
-            }, for: .Click)
+           
+            let context = self.chatInteraction.context
             
-            container.set(handler: { [weak self] _ in
+            let anotherAction = { [weak self] in
                 guard let context = self?.chatInteraction.context else {
                     return
                 }
@@ -107,6 +106,40 @@ class ChatInputAccessory: Node {
                 delay(0.15, closure: {
                     self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
                 })
+            }
+            let hideAction = { [weak self] in
+                
+            }
+            
+            let alert:(Bool)->Void = { [weak self] canCancel in
+                let message = state.interfaceState.forwardMessages[0]
+                let chatName = message.peers[message.id.peerId]?.displayTitle ?? ""
+                let header = L10n.chatAlertForwardHeaderCountable(state.interfaceState.forwardMessages.count)
+                let textHelp = L10n.chatAlertForwardTextInnerCountable(state.interfaceState.forwardMessages.count)
+                let text = L10n.chatAlertForwardText(textHelp, chatName)
+                let okTitle = L10n.chatAlertForwardActionAnother
+                let cancelTitle = canCancel ? L10n.chatAlertForwardActionCancel : L10n.alertCancel
+                let thirdTitle = L10n.chatAlertForwardActionHide
+                confirm(for: context.window, header: header, information: text, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thirdTitle, successHandler: { result in
+                    switch result {
+                    case .basic:
+                        anotherAction()
+                    case .thrid:
+                        hideAction()
+                    }
+                }, cancelHandler: { [weak self] in
+                    if canCancel {
+                        self?.dismissForward()
+                    }
+                })
+            }
+            
+            dismiss.set(handler: { _ in
+                alert(true)
+            }, for: .Click)
+            
+            container.set(handler: { [weak self] _ in
+                alert(false)
             }, for: .Click)
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {

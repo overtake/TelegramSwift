@@ -810,10 +810,15 @@ private final class WallpaperPreviewView: View {
             case let .color(color):
                 return getAverageColor(color)
             case let .gradient(colors, _):
-                let blended = colors.reduce(colors.first!, { color, with in
-                    return color.blended(withFraction: 0.5, of: with)!
-                })
-                return getAverageColor(blended)
+                if !colors.isEmpty {
+                    let blended = colors.reduce(colors.first!, { color, with in
+                        return color.blended(withFraction: 0.5, of: with)!
+                    })
+                    return getAverageColor(blended)
+                } else {
+                    return getAverageColor(theme.colors.chatBackground)
+                }
+                
             case let .tiled(image):
                 return getAverageColor(image)
             case .plain:
@@ -1139,15 +1144,16 @@ class WallpaperPreviewController: ModalViewController {
             }
             
             if isPattern {
-                if let pattern = settings.colors.first {
-                    var color = NSColor(argb: pattern).hexString.lowercased()
-                    color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
-                    var bg = "bg_color=\(color)"
-                    if settings.colors.count > 1, let bottomColor = settings.colors.last {
-                        var color = NSColor(argb: bottomColor).hexString.lowercased()
-                        color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
-                        bg = "\(bg)~\(color)"
+                
+               
+
+                
+                if !settings.colors.isEmpty {
+                    let colors:[String] = settings.colors.map { value in
+                        let color = NSColor(argb: value).hexString.lowercased()
+                        return String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     }
+                    let bg = "bg_color=\(colors.joined(separator: "~"))"
                     options.append(bg)
                 }
                 if let intensity = settings.intensity {

@@ -1571,6 +1571,72 @@ internal final class L10n {
   internal static var chatViewContact: String  { return L10n.tr("Localizable", "Chat.ViewContact") }
   /// VIEW THEME
   internal static var chatActionViewTheme: String  { return L10n.tr("Localizable", "Chat.Action.ViewTheme") }
+  /// %d
+  internal static func chatAlertForwardHeaderCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_countable", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_few", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_many", p1)
+  }
+  /// %d Message
+  internal static func chatAlertForwardHeaderOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_one", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_other", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_two", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_zero", p1)
+  }
+  /// What would you like to do with %1$@ from %2$@?
+  internal static func chatAlertForwardText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text", p1, p2)
+  }
+  /// Forward to Another Chat
+  internal static var chatAlertForwardActionAnother: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Another") }
+  /// Cancel Forwarding
+  internal static var chatAlertForwardActionCancel: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Cancel") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide") }
+  /// %d
+  internal static func chatAlertForwardTextInnerCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_countable", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_few", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_many", p1)
+  }
+  /// %d message
+  internal static func chatAlertForwardTextInnerOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_one", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_other", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_two", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_zero", p1)
+  }
   /// Forwarded from: [%@]()
   internal static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)

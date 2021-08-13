@@ -22,13 +22,13 @@ struct StickerSettings: PreferencesEntry, Equatable {
     
     init(decoder: PostboxDecoder) {
         self.emojiStickerSuggestionMode = EmojiStickerSuggestionMode(rawValue: decoder.decodeInt32ForKey("emojiStickerSuggestionMode", orElse: 0))!
-        self.trendingClosedOn = decoder.decodeOptionalInt64ForKey("t.c.o1")
+        self.trendingClosedOn = decoder.decodeOptionalInt64ForKey("t.c.o")
     }
     
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeInt32(self.emojiStickerSuggestionMode.rawValue, forKey: "emojiStickerSuggestionMode")
         if let trendingClosedOn = self.trendingClosedOn {
-            encoder.encodeInt64(trendingClosedOn, forKey: "t.c.o1")
+            encoder.encodeInt64(trendingClosedOn, forKey: "t.c.o")
         }
     }
     
