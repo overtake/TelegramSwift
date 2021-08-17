@@ -1609,6 +1609,8 @@ internal final class L10n {
   internal static var chatAlertForwardActionCancel: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Cancel") }
   /// Hide Sender's Names
   internal static var chatAlertForwardActionHide: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show") }
   /// %d
   internal static func chatAlertForwardTextInnerCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_countable", p1)
@@ -1971,6 +1973,8 @@ internal final class L10n {
   internal static func chatInputErrorMessageTooLongZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_zero", p1)
   }
+  /// You (sender's names hidden)
+  internal static var chatInputForwardHidden: String  { return L10n.tr("Localizable", "Chat.Input.Forward.Hidden") }
   /// Waiting for the %@ to get online...
   internal static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
@@ -5547,6 +5551,8 @@ internal final class L10n {
   internal static var notificationSettingsSoundEffects: String  { return L10n.tr("Localizable", "NotificationSettings.SoundEffects") }
   /// Notifications
   internal static var notificationSettingsToggleNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications") }
+  /// Turn ON in Settings
+  internal static var notificationSettingsTurnOn: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn") }
   /// Reset notifications
   internal static var notificationSettingsConfirmReset: String  { return L10n.tr("Localizable", "NotificationSettings.Confirm.Reset") }
   /// Turn this on if you want to receive notifications from all your accounts.
@@ -5561,6 +5567,10 @@ internal final class L10n {
   internal static var notificationSettingsToggleNotificationsHeader: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications.Header") }
   /// Default
   internal static var notificationSettingsToneDefault: String  { return L10n.tr("Localizable", "NotificationSettings.Tone.Default") }
+  /// Don't miss important messages from your family and friends.
+  internal static var notificationSettingsTurnOnTextText: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Text") }
+  /// Turn ON Notifications
+  internal static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
   /// Mute
   internal static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
   /// Minimize

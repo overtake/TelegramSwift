@@ -2111,6 +2111,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         
                         let fwdIds: [MessageId] = presentation.interfaceState.forwardMessageIds
+                        let hideNames = presentation.interfaceState.hideSendersName
                         if !fwdIds.isEmpty {
                             setNextToTransaction = true
                             
@@ -2153,7 +2154,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .complete()
                                 }
                                 
-                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, silent: silent, atDate: atDate)
+                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, hideNames: hideNames, silent: silent, atDate: atDate)
                             }
                             
                             invokeSignal = invokeSignal |> then(fwd |> ignoreValues)

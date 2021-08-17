@@ -20,7 +20,7 @@ private let queue = Queue(name: "micro-listen", qos: .background)
 private final class MicroListenerContextObject : RecoderContextRenderer {
     private let devicesDisposable = MetaDisposable()
     private let devices: DevicesContext
-    private let accountManager: AccountManager
+    private let accountManager: AccountManager<TelegramAccountManagerTypes>
     
     
     private var device: AVCaptureDevice?
@@ -51,7 +51,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
 
     private let queue: Queue
     
-    init(queue: Queue, devices:DevicesContext, accountManager: AccountManager) {
+    init(queue: Queue, devices:DevicesContext, accountManager: AccountManager<TelegramAccountManagerTypes>) {
         self.devices = devices
         self.queue = queue
         self.accountManager = accountManager
@@ -340,7 +340,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
 
 final class MicroListenerContext {
     private let contextRef: QueueLocalObject<MicroListenerContextObject>
-    init(devices:DevicesContext, accountManager: AccountManager) {
+    init(devices:DevicesContext, accountManager: AccountManager<TelegramAccountManagerTypes>) {
         contextRef = .init(queue: queue, generate: {
             return MicroListenerContextObject(queue: queue, devices: devices, accountManager: accountManager)
         })

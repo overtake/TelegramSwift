@@ -9,6 +9,7 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
 
 
@@ -51,17 +52,17 @@ struct PasscodeSettings: PreferencesEntry, Equatable {
 }
 
 
-func passcodeSettings(_ transaction: AccountManagerModifier) -> PasscodeSettings {
+func passcodeSettings(_ transaction: AccountManagerModifier<TelegramAccountManagerTypes>) -> PasscodeSettings {
     return transaction.getSharedData(ApplicationSharedPreferencesKeys.passcodeSettings) as? PasscodeSettings ?? PasscodeSettings.defaultValue
 }
 
-func passcodeSettingsView(_ accountManager: AccountManager) -> Signal<PasscodeSettings, NoError> {
+func passcodeSettingsView(_ accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<PasscodeSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.passcodeSettings]) |> map { view in
         return view.entries[ApplicationSharedPreferencesKeys.passcodeSettings] as? PasscodeSettings ?? PasscodeSettings.defaultValue
     }
 }
 
-func updatePasscodeSettings(_ accountManager: AccountManager, _ f: @escaping(PasscodeSettings) -> PasscodeSettings) -> Signal<Never, NoError> {
+func updatePasscodeSettings(_ accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping(PasscodeSettings) -> PasscodeSettings) -> Signal<Never, NoError> {
     return accountManager.transaction { transaction in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.passcodeSettings, { entry in
             let current = entry as? PasscodeSettings ?? PasscodeSettings.defaultValue

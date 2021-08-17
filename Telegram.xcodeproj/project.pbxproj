@@ -24,6 +24,8 @@
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		27200F21257CCFDB00574365 /* HotKey.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 273F9C0A257BC486004EC51B /* HotKey.framework */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
+		2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728991826CBC0D100F4D288 /* UNUserNotifications.swift */; };
+		2728991C26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728991B26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift */; };
 		2729712126135C94006D38E2 /* GroupCallInviteRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */; };
 		272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272C182F267D00350030B5FB /* CoreMediaIO.framework */; };
 		273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */; };
@@ -1116,6 +1118,8 @@
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
+		2728991826CBC0D100F4D288 /* UNUserNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UNUserNotifications.swift; sourceTree = "<group>"; };
+		2728991B26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnOnNotificationsRowItem.swift; sourceTree = "<group>"; };
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
 		273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperColorPickerContainerView.swift; sourceTree = "<group>"; };
@@ -2261,6 +2265,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2728991A26CBCD8F00F4D288 /* items */ = {
+			isa = PBXGroup;
+			children = (
+				2728991B26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift */,
+			);
+			name = items;
+			sourceTree = "<group>";
+		};
 		2760E55726970666001C59F8 /* views */ = {
 			isa = PBXGroup;
 			children = (
@@ -3099,6 +3111,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				2728991A26CBCD8F00F4D288 /* items */,
 				27FFCEC32694BA2C006CA024 /* empty-cards */,
 				9F10CE862060FFB7002DD61A /* secure-id */,
 				C20CAD131FE436C600EFF8BF /* appearance */,
@@ -4273,6 +4286,7 @@
 				D00B318625729F0500D62056 /* DataItem.swift */,
 				27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */,
 				27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */,
+				2728991826CBC0D100F4D288 /* UNUserNotifications.swift */,
 			);
 			name = utils;
 			sourceTree = "<group>";
@@ -5670,6 +5684,7 @@
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,
+				2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */,
 				D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */,
 				C295C65F1F75808600BA309D /* ChatAdditionController.swift in Sources */,
 				D001E974243B1A0A009025F9 /* LeftSidebarController.swift in Sources */,
@@ -5897,6 +5912,7 @@
 				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				D001E978243B4639009025F9 /* LeftSidebarFolderItem.swift in Sources */,
 				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
+				2728991C26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift in Sources */,
 				D076F8872296CAB2004F895A /* ChannelDisscussionGroup.swift in Sources */,
 				27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */,
 				27949112260A41EB0003BFA0 /* FFMpegAudioFrameDecoder.swift in Sources */,

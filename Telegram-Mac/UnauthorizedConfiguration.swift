@@ -38,7 +38,7 @@ enum QRLoginType : String {
 }
 
 
-func unauthorizedConfiguration(accountManager: AccountManager) -> Signal<UnauthorizedConfiguration, NoError> {
+func unauthorizedConfiguration(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<UnauthorizedConfiguration, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.appConfiguration]) |> mapToSignal { view in
         if let appConfiguration = view.entries[ApplicationSharedPreferencesKeys.appConfiguration] as? AppConfiguration {
             let configuration = UnauthorizedConfiguration.with(appConfiguration: appConfiguration)
@@ -49,7 +49,7 @@ func unauthorizedConfiguration(accountManager: AccountManager) -> Signal<Unautho
     } |> deliverOnMainQueue
 }
 
-private func currentUnauthorizedAppConfiguration(transaction: AccountManagerModifier) -> AppConfiguration {
+private func currentUnauthorizedAppConfiguration(transaction:AccountManagerModifier<TelegramAccountManagerTypes>) -> AppConfiguration {
     if let entry = transaction.getSharedData(ApplicationSharedPreferencesKeys.appConfiguration) as? AppConfiguration {
         return entry
     } else {
@@ -57,7 +57,7 @@ private func currentUnauthorizedAppConfiguration(transaction: AccountManagerModi
     }
 }
 
-private func updateAppConfiguration(transaction: AccountManagerModifier, _ f: (AppConfiguration) -> AppConfiguration) {
+private func updateAppConfiguration(transaction: AccountManagerModifier<TelegramAccountManagerTypes>, _ f: (AppConfiguration) -> AppConfiguration) {
     let current = currentUnauthorizedAppConfiguration(transaction: transaction)
     let updated = f(current)
     transaction.updateSharedData(ApplicationSharedPreferencesKeys.appConfiguration, { _ in
@@ -66,7 +66,7 @@ private func updateAppConfiguration(transaction: AccountManagerModifier, _ f: (A
 }
 
 
-func managedAppConfigurationUpdates(accountManager: AccountManager, network: Network) -> Signal<Void, NoError> {
+func managedAppConfigurationUpdates(accountManager: AccountManager<TelegramAccountManagerTypes>, network: Network) -> Signal<Void, NoError> {
     let poll = Signal<Void, NoError> { subscriber in
         return (network.request(Api.functions.help.getAppConfig())
             |> retryRequest

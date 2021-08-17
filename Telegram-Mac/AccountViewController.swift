@@ -125,7 +125,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case proxy(index: Int, status: String?)
     case general(index: Int)
     case stickers(index: Int)
-    case notifications(index: Int)
+    case notifications(index: Int, status: UNUserNotifications.AuthorizationStatus)
     case language(index: Int, current: String)
     case appearance(index: Int)
     case privacy(index: Int, AccountPrivacySettings?, WebSessionsContextState)
@@ -202,7 +202,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return index
         case let .stickers(index):
             return index
-        case let .notifications(index):
+        case let .notifications(index, _):
             return index
         case let .language(index, _):
             return index
@@ -273,9 +273,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .notifications(lhsIndex):
-            if case let .notifications(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
+        case let .notifications(index, status):
+            if case .notifications(index, status) = rhs {
+                return true
             } else {
                 return false
             }
@@ -426,8 +426,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, action: {
                 arguments.presentController(InstalledStickerPacksController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .notifications:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: .next, action: {
+        case .notifications(_, let status):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: status == .denied ? .image(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed()) : .next, action: {
                 arguments.presentController(NotificationPreferencesController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
         case let .language(_, current):
@@ -526,7 +526,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool, hasFilters: Bool, sessionsCount: Int) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -569,7 +569,7 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     
     entries.append(.general(index: index))
     index += 1
-    entries.append(.notifications(index: index))
+    entries.append(.notifications(index: index, status: unAuthStatus))
     index += 1
     entries.append(.privacy(index: index, privacySettings, webSessions))
     index += 1
@@ -828,8 +828,8 @@ class LayoutAccountController : TableViewController {
         }
 
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get(), hasFilters.get(), sessionsCount) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet, hasFilters, sessionsCount -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet, hasFilters: hasFilters, sessionsCount: sessionsCount).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get(), hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context)) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet, hasFilters, sessionsCount, unAuthStatus -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)

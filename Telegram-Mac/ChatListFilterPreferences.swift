@@ -135,7 +135,7 @@ struct ChatListFilterBadges : Equatable {
     }
 }
 
-func chatListFilterItems(engine: TelegramEngine, accountManager: AccountManager) -> Signal<ChatListFilterBadges, NoError> {
+func chatListFilterItems(engine: TelegramEngine, accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<ChatListFilterBadges, NoError> {
     
     let settings = appNotificationSettings(accountManager: accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
         return lhs.badgeEnabled == rhs.badgeEnabled

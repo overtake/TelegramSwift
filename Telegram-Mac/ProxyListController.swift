@@ -188,7 +188,7 @@ private extension ProxyServerConnection {
     }
 }
 
-func proxyListController(accountManager: AccountManager, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}, pushController:@escaping(ViewController) -> Void = { _ in }) -> ViewController {
+func proxyListController(accountManager: AccountManager<TelegramAccountManagerTypes>, network: Network, showUseCalls: Bool = true, share:@escaping([ProxyServerSettings])->Void = {_ in}, pushController:@escaping(ViewController) -> Void = { _ in }) -> ViewController {
     let actionsDisposable = DisposableSet()
     
     let updateDisposable = MetaDisposable()
@@ -284,7 +284,7 @@ private enum ProxyType {
     }
 }
 
-private func addProxyController(accountManager: AccountManager, network: Network, settings: ProxyServerSettings?, type: ProxyType) -> (InputDataController) {
+private func addProxyController(accountManager: AccountManager<TelegramAccountManagerTypes>, network: Network, settings: ProxyServerSettings?, type: ProxyType) -> (InputDataController) {
     
     let actionsDisposable = DisposableSet()
 

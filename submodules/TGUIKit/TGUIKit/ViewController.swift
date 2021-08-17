@@ -138,7 +138,7 @@ open class BackgroundView: View {
                 imageView.contents = image
                 let colors = colors?.map { $0.withAlphaComponent(1) }
                 if let colors = colors, !colors.isEmpty {
-                    imageView.opacity = Float((intensity ?? 50)) / 100.0 * 0.5
+                    imageView.opacity = Float((abs(intensity ?? 50))) / 100.0 * 0.5
                     imageView.compositingFilter = "softLightBlendMode"
 
                     if colors.count > 2 {

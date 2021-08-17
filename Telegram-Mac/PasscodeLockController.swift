@@ -351,7 +351,7 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
 }
 
 class PasscodeLockController: ModalViewController {
-    let accountManager: AccountManager
+    let accountManager: AccountManager<TelegramAccountManagerTypes>
     private let useTouchId: Bool
     private let appearanceDisposable = MetaDisposable()
     private let disposable:MetaDisposable = MetaDisposable()
@@ -368,7 +368,7 @@ class PasscodeLockController: ModalViewController {
     }
     private let updateCurrectController: ()->Void
     private let logoutImpl:() -> Signal<Never, NoError>
-    init(_ accountManager: AccountManager, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }, updateCurrectController: @escaping()->Void) {
+    init(_ accountManager: AccountManager<TelegramAccountManagerTypes>, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }, updateCurrectController: @escaping()->Void) {
         self.accountManager = accountManager
         self.logoutImpl = logoutImpl
         self.useTouchId = useTouchId

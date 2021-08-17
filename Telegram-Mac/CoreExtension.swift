@@ -2384,7 +2384,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
 
 }
 
-func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountManager) {
+func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountManager<TelegramAccountManagerTypes>) {
     var textInfo = L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port))
     switch server.connection {
     case let .socks5(username, password):
@@ -2699,7 +2699,7 @@ func fileExtenstion(_ file: TelegramMediaFile) -> String {
     return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
 }
 
-func proxySettings(accountManager: AccountManager) -> Signal<ProxySettings, NoError>  {
+func proxySettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<ProxySettings, NoError>  {
     return accountManager.sharedData(keys: [SharedDataKeys.proxySettings]) |> map { view in
         return view.entries[SharedDataKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
     }
@@ -2962,6 +2962,7 @@ enum SystemSettingsCategory : String {
     case storage = "Storage"
     case sharing = "Privacy_ScreenCapture"
     case accessibility = "Privacy_Accessibility"
+    case notifications = "Notifications"
     case none = ""
 }
 
@@ -2974,6 +2975,10 @@ func openSystemSettings(_ category: SystemSettingsCategory) {
        // }
     case .microphone, .camera, .sharing:
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(category.rawValue)") {
+            NSWorkspace.shared.open(url)
+        }
+    case .notifications:
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
             NSWorkspace.shared.open(url)
         }
     default:
@@ -3199,14 +3204,7 @@ extension TelegramThemeSettings {
     }
     
     var accent: PaletteAccentColor {
-        var messages: [NSColor]?
-        if let message = self.messageColors {
-            let top = NSColor(argb: UInt32(bitPattern: message.top))
-            let bottom = NSColor(argb: UInt32(bitPattern: message.bottom))
-            messages = [top, bottom]
-        } else {
-            messages = nil
-        }
+        let messages = self.messageColors.map { NSColor(argb: UInt32(bitPattern: $0)) }
         return PaletteAccentColor(NSColor(rgb: UInt32(bitPattern: self.accentColor)), messages)
     }
     
@@ -3228,7 +3226,8 @@ extension TelegramThemeSettings {
         } else {
             wString = ""
         }
-        return "\(self.accentColor)-\(self.baseTheme)-\(String(describing: self.messageColors?.top))-\(String(describing: self.messageColors?.bottom))-\(wString)"
+        let colors = messageColors.map { "\($0)" }.split(separator: "-").joined()
+        return "\(self.accentColor)-\(self.baseTheme)-\(colors)-\(wString)"
     }
 }
 
