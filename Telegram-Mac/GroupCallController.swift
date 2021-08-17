@@ -919,6 +919,8 @@ final class GroupCallUIController : ViewController {
                         _ = signal.start(completed: f)
                         
                         strongSelf.data.call.toggleIsMuted()
+                    } else {
+                        f()
                     }
                 }
             }

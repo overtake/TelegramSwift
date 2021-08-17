@@ -1143,7 +1143,9 @@ class ChatRowItem: TableRowItem {
         if !isBubbled || !channelHasCommentButton {
             return nil
         }
-        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia || (self is ChatVideoMessageItem) {
+        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia {
+            return nil
+        } else if (self is ChatVideoMessageItem) {
             return nil
         }
         if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
@@ -1343,6 +1345,9 @@ class ChatRowItem: TableRowItem {
             if renderType == .bubble, let message = captionMessage, let media = message.media.first {
                 if let file = media as? TelegramMediaFile {
                     if file.isStaticSticker || file.isAnimatedSticker {
+                        return renderType == .bubble
+                    }
+                    if file.isInstantVideo {
                         return renderType == .bubble
                     }
                     
@@ -1835,6 +1840,7 @@ class ChatRowItem: TableRowItem {
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
+                    NSLog("state: \(isStateOverlayLayout)")
                     channelViewsAttributed = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
                     var author: String = ""
