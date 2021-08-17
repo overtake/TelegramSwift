@@ -2105,7 +2105,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                             setNextToTransaction = true
                             invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId ?? threadId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, secretMediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
-                                strongSelf?.nextTransaction.execute()
+                                _ = strongSelf?.nextTransaction.execute()
                             }) |> deliverOnMainQueue |> ignoreValues
                             
                         }
