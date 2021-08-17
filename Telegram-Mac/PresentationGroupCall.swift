@@ -1905,6 +1905,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         videoDescription: nil
                     ))
                 }
+
+                if let screencastSsrc = participant.presentationDescription?.audioSsrc {
+                    if remainingSsrcs.contains(screencastSsrc) {
+                        remainingSsrcs.remove(screencastSsrc)
+
+                        result.append(OngoingGroupCallContext.MediaChannelDescription(
+                            kind: .audio,
+                            audioSsrc: screencastSsrc,
+                            videoDescription: nil
+                        ))
+                    }
+                }
             }
         }
 
