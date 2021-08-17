@@ -785,16 +785,16 @@ func ==(lhs: ThemePaletteSettings, rhs: ThemePaletteSettings) -> Bool {
 }
 
 
-func themeSettingsView(accountManager: AccountManager)-> Signal<ThemePaletteSettings, NoError> {
+func themeSettingsView(accountManager: AccountManager<TelegramAccountManagerTypes>)-> Signal<ThemePaletteSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.themeSettings]) |> map { $0.entries[ApplicationSharedPreferencesKeys.themeSettings] as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme }
 }
 
-func themeUnmodifiedSettings(accountManager: AccountManager)-> Signal<ThemePaletteSettings, NoError> {
+func themeUnmodifiedSettings(accountManager: AccountManager<TelegramAccountManagerTypes>)-> Signal<ThemePaletteSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.themeSettings]) |> map { $0.entries[ApplicationSharedPreferencesKeys.themeSettings] as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme }
 }
 
 
-func updateThemeInteractivetly(accountManager: AccountManager, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, NoError> {
+func updateThemeInteractivetly(accountManager: AccountManager<TelegramAccountManagerTypes>, f:@escaping (ThemePaletteSettings)->ThemePaletteSettings)-> Signal<Void, NoError> {
     var bp:Int = 0
     bp += 1
     return accountManager.transaction { transaction -> Void in

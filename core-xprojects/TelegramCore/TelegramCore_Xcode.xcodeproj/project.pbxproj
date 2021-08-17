@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2728990F26CBB63300F4D288 /* SyncCore_ForwardHideSendersNamesMessageAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728990E26CBB63300F4D288 /* SyncCore_ForwardHideSendersNamesMessageAttribute.swift */; };
 		279881BE260DCA7400C2AF8E /* TelegramCore.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 279881BD260DCA7400C2AF8E /* TelegramCore.xcconfig */; };
 		27E287EF26BBE15A00219927 /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E285DE26BBE15A00219927 /* Wallpapers.swift */; };
 		27E287F026BBE15A00219927 /* Authorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E285DF26BBE15A00219927 /* Authorization.swift */; };
@@ -520,6 +521,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2728990E26CBB63300F4D288 /* SyncCore_ForwardHideSendersNamesMessageAttribute.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncCore_ForwardHideSendersNamesMessageAttribute.swift; sourceTree = "<group>"; };
 		279881BD260DCA7400C2AF8E /* TelegramCore.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = TelegramCore.xcconfig; sourceTree = "<group>"; };
 		27E285DE26BBE15A00219927 /* Wallpapers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Wallpapers.swift; sourceTree = "<group>"; };
 		27E285DF26BBE15A00219927 /* Authorization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Authorization.swift; sourceTree = "<group>"; };
@@ -1772,6 +1774,7 @@
 				27E287CE26BBE15A00219927 /* SyncCore_SecretChatKeychain.swift */,
 				27E287CF26BBE15A00219927 /* SyncCore_VoipConfiguration.swift */,
 				27E287D026BBE15A00219927 /* SyncCore_EmbeddedMediaStickersMessageAttribute.swift */,
+				2728990E26CBB63300F4D288 /* SyncCore_ForwardHideSendersNamesMessageAttribute.swift */,
 				27E287D126BBE15A00219927 /* SyncCore_TelegramMediaInvoice.swift */,
 				27E287D226BBE15A00219927 /* SyncCore_EmojiSearchQueryMessageAttribute.swift */,
 				27E287D326BBE15A00219927 /* SyncCore_CloudChatRemoveMessagesOperation.swift */,
@@ -2069,6 +2072,7 @@
 				27E2884A26BBE15B00219927 /* InitializeAccountAfterLogin.swift in Sources */,
 				27E287F226BBE15A00219927 /* LoggingSettings.swift in Sources */,
 				27E2888A26BBE15B00219927 /* SecureIdForm.swift in Sources */,
+				2728990F26CBB63300F4D288 /* SyncCore_ForwardHideSendersNamesMessageAttribute.swift in Sources */,
 				27E288BF26BBE15B00219927 /* ExportMessageLink.swift in Sources */,
 				27E2881F26BBE15A00219927 /* UpdateMessageMedia.swift in Sources */,
 				27E288A126BBE15B00219927 /* CachedStickerPack.swift in Sources */,

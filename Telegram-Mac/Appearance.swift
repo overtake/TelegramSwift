@@ -256,85 +256,20 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         ctx.setFillColor(palette.chatBackground.cgColor)
         ctx.fill(rect)
         
+        #if !SHARE
         switch wallpaper {
         case .builtin, .file, .color, .gradient:
-            switch backgroundMode {
-            case let .background(image, intensity, colors, rotation):
-                let imageSize = image.size.aspectFilled(size)
-                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-                ctx.scaleBy(x: 1.0, y: -1.0)
-                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-
-                if let colors = colors, !colors.isEmpty {
-                    if colors.count == 1, let color = colors.first {
-                        ctx.setFillColor(color.cgColor)
-                        ctx.fill(rect)
-                    } else {
-                        if colors.count <= 2 {
-                            let gradientColors = colors.map { $0.cgColor } as CFArray
-                            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-
-                            var locations: [CGFloat] = []
-                            for i in 0 ..< colors.count {
-                                locations.append(delta * CGFloat(i))
-                            }
-                            let colorSpace = CGColorSpaceCreateDeviceRGB()
-                            let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                            
-                            ctx.saveGState()
-                            ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
-                            ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
-                            ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
-                            
-                            ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                            ctx.restoreGState()
-                        } else {
-                            let preview = AnimatedGradientBackgroundView.generatePreview(size: size.fitted(.init(width: 32, height: 32)), colors: colors)
-
-                            ctx.saveGState()
-                            ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-                            ctx.scaleBy(x: 1.0, y: -1.0)
-                            ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-                            ctx.draw(preview, in: size.bounds)
-                            ctx.restoreGState()
-                        }
-                    }
-                }
-                
-                ctx.draw(image.cgImage(forProposedRect: nil, context: nil, hints: nil)!, in: rect.focus(imageSize))
-                
-                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-                ctx.scaleBy(x: 1.0, y: -1.0)
-                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-
-            case let .color(color):
-                ctx.setFillColor(color.cgColor)
-                ctx.fill(rect)
-            case let .gradient(colors, rotation):
-                let colors = colors.reversed()
-                
-                let gradientColors = colors.map { $0.cgColor } as CFArray
-                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                
-                var locations: [CGFloat] = []
-                for i in 0 ..< colors.count {
-                    locations.append(delta * CGFloat(i))
-                }
-                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                
-                ctx.saveGState()
-                ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-                ctx.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
-                ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                ctx.restoreGState()
-            default:
-                break
-            }
+            ctx.saveGState()
+            ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+            ctx.scaleBy(x: 1.0, y: -1.0)
+            ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+            drawBg(backgroundMode, bubbled: true, rect: rect, in: ctx)
+            ctx.restoreGState()
         default:
             break
         }
+        #endif
+        
         
         //top and bottom
         ctx.setFillColor(palette.background.cgColor)

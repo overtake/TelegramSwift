@@ -95,9 +95,12 @@ private let _id_snoof = InputDataIdentifier("_id_snoof")
 private let _id_tone = InputDataIdentifier("_id_tone")
 private let _id_bounce = InputDataIdentifier("_id_bounce")
 
+private let _id_turnon_notifications = InputDataIdentifier("_id_turnon_notifications")
+private let _id_turnon_notifications_title = InputDataIdentifier("_id_turnon_notifications_title")
+
 private let _id_message_effect = InputDataIdentifier("_id_message_effect")
 
-private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], arguments: NotificationArguments) -> [InputDataEntry] {
+private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -106,6 +109,25 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
+    
+    switch unAuthStatus {
+    case .denied:
+        
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_turnon_notifications_title, equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return TurnOnNotificationsRowItem(initialSize, stableId: stableId, viewType: .firstItem)
+        }))
+        index += 1
+        
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_turnon_notifications, data: InputDataGeneralData(name: L10n.notificationSettingsTurnOn, color: theme.colors.text, type: .none, viewType: .lastItem, action: {
+            openSystemSettings(.notifications)
+        })))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    default:
+        break
+    }
     
     if accounts.count > 1 {
         entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsShowNotificationsFrom), data: InputDataGeneralTextData(viewType: .textTopItem)))
@@ -303,8 +325,10 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         FastSettings.toggleInAppSouds(value)
     })
     
-    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }) |> map { inAppSettings, globalSettings, accounts -> [InputDataEntry] in
-            return notificationEntries(settings: inAppSettings, globalSettings: globalSettings, accounts: accounts, arguments: arguments)
+    
+    
+    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context)) |> map { inAppSettings, globalSettings, accounts, unAuthStatus -> [InputDataEntry] in
+        return notificationEntries(settings: inAppSettings, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
     }
 
     

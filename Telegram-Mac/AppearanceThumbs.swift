@@ -13,10 +13,10 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 
-private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
+func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
     switch backgroundMode {
     case let .background(image, intensity, colors, rotation):
-        let imageSize = image.size.aspectFilled(NSMakeSize(300, 300))
+        let imageSize = image.size.aspectFilled(rect.size)
         ctx.saveGState()
         ctx.translateBy(x: 1, y: -1)
 
@@ -29,7 +29,7 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
                 ctx.scaleBy(x: 1, y: -1.0)
                 ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
 
-                ctx.draw(preview, in: rect.focus(NSMakeSize(200, 100)))
+                ctx.draw(preview, in: rect.focus(rect.size))
                 ctx.restoreGState()
                 
             } else if colors.count > 1 {
@@ -56,7 +56,7 @@ private func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: 
         if let colors = colors, !colors.isEmpty {
             if let image = image._cgImage {
                 ctx.setBlendMode(.softLight)
-                ctx.setAlpha(CGFloat(intensity ?? 50) / 100.0 * 0.5)
+                ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0 * 0.5)
                 ctx.draw(image, in: rect.focus(imageSize))
             }
         } else {

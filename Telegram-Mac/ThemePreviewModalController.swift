@@ -340,7 +340,9 @@ class ThemePreviewModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: L10n.modalSet, accept: { [weak self] in
             self?.saveAccent()
-        }, drawBorder: true, singleButton: true)
+        }, drawBorder: true, singleButton: true, customTheme: { [weak self] in
+            return self?.modalTheme ?? .init()
+        })
     }
     
     override var dynamicSize: Bool {
@@ -360,6 +362,10 @@ class ThemePreviewModalController: ModalViewController {
     }
     override func viewClass() -> AnyClass {
         return ThemePreviewView.self
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: currentTheme.colors.text, grayText: currentTheme.colors.grayText, background: currentTheme.colors.background, border: currentTheme.colors.border, accent: currentTheme.colors.accent, grayForeground: currentTheme.colors.grayForeground)
     }
 }
 

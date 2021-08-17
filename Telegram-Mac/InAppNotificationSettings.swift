@@ -178,7 +178,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     }
 }
 
-func updateInAppNotificationSettingsInteractively(accountManager: AccountManager, _ f: @escaping (InAppNotificationSettings) -> InAppNotificationSettings) -> Signal<Void, NoError> {
+func updateInAppNotificationSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (InAppNotificationSettings) -> InAppNotificationSettings) -> Signal<Void, NoError> {
     
     return accountManager.transaction { transaction in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.inAppNotificationSettings, { entry in
@@ -193,7 +193,7 @@ func updateInAppNotificationSettingsInteractively(accountManager: AccountManager
     }
 }
 
-func appNotificationSettings(accountManager: AccountManager) -> Signal<InAppNotificationSettings, NoError> {
+func appNotificationSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<InAppNotificationSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.inAppNotificationSettings]) |> map { view in
         return view.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings ?? InAppNotificationSettings.defaultSettings
     }

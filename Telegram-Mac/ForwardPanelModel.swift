@@ -16,13 +16,13 @@ class ForwardPanelModel: ChatAccessoryModel {
     
     
     
-    private var account:Account
-    private var forwardMessages:[Message] = []
-    
-    init(forwardMessages:[Message], account:Account) {
-        
+    private let account:Account
+    private let forwardMessages:[Message]
+    private let hideNames: Bool
+    init(forwardMessages:[Message], hideNames: Bool, account:Account) {
         self.account = account
         self.forwardMessages = forwardMessages
+        self.hideNames = hideNames
         super.init()
         self.make()
     }
@@ -63,8 +63,12 @@ class ForwardPanelModel: ChatAccessoryModel {
             }
         }
         
-        self.headerAttr = NSAttributedString.initialize(string: names.joined(separator: ", "), color: theme.colors.accent, font: .medium(.text))
-        self.messageAttr = NSAttributedString.initialize(string: tr(L10n.messageAccessoryPanelForwardedCountable(forwardMessages.count)), color: theme.colors.text, font: .normal(.text))
+        self.headerAttr = NSAttributedString.initialize(string: hideNames ? L10n.chatInputForwardHidden :  names.joined(separator: ", "), color: theme.colors.accent, font: .medium(.text))
+        if forwardMessages.count == 1, !forwardMessages[0].text.isEmpty, forwardMessages[0].media.isEmpty {
+            self.messageAttr = NSAttributedString.initialize(string: forwardMessages[0].text, color: theme.colors.text, font: .normal(.text))
+        } else {
+            self.messageAttr = NSAttributedString.initialize(string: L10n.messageAccessoryPanelForwardedCountable(forwardMessages.count), color: theme.colors.text, font: .normal(.text))
+        }
 
         nodeReady.set(.single(true))
         self.setNeedDisplay()

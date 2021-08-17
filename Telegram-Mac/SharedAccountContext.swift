@@ -60,7 +60,7 @@ public final class AccountWithInfo: Equatable {
 
 
 class SharedAccountContext {
-    let accountManager: AccountManager
+    let accountManager: AccountManager<TelegramAccountManagerTypes>
     var bindings: AccountContextBindings = AccountContextBindings()
 
     #if !SHARE
@@ -188,7 +188,7 @@ class SharedAccountContext {
     
 
     
-    init(accountManager: AccountManager, networkArguments: NetworkInitializationArguments, rootPath: String, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters, displayUpgradeProgress: @escaping(Float?) -> Void) {
+    init(accountManager: AccountManager<TelegramAccountManagerTypes>, networkArguments: NetworkInitializationArguments, rootPath: String, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters, displayUpgradeProgress: @escaping(Float?) -> Void) {
         self.accountManager = accountManager
         self.displayUpgradeProgress = displayUpgradeProgress
         self.appEncryption = Atomic(value: appEncryption)
@@ -510,7 +510,7 @@ class SharedAccountContext {
     
     public func beginNewAuth(testingEnvironment: Bool) {
         let _ = self.accountManager.transaction({ transaction -> Void in
-            let _ = transaction.createAuth([AccountEnvironmentAttribute(environment: testingEnvironment ? .test : .production)])
+            let _ = transaction.createAuth([.environment(AccountEnvironmentAttribute(environment: testingEnvironment ? .test : .production))])
         }).start()
     }
     
@@ -547,18 +547,19 @@ class SharedAccountContext {
     private func updateAccountBackupData(account: Account) -> Signal<Never, NoError> {
         return accountBackupData(postbox: account.postbox)
             |> mapToSignal { backupData -> Signal<Never, NoError> in
-                guard let backupData = backupData else {
-                    return .complete()
-                }
                 return self.accountManager.transaction { transaction -> Void in
                     transaction.updateRecord(account.id, { record in
                         guard let record = record else {
                             return nil
                         }
-                        var attributes = record.attributes.filter({ !($0 is AccountBackupDataAttribute) })
-                        if false {
-                            attributes.append(AccountBackupDataAttribute(data: backupData))
+                        let attributes = record.attributes.filter {
+                            if case .backupData = $0 {
+                                return false
+                            } else {
+                                return true
+                            }
                         }
+                       
                         return AccountRecord(id: record.id, attributes: attributes, temporarySessionId: record.temporarySessionId)
                     })
                     }

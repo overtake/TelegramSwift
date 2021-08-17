@@ -10,7 +10,7 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
-
+import TelegramCore
 
 
 public struct AdditionalSettings: PreferencesEntry, Equatable {
@@ -49,7 +49,7 @@ public struct AdditionalSettings: PreferencesEntry, Equatable {
     }
 }
 
-func updateAdditionalSettingsInteractively(accountManager: AccountManager, _ f: @escaping (AdditionalSettings) -> AdditionalSettings) -> Signal<Void, NoError> {
+func updateAdditionalSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (AdditionalSettings) -> AdditionalSettings) -> Signal<Void, NoError> {
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.additionalSettings, { entry in
             let currentSettings: AdditionalSettings
@@ -63,7 +63,7 @@ func updateAdditionalSettingsInteractively(accountManager: AccountManager, _ f: 
     }
 }
 
-func additionalSettings(accountManager: AccountManager) -> Signal<AdditionalSettings, NoError> {
+func additionalSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<AdditionalSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.additionalSettings]) |> map { view in
         return (view.entries[ApplicationSharedPreferencesKeys.additionalSettings] as? AdditionalSettings) ?? AdditionalSettings.defaultSettings
     }

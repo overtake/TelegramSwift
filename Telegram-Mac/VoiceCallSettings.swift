@@ -197,7 +197,7 @@ struct VoiceCallSettings: PreferencesEntry, Equatable {
 
 }
 
-func updateVoiceCallSettingsSettingsInteractively(accountManager: AccountManager, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {
+func updateVoiceCallSettingsSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (VoiceCallSettings) -> VoiceCallSettings) -> Signal<Void, NoError> {
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.voiceCallSettings, { entry in
             let currentSettings: VoiceCallSettings
@@ -212,7 +212,7 @@ func updateVoiceCallSettingsSettingsInteractively(accountManager: AccountManager
 }
 
 
-func voiceCallSettings(_ accountManager: AccountManager) -> Signal<VoiceCallSettings, NoError>  {
+func voiceCallSettings(_ accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<VoiceCallSettings, NoError>  {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.voiceCallSettings]) |> map { view in
         return view.entries[ApplicationSharedPreferencesKeys.voiceCallSettings] as? VoiceCallSettings ?? VoiceCallSettings.defaultSettings
     }

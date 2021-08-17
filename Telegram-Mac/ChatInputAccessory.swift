@@ -93,7 +93,7 @@ class ChatInputAccessory: Node {
             }, for: .Click)
             
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
-            displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages,account:account)
+            displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, account:account)
            
             let context = self.chatInteraction.context
             
@@ -108,7 +108,11 @@ class ChatInputAccessory: Node {
                 })
             }
             let hideAction = { [weak self] in
-                
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedHideSendersName(!$0.hideSendersName)
+                    }
+                }
             }
             
             let alert:(Bool)->Void = { [weak self] canCancel in
@@ -119,7 +123,7 @@ class ChatInputAccessory: Node {
                 let text = L10n.chatAlertForwardText(textHelp, chatName)
                 let okTitle = L10n.chatAlertForwardActionAnother
                 let cancelTitle = canCancel ? L10n.chatAlertForwardActionCancel : L10n.alertCancel
-                let thirdTitle = L10n.chatAlertForwardActionHide
+                let thirdTitle = !state.interfaceState.hideSendersName ? L10n.chatAlertForwardActionHide : L10n.chatAlertForwardActionShow
                 confirm(for: context.window, header: header, information: text, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thirdTitle, successHandler: { result in
                     switch result {
                     case .basic:
