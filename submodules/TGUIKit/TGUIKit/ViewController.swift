@@ -128,10 +128,12 @@ open class BackgroundView: View {
                         transition.updateFrame(layer: layer, frame: rects[i])
                         superlayer.addSublayer(layer)
                     }
-                }
-            } else {
-                while tileLayers.count > 1 {
-                    tileLayers.removeLast().removeFromSuperlayer()
+                } else {
+                    while tileLayers.count > 1 {
+                        tileLayers.removeLast().removeFromSuperlayer()
+                    }
+                    superlayer.addSublayer(main)
+                    transition.updateFrame(layer: main, frame: frame)
                 }
             }
         }
