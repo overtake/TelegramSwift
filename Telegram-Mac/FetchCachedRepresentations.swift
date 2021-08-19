@@ -129,7 +129,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
             let url = URL(fileURLWithPath: path)
             
             if let data = TGGUnzipData(data, 8 * 1024 * 1024), data.count > 5, let string = String(data: data.subdata(in: 0 ..< 5), encoding: .utf8), string == "<?xml" {
-                let size = NSMakeSize(500, 500)
+                let size = NSMakeSize(400, 800)
                 
                 if let image = drawSvgImageNano(data, size)?._cgImage {
                     if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
