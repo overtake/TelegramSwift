@@ -22,8 +22,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		303B4F6D1E4CBE5000DC1633 /* permissions.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = permissions.zip; sourceTree = "<group>"; };
-		305237171E64595700CA46D1 /* unsupported_permissions.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = unsupported_permissions.zip; sourceTree = "<group>"; };
 		342FC0E71C5044DC0023A3C3 /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
 		342FC0E81C5044DC0023A3C3 /* ioapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi.c; sourceTree = "<group>"; };
 		342FC0E91C5044DC0023A3C3 /* ioapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi.h; sourceTree = "<group>"; };
@@ -36,15 +34,10 @@
 		343625BA1C5827DC0023C4C6 /* ZipUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ZipUtilities.swift; sourceTree = "<group>"; };
 		344050D91CE28F59001AFF0F /* Info-tvOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-tvOS.plist"; sourceTree = "<group>"; };
 		3443A3F51C4AB8A3004AD173 /* QuickZip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuickZip.swift; sourceTree = "<group>"; };
-		3443A3FC1C4AD199004AD173 /* bb8.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = bb8.zip; sourceTree = "<group>"; };
 		347E3A741C1DFFB500A11FD3 /* Zip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Zip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		347E3A771C1DFFB500A11FD3 /* Zip.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Zip.h; sourceTree = "<group>"; };
 		347E3A791C1DFFB500A11FD3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		347E3A831C1DFFB500A11FD3 /* ZipTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipTests.swift; sourceTree = "<group>"; };
-		347E3A851C1DFFB500A11FD3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		347E3AD71C1E04C900A11FD3 /* Zip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Zip.swift; sourceTree = "<group>"; };
-		34940A221C58876200D41574 /* 3crBXeO.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = 3crBXeO.gif; path = Images/3crBXeO.gif; sourceTree = "<group>"; };
-		34940A231C58876200D41574 /* kYkLkPf.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = kYkLkPf.gif; path = Images/kYkLkPf.gif; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,7 +71,6 @@
 			isa = PBXGroup;
 			children = (
 				347E3A761C1DFFB500A11FD3 /* Zip */,
-				347E3A821C1DFFB500A11FD3 /* ZipTests */,
 				347E3A751C1DFFB500A11FD3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -104,20 +96,6 @@
 				3430F61F1C45C805007473A6 /* libz.tbd */,
 			);
 			path = Zip;
-			sourceTree = "<group>";
-		};
-		347E3A821C1DFFB500A11FD3 /* ZipTests */ = {
-			isa = PBXGroup;
-			children = (
-				305237171E64595700CA46D1 /* unsupported_permissions.zip */,
-				303B4F6D1E4CBE5000DC1633 /* permissions.zip */,
-				34940A221C58876200D41574 /* 3crBXeO.gif */,
-				34940A231C58876200D41574 /* kYkLkPf.gif */,
-				3443A3FC1C4AD199004AD173 /* bb8.zip */,
-				347E3A831C1DFFB500A11FD3 /* ZipTests.swift */,
-				347E3A851C1DFFB500A11FD3 /* Info.plist */,
-			);
-			path = ZipTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

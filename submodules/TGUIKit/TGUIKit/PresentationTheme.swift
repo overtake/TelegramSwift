@@ -1356,7 +1356,7 @@ public class ColorPalette : Equatable {
             default:
                 break
             }
-        } else if let messages = color.messages {
+        } else if let messages = color.messages, !messages.isEmpty {
             let blended = messages.reduce(messages[0], { color, with in
                 return color.blended(withFraction: 0.5, of: with)!
             })
