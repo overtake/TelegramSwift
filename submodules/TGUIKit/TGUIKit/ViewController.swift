@@ -91,6 +91,8 @@ open class BackgroundView: View {
         func update(frame: NSRect, transition: ContainedViewLayoutTransition) {
             
             var rects:[CGRect] = []
+            var frame = frame
+            frame.size.height = max(500, frame.height)
             
             if let superlayer = superlayer {
                 if let tile = tile {
