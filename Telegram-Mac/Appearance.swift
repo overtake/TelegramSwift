@@ -1494,16 +1494,6 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         
     case let .file(_, file, settings, _):
         if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
-            let imageSize = image.size
-            var image = image
-            if imageSize.height > imageSize.width {
-                let cgImage = generateImage(NSMakeSize(imageSize.width, imageSize.width), contextGenerator: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.draw(image._cgImage!, in: NSMakeRect(0, -(imageSize.height - imageSize.width) / 2, imageSize.width, imageSize.height))
-                }, scale: 1)!
-                image = NSImage(cgImage: cgImage, size: NSMakeSize(imageSize.width, imageSize.width))
-            }
-           
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
             backgroundMode = TelegramPresentationTheme.defaultBackground

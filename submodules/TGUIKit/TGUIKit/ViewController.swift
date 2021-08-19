@@ -73,7 +73,7 @@ open class BackgroundView: View {
         private var superlayer: CALayer?
         private let main: CALayer
         private var tile: NSImage? = nil
-
+        private var shouldTile: Bool = false
         private var tileLayers:[CALayer] = []
         
         init(main: CALayer) {
@@ -81,8 +81,9 @@ open class BackgroundView: View {
             tileLayers.append(main)
         }
         
-        func set(superlayer: CALayer?, tile: NSImage?) {
+        func set(superlayer: CALayer?, tile: NSImage?, shouldTile: Bool) {
             self.superlayer = superlayer
+            self.shouldTile = shouldTile
             self.tile = tile
         }
         
@@ -95,11 +96,17 @@ open class BackgroundView: View {
                 if let tile = tile {
                     let size = tile.size
                     let tileSize = size.aspectFitted(frame.size)
-                    if tileSize.width < frame.width {
-                        while rects.reduce(CGFloat(0), { $0 + $1.width }) < frame.width {
-                            let width = rects.reduce(CGFloat(0), { $0 + $1.width })
-                            rects.append(CGRect(origin: .init(x: width, y: (frame.height - tileSize.height) / 2), size: tileSize))
+                    if shouldTile {
+                        if tileSize.width < frame.width {
+                            while rects.reduce(CGFloat(0), { $0 + $1.width }) < frame.width {
+                                let width = rects.reduce(CGFloat(0), { $0 + $1.width })
+                                rects.append(CGRect(origin: .init(x: width, y: (frame.height - tileSize.height) / 2), size: tileSize))
+                            }
+                        } else {
+                            rects.append(frame.focus(size.aspectFilled(frame.size)))
                         }
+                    } else {
+                        rects.append(frame.focus(size.aspectFilled(frame.size)))
                     }
                     
                     while self.tileLayers.count > rects.count {
@@ -202,7 +209,9 @@ open class BackgroundView: View {
                 imageView.backgroundColor = .clear
                 imageView.contents = image
                 let colors = colors?.map { $0.withAlphaComponent(1) }
+                var shouldTile = false
                 if let colors = colors, !colors.isEmpty {
+                    shouldTile = true
                     imageView.opacity = Float((abs(intensity ?? 50))) / 100.0 * 0.5
                     imageView.compositingFilter = "softLightBlendMode"
 
@@ -228,18 +237,18 @@ open class BackgroundView: View {
                     imageView.compositingFilter = nil
                 }
                 if let bg = backgroundView as? AnimatedGradientBackgroundView {
-                    tileControl.set(superlayer: bg.contentView.layer, tile: image)
+                    tileControl.set(superlayer: bg.contentView.layer, tile: image, shouldTile: shouldTile)
                 } else if let bg = backgroundView as? BackgroundGradientView {
-                    tileControl.set(superlayer: bg.layer, tile: image)
+                    tileControl.set(superlayer: bg.layer, tile: image, shouldTile: shouldTile)
                 } else {
-                    tileControl.set(superlayer: container.layer, tile: image)
+                    tileControl.set(superlayer: container.layer, tile: image, shouldTile: shouldTile)
                 }
             case let .color(color):
                 imageView.backgroundColor = color.withAlphaComponent(1.0).cgColor
                 imageView.compositingFilter = nil
                 imageView.contents = nil
                 imageView.opacity = 1
-                tileControl.set(superlayer: container.layer!, tile: nil)
+                tileControl.set(superlayer: container.layer!, tile: nil, shouldTile: false)
             case let .gradient(colors, rotation):
                 let colors = colors.map { $0.withAlphaComponent(1) }
                 imageView.contents = nil
@@ -247,7 +256,7 @@ open class BackgroundView: View {
                 imageView.opacity = 1
                 imageView.compositingFilter = nil
                 imageView.removeFromSuperlayer()
-                tileControl.set(superlayer: nil, tile: nil)
+                tileControl.set(superlayer: nil, tile: nil, shouldTile: false)
                 if colors.count > 2 {
                     if let bg = self.backgroundView as? AnimatedGradientBackgroundView {
                         backgroundView = bg
@@ -271,7 +280,7 @@ open class BackgroundView: View {
                 imageView.compositingFilter = nil
                 imageView.opacity = 1
                 imageView.removeFromSuperlayer()
-                tileControl.set(superlayer: nil, tile: nil)
+                tileControl.set(superlayer: nil, tile: nil, shouldTile: false)
             }
             
             tileControl.update(frame: bounds, transition: .immediate)

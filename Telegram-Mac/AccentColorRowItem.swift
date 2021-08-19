@@ -232,6 +232,7 @@ final class AccentColorRowView : TableRowView {
         if item.isNative {
             let custom = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             custom.autohighlight = false
+            custom.animates = false
             custom.set(image: generateCustomSwatchImage(), for: .Normal)
             custom.setImageContentGravity(.resize)
             custom.set(handler: { _ in
@@ -245,6 +246,7 @@ final class AccentColorRowView : TableRowView {
         if !colorList.contains(where: { $0.accent.accent == theme.colors.accent && $0.cloudTheme?.id == theme.cloudTheme?.id }) {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
+            button.animates = false
             button.layer?.cornerRadius = button.frame.height / 2
             button.set(background: theme.colors.accent, for: .Normal)
             button.addSubview(selectedImageView)
@@ -273,6 +275,7 @@ final class AccentColorRowView : TableRowView {
             
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
+            button.animates = false
            // button.layer?.cornerRadius = button.frame.height / 2
             let icon = generateAccentColor(accent.accent, bubbled: theme.bubbled)
             button.contextObject = colorList[i]

@@ -65,7 +65,7 @@ class GeneralInteractedRowView: GeneralRowView {
             if case let .image(stateback) = item.type {
                 nextView.image = stateback
                 nextView.sizeToFit()
-                nextView.isHidden = false
+                nextView.isHidden = item.isSelected
             }
             
             switch item.type {
