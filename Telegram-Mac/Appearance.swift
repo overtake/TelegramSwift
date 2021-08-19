@@ -1526,7 +1526,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
 private func builtinBackgound() -> NSImage {
     var data = try! Data(contentsOf: Bundle.main.url(forResource: "builtin-wallpaper-svg", withExtension: nil)!)
     data = TGGUnzipData(data, 8 * 1024 * 1024)!
-    return drawSvgImageNano(data, NSMakeSize(1500, 1500))!
+    return drawSvgImageNano(data, NSMakeSize(400, 800))!
 }
 #endif
 class TelegramPresentationTheme : PresentationTheme {

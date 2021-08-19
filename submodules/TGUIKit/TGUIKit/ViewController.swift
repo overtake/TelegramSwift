@@ -69,6 +69,68 @@ public final class BackgroundGradientView : View {
 
 open class BackgroundView: View {
     
+    private final class TileControl {
+        private var superlayer: CALayer?
+        private let main: CALayer
+        private var tile: NSImage? = nil
+
+        private var tileLayers:[CALayer] = []
+        
+        init(main: CALayer) {
+            self.main = main
+            tileLayers.append(main)
+        }
+        
+        func set(superlayer: CALayer?, tile: NSImage?) {
+            self.superlayer = superlayer
+            self.tile = tile
+        }
+        
+        
+        func update(frame: NSRect, transition: ContainedViewLayoutTransition) {
+            
+            var rects:[CGRect] = []
+            
+            if let superlayer = superlayer {
+                if let tile = tile {
+                    let size = tile.size
+                    let tileSize = size.aspectFitted(frame.size)
+                    if tileSize.width < frame.width {
+                        while rects.reduce(CGFloat(0), { $0 + $1.width }) < frame.width {
+                            let width = rects.reduce(CGFloat(0), { $0 + $1.width })
+                            rects.append(CGRect(origin: .init(x: width, y: (frame.height - tileSize.height) / 2), size: tileSize))
+                        }
+                    }
+                    
+                    while self.tileLayers.count > rects.count {
+                        self.tileLayers.removeLast().removeFromSuperlayer()
+                    }
+                    while self.tileLayers.count < rects.count {
+                        let layer = CALayer()
+                        layer.disableActions()
+                        layer.contentsGravity = .resize
+                        self.tileLayers.append(layer)
+                    }
+                    
+                    for (i, layer) in tileLayers.enumerated() {
+                        layer.compositingFilter = main.compositingFilter
+                        layer.backgroundColor = main.backgroundColor
+                        layer.contents = main.contents
+                        layer.opacity = main.opacity
+
+                        transition.updateFrame(layer: layer, frame: rects[i])
+                        superlayer.addSublayer(layer)
+                    }
+                }
+            } else {
+                while tileLayers.count > 1 {
+                    tileLayers.removeLast().removeFromSuperlayer()
+                }
+            }
+        }
+    }
+    
+
     
     deinit {
     }
@@ -80,13 +142,16 @@ open class BackgroundView: View {
     
     private let container: View = View()
     
+    private var tileControl: TileControl
+    
     public required init(frame frameRect: NSRect) {
+        tileControl = TileControl(main: imageView)
         super.init(frame: frameRect)
         imageView.disableActions()
         imageView.frame = frameRect.size.bounds
 //        container.addSubview(imageView)
         autoresizesSubviews = false
-        imageView.contentsGravity = .resizeAspectFill
+        imageView.contentsGravity = .resize
         self.addSubview(container)
     }
     
@@ -163,18 +228,18 @@ open class BackgroundView: View {
                     imageView.compositingFilter = nil
                 }
                 if let bg = backgroundView as? AnimatedGradientBackgroundView {
-                    bg.contentView.layer?.addSublayer(imageView)
+                    tileControl.set(superlayer: bg.contentView.layer, tile: image)
                 } else if let bg = backgroundView as? BackgroundGradientView {
-                    bg.layer?.addSublayer(imageView)
+                    tileControl.set(superlayer: bg.layer, tile: image)
                 } else {
-                    container.layer?.addSublayer(imageView)
+                    tileControl.set(superlayer: container.layer, tile: image)
                 }
             case let .color(color):
                 imageView.backgroundColor = color.withAlphaComponent(1.0).cgColor
                 imageView.compositingFilter = nil
                 imageView.contents = nil
                 imageView.opacity = 1
-                container.layer?.addSublayer(imageView)
+                tileControl.set(superlayer: container.layer!, tile: nil)
             case let .gradient(colors, rotation):
                 let colors = colors.map { $0.withAlphaComponent(1) }
                 imageView.contents = nil
@@ -182,6 +247,7 @@ open class BackgroundView: View {
                 imageView.opacity = 1
                 imageView.compositingFilter = nil
                 imageView.removeFromSuperlayer()
+                tileControl.set(superlayer: nil, tile: nil)
                 if colors.count > 2 {
                     if let bg = self.backgroundView as? AnimatedGradientBackgroundView {
                         backgroundView = bg
@@ -205,18 +271,18 @@ open class BackgroundView: View {
                 imageView.compositingFilter = nil
                 imageView.opacity = 1
                 imageView.removeFromSuperlayer()
+                tileControl.set(superlayer: nil, tile: nil)
             }
             
+            tileControl.update(frame: bounds, transition: .immediate)
             
             if let backgroundView = backgroundView {
                 self.backgroundView?.removeFromSuperview()
                 self.backgroundView = backgroundView
                 container.addSubview(backgroundView)
-//                imageView.layer?.compositingFilter = "softLightBlendMode"
             } else {
                 self.backgroundView?.removeFromSuperview()
                 self.backgroundView = nil
-//                imageView.layer?.compositingFilter = nil
             }
         }
     }
@@ -224,6 +290,7 @@ open class BackgroundView: View {
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(layer: imageView, frame: bounds)
         transition.updateFrame(view: container, frame: bounds)
+        tileControl.update(frame: bounds, transition: transition)
         if let backgroundView = backgroundView {
             transition.updateFrame(view: backgroundView, frame: bounds)
             if let backgroundView = backgroundView as? AnimatedGradientBackgroundView {
