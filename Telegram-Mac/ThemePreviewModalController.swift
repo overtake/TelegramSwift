@@ -261,7 +261,7 @@ class ThemePreviewModalController: ModalViewController {
         switch self.source {
         case let .cloudTheme(theme):
             
-            let count:Int32 = theme.installCount
+            let count:Int32 = theme.installCount ?? 0
             
             var countTitle = L10n.themePreviewUsesCountCountable(Int(count))
             countTitle = countTitle.replacingOccurrences(of: "\(count)", with: count.formattedWithSeparator)
