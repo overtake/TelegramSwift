@@ -49,10 +49,10 @@ final class EditImageCanvasControlsView : View {
         draw.set(image: NSImage(named: "Icon_EditImageDraw")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         clear.set(image: NSImage(named: "Icon_EditImageEraser")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         
-        undo.appTooltip = "⌘Z"
-        redo.appTooltip = "⌘⇧Z"
-        draw.appTooltip = "L"
-        clear.appTooltip = "E"
+        undo.appTooltip = L10n.canvasUndo
+        redo.appTooltip = L10n.canvasRedo
+        draw.appTooltip = L10n.canvasDraw
+        clear.appTooltip = L10n.canvasClear
         
         undo.set(image: NSImage(named: "Icon_EditImageUndo")!.precomposed(.white), for: .Hover)
         redo.set(image: NSImage(named: "Icon_EditImageUndo")!.precomposed(NSColor.white, flipHorizontal: true), for: .Hover)
@@ -122,8 +122,20 @@ final class EditImageCanvasControlsView : View {
         
         undo.isEnabled = !state.actionValues.isEmpty
         redo.isEnabled = !state.removedActions.isEmpty
-        draw.isSelected = state.action == .draw
+        draw.isSelected = state.action == .draw || state.action == .drawArrow
         clear.isSelected = state.action == .clear
+        
+        let drawImage: NSImage
+        switch state.action {
+        case .drawArrow:
+            drawImage = NSImage(named: "Icon_EditImageArrow")!
+        default:
+            drawImage = NSImage(named: "Icon_EditImageDraw")!
+        }
+        
+        draw.set(image: drawImage.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
+        draw.set(image: drawImage.precomposed(.white), for: .Hover)
+
 
     }
     

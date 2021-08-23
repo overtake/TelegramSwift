@@ -64,6 +64,9 @@ internal struct ControlStateHandler : Hashable {
 
 open class Control: View {
     
+    public var contextObject: Any?
+
+    
     public internal(set) weak var popover: Popover?
     
     open var isEnabled:Bool = true {

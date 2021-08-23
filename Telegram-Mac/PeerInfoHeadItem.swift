@@ -393,7 +393,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     fileprivate let editing: Bool
     fileprivate let updatingPhotoState:PeerInfoUpdatingPhotoState?
-    fileprivate let updatePhoto:(NSImage?)->Void
+    fileprivate let updatePhoto:(NSImage?, Control?)->Void
     fileprivate let arguments: PeerInfoArguments
     
     let canEditPhoto: Bool
@@ -403,7 +403,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     
     var photos: [TelegramPeerPhoto] = []
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?)->Void = { _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.peerView = peerView
@@ -557,7 +557,7 @@ private final class PeerInfoPhotoEditableView : Control {
     private var progressView:RadialProgressContainerView?
     private var updatingPhotoState: PeerInfoUpdatingPhotoState?
     private var tempImageView: ImageView?
-    var setup: ((NSImage?)->Void)?
+    var setup: ((NSImage?, Control?)->Void)?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -597,9 +597,9 @@ private final class PeerInfoPhotoEditableView : Control {
         backgroundView.frame = bounds
         
         
-        set(handler: { [weak self] _ in
+        set(handler: { [weak self] control in
             if self?.updatingPhotoState == nil {
-                self?.setup?(nil)
+                self?.setup?(nil, control)
             }
         }, for: .Click)
     }
@@ -759,13 +759,13 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             activeDragging = false
             if let item = item as? PeerInfoHeadItem {
                 if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
-                    item.updatePhoto(image)
+                    item.updatePhoto(image, self.photoEditableView)
                     return true
                 } else {
                     let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
                     if  let list = list {
                         if let first = list.first, let image = NSImage(contentsOfFile: first) {
-                            item.updatePhoto(image)
+                            item.updatePhoto(image, self.photoEditableView)
                             return true
                         }
                     }

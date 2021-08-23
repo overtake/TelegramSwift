@@ -344,10 +344,12 @@ class VideoAvatarModalController: ModalViewController {
     
     private var state: Promise<VideoAvatarGeneratorState> = Promise()
     private let localize: String
-    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String) {
+    private let quality: String
+    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String, quality: String) {
         self.context = context
         self.asset = asset
         self.track = track
+        self.quality = quality
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
         self.item = AVPlayerItem(asset: asset)
@@ -421,7 +423,7 @@ class VideoAvatarModalController: ModalViewController {
     }
     
     override func returnKeyAction() -> KeyHandlerResult {
-        self.state.set(generateVideo(asset, composition: self.currentVideoComposition(), values: self.scrubberValues.with { $0 }))
+        self.state.set(generateVideo(asset, composition: self.currentVideoComposition(), quality: self.quality, values: self.scrubberValues.with { $0 }))
         close()
         
         return .invoked
@@ -732,7 +734,7 @@ class VideoAvatarModalController: ModalViewController {
 
 
 
-func selectVideoAvatar(context: AccountContext, path: String, localize: String, signal:@escaping(Signal<VideoAvatarGeneratorState, NoError>)->Void) {
+func selectVideoAvatar(context: AccountContext, path: String, localize: String, quality: String = AVAssetExportPresetMediumQuality, signal:@escaping(Signal<VideoAvatarGeneratorState, NoError>)->Void) {
     let asset = AVURLAsset(url: URL(fileURLWithPath: path))
     let track = asset.tracks(withMediaType: .video).first
     if let track = track {
@@ -742,7 +744,7 @@ func selectVideoAvatar(context: AccountContext, path: String, localize: String, 
         }
         do {
             try compositionVideoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: asset.duration), of: track, at: .zero)
-            let controller = VideoAvatarModalController(context: context, asset: composition, track: track, localize: localize)
+            let controller = VideoAvatarModalController(context: context, asset: composition, track: track, localize: localize, quality: quality)
             showModal(with: controller, for: context.window)
             signal(controller.completeState)
         } catch {
@@ -752,10 +754,10 @@ func selectVideoAvatar(context: AccountContext, path: String, localize: String, 
 }
 
 
-private func generateVideo(_ asset: AVComposition, composition: AVVideoComposition, values: VideoScrubberValues) -> Signal<VideoAvatarGeneratorState, NoError> {
+private func generateVideo(_ asset: AVComposition, composition: AVVideoComposition, quality: String, values: VideoScrubberValues) -> Signal<VideoAvatarGeneratorState, NoError> {
     return Signal { subscriber in
         
-        let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality)!
+        let exportSession = AVAssetExportSession(asset: asset, presetName: quality)!
         exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = true
         

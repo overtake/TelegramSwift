@@ -19,8 +19,8 @@ class EditAccountInfoItem: GeneralRowItem {
     fileprivate let state: EditInfoState
     fileprivate let photo: AvatarNodeState
     fileprivate let updateText: (String, String)->Void
-    fileprivate let uploadNewPhoto: (()->Void)?
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, viewType: GeneralViewType = .legacy, updateText:@escaping(String, String)->Void, uploadNewPhoto: (()->Void)? = nil) {
+    fileprivate let uploadNewPhoto: ((Control)->Void)?
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, viewType: GeneralViewType = .legacy, updateText:@escaping(String, String)->Void, uploadNewPhoto: ((Control)->Void)? = nil) {
         self.account = account
         self.updateText = updateText
         self.state = state
@@ -82,9 +82,9 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.accentIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
         
         
-        updoadPhotoCap.set(handler: { [weak self] _ in
+        updoadPhotoCap.set(handler: { [weak self] control in
             guard let item = self?.item as? EditAccountInfoItem else {return}
-            item.uploadNewPhoto?()
+            item.uploadNewPhoto?(control)
         }, for: .Click)
         
         avatar.addSubview(updoadPhotoCap)
