@@ -14,14 +14,14 @@ final class EditImageCanvasArguments {
     let makeNewActionAt:(NSPoint)->Void
     let addToLastAction:(NSPoint)->Void
     
-    let switchAction:(EditImageCanvasAction)->Void
+    let switchAction:(EditImageDrawTouch.Action)->Void
     let undo:()->Void
     let redo:()->Void
     let updateColorAndWidth:(NSColor, CGFloat)->Void
     
     let save:()->Void
     let cancel:()->Void
-    init(makeNewActionAt:@escaping(NSPoint)->Void, addToLastAction:@escaping(NSPoint)->Void, switchAction:@escaping(EditImageCanvasAction)->Void, undo: @escaping()->Void, redo: @escaping()->Void, updateColorAndWidth: @escaping(NSColor, CGFloat)->Void, save: @escaping()->Void, cancel: @escaping()->Void) {
+    init(makeNewActionAt:@escaping(NSPoint)->Void, addToLastAction:@escaping(NSPoint)->Void, switchAction:@escaping(EditImageDrawTouch.Action)->Void, undo: @escaping()->Void, redo: @escaping()->Void, updateColorAndWidth: @escaping(NSColor, CGFloat)->Void, save: @escaping()->Void, cancel: @escaping()->Void) {
         self.makeNewActionAt = makeNewActionAt
         self.addToLastAction = addToLastAction
         self.switchAction = switchAction
@@ -33,32 +33,69 @@ final class EditImageCanvasArguments {
     }
 }
 
+private extension CGMutablePath {
+    func addArrow(start: CGPoint, end: CGPoint, pointerLineLength: CGFloat, arrowAngle: CGFloat) {
+        self.move(to: start)
+        self.addLine(to: end)
+
+        let startEndAngle = atan((end.y - start.y) / (end.x - start.x)) + ((end.x - start.x) < 0 ? CGFloat(Double.pi) : 0)
+        let arrowLine1 = CGPoint(x: end.x + pointerLineLength * cos(CGFloat(Double.pi) - startEndAngle + arrowAngle), y: end.y - pointerLineLength * sin(CGFloat(Double.pi) - startEndAngle + arrowAngle))
+        let arrowLine2 = CGPoint(x: end.x + pointerLineLength * cos(CGFloat(Double.pi) - startEndAngle - arrowAngle), y: end.y - pointerLineLength * sin(CGFloat(Double.pi) - startEndAngle - arrowAngle))
+
+        self.addLine(to: arrowLine1)
+        self.move(to: end)
+        self.addLine(to: arrowLine2)
+    }
+}
+
+
 func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext, imageSize: NSSize) {
     context.saveGState()
     for touch in touches {
         context.beginPath()
         
         let multiplier = NSMakePoint(imageSize.width / touch.canvasSize.width, imageSize.height / touch.canvasSize.height)
+        let lineWidth = touch.width * ((multiplier.x + multiplier.y) / 2)
+
         
-        for (i, point) in touch.lines.enumerated() {
-            let point = NSMakePoint(point.x * multiplier.x, point.y * multiplier.y)
-            if i == 0 {
-                context.move(to: point)
-            } else {
-                context.addLine(to: point)
+        switch touch.action {
+        case .draw, .clear:
+            for (i, point) in touch.lines.enumerated() {
+                let point = NSMakePoint(point.x * multiplier.x, point.y * multiplier.y)
+                if i == 0 {
+                    context.move(to: point)
+                } else {
+                    context.addLine(to: point)
+                }
             }
+            context.setLineWidth(lineWidth)
+        default:
+            break
         }
         
-        context.setLineWidth(touch.width * ((multiplier.x + multiplier.y) / 2))
         context.setLineCap(.round)
         context.setLineJoin(.round)
         context.setStrokeColor(touch.color.cgColor)
+
         
         switch touch.action {
         case .draw:
             context.setBlendMode(.normal)
         case .clear:
             context.setBlendMode(.clear)
+        case .drawArrow:
+            context.setBlendMode(.normal)
+            let path = CGMutablePath()
+            context.setLineWidth(lineWidth * 0.7)
+            if touch.lines.count > 1 {
+                let first = touch.lines.first!
+                let last = touch.lines.last!
+                let dif = last - first
+                if abs(dif.x) > lineWidth * 1.5 || abs(dif.y) > lineWidth * 1.5 {
+                    path.addArrow(start: first, end: last, pointerLineLength: lineWidth * 2.5, arrowAngle: CGFloat(Double.pi / 4))
+                    context.addPath(path)
+                }
+            }
         }
         context.strokePath()
     }
@@ -67,6 +104,13 @@ func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext, imageS
 }
 
 final class EditImageDrawTouch : Equatable {
+    
+    enum Action : Hashable {
+        case draw
+        case drawArrow
+        case clear
+    }
+
     
     static func == (lhs: EditImageDrawTouch, rhs: EditImageDrawTouch) -> Bool {
         return lhs.lines == rhs.lines &&
@@ -78,9 +122,9 @@ final class EditImageDrawTouch : Equatable {
     private(set) var lines:[NSPoint]
     let color: NSColor
     let width: CGFloat
-    let action: EditImageCanvasAction
+    let action: Action
     let canvasSize: NSSize
-    init(action: EditImageCanvasAction, point: NSPoint, canvasSize: NSSize, color: NSColor, width: CGFloat) {
+    init(action: Action, point: NSPoint, canvasSize: NSSize, color: NSColor, width: CGFloat) {
         self.action = action
         self.lines = [point]
         self.color = color
@@ -212,13 +256,9 @@ final class EditImageCanvasView : View {
     }
 }
 
-enum EditImageCanvasAction : Hashable {
-    case draw
-    case clear
-}
 
 struct EditImageCanvasState : Equatable {
-    let action: EditImageCanvasAction
+    let action: EditImageDrawTouch.Action
     
     let color: NSColor
     let width: CGFloat
@@ -226,7 +266,7 @@ struct EditImageCanvasState : Equatable {
     let actionValues:[EditImageDrawTouch]
     let removedActions:[EditImageDrawTouch]
     
-    init(action: EditImageCanvasAction, actionValues:[EditImageDrawTouch], removedActions:[EditImageDrawTouch], color: NSColor, width: CGFloat) {
+    init(action: EditImageDrawTouch.Action, actionValues:[EditImageDrawTouch], removedActions:[EditImageDrawTouch], color: NSColor, width: CGFloat) {
         self.action = action
         self.actionValues = actionValues
         self.color = color
@@ -234,7 +274,7 @@ struct EditImageCanvasState : Equatable {
         self.removedActions = removedActions
     }
     
-    func withUpdatedAction(_ action: EditImageCanvasAction) -> EditImageCanvasState {
+    func withUpdatedAction(_ action: EditImageDrawTouch.Action) -> EditImageCanvasState {
         return EditImageCanvasState(action: action, actionValues: self.actionValues, removedActions: self.removedActions, color: self.color, width: self.width)
     }
     
@@ -380,6 +420,11 @@ final class EditImageCanvasController : ModalViewController {
             }
         }, switchAction: { action in
             updateState { state in
+                if action == .draw && state.action == .draw {
+                    return state.withUpdatedAction(.drawArrow)
+                } else if action == .drawArrow && state.action == .drawArrow {
+                    return state.withUpdatedAction(.draw)
+                }
                 return state.withUpdatedAction(action)
             }
         }, undo: {
@@ -434,28 +479,29 @@ final class EditImageCanvasController : ModalViewController {
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.undo()
-            
             return .invoked
         }, with: self, for: .Z, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.redo()
-            
             return .invoked
         }, with: self, for: .Z, priority: .modal, modifierFlags: [.command, .shift])
         
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.switchAction(.clear)
-            
             return .invoked
         }, with: self, for: .E, priority: .modal)
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.arguments?.switchAction(.draw)
-            
             return .invoked
         }, with: self, for: .L, priority: .modal)
+        
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.arguments?.switchAction(.drawArrow)
+            return .invoked
+        }, with: self, for: .A, priority: .modal)
     }
     
     override func viewWillDisappear(_ animated: Bool) {

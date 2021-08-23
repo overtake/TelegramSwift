@@ -25,15 +25,20 @@ private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> 
                 ctx.clear(rect)
                 ctx.round(size, size.height / 2)
                 let colors = messages.reversed()
-                let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
-                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                var locations: [CGFloat] = []
-                for i in 0 ..< colors.count {
-                    locations.append(delta * CGFloat(i))
+                if colors.count > 1 {
+                    let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else if let color = messages.first {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
                 }
-                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
             })!
             
             context.draw(image, in: bounds.focus(imageSize))

@@ -537,41 +537,10 @@ final class EntertainmentView : View {
     }
     
     func toggleSearch(_ signal:ValuePromise<SearchState>) {
-//        if let searchView = self.searchView {
-//            self.searchView = nil
-//            searchView.searchInteractions = nil
-//            signal.set(.init(state: .None, request: nil))
-//            searchView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak searchView] _ in
-//                searchView?.removeFromSuperview()
-//            })
-//            self.search.isSelected = false
-//        } else {
-//            self.searchView = EntertainmentSearchView(frame: NSMakeRect(0, 0, frame.width, 50))
-//            self.addSubview(self.searchView!)
-//            self.searchView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//            self.searchView?.searchInteractions = SearchInteractions({ [weak self] state, _ in
-//                signal.set(state)
-//                switch state.state {
-//                case .Focus:
-//                    break
-//                case .None:
-//                    self?.toggleSearch(signal)
-//                }
-//            }, { [weak self] state in
-//                signal.set(state)
-//                switch state.state {
-//                case .Focus:
-//                    break
-//                case .None:
-//                    self?.toggleSearch(signal)
-//                }
-//            })
-//            self.search.isSelected = true
-//            self.searchView?.change(state: .Focus, false)
-//        }
+
     }
     
-    func updateSelected(_ state: EntertainmentState) {
+    func updateSelected(_ state: EntertainmentState, mode: EntertainmentViewController.Mode) {
         self.emoji.isSelected = false
         self.stickers.isSelected = false
         self.gifs.isSelected = false
@@ -584,6 +553,9 @@ final class EntertainmentView : View {
         case .gifs:
             self.gifs.isSelected = true
         }
+        emoji.isHidden = mode == .selectAvatar
+        
+        needsLayout = true
     }
     
     
@@ -592,12 +564,15 @@ final class EntertainmentView : View {
         self.sectionView.frame = NSMakeRect(0, 0, self.frame.width, self.frame.height - 50)
         self.bottomView.frame = NSMakeRect(0, self.frame.height - 50, self.frame.width, 50)
         self.borderView.frame = NSMakeRect(0, 0, self.bottomView.frame.width, .borderSize)
-        self.sectionTabs.setFrameSize(NSMakeSize(self.sectionTabs.subviewsSize.width + 40, 40))
+        
+        let buttons:[NSView] = [self.emoji, self.stickers, self.gifs].filter { !$0.isHidden }
+        
+        self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1) * 20, 40))
         self.sectionTabs.center()
         
-        self.emoji.centerY(x: 0)
-        self.stickers.centerY(x: self.emoji.frame.maxX + 20)
-        self.gifs.centerY(x: self.stickers.frame.maxX + 20)
+        for (i, button) in buttons.enumerated() {
+            button.centerY(x: (button.frame.width + 20) * CGFloat(i))
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -622,6 +597,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     private var disposable:MetaDisposable = MetaDisposable()
     private var locked:Bool = false
 
+    enum Mode {
+        case common
+        case selectAvatar
+    }
+    
+    private let mode: Mode
 
     private let emoji:EmojiViewController
     private let stickers:NStickersViewController
@@ -645,7 +626,14 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     func update(with chatInteraction:ChatInteraction) -> Void {
         self.chatInteraction = chatInteraction
         
-        let interactions = EntertainmentInteractions(FastSettings.entertainmentState, peerId: chatInteraction.peerId)
+        let state: EntertainmentState
+        if mode == .selectAvatar {
+            state = .stickers
+        } else {
+            state = FastSettings.entertainmentState
+        }
+        
+        let interactions = EntertainmentInteractions(state, peerId: chatInteraction.peerId)
 
         interactions.close = { [weak self] in
             self?.closePopover()
@@ -659,14 +647,13 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             self?.closePopover()
         }
         interactions.sendEmoji = { [weak self] emoji in
-            _ = self?.chatInteraction?.appendText(emoji)
-            guard let `self` = self else {
-                return
+            if self?.mode == .selectAvatar {
+                _ = self?.chatInteraction?.sendPlainText(emoji)
+                self?.closePopover()
+            } else {
+                _ = self?.chatInteraction?.appendText(emoji)
             }
-            
-//            if self.genericView.searchView != nil {
-//                self.genericView.toggleSearch(self.searchState)
-//            }
+
         }
         interactions.toggleSearch = { [weak self] in
             guard let `self` = self else {
@@ -686,18 +673,30 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         self.viewWillDisappear(false)
     }
     
-    init(size:NSSize, context:AccountContext) {
-        
+    init(size:NSSize, context:AccountContext, mode: Mode = .common) {
+        self.mode = mode
         self.cap = SidebarCapViewController(context)
         self.emoji = EmojiViewController(context)
         self.stickers = NStickersViewController(context)
         self.gifs = GIFViewController(context)
         
+        self.stickers.mode = mode
+        self.gifs.mode = mode
+        
         var items:[SectionControllerItem] = []
-        items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))
+        if mode == .common {
+            items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))
+        }
         items.append(SectionControllerItem(title: {L10n.entertainmentStickers.uppercased()}, controller: stickers))
         items.append(SectionControllerItem(title: {L10n.entertainmentGIF.uppercased()}, controller: gifs))
-        self.section = SectionViewController(sections: items, selected: Int(FastSettings.entertainmentState.rawValue), hasHeaderView: false)
+        
+        let index: Int
+        if mode == .selectAvatar {
+            index = 0
+        } else {
+            index = Int(FastSettings.entertainmentState.rawValue)
+        }
+        self.section = SectionViewController(sections: items, selected: index, hasHeaderView: false)
         super.init(context)
         bar = .init(height: 0)
     }
@@ -784,7 +783,15 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         super.viewDidLoad()
         cap.loadViewIfNeeded()
 
-        self.genericView.updateSelected(FastSettings.entertainmentState)
+        let state:EntertainmentState
+        if mode == .selectAvatar {
+            state = .stickers
+        } else {
+            state = FastSettings.entertainmentState
+        }
+        
+        
+        self.genericView.updateSelected(state, mode: mode)
 
         
         let callSearchCmd:(ESearchCommand, SearchView)->Void = { command, view in
@@ -820,6 +827,10 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         
         
         
+        let e_index: Int = 0
+        let s_index: Int = mode == .selectAvatar ? 0 : 1
+        let g_index: Int = mode == .selectAvatar ? 1 : 2
+
         self.genericView.emoji.set(handler: { [weak self] _ in
             guard let `self` = self else {
                 return
@@ -827,7 +838,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.genericView.emoji.isSelected {
                 self.emoji.scrollup()
             }
-            self.section.select(0, true, notifyApper: true)
+            self.section.select(e_index, true, notifyApper: true)
             
         }, for: .Click)
         
@@ -838,7 +849,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.genericView.stickers.isSelected {
                 self.stickers.scrollup()
             }
-            self.section.select(1, true, notifyApper: true)
+            self.section.select(s_index, true, notifyApper: true)
         }, for: .Click)
         
         self.genericView.gifs.set(handler: { [weak self] _ in
@@ -848,15 +859,23 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self.genericView.gifs.isSelected {
                 self.gifs.scrollup()
             }
-            self.section.select(2, true, notifyApper: true)
+            self.section.select(g_index, true, notifyApper: true)
         }, for: .Click)
         
         
+        let mode = self.mode
+        
         section.selectionUpdateHandler = { [weak self] index in
+            var index = index
+            if mode == .selectAvatar {
+                index += 1
+            } else {
+                FastSettings.changeEntertainmentState(state)
+            }
+            
             let state = EntertainmentState(rawValue: Int32(index))!
-            FastSettings.changeEntertainmentState(state)
-            self?.chatInteraction?.update({$0.withUpdatedIsEmojiSection(index == 0)})
-            self?.genericView.updateSelected(state)
+            self?.chatInteraction?.update({ $0.withUpdatedIsEmojiSection(state == .emoji )})
+            self?.genericView.updateSelected(state, mode: mode)
         }
 
         self.ready.set(section.ready.get())

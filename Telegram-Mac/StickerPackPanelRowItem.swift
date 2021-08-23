@@ -118,6 +118,9 @@ class StickerPackPanelRowItem: TableRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
         let context = self.context
+        if arguments.mode != .common {
+            return .single([])
+        }
         for file in files {
             let rect = NSMakeRect(file.2.x, file.2.y, 60, 60)
             let file = file.0
@@ -146,7 +149,6 @@ class StickerPackPanelRowItem: TableRowItem {
                         }))
                     }
                 }
-                
                 items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak self] in
                     guard let `self` = self else {
                         return
@@ -410,24 +412,30 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         packNameView.update(item.packNameLayout)
         
-        switch item.packInfo {
-        case .recent:
-            if self.clearRecentButton == nil {
-                self.clearRecentButton = ImageButton()
-                addSubview(self.clearRecentButton!)
+        if item.arguments.mode == .common {
+            switch item.packInfo {
+            case .recent:
+                if self.clearRecentButton == nil {
+                    self.clearRecentButton = ImageButton()
+                    addSubview(self.clearRecentButton!)
+                }
+                self.clearRecentButton?.set(image: theme.icons.wallpaper_color_close, for: .Normal)
+                _ = self.clearRecentButton?.sizeToFit(NSMakeSize(5, 5), thatFit: false)
+                
+                self.clearRecentButton?.removeAllHandlers()
+                
+                self.clearRecentButton?.set(handler: { [weak item] _ in
+                    item?.arguments.clearRecent()
+                }, for: .Click)
+            default:
+                self.clearRecentButton?.removeFromSuperview()
+                self.clearRecentButton = nil
             }
-            self.clearRecentButton?.set(image: theme.icons.wallpaper_color_close, for: .Normal)
-            _ = self.clearRecentButton?.sizeToFit(NSMakeSize(5, 5), thatFit: false)
-            
-            self.clearRecentButton?.removeAllHandlers()
-            
-            self.clearRecentButton?.set(handler: { [weak item] _ in
-                item?.arguments.clearRecent()
-            }, for: .Click)
-        default:
+        } else {
             self.clearRecentButton?.removeFromSuperview()
             self.clearRecentButton = nil
         }
+       
         
         self.previousRange = (0, 0)
         

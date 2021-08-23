@@ -12,7 +12,6 @@ import Cocoa
 
 open class Button: Control {
     
-    public var contextObject: Any?
     
     public var autohighlight:Bool = true
     public var highlightHovered:Bool = false

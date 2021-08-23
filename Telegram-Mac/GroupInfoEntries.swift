@@ -757,8 +757,8 @@ final class GroupInfoArguments : PeerInfoArguments {
         
     }
     
-    func updateGroupPhoto(_ custom: NSImage?) {
-        let invoke:(NSImage) -> Void = { image in
+    func updateGroupPhoto(_ custom: NSImage?, control: Control?) {
+        let updatePhoto:(NSImage) -> Void = { image in
             _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
                 showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
@@ -771,19 +771,92 @@ final class GroupInfoArguments : PeerInfoArguments {
             })
         }
         if let image = custom {
-            invoke(image)
+            updatePhoto(image)
         } else {
+            
             let context = self.context
- 
-            filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
-                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                    invoke(image)
-                } else if let path = paths?.first {
-                    selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescGroup, signal: { [weak self] signal in
-                        self?.updateVideo(signal)
+            let updateVideo = self.updateVideo
+            
+            
+            var items:[SPopoverItem] = []
+            
+            items.append(.init(L10n.editAvatarPhotoOrVideo, {
+                filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        updatePhoto(image)
+                    } else if let path = paths?.first {
+                        selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescGroup, signal: { signal in
+                            updateVideo(signal)
+                        })
+                    }
+                })
+            }))
+            
+            items.append(.init(L10n.editAvatarStickerOrGif, { [weak control] in
+                let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
+                controller._frameRect = NSMakeRect(0, 0, 350, 400)
+                
+                let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+                
+                let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
+                    _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
+                        switch result {
+                        case let .image(image):
+                             updatePhoto(image)
+                        case let .video(path):
+                            selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescGroup, quality: AVAssetExportPresetHighestQuality, signal: { signal in
+                                updateVideo(signal)
+                            })
+                        }
+                        control?.contextObject = nil
                     })
+                    control?.contextObject = convertor
                 }
-            })
+                
+                interactions.sendAppFile = { file, _, _ in
+                    let object: MediaObjectToAvatar.Object
+                    if file.isAnimatedSticker {
+                        object = .animated(file)
+                    } else if file.isSticker {
+                        object = .sticker(file)
+                    } else {
+                        object = .gif(file)
+                    }
+                    let convertor = MediaObjectToAvatar(context: context, object: object)
+                    runConvertor(convertor)
+                }
+                interactions.sendInlineResult = { [] collection, result in
+                    switch result {
+                    case let .internalReference(reference):
+                        if let file = reference.file {
+                            let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
+                            runConvertor(convertor)
+                        }
+                    case .externalReference:
+                        break
+                    }
+                }
+                
+                control?.contextObject = interactions
+                controller.update(with: interactions)
+                if let control = control {
+                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
+                }
+            }))
+            
+            if let control = control {
+                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(0, -60))
+            } else {
+                filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        updatePhoto(image)
+                    } else if let path = paths?.first {
+                        selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescGroup, signal: { signal in
+                            updateVideo(signal)
+                        })
+                    }
+                })
+            }
         }
     }
     

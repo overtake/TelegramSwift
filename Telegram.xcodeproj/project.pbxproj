@@ -13,6 +13,7 @@
 		270A262A269D8F1000B31B2B /* ExpCardStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* ExpCardStickersController.swift */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
+		2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */; };
 		2713B21F260A42FE00CE0EC6 /* MediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */; };
 		2713B220260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21A260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift */; };
 		2713B221260A42FE00CE0EC6 /* MediaTrackFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21B260A42FE00CE0EC6 /* MediaTrackFrame.swift */; };
@@ -1107,6 +1108,7 @@
 		270A2629269D8F1000B31B2B /* ExpCardStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpCardStickersController.swift; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
+		2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaObjectToAvatar.swift; sourceTree = "<group>"; };
 		2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaFrameSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaFrameSource.swift"; sourceTree = SOURCE_ROOT; };
 		2713B21A260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackDecodableFrame.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackDecodableFrame.swift"; sourceTree = SOURCE_ROOT; };
 		2713B21B260A42FE00CE0EC6 /* MediaTrackFrame.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackFrame.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackFrame.swift"; sourceTree = SOURCE_ROOT; };
@@ -4539,6 +4541,7 @@
 				A7F28336239A808500742C20 /* TemplateController.swift */,
 				27E434132680C57900B05CB1 /* CoreMediaVideoTest.swift */,
 				27CF9608268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift */,
+				2711D71026CFBF6A00917305 /* MediaObjectToAvatar.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -5438,6 +5441,7 @@
 				A7E83214255E992D0095A167 /* WaveView.swift in Sources */,
 				D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */,
 				C29F4C7D1F47283600DBFC00 /* InstantPageBrowser.swift in Sources */,
+				2711D71126CFBF6A00917305 /* MediaObjectToAvatar.swift in Sources */,
 				C25FC7FD1D86FEE00041E303 /* ChatListHoleRowView.swift in Sources */,
 				27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */,
 				C2A506791DF59C9700971A93 /* PicturePicker.swift in Sources */,

@@ -781,6 +781,14 @@ internal final class L10n {
   }
   /// Cancel Account Reset
   internal static var cancelResetAccountTitle: String  { return L10n.tr("Localizable", "CancelResetAccount.Title") }
+  /// E
+  internal static var canvasClear: String  { return L10n.tr("Localizable", "Canvas.Clear") }
+  /// L - Line\nA - Arrow
+  internal static var canvasDraw: String  { return L10n.tr("Localizable", "Canvas.Draw") }
+  /// ⌘⇧Z
+  internal static var canvasRedo: String  { return L10n.tr("Localizable", "Canvas.Redo") }
+  /// ⌘Z
+  internal static var canvasUndo: String  { return L10n.tr("Localizable", "Canvas.Undo") }
   /// All Admins
   internal static var chanelEventFilterAllAdmins: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllAdmins") }
   /// All Events
@@ -1815,6 +1823,8 @@ internal final class L10n {
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
   internal static var chatDropFolderTitle: String  { return L10n.tr("Localizable", "Chat.DropFolder.Title") }
+  /// Sorry, you can't attach new media while editing a message.
+  internal static var chatEditAttachError: String  { return L10n.tr("Localizable", "Chat.Edit.Attach.Error") }
   /// Are you sure you want to discard all changes?
   internal static var chatEditCancelText: String  { return L10n.tr("Localizable", "Chat.Edit.Cancel.Text") }
   /// Click to edit Media
@@ -3709,6 +3719,10 @@ internal final class L10n {
   internal static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   internal static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
+  /// Photo or Video
+  internal static var editAvatarPhotoOrVideo: String  { return L10n.tr("Localizable", "EditAvatar.PhotoOrVideo") }
+  /// Sticker or GIF
+  internal static var editAvatarStickerOrGif: String  { return L10n.tr("Localizable", "EditAvatar.StickerOrGif") }
   /// RESET
   internal static var editImageControlReset: String  { return L10n.tr("Localizable", "EditImageControl.Reset") }
   /// Are you sure you want to close and discard all changes?
@@ -5551,7 +5565,7 @@ internal final class L10n {
   internal static var notificationSettingsSoundEffects: String  { return L10n.tr("Localizable", "NotificationSettings.SoundEffects") }
   /// Notifications
   internal static var notificationSettingsToggleNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications") }
-  /// Turn ON in Settings
+  /// Allow in System Settings
   internal static var notificationSettingsTurnOn: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn") }
   /// Reset notifications
   internal static var notificationSettingsConfirmReset: String  { return L10n.tr("Localizable", "NotificationSettings.Confirm.Reset") }
@@ -5569,7 +5583,7 @@ internal final class L10n {
   internal static var notificationSettingsToneDefault: String  { return L10n.tr("Localizable", "NotificationSettings.Tone.Default") }
   /// Don't miss important messages from your family and friends.
   internal static var notificationSettingsTurnOnTextText: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Text") }
-  /// Turn ON Notifications
+  /// Allow Notifications
   internal static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
   /// Mute
   internal static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
