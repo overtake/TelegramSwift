@@ -32,12 +32,16 @@ final class UNUserNotifications {
     static var authorizationStatus: Signal<AuthorizationStatus, NoError> {
         return Signal { subscriber in
             if #available(macOS 10.14, *) {
-                UNUserNotificationCenter.current().getNotificationSettings { settings in
-                    if let value = AuthorizationStatus(rawValue: settings.authorizationStatus.rawValue) {
-                        subscriber.putNext(value)
-                        subscriber.putCompletion()
-                    }
-                }
+                
+                subscriber.putNext(.authorized)
+                subscriber.putCompletion()
+                
+//                UNUserNotificationCenter.current().getNotificationSettings { settings in
+//                    if let value = AuthorizationStatus(rawValue: settings.authorizationStatus.rawValue) {
+//                        subscriber.putNext(value)
+//                        subscriber.putCompletion()
+//                    }
+//                }
             } else {
                 subscriber.putNext(.authorized)
                 subscriber.putCompletion()
