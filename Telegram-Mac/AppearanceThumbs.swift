@@ -29,7 +29,7 @@ func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, 
                 ctx.scaleBy(x: 1, y: -1.0)
                 ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
 
-                ctx.draw(preview, in: rect.focus(rect.size))
+                ctx.draw(preview, in: rect.focus(NSMakeSize(200, 200)))
                 ctx.restoreGState()
                 
             } else if colors.count > 1 {

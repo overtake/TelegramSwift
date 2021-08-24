@@ -2395,6 +2395,10 @@ internal final class L10n {
   internal static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
+  /// %1$@ change chat theme to %2$@
+  internal static func chatServiceUpdateTheme(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.UpdateTheme", p1, p2)
+  }
   /// %1$@ finished voice chat (%2$@)
   internal static func chatServiceVoiceChatFinished(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished", p1, p2)
@@ -2524,6 +2528,10 @@ internal final class L10n {
   /// %@ received the following documents: %@
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
+  }
+  /// You change chat theme to %@
+  internal static func chatServiceUpdateThemeYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)
   }
   /// Voice chat ended (%1$@)
   internal static func chatServiceVoiceChatFinishedChannel(_ p1: String) -> String {

@@ -480,6 +480,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 text = L10n.chatListServiceVoiceChatInvitation(authorName, list)
             }
             return text
+        case let .setChatTheme(emoji):
+            let text: String
+            if message.author?.id == account.peerId {
+                text = L10n.chatServiceUpdateThemeYou(emoji)
+            } else {
+                text = L10n.chatServiceUpdateTheme(authorName, emoji)
+            }
+            return text
         }
     }
     

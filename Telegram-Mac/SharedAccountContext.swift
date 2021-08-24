@@ -225,32 +225,39 @@ class SharedAccountContext {
                 var result: [AccountRecordId: AccountAttributes] = [:]
                 for record in view.records {
                     let isLoggedOut = record.attributes.contains(where: { attribute in
-                        return attribute is LoggedOutAccountAttribute
-                    })
-                    if isLoggedOut {
-                        continue
-                    }
-                    let isTestingEnvironment = record.attributes.contains(where: { attribute in
-                        if let attribute = attribute as? AccountEnvironmentAttribute, case .test = attribute.environment {
+                        if case .loggedOut = attribute {
                             return true
                         } else {
                             return false
                         }
                     })
+                    if isLoggedOut {
+                        continue
+                    }
+
+                    let isTestingEnvironment = record.attributes.contains(where: { attribute in
+                        if case let .environment(environment) = attribute, case .test = environment.environment {
+                            return true
+                        } else {
+                            return false
+                        }
+                    })
+
                     var backupData: AccountBackupData?
                     var sortIndex: Int32 = 0
                     for attribute in record.attributes {
-                        if let attribute = attribute as? AccountSortOrderAttribute {
-                            sortIndex = attribute.order
-                        } else if let attribute = attribute as? AccountBackupDataAttribute, false {
-                            backupData = attribute.data
+                        if case let .sortOrder(sortOrder) = attribute {
+                            sortIndex = sortOrder.order
+                        } else if case let .backupData(backupDataValue) = attribute {
+                            backupData = backupDataValue.data
                         }
                     }
+
                     result[record.id] = AccountAttributes(sortIndex: sortIndex, isTestingEnvironment: isTestingEnvironment, backupData: backupData)
                 }
                 let authRecord: (AccountRecordId, Bool)? = view.currentAuthAccount.flatMap({ authAccount in
                     let isTestingEnvironment = authAccount.attributes.contains(where: { attribute in
-                        if let attribute = attribute as? AccountEnvironmentAttribute, case .test = attribute.environment {
+                        if case let .environment(environment) = attribute, case .test = environment.environment {
                             return true
                         } else {
                             return false
@@ -258,6 +265,7 @@ class SharedAccountContext {
                     })
                     return (authAccount.id, isTestingEnvironment)
                 })
+
                 return (view.currentRecord?.id, result, authRecord)
             }
             |> distinctUntilChanged(isEqual: { lhs, rhs in
