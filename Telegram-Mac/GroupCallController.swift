@@ -1545,7 +1545,7 @@ final class GroupCallUIController : ViewController {
                 let mainMember = members?.participants.first(where: { $0.peer.id == accountId })
                 
                 let videoMembers: [GroupCallParticipantsContext.Participant] = members?.participants.filter { member in
-                    return (member.videoEndpointId != nil || member.presentationEndpointId != nil) && mainMember?.joinedVideo == true
+                    return (member.videoEndpointId != nil || member.presentationEndpointId != nil)
                 } ?? []
                 
                 let tiles = tileViews(videoMembers.count, isFullscreen: isFullScreen, frameSize: strongSelf.genericView.videoRect.size)
