@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "Close.png",
+      "filename" : "ic_edit.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Close@2x.png",
+      "filename" : "ic_edit@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

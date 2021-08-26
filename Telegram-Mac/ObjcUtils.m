@@ -1133,7 +1133,7 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
                 return index;
             };
             
-            NSArray<NSCharacterSet *> *csets = @[[NSCharacterSet newlineCharacterSet],[NSCharacterSet characterSetWithCharactersInString:@"."],[NSCharacterSet whitespaceCharacterSet]];
+            NSArray<NSCharacterSet *> *csets = @[[NSCharacterSet newlineCharacterSet],[NSCharacterSet whitespaceCharacterSet]];
             
             NSUInteger index = substring.length;
             

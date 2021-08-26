@@ -7960,6 +7960,97 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_action_dismiss: CGImage {
+      if let image = cached.with({ $0["chat_action_dismiss"] }) {
+          return image
+      } else {
+          let image = _chat_action_dismiss()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_dismiss"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_action_edit_message: CGImage {
+      if let image = cached.with({ $0["chat_action_edit_message"] }) {
+          return image
+      } else {
+          let image = _chat_action_edit_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_edit_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_action_forward_message: CGImage {
+      if let image = cached.with({ $0["chat_action_forward_message"] }) {
+          return image
+      } else {
+          let image = _chat_action_forward_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_forward_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_action_reply_message: CGImage {
+      if let image = cached.with({ $0["chat_action_reply_message"] }) {
+          return image
+      } else {
+          let image = _chat_action_reply_message()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_reply_message"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_action_url_preview: CGImage {
+      if let image = cached.with({ $0["chat_action_url_preview"] }) {
+          return image
+      } else {
+          let image = _chat_action_url_preview()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_url_preview"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_action_menu_update_chat: CGImage {
+      if let image = cached.with({ $0["chat_action_menu_update_chat"] }) {
+          return image
+      } else {
+          let image = _chat_action_menu_update_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_menu_update_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var chat_action_menu_selected: CGImage {
+      if let image = cached.with({ $0["chat_action_menu_selected"] }) {
+          return image
+      } else {
+          let image = _chat_action_menu_selected()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_action_menu_selected"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8573,6 +8664,13 @@ final class TelegramIconsTheme {
   private let _empty_chat_stickers_none_active: ()->CGImage
   private let _empty_chat_stickers_mysets_active: ()->CGImage
   private let _empty_chat_stickers_allsets_active: ()->CGImage
+  private let _chat_action_dismiss: ()->CGImage
+  private let _chat_action_edit_message: ()->CGImage
+  private let _chat_action_forward_message: ()->CGImage
+  private let _chat_action_reply_message: ()->CGImage
+  private let _chat_action_url_preview: ()->CGImage
+  private let _chat_action_menu_update_chat: ()->CGImage
+  private let _chat_action_menu_selected: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9186,7 +9284,14 @@ final class TelegramIconsTheme {
       empty_chat_stickers_allsets: @escaping()->CGImage,
       empty_chat_stickers_none_active: @escaping()->CGImage,
       empty_chat_stickers_mysets_active: @escaping()->CGImage,
-      empty_chat_stickers_allsets_active: @escaping()->CGImage
+      empty_chat_stickers_allsets_active: @escaping()->CGImage,
+      chat_action_dismiss: @escaping()->CGImage,
+      chat_action_edit_message: @escaping()->CGImage,
+      chat_action_forward_message: @escaping()->CGImage,
+      chat_action_reply_message: @escaping()->CGImage,
+      chat_action_url_preview: @escaping()->CGImage,
+      chat_action_menu_update_chat: @escaping()->CGImage,
+      chat_action_menu_selected: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9800,5 +9905,12 @@ final class TelegramIconsTheme {
       self._empty_chat_stickers_none_active = empty_chat_stickers_none_active
       self._empty_chat_stickers_mysets_active = empty_chat_stickers_mysets_active
       self._empty_chat_stickers_allsets_active = empty_chat_stickers_allsets_active
+      self._chat_action_dismiss = chat_action_dismiss
+      self._chat_action_edit_message = chat_action_edit_message
+      self._chat_action_forward_message = chat_action_forward_message
+      self._chat_action_reply_message = chat_action_reply_message
+      self._chat_action_url_preview = chat_action_url_preview
+      self._chat_action_menu_update_chat = chat_action_menu_update_chat
+      self._chat_action_menu_selected = chat_action_menu_selected
   }
 }

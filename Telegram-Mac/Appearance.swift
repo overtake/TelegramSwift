@@ -1054,12 +1054,14 @@ struct ActivitiesTheme : Equatable {
     let text:[CGImage]
     let uploading:[CGImage]
     let recording:[CGImage]
+    let choosingSticker:[CGImage]
     let textColor:NSColor
     let backgroundColor:NSColor
-    init(text:[CGImage], uploading:[CGImage], recording:[CGImage], textColor:NSColor, backgroundColor:NSColor) {
+    init(text:[CGImage], uploading:[CGImage], recording:[CGImage], choosingSticker: [CGImage], textColor:NSColor, backgroundColor:NSColor) {
         self.text = text
         self.uploading = uploading
         self.recording = recording
+        self.choosingSticker = choosingSticker
         self.textColor = textColor
         self.backgroundColor = backgroundColor
     }
@@ -1868,7 +1870,7 @@ class TelegramPresentationTheme : PresentationTheme {
     
     func activity(key:Int32, foregroundColor: NSColor, backgroundColor: NSColor) -> ActivitiesTheme {
         return activityResources.object(key, { () -> Any in
-            return ActivitiesTheme(text: textActivityAnimation(foregroundColor), uploading: uploadFileActivityAnimation(foregroundColor, backgroundColor), recording: recordVoiceActivityAnimation(foregroundColor), textColor: foregroundColor, backgroundColor: backgroundColor)
+            return ActivitiesTheme(text: textActivityAnimation(foregroundColor), uploading: uploadFileActivityAnimation(foregroundColor, backgroundColor), recording: recordVoiceActivityAnimation(foregroundColor), choosingSticker: choosingStickerActivityAnimation(foregroundColor), textColor: foregroundColor, backgroundColor: backgroundColor)
         }) as! ActivitiesTheme
     }
     
@@ -2514,7 +2516,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                empty_chat_stickers_allsets: { NSImage(named: "Icon_EmptyChat_Stickers_AllSets")!.precomposed(palette.text) },
                                                empty_chat_stickers_none_active: { NSImage(named: "Icon_EmptyChat_Stickers_None")!.precomposed(palette.accent) },
                                                empty_chat_stickers_mysets_active: { NSImage(named: "Icon_EmptyChat_Stickers_MySets")!.precomposed(palette.accent) },
-                                               empty_chat_stickers_allsets_active: { NSImage(named: "Icon_EmptyChat_Stickers_AllSets")!.precomposed(palette.accent) }
+                                               empty_chat_stickers_allsets_active: { NSImage(named: "Icon_EmptyChat_Stickers_AllSets")!.precomposed(palette.accent) },
+                                               chat_action_dismiss: { NSImage(named: "Icon_ChatAction_Close")!.precomposed(palette.accent) },
+                                               chat_action_edit_message: { NSImage(named: "Icon_ChatAction_EditMessage")!.precomposed(palette.accent) },
+                                               chat_action_forward_message: { NSImage(named: "Icon_ChatAction_ForwardMessage")!.precomposed(palette.accent) },
+                                               chat_action_reply_message: { NSImage(named: "Icon_ChatAction_ReplyMessage")!.precomposed(palette.accent) },
+                                               chat_action_url_preview: { NSImage(named: "Icon_ChatAction_UrlPreview")!.precomposed(palette.accent) },
+                                               chat_action_menu_update_chat: { NSImage(named: "Icon_ChatAction_Menu_UpdateChat")!.precomposed(palette.accent) },
+                                               chat_action_menu_selected: { NSImage(named: "Icon_UsernameAvailability")!.precomposed(palette.accent) }
     )
 
 }

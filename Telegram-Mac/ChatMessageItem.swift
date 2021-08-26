@@ -91,6 +91,9 @@ class ChatMessageItem: ChatRowItem {
     }
     
     var actionButtonText: String? {
+        if let _ = message?.adAttribute {
+            return L10n.chatMessageViewChannel
+        }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
@@ -137,7 +140,10 @@ class ChatMessageItem: ChatRowItem {
     }
     
     func invokeAction() {
-        if let webpage = webpageLayout {
+        if let _ = message?.adAttribute, let peer = peer {
+            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo)
+            execute(inapp: link)
+        } else if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
         } else if unsupported {
@@ -684,6 +690,11 @@ class ChatMessageItem: ChatRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items = super.menuItems(in: location)
+        
+        if message?.adAttribute != nil {
+            return items
+        }
+        
         let text = messageText.string
         
         let context = self.context

@@ -481,8 +481,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         _ts.setFrameSize(frame.width, .borderSize)
         
-        accessory.measureSize(frame.width - 40.0)
-        accessory.frame = NSMakeRect(15, contentView.frame.maxY, accessory.measuredWidth, accessory.size.height)
+        accessory.measureSize(frame.width - 64)
+        accessory.frame = NSMakeRect(15, contentView.frame.maxY, frame.width - 39, accessory.size.height)
         messageActionsPanelView?.setFrameSize(frame.size)
         blockedActionView?.setFrameSize(frame.size)
         chatDiscussionView?.setFrameSize(frame.size)
@@ -593,7 +593,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage(false, nil)
                 
-                chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: chatInteraction.peerId, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: false)
+                chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.activitySpace, activity: .typingText, isPresent: false)
                 markNextTextChangeToFalseActivity = true
             } else if text.isEmpty {
                 chatInteraction.scrollToLatest(true)

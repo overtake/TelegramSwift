@@ -346,8 +346,6 @@ class SharedAccountContext {
                         }
                 }
                 
-
-                
                 differenceDisposable.set(combineLatest(queue: .mainQueue(), mappedAddedAccounts, addedAuthSignal).start(next: { mappedAddedAccounts, authAccount in
                     var addedAccounts: [(AccountRecordId, Account?, Int32)] = []
                     switch mappedAddedAccounts {
@@ -357,7 +355,6 @@ class SharedAccountContext {
                     case let .ready(value):
                         addedAccounts = value
                     }
-                    
                     
                     var hadUpdates = false
                     if self.activeAccountsValue == nil {

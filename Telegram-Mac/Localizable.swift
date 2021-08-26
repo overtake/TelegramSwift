@@ -2131,6 +2131,8 @@ internal final class L10n {
   internal static var chatMessageUnsupportedNew: String  { return L10n.tr("Localizable", "Chat.Message.UnsupportedNew") }
   /// via
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
+  /// VIEW CHANNEL
+  internal static var chatMessageViewChannel: String  { return L10n.tr("Localizable", "Chat.Message.ViewChannel") }
   /// This message was imported from another app. We can't guarantee it's real.
   internal static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
   /// JOIN AS LISTENER
@@ -5781,6 +5783,10 @@ internal final class L10n {
   internal static var peerSavedMessages: String  { return L10n.tr("Localizable", "Peer.SavedMessages") }
   /// Service Notifications
   internal static var peerServiceNotifications: String  { return L10n.tr("Localizable", "Peer.ServiceNotifications") }
+  /// %@ is choosing sticker
+  internal static func peerActivityChatChoosingSticker(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.Activity.Chat.ChoosingSticker", p1)
+  }
   /// %@ is playing a game
   internal static func peerActivityChatPlayingGame(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.PlayingGame", p1)
@@ -5808,6 +5814,10 @@ internal final class L10n {
   /// %@ is typing
   internal static func peerActivityChatTypingText(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.TypingText", p1)
+  }
+  /// %@ and %d others are choosing stickers
+  internal static func peerActivityChatMultiChoosingSticker1(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Activity.Chat.Multi.ChoosingSticker1", p1, p2)
   }
   /// %@ and %d others are playing a games
   internal static func peerActivityChatMultiPlayingGame1(_ p1: String, _ p2: Int) -> String {
@@ -5841,6 +5851,8 @@ internal final class L10n {
   internal static func peerActivityChatMultiTypingText1(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.Multi.TypingText1", p1, p2)
   }
+  /// choosing sticker
+  internal static var peerActivityUserChoosingSticker: String  { return L10n.tr("Localizable", "Peer.Activity.User.ChoosingSticker") }
   /// playing a game
   internal static var peerActivityUserPlayingGame: String  { return L10n.tr("Localizable", "Peer.Activity.User.PlayingGame") }
   /// recording voice

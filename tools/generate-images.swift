@@ -687,7 +687,16 @@ func initialize() -> [String] {
     array.append("empty_chat_stickers_none_active")
     array.append("empty_chat_stickers_mysets_active")
     array.append("empty_chat_stickers_allsets_active")
-
+    
+    array.append("chat_action_dismiss")
+    array.append("chat_action_edit_message")
+    array.append("chat_action_forward_message")
+    array.append("chat_action_reply_message")
+    array.append("chat_action_url_preview")
+    
+    array.append("chat_action_menu_update_chat")
+    array.append("chat_action_menu_selected")
+    
     return array
 }
 //swift ./tools/generate-images.swift

@@ -611,6 +611,9 @@ public extension Message {
     
     func chatPeer(_ accountPeerId: PeerId) -> Peer? {
         var _peer: Peer?
+        if let _ = adAttribute {
+            return author
+        }
         for attr in attributes {
             if let source = attr as? SourceReferenceMessageAttribute {
                 if let info = forwardInfo {
