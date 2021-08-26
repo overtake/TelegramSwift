@@ -33,6 +33,10 @@ final class ChatInteraction : InterfaceObserver  {
         return chatLocation.peerId
     }
     
+    var activitySpace: PeerActivitySpace {
+        return .init(peerId: peerId, category: mode.activityCategory)
+    }
+    
     var peer: Peer? {
         return presentation.peer
     }

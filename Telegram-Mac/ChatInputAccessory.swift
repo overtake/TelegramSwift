@@ -21,6 +21,7 @@ class ChatInputAccessory: Node {
     private var displayNode:ChatAccessoryModel?
     
     private let dismiss:ImageButton = ImageButton()
+    private let iconView = ImageView()
     private var progress: Control?
     let container:ChatAccessoryView = ChatAccessoryView()
     
@@ -50,7 +51,7 @@ class ChatInputAccessory: Node {
         dismiss.set(image: theme.icons.dismissAccessory, for: .Normal)
         _ = dismiss.sizeToFit()
         
-       
+        view?.addSubview(iconView)
         view?.addSubview(dismiss)
         self.view = view
         
@@ -68,7 +69,7 @@ class ChatInputAccessory: Node {
         
         dismiss.isHidden = false
         progress?.isHidden = true
-      
+        iconView.isHidden = false
         
         displayNode = nil
         dismiss.removeAllHandlers()
@@ -76,13 +77,15 @@ class ChatInputAccessory: Node {
         
 
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
+            iconView.image = theme.icons.chat_action_url_preview
             displayNode = ChatUrlPreviewModel(account: account, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissUrlPreview()
             }, for: .Click)
         } else if let editState = state.interfaceState.editState {
             displayNode = EditMessageModel(state: editState, account:account)
-            dismiss.isHidden = editState.loadingState != .none
+            iconView.image = theme.icons.chat_action_edit_message
+            iconView.isHidden = editState.loadingState != .none
             progress?.isHidden = editState.loadingState == .none
             updateProgress(editState.loadingState)
             dismiss.set(handler: { [weak self] _ in
@@ -96,7 +99,8 @@ class ChatInputAccessory: Node {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, account:account)
            
             let context = self.chatInteraction.context
-            
+            iconView.image = theme.icons.chat_action_forward_message
+
             let anotherAction = { [weak self] in
                 guard let context = self?.chatInteraction.context else {
                     return
@@ -107,47 +111,42 @@ class ChatInputAccessory: Node {
                     self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
                 })
             }
-            let hideAction = { [weak self] in
+            let setHideAction = { [weak self] hide in
                 self?.chatInteraction.update {
                     $0.updatedInterfaceState {
-                        $0.withUpdatedHideSendersName(!$0.hideSendersName)
+                        $0.withUpdatedHideSendersName(hide)
                     }
                 }
             }
             
-            let alert:(Bool)->Void = { [weak self] canCancel in
-                let message = state.interfaceState.forwardMessages[0]
-                let chatName = message.peers[message.id.peerId]?.displayTitle ?? ""
-                let header = L10n.chatAlertForwardHeaderCountable(state.interfaceState.forwardMessages.count)
-                let textHelp = L10n.chatAlertForwardTextInnerCountable(state.interfaceState.forwardMessages.count)
-                let text = L10n.chatAlertForwardText(textHelp, chatName)
-                let okTitle = L10n.chatAlertForwardActionAnother
-                let cancelTitle = canCancel ? L10n.chatAlertForwardActionCancel : L10n.alertCancel
-                let thirdTitle = !state.interfaceState.hideSendersName ? L10n.chatAlertForwardActionHide : L10n.chatAlertForwardActionShow
-                confirm(for: context.window, header: header, information: text, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thirdTitle, successHandler: { result in
-                    switch result {
-                    case .basic:
-                        anotherAction()
-                    case .thrid:
-                        hideAction()
-                    }
-                }, cancelHandler: { [weak self] in
-                    if canCancel {
-                        self?.dismissForward()
-                    }
-                })
-            }
+            var items:[SPopoverItem] = []
             
-            dismiss.set(handler: { _ in
-                alert(true)
+            
+            items.append(SPopoverItem(L10n.chatAlertForwardActionShow, {
+                setHideAction(false)
+            }, !state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
+            
+            items.append(SPopoverItem(L10n.chatAlertForwardActionHide, {
+                setHideAction(true)
+            }, state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
+        
+            items.append(SPopoverItem(true))
+            
+            items.append(SPopoverItem(L10n.chatAlertForwardActionAnother, anotherAction, theme.icons.chat_action_menu_update_chat))
+
+        
+            container.set(handler: { control in
+                showPopover(for: control, with: SPopoverViewController(items: items), inset: NSMakePoint(-5, 3))
+            }, for: .Hover)
+            
+            dismiss.set(handler: { [weak self] _ in
+                self?.dismissForward()
             }, for: .Click)
             
-            container.set(handler: { [weak self] _ in
-                alert(false)
-            }, for: .Click)
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
             displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage)
+            iconView.image = theme.icons.chat_action_reply_message
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)
@@ -162,12 +161,9 @@ class ChatInputAccessory: Node {
         } else {
             nodeReady.set(.single(animated))
         }
+        iconView.sizeToFit()
         container.removeAllSubviews()
         displayNode?.view = container
-        
-     
-        
-        
     }
     
     private func updateProgress(_ loadingState: EditStateLoading) {
@@ -207,8 +203,9 @@ class ChatInputAccessory: Node {
         }
         set {
             super.frame = newValue
-            self.container.frame = NSMakeRect(49, 0, newValue.width, size.height)
-            dismiss.centerY(x: 0)
+            self.container.frame = NSMakeRect(49, 0, measuredWidth, size.height)
+            iconView.centerY(x: 5)
+            dismiss.centerY(x: newValue.width - dismiss.frame.width)
             progress?.centerY(x: 5)
             displayNode?.setNeedDisplay()
         }
@@ -223,7 +220,7 @@ class ChatInputAccessory: Node {
             if let view = newValue {
                 if container.superview != newValue {
                     container.removeFromSuperview()
-                    view.addSubview(container)
+                    view.addSubview(container, positioned: .below, relativeTo: dismiss)
                 }
                 container.frame = view.bounds
                 container.setNeedsDisplay()

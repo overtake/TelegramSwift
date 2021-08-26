@@ -735,6 +735,8 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
+        
+        
         if isSharable {
             if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
                 return false
@@ -752,6 +754,9 @@ class ChatRowItem: TableRowItem {
         }
         
         guard let message = message else {
+            return false
+        }
+        if message.adAttribute != nil {
             return false
         }
         
@@ -882,7 +887,7 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.chatLocation {
         case .peer, .replyThread:
             if renderType == .bubble, let peer = messageMainPeer(message) {
-                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId)
+                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
                 if let media = message.media.first {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
@@ -1475,6 +1480,10 @@ class ChatRowItem: TableRowItem {
                         break
                     }
                 }
+//                if let _ = message.adAttribute {
+//                    //TODOLANG
+//                    postAuthorAttributed = .initialize(string: "sponsored", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+//                }
             }
             if let peer = peer, peer.isSupergroup, message.isAnonymousMessage {
                 for attr in message.attributes {
@@ -1661,11 +1670,11 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 var titlePeer:Peer? = self.peer
+                var title:String = self.peer?.displayTitle ?? ""
                 
-                var title:String = peer?.displayTitle ?? ""
                 if object.renderType == .list, let _ = message.forwardInfo?.psaType {
                     
-                } else if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+                } else if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info, message.adAttribute == nil {
                     title = peer.displayTitle
                     titlePeer = peer
                 }
@@ -2494,6 +2503,13 @@ class ChatRowItem: TableRowItem {
 }
 
 func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
+    
+    if let _ = message.adAttribute {
+        //TODOLANG
+        return .single([ContextMenuItem("What are sponsored messages?", handler: {
+            
+        })])
+    }
     
     let account = chatInteraction.context.account
     let context = chatInteraction.context

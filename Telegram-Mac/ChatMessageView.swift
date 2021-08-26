@@ -132,6 +132,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     actionButton?.set(font: .normal(.text), for: .Normal)
                     addSubview(actionButton!)
                 }
+                actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
                 actionButton?.set(handler: { [weak item] _ in
                     item?.invokeAction()

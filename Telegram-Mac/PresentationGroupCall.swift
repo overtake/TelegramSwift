@@ -2401,7 +2401,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         if (self.stateValue.recordingStartTimestamp != nil) == shouldBeRecording {
             return
         }
-        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title)
+        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title, videoOrientation: nil)
     }
     
     private func requestCall(movingFromBroadcastToRtc: Bool) {

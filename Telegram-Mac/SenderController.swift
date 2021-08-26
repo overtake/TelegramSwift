@@ -458,7 +458,7 @@ class Sender: NSObject {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
         if hideNames {
-            attributes.append(ForwardHideSendersNamesMessageAttribute())
+            attributes.append(ForwardOptionsMessageAttribute(hideNames: hideNames, hideCaptions: false))
         }
         
         if let date = atDate {

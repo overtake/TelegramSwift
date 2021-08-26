@@ -18,6 +18,7 @@ enum ChatActivityAnimation {
     case text
     case uploading
     case recording
+    case choosingSticker
 }
 
 
@@ -63,6 +64,15 @@ class ChatActivitiesView : View {
             setFrameSize(layout.layoutSize.width + animationView.frame.width, layout.layoutSize.height)
         }
         textView.update(params.1, origin:NSMakePoint(animationView.frame.width , 0))
+        
+        if let type = type {
+            switch type {
+            case .choosingSticker:
+                animationView.setFrameOrigin(NSMakePoint(0, -1))
+            default:
+                animationView.setFrameOrigin(NSMakePoint(0, -4))
+            }
+        }
     }
     
     func startAnimation(_ type:ChatActivityAnimation, theme:ActivitiesTheme) {
@@ -80,9 +90,14 @@ class ChatActivitiesView : View {
                 animation.duration = 0.7
             case .uploading:
                 animationView.layer?.contents = theme.uploading.first
-                animationView.setFrameSize(theme.recording.first!.backingSize)
+                animationView.setFrameSize(theme.uploading.first!.backingSize)
                 animation.values = theme.uploading
                 animation.duration = 1.75
+            case .choosingSticker:
+                animationView.layer?.contents = theme.choosingSticker.first
+                animationView.setFrameSize(theme.choosingSticker.first!.backingSize)
+                animation.values = theme.choosingSticker
+                animation.duration = 2.0
             default:
                 animationView.layer?.contents = theme.text.first
                 animationView.setFrameSize(theme.recording.first!.backingSize)
@@ -183,6 +198,9 @@ class ChatActivitiesModel: Node {
                         case .recordingInstantVideo:
                             animation = .recording
                             _ = text.append(string: tr(L10n.peerActivityChatMultiRecordingVideo1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
+                        case .choosingSticker:
+                            animation = .choosingSticker
+                            _ = text.append(string: tr(L10n.peerActivityChatMultiChoosingSticker1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
                         case .playingGame:
                             animation = .text
                             _ = text.append(string: tr(L10n.peerActivityChatMultiPlayingGame1(firstTitle, activities.1.count - 1)), color: theme.textColor, font: .normal(.text))
@@ -234,6 +252,14 @@ class ChatActivitiesModel: Node {
                         } else {
                             _ = text.append(string: L10n.peerActivityChatSendingPhoto(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
+                    case .choosingSticker:
+                        animation = .choosingSticker
+                        if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
+                            
+                            _ = text.append(string:tr(L10n.peerActivityUserChoosingSticker), color: theme.textColor, font: .normal(.text))
+                        } else {
+                            _ = text.append(string: L10n.peerActivityChatChoosingSticker(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
+                        }
                     case .recordingInstantVideo:
                         animation = .recording
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
@@ -283,7 +309,6 @@ class ChatActivitiesModel: Node {
     init() {
         self.activityView = ChatActivitiesView()
         super.init(activityView)
-        
     }
     
 }
