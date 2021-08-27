@@ -141,8 +141,8 @@ final class GroupCallUIState : Equatable {
         self.isWindowVisible = isWindowVisible
         self.dominantSpeaker = dominantSpeaker
         self.pinnedData = pinnedData
-        self.isFullScreen = isFullScreen && videoJoined
-        self.mode = mode
+        self.isFullScreen = isFullScreen
+        self.mode = activeVideoViews.isEmpty ? mode : .video
         self.videoSources = videoSources
         self.version = version
         self.activeVideoViews = activeVideoViews
