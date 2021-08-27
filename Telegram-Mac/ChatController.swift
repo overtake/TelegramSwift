@@ -4469,6 +4469,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 var hasFailed: Bool = false
                 
+                var readAds:[Data] = []
+                
                 tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
                         if message == nil {
@@ -4515,6 +4517,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else {
                                 topVisibleMessageRange = ChatTopVisibleMessageRange(lowerBound: message.id, upperBound: message.id, isLast: item.index == tableView.count - 1)
                             }
+                            if let id = message.adAttribute?.opaqueId {
+                                if item.height == item.view?.visibleRect.height {
+                                    readAds.append(id)
+                                }
+                            }
                         }
                         
                         
@@ -4532,6 +4539,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.topVisibleMessageRange.set(topVisibleMessageRange)
                 }
 
+                if !readAds.isEmpty {
+                    for data in readAds {
+                        strongSelf.adMessages?.markAsSeen(opaqueId: data)
+                    }
+                }
                 
                 strongSelf.genericView.updateFailedIds(strongSelf.genericView.failedIds, hasOnScreen: hasFailed, animated: true)
                 
@@ -4706,6 +4718,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } else {
                 self.interactiveReadingDisposable.set(nil)
             }
+            
         default:
             self.interactiveReadingDisposable.set(nil)
         }
