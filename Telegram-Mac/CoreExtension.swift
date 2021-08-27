@@ -650,7 +650,7 @@ public extension Message {
     
     var editedAttribute: EditedMessageAttribute? {
         for attr in attributes {
-            if let attr = attr as? EditedMessageAttribute {
+            if let attr = attr as? EditedMessageAttribute, !attr.isHidden {
                 return attr
             }
         }

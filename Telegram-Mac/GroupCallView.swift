@@ -417,7 +417,7 @@ final class GroupCallView : View {
         var rect = focus(size)
         rect.origin.y = 54
         
-        if let state = state, (!state.videoActive(.main).isEmpty || state.cantRunVideo) {
+        if let state = state, !state.videoActive(.main).isEmpty {
             if !isFullScreen {
                 rect.origin.y = videoRect.maxY + 5
             } else {
@@ -605,7 +605,7 @@ final class GroupCallView : View {
             }
         }
         
-        if !state.videoActive(.main).isEmpty || state.cantRunVideo {
+        if !state.videoActive(.main).isEmpty {
             let current: GroupCallTileView
             if let tileView = self.tileView {
                 current = tileView
