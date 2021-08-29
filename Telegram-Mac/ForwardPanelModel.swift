@@ -63,11 +63,27 @@ class ForwardPanelModel: ChatAccessoryModel {
             }
         }
         
-        self.headerAttr = NSAttributedString.initialize(string: hideNames ? L10n.chatInputForwardHidden :  names.joined(separator: ", "), color: theme.colors.accent, font: .medium(.text))
+        //hideNames ? L10n.chatInputForwardHidden :  names.joined(separator: ", ")
+        
+        let text = hideNames ? L10n.chatAccessoryHiddenCountable(forwardMessages.count) : L10n.chatAccessoryForwardCountable(forwardMessages.count)
+        self.headerAttr = NSAttributedString.initialize(string: text, color: theme.colors.accent, font: .medium(.text))
         if forwardMessages.count == 1, !forwardMessages[0].text.isEmpty, forwardMessages[0].media.isEmpty {
-            self.messageAttr = NSAttributedString.initialize(string: forwardMessages[0].text, color: theme.colors.text, font: .normal(.text))
+            let text: String
+            let messageText = chatListText(account: account, for: forwardMessages[0]).string
+            if forwardMessages[0].effectiveAuthor?.id == account.peerId {
+                text = "\(L10n.chatAccessoryForwardYou): \(messageText)"
+            } else if let author = forwardMessages[0].effectiveAuthor {
+                text = "\(author.displayTitle): \(messageText)"
+            } else {
+                text = messageText
+            }
+            self.messageAttr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.text))
         } else {
-            self.messageAttr = NSAttributedString.initialize(string: L10n.messageAccessoryPanelForwardedCountable(forwardMessages.count), color: theme.colors.text, font: .normal(.text))
+            let authors = uniquePeers(from: forwardMessages.compactMap { $0.effectiveAuthor })
+            let messageText = authors.map { $0.compactDisplayTitle }.joined(separator: ", ")
+            let text = "\(L10n.chatAccessoryForwardFrom): \(messageText)"
+
+            self.messageAttr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.text))
         }
 
         nodeReady.set(.single(true))

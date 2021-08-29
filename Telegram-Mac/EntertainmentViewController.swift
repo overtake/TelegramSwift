@@ -720,7 +720,6 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     deinit {
         languageDisposable.dispose()
         disposable.dispose()
-        delayDisposable.dispose()
     }
 
     
@@ -728,31 +727,14 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         super.viewWillAppear(animated)
         section.viewWillAppear(animated)
         updateLocalizationAndTheme(theme: theme)
-        shouldSendActivity(section.selectedSection.controller == stickers)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         section.viewWillDisappear(animated)
         window?.removeAllHandlers(for: self)
-        shouldSendActivity(false)
     }
-    private let delayDisposable = MetaDisposable()
-    private func shouldSendActivity(_ isPresent: Bool) {
-        if let chatInteraction = chatInteraction {
-            if chatInteraction.peerId.toInt64() != 0 {
-                chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.activitySpace, activity: .choosingSticker, isPresent: isPresent)
-                
-                if isPresent {
-                    delayDisposable.set(delaySignal(5.0).start(completed: { [weak self] in
-                        self?.shouldSendActivity(isPresent)
-                    }))
-                } else {
-                    delayDisposable.set(nil)
-                }
-            }
-        }
-    }
+
     
     private func toggleSearch() {
         if let searchView = self.effectiveSearchView {
@@ -834,6 +816,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 callSearchCmd(command, view)
             }
         }
+                
         self.gifs.makeSearchCommand = { [weak self] command in
             if self?.gifs.view.superview != nil, let view = self?.gifs.genericView.searchView  {
                 callSearchCmd(command, view)
@@ -897,7 +880,6 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             self?.chatInteraction?.update({ $0.withUpdatedIsEmojiSection(state == .emoji )})
             self?.genericView.updateSelected(state, mode: mode)
             
-            self?.shouldSendActivity(state == .stickers)
         }
 
         self.ready.set(section.ready.get())

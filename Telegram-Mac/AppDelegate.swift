@@ -1189,6 +1189,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         if let context = self.contextValue?.context {
             let navigation = context.sharedContext.bindings.rootNavigation()
+            (navigation.controller as? ChatController)?.chatInteraction.saveState(sync: true)
         }
         
         return .terminateNow

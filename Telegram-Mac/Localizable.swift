@@ -1577,6 +1577,58 @@ internal final class L10n {
   internal static var chatViewBackground: String  { return L10n.tr("Localizable", "Chat.ViewBackground") }
   /// VIEW CONTACT
   internal static var chatViewContact: String  { return L10n.tr("Localizable", "Chat.ViewContact") }
+  /// %d
+  internal static func chatAccessoryForwardCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_countable", p1)
+  }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_few", p1)
+  }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_many", p1)
+  }
+  /// Forward Message
+  internal static var chatAccessoryForwardOne: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward_one") }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_other", p1)
+  }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_two", p1)
+  }
+  /// Forward Messages
+  internal static var chatAccessoryForwardZero: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward_zero") }
+  /// %d
+  internal static func chatAccessoryHiddenCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_countable", p1)
+  }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_few", p1)
+  }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_many", p1)
+  }
+  /// Forward Message (sender's names hidden)
+  internal static var chatAccessoryHiddenOne: String  { return L10n.tr("Localizable", "Chat.Accessory.Hidden_one") }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_other", p1)
+  }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_two", p1)
+  }
+  /// Forward Messages (sender's names hidden)
+  internal static var chatAccessoryHiddenZero: String  { return L10n.tr("Localizable", "Chat.Accessory.Hidden_zero") }
+  /// From
+  internal static var chatAccessoryForwardFrom: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.From") }
+  /// You
+  internal static var chatAccessoryForwardYou: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.You") }
   /// VIEW THEME
   internal static var chatActionViewTheme: String  { return L10n.tr("Localizable", "Chat.Action.ViewTheme") }
   /// %d
@@ -2109,6 +2161,8 @@ internal final class L10n {
   }
   /// imported
   internal static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// sponsored
+  internal static var chatMessageSponsored: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored") }
   /// %d
   internal static func chatMessageUnsendMessagesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.UnsendMessages_countable", p1)
@@ -2397,7 +2451,7 @@ internal final class L10n {
   internal static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
-  /// %1$@ change chat theme to %2$@
+  /// %1$@ changed chat theme to %2$@
   internal static func chatServiceUpdateTheme(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme", p1, p2)
   }
@@ -2531,7 +2585,7 @@ internal final class L10n {
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
   }
-  /// You change chat theme to %@
+  /// You changed chat theme to %@
   internal static func chatServiceUpdateThemeYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)
   }
@@ -3857,7 +3911,7 @@ internal final class L10n {
   internal static var emptyChatStorageUsageDesc: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Desc") }
   /// Calculating...
   internal static var emptyChatStorageUsageLoading: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Loading") }
-  /// 8 GB
+  /// 5 GB
   internal static var emptyChatStorageUsageLow: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Low") }
   /// 32 GB
   internal static var emptyChatStorageUsageMedium: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Medium") }
@@ -9757,10 +9811,16 @@ internal final class L10n {
   internal static var ns81Title: String  { return L10n.tr("Localizable", "_NS81.title") }
   /// Edit
   internal static var ns88Title: String  { return L10n.tr("Localizable", "_NS88.title") }
+  /// Edit
+  internal static var ns104Title: String  { return L10n.tr("Localizable", "_NS:104.title") }
   /// Window
   internal static var ns163Title: String  { return L10n.tr("Localizable", "_NS:163.title") }
+  /// Window
+  internal static var ns168Title: String  { return L10n.tr("Localizable", "_NS:168.title") }
   /// View
   internal static var ns77Title: String  { return L10n.tr("Localizable", "_NS:77.title") }
+  /// View
+  internal static var ns82Title: String  { return L10n.tr("Localizable", "_NS:82.title") }
   /// Edit
   internal static var ns99Title: String  { return L10n.tr("Localizable", "_NS:99.title") }
   /// Global Search
