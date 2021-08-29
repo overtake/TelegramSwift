@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import UserNotifications
+//import UserNotifications
 import SwiftSignalKit
 
 final class UNUserNotifications {

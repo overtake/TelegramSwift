@@ -572,7 +572,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     
     
-    public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil) {
+    public func saveState(_ force:Bool = true, scrollState: ChatInterfaceHistoryScrollState? = nil, sync: Bool = false) {
         
         let peerId = self.peerId
         let context = self.context
@@ -587,11 +587,17 @@ final class ChatInteraction : InterfaceObserver  {
             s = s |> delay(10, queue: Queue.mainQueue())
         }
         
+        let semaphore = DispatchSemaphore(value: 0)
+        
         let disposable = s.start(completed: {
             context.setChatInterfaceTempState(ChatInterfaceTempState(editState: interfaceState.editState), for: peerId)
+            semaphore.signal()
         })
-        
         modifyDisposable.set(disposable)
+
+        if sync {
+            semaphore.wait()
+        }
     }
     
     

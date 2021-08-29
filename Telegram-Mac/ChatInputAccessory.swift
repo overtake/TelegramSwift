@@ -74,7 +74,7 @@ class ChatInputAccessory: Node {
         displayNode = nil
         dismiss.removeAllHandlers()
         container.removeAllHandlers()
-        
+        container.removeAllStateHandlers()
 
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
             iconView.image = theme.icons.chat_action_url_preview
@@ -98,7 +98,6 @@ class ChatInputAccessory: Node {
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
             displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, account:account)
            
-            let context = self.chatInteraction.context
             iconView.image = theme.icons.chat_action_forward_message
 
             let anotherAction = { [weak self] in

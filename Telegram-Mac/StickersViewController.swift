@@ -848,10 +848,29 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         return nil
     }
     
+    private func shouldSendActivity(_ isPresent: Bool) {
+        if let chatInteraction = chatInteraction {
+            if chatInteraction.peerId.toInt64() != 0 {
+                chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.activitySpace, activity: .choosingSticker, isPresent: isPresent)
+
+            }
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.shouldSendActivity(false)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
         let initialSize = self.atomicSize
+        
+        genericView.tableView.addScroll(listener: TableScrollListener.init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.shouldSendActivity(true)
+        }))
+        
                
         let searchInteractions = SearchInteractions({ [weak self] state, _ in
             self?.updateSearchState(state)
