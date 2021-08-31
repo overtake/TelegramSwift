@@ -697,7 +697,14 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             }
             if item.data.state == nil {
                 item.invite(item.peer.id)
-            } else {
+            }
+        }, for: .SingleClick)
+        
+        button.set(handler: { [weak self] _ in
+            guard let item = self?.item as? GroupCallParticipantRowItem else {
+                return
+            }
+            if item.data.state != nil {
                 _ = item.menuItems(in: .zero).start(next: { [weak self] items in
                     if let event = NSApp.currentEvent, let button = self?.button {
                         let menu = NSMenu()
@@ -706,8 +713,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                         NSMenu.popUpContextMenu(menu, with: event, for: button)
                     }
                 })
-            }
-        }, for: .SingleClick)
+            } 
+        }, for: .Down)
         
         containerView.set(handler: { [weak self] _ in
             if let event = NSApp.currentEvent {

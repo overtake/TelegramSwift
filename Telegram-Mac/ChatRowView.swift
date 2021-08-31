@@ -568,13 +568,18 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - rightSize.width
                 rect.origin.y += 3
             }
-            if let item = item as? ChatMessageItem, item.containsBigEmoji {
-                rect.origin.y = bubbleFrame.maxY - rightSize.height
+            if let item = item as? ChatMessageItem {
+                if item.containsBigEmoji {
+                    rect.origin.y = bubbleFrame.maxY - rightSize.height
+                } else if item.actionButtonText != nil {
+                    rect.origin.y = bubbleFrame.maxY - rightSize.height - item.actionButtonHeight - 6;
+                }
             }
             
             if item.hasBubble, let _ = item.commentsBubbleData {
                 rect.origin.y -= ChatRowItem.channelCommentsBubbleHeight
             }
+            
         }
         
         return rect

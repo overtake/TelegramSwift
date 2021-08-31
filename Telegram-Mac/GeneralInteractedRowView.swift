@@ -365,7 +365,12 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     private func invokeIfNeededUp() {
         if let event = NSApp.currentEvent {
-            if let item = item as? GeneralInteractedRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
+            guard let item = item as? GeneralInteractedRowItem else {
+                return
+            }
+            if case .contextSelector = item.type {
+                
+            } else if let table = item.table, table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
                 invokeAction(item)
             } else {
                 super.mouseUp(with: event)
@@ -375,7 +380,12 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     private func invokeIfNeededDown() {
         if let event = NSApp.currentEvent {
-            if let item = item as? GeneralInteractedRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
+            guard let item = item as? GeneralInteractedRowItem else {
+                return
+            }
+            if case .contextSelector = item.type {
+                invokeAction(item)
+            } else if let table = item.table, !table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
                 invokeAction(item)
             } else {
                 super.mouseDown(with: event)

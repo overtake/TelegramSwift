@@ -91,8 +91,14 @@ class ChatMessageItem: ChatRowItem {
     }
     
     var actionButtonText: String? {
-        if let _ = message?.adAttribute {
-            return L10n.chatMessageViewChannel
+        if let _ = message?.adAttribute, let author = message?.author {
+            if author.isBot {
+                return L10n.chatMessageViewBot
+            } else if author.isGroup || author.isSupergroup {
+                return L10n.chatMessageViewGroup
+            } else {
+                return L10n.chatMessageViewChannel
+            }
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
@@ -660,10 +666,14 @@ class ChatMessageItem: ChatRowItem {
             
         }
         if let _ = actionButtonText {
-            contentSize.height += 36
+            contentSize.height += actionButtonHeight
         }
         
         return contentSize
+    }
+    
+    var actionButtonHeight: CGFloat {
+        return 36
     }
     
     
