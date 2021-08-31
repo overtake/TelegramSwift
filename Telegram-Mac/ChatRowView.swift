@@ -572,7 +572,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if item.containsBigEmoji {
                     rect.origin.y = bubbleFrame.maxY - rightSize.height
                 } else if item.actionButtonText != nil {
-                    rect.origin.y = bubbleFrame.maxY - rightSize.height - item.actionButtonHeight - 6;
+                    if item.webpageLayout == nil {
+                        rect.origin.y = bubbleFrame.maxY - rightSize.height - item.actionButtonHeight - 6;
+                    }
                 }
             }
             
