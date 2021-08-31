@@ -1548,7 +1548,7 @@ class ChatRowItem: TableRowItem {
 
                     if ChatRowItem.authorIsChannel(message: message, account: context.account) {
                         if let author = info.author {
-                            var range = attr.append(string: author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                            let range = attr.append(string: author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                             
                             let appLink = inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: !(author is TelegramUser), postId: info.sourceMessageId?.id, callback: chatInteraction.openInfo)
                             attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
@@ -1747,7 +1747,7 @@ class ChatRowItem: TableRowItem {
                 }
                 
             }
-            if message.timestamp != scheduleWhenOnlineTimestamp {
+            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil {
                 var time:TimeInterval = TimeInterval(message.timestamp)
                 time -= context.timeDifference
                 
@@ -1757,6 +1757,8 @@ class ChatRowItem: TableRowItem {
                 dateFormatter.timeZone = NSTimeZone.local
                 
                 date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            } else if message.adAttribute != nil {
+                date = TextNode.layoutText(maybeNode: nil, .initialize(string: L10n.chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
             }
 
         } else {
@@ -2505,9 +2507,8 @@ class ChatRowItem: TableRowItem {
 func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     if let _ = message.adAttribute {
-        //TODOLANG
-        return .single([ContextMenuItem("What are sponsored messages?", handler: {
-            
+        return .single([ContextMenuItem(L10n.chatMessageSponsoredWhat, handler: {
+            execute(inapp: .external(link: L10n.chatMessageSponsoredLink, false))
         })])
     }
     

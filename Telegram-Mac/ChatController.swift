@@ -363,7 +363,8 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func updateScroller(_ historyState:ChatHistoryState) {
         self.historyState = historyState
-        let isHidden = (tableView.documentOffset.y < 150 && historyState.isDownOfHistory) || tableView.isEmpty
+        let isHidden = (tableView.documentOffset.y < 80 && historyState.isDownOfHistory) || tableView.isEmpty
+
         if !isHidden {
             scroller.isHidden = false
         }
@@ -4969,7 +4970,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
                                 
                                 if peer.groupAccess.canMakeVoiceChat {
-                                    items.append(SPopoverItem(L10n.peerInfoActionVoiceChat, { [weak self] in
+                                    var isLiveStream: Bool = false
+                                    if let peer = peer as? TelegramChannel {
+                                        isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
+                                    }
+                                    items.append(SPopoverItem(isLiveStream ? L10n.peerInfoActionLiveStream : L10n.peerInfoActionVoiceChat, { [weak self] in
                                         self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
                                     }, theme.icons.chat_info_voice_chat))
                                 }
