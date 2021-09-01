@@ -938,7 +938,7 @@ class AddContactView : Control, ChatHeaderProtocol {
             buttons.append(unarchiveButton)
         }
         
-        buttonsContainer.frame = NSMakeRect(0, 0, frame.width - (frame.width - dismiss.frame.minX), frame.height - .borderSize)
+        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
 
         
         let buttonWidth: CGFloat = floor(buttonsContainer.frame.width / CGFloat(buttons.count))

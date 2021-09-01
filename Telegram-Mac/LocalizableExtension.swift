@@ -70,6 +70,10 @@ private func dictFromLocalization(_ value: Localization) -> [String: String] {
 }
 
 func applyUILocalization(_ settings: LocalizationSettings) {
+    #if !SHARE
+    UNUserNotifications.current?.registerCategories()
+    #endif
+    
     let primaryLanguage = Language(languageCode: settings.primaryComponent.languageCode, customPluralizationCode: settings.primaryComponent.customPluralizationCode, strings: dictFromLocalization(settings.primaryComponent.localization))
     let secondaryLanguage = settings.secondaryComponent != nil ? Language.init(languageCode: settings.secondaryComponent!.languageCode, customPluralizationCode: settings.secondaryComponent!.customPluralizationCode, strings: dictFromLocalization(settings.secondaryComponent!.localization)) : nil
 

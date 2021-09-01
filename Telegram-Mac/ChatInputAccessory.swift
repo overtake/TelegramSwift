@@ -203,7 +203,7 @@ class ChatInputAccessory: Node {
         set {
             super.frame = newValue
             self.container.frame = NSMakeRect(49, 0, measuredWidth, size.height)
-            iconView.centerY(x: 5)
+            iconView.centerY(x: 2)
             dismiss.centerY(x: newValue.width - dismiss.frame.width)
             progress?.centerY(x: 5)
             displayNode?.setNeedDisplay()
