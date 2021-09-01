@@ -1858,8 +1858,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if apply, let window = self.window {
                         let peerId = self.chatLocation.peerId
                         if !hasModals(window) {
-                            clearNotifies(peerId, maxId: messageIndex.id)
+                            UNUserNotifications.current?.clearNotifies(peerId, maxId: messageIndex.id)
                             
+                        
                             context.applyMaxReadIndex(for: self.chatLocation, contextHolder: self.chatLocationContextHolder, messageIndex: messageIndex)
                         }
                     }
@@ -5164,8 +5165,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             chatInteraction.update({$0.withoutRecordingState()})
             return .invoked
         } else if chatInteraction.presentation.interfaceState.replyMessageId != nil {
-            chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
-            return .invoked
+            if chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
+                chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil)})})
+                return .invoked
+            }
         }
         
         return result

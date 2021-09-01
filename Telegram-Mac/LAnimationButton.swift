@@ -46,8 +46,8 @@ class LAnimationButton: Button {
     
     func setAnimationName(_ animation: String, keysToColor: [String]? = nil, color: NSColor = .black) {
         if let file = Bundle.main.path(forResource: animation, ofType: "json"), let data = try? Data(contentsOf: URL(fileURLWithPath: file)) {
-            self.animation = LottieAnimation(compressed: data, key: .init(key: .bundle(animation), size: frame.size), cachePurpose: .none, playPolicy: .once, maximumFps: 60)
-            self.firstFrame = LottieAnimation(compressed: data, key: .init(key: .bundle(animation), size: frame.size), cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60)
+            self.animation = LottieAnimation(compressed: data, key: .init(key: .bundle(animation), size: frame.size), cachePurpose: .none, playPolicy: .toEnd(from: 1), maximumFps: 60, runOnQueue: .mainQueue())
+            self.firstFrame = LottieAnimation(compressed: data, key: .init(key: .bundle(animation), size: frame.size), cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, runOnQueue: .mainQueue())
         } else {
             self.animation = nil
             self.firstFrame = nil
@@ -102,7 +102,7 @@ class LAnimationButton: Button {
                 }
             } else if self.played {
                 self.played = false
-                //animationView.set(self.firstFrame)
+                animationView.set(self.firstFrame)
             }
         }
        

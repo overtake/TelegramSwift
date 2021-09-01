@@ -5595,6 +5595,12 @@ internal final class L10n {
   }
   /// 📆 Reminder
   internal static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
+  /// Reply
+  internal static var notificationReply: String  { return L10n.tr("Localizable", "Notification.Reply") }
+  /// Type message...
+  internal static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
+  /// Reply
+  internal static var notificationTitleReply: String  { return L10n.tr("Localizable", "Notification.Title.Reply") }
   /// All Accounts
   internal static var notificationSettingsAllAccounts: String  { return L10n.tr("Localizable", "NotificationSettings.AllAccounts") }
   /// Switch off to show the number of unread chats instead of messages.

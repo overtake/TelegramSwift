@@ -13,7 +13,7 @@ import TelegramCore
 
 import TGUIKit
 
-func getNotificationMessageId(userInfo:[String: Any], for prefix: String) -> MessageId? {
+func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -> MessageId? {
     if let msgId = userInfo["\(prefix).message.id"] as? Int32, let msgNamespace = userInfo["\(prefix).message.namespace"] as? Int32, let namespace = userInfo["\(prefix).peer.namespace"] as? Int32, let id = userInfo["\(prefix).peer.id"] as? Int32 {
         return MessageId(peerId: PeerId(namespace: PeerId.Namespace._internalFromInt32Value(namespace), id: PeerId.Id._internalFromInt32Value(id)), namespace: msgNamespace, id: msgId)
     }
@@ -88,22 +88,25 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     }
     
     private let disposableDict: DisposableDict<AccountRecordId> = DisposableDict()
-    private let accountManager: AccountManager<TelegramAccountManagerTypes>
-    private var resignTimestamp:Int32? = nil
-    private let window: Window
+    let accountManager: AccountManager<TelegramAccountManagerTypes>
+    var resignTimestamp:Int32? = nil
+    let window: Window
     
-    private var activeAccounts: (primary: Account?, accounts: [(AccountRecordId, Account)]) = (primary: nil, accounts: [])
-    private let bindings: SharedNotificationBindings
+    var activeAccounts: (primary: Account?, accounts: [(AccountRecordId, Account)]) = (primary: nil, accounts: [])
+    let bindings: SharedNotificationBindings
     private let appEncryption: AppEncryptionParameters
     init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager<TelegramAccountManagerTypes>, window: Window, bindings: SharedNotificationBindings) {
         self.accountManager = accountManager
         self.window = window
         self.bindings = bindings
         self.appEncryption = appEncryption
+        
+        
         super.init()
         
+        UNUserNotifications.initialize(manager: self)
+
      
-        NSUserNotificationCenter.default.delegate = self
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
@@ -238,12 +241,12 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         return _lockedValue.isLocked
     }
     
-    private var snoofEnabled: Bool = true
-    private var requestUserAttention: Bool = false
+    private(set) var snoofEnabled: Bool = true
+    private(set) var requestUserAttention: Bool = false
     
     func startNotifyListener(with account: Account, primary: Bool) {
         let screenLocked = self.screenLocked
-        var alsoNotified:Set<MessageId> = Set()
+        var alreadyNotified:Set<MessageId> = Set()
         
         disposableDict.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([([Message], PeerGroupId)], InAppNotificationSettings), NoError> in
             return appNotificationSettings(accountManager: self.accountManager) |> take(1) |> mapToSignal { inAppSettings -> Signal<([([Message], PeerGroupId)], InAppNotificationSettings), NoError> in
@@ -303,7 +306,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 for (messages, groupId) in messages {
                     for message in messages {
                         
-                        if alsoNotified.contains(message.id) {
+                        if alreadyNotified.contains(message.id) {
                             continue
                         }
 
@@ -366,6 +369,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             let notification = NSUserNotification()
                             
+                            notification.identifier = "msg_\(message.id.toInt64())"
+                            
                             if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
                                 notification.soundName = inAppSettings.tone
                             } else {
@@ -391,7 +396,6 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             notification.hasActionButton = !message.wasScheduled
                             notification.otherButtonTitle = L10n.notificationMarkAsRead
-                           // notification.additionalActions = [NSUserNotificationAction(identifier: "read", title: "Mark as Read")]
                             
                             var dict: [String : Any] = [:]
                             
@@ -421,98 +425,37 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             dict["accountId"] = account.id.int64
                             dict["timestamp"] = Int32(Date().timeIntervalSince1970)
 
-                            alsoNotified.insert(message.id)
+                            alreadyNotified.insert(message.id)
                             
                             notification.userInfo = dict
-                            NSUserNotificationCenter.default.deliver(notification)
+//                            NSUserNotificationCenter.default.deliver(notification)
                             
-                
-                            
+                            if self.shouldPresent(dict) {
+                                UNUserNotifications.current?.add(notification)
+                            }
                         }
                     }
                 }
             }), forKey: account.id)
     }
 
-    func userNotificationCenter(_ center: NSUserNotificationCenter, didDeliver notification: NSUserNotification) {
-        if requestUserAttention && !window.isKeyWindow {
-            NSApp.requestUserAttention(.informationalRequest)
-        }
-    }
-    
-    func userNotificationCenter(_ center: NSUserNotificationCenter, shouldPresent notification: NSUserNotification) -> Bool {
-        guard let id = notification.userInfo?["accountId"] as? Int64 else {
+  
+    private func shouldPresent(_ userInfo:[AnyHashable : Any]?) -> Bool {
+        guard let id = userInfo?["accountId"] as? Int64 else {
             return false
         }
         let accountId = AccountRecordId(rawValue: id)
         
         if accountId != self.activeAccounts.primary?.id {
-            
             return true
         }
         
-        let wasScheduled = notification.userInfo?["wasScheduled"] as? Bool ?? false
+        let wasScheduled = userInfo?["wasScheduled"] as? Bool ?? false
         
         let result = !snoofEnabled || !window.isKeyWindow || wasScheduled
         
-        
         return result
     }
-    
-    
-    @objc func userNotificationCenter(_ center: NSUserNotificationCenter, didDismissAlert notification: NSUserNotification) {
-        if let userInfo = notification.userInfo, let timestamp = userInfo["timestamp"] as? Int32, let accountId = userInfo["accountId"] as? Int64, let messageId = getNotificationMessageId(userInfo: userInfo, for: "reply") {
-            
-            bindings.applyMaxReadIndexInteractively(MessageIndex(id: messageId, timestamp: timestamp))
-        }
-    }
-    
-    func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
-        if let userInfo = notification.userInfo, let messageId = getNotificationMessageId(userInfo: userInfo, for: "reply"), let accountId = userInfo["accountId"] as? Int64 {
-            
-            let accountId = AccountRecordId(rawValue: accountId)
-            
-            guard let account = activeAccounts.accounts.first(where: {$0.0 == accountId})?.1 else {
-                return
-            }
-            
-            closeAllModals()
-            
-            if notification.activationType == .replied, let text = notification.response?.string, !text.isEmpty {
-                
-                if let sourceMessageId = getNotificationMessageId(userInfo: userInfo, for: "source") {
-                    var replyToMessageId:MessageId?
-                    if sourceMessageId.peerId.namespace != Namespaces.Peer.CloudUser {
-                        replyToMessageId = sourceMessageId
-                    }
-                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
-
-                } else {
-                    var replyToMessageId:MessageId?
-                    if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
-                        replyToMessageId = messageId
-                    }
-                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
-                }
-                
-                
-            } else {
-                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread"), let fromId = getNotificationMessageId(userInfo: userInfo, for: "source") {
-                    self.bindings.navigateToThread(account, threadId, fromId)
-                } else {
-                    self.bindings.navigateToChat(account, messageId.peerId)
-                }
-                center.removeDeliveredNotification(notification)
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
-            }
-        } else {
-            center.removeDeliveredNotification(notification)
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-        }
-    }
-    
 
     
 }

@@ -617,11 +617,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 
         someActionsDisposable.add(context.engine.peers.managedUpdatedRecentPeers().start())
         
-        
-       
-        
+                
         clearReadNotifiesDisposable.set(context.account.stateManager.appliedIncomingReadMessages.start(next: { msgIds in
-            clearNotifies(by: msgIds)
+            UNUserNotifications.current?.clearNotifies(by: msgIds)
         }))
         
 
