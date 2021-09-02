@@ -309,6 +309,10 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         self.genericView.tableView.performScrollEvent()
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -443,9 +447,6 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         return !genericView.tabs._mouseInside()
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-    }
     
     func scrollTo(stableId:AnyHashable) -> Void {
         genericView.tabs.changeSelection(stableId: stableId)

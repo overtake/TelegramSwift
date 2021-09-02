@@ -295,12 +295,16 @@ internal final class L10n {
   internal static var appearanceSettingsAutoNightHeader: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNightHeader") }
   /// Bubbles Mode
   internal static var appearanceSettingsBubblesMode: String  { return L10n.tr("Localizable", "Appearance.Settings.BubblesMode") }
+  /// Accent
+  internal static var appearanceThemeAccent: String  { return L10n.tr("Localizable", "Appearance.Theme.Accent") }
   /// Edit
   internal static var appearanceThemeEdit: String  { return L10n.tr("Localizable", "Appearance.Theme.Edit") }
   /// Remove
   internal static var appearanceThemeRemove: String  { return L10n.tr("Localizable", "Appearance.Theme.Remove") }
   /// Share
   internal static var appearanceThemeShare: String  { return L10n.tr("Localizable", "Appearance.Theme.Share") }
+  /// Messages
+  internal static var appearanceThemeAccentMessages: String  { return L10n.tr("Localizable", "Appearance.Theme.Accent.Messages") }
   /// Follow System Appearance
   internal static var appearanceSettingsFollowSystemAppearance: String  { return L10n.tr("Localizable", "AppearanceSettings.FollowSystemAppearance") }
   /// Good morning! 👋
@@ -777,6 +781,14 @@ internal final class L10n {
   }
   /// Cancel Account Reset
   internal static var cancelResetAccountTitle: String  { return L10n.tr("Localizable", "CancelResetAccount.Title") }
+  /// E
+  internal static var canvasClear: String  { return L10n.tr("Localizable", "Canvas.Clear") }
+  /// L - Line\nA - Arrow
+  internal static var canvasDraw: String  { return L10n.tr("Localizable", "Canvas.Draw") }
+  /// ⌘⇧Z
+  internal static var canvasRedo: String  { return L10n.tr("Localizable", "Canvas.Redo") }
+  /// ⌘Z
+  internal static var canvasUndo: String  { return L10n.tr("Localizable", "Canvas.Undo") }
   /// All Admins
   internal static var chanelEventFilterAllAdmins: String  { return L10n.tr("Localizable", "Chanel.EventFilter.AllAdmins") }
   /// All Events
@@ -1565,8 +1577,156 @@ internal final class L10n {
   internal static var chatViewBackground: String  { return L10n.tr("Localizable", "Chat.ViewBackground") }
   /// VIEW CONTACT
   internal static var chatViewContact: String  { return L10n.tr("Localizable", "Chat.ViewContact") }
+  /// %d
+  internal static func chatAccessoryForwardCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_countable", p1)
+  }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_few", p1)
+  }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_many", p1)
+  }
+  /// Forward Message
+  internal static var chatAccessoryForwardOne: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward_one") }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_other", p1)
+  }
+  /// Forward %d Messages
+  internal static func chatAccessoryForwardTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_two", p1)
+  }
+  /// Forward Messages
+  internal static var chatAccessoryForwardZero: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward_zero") }
+  /// %d
+  internal static func chatAccessoryHiddenCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_countable", p1)
+  }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_few", p1)
+  }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_many", p1)
+  }
+  /// Forward Message (sender's names hidden)
+  internal static var chatAccessoryHiddenOne: String  { return L10n.tr("Localizable", "Chat.Accessory.Hidden_one") }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_other", p1)
+  }
+  /// Forward %d Messages (sender's names hidden)
+  internal static func chatAccessoryHiddenTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_two", p1)
+  }
+  /// Forward Messages (sender's names hidden)
+  internal static var chatAccessoryHiddenZero: String  { return L10n.tr("Localizable", "Chat.Accessory.Hidden_zero") }
+  /// From
+  internal static var chatAccessoryForwardFrom: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.From") }
+  /// You
+  internal static var chatAccessoryForwardYou: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.You") }
   /// VIEW THEME
   internal static var chatActionViewTheme: String  { return L10n.tr("Localizable", "Chat.Action.ViewTheme") }
+  /// %d
+  internal static func chatAlertForwardHeaderCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_countable", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_few", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_many", p1)
+  }
+  /// %d Message
+  internal static func chatAlertForwardHeaderOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_one", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_other", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_two", p1)
+  }
+  /// %d Messages
+  internal static func chatAlertForwardHeaderZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Header_zero", p1)
+  }
+  /// What would you like to do with %1$@ from %2$@?
+  internal static func chatAlertForwardText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text", p1, p2)
+  }
+  /// Forward to Another Chat
+  internal static var chatAlertForwardActionAnother: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Another") }
+  /// Cancel Forwarding
+  internal static var chatAlertForwardActionCancel: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Cancel") }
+  /// %d
+  internal static func chatAlertForwardActionHide1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_countable", p1)
+  }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Few: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_few") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Many: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_many") }
+  /// Hide Sender Name
+  internal static var chatAlertForwardActionHide1One: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_one") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Other: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_other") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Two: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_two") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Zero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_zero") }
+  /// %d
+  internal static func chatAlertForwardActionShow1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_countable", p1)
+  }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Few: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_few") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Many: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_many") }
+  /// Show Sender Name
+  internal static var chatAlertForwardActionShow1One: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_one") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Other: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_other") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Two: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_two") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Zero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_zero") }
+  /// %d
+  internal static func chatAlertForwardTextInnerCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_countable", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_few", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_many", p1)
+  }
+  /// %d message
+  internal static func chatAlertForwardTextInnerOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_one", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_other", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_two", p1)
+  }
+  /// %d messages
+  internal static func chatAlertForwardTextInnerZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_zero", p1)
+  }
   /// Forwarded from: [%@]()
   internal static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)
@@ -1743,6 +1903,8 @@ internal final class L10n {
   internal static var chatDropFolderDesc: String  { return L10n.tr("Localizable", "Chat.DropFolder.Desc") }
   /// Drop the folder here to send
   internal static var chatDropFolderTitle: String  { return L10n.tr("Localizable", "Chat.DropFolder.Title") }
+  /// Sorry, you can't attach new media while editing a message.
+  internal static var chatEditAttachError: String  { return L10n.tr("Localizable", "Chat.Edit.Attach.Error") }
   /// Are you sure you want to discard all changes?
   internal static var chatEditCancelText: String  { return L10n.tr("Localizable", "Chat.Edit.Cancel.Text") }
   /// Click to edit Media
@@ -1901,6 +2063,8 @@ internal final class L10n {
   internal static func chatInputErrorMessageTooLongZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Input.Error.MessageTooLong_zero", p1)
   }
+  /// You (sender's names hidden)
+  internal static var chatInputForwardHidden: String  { return L10n.tr("Localizable", "Chat.Input.Forward.Hidden") }
   /// Waiting for the %@ to get online...
   internal static func chatInputSecretChatWaitingToUserOnline(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Input.SecretChat.WaitingToUserOnline", p1)
@@ -2025,6 +2189,8 @@ internal final class L10n {
   }
   /// imported
   internal static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// sponsored
+  internal static var chatMessageSponsored: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored") }
   /// %d
   internal static func chatMessageUnsendMessagesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.UnsendMessages_countable", p1)
@@ -2047,6 +2213,12 @@ internal final class L10n {
   internal static var chatMessageUnsupportedNew: String  { return L10n.tr("Localizable", "Chat.Message.UnsupportedNew") }
   /// via
   internal static var chatMessageVia: String  { return L10n.tr("Localizable", "Chat.Message.Via") }
+  /// VIEW BOT
+  internal static var chatMessageViewBot: String  { return L10n.tr("Localizable", "Chat.Message.ViewBot") }
+  /// VIEW CHANNEL
+  internal static var chatMessageViewChannel: String  { return L10n.tr("Localizable", "Chat.Message.ViewChannel") }
+  /// VIEW GROUP
+  internal static var chatMessageViewGroup: String  { return L10n.tr("Localizable", "Chat.Message.ViewGroup") }
   /// This message was imported from another app. We can't guarantee it's real.
   internal static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
   /// JOIN AS LISTENER
@@ -2057,6 +2229,10 @@ internal final class L10n {
   internal static var chatMessageMTProxyConfig: String  { return L10n.tr("Localizable", "Chat.Message.MTProxy.Config") }
   /// SOCKS5 Configuration
   internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
+  /// https://telegram.org
+  internal static var chatMessageSponsoredLink: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.Link") }
+  /// What are sponsored messages?
+  internal static var chatMessageSponsoredWhat: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.What") }
   /// SHOW MESSAGE
   internal static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
   /// Don't Show Pinned Messages
@@ -2311,6 +2487,10 @@ internal final class L10n {
   internal static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
+  /// %1$@ changed chat theme to %2$@
+  internal static func chatServiceUpdateTheme(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.UpdateTheme", p1, p2)
+  }
   /// %1$@ finished voice chat (%2$@)
   internal static func chatServiceVoiceChatFinished(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished", p1, p2)
@@ -2440,6 +2620,10 @@ internal final class L10n {
   /// %@ received the following documents: %@
   internal static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
+  }
+  /// You changed chat theme to %@
+  internal static func chatServiceUpdateThemeYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)
   }
   /// Voice chat ended (%1$@)
   internal static func chatServiceVoiceChatFinishedChannel(_ p1: String) -> String {
@@ -3635,6 +3819,10 @@ internal final class L10n {
   internal static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   internal static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
+  /// Photo or Video
+  internal static var editAvatarPhotoOrVideo: String  { return L10n.tr("Localizable", "EditAvatar.PhotoOrVideo") }
+  /// Sticker or GIF
+  internal static var editAvatarStickerOrGif: String  { return L10n.tr("Localizable", "EditAvatar.StickerOrGif") }
   /// RESET
   internal static var editImageControlReset: String  { return L10n.tr("Localizable", "EditImageControl.Reset") }
   /// Are you sure you want to close and discard all changes?
@@ -3759,7 +3947,7 @@ internal final class L10n {
   internal static var emptyChatStorageUsageDesc: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Desc") }
   /// Calculating...
   internal static var emptyChatStorageUsageLoading: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Loading") }
-  /// 8 GB
+  /// 5 GB
   internal static var emptyChatStorageUsageLow: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Low") }
   /// 32 GB
   internal static var emptyChatStorageUsageMedium: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Medium") }
@@ -5179,7 +5367,7 @@ internal final class L10n {
   internal static func messageTimerShortMinutes(_ p1: String) -> String {
     return L10n.tr("Localizable", "MessageTimer.ShortMinutes", p1)
   }
-  /// %@mo
+  /// %@M
   internal static func messageTimerShortMonths(_ p1: String) -> String {
     return L10n.tr("Localizable", "MessageTimer.ShortMonths", p1)
   }
@@ -5477,6 +5665,8 @@ internal final class L10n {
   internal static var notificationSettingsSoundEffects: String  { return L10n.tr("Localizable", "NotificationSettings.SoundEffects") }
   /// Notifications
   internal static var notificationSettingsToggleNotifications: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications") }
+  /// Allow in System Settings
+  internal static var notificationSettingsTurnOn: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn") }
   /// Reset notifications
   internal static var notificationSettingsConfirmReset: String  { return L10n.tr("Localizable", "NotificationSettings.Confirm.Reset") }
   /// Turn this on if you want to receive notifications from all your accounts.
@@ -5491,6 +5681,10 @@ internal final class L10n {
   internal static var notificationSettingsToggleNotificationsHeader: String  { return L10n.tr("Localizable", "NotificationSettings.ToggleNotifications.Header") }
   /// Default
   internal static var notificationSettingsToneDefault: String  { return L10n.tr("Localizable", "NotificationSettings.Tone.Default") }
+  /// Don't miss important messages from your family and friends.
+  internal static var notificationSettingsTurnOnTextText: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Text") }
+  /// Allow Notifications
+  internal static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
   /// Mute
   internal static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
   /// Minimize
@@ -5679,6 +5873,10 @@ internal final class L10n {
   internal static var peerSavedMessages: String  { return L10n.tr("Localizable", "Peer.SavedMessages") }
   /// Service Notifications
   internal static var peerServiceNotifications: String  { return L10n.tr("Localizable", "Peer.ServiceNotifications") }
+  /// %@ is choosing sticker
+  internal static func peerActivityChatChoosingSticker(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.Activity.Chat.ChoosingSticker", p1)
+  }
   /// %@ is playing a game
   internal static func peerActivityChatPlayingGame(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.PlayingGame", p1)
@@ -5706,6 +5904,10 @@ internal final class L10n {
   /// %@ is typing
   internal static func peerActivityChatTypingText(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.TypingText", p1)
+  }
+  /// %@ and %d others are choosing stickers
+  internal static func peerActivityChatMultiChoosingSticker1(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Activity.Chat.Multi.ChoosingSticker1", p1, p2)
   }
   /// %@ and %d others are playing a games
   internal static func peerActivityChatMultiPlayingGame1(_ p1: String, _ p2: Int) -> String {
@@ -5739,6 +5941,8 @@ internal final class L10n {
   internal static func peerActivityChatMultiTypingText1(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.Multi.TypingText1", p1, p2)
   }
+  /// choosing sticker
+  internal static var peerActivityUserChoosingSticker: String  { return L10n.tr("Localizable", "Peer.Activity.User.ChoosingSticker") }
   /// playing a game
   internal static var peerActivityUserPlayingGame: String  { return L10n.tr("Localizable", "Peer.Activity.User.PlayingGame") }
   /// recording voice
@@ -6057,6 +6261,8 @@ internal final class L10n {
   internal static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
   /// Leave
   internal static var peerInfoActionLeave: String  { return L10n.tr("Localizable", "PeerInfo.Action.Leave") }
+  /// Live Stream
+  internal static var peerInfoActionLiveStream: String  { return L10n.tr("Localizable", "PeerInfo.Action.LiveStream") }
   /// Message
   internal static var peerInfoActionMessage: String  { return L10n.tr("Localizable", "PeerInfo.Action.Message") }
   /// More
@@ -8293,6 +8499,8 @@ internal final class L10n {
   internal static var stickersSuggestNone: String  { return L10n.tr("Localizable", "Stickers.SuggestNone") }
   /// Suggest Stickers by Emoji
   internal static var stickersSuggestStickers: String  { return L10n.tr("Localizable", "Stickers.SuggestStickers") }
+  /// Trending Stickers
+  internal static var stickersTrending: String  { return L10n.tr("Localizable", "Stickers.Trending") }
   /// Clear Recent Stickers
   internal static var stickersConfirmClearRecentHeader: String  { return L10n.tr("Localizable", "Stickers.Confirm.ClearRecentHeader") }
   /// Clear
@@ -9641,10 +9849,16 @@ internal final class L10n {
   internal static var ns81Title: String  { return L10n.tr("Localizable", "_NS81.title") }
   /// Edit
   internal static var ns88Title: String  { return L10n.tr("Localizable", "_NS88.title") }
+  /// Edit
+  internal static var ns104Title: String  { return L10n.tr("Localizable", "_NS:104.title") }
   /// Window
   internal static var ns163Title: String  { return L10n.tr("Localizable", "_NS:163.title") }
+  /// Window
+  internal static var ns168Title: String  { return L10n.tr("Localizable", "_NS:168.title") }
   /// View
   internal static var ns77Title: String  { return L10n.tr("Localizable", "_NS:77.title") }
+  /// View
+  internal static var ns82Title: String  { return L10n.tr("Localizable", "_NS:82.title") }
   /// Edit
   internal static var ns99Title: String  { return L10n.tr("Localizable", "_NS:99.title") }
   /// Global Search

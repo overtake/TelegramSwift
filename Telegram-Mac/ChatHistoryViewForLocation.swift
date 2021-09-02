@@ -208,9 +208,13 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                             }
                         }
                     }
-
-                } else if let historyScrollState = (initialData?.chatInterfaceState as? ChatInterfaceState)?.historyScrollState {
-                    scrollPosition = .positionRestoration(index: historyScrollState.messageIndex, relativeOffset: CGFloat(historyScrollState.relativeOffset))
+                } else if let opaqueState = (initialData?.storedInterfaceState).flatMap(_internal_decodeStoredChatInterfaceState) {
+                    
+                    let interfaceState = ChatInterfaceState.parse(opaqueState, peerId: _chatLocation.peerId, context: context)
+                    
+                    if let historyScrollState = interfaceState?.historyScrollState {
+                        scrollPosition = .positionRestoration(index: historyScrollState.messageIndex, relativeOffset: CGFloat(historyScrollState.relativeOffset))
+                    }
                 } else {
                     if view.entries.isEmpty && (view.holeEarlier || view.holeLater) {
                         fadeIn = true

@@ -10,7 +10,7 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 import TGUIKit
-
+import TelegramCore
 
 
 enum AutoNightSchedule : Equatable {
@@ -119,11 +119,11 @@ struct AutoNightThemePreferences: PreferencesEntry, Equatable {
 }
 
 
-func autoNightSettings(accountManager: AccountManager) -> Signal<AutoNightThemePreferences, NoError> {
+func autoNightSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<AutoNightThemePreferences, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.autoNight]) |> map { $0.entries[ApplicationSharedPreferencesKeys.autoNight] as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings }
 }
 
-func updateAutoNightSettingsInteractively(accountManager: AccountManager, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<Void, NoError> {
+func updateAutoNightSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<Void, NoError> {
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
             let currentSettings: AutoNightThemePreferences

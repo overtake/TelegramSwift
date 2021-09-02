@@ -242,7 +242,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .keepMediaLimitHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .keepMediaLimit(_, value, viewType):
-            let values = [5, 16, 36, Int32.max]
+            let values = [5, 16, 32, Int32.max]
             var value = value
             if !values.contains(value) {
                 value = Int32.max

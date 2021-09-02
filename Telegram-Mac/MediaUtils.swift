@@ -2876,8 +2876,10 @@ func chatMessagePhotoThumbnail(account: Account,  imageReference: ImageMediaRefe
 
 private func builtinWallpaperData() -> Signal<ImageRenderData, NoError> {
     return Signal { subscriber in
-        if let filePath = Bundle.main.path(forResource: "builtin-wallpaper-0", ofType: "jpg"), let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) {
-            subscriber.putNext(ImageRenderData(nil, data, true))
+        if let filePath = Bundle.main.path(forResource: "builtin-wallpaper-svg", ofType: nil), let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) {
+            if let data = TGGUnzipData(data, 8 * 1024 * 1024) {
+                subscriber.putNext(ImageRenderData(nil, data, true))
+            }
         }
         subscriber.putCompletion()
         
@@ -2891,12 +2893,8 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
             
             var fullSizeImage: CGImage?
-            if let fullSizeData = data.fullSizeData {
-                let options = NSMutableDictionary()
-                options[kCGImageSourceShouldCache as NSString] = false as NSNumber
-                if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateImageAtIndex(imageSource, 0, options as CFDictionary) {
-                    fullSizeImage = image
-                }
+            if let data = data.fullSizeData, let image = drawSvgImageNano(data, arguments.drawingSize) {
+                fullSizeImage = image._cgImage
             }
             if let fullSizeImage = fullSizeImage {
                 let drawingRect = arguments.drawingRect
@@ -2910,9 +2908,18 @@ func settingsBuiltinWallpaperImage(account: Account, scale: CGFloat = 2.0) -> Si
                 
                 let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
                 
+                
                 context.withFlippedContext { c in
-                    c.setBlendMode(.copy)
+                    
+                    
+                    let preview = AnimatedGradientBackgroundView.generatePreview(size: arguments.drawingSize.fitted(.init(width: 30, height: 30)), colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) })
+
+                    c.setBlendMode(.normal)
+                    c.draw(preview, in: fittedRect)
+                    
                     c.interpolationQuality = .medium
+                    c.setBlendMode(.softLight)
+                    c.setAlpha(0.25)
                     c.draw(fullSizeImage, in: fittedRect)
                 }
             }
@@ -3181,8 +3188,9 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                 
                 let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
                 context.withFlippedContext { c in
+                    c.setBlendMode(.normal)
+
                     if !drawPatternOnly {
-                        c.setBlendMode(.normal)
                         if colors.count == 1, let color = colors.first {
                             c.setFillColor(color.cgColor)
                             c.fill(arguments.drawingRect)
@@ -3219,42 +3227,11 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                     }
                     
                     if let fullSizeImage = fullSizeImage {
-                        
-                        let image = generateImage(arguments.drawingSize, contextGenerator: { size, c in
-                            c.clear(fittedRect)
-                            c.interpolationQuality = .medium
-                            c.clip(to: fittedRect, mask: fullSizeImage)
-                            
-                            if colors.count == 1, let color = colors.first {
-                                c.setFillColor(patternColor(for: color, intensity: intensity, prominent: prominent).cgColor)
-                                c.fill(arguments.drawingRect)
-                            } else {
-                                let gradientColors = colors.map { patternColor(for: $0, intensity: intensity, prominent: prominent).cgColor } as CFArray
-                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                                
-                                var locations: [CGFloat] = []
-                                for i in 0 ..< colors.count {
-                                    locations.append(delta * CGFloat(i))
-                                }
-                                
-                                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-
-                                c.saveGState()
-                                c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                                c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
-                                c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-
-                                c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                                c.restoreGState()
-                            }
-                        })!
-//                        if colors.count > 1 && !drawPatternOnly {
-//                            c.setBlendMode(.softLight)
-//                            c.setFillColor(NSColor.white.cgColor)
-//                            c.fill(arguments.drawingRect)
-//                        }
-                        c.draw(image, in: arguments.drawingRect)
+                        if !drawPatternOnly {
+                            c.setBlendMode(.softLight)
+                            c.setAlpha(intensity * 0.5)
+                        }
+                        c.draw(fullSizeImage, in: fittedRect)
                     }
                     
                 }

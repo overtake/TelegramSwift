@@ -144,12 +144,16 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
     
-    if let embeddedState = embeddedState as? ChatEmbeddedInterfaceState {
+    let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
+        ChatInterfaceState.parse($0, peerId: nil, context: nil)
+    })
+    
+    if let embeddedState = interfaceState, !embeddedState.inputState.inputText.isEmpty {
         let mutableAttributedText = NSMutableAttributedString()
         _ = mutableAttributedText.append(string: L10n.chatListDraft, color: theme.colors.redUI, font: .normal(.text))
-        _ = mutableAttributedText.append(string: " \(embeddedState.text.fullTrimmed.replacingOccurrences(of: "\n", with: " "))", color: theme.chatList.grayTextColor, font: .normal(.text))
+        _ = mutableAttributedText.append(string: " \(embeddedState.inputState.inputText.fullTrimmed.replacingOccurrences(of: "\n", with: " "))", color: theme.chatList.grayTextColor, font: .normal(.text))
         mutableAttributedText.setSelected(color: theme.colors.underSelectedColor, range: mutableAttributedText.range)
         return mutableAttributedText
     }
@@ -474,6 +478,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 text = L10n.chatListServiceVoiceChatInvitationForYou(authorName)
             } else {
                 text = L10n.chatListServiceVoiceChatInvitation(authorName, list)
+            }
+            return text
+        case let .setChatTheme(emoji):
+            let text: String
+            if message.author?.id == account.peerId {
+                text = L10n.chatServiceUpdateThemeYou(emoji)
+            } else {
+                text = L10n.chatServiceUpdateTheme(authorName, emoji)
             }
             return text
         }

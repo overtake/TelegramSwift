@@ -11,11 +11,19 @@ import Cocoa
 
 open class TableAnimationInterface: NSObject {
     
+    public struct AnimateItem {
+        public let index: Int
+        public let from: NSPoint
+        public let to: NSPoint
+    }
+    
     public let scrollBelow:Bool
     public let saveIfAbove:Bool
-    public init(_ scrollBelow:Bool = true, _ saveIfAbove:Bool = true) {
+    let animate:([AnimateItem])->Void
+    public init(_ scrollBelow:Bool = true, _ saveIfAbove:Bool = true, _ animate:@escaping([AnimateItem])->Void) {
         self.scrollBelow = scrollBelow
         self.saveIfAbove = saveIfAbove
+        self.animate = animate
     }
 
     public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem], previousRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
@@ -74,6 +82,7 @@ open class TableAnimationInterface: NSObject {
             return
         }
         
+        var animatedItems:[AnimateItem] = []
         
         scrollBelow = scrollBelow || (checkBelowAfter && (bounds.minY - height) < 0)
       
@@ -91,9 +100,15 @@ open class TableAnimationInterface: NSObject {
                             inset = presentLayer.position.y
                          }
                         
+                        let from: CGPoint = NSMakePoint(0, inset)
+                        let to: CGPoint = NSMakePoint(0, layer.position.y)
+                        
+                        
                       //  if layer.presentation()?.animation(forKey: "position") == nil {
-                            layer.animatePosition(from: NSMakePoint(0, inset), to: NSMakePoint(0, layer.position.y), duration: 0.2, timingFunction: .easeOut)
+                            layer.animatePosition(from: from, to: to, duration: 0.2, timingFunction: .easeOut)
                       //  }
+                        
+                        animatedItems.append(AnimateItem(index: added[0].index, from: from, to: to))
                         
                         /*
                          if layer.presentation()?.animation(forKey: "position") == nil {
@@ -116,6 +131,9 @@ open class TableAnimationInterface: NSObject {
             table.reflectScrolledClipView(contentView)
         }
 
+        if !animatedItems.isEmpty {
+            self.animate(animatedItems)
+        }
     }
     
     public func scroll(table:TableView, from:NSRect, to:NSRect) -> Void {

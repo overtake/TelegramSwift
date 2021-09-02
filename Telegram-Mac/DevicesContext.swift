@@ -130,7 +130,7 @@ final class DevicesContext : NSObject {
         return _currentOutputId.with { $0 }
     }
     
-    init(_ accountManager: AccountManager ) {
+    init(_ accountManager: AccountManager<TelegramAccountManagerTypes> ) {
         super.init()
         
 

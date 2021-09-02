@@ -611,6 +611,9 @@ public extension Message {
     
     func chatPeer(_ accountPeerId: PeerId) -> Peer? {
         var _peer: Peer?
+        if let _ = adAttribute {
+            return author
+        }
         for attr in attributes {
             if let source = attr as? SourceReferenceMessageAttribute {
                 if let info = forwardInfo {
@@ -647,7 +650,7 @@ public extension Message {
     
     var editedAttribute: EditedMessageAttribute? {
         for attr in attributes {
-            if let attr = attr as? EditedMessageAttribute {
+            if let attr = attr as? EditedMessageAttribute, !attr.isHidden {
                 return attr
             }
         }
@@ -838,9 +841,7 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
 }
 
 func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
-    
-    let account = chatInteraction.context.account
-    
+        
     if message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     }
@@ -2386,7 +2387,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
 
 }
 
-func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountManager) {
+func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountManager<TelegramAccountManagerTypes>) {
     var textInfo = L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port))
     switch server.connection {
     case let .socks5(username, password):
@@ -2701,7 +2702,7 @@ func fileExtenstion(_ file: TelegramMediaFile) -> String {
     return fileExt(file.mimeType) ?? file.fileName?.nsstring.pathExtension ?? ""
 }
 
-func proxySettings(accountManager: AccountManager) -> Signal<ProxySettings, NoError>  {
+func proxySettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<ProxySettings, NoError>  {
     return accountManager.sharedData(keys: [SharedDataKeys.proxySettings]) |> map { view in
         return view.entries[SharedDataKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
     }
@@ -2964,6 +2965,7 @@ enum SystemSettingsCategory : String {
     case storage = "Storage"
     case sharing = "Privacy_ScreenCapture"
     case accessibility = "Privacy_Accessibility"
+    case notifications = "Notifications"
     case none = ""
 }
 
@@ -2976,6 +2978,10 @@ func openSystemSettings(_ category: SystemSettingsCategory) {
        // }
     case .microphone, .camera, .sharing:
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(category.rawValue)") {
+            NSWorkspace.shared.open(url)
+        }
+    case .notifications:
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
             NSWorkspace.shared.open(url)
         }
     default:
@@ -3201,14 +3207,7 @@ extension TelegramThemeSettings {
     }
     
     var accent: PaletteAccentColor {
-        var messages: (top: NSColor, bottom: NSColor)?
-        if let message = self.messageColors {
-            let top = NSColor(argb: UInt32(bitPattern: message.top))
-            let bottom = NSColor(argb: UInt32(bitPattern: message.bottom))
-            messages = (top: top, bottom: bottom)
-        } else {
-            messages = nil
-        }
+        let messages = self.messageColors.map { NSColor(argb: UInt32(bitPattern: $0)) }
         return PaletteAccentColor(NSColor(rgb: UInt32(bitPattern: self.accentColor)), messages)
     }
     
@@ -3230,7 +3229,8 @@ extension TelegramThemeSettings {
         } else {
             wString = ""
         }
-        return "\(self.accentColor)-\(self.baseTheme)-\(String(describing: self.messageColors?.top))-\(String(describing: self.messageColors?.bottom))-\(wString)"
+        let colors = messageColors.map { "\($0)" }.split(separator: "-").joined()
+        return "\(self.accentColor)-\(self.baseTheme)-\(colors)-\(wString)"
     }
 }
 
@@ -3244,8 +3244,8 @@ extension TelegramWallpaper {
             t = .color(color)
         case let .file(values):
             t = .file(slug: values.slug, file: values.file, settings: values.settings, isPattern: values.isPattern)
-        case let .gradient(id, colors, settings):
-            t = .gradient(id, colors, settings.rotation)
+        case let .gradient(gradient):
+            t = .gradient(gradient.id, gradient.colors, gradient.settings.rotation)
         case let .image(reps, settings):
             t = .image(reps, settings: settings)
         }
@@ -3261,7 +3261,7 @@ extension Wallpaper {
         case let .color(color):
             return .color(color)
         case let .gradient(id, colors, rotation):
-            return .gradient(id, colors, WallpaperSettings(rotation: rotation))
+            return .gradient(.init(id: id, colors: colors, settings: WallpaperSettings(rotation: rotation)))
         default:
             break
         }

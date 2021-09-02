@@ -121,14 +121,16 @@ public func ==(lhs: ColorPalette, rhs: ColorPalette) -> Bool {
 
 public struct PaletteAccentColor : Equatable {
     public static func == (lhs: PaletteAccentColor, rhs: PaletteAccentColor) -> Bool {
-        return lhs.accent.argb == rhs.accent.argb && lhs.messages?.top.argb == rhs.messages?.top.argb && lhs.messages?.bottom.argb == rhs.messages?.bottom.argb
+        return lhs.accent.argb == rhs.accent.argb && lhs.messages == rhs.messages
     }
     
     public let accent: NSColor
-    public let messages: (top: NSColor, bottom: NSColor)?
-    public init(_ accent: NSColor, _ messages: (top: NSColor, bottom: NSColor)? = nil) {
+    public let messages: [NSColor]?
+    public init(_ accent: NSColor, _ messages: [NSColor]? = nil) {
         self.accent = accent.withAlphaComponent(1.0)
-        self.messages = messages.map { (top: $0.top.withAlphaComponent(1.0), bottom: $0.bottom.withAlphaComponent(1.0)) }
+        self.messages = messages?.map {
+            $0.withAlphaComponent(1.0)
+        }
     }
 }
 
@@ -142,6 +144,14 @@ public class ColorPalette : Equatable {
     public let accentList:[PaletteAccentColor]
     public let parent: TelegramBuiltinTheme
     public let wallpaper: PaletteWallpaper
+    
+
+    public var blendedOutgoingColors:NSColor {
+        let first = bubbleBackground_outgoing.first!
+        return bubbleBackground_outgoing.reduce(first, {
+            $0.blended(withFraction: 0.5, of: $1)!
+        })
+    }
     
     private let _basicAccent: NSColor
     public var basicAccent: NSColor {
@@ -272,13 +282,9 @@ public class ColorPalette : Equatable {
     public var bubbleBackground_incoming: NSColor {
         return self._bubbleBackground_incoming
     }
-    private let _bubbleBackgroundTop_outgoing: NSColor
-    public var bubbleBackgroundTop_outgoing: NSColor {
-        return self._bubbleBackgroundTop_outgoing
-    }
-    private let _bubbleBackgroundBottom_outgoing: NSColor
-    public var bubbleBackgroundBottom_outgoing: NSColor {
-        return self._bubbleBackgroundBottom_outgoing
+    private let _bubbleBackground_outgoing: [NSColor]
+    public var bubbleBackground_outgoing: [NSColor] {
+        return self._bubbleBackground_outgoing
     }
     
     private let _bubbleBorder_incoming: NSColor
@@ -665,7 +671,7 @@ public class ColorPalette : Equatable {
                 var prop = prop
                 _ = prop.removeFirst()
                 if prop == "chatBackground" {
-                    string += "//Parameter is usually using for minimalistic chat mode, but also works as fallback for bubbles if wallpaper doesn't installed\n"
+                    string += "//Parameter is usually using for minimalistic chat mode, but also works as fallback for bubbles if wallpaper not installed\n"
                 }
                 string += "\(prop) = \(color.hexString.lowercased())\n"
             }
@@ -714,8 +720,7 @@ public class ColorPalette : Equatable {
                 selectTextBubble_incoming: NSColor,
                 selectTextBubble_outgoing: NSColor,
                 bubbleBackground_incoming: NSColor,
-                bubbleBackgroundTop_outgoing: NSColor,
-                bubbleBackgroundBottom_outgoing: NSColor,
+                bubbleBackground_outgoing: [NSColor],
                 bubbleBorder_incoming: NSColor,
                 bubbleBorder_outgoing: NSColor,
                 grayTextBubble_incoming: NSColor,
@@ -822,13 +827,14 @@ public class ColorPalette : Equatable {
         var accentIconBubble_outgoing: NSColor = accentIconBubble_outgoing
         
         let bubbleBackground_incoming = bubbleBackground_incoming.withAlphaComponent(1.0)
-        let bubbleBackgroundTop_outgoing = bubbleBackgroundTop_outgoing.withAlphaComponent(1.0)
-        let bubbleBackgroundBottom_outgoing = bubbleBackgroundBottom_outgoing.withAlphaComponent(1.0)
+        let bubbleBackground_outgoing = bubbleBackground_outgoing.map { $0.withAlphaComponent(1.0) }
         let linkBubble_incoming = linkBubble_incoming.withAlphaComponent(1.0)
         let linkBubble_outgoing = linkBubble_outgoing.withAlphaComponent(1.0)
         
         
-        let bubbleBackground_outgoing = bubbleBackgroundTop_outgoing.blended(withFraction: 0.5, of: bubbleBackgroundBottom_outgoing)!
+        let background_outgoing = bubbleBackground_outgoing.reduce(bubbleBackground_outgoing.first!, {
+            $0.blended(withFraction: 0.5, of: $1)!
+        })
         
         let chatBackground = chatBackground.withAlphaComponent(1.0)
         
@@ -854,28 +860,28 @@ public class ColorPalette : Equatable {
             accentSelect = background.brightnessAdjustedColor
         }
         if textBubble_incoming.isTooCloseHSV(to: bubbleBackground_incoming) {
-            textBubble_incoming = bubbleBackground_incoming.brightnessAdjustedColor
+            textBubble_incoming = background_outgoing.brightnessAdjustedColor
         }
-        if textBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
-            textBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
+        if textBubble_outgoing.isTooCloseHSV(to: background_outgoing) {
+            textBubble_outgoing = background_outgoing.brightnessAdjustedColor
         }
-        if grayTextBubble_incoming.isTooCloseHSV(to: bubbleBackground_incoming) {
-            grayTextBubble_incoming = bubbleBackground_incoming.brightnessAdjustedColor
+        if grayTextBubble_incoming.isTooCloseHSV(to: background_outgoing) {
+            grayTextBubble_incoming = background_outgoing.brightnessAdjustedColor
         }
-        if grayTextBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
-            grayTextBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
+        if grayTextBubble_outgoing.isTooCloseHSV(to: background_outgoing) {
+            grayTextBubble_outgoing = background_outgoing.brightnessAdjustedColor
         }
-        if grayIconBubble_incoming.isTooCloseHSV(to: bubbleBackground_incoming) {
-            grayIconBubble_incoming = bubbleBackground_incoming.brightnessAdjustedColor
+        if grayIconBubble_incoming.isTooCloseHSV(to: background_outgoing) {
+            grayIconBubble_incoming = background_outgoing.brightnessAdjustedColor
         }
-        if grayIconBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
-            grayIconBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
+        if grayIconBubble_outgoing.isTooCloseHSV(to: background_outgoing) {
+            grayIconBubble_outgoing = background_outgoing.brightnessAdjustedColor
         }
-        if accentIconBubble_incoming.isTooCloseHSV(to: bubbleBackground_incoming) {
-            accentIconBubble_incoming = bubbleBackground_incoming.brightnessAdjustedColor
+        if accentIconBubble_incoming.isTooCloseHSV(to: background_outgoing) {
+            accentIconBubble_incoming = background_outgoing.brightnessAdjustedColor
         }
-        if accentIconBubble_outgoing.isTooCloseHSV(to: bubbleBackground_outgoing) {
-            accentIconBubble_outgoing = bubbleBackground_outgoing.brightnessAdjustedColor
+        if accentIconBubble_outgoing.isTooCloseHSV(to: background_outgoing) {
+            accentIconBubble_outgoing = background_outgoing.brightnessAdjustedColor
         }
         self.isNative = isNative
         self.parent = parent
@@ -917,8 +923,7 @@ public class ColorPalette : Equatable {
         self._selectTextBubble_incoming = selectTextBubble_incoming.withAlphaComponent(max(0.6, selectTextBubble_incoming.alpha))
         self._selectTextBubble_outgoing = selectTextBubble_outgoing.withAlphaComponent(max(0.6, selectTextBubble_outgoing.alpha))
         self._bubbleBackground_incoming = bubbleBackground_incoming.withAlphaComponent(max(0.6, bubbleBackground_incoming.alpha))
-        self._bubbleBackgroundTop_outgoing = bubbleBackgroundTop_outgoing.withAlphaComponent(max(1.0, bubbleBackgroundTop_outgoing.alpha))
-        self._bubbleBackgroundBottom_outgoing = bubbleBackgroundBottom_outgoing.withAlphaComponent(max(1.0, bubbleBackgroundBottom_outgoing.alpha))
+        self._bubbleBackground_outgoing = bubbleBackground_outgoing
         self._bubbleBorder_incoming = bubbleBorder_incoming.withAlphaComponent(max(0.6, bubbleBorder_incoming.alpha))
         self._bubbleBorder_outgoing = bubbleBorder_outgoing.withAlphaComponent(max(0.6, bubbleBorder_outgoing.alpha))
         self._grayTextBubble_incoming = grayTextBubble_incoming.withAlphaComponent(max(0.6, grayTextBubble_incoming.alpha))
@@ -1087,8 +1092,7 @@ public class ColorPalette : Equatable {
                             selectTextBubble_incoming: selectTextBubble_incoming,
                             selectTextBubble_outgoing: selectTextBubble_outgoing,
                             bubbleBackground_incoming: bubbleBackground_incoming,
-                            bubbleBackgroundTop_outgoing: bubbleBackgroundTop_outgoing,
-                            bubbleBackgroundBottom_outgoing: bubbleBackgroundBottom_outgoing,
+                            bubbleBackground_outgoing: bubbleBackground_outgoing,
                             bubbleBorder_incoming: bubbleBorder_incoming,
                             bubbleBorder_outgoing: bubbleBorder_outgoing,
                             grayTextBubble_incoming: grayTextBubble_incoming,
@@ -1175,7 +1179,6 @@ public class ColorPalette : Equatable {
                             grayHighlight: grayHighlight,
                             focusAnimationColor: focusAnimationColor)
     }
-    
     public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
         return ColorPalette(isNative: self.isNative, isDark: isDark,
                             tinted: tinted,
@@ -1216,8 +1219,7 @@ public class ColorPalette : Equatable {
                             selectTextBubble_incoming: selectTextBubble_incoming,
                             selectTextBubble_outgoing: selectTextBubble_outgoing,
                             bubbleBackground_incoming: bubbleBackground_incoming,
-                            bubbleBackgroundTop_outgoing: bubbleBackgroundTop_outgoing,
-                            bubbleBackgroundBottom_outgoing: bubbleBackgroundBottom_outgoing,
+                            bubbleBackground_outgoing: bubbleBackground_outgoing,
                             bubbleBorder_incoming: bubbleBorder_incoming,
                             bubbleBorder_outgoing: bubbleBorder_outgoing,
                             grayTextBubble_incoming: grayTextBubble_incoming,
@@ -1344,7 +1346,7 @@ public class ColorPalette : Equatable {
         }
         
         
-        var lightnessColor = color.messages?.top ?? color.accent
+        var lightnessColor = color.messages?.first ?? color.accent
         
         if color.messages == nil {
             switch parent {
@@ -1354,15 +1356,22 @@ public class ColorPalette : Equatable {
             default:
                 break
             }
-        } else if let messages = color.messages {
-            lightnessColor = messages.top.blended(withFraction: 0.5, of: messages.bottom)!
+        } else if let messages = color.messages, !messages.isEmpty {
+            let blended = messages.reduce(messages[0], { color, with in
+                return color.blended(withFraction: 0.5, of: with)!
+            })
+            lightnessColor = blended
         }
         
-        
-        
-        let bubbleBackgroundTop_outgoing = color.messages?.top ?? lightnessColor
-        let bubbleBackgroundBottom_outgoing = color.messages?.bottom ?? lightnessColor
 
+        var bubbleBackground_outgoing:[NSColor] = []
+        
+        if let colors = color.messages, !colors.isEmpty {
+            bubbleBackground_outgoing = colors
+        } else {
+            bubbleBackground_outgoing = [lightnessColor]
+        }
+        
         bubbleBackgroundHighlight_outgoing = lightnessColor.darker(amount: 0.1)
 
         
@@ -1489,8 +1498,7 @@ public class ColorPalette : Equatable {
                             selectTextBubble_incoming: selectTextBubble_incoming,
                             selectTextBubble_outgoing: selectTextBubble_outgoing,
                             bubbleBackground_incoming: bubbleBackground_incoming,
-                            bubbleBackgroundTop_outgoing: bubbleBackgroundTop_outgoing,
-                            bubbleBackgroundBottom_outgoing: bubbleBackgroundBottom_outgoing,
+                            bubbleBackground_outgoing: bubbleBackground_outgoing,
                             bubbleBorder_incoming: bubbleBorder_incoming,
                             bubbleBorder_outgoing: bubbleBorder_outgoing,
                             grayTextBubble_incoming: grayTextBubble_incoming,
@@ -1720,8 +1728,7 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                        selectTextBubble_incoming: NSColor(0xCCDDEA),
                                        selectTextBubble_outgoing: NSColor(0x6DA8D6),
                                        bubbleBackground_incoming: NSColor(0xF4F4F4),
-                                       bubbleBackgroundTop_outgoing: NSColor(0x4c91c7),//0x007ee5
-                                        bubbleBackgroundBottom_outgoing: NSColor(0x4c91c7),//0x007ee5
+                                       bubbleBackground_outgoing: [NSColor(0x4c91c7)],
                                         bubbleBorder_incoming: NSColor(0xeaeaea),
                                         bubbleBorder_outgoing: NSColor(0x4c91c7),
                                         grayTextBubble_incoming: NSColor(0x999999),
@@ -1867,8 +1874,7 @@ public let nightAccentPalette = ColorPalette(isNative: true, isDark: true,
                                            selectTextBubble_incoming: NSColor(0x3e6b9b),
                                            selectTextBubble_outgoing: NSColor(0x355a80),
                                            bubbleBackground_incoming: NSColor(0x213040),
-                                           bubbleBackgroundTop_outgoing: NSColor(0x3d6a97),
-                                           bubbleBackgroundBottom_outgoing: NSColor(0x3d6a97),
+                                           bubbleBackground_outgoing: [NSColor(0x3d6a97)],
                                            bubbleBorder_incoming: NSColor(0x213040),
                                            bubbleBorder_outgoing: NSColor(0x3d6a97),
                                            grayTextBubble_incoming: NSColor(0xb1c3d5),
@@ -1962,13 +1968,13 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             parent: .dayClassic,
                                             wallpaper: .builtin,
                                             copyright: "Telegram",
-                                            accentList: [PaletteAccentColor(NSColor(0x2481cc), (top: NSColor(0xdcf8c6), bottom: NSColor(0xdcf8c6))),
-                                                         PaletteAccentColor(NSColor(0x5a9e29), (top: NSColor(0xdcf8c6), bottom: NSColor(0xdcf8c6))),
-                                                         PaletteAccentColor(NSColor(0xf55783), (top: NSColor(0xd6f5ff), bottom: NSColor(0xd6f5ff))),
-                                                         PaletteAccentColor(NSColor(0x7e5fe5), (top: NSColor(0xf5e2ff), bottom: NSColor(0xf5e2ff))),
-                                                         PaletteAccentColor(NSColor(0xff5fa9), (top: NSColor(0xfff4d7), bottom: NSColor(0xfff4d7))),
-                                                         PaletteAccentColor(NSColor(0x199972), (top: NSColor(0xfffec7), bottom: NSColor(0xfffec7))),
-                                                         PaletteAccentColor(NSColor(0x009eee), (top: NSColor(0x94fff9), bottom: NSColor(0x94fff9)))],
+                                            accentList: [PaletteAccentColor(NSColor(0x2481cc), [NSColor(0xdcf8c6), NSColor(0xdcf8c6)]),
+                                                         PaletteAccentColor(NSColor(0x5a9e29), [NSColor(0xdcf8c6), NSColor(0xdcf8c6)]),
+                                                         PaletteAccentColor(NSColor(0xf55783), [NSColor(0xd6f5ff), NSColor(0xd6f5ff)]),
+                                                         PaletteAccentColor(NSColor(0x7e5fe5), [NSColor(0xf5e2ff), NSColor(0xf5e2ff)]),
+                                                         PaletteAccentColor(NSColor(0xff5fa9), [NSColor(0xfff4d7), NSColor(0xfff4d7)]),
+                                                         PaletteAccentColor(NSColor(0x199972), [NSColor(0xfffec7), NSColor(0xfffec7)]),
+                                                         PaletteAccentColor(NSColor(0x009eee), [NSColor(0x94fff9), NSColor(0x94fff9)])],
                                             basicAccent: NSColor(0x2481cc),
                                             background: NSColor(0xffffff),
                                             text: NSColor(0x000000),
@@ -2001,8 +2007,7 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             selectTextBubble_incoming: NSColor(0xCCDDEA),
                                             selectTextBubble_outgoing: NSColor(0xCCDDEA),
                                             bubbleBackground_incoming: NSColor(0xffffff),
-                                            bubbleBackgroundTop_outgoing: NSColor(0xE1FFC7),
-                                            bubbleBackgroundBottom_outgoing: NSColor(0xE1FFC7),
+                                            bubbleBackground_outgoing: [NSColor(0xE1FFC7)],
                                             bubbleBorder_incoming: NSColor(0x86A9C9,0.5),
                                             bubbleBorder_outgoing: NSColor(0x86A9C9,0.5),
                                             grayTextBubble_incoming: NSColor(0x999999),
@@ -2136,8 +2141,7 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       selectTextBubble_incoming: NSColor(0x8699a3),
                                       selectTextBubble_outgoing: NSColor(0x8699a3),
                                       bubbleBackground_incoming: NSColor(0x3d414d),
-                                      bubbleBackgroundTop_outgoing: NSColor(0x20889a),
-                                      bubbleBackgroundBottom_outgoing: NSColor(0x20889a),
+                                      bubbleBackground_outgoing: [NSColor(0x20889a)],
                                       bubbleBorder_incoming: NSColor(0x464a57),
                                       bubbleBorder_outgoing: NSColor(0x20889a),
                                       grayTextBubble_incoming: NSColor(0x8699a3),
@@ -2349,11 +2353,8 @@ private final class MojavePalette : ColorPalette {
     override var groupPeerNameOrange: NSColor {
         return NSColor.systemOrange.usingColorSpaceName(NSColorSpaceName.deviceRGB)!
     }
-    override var bubbleBackgroundTop_outgoing: NSColor {
-        return controlAccentColor.darker(amount: 0.2)
-    }
-    override var bubbleBackgroundBottom_outgoing: NSColor {
-        return controlAccentColor.darker(amount: 0.2)
+    override var bubbleBackground_outgoing: [NSColor] {
+        return [controlAccentColor.darker(amount: 0.2)]
     }
     override var bubbleBorder_outgoing: NSColor {
         return controlAccentColor.darker(amount: 0.2)
@@ -2437,8 +2438,7 @@ public let systemPalette: ColorPalette = {
                             selectTextBubble_incoming: NSColor(0x3e6b9b),
                             selectTextBubble_outgoing: NSColor(0x355a80),
                             bubbleBackground_incoming: NSColor(0x4e5058),
-                            bubbleBackgroundTop_outgoing: NSColor(0x3d6a97),
-                            bubbleBackgroundBottom_outgoing: NSColor(0x3d6a97),
+                            bubbleBackground_outgoing: [NSColor(0x3d6a97)],
                             bubbleBorder_incoming: NSColor(0x4e5058),
                             bubbleBorder_outgoing: NSColor(0x3d6a97),
                             grayTextBubble_incoming: NSColor(0xb1c3d5),

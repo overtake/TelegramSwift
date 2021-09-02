@@ -567,7 +567,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .wallpaper(_, context, preview):
         switch preview {
         case let .gradient(id, colors, settings):
-            let wallpaper: TelegramWallpaper = .gradient(id, colors.map { $0.argb }, settings)
+            let wallpaper: TelegramWallpaper = .gradient(.init(id: id, colors: colors.map { $0.argb }, settings: settings))
             showModal(with: WallpaperPreviewController(context, wallpaper: Wallpaper(wallpaper), source: .link(wallpaper)), for: context.window)
         case let .color(color):
             let wallpaper: TelegramWallpaper = .color(color.argb)
@@ -975,7 +975,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     case actions_me[6]:
                         if !value.isEmpty {
-                            let component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
+                            var component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
+                            component = component.components(separatedBy: "?")[0]
+                            
                             if let context = context {
                                 let (vars, emptyVars) = urlVars(with: value)
                                 var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
@@ -993,12 +995,24 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 var colors: [UInt32] = []
                                 
                                 if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
-                                    let components = bgcolor.components(separatedBy: "~")
+                                    var components = bgcolor.components(separatedBy: "~")
+                                    if components.count == 1 {
+                                        components = bgcolor.components(separatedBy: "-")
+                                        if components.count > 2 {
+                                            components = []
+                                        }
+                                    }
                                     colors = components.compactMap {
                                         return NSColor(hexString: "#\($0)")?.argb
                                     }
                                 } else {
-                                    let components = component.split(separator: "~")
+                                    var components = component.components(separatedBy: "~")
+                                    if components.count == 1 {
+                                        components = component.components(separatedBy: "-")
+                                        if components.count > 2 {
+                                            components = []
+                                        }
+                                    }
                                     colors = components.compactMap {
                                         return NSColor(hexString: "#\($0)")?.argb
                                     }
@@ -1017,7 +1031,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if let index = component.range(of: "?") {
                                     slug = String(component[component.startIndex ..< index.lowerBound])
                                 }
-                                if slug.contains("~") {
+                                if (slug.contains("~") || slug.length < 27) {
                                     slug = ""
                                 }
                                 
@@ -1286,7 +1300,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
 
                         
                         if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
-                            let components = bgcolor.components(separatedBy: "~")
+                            var components = bgcolor.components(separatedBy: "~")
+                            if components.count == 1 {
+                                components = bgcolor.components(separatedBy: "-")
+                                if components.count > 2 {
+                                    components = []
+                                }
+                            }
                             colors = components.compactMap {
                                 return NSColor(hexString: "#\($0)")?.argb
                             }
@@ -1315,7 +1335,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                         
-                        let components = vars["bg_color"]?.components(separatedBy: "~") ?? []
+                        var components = vars["bg_color"]?.components(separatedBy: "~") ?? []
+                        if components.count == 1 {
+                            components = vars["bg_color"]?.components(separatedBy: "-") ?? []
+                            if components.count > 2 {
+                                components = []
+                            }
+                        }
                         let colors = components.compactMap {
                             return NSColor(hexString: "#\($0)")
                         }

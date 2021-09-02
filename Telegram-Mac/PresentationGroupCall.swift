@@ -1905,6 +1905,18 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         videoDescription: nil
                     ))
                 }
+
+                if let screencastSsrc = participant.presentationDescription?.audioSsrc {
+                    if remainingSsrcs.contains(screencastSsrc) {
+                        remainingSsrcs.remove(screencastSsrc)
+
+                        result.append(OngoingGroupCallContext.MediaChannelDescription(
+                            kind: .audio,
+                            audioSsrc: screencastSsrc,
+                            videoDescription: nil
+                        ))
+                    }
+                }
             }
         }
 
@@ -2389,7 +2401,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         if (self.stateValue.recordingStartTimestamp != nil) == shouldBeRecording {
             return
         }
-        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title)
+        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title, videoOrientation: nil)
     }
     
     private func requestCall(movingFromBroadcastToRtc: Bool) {

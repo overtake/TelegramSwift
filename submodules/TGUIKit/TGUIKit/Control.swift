@@ -64,6 +64,9 @@ internal struct ControlStateHandler : Hashable {
 
 open class Control: View {
     
+    public var contextObject: Any?
+
+    
     public internal(set) weak var popover: Popover?
     
     open var isEnabled:Bool = true {
@@ -329,7 +332,7 @@ open class Control: View {
         self.handlers.removeAll(where: { identifier == $0.identifier })
     }
     
-    public func removeAllStateHandler() -> Void {
+    public func removeAllStateHandlers() -> Void {
         self.stateHandlers.removeAll(where: { !$0.internal })
 
     }

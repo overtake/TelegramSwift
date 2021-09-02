@@ -201,6 +201,11 @@ class ChatControllerView : View, ChatInputDelegate {
 
     
     let tableView:TableView
+    
+    var scroll: ScrollPosition {
+        return self.tableView.scrollPosition().current
+    }
+    
     let inputView:ChatInputView
     let inputContextHelper:InputContextHelper
     private(set) var state:ChatControllerViewState = .visible
@@ -212,6 +217,8 @@ class ChatControllerView : View, ChatInputDelegate {
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
+    
+    private let floatingPhotosView: View = View()
     
     private let gradientMaskView = BackgroundGradientView(frame: NSZeroRect)
     
@@ -229,7 +236,7 @@ class ChatControllerView : View, ChatInputDelegate {
     required init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         header = ChatHeaderController(chatInteraction)
-        scroller = ChatNavigateScroller(chatInteraction.context, chatLocation: chatInteraction.chatLocation, mode: chatInteraction.mode)
+        scroller = ChatNavigateScroller(chatInteraction.context, contextHolder: chatInteraction.contextHolder(), chatLocation: chatInteraction.chatLocation, mode: chatInteraction.mode)
         inputContextHelper = InputContextHelper(chatInteraction: chatInteraction)
         tableView = TableView(frame:NSMakeRect(0,0,frameRect.width,frameRect.height - 50), isFlipped:false)
         inputView = ChatInputView(frame: NSMakeRect(0,tableView.frame.maxY, frameRect.width,50), chatInteraction: chatInteraction)
@@ -240,6 +247,12 @@ class ChatControllerView : View, ChatInputDelegate {
 //        self.layer?.disableActions()
         
         addSubview(tableView)
+        addSubview(floatingPhotosView)
+        
+        floatingPhotosView.flip = false
+        floatingPhotosView.isEventLess = true
+//        floatingPhotosView.backgroundColor = .random
+        
         addSubview(inputView)
         inputView.delegate = self
         self.autoresizesSubviews = false
@@ -307,12 +320,51 @@ class ChatControllerView : View, ChatInputDelegate {
             })
         }))
         
+        tableView.onCAScroll = { [weak self] from, to in
+            guard let strongSelf = self else {
+                return
+            }
+            for view in strongSelf.floatingPhotosView.subviews {
+                view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, view.frame.minY - (from.minY - to.minY)), to: view.frame.origin, duration: 0.4, timingFunction: .spring)
+            }
+        }
     }
     
+    func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
+        CATransaction.begin()
+        var added:[NSView] = []
+        for value in values {
+            if let view = value.photoView {
+                view._change(pos: value.point, animated: animated && view.superview == floatingPhotosView, duration: 0.2, timingFunction: .easeOut)
+                if view.superview != floatingPhotosView {
+                    floatingPhotosView.addSubview(view)
+                    if animated {
+                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeOut)
+                        let moveAsNew = currentAnimationRows.first(where: {
+                            $0.index == value.items.first?.index
+                        })
+                        if let moveAsNew = moveAsNew {
+                            
+                            view.layer?.animatePosition(from: value.point - (moveAsNew.to - moveAsNew.from), to: value.point, duration: 0.2, timingFunction: .easeOut)
+                        }
+                    }
+                }
+                added.append(view)
+            }
+        }
+        let toRemove = floatingPhotosView.subviews.filter {
+            !added.contains($0)
+        }
+        for view in toRemove {
+            performSubviewRemoval(view, animated: animated, timingFunction: .easeOut)
+        }
+        CATransaction.commit()
+    }
     
     func updateScroller(_ historyState:ChatHistoryState) {
         self.historyState = historyState
-        let isHidden = (tableView.documentOffset.y < 150 && historyState.isDownOfHistory) || tableView.isEmpty
+        let isHidden = (tableView.documentOffset.y < 80 && historyState.isDownOfHistory) || tableView.isEmpty
+
         if !isHidden {
             scroller.isHidden = false
         }
@@ -358,6 +410,7 @@ class ChatControllerView : View, ChatInputDelegate {
             
             tableView.change(size: size, animated: animated)
             
+            floatingPhotosView.change(size: size, animated: animated)
             
             if tableView.contentOffset.y > height {
                // tableView.clipView.scroll(to: NSMakePoint(0, tableView.contentOffset.y - (previousHeight - height)))
@@ -452,6 +505,8 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             (animated ? failed.animator() : failed).setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, frame.height - inputView.frame.height - failed.frame.height - 6 - offset))
         }
+        
+        (animated ? floatingPhotosView.animator() : floatingPhotosView).frame = tableView.frame
     }
 
     override var responder: NSResponder? {
@@ -494,7 +549,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func updateHeader(_ interfaceState:ChatPresentationInterfaceState, _ animated:Bool, _ animateOnlyHeader: Bool = false) {
 
-
+    
         var voiceChat: ChatActiveGroupCallInfo?
         if interfaceState.groupCall?.data?.groupCall == nil {
             if let data = interfaceState.groupCall?.data, data.participantCount == 0 && interfaceState.groupCall?.activeCall.scheduleTimestamp == nil {
@@ -520,6 +575,12 @@ class ChatControllerView : View, ChatInputDelegate {
                 state = .report(voiceChat, autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canShareContact) {
                 state = .shareInfo(voiceChat)
+            } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
+                if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
+                    state = .pinned(voiceChat, pinnedMessageId, doNotChangeTable: interfaceState.chatMode.isThreadMode)
+                } else {
+                    state = .none(voiceChat)
+                }
             } else {
                 state = .none(voiceChat)
             }
@@ -1067,6 +1128,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let dismissedPinnedIds = ValuePromise<ChatDismissedPins>(ChatDismissedPins(ids: [], tempMaxId: nil), ignoreRepeated: true)
 
 
+    private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
+    
+    
     
     private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
         return pollAnswersLoading.get()
@@ -1137,6 +1201,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     let layoutDisposable:MetaDisposable = MetaDisposable()
     
     private var afterNextTransaction:(()->Void)?
+    
+    private var currentAnimationRows:[TableAnimationInterface.AnimateItem] = []
+    
+    private let adMessages: AdMessagesHistoryContext?
+   
     
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
@@ -1227,15 +1296,149 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
     }
     
+    private func updateFloatingPhotos(_ position: ScrollPosition, animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
+        
+        let offset = genericView.tableView.clipView.bounds.origin
+        
+        var floating: [ChatFloatingPhoto] = []
+        for groupped in grouppedFloatingPhotos {
+            let photoView = groupped.1
+            
+            let views = groupped.0.compactMap { $0.view as? ChatRowView }.filter { $0.visibleRect != .zero }
+            
+            guard !views.isEmpty else {
+                continue
+            }
+            
+            var point: NSPoint = .init(x: groupped.0[0].leftInset, y: 0)
+
+
+            let ph: CGFloat = 36
+            let gap: CGFloat = 10
+            let inset: CGFloat = 3
+            
+            
+            let lastMax = views[views.count - 1].frame.maxY - inset
+            let firstMin = views[0].frame.minY + inset
+
+            if offset.y >= lastMax - ph - gap {
+                point.y = lastMax - offset.y - ph
+            } else if offset.y + gap > firstMin {
+                point.y = gap
+            } else {
+                point.y = firstMin - offset.y
+            }
+            
+            let revealView = views.first(where: {
+                $0.hasRevealState
+            })
+            
+            if let revealView = revealView {
+                
+                let maxOffset = revealView.frame.maxY - offset.y
+                let minOffset = revealView.frame.minY - offset.y
+
+                let rect = NSMakeRect(0, minOffset, revealView.frame.width, maxOffset - minOffset)
+                if NSPointInRect(point, rect) {
+                    point.x += revealView.containerX
+                } else if NSPointInRect(NSMakePoint(point.x, point.y + photoView.frame.height - 1), rect) {
+                    point.x += revealView.containerX
+                }
+
+            }
+            
+            let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView)
+            floating.append(value)
+        }
+        genericView.updateFloating(floating, animated: animated, currentAnimationRows: currentAnimationRows)
+    }
+    
+    private func collectFloatingPhotos(animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem]) {
+        guard let peer = self.chatInteraction.peer else {
+            self.grouppedFloatingPhotos = []
+            return
+        }
+        guard peer.isGroup || peer.isSupergroup || peer.id == context.peerId, theme.bubbled else {
+            self.grouppedFloatingPhotos = []
+            return
+        }
+        let cached:[MessageId : NSView] = grouppedFloatingPhotos.reduce([:], { current, value in
+            var current = current
+            let item = value.0[value.0.count - 1]
+            let view = value.1
+            current[item.message!.id] = view
+            return current
+        })
+        
+        var groupped:[[ChatRowItem]] = []
+        var current:[ChatRowItem] = []
+        self.genericView.tableView.enumerateItems { item in
+            var skipOrFill = true
+            if let item = item as? ChatRowItem {
+                if item.canHasFloatingPhoto {
+                    let prev = current.last
+                    let sameAuthor = prev?.message?.author?.id == item.message?.author?.id
+                    var canGroup = false
+                    if sameAuthor {
+                        if case .Short = item.itemType {
+                            canGroup = true
+                        }
+                    }
+                    if prev == nil || canGroup {
+                        skipOrFill = false
+                        current.append(item)
+                    }
+                }
+            }
+            if skipOrFill {
+                if !current.isEmpty {
+                    groupped.append(current)
+                }
+                current = []
+
+                if let item = item as? ChatRowItem {
+                    if item.canHasFloatingPhoto {
+                        current.append(item)
+                    }
+                }
+            }
+            return true
+        }
+        if !current.isEmpty {
+            groupped.append(current)
+        }
+        self.grouppedFloatingPhotos = groupped.compactMap { value in
+            let item = value[value.count - 1]
+            let view = cached[item.message!.id] ?? ChatRowView.makePhotoView(item)
+            let control = view as? AvatarControl
+            control?.removeAllHandlers()
+            control?.set(handler: { [weak item] _ in
+                item?.openInfo()
+            }, for: .Click)
+            if let control = control {
+                return (value, control)
+            } else {
+                return nil
+            }
+        }
+        
+        self.updateFloatingPhotos(genericView.scroll, animated: animated, currentAnimationRows: currentAnimationRows)
+    }
+
+    
 
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
+        self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         
+        self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.updateFloatingPhotos(position, animated: false)
+        }))
         
         self.undoTooltipControl.getYInset = { [weak self] in
             guard let `self` = self else {
@@ -1455,6 +1658,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             customThreadOutgoingReadState = .single(nil)
         }
 
+        let animatedRows:([TableAnimationInterface.AnimateItem])->Void = { [weak self] items in
+            self?.currentAnimationRows = items
+        }
         
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
@@ -1477,7 +1683,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        let clearHistoryUndoSignal = context.chatUndoManager.status(for: chatInteraction.peerId, type: .clearHistory)
         
         let _searchState: Atomic<SearchMessagesResultState> = Atomic(value: SearchMessagesResultState("", []))
         
@@ -1495,6 +1700,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let previousUpdatingMedia = Atomic<[MessageId: ChatUpdatingMessageMedia]?>(value: nil)
         
+        
+        let adMessages:Signal<[Message], NoError>
+        if let ad = self.adMessages {
+            adMessages = ad.state
+        } else {
+            adMessages = .single([])
+        }
+        
+       
         let historyViewTransition = combineLatest(queue: messagesViewQueue,
                                                   historyViewUpdate,
                                                   appearanceSignal,
@@ -1504,11 +1718,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   animatedEmojiStickers,
                                                   customChannelDiscussionReadState,
                                                   customThreadOutgoingReadState,
-                                                  updatingMedia
-) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
-            
-            //NSLog("get history")
-            
+                                                  updatingMedia,
+                                                  adMessages
+) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool), NoError> in
+                        
             let maxReadIndex = readIndexAndOther.0
             let pollAnswersLoading = readIndexAndOther.1
             let threadLoading = readIndexAndOther.2
@@ -1561,7 +1774,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             default:
                 break
             }
-            let animationInterface: TableAnimationInterface = TableAnimationInterface(nextTransaction.isExutable && view?.laterId == nil)
+            let animationInterface: TableAnimationInterface = TableAnimationInterface(nextTransaction.isExutable && view?.laterId == nil, true, animatedRows)
             let timeDifference = context.timeDifference
             let bigEmojiEnabled = context.sharedContext.baseSettings.bigEmoji
 
@@ -1599,7 +1812,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         topMessages = nil
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    var ads:[Message] = []
+                    if !view.isLoading && view.laterId == nil {
+                        ads = adMessages
+                    }
+                    
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: appearance.presentation.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessages: ads).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries)
                 }
             } else {
@@ -1910,12 +2128,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                             setNextToTransaction = true
                             invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId ?? threadId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, secretMediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
-                                strongSelf?.nextTransaction.execute()
+                                _ = strongSelf?.nextTransaction.execute()
                             }) |> deliverOnMainQueue |> ignoreValues
                             
                         }
                         
                         let fwdIds: [MessageId] = presentation.interfaceState.forwardMessageIds
+                        let hideNames = presentation.interfaceState.hideSendersName
                         if !fwdIds.isEmpty {
                             setNextToTransaction = true
                             
@@ -1958,7 +2177,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .complete()
                                 }
                                 
-                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, silent: silent, atDate: atDate)
+                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, hideNames: hideNames, silent: silent, atDate: atDate)
                             }
                             
                             invokeSignal = invokeSignal |> then(fwd |> ignoreValues)
@@ -3066,7 +3285,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                     if !updated.isEmpty {
-                        showModal(with: PreviewSenderController(urls: updated, chatInteraction: self.chatInteraction, asMedia: asMedia, attributedString: attributedString), for: context.window)
+                        if let _ = self.chatInteraction.presentation.interfaceState.editState {
+                            alert(for: context.window, info: L10n.chatEditAttachError)
+                        } else {
+                            showModal(with: PreviewSenderController(urls: updated, chatInteraction: self.chatInteraction, asMedia: asMedia, attributedString: attributedString), for: context.window)
+                        }
                     }
                 }
             }
@@ -3473,7 +3696,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return .zero
             }
-            let point = self.genericView.tableView.scrollPosition().current.rect.origin
+            let point = self.genericView.scroll.rect.origin
             return CGRect(origin: point, size: self.frame.size)
         }
         
@@ -3525,13 +3748,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }))
         }
         
-        chatInteraction.contextHolder = { [weak self] in
-            return self?.chatLocationContextHolder ?? Atomic(value: nil)
-        }
         
-        chatInteraction.contextHolder = { [weak self] in
-            return self?.chatLocationContextHolder ?? Atomic(value: nil)
-        }
         
         
         chatInteraction.closeAfterPeek = { [weak self] peek in
@@ -3661,8 +3878,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self.genericView.inputView.updateInterface(with: self.chatInteraction)
                 return
             }
+                        
+            let opaqueState = initialData.storedInterfaceState.flatMap(_internal_decodeStoredChatInterfaceState)
             
-            if let interfaceState = initialData.chatInterfaceState as? ChatInterfaceState {
+            let interfaceState = ChatInterfaceState.parse(opaqueState, peerId: self.chatLocation.peerId, context: context)
+            
+            if let interfaceState = interfaceState {
                 self.chatInteraction.update(animated:false,{$0.updatedInterfaceState({_ in return interfaceState})})
             }
             switch self.chatInteraction.mode {
@@ -3804,245 +4025,243 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         peerDisposable.set((combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall) |> beforeNext  { [weak self] topPinnedMessage, postboxView, groupCallData in
-                
-                guard let `self` = self else {return}
-                (self.centerBarView as? ChatTitleBarView)?.postboxView = postboxView
-                let peerView = postboxView as? PeerView
-                
-                switch self.chatInteraction.mode {
-                case .history, .preview:
-                    
-                    if let cachedData = peerView?.cachedData as? CachedChannelData {
-                        let onlineMemberCount:Signal<Int32?, NoError>
-                        if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                        } else {
-                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                        }
                         
-                        self.onlineMemberCountDisposable.set(onlineMemberCount.start(next: { [weak self] count in
-                            (self?.centerBarView as? ChatTitleBarView)?.onlineMemberCount = count
-                        }))
+            guard let `self` = self else {return}
+            (self.centerBarView as? ChatTitleBarView)?.postboxView = postboxView
+            let peerView = postboxView as? PeerView
+            
+            switch self.chatInteraction.mode {
+            case .history, .preview:
+                
+                if let cachedData = peerView?.cachedData as? CachedChannelData {
+                    let onlineMemberCount:Signal<Int32?, NoError>
+                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                    } else {
+                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
                     }
                     
-                    var wasGroupChannel: Bool?
-                    if let peer = self.chatInteraction.presentation.mainPeer as? TelegramChannel  {
-                        if case .group = peer.info {
-                            wasGroupChannel = true
-                        } else {
-                            wasGroupChannel = false
-                        }
-                    }
-                    var isGroupChannel: Bool?
-                    if let peerView = peerView, let info = (peerView.peers[peerView.peerId] as? TelegramChannel)?.info {
-                        if case .group = info {
-                            isGroupChannel = true
-                        } else {
-                            isGroupChannel = false
-                        }
-                    }
-                    
-                    if wasGroupChannel != isGroupChannel {
-                        if let isGroupChannel = isGroupChannel, isGroupChannel {
-                            let (recentDisposable, _) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: chatInteraction.peerId, updated: { _ in })
-                            let (adminsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(peerId: chatInteraction.peerId, updated: { _ in })
-                            let disposable = DisposableSet()
-                            disposable.add(recentDisposable)
-                            disposable.add(adminsDisposable)
-                            
-                            self.updatedChannelParticipants.set(disposable)
-                        } else {
-                            self.updatedChannelParticipants.set(nil)
-                        }
-                        
-                    }
-                    
-                    self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
-                        if let peerView = peerView {
-                            var present = presentation.updatedPeer { [weak peerView] _ in
-                                if let peerView = peerView {
-                                    return peerView.peers[peerView.peerId]
-                                }
-                                return nil
-                            }.updatedMainPeer(peerViewMainPeer(peerView))
-                            
-                            var discussionGroupId:CachedChannelData.LinkedDiscussionPeerId = .unknown
-                            if let cachedData = peerView.cachedData as? CachedChannelData {
-                                if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
-                                    switch peer.info {
-                                    case let .broadcast(info):
-                                        if info.flags.contains(.hasDiscussionGroup) {
-                                            discussionGroupId = cachedData.linkedDiscussionPeerId
-                                        }
-                                    case .group:
-                                        discussionGroupId = cachedData.linkedDiscussionPeerId
-                                    }
-                                }
-                            }
-
-                            if let peer = peerView.peers[peerId] {
-                                if let peer = peer as? TelegramSecretChat {
-                                    if let value = peer.messageAutoremoveTimeout {
-                                        present = present.withUpdatedMessageSecretTimeout(.known(.init(peerValue: value)))
-                                    } else {
-                                        present = present.withUpdatedMessageSecretTimeout(.known(nil))
-                                    }
-                                } else if let cachedData = peerView.cachedData as? CachedUserData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                } else if let cachedData = peerView.cachedData as? CachedChannelData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                } else if let cachedData = peerView.cachedData as? CachedGroupData {
-                                    present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                }
-                                
-                            }
-                            
-                            present = present.withUpdatedDiscussionGroupId(discussionGroupId)
-                            present = present.withUpdatedPinnedMessageId(topPinnedMessage)
-                            
-                            var contactStatus: ChatPeerStatus?
-                            if let cachedData = peerView.cachedData as? CachedUserData {
-                                contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
-                            } else if let cachedData = peerView.cachedData as? CachedGroupData {
-                                contactStatus = ChatPeerStatus(canAddContact: false, peerStatusSettings: cachedData.peerStatusSettings)
-                            } else if let cachedData = peerView.cachedData as? CachedChannelData {
-                                contactStatus = ChatPeerStatus(canAddContact: false, peerStatusSettings: cachedData.peerStatusSettings)
-                            } else if let cachedData = peerView.cachedData as? CachedSecretChatData {
-                                contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
-                            }
-                            if let cachedData = peerView.cachedData as? CachedUserData {
-                                present = present
-                                    .withUpdatedBlocked(cachedData.isBlocked)
-                                    .withUpdatedPeerStatusSettings(contactStatus)
-                                    .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
-                                    .updateBotMenu { current in
-                                        if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
-                                            var current = current ?? .init(commands: [], revealed: false)
-                                            current.commands = botInfo.commands
-                                            return current
-                                        }
-                                        return nil
-                                    }
-                            } else if let cachedData = peerView.cachedData as? CachedChannelData {
-                                present = present
-                                    .withUpdatedPeerStatusSettings(contactStatus)
-                                    .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                    .updatedGroupCall({ current in
-                                        if let call = cachedData.activeCall {
-                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId, joinHash: current?.joinHash)
-                                        } else {
-                                            return nil
-                                        }
-                                    })
-                                if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
-                                    switch peer.info {
-                                    case let .group(info):
-                                        if info.flags.contains(.slowModeEnabled), peer.adminRights == nil && !peer.flags.contains(.isCreator) {
-                                            present = present.updateSlowMode({ value in
-                                                var value = value ?? SlowMode()
-                                                value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
-                                                if let timeout = cachedData.slowModeValidUntilTimestamp {
-                                                    if timeout > context.timestamp {
-                                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
-                                                    } else {
-                                                        value = value.withUpdatedTimeout(nil)
-                                                    }
-                                                }
-                                                return value
-                                            })
-                                        } else {
-                                            present = present.updateSlowMode { _ in return nil }
-                                        }
-                                    default:
-                                        present = present.updateSlowMode { _ in return nil }
-                                    }
-                                }
-                            } else if let cachedData = peerView.cachedData as? CachedGroupData {
-                                present = present
-                                    .withUpdatedPeerStatusSettings(contactStatus)
-                                    .updatedGroupCall({ current in
-                                        if let call = cachedData.activeCall {
-                                            return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId, joinHash: current?.joinHash)
-                                        } else {
-                                            return nil
-                                        }
-                                    })
-                            } else if let _ = peerView.cachedData as? CachedSecretChatData {
-                                present = present
-                                    .withUpdatedPeerStatusSettings(contactStatus)
-                            }
-                            if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
-                                present = present.updatedNotificationSettings(notificationSettings)
-                            }
-                            return present
-                        }
-                        return presentation
-                    })
-                case .scheduled:
-                    self.chatInteraction.update(animated: !first.swap(false), {  presentation in
-                        return presentation.withUpdatedCanPinMessage(context.peerId == peerId).updatedPeer { _ in
-                            if let peerView = peerView {
-                                return peerView.peers[peerView.peerId]
-                            }
-                            return nil
-                        }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
-                    })
-                case .pinned:
-                    self.chatInteraction.update(animated: !first.swap(false), { presentation in
-                        var pinnedMessage: ChatPinnedMessage?
-                        pinnedMessage = topPinnedMessage
-                        return presentation.withUpdatedPinnedMessageId(pinnedMessage).withUpdatedCanPinMessage((peerView?.cachedData as? CachedUserData)?.canPinMessages ?? true || context.peerId == peerId).updatedPeer { _ in
-                            if let peerView = peerView {
-                                return peerView.peers[peerView.peerId]
-                            }
-                            return nil
-                        }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
-                    })
-                case .replyThread:
-                    self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
-                        if let peerView = peerView {
-                            var present = presentation.updatedPeer { [weak peerView] _ in
-                                if let peerView = peerView {
-                                    return peerView.peers[peerView.peerId]
-                                }
-                                return nil
-                                }.updatedMainPeer(peerViewMainPeer(peerView))
-                            
-                            if let cachedData = peerView.cachedData as? CachedChannelData {
-                                present = present
-                                    .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
-                                if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
-                                    switch peer.info {
-                                    case let .group(info):
-                                        if info.flags.contains(.slowModeEnabled), peer.adminRights == nil && !peer.flags.contains(.isCreator) {
-                                            present = present.updateSlowMode({ value in
-                                                var value = value ?? SlowMode()
-                                                value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
-                                                if let timeout = cachedData.slowModeValidUntilTimestamp {
-                                                    if timeout > context.timestamp {
-                                                        value = value.withUpdatedTimeout(timeout - context.timestamp)
-                                                    } else {
-                                                        value = value.withUpdatedTimeout(nil)
-                                                    }
-                                                }
-                                                return value
-                                            })
-                                        } else {
-                                            present = present.updateSlowMode { _ in return nil }
-                                        }
-                                    default:
-                                        present = present.updateSlowMode { _ in return nil }
-                                    }
-                                }
-                            }
-                            return present
-                        }
-                        return presentation
-                    })
+                    self.onlineMemberCountDisposable.set(onlineMemberCount.start(next: { [weak self] count in
+                        (self?.centerBarView as? ChatTitleBarView)?.onlineMemberCount = count
+                    }))
                 }
                 
+                var wasGroupChannel: Bool?
+                if let peer = self.chatInteraction.presentation.mainPeer as? TelegramChannel  {
+                    if case .group = peer.info {
+                        wasGroupChannel = true
+                    } else {
+                        wasGroupChannel = false
+                    }
+                }
+                var isGroupChannel: Bool?
+                if let peerView = peerView, let info = (peerView.peers[peerView.peerId] as? TelegramChannel)?.info {
+                    if case .group = info {
+                        isGroupChannel = true
+                    } else {
+                        isGroupChannel = false
+                    }
+                }
                 
-            }).start())
+                if wasGroupChannel != isGroupChannel {
+                    if let isGroupChannel = isGroupChannel, isGroupChannel {
+                        let (recentDisposable, _) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: chatInteraction.peerId, updated: { _ in })
+                        let (adminsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(peerId: chatInteraction.peerId, updated: { _ in })
+                        let disposable = DisposableSet()
+                        disposable.add(recentDisposable)
+                        disposable.add(adminsDisposable)
+                        
+                        self.updatedChannelParticipants.set(disposable)
+                    } else {
+                        self.updatedChannelParticipants.set(nil)
+                    }
+                    
+                }
+                
+                self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
+                    if let peerView = peerView {
+                        var present = presentation.updatedPeer { [weak peerView] _ in
+                            if let peerView = peerView {
+                                return peerView.peers[peerView.peerId]
+                            }
+                            return nil
+                        }.updatedMainPeer(peerViewMainPeer(peerView))
+                        
+                        var discussionGroupId:CachedChannelData.LinkedDiscussionPeerId = .unknown
+                        if let cachedData = peerView.cachedData as? CachedChannelData {
+                            if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
+                                switch peer.info {
+                                case let .broadcast(info):
+                                    if info.flags.contains(.hasDiscussionGroup) {
+                                        discussionGroupId = cachedData.linkedDiscussionPeerId
+                                    }
+                                case .group:
+                                    discussionGroupId = cachedData.linkedDiscussionPeerId
+                                }
+                            }
+                        }
+
+                        if let peer = peerView.peers[peerId] {
+                            if let peer = peer as? TelegramSecretChat {
+                                if let value = peer.messageAutoremoveTimeout {
+                                    present = present.withUpdatedMessageSecretTimeout(.known(.init(peerValue: value)))
+                                } else {
+                                    present = present.withUpdatedMessageSecretTimeout(.known(nil))
+                                }
+                            } else if let cachedData = peerView.cachedData as? CachedUserData {
+                                present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            } else if let cachedData = peerView.cachedData as? CachedChannelData {
+                                present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            } else if let cachedData = peerView.cachedData as? CachedGroupData {
+                                present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            }
+                            
+                        }
+                        
+                        present = present.withUpdatedDiscussionGroupId(discussionGroupId)
+                        present = present.withUpdatedPinnedMessageId(topPinnedMessage)
+                        
+                        var contactStatus: ChatPeerStatus?
+                        if let cachedData = peerView.cachedData as? CachedUserData {
+                            contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
+                        } else if let cachedData = peerView.cachedData as? CachedGroupData {
+                            contactStatus = ChatPeerStatus(canAddContact: false, peerStatusSettings: cachedData.peerStatusSettings)
+                        } else if let cachedData = peerView.cachedData as? CachedChannelData {
+                            contactStatus = ChatPeerStatus(canAddContact: false, peerStatusSettings: cachedData.peerStatusSettings)
+                        } else if let cachedData = peerView.cachedData as? CachedSecretChatData {
+                            contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
+                        }
+                        if let cachedData = peerView.cachedData as? CachedUserData {
+                            present = present
+                                .withUpdatedBlocked(cachedData.isBlocked)
+                                .withUpdatedPeerStatusSettings(contactStatus)
+                                .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
+                                .updateBotMenu { current in
+                                    if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
+                                        var current = current ?? .init(commands: [], revealed: false)
+                                        current.commands = botInfo.commands
+                                        return current
+                                    }
+                                    return nil
+                                }
+                        } else if let cachedData = peerView.cachedData as? CachedChannelData {
+                            present = present
+                                .withUpdatedPeerStatusSettings(contactStatus)
+                                .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
+                                .updatedGroupCall({ current in
+                                    if let call = cachedData.activeCall {
+                                        return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId, joinHash: current?.joinHash)
+                                    } else {
+                                        return nil
+                                    }
+                                })
+                            if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
+                                switch peer.info {
+                                case let .group(info):
+                                    if info.flags.contains(.slowModeEnabled), peer.adminRights == nil && !peer.flags.contains(.isCreator) {
+                                        present = present.updateSlowMode({ value in
+                                            var value = value ?? SlowMode()
+                                            value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
+                                            if let timeout = cachedData.slowModeValidUntilTimestamp {
+                                                if timeout > context.timestamp {
+                                                    value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                } else {
+                                                    value = value.withUpdatedTimeout(nil)
+                                                }
+                                            }
+                                            return value
+                                        })
+                                    } else {
+                                        present = present.updateSlowMode { _ in return nil }
+                                    }
+                                default:
+                                    present = present.updateSlowMode { _ in return nil }
+                                }
+                            }
+                        } else if let cachedData = peerView.cachedData as? CachedGroupData {
+                            present = present
+                                .withUpdatedPeerStatusSettings(contactStatus)
+                                .updatedGroupCall({ current in
+                                    if let call = cachedData.activeCall {
+                                        return ChatActiveGroupCallInfo(activeCall: call, data: groupCallData, callJoinPeerId: cachedData.callJoinPeerId, joinHash: current?.joinHash)
+                                    } else {
+                                        return nil
+                                    }
+                                })
+                        } else if let _ = peerView.cachedData as? CachedSecretChatData {
+                            present = present
+                                .withUpdatedPeerStatusSettings(contactStatus)
+                        }
+                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
+                            present = present.updatedNotificationSettings(notificationSettings)
+                        }
+                        return present
+                    }
+                    return presentation
+                })
+            case .scheduled:
+                self.chatInteraction.update(animated: !first.swap(false), {  presentation in
+                    return presentation.withUpdatedCanPinMessage(context.peerId == peerId).updatedPeer { _ in
+                        if let peerView = peerView {
+                            return peerView.peers[peerView.peerId]
+                        }
+                        return nil
+                    }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
+                })
+            case .pinned:
+                self.chatInteraction.update(animated: !first.swap(false), { presentation in
+                    var pinnedMessage: ChatPinnedMessage?
+                    pinnedMessage = topPinnedMessage
+                    return presentation.withUpdatedPinnedMessageId(pinnedMessage).withUpdatedCanPinMessage((peerView?.cachedData as? CachedUserData)?.canPinMessages ?? true || context.peerId == peerId).updatedPeer { _ in
+                        if let peerView = peerView {
+                            return peerView.peers[peerView.peerId]
+                        }
+                        return nil
+                    }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
+                })
+            case .replyThread:
+                self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
+                    if let peerView = peerView {
+                        var present = presentation.updatedPeer { [weak peerView] _ in
+                            if let peerView = peerView {
+                                return peerView.peers[peerView.peerId]
+                            }
+                            return nil
+                            }.updatedMainPeer(peerViewMainPeer(peerView))
+                        
+                        if let cachedData = peerView.cachedData as? CachedChannelData {
+                            present = present
+                                .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
+                            if let peer = peerViewMainPeer(peerView) as? TelegramChannel {
+                                switch peer.info {
+                                case let .group(info):
+                                    if info.flags.contains(.slowModeEnabled), peer.adminRights == nil && !peer.flags.contains(.isCreator) {
+                                        present = present.updateSlowMode({ value in
+                                            var value = value ?? SlowMode()
+                                            value = value.withUpdatedValidUntil(cachedData.slowModeValidUntilTimestamp)
+                                            if let timeout = cachedData.slowModeValidUntilTimestamp {
+                                                if timeout > context.timestamp {
+                                                    value = value.withUpdatedTimeout(timeout - context.timestamp)
+                                                } else {
+                                                    value = value.withUpdatedTimeout(nil)
+                                                }
+                                            }
+                                            return value
+                                        })
+                                    } else {
+                                        present = present.updateSlowMode { _ in return nil }
+                                    }
+                                default:
+                                    present = present.updateSlowMode { _ in return nil }
+                                }
+                            }
+                        }
+                        return present
+                    }
+                    return presentation
+                })
+            }
+        }).start())
         
         
     
@@ -4251,6 +4470,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 var hasFailed: Bool = false
                 
+                var readAds:[Data] = []
+                
                 tableView.enumerateVisibleItems(with: { item in
                     if let item = item as? ChatRowItem {
                         if message == nil {
@@ -4297,6 +4518,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else {
                                 topVisibleMessageRange = ChatTopVisibleMessageRange(lowerBound: message.id, upperBound: message.id, isLast: item.index == tableView.count - 1)
                             }
+                            if let id = message.adAttribute?.opaqueId {
+                                if item.height == item.view?.visibleRect.height {
+                                    readAds.append(id)
+                                }
+                            }
                         }
                         
                         
@@ -4314,6 +4540,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.topVisibleMessageRange.set(topVisibleMessageRange)
                 }
 
+                if !readAds.isEmpty {
+                    for data in readAds {
+                        strongSelf.adMessages?.markAsSeen(opaqueId: data)
+                    }
+                }
                 
                 strongSelf.genericView.updateFailedIds(strongSelf.genericView.failedIds, hasOnScreen: hasFailed, animated: true)
                 
@@ -4481,13 +4712,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private func updateInteractiveReading() {
         switch mode {
         case .history:
-            let scroll = genericView.tableView.scrollPosition().current
+            let scroll = genericView.scroll
             let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
             if let window = window, window.isKeyWindow, self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height, hasEntries {
                 self.interactiveReadingDisposable.set(context.engine.messages.installInteractiveReadMessagesAction(peerId: chatInteraction.peerId))
             } else {
                 self.interactiveReadingDisposable.set(nil)
             }
+            
         default:
             self.interactiveReadingDisposable.set(nil)
         }
@@ -4543,7 +4775,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         genericView.change(state: isLoading ? .progress : .visible, animated: previousView.with { $0?.originalView != nil })
         
       
+        self.currentAnimationRows = []
         genericView.tableView.merge(with: transition)
+                
+        let animated: Bool
+        switch transition.state {
+        case let .none(interface):
+            animated = interface != nil
+        default:
+            animated = transition.animated
+        }
+        
+        collectFloatingPhotos(animated: animated, currentAnimationRows: currentAnimationRows)
         
         let _ = nextTransaction.execute()
 
@@ -4727,7 +4970,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
                                 
                                 if peer.groupAccess.canMakeVoiceChat {
-                                    items.append(SPopoverItem(L10n.peerInfoActionVoiceChat, { [weak self] in
+                                    var isLiveStream: Bool = false
+                                    if let peer = peer as? TelegramChannel {
+                                        isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
+                                    }
+                                    items.append(SPopoverItem(isLiveStream ? L10n.peerInfoActionLiveStream : L10n.peerInfoActionVoiceChat, { [weak self] in
                                         self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
                                     }, theme.icons.chat_info_voice_chat))
                                 }
@@ -5326,7 +5573,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
                 if row != -1 {
                     guard let item = self.genericView.tableView.item(at: row) as? ChatRowItem, let message = item.message, canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode) else {return .failed}
-                    self.removeRevealStateIfNeeded(message.id)
                     (item.view as? RevealTableView)?.initRevealState()
                     return .success(RevealTableItemController(item: item))
                 } else {
@@ -5358,13 +5604,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 
                 view.moveReveal(delta: delta)
-
+                self.updateFloatingPhotos(self.genericView.scroll, animated: false)
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController
                 guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
                 
-                
                 view.completeReveal(direction: direction)
+                self.updateFloatingPhotos(self.genericView.scroll, animated: true)
             }
             
             //  return .success()
@@ -5432,9 +5678,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     }
     
-    private func removeRevealStateIfNeeded(_ messageId: MessageId) -> Void {
-        
-    }
     
     func findAndSetEditableMessage(_ bottom: Bool = false) -> Bool {
         if let view = self.previousView.with({ $0?.originalView }), view.laterId == nil {
@@ -5504,6 +5747,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             isAdChat = false
         }
+        
+        if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel {
+            self.adMessages = context.engine.messages.adMessages(peerId: chatLocation.peerId)
+        } else {
+            self.adMessages = nil
+        }
+        
         super.init(context)
     
         //NSLog("init chat controller")
@@ -5559,6 +5809,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         _ = (self.location.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] location in
             _ = self?._locationValue.swap(location)
         })
+        
+        chatInteraction.contextHolder = { [weak self] in
+            return self?.chatLocationContextHolder ?? Atomic(value: nil)
+        }
     }
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {

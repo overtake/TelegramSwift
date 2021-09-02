@@ -114,7 +114,7 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
 }
 
 
-public func fetchCachedSharedResourceRepresentation(accountManager: AccountManager, resource: MediaResource, representation: CachedMediaResourceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+public func fetchCachedSharedResourceRepresentation(accountManager: AccountManager<TelegramAccountManagerTypes>, resource: MediaResource, representation: CachedMediaResourceRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     fatalError()
 }
 
@@ -129,7 +129,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
             let url = URL(fileURLWithPath: path)
             
             if let data = TGGUnzipData(data, 8 * 1024 * 1024), data.count > 5, let string = String(data: data.subdata(in: 0 ..< 5), encoding: .utf8), string == "<?xml" {
-                let size = (representation.size ?? CGSize(width: 1440.0, height: 2960.0)).aspectFilled(NSMakeSize(800, 800))
+                let size = NSMakeSize(400, 800)
                 
                 if let image = drawSvgImageNano(data, size)?._cgImage {
                     if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
@@ -147,17 +147,9 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                     }
                 }
             } else if let image = NSImage(data: data)?._cgImage {
-                let size = (representation.size.flatMap { image.backingSize.aspectFitted($0) } ?? image.size).aspectFilled(NSMakeSize(800, 800))
                 
-                let alphaImage = generateImage(size, contextGenerator: { size, context in
-                    context.setFillColor(NSColor.black.cgColor)
-                    context.fill(CGRect(origin: CGPoint(), size: size))
-                    context.clip(to: CGRect(origin: CGPoint(), size: size), mask: image)
-                    context.setFillColor(NSColor.white.cgColor)
-                    context.fill(CGRect(origin: CGPoint(), size: size))
-                }, scale: 1.0)
-                
-                if let alphaImage = alphaImage, let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+              
+                if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
                     CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
                     
                     let colorQuality: Float = 0.6
@@ -165,7 +157,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                     let options = NSMutableDictionary()
                     options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
                     
-                    CGImageDestinationAddImage(alphaDestination, alphaImage, options as CFDictionary)
+                    CGImageDestinationAddImage(alphaDestination, image, options as CFDictionary)
                     if CGImageDestinationFinalize(alphaDestination) {
                         svgPath = path
                     }
@@ -175,54 +167,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
             if let path = svgPath {
                 if let settings = representation.settings {
                     if let image = NSImage(contentsOfFile: path)?._cgImage {
-                        let image = generateImage(image.systemSize, contextGenerator: { size, ctx in
-                            ctx.clear(size.bounds)
-                            let imageRect = NSMakeRect(0, 0, size.width, size.height)
-                            let colors:[NSColor]
-                            var intensity: CGFloat = 0.5
-                            
-                            if settings.colors.count == 1, let combinedColor = settings.colors.first {
-                                let combinedColor = NSColor(argb: combinedColor)
-                                if let i = settings.intensity {
-                                    intensity = CGFloat(i) / 100.0
-                                }
-                                intensity = combinedColor.alpha
-                                colors = [combinedColor]
-                            } else if !settings.colors.isEmpty {
-                                if let i = settings.intensity {
-                                    intensity = CGFloat(i) / 100.0
-                                }
-                                colors = settings.colors.map { NSColor(argb: $0 ) }.reversed().map { $0.withAlphaComponent(1.0) }
-                            } else {
-                                colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
-                            }
-                            
-                            ctx.setBlendMode(.normal)
-                            ctx.interpolationQuality = .medium
-                            
-                            ctx.clip(to: imageRect, mask: image)
-                            if colors.count == 1 {
-                                ctx.setFillColor(patternColor(for: colors[0], intensity: intensity).cgColor)
-                                ctx.fill(imageRect)
-                            } else {
-                                let gradientColors = colors.map { patternColor(for: $0, intensity: intensity).cgColor } as CFArray
-                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                                
-                                var locations: [CGFloat] = []
-                                for i in 0 ..< colors.count {
-                                    locations.append(delta * CGFloat(i))
-                                }
-                                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                                
-                                ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
-                                ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
-                                ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
-                                
-                                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                            }
-                        }, scale: 1)!
-                        
+
                         let finalPath = NSTemporaryDirectory() + "\(arc4random64())"
                         let url = URL(fileURLWithPath: finalPath)
                         

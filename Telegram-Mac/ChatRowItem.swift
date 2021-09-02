@@ -14,6 +14,12 @@ import Postbox
 import SwiftSignalKit
 
 
+struct ChatFloatingPhoto {
+    var point: NSPoint
+    var items:[ChatRowItem]
+    weak var photoView: NSView?
+    
+}
 
 let simpleDif:Int32 = 10 * 60
 let forwardDif:Int32 = 10 * 60
@@ -46,8 +52,14 @@ enum ForwardItemType {
 }
 
 enum ChatItemType : Equatable {
-    case Full(rank: String?)
-    case Short
+    
+    enum Header {
+        case normal
+        case short
+    }
+    
+    case Full(rank: String?, header: Header)
+    case Short(rank: String?, header: Header)
 }
 
 enum ChatItemRenderType {
@@ -92,7 +104,7 @@ class ChatRowItem: TableRowItem {
         return []
     }
     
-    private(set) var itemType:ChatItemType = .Full(rank: nil)
+    private(set) var itemType:ChatItemType = .Full(rank: nil, header: .normal)
     
     var isFullItemType: Bool {
         if case .Full = itemType {
@@ -330,7 +342,7 @@ class ChatRowItem: TableRowItem {
                 height += additional
             }
    
-            if hasPhoto || replyModel?.isSideAccessory == true {
+            if replyModel?.isSideAccessory == true {
                 height = max(48, height)
             }
             
@@ -432,6 +444,12 @@ class ChatRowItem: TableRowItem {
         if isBubbled {
             if hasPhoto {
                 inset += 36 + 6
+            } else if self.isIncoming, let message = message {
+                if let peer = message.peers[message.id.peerId] {
+                    if peer.isGroup || peer.isSupergroup {
+                        inset += 36 + 6
+                    }
+                }
             }
         } else {
             inset += 36 + 10
@@ -717,6 +735,8 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
+        
+        
         if isSharable {
             if message.isScheduledMessage || message.flags.contains(.Sending) || message.flags.contains(.Failed) || message.flags.contains(.Unsent) {
                 return false
@@ -734,6 +754,9 @@ class ChatRowItem: TableRowItem {
         }
         
         guard let message = message else {
+            return false
+        }
+        if message.adAttribute != nil {
             return false
         }
         
@@ -802,6 +825,14 @@ class ChatRowItem: TableRowItem {
     
     let isIncoming: Bool
     
+    var canHasFloatingPhoto: Bool {
+        if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
+            return false
+        } else {
+            return isIncoming
+        }
+    }
+    
     var isUnsent: Bool {
         if entry.additionalData.updatingMedia != nil {
             return true
@@ -856,7 +887,7 @@ class ChatRowItem: TableRowItem {
         switch chatInteraction.chatLocation {
         case .peer, .replyThread:
             if renderType == .bubble, let peer = messageMainPeer(message) {
-                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId)
+                canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
                 if let media = message.media.first {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
@@ -1117,7 +1148,9 @@ class ChatRowItem: TableRowItem {
         if !isBubbled || !channelHasCommentButton {
             return nil
         }
-        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia || (self is ChatVideoMessageItem) {
+        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia {
+            return nil
+        } else if (self is ChatVideoMessageItem) {
             return nil
         }
         if let message = effectiveCommentMessage, let peer = message.peers[message.id.peerId] as? TelegramChannel {
@@ -1263,7 +1296,7 @@ class ChatRowItem: TableRowItem {
         self._avatarSynchronousValue = Thread.isMainThread
         var message: Message?
         var isRead: Bool = true
-        var itemType: ChatItemType = .Full(rank: nil)
+        var itemType: ChatItemType = .Full(rank: nil, header: .normal)
         var fwdType: ForwardItemType? = nil
         var renderType:ChatItemRenderType = .list
         var object = object
@@ -1319,6 +1352,9 @@ class ChatRowItem: TableRowItem {
                     if file.isStaticSticker || file.isAnimatedSticker {
                         return renderType == .bubble
                     }
+                    if file.isInstantVideo {
+                        return renderType == .bubble
+                    }
                     
                 }
                 if media is TelegramMediaDice {
@@ -1342,7 +1378,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if message?.id.peerId == context.peerId {
-            itemType = .Full(rank: nil)
+            itemType = .Full(rank: nil, header: .normal)
         }
         self.renderType = renderType
         self.message = message
@@ -1444,6 +1480,10 @@ class ChatRowItem: TableRowItem {
                         break
                     }
                 }
+//                if let _ = message.adAttribute {
+//                    //TODOLANG
+//                    postAuthorAttributed = .initialize(string: "sponsored", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+//                }
             }
             if let peer = peer, peer.isSupergroup, message.isAnonymousMessage {
                 for attr in message.attributes {
@@ -1508,7 +1548,7 @@ class ChatRowItem: TableRowItem {
 
                     if ChatRowItem.authorIsChannel(message: message, account: context.account) {
                         if let author = info.author {
-                            var range = attr.append(string: author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                            let range = attr.append(string: author.displayTitle, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                             
                             let appLink = inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: !(author is TelegramUser), postId: info.sourceMessageId?.id, callback: chatInteraction.openInfo)
                             attr.add(link: appLink, for: range, color: presentation.chat.linkColor(isIncoming, object.renderType == .bubble))
@@ -1610,8 +1650,18 @@ class ChatRowItem: TableRowItem {
                 }
             }
             
-            if case let .Full(rank) = itemType {
-                
+            let fillName: Bool
+            let rank: String?
+            switch itemType {
+            case let .Full(r, header):
+                rank = r
+                fillName = header == .normal
+            case let .Short(r, header):
+                rank = r
+                fillName = header == .normal && theme.bubbled
+            }
+            
+            if fillName {
                 
                 let canFillAuthorName: Bool = ChatRowItem.canFillAuthorName(message, chatInteraction: chatInteraction, renderType: renderType, isIncoming: isIncoming, hasBubble: hasBubble)
 
@@ -1620,11 +1670,11 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 var titlePeer:Peer? = self.peer
+                var title:String = self.peer?.displayTitle ?? ""
                 
-                var title:String = peer?.displayTitle ?? ""
                 if object.renderType == .list, let _ = message.forwardInfo?.psaType {
                     
-                } else if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+                } else if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info, message.adAttribute == nil {
                     title = peer.displayTitle
                     titlePeer = peer
                 }
@@ -1662,7 +1712,7 @@ class ChatRowItem: TableRowItem {
                     
                     
                     if let bot = message.inlinePeer, message.hasInlineAttribute, let address = bot.username {
-                        if message.forwardInfo?.psaType == nil {
+                        if message.forwardInfo?.psaType == nil, !isBubbled || hasBubble {
                             if attr.length > 0 {
                                 _ = attr.append(string: " ")
                             }
@@ -1697,7 +1747,7 @@ class ChatRowItem: TableRowItem {
                 }
                 
             }
-            if message.timestamp != scheduleWhenOnlineTimestamp {
+            if message.timestamp != scheduleWhenOnlineTimestamp && message.adAttribute == nil {
                 var time:TimeInterval = TimeInterval(message.timestamp)
                 time -= context.timeDifference
                 
@@ -1707,6 +1757,8 @@ class ChatRowItem: TableRowItem {
                 dateFormatter.timeZone = NSTimeZone.local
                 
                 date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            } else if message.adAttribute != nil {
+                date = TextNode.layoutText(maybeNode: nil, .initialize(string: L10n.chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
             }
 
         } else {
@@ -2454,6 +2506,12 @@ class ChatRowItem: TableRowItem {
 
 func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
+    if let _ = message.adAttribute {
+        return .single([ContextMenuItem(L10n.chatMessageSponsoredWhat, handler: {
+            execute(inapp: .external(link: L10n.chatMessageSponsoredLink, false))
+        })])
+    }
+    
     let account = chatInteraction.context.account
     let context = chatInteraction.context
     let peerId = chatInteraction.peerId
@@ -2770,7 +2828,7 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
             
             
         }
-    } else if let image = message.media.first as? TelegramMediaImage {
+    } else if let image = message.media.first as? TelegramMediaImage, !message.containsSecretMedia {
         signal = signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
             var items = items
             if let resource = image.representations.last?.resource {

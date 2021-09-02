@@ -88,14 +88,14 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     }
     
     private let disposableDict: DisposableDict<AccountRecordId> = DisposableDict()
-    private let accountManager: AccountManager
+    private let accountManager: AccountManager<TelegramAccountManagerTypes>
     private var resignTimestamp:Int32? = nil
     private let window: Window
     
     private var activeAccounts: (primary: Account?, accounts: [(AccountRecordId, Account)]) = (primary: nil, accounts: [])
     private let bindings: SharedNotificationBindings
     private let appEncryption: AppEncryptionParameters
-    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager, window: Window, bindings: SharedNotificationBindings) {
+    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager<TelegramAccountManagerTypes>, window: Window, bindings: SharedNotificationBindings) {
         self.accountManager = accountManager
         self.window = window
         self.bindings = bindings

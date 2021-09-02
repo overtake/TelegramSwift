@@ -65,7 +65,7 @@ class GeneralInteractedRowView: GeneralRowView {
             if case let .image(stateback) = item.type {
                 nextView.image = stateback
                 nextView.sizeToFit()
-                nextView.isHidden = false
+                nextView.isHidden = item.isSelected
             }
             
             switch item.type {
@@ -365,7 +365,12 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     private func invokeIfNeededUp() {
         if let event = NSApp.currentEvent {
-            if let item = item as? GeneralInteractedRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
+            guard let item = item as? GeneralInteractedRowItem else {
+                return
+            }
+            if case .contextSelector = item.type {
+                
+            } else if let table = item.table, table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
                 invokeAction(item)
             } else {
                 super.mouseUp(with: event)
@@ -375,7 +380,12 @@ class GeneralInteractedRowView: GeneralRowView {
     }
     private func invokeIfNeededDown() {
         if let event = NSApp.currentEvent {
-            if let item = item as? GeneralInteractedRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
+            guard let item = item as? GeneralInteractedRowItem else {
+                return
+            }
+            if case .contextSelector = item.type {
+                invokeAction(item)
+            } else if let table = item.table, !table.alwaysOpenRowsOnMouseUp, containerView.mouseInside() {
                 invokeAction(item)
             } else {
                 super.mouseDown(with: event)

@@ -580,7 +580,7 @@ class GalleryViewer: NSResponder {
             
                 switch type {
                 case .alone:
-                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
+                    let entries:[ChatHistoryEntry] = [.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))]
                     let previous = previous.swap(entries)
                     
                     var inserted: [(Int, MGalleryItem)] = []
@@ -630,7 +630,7 @@ class GalleryViewer: NSResponder {
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
                         if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
-                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)))
+                            entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
                         return prepareEntries(from: previous, to: entries, context: context, pagerSize: pagerSize) |> map { transition in
@@ -1190,7 +1190,7 @@ class GalleryViewer: NSResponder {
         //closePipVideo()
        // backgroundView.alphaValue = 0
         backgroundView._change(opacity: 0, animated: false)
-        self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start { [weak self] in
+        self.readyDispose.set((self.ready.get() |> take(1) |> deliverOnMainQueue).start(completed:  { [weak self] in
             if let strongSelf = self {
                 
                 if let startTime = strongSelf.contentInteractions?.timeCodeInitializer {
@@ -1223,10 +1223,10 @@ class GalleryViewer: NSResponder {
                         //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
                     }
                 }, addVideoTimebase: { stableId, view  in
-                   
+                    
                 })
             }
-        });
+        }));
         
     }
     

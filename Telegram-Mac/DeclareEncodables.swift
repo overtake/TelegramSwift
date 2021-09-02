@@ -10,7 +10,6 @@ import Cocoa
 import Postbox
 
 private var telegramUIDeclaredEncodables: Void = {
-    declareEncodable(ChatInterfaceState.self, f: { ChatInterfaceState(decoder: $0) })
     declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
     declareEncodable(BaseApplicationSettings.self, f: { BaseApplicationSettings(decoder: $0) })
     declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
@@ -52,7 +51,6 @@ private var telegramUIDeclaredEncodables: Void = {
     declareEncodable(CachedInstantPage.self, f: { CachedInstantPage(decoder: $0) })
     declareEncodable(RecentSettingsSearchQueryItem.self, f: { RecentSettingsSearchQueryItem(decoder: $0) })
     declareEncodable(ChatListFoldersSettings.self, f: { ChatListFoldersSettings(decoder: $0) })
-    declareEncodable(ChatTextInputState.self, f: { ChatTextInputState(decoder: $0) })
     declareEncodable(PushToTalkValue.self, f: { PushToTalkValue(decoder: $0) })
     declareEncodable(PushToTalkValue.ModifierFlag.self, f: { PushToTalkValue.ModifierFlag(decoder: $0) })
     

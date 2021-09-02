@@ -926,6 +926,57 @@ public extension CGSize {
 
 public extension NSImage {
     
+    func precomposed(_ colors:[NSColor], flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+        
+        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
+        
+        
+        let make:(CGContext) -> Void = { [weak self] ctx in
+            
+            guard let image = self else { return }
+            
+            let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
+            ctx.interpolationQuality = .high
+            ctx.clear(rect)
+            
+            var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
+
+            let cimage = image.cgImage(forProposedRect: &imageRect, context: nil, hints: nil)
+            
+            if !colors.isEmpty {
+                ctx.clip(to: rect, mask: cimage!)
+                if colors.count > 2 {
+                    let preview = AnimatedGradientBackgroundView.generatePreview(size: NSMakeSize(32, 32), colors: colors)
+                    ctx.draw(preview, in: rect.focus(preview.size.aspectFilled(rect.size)))
+                } else if colors.count > 1 {
+                    let rect = NSMakeRect(0, 0, rect.width, rect.height)
+                    let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else if let color = colors.first {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
+                }
+            } else {
+                ctx.draw(cimage!, in: imageRect)
+            }
+            
+
+        }
+        
+        drawContext.withFlippedContext(horizontal: flipHorizontal, vertical: flipVertical, make)
+
+        return drawContext.generateImage()!
+    }
+    
+    
     func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
         
         let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
@@ -970,22 +1021,8 @@ public extension NSImage {
         }
         
         drawContext.withFlippedContext(horizontal: flipHorizontal, vertical: flipVertical, make)
-        
 
-        
-        
         return drawContext.generateImage()!
-        
-//        var image:NSImage = self.copy() as! NSImage
-//        if let color = color {
-//            image.lockFocus()
-//            color.set()
-//            var imageRect = NSMakeRect(0, 0, image.size.width * 2.0, image.size.height * 2.0)
-//            NSRectFillUsingOperation(imageRect, NSCompositeSourceAtop)
-//            image.unlockFocus()
-//        }
-
-    //    return roundImage(image.tiffRepresentation!, self.size, cornerRadius: 0, reversed:reversed)!
     }
     
 }

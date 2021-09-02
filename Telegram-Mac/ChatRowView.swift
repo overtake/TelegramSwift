@@ -65,6 +65,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var hasBeenLayout: Bool = false
 
     let rowView: View
+    
+    var photoView: NSView? {
+        return self.avatar
+    }
 
     required init(frame frameRect: NSRect) {
         rowView = View(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
@@ -117,6 +121,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         bubbleView.update(rect: rect.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
     }
     
+//    func updateFloatingPhoto() {
+//        if let item = self.item as? ChatRowItem, let table = item.table {
+//            
+//        }
+//    }
+//    
     var selectableTextViews: [TextView] {
         return captionViews.map { $0.view }
     }
@@ -558,13 +568,20 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - rightSize.width
                 rect.origin.y += 3
             }
-            if let item = item as? ChatMessageItem, item.containsBigEmoji {
-                rect.origin.y = bubbleFrame.maxY - rightSize.height
+            if let item = item as? ChatMessageItem {
+                if item.containsBigEmoji {
+                    rect.origin.y = bubbleFrame.maxY - rightSize.height
+                } else if item.actionButtonText != nil {
+                    if item.webpageLayout == nil {
+                        rect.origin.y = bubbleFrame.maxY - rightSize.height - item.actionButtonHeight - 6;
+                    }
+                }
             }
             
             if item.hasBubble, let _ = item.commentsBubbleData {
                 rect.origin.y -= ChatRowItem.channelCommentsBubbleHeight
             }
+            
         }
         
         return rect
@@ -902,13 +919,24 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    static func makePhotoView(_ item: ChatRowItem) -> NSView {
+        let avatar = AvatarControl(font: .avatar(.text))
+        avatar.setFrameSize(36,36)
+        
+        avatar.toolTip = item.nameHide
+        if let peer = item.peer {
+            avatar.setPeer(account: item.context.account, peer: peer, message: item.message)
+        }
+        return avatar
+    }
+    
     func fillPhoto(_ item:ChatRowItem) -> Void {
-        if item.hasPhoto, let peer = item.peer {
+        if item.hasPhoto, let peer = item.peer, !item.presentation.bubbled {
             
             if avatar == nil {
                 avatar = AvatarControl(font: .avatar(.text))
                 avatar?.setFrameSize(36,36)
-               rowView.addSubview(avatar!)
+                rowView.addSubview(avatar!)
             }
             avatar?.removeAllHandlers()
             avatar?.set(handler: { [weak item] control in
@@ -1754,6 +1782,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         control.centerY()
         
+    }
+    
+    var hasRevealState: Bool {
+        return !swipingRightView.subviews.isEmpty
     }
     
     func moveReveal(delta: CGFloat) {

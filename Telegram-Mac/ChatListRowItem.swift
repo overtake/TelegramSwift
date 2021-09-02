@@ -465,9 +465,10 @@ class ChatListRowItem: TableRowItem {
     }
     
     private let highlightText: String?
-    private let embeddedState:PeerChatListEmbeddedInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:PeerChatListEmbeddedInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
+    private let embeddedState:StoredPeerChatInterfaceState?
+    
+    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:StoredPeerChatInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
         
         
         var embeddedState = embeddedState
@@ -477,7 +478,14 @@ class ChatListRowItem: TableRowItem {
                 embeddedState = nil
             }
         }
-        
+        let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
+            ChatInterfaceState.parse($0, peerId: nil, context: nil)
+        })
+        if let interfaceState = interfaceState {
+            if interfaceState.inputState.inputText.isEmpty {
+                embeddedState = nil
+            }
+        }
         let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(777000))
 
         if let peerPresence = peerPresence, context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
