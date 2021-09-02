@@ -120,12 +120,14 @@ class ChatInputAccessory: Node {
             
             var items:[SPopoverItem] = []
             
+            let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
+
             
-            items.append(SPopoverItem(L10n.chatAlertForwardActionShow, {
+            items.append(SPopoverItem(L10n.chatAlertForwardActionShow1Countable(authors), {
                 setHideAction(false)
             }, !state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
             
-            items.append(SPopoverItem(L10n.chatAlertForwardActionHide, {
+            items.append(SPopoverItem(L10n.chatAlertForwardActionHide1Countable(authors), {
                 setHideAction(true)
             }, state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
         
@@ -203,7 +205,7 @@ class ChatInputAccessory: Node {
         set {
             super.frame = newValue
             self.container.frame = NSMakeRect(49, 0, measuredWidth, size.height)
-            iconView.centerY(x: 5)
+            iconView.centerY(x: 2)
             dismiss.centerY(x: newValue.width - dismiss.frame.width)
             progress?.centerY(x: 5)
             displayNode?.setNeedDisplay()
