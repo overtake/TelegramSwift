@@ -60,7 +60,7 @@ public final class AccountWithInfo: Equatable {
 
 
 class SharedAccountContext {
-    let accountManager: AccountManager
+    let accountManager: AccountManager<TelegramAccountManagerTypes>
     var bindings: AccountContextBindings = AccountContextBindings()
 
     #if !SHARE
@@ -188,7 +188,7 @@ class SharedAccountContext {
     
 
     
-    init(accountManager: AccountManager, networkArguments: NetworkInitializationArguments, rootPath: String, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters, displayUpgradeProgress: @escaping(Float?) -> Void) {
+    init(accountManager: AccountManager<TelegramAccountManagerTypes>, networkArguments: NetworkInitializationArguments, rootPath: String, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters, displayUpgradeProgress: @escaping(Float?) -> Void) {
         self.accountManager = accountManager
         self.displayUpgradeProgress = displayUpgradeProgress
         self.appEncryption = Atomic(value: appEncryption)
@@ -225,32 +225,39 @@ class SharedAccountContext {
                 var result: [AccountRecordId: AccountAttributes] = [:]
                 for record in view.records {
                     let isLoggedOut = record.attributes.contains(where: { attribute in
-                        return attribute is LoggedOutAccountAttribute
-                    })
-                    if isLoggedOut {
-                        continue
-                    }
-                    let isTestingEnvironment = record.attributes.contains(where: { attribute in
-                        if let attribute = attribute as? AccountEnvironmentAttribute, case .test = attribute.environment {
+                        if case .loggedOut = attribute {
                             return true
                         } else {
                             return false
                         }
                     })
+                    if isLoggedOut {
+                        continue
+                    }
+
+                    let isTestingEnvironment = record.attributes.contains(where: { attribute in
+                        if case let .environment(environment) = attribute, case .test = environment.environment {
+                            return true
+                        } else {
+                            return false
+                        }
+                    })
+
                     var backupData: AccountBackupData?
                     var sortIndex: Int32 = 0
                     for attribute in record.attributes {
-                        if let attribute = attribute as? AccountSortOrderAttribute {
-                            sortIndex = attribute.order
-                        } else if let attribute = attribute as? AccountBackupDataAttribute, false {
-                            backupData = attribute.data
+                        if case let .sortOrder(sortOrder) = attribute {
+                            sortIndex = sortOrder.order
+                        } else if case let .backupData(backupDataValue) = attribute {
+                            backupData = backupDataValue.data
                         }
                     }
+
                     result[record.id] = AccountAttributes(sortIndex: sortIndex, isTestingEnvironment: isTestingEnvironment, backupData: backupData)
                 }
                 let authRecord: (AccountRecordId, Bool)? = view.currentAuthAccount.flatMap({ authAccount in
                     let isTestingEnvironment = authAccount.attributes.contains(where: { attribute in
-                        if let attribute = attribute as? AccountEnvironmentAttribute, case .test = attribute.environment {
+                        if case let .environment(environment) = attribute, case .test = environment.environment {
                             return true
                         } else {
                             return false
@@ -258,6 +265,7 @@ class SharedAccountContext {
                     })
                     return (authAccount.id, isTestingEnvironment)
                 })
+
                 return (view.currentRecord?.id, result, authRecord)
             }
             |> distinctUntilChanged(isEqual: { lhs, rhs in
@@ -338,8 +346,6 @@ class SharedAccountContext {
                         }
                 }
                 
-
-                
                 differenceDisposable.set(combineLatest(queue: .mainQueue(), mappedAddedAccounts, addedAuthSignal).start(next: { mappedAddedAccounts, authAccount in
                     var addedAccounts: [(AccountRecordId, Account?, Int32)] = []
                     switch mappedAddedAccounts {
@@ -349,7 +355,6 @@ class SharedAccountContext {
                     case let .ready(value):
                         addedAccounts = value
                     }
-                    
                     
                     var hadUpdates = false
                     if self.activeAccountsValue == nil {
@@ -510,7 +515,7 @@ class SharedAccountContext {
     
     public func beginNewAuth(testingEnvironment: Bool) {
         let _ = self.accountManager.transaction({ transaction -> Void in
-            let _ = transaction.createAuth([AccountEnvironmentAttribute(environment: testingEnvironment ? .test : .production)])
+            let _ = transaction.createAuth([.environment(AccountEnvironmentAttribute(environment: testingEnvironment ? .test : .production))])
         }).start()
     }
     
@@ -547,18 +552,19 @@ class SharedAccountContext {
     private func updateAccountBackupData(account: Account) -> Signal<Never, NoError> {
         return accountBackupData(postbox: account.postbox)
             |> mapToSignal { backupData -> Signal<Never, NoError> in
-                guard let backupData = backupData else {
-                    return .complete()
-                }
                 return self.accountManager.transaction { transaction -> Void in
                     transaction.updateRecord(account.id, { record in
                         guard let record = record else {
                             return nil
                         }
-                        var attributes = record.attributes.filter({ !($0 is AccountBackupDataAttribute) })
-                        if false {
-                            attributes.append(AccountBackupDataAttribute(data: backupData))
+                        let attributes = record.attributes.filter {
+                            if case .backupData = $0 {
+                                return false
+                            } else {
+                                return true
+                            }
                         }
+                       
                         return AccountRecord(id: record.id, attributes: attributes, temporarySessionId: record.temporarySessionId)
                     })
                     }

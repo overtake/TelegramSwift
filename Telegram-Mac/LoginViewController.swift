@@ -22,11 +22,11 @@ final class LoginAuthViewArguments {
     let editPhone:()->Void
     let checkCode:(String)->Void
     let checkPassword:(String)->Void
-    let requestPasswordRecovery: (@escaping(PasswordRecoveryOption)-> Void)->Void
+    let requestPasswordRecovery: (@escaping(String)-> Void)->Void
     let resetAccount: ()->Void
     let signUp:(String, String, URL?) -> Void
     let cancelQrAuth:()->Void
-    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(PasswordRecoveryOption)-> Void)->Void, resetAccount: @escaping()->Void, signUp:@escaping(String, String, URL?) -> Void, cancelQrAuth: @escaping()->Void, updatePhoneNumberField:@escaping(String)->Void) {
+    init(sendCode:@escaping(String)->Void, resendCode:@escaping()->Void, editPhone:@escaping()->Void, checkCode:@escaping(String)->Void, checkPassword:@escaping(String)->Void, requestPasswordRecovery: @escaping(@escaping(String)-> Void)->Void, resetAccount: @escaping()->Void, signUp:@escaping(String, String, URL?) -> Void, cancelQrAuth: @escaping()->Void, updatePhoneNumberField:@escaping(String)->Void) {
         self.sendCode = sendCode
         self.resendCode = resendCode
         self.editPhone = editPhone
@@ -370,13 +370,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
        
         forgotPasswordView.set(handler: { [weak self]  _ in
             self?.arguments?.requestPasswordRecovery({ [weak self] option in
-                switch option {
-                case .email:
-                    self?.resetAccountView.isHidden = false
-                case .none:
-                    alert(for: mainWindow, info: L10n.loginRecoveryMailFailed)
-                    self?.resetAccountView.isHidden = false
-                }
+                self?.resetAccountView.isHidden = false
             })
         }, for: .Click)
         

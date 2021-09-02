@@ -174,7 +174,7 @@ public class SectionControllerView : View {
 
 public class SectionControllerItem {
     let title: ()->String
-    let controller: ViewController
+    public let controller: ViewController
     public init(title: @escaping()->String, controller: ViewController) {
         self.title = title
         self.controller = controller

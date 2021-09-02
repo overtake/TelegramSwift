@@ -201,14 +201,8 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
         input.textView?.insertionPointColor = secondaryColor;
         input.textColor = secondaryColor
         inputContainer.background = containerBgColor
-        switch theme.controllerBackgroundMode {
-        case .gradient:
-            backgroundView.backgroundMode = theme.controllerBackgroundMode
-        case let .background(_, colors, rotation):
-            backgroundView.backgroundMode = .gradient(colors: colors ?? [], rotation: rotation)
-        default:
-            backgroundView.backgroundMode = .plain
-        }
+        backgroundView.backgroundMode = theme.controllerBackgroundMode
+
 
         let placeholder = NSMutableAttributedString()
         _ = placeholder.append(string: L10n.passcodeEnterPasscodePlaceholder, color: theme.chatServiceItemTextColor, font: .normal(.title))
@@ -357,7 +351,7 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
 }
 
 class PasscodeLockController: ModalViewController {
-    let accountManager: AccountManager
+    let accountManager: AccountManager<TelegramAccountManagerTypes>
     private let useTouchId: Bool
     private let appearanceDisposable = MetaDisposable()
     private let disposable:MetaDisposable = MetaDisposable()
@@ -374,7 +368,7 @@ class PasscodeLockController: ModalViewController {
     }
     private let updateCurrectController: ()->Void
     private let logoutImpl:() -> Signal<Never, NoError>
-    init(_ accountManager: AccountManager, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }, updateCurrectController: @escaping()->Void) {
+    init(_ accountManager: AccountManager<TelegramAccountManagerTypes>, useTouchId: Bool, logoutImpl:@escaping()->Signal<Never, NoError> = { .complete() }, updateCurrectController: @escaping()->Void) {
         self.accountManager = accountManager
         self.logoutImpl = logoutImpl
         self.useTouchId = useTouchId

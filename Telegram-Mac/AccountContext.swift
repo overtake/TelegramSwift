@@ -91,6 +91,7 @@ final class AccountContext {
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
+    private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
     #endif
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
@@ -370,6 +371,18 @@ final class AccountContext {
         _temporartPassword = nil
         temporaryPwdDisposable.set(nil)
     }
+    #if !SHARE
+    func setChatInterfaceTempState(_ state: ChatInterfaceTempState, for peerId: PeerId) {
+        self.chatInterfaceTempState[peerId] = state
+    }
+    func getChatInterfaceTempState(_ peerId: PeerId?) -> ChatInterfaceTempState? {
+        if let peerId = peerId {
+            return self.chatInterfaceTempState[peerId]
+        } else {
+            return nil
+        }
+    }
+    #endif
     
     func setTemporaryPwd(_ password: String) -> Void {
         _temporartPassword = password
@@ -435,6 +448,28 @@ final class AccountContext {
         case let .replyThread(data):
             let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
             return context.maxReadOutgoingMessageId
+        }
+    }
+
+    public func chatLocationUnreadCount(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> Signal<Int, NoError> {
+        switch location {
+        case let .peer(peerId):
+            let unreadCountsKey: PostboxViewKey = .unreadCounts(items: [.peer(peerId), .total(nil)])
+            return self.account.postbox.combinedView(keys: [unreadCountsKey])
+            |> map { views in
+                var unreadCount: Int32 = 0
+
+                if let view = views.views[unreadCountsKey] as? UnreadMessageCountsView {
+                    if let count = view.count(for: .peer(peerId)) {
+                        unreadCount = count
+                    }
+                }
+
+                return Int(unreadCount)
+            }
+        case let .replyThread(data):
+            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+            return context.unreadCount
         }
     }
 

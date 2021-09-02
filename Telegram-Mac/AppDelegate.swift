@@ -296,7 +296,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
 
-        let accountManager = AccountManager(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
 
         if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
@@ -327,7 +327,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             updateTheme(with: themeSettings, for: window)
             
             self.window.makeKeyAndOrderFront(self)
-            
+            NSApp.activate(ignoringOtherApps: true)
+
             showModal(with: ColdStartPasslockController(checkNextValue: { passcode in
                 appEncryption.applyPasscode(passcode)
                 if let params = appEncryption.decrypt() {
@@ -343,7 +344,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     subscriber.putCompletion()
                     DispatchQueue.main.async {
                         let appEncryption = AppEncryptionParameters(path: rootPath)
-                        let accountManager = AccountManager(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
+                        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
                         if let params = appEncryption.decrypt() {
                             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
                             self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
@@ -355,7 +356,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
     }
     
-    private func launchApp(accountManager: AccountManager, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
+    private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         
         self.appEncryption = appEncryption
@@ -1188,6 +1189,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         if let context = self.contextValue?.context {
             let navigation = context.sharedContext.bindings.rootNavigation()
+            (navigation.controller as? ChatController)?.chatInteraction.saveState(sync: true)
         }
         
         return .terminateNow

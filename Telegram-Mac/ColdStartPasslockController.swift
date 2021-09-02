@@ -111,6 +111,10 @@ class ColdStartPasslockController: ModalViewController {
         return true
     }
     
+    override var cornerRadius: CGFloat {
+        return 0
+    }
+    
     override var handleAllEvents: Bool {
         return true
     }

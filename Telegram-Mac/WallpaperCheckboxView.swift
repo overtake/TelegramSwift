@@ -112,39 +112,140 @@ private final class BlurCheckbox : View {
 
 
 final class WallpaperCheckboxView : Control {
+    
+    final class ColorsListView : View {
+        
+        var colors:[NSColor] = [] {
+            didSet {
+                needsDisplay = true
+            }
+        }
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            super.draw(layer, in: ctx)
+            
+            ctx.round(frame.size, frame.height / 2)
+            
+            if colors.count == 1 {
+                ctx.setFillColor(colors[0].cgColor)
+                ctx.fill(bounds)
+            } else if colors.count == 2 {
+                ctx.setFillColor(colors[0].cgColor)
+                ctx.fill(NSMakeRect(0, 0, frame.width / 2, frame.height))
+                ctx.setFillColor(colors[1].cgColor)
+                ctx.fill(NSMakeRect(frame.width / 2, 0, frame.width / 2, frame.height))
+            } else if colors.count == 3 {
+            
+                ctx.setFillColor(colors[2].cgColor)
+                ctx.fill(bounds)
+                
+                ctx.setFillColor(colors[0].cgColor)
+                var path = CGMutablePath()
+                path.move(to: NSMakePoint(0, 0))
+                path.addLine(to: CGPoint(x: frame.width / 2, y: 0))
+                path.addLine(to: CGPoint(x: frame.width / 2, y: frame.height / 2))
+                path.addLine(to: CGPoint(x: 0, y: frame.height * 0.8))
+                ctx.addPath(path)
+                ctx.fillPath()
+                
+                ctx.setFillColor(colors[1].cgColor)
+                path = CGMutablePath()
+                path.move(to: NSMakePoint(frame.width, 0))
+                path.addLine(to: NSMakePoint(frame.width / 2, 0))
+                path.addLine(to: CGPoint(x: frame.width / 2, y: frame.height / 2))
+                path.addLine(to: CGPoint(x: frame.width, y: frame.height * 0.8))
+                ctx.addPath(path)
+                ctx.fillPath()
+                
+//                ctx.setFillColor(colors[2].cgColor)
+//                path = CGMutablePath()
+//                path.move(to: NSMakePoint(0, frame.height * 0.8))
+//                path.addLine(to: CGPoint(x: frame.width / 2, y: frame.height / 2))
+//                path.addLine(to: CGPoint(x: frame.width, y: frame.height * 0.8))
+//                ctx.addPath(path)
+//                ctx.fillPath()
+                
+            } else if colors.count == 4 {
+                ctx.setFillColor(colors[0].cgColor)
+                ctx.fill(NSMakeRect(0, 0, frame.width / 2, frame.height / 2))
+                
+                ctx.setFillColor(colors[1].cgColor)
+                ctx.fill(NSMakeRect(frame.width / 2, 0, frame.width / 2, frame.height / 2))
+                
+                ctx.setFillColor(colors[2].cgColor)
+                ctx.fill(NSMakeRect(0, frame.height / 2, frame.width / 2, frame.height / 2))
+                
+                ctx.setFillColor(colors[3].cgColor)
+                ctx.fill(NSMakeRect(frame.width / 2, frame.height / 2, frame.width / 2, frame.height / 2))
+
+            }
+        }
+    }
+    
     private let title:(TextNodeLayout,TextNode)
     fileprivate let checkbox: BlurCheckbox = BlurCheckbox(frame: NSMakeRect(0, 0, 16, 16))
     
+    private var _isSelected: Bool = false
     override var isSelected: Bool {
         get {
-            return checkbox.isSelected
+            return _isSelected
         }
         set {
-            checkbox.set(isSelected: newValue, animated: false)
+            _isSelected = newValue
+            self.update(by: self.bgcolor)
         }
     }
     
+    
     var isFullFilled: Bool = false {
         didSet {
-            checkbox.isFullFilled = isFullFilled
+            //checkbox.isFullFilled = isFullFilled
         }
     }
+    
+    private var colors: ColorsListView?
     
     required init(frame frameRect: NSRect, title: String) {
         self.title = TextNode.layoutText(.initialize(string: title, color: .white, font: .medium(.text)), nil, 1, .end, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
         super.init(frame: frameRect)
         addSubview(checkbox)
+        
+        
+        colors?.colors = [NSColor.random, NSColor.random, NSColor.random]
+        
         layer?.cornerRadius = frameRect.height / 2
         setFrameSize(self.title.0.size.width + 10 + checkbox.frame.width + 10 + 10, frameRect.height)
         scaleOnClick = true
         
         self.set(handler: { [weak self] _ in
             if let strongSelf = self {
-                strongSelf.checkbox.set(isSelected: !strongSelf.checkbox.isSelected, animated: false)
-                strongSelf.onChangedValue?(strongSelf.checkbox.isSelected)
+                strongSelf.isSelected = !strongSelf.isSelected
+                strongSelf.onChangedValue?(strongSelf.isSelected)
+                strongSelf.update(by: strongSelf.bgcolor)
             }
         }, for: .Click)
 
+    }
+    
+    var hasPattern: Bool = false {
+        didSet {
+            checkbox.set(isSelected: hasPattern, animated: false)
+        }
+    }
+    
+    var colorsValue: [NSColor] = [] {
+        didSet {
+            if colors == nil, !colorsValue.isEmpty {
+                colors = ColorsListView(frame: NSMakeRect(10, 0, 16, 16))
+                addSubview(colors!)
+            } else if colorsValue.isEmpty {
+                colors?.removeFromSuperview()
+                colors = nil
+            }
+            colors?.colors = colorsValue
+            checkbox.isHidden = colors != nil
+            checkbox.set(isSelected: !colorsValue.isEmpty, animated: true)
+        }
     }
     
     var onChangedValue:((Bool)->Void)?
@@ -152,13 +253,16 @@ final class WallpaperCheckboxView : Control {
     override func layout() {
         super.layout()
         checkbox.centerY(x: 10)
+        colors?.centerY(x: 10)
     }
+    private var bgcolor: NSColor? = nil
     
     func update(by color: NSColor?) -> Void {
+        self.bgcolor = color
         if let color = color {
-            backgroundColor = color
+            backgroundColor = isSelected ? color.darker() : color
         } else {
-            backgroundColor = theme.chatServiceItemColor
+            backgroundColor = isSelected ? theme.chatServiceItemColor.darker() : theme.chatServiceItemColor
         }
     }
     

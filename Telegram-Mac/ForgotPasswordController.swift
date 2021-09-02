@@ -59,7 +59,7 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     return entries
 }
 
-func ForgotUnauthorizedPasswordController(accountManager: AccountManager, engine: TelegramEngineUnauthorized, emailPattern: String) -> InputDataModalController {
+func ForgotUnauthorizedPasswordController(accountManager: AccountManager<TelegramAccountManagerTypes>, engine: TelegramEngineUnauthorized, emailPattern: String) -> InputDataModalController {
     
     
     let initialState = ForgotPasswordState(code: "", error: nil, checking: false)

@@ -24,16 +24,21 @@ private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> 
                 let rect = NSMakeRect(0, 0, size.width, size.height)
                 ctx.clear(rect)
                 ctx.round(size, size.height / 2)
-                let colors = [messages.top, messages.bottom].reversed()
-                let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
-                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                var locations: [CGFloat] = []
-                for i in 0 ..< colors.count {
-                    locations.append(delta * CGFloat(i))
+                let colors = messages.reversed()
+                if colors.count > 1 {
+                    let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else if let color = messages.first {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
                 }
-                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
             })!
             
             context.draw(image, in: bounds.focus(imageSize))
@@ -232,6 +237,7 @@ final class AccentColorRowView : TableRowView {
         if item.isNative {
             let custom = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             custom.autohighlight = false
+            custom.animates = false
             custom.set(image: generateCustomSwatchImage(), for: .Normal)
             custom.setImageContentGravity(.resize)
             custom.set(handler: { _ in
@@ -245,6 +251,7 @@ final class AccentColorRowView : TableRowView {
         if !colorList.contains(where: { $0.accent.accent == theme.colors.accent && $0.cloudTheme?.id == theme.cloudTheme?.id }) {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
+            button.animates = false
             button.layer?.cornerRadius = button.frame.height / 2
             button.set(background: theme.colors.accent, for: .Normal)
             button.addSubview(selectedImageView)
@@ -273,6 +280,7 @@ final class AccentColorRowView : TableRowView {
             
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
+            button.animates = false
            // button.layer?.cornerRadius = button.frame.height / 2
             let icon = generateAccentColor(accent.accent, bubbled: theme.bubbled)
             button.contextObject = colorList[i]

@@ -54,7 +54,7 @@ public enum TableBackgroundMode {
     case plain
     case color(color: NSColor)
     case gradient(colors: [NSColor], rotation: Int32?)
-    case background(image: NSImage, colors: [NSColor]?, rotation: Int32?)
+    case background(image: NSImage, intensity: Int32?, colors: [NSColor]?, rotation: Int32?)
     case tiled(image: NSImage)
     public var hasWallpaper: Bool {
         switch self {
@@ -626,6 +626,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var searchView: TableSearchView?
     private var rightBorder: View? = nil
     public var separator:TableSeparator = .none
+    
+    public var onCAScroll:(NSRect, NSRect)->Void = { _, _ in }
     
     public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
         didSet {
@@ -1813,7 +1815,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var item:TableRowItem = self.item(at:from);
         let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current.duration = animation != .none ? NSAnimationContext.current.duration : 0.0
+        NSAnimationContext.current.duration = animation != .none ? 0.2 : 0.0
         NSAnimationContext.current.timingFunction = animation != .none ? CAMediaTimingFunction(name: .easeOut) : nil
 
         if let change = changeItem {
@@ -2860,7 +2862,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, _ toVisible:Bool = false, ignoreLayerAnimation: Bool = false, completion: @escaping(Bool)->Void = { _ in }) {
-       // if let index = self.index(of: item) {
         
         var rowRect:NSRect = bounds
         
@@ -3044,7 +3045,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self.areSuspended = false
                     self.enqueueTransitions()
                 })
-
+                self.onCAScroll(edgeRect, bounds)
             }
         } else {
             if let item = item, focus.focus {

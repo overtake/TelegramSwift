@@ -108,7 +108,6 @@ final class WallpaperPatternPreviewView: View {
             let patternView = WallpaperPatternView(frame: NSMakeRect(x, 10, 80, 80))
             patternView.update(with: pattern, isSelected: pattern == selected, account: account, colors: self.colors, rotation: self.rotation)
             patternView.set(handler: { [weak self] _ in
-                guard let `self` = self else {return}
                 select(pattern)
               //  self.updateSelected(pattern)
             }, for: .Click)
@@ -164,7 +163,6 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
     
     var intensity: Int32? = nil {
         didSet {
-            NSLog("intensity: \(intensity)")
             if oldValue != nil, oldValue != intensity {
                 self.selected?(pattern?.withUpdatedSettings(WallpaperSettings(colors: pattern?.settings.colors ?? [], intensity: intensity)))
             }
@@ -183,6 +181,8 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
                 default:
                     break
                 }
+            } else {
+                genericView.updateSelected(nil)
             }
         }
     }
@@ -205,8 +205,8 @@ class WallpaperPatternPreviewController: GenericViewController<WallpaperPatternP
         let signal = telegramWallpapers(postbox: context.account.postbox, network: context.account.network) |> map { wallpapers -> [Wallpaper] in
             return wallpapers.compactMap { wallpaper in
                 switch wallpaper {
-                case let .file(_, _, _, _, isPattern, _, _, _, _):
-                    return isPattern ? Wallpaper(wallpaper) : nil
+                case let .file(file):
+                    return file.isPattern ? Wallpaper(wallpaper) : nil
                 default:
                     return nil
                 }

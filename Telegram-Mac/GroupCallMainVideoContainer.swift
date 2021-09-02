@@ -147,8 +147,10 @@ private final class BackView : Control {
 private final class SelfPresentationPlaceholder : View {
     private let textView = TextView()
     private let button = TitleButton()
+    private let visualEffect = NSVisualEffectView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(visualEffect)
         addSubview(textView)
         addSubview(button)
         
@@ -157,6 +159,11 @@ private final class SelfPresentationPlaceholder : View {
         
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        visualEffect.wantsLayer = true
+        visualEffect.material = .ultraDark
+        visualEffect.blendingMode = .withinWindow
+        visualEffect.state = .active
     }
         
     func update(stop: @escaping()->Void) {
@@ -193,6 +200,10 @@ private final class SelfPresentationPlaceholder : View {
         var buttonRect = size.bounds.focus(button.frame.size)
         buttonRect.origin.y = frame.midY + 5
         transition.updateFrame(view: button, frame: buttonRect)
+        
+        if let window = window {
+            visualEffect.frame = window.bounds
+        }
     }
     
     
@@ -223,16 +234,12 @@ struct DominantVideo : Equatable {
 final class GroupCallMainVideoContainerView: Control {
     private let call: PresentationGroupCall
     
-    private(set) var backstageView: GroupVideoView?
-    
     private class V : NSVisualEffectView {
         override var mouseDownCanMoveWindow: Bool {
             return true
         }
     }
     
-    private var backstage: NSView?
-
     private(set) var currentVideoView: GroupVideoView?
     private(set) var currentPeer: DominantVideo?
     
@@ -534,40 +541,9 @@ final class GroupCallMainVideoContainerView: Control {
                 self.addSubview(videoView, positioned: .below, relativeTo: self.shadowView)
             }
             
-            if let participant = participant {
-                var view: NSView? = self.backstage
-                
-                if participant.visualEffects {
-                    if !(view is NSVisualEffectView) {
-                        view?.removeFromSuperview()
-                        let visualEffect = NSVisualEffectView(frame: bounds)
-                        visualEffect.layerContentsRedrawPolicy = .duringViewResize
-                        visualEffect.wantsLayer = true
-                        visualEffect.material = .dark
-                        
-                        visualEffect.blendingMode = .withinWindow
-                        if #available(OSX 10.12, *) {
-                            visualEffect.isEmphasized = true
-                        }
-                        visualEffect.state = .active
-                        view = visualEffect
-                    }
-                } else {
-                    if (view is NSVisualEffectView) {
-                        view?.removeFromSuperview()
-                        let empty = View(frame: bounds)
-                        empty.background = GroupCallTheme.membersColor.withAlphaComponent(0.9)
-                        view = empty
-                    }
-                }
-                self.backstage = view
-
-            }
-            
-            
             if let videoView = videoView {
                 
-                videoView.change(opacity: isPaused || selfPresentation ? 0 : 1, animated: animated)
+                videoView.change(opacity: isPaused ? 0 : 1, animated: animated)
                 
                 let prevIsPaused = self.participant?.isVideoPaused(peer.endpointId) == true
                 if prevIsPaused != isPaused {
@@ -619,13 +595,6 @@ final class GroupCallMainVideoContainerView: Control {
             
             self.currentVideoView?.gravity = resizeMode
             
-            if let backstage = backstage {
-                if let backstageView = backstageView {
-                    self.addSubview(backstage, positioned: .above, relativeTo: backstageView)
-                } else {
-                    self.addSubview(backstage, positioned: .below, relativeTo: videoView)
-                }
-            }
         } else {
             if let view = self.selfPresentationPlaceholder {
                 view.removeFromSuperview()
@@ -635,12 +604,6 @@ final class GroupCallMainVideoContainerView: Control {
             if let currentVideoView = self.currentVideoView {
                 currentVideoView.removeFromSuperview()
                 self.currentVideoView = nil
-            }
-            if let backstageView = self.backstageView {
-                backstageView.removeFromSuperview()
-                self.backstageView = nil
-                backstage?.removeFromSuperview()
-                self.backstage = nil
             }
         }
         self.participant = participant
@@ -657,15 +620,6 @@ final class GroupCallMainVideoContainerView: Control {
             currentVideoView.updateLayout(size: size, transition: transition)
         }
         
-        if let backstageView = self.backstageView {
-            transition.updateFrame(view: backstageView, frame: size.bounds)
-            backstageView.updateLayout(size: size, transition: transition)
-        }
-    
-        if let backstage = backstage, let window = window {
-            transition.updateFrame(view: backstage, frame: window.frame.size.bounds)
-        }
-
         
         transition.updateFrame(view: shadowView, frame: CGRect(origin: NSMakePoint(0, size.height - 50), size: NSMakeSize(size.width, 50)))
         

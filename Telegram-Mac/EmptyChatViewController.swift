@@ -19,15 +19,31 @@ class EmptyChatView : View {
     private let label:TextView = TextView()
     private let imageView:ImageView = ImageView()
     
+    let toggleTips: ImageButton = ImageButton()
     
-    var cards: NSView? {
-        didSet {
-            if let cards = cards {
-                addSubview(cards)
-            } else if let oldView = oldValue {
-                oldView.removeFromSuperview()
+    private var cards: NSView?
+    
+    func toggleTips(_ isEnabled: Bool, animated: Bool, view: NSView) {
+        if isEnabled {
+            addSubview(view)
+            self.cards = view
+            view.frame = NSMakeRect(0, 0, frame.width, 370)
+            view.center()
+            if animated {
+                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.3, timingFunction: .spring)
+                view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
             }
+        } else {
+            performSubviewRemoval(view, animated: animated, duration: 0.3, timingFunction: .spring)
+            if animated {
+                view.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, bounce: false)
+            }
+
+            self.cards = nil
         }
+        containerView.change(opacity: isEnabled ? 0 : 1, animated: animated)
+        toggleTips.set(image: isEnabled ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
+        
     }
     
     required init(frame frameRect: NSRect) {
@@ -35,9 +51,17 @@ class EmptyChatView : View {
         self.layer = CAGradientLayer()
         self.layer?.disableActions()
         
+        toggleTips.set(image: theme.empty_chat_showtips, for: .Normal)
+        toggleTips.setFrameSize(NSMakeSize(30, 30))
+        toggleTips.set(background: theme.chatServiceItemColor, for: .Normal)
+        toggleTips.autohighlight = false
+        toggleTips.scaleOnClick = true
+        toggleTips.layer?.cornerRadius = 15
+
         addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(label)
+        addSubview(toggleTips)
         label.userInteractionEnabled = false
         label.isSelectable = false
         updateLocalizationAndTheme(theme: theme)
@@ -54,6 +78,9 @@ class EmptyChatView : View {
             imageView.isHidden = true
         }
         
+        toggleTips.set(image: cards != nil ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
+        toggleTips.set(background: theme.chatServiceItemColor, for: .Normal)
+                
         imageView.sizeToFit()
         label.disableBackgroundDrawing = true
         label.backgroundColor = imageView.isHidden ? theme.chatServiceItemColor : theme.chatBackground
@@ -73,6 +100,8 @@ class EmptyChatView : View {
         cards?.frame = NSMakeRect(0, 0, frame.width, 370)
         cards?.center()
         
+        
+        
         if imageView.isHidden {
             
             label.setFrameSize(label.frame.width + 16, label.frame.height + 6)
@@ -89,6 +118,8 @@ class EmptyChatView : View {
             label.centerX(y: imageView.frame.maxY + 30)
             containerView.layer?.cornerRadius = 0
         }
+        
+        toggleTips.setFrameOrigin(NSMakePoint(frame.width - toggleTips.frame.width - 10, 10))
     }
 }
 
@@ -197,6 +228,16 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
 //        readyOnce()
         
         self.ready.set(cards.ready.get())
-        self.genericView.cards = cards.view
+        
+        
+        self.genericView.toggleTips(FastSettings.emptyTips, animated: false, view: cards.view)
+        
+        self.genericView.toggleTips.set(handler: { [weak self] _ in
+            guard let cards = self?.cards.view else {
+                return
+            }
+            FastSettings.updateEmptyTips(!FastSettings.emptyTips)
+            self?.genericView.toggleTips(FastSettings.emptyTips, animated: true, view: cards)
+        }, for: .Click)
     }
 }

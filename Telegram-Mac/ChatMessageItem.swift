@@ -91,6 +91,15 @@ class ChatMessageItem: ChatRowItem {
     }
     
     var actionButtonText: String? {
+        if let _ = message?.adAttribute, let author = message?.author {
+            if author.isBot {
+                return L10n.chatMessageViewBot
+            } else if author.isGroup || author.isSupergroup {
+                return L10n.chatMessageViewGroup
+            } else {
+                return L10n.chatMessageViewChannel
+            }
+        }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
@@ -137,7 +146,10 @@ class ChatMessageItem: ChatRowItem {
     }
     
     func invokeAction() {
-        if let webpage = webpageLayout {
+        if let _ = message?.adAttribute, let peer = peer {
+            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo)
+            execute(inapp: link)
+        } else if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
         } else if unsupported {
@@ -654,10 +666,14 @@ class ChatMessageItem: ChatRowItem {
             
         }
         if let _ = actionButtonText {
-            contentSize.height += 36
+            contentSize.height += actionButtonHeight
         }
         
         return contentSize
+    }
+    
+    var actionButtonHeight: CGFloat {
+        return 36
     }
     
     
@@ -684,6 +700,11 @@ class ChatMessageItem: ChatRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items = super.menuItems(in: location)
+        
+        if message?.adAttribute != nil {
+            return items
+        }
+        
         let text = messageText.string
         
         let context = self.context
@@ -993,8 +1014,8 @@ class ChatMessageItem: ChatRowItem {
                         }
                     }
                     
-                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(link, { code in
-                        timecode(parseTimecodeString(code))
+                    string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(link, { _ in
+                        timecode(code)
                     }), range: range)
 
                 }

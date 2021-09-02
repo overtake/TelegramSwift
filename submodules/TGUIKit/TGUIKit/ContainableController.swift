@@ -124,7 +124,41 @@ public extension ContainedViewLayoutTransition {
             }
         }
     }
-    
+    func updateFrame(layer: CALayer, frame: CGRect, completion: ((Bool) -> Void)? = nil) {
+        switch self {
+        case .immediate:
+            layer.frame = frame
+            if let completion = completion {
+                completion(true)
+            }
+        case let .animated(duration, _):
+
+            CATransaction.begin()
+            
+            func animateSize(_ layer: CALayer) -> Void {
+                var presentBounds:NSRect = layer.bounds
+                let presentation = layer.presentation()
+                if let presentation = presentation, layer.animation(forKey:"bounds") != nil {
+                    presentBounds.size.width = NSWidth(presentation.bounds)
+                    presentBounds.size.height = NSHeight(presentation.bounds)
+                }
+                layer.animateBounds(from: presentBounds, to: frame.size.bounds, duration: duration, timingFunction: timingFunction)
+            }
+            func animatePos(_ layer: CALayer) -> Void {
+                var presentRect:NSRect = layer.frame
+                let presentation = layer.presentation()
+                if let presentation = presentation, layer.animation(forKey:"position") != nil {
+                    presentRect.origin.x = presentation.frame.minX
+                    presentRect.origin.y = presentation.frame.minY
+                }
+                layer.animatePosition(from: presentRect.origin, to: frame.origin, duration: duration, timingFunction: timingFunction)
+            }
+            animatePos(layer)
+            animateSize(layer)
+            
+            CATransaction.commit()
+        }
+    }
     
        func updateTransformScale(layer: CALayer, scale: CGFloat, beginWithCurrentState: Bool = false, completion: ((Bool) -> Void)? = nil) {
            let t = layer.transform

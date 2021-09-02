@@ -9,6 +9,8 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
+import TelegramCore
+
 class BaseApplicationSettings: PreferencesEntry, Equatable {
     let handleInAppKeys: Bool
     let sidebar: Bool
@@ -116,13 +118,13 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
 }
 
 
-func baseAppSettings(accountManager: AccountManager) -> Signal<BaseApplicationSettings, NoError> {
+func baseAppSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<BaseApplicationSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.baseAppSettings]) |> map { prefs in
         return prefs.entries[ApplicationSharedPreferencesKeys.baseAppSettings] as? BaseApplicationSettings ?? BaseApplicationSettings.defaultSettings
     }
 }
 
-func updateBaseAppSettingsInteractively(accountManager: AccountManager, _ f: @escaping (BaseApplicationSettings) -> BaseApplicationSettings) -> Signal<Void, NoError> {
+func updateBaseAppSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (BaseApplicationSettings) -> BaseApplicationSettings) -> Signal<Void, NoError> {
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.baseAppSettings, { entry in
             let currentSettings: BaseApplicationSettings

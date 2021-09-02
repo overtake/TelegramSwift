@@ -426,7 +426,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
             
             var buttons: [ExpCardData.Button] = []
             
-            let lowIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 8
+            let lowIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 5
             let normalIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 32
             let highIsSelected = state.settings.defaultCacheStorageLimitGigabytes == .max
 
@@ -436,7 +436,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
                 return lowIsSelected ? theme.icons.empty_chat_storage_low_active : theme.icons.empty_chat_storage_low
             }, click: {
                 _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
-                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(8)
+                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(5)
                 }).start()
             }))
             

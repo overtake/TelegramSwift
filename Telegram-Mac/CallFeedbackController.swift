@@ -140,9 +140,9 @@ private func callFeedbackControllerEntries(state: CallFeedbackState, isVideo: Bo
     index += 1
     
     let reasons = CallFeedbackReason.allCases.filter { value in
-        if isVideo && value.isVideoRelated {
+        if isVideo {
             return true
-        } else if !isVideo {
+        } else if !isVideo && !value.isVideoRelated {
             return true
         }
         return false

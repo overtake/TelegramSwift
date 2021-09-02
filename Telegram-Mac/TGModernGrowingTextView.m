@@ -326,8 +326,13 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     }
 
     NSRange effectiveRange;
-    NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
-    
+    NSFont *effectiveFont;
+    for (int i = self.selectedRange.location; i < self.selectedRange.location + self.selectedRange.length; i++) {
+        effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:i effectiveRange:&effectiveRange];
+        if (![effectiveFont.fontName hasPrefix:@".AppleColorEmojiUI"]) {
+            break;
+        }
+    }
     
     [self changeFontMarkdown:[NSFontManager.sharedFontManager convertFont:effectiveFont toHaveTrait:NSBoldFontMask] makeBold:YES makeItalic:NO];
     
@@ -353,8 +358,13 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     }
 
     NSRange effectiveRange;
-    NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
-    
+    NSFont *effectiveFont;
+    for (int i = self.selectedRange.location; i < self.selectedRange.location + self.selectedRange.length; i++) {
+        effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:i effectiveRange:&effectiveRange];
+        if (![effectiveFont.fontName hasPrefix:@".AppleColorEmojiUI"]) {
+            break;
+        }
+    }
     [self changeFontMarkdown:[[NSFontManager sharedFontManager] convertFont:effectiveFont toHaveTrait:NSFontItalicTrait] makeBold:NO makeItalic:YES];
     
     //    [self.textStorage addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:[NSFont systemFontOfSize:13] toHaveTrait:NSFontItalicTrait] range:self.selectedRange];
@@ -383,8 +393,13 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
     
     NSRange effectiveRange;
-    NSFont *effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:self.selectedRange.location effectiveRange:&effectiveRange];
-    
+    NSFont *effectiveFont;
+    for (int i = self.selectedRange.location; i < self.selectedRange.location + self.selectedRange.length; i++) {
+        effectiveFont = [self.textStorage attribute:NSFontAttributeName atIndex:i effectiveRange:&effectiveRange];
+        if (![effectiveFont.fontName hasPrefix:@".AppleColorEmojiUI"]) {
+            break;
+        }
+    }
     
     NSFontDescriptor *descriptor = font.fontDescriptor;
     NSFontSymbolicTraits symTraits = [descriptor symbolicTraits];

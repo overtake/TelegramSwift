@@ -45,7 +45,7 @@ class ShareViewController: NSViewController {
         
         
         let rootPath = containerUrl.path
-        let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true)
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true)
 
         let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
         logger.logToConsole = false
@@ -103,7 +103,7 @@ class ShareViewController: NSViewController {
     }
 
     
-    private func launchExtension(accountManager: AccountManager, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
+    private func launchExtension(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         let extensionContext = self.extensionContext!
 

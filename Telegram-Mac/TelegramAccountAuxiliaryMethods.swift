@@ -11,15 +11,7 @@ import TelegramCore
 
 import Postbox
 
-public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerChatInputState: { interfaceState, inputState -> PeerChatInterfaceState? in
-    if interfaceState == nil {
-        return ChatInterfaceState().withUpdatedSynchronizeableInputState(inputState)
-    } else if let interfaceState = interfaceState as? ChatInterfaceState {
-        return interfaceState.withUpdatedSynchronizeableInputState(inputState)
-    } else {
-        return interfaceState
-    }
-}, fetchResource: { account, resource, range, tag in
+public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(fetchResource: { account, resource, range, tag in
     if let resource = resource as? LocalFileGifMediaResource {
         return fetchGifMediaResource(resource: resource)
     } else if let resource = resource as? LocalFileArchiveMediaResource {

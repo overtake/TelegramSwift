@@ -205,6 +205,14 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return renderType
         }
     }
+    var itemType: ChatItemType? {
+        switch self {
+        case let .MessageEntry(_, _, _, _, itemType, _, _):
+            return itemType
+        default:
+            return nil
+        }
+    }
     
     var location:MessageHistoryEntryLocation? {
         switch self {
@@ -402,7 +410,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:]) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessages:[Message] = []) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -547,7 +555,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
         }
         
-        var itemType:ChatItemType = .Full(rank: rank)
+        var itemType:ChatItemType = .Full(rank: rank, header: .normal)
         var fwdType:ForwardItemType? = nil
         
         if message.itHasRestrictedContent {
@@ -568,7 +576,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 
                 if message.author?.id == prev.message.author?.id, (message.timestamp - prev.message.timestamp) < simpleDif, actionShortAccess, let peer = message.peers[message.id.peerId] {
                     if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
-                        itemType = .Full(rank: rank)
+                        itemType = .Full(rank: rank, header: .normal)
                     } else {
                         var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
                         
@@ -581,28 +589,65 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                                 break attrsLoop
                             }
                         }
-                        itemType = !canShort ? .Full(rank: rank) : .Short
+                        itemType = !canShort ? .Full(rank: rank, header: .normal) : .Short(rank: rank, header: .normal)
                         
                     }
                 } else {
-                    itemType = .Full(rank: rank)
+                    itemType = .Full(rank: rank, header: .normal)
                 }
             } else {
-                itemType = .Full(rank: rank)
+                itemType = .Full(rank: rank, header: .normal)
             }
         } else {
-            if let next = next, !message.isAnonymousMessage {
-                if message.author?.id == next.message.author?.id, let peer = message.peers[message.id.peerId] {
-                    if peer.isChannel || ((peer.isGroup || peer.isSupergroup) && message.flags.contains(.Incoming)) {
-                        itemType = .Full(rank: rank)
+            
+            let isSameGroup:(Message, Message) -> Bool = { lhs, rhs in
+                var accept = abs(lhs.timestamp - rhs.timestamp) < simpleDif
+                accept = accept && chatDateId(for: lhs.timestamp) == chatDateId(for: rhs.timestamp)
+                accept = accept && lhs.author?.id == rhs.author?.id
+                if let maxReadIndex = maxReadIndex {
+                    if maxReadIndex >= rhs.index && maxReadIndex < lhs.index {
+                        accept = false
+                    } else if maxReadIndex < rhs.index && maxReadIndex >= lhs.index {
+                        accept = false
+                    }
+                }
+                if lhs.media.first is TelegramMediaAction {
+                    accept = false
+                }
+                if rhs.media.first is TelegramMediaAction {
+                    accept = false
+                }
+                if lhs.isAnonymousMessage {
+                    accept = false
+                }
+                if rhs.isAnonymousMessage {
+                    accept = false
+                }
+                return accept
+            }
+            
+            if let next = next {
+                if isSameGroup(message, next.message) {
+                    if let prev = prev {
+                        itemType = .Short(rank: rank, header: isSameGroup(message, prev.message) ? .short : .normal)
                     } else {
-                        itemType = message.inlinePeer == nil ? .Short : .Full(rank: rank)
+                        itemType = .Short(rank: rank, header: .normal)
                     }
                 } else {
-                    itemType = .Full(rank: rank)
+                    if let prev = prev {
+                        let shouldGroup = isSameGroup(message, prev.message)
+                        itemType = .Full(rank: rank, header: shouldGroup ? .short : .normal)
+                    } else {
+                        itemType = .Full(rank: rank, header:  .normal)
+                    }
                 }
             } else {
-                itemType = .Full(rank: rank)
+                if let prev = prev {
+                    let shouldGroup = isSameGroup(message, prev.message)
+                    itemType = .Full(rank: rank, header: shouldGroup ? .short : .normal)
+                } else {
+                    itemType = .Full(rank: rank, header: .normal)
+                }
             }
         }
         
@@ -630,8 +675,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             }
         }
         
-        if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader  {
-            itemType = .Full(rank: rank)
+        if let forwardType = fwdType, forwardType == .ShortHeader || forwardType == .FullHeader, renderType != .bubble {
+            itemType = .Full(rank: rank, header: .normal)
             if forwardType == .ShortHeader {
                 if let next = next  {
                     if next.message.forwardInfo != nil && (message.author?.id == next.message.author?.id || next.message.timestamp - message.timestamp < simpleDif) {
@@ -702,9 +747,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             if groupInfo == nil {
                 groupInfo = key
-                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank, header: .normal)))
             } else if groupInfo == key {
-                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank, header: .normal)))
             } else {
                 if groupedPhotos.count > 0 {
                     if let groupInfo = groupInfo {
@@ -718,7 +763,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
                 
                 groupInfo = key
-                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank)))
+                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank, header: .normal)))
             }
         } else {
             entries.append(entry)
@@ -792,8 +837,46 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         entries.insert(.topThreadInset(addTopThreadInset, MessageIndex.absoluteLowerBound(), renderType), at: 0)
     }
     
+  
+
+    
+    if let lastMessage = entries.last(where: { $0.message != nil })?.message {
+        var nextAdMessageId: Int32 = 1
+        for message in adMessages {
+            let updatedMessage = Message(
+                stableId: UInt32.max - 1 - UInt32(nextAdMessageId),
+                stableVersion: message.stableVersion,
+                id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: nextAdMessageId),
+                globallyUniqueId: nil,
+                groupingKey: nil,
+                groupInfo: nil,
+                threadId: nil,
+                timestamp: lastMessage.timestamp,
+                flags: message.flags,
+                tags: message.tags,
+                globalTags: message.globalTags,
+                localTags: message.localTags,
+                forwardInfo: message.forwardInfo,
+                author: message.author,
+                text: message.text,
+                attributes: message.attributes,
+                media: message.media,
+                peers: message.peers,
+                associatedMessages: message.associatedMessages,
+                associatedMessageIds: message.associatedMessageIds
+            )
+            nextAdMessageId += 1
+            
+            let timestamp = Int32(min(TimeInterval(updatedMessage.timestamp) - timeDifference, TimeInterval(Int32.max)))
+            entries.append(.MessageEntry(updatedMessage, MessageIndex(updatedMessage.withUpdatedTimestamp(timestamp)), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(), autoplayMedia)))
+            
+            //add entry
+        }
+    }
+    
     var sorted = entries.sorted()
 
+    
     if hasUnread, sorted.count >= 2 {
         if  case .UnreadEntry = sorted[sorted.count - 2] {
             sorted.remove(at: sorted.count - 2)

@@ -1076,7 +1076,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 
                 frame.origin.y = bubbleFrame.height - frame.maxY + 6
                 
-                return (item.isIncoming ? theme.colors.bubbleBackground_incoming.darker().withAlphaComponent(0.5) : theme.colors.bubbleBackgroundTop_outgoing.darker().withAlphaComponent(0.5)
+                return (item.isIncoming ? theme.colors.bubbleBackground_incoming.darker().withAlphaComponent(0.5) : theme.colors.blendedOutgoingColors.darker().withAlphaComponent(0.5)
                     , frame: frame, flags: [], superview: self.bubbleView)
             } else {
                 
