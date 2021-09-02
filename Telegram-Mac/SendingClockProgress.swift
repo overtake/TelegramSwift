@@ -9,10 +9,6 @@
 import Cocoa
 import TGUIKit
 
-
-
-fileprivate let minute_duration:Double = 1.2
-
 class SendingClockProgress: View {
     
     private var isAnimating:Bool = false
