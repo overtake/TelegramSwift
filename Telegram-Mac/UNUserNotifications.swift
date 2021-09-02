@@ -231,6 +231,14 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         UNUserNotificationCenter.current().delegate = self
     }
     
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+
+           //If you don't want to show notification when app is open, do something here else and make a return here.
+           //Even you you don't implement this delegate method, you will not see the notification on the specified controller. So, you have to implement this delegate and make sure the below line execute. i.e. completionHandler.
+
+           completionHandler([.alert, .sound])
+       }
+    
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
     
         switch response.actionIdentifier {
@@ -281,7 +289,8 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.userInfo = notification.userInfo ?? [:]
         
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
-            
+            var bp = 0
+            bp += 1
         })
     }
     
