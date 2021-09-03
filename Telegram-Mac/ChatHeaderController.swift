@@ -1911,7 +1911,18 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         self.topPeers = topPeers
         self.data = data
         
-        let headerLayout = TextViewLayout(.initialize(string: data.activeCall.scheduleTimestamp != nil ? L10n.chatGroupCallScheduledTitle : L10n.chatGroupCallTitle, color: theme.colors.text, font: .medium(.text)))
+        
+        var title: String = data.activeCall.scheduleTimestamp != nil ? L10n.chatGroupCallScheduledTitle : L10n.chatGroupCallTitle
+        
+        
+        if data.activeCall.scheduleTimestamp == nil, let peer = self.chatInteraction.presentation.peer as? TelegramChannel {
+            if peer.flags.contains(.isGigagroup) || peer.isChannel {
+                title = L10n.chatGroupCallLiveTitle
+            }
+        }
+        
+        
+        let headerLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.text)))
         headerLayout.measure(width: frame.width - 100)
         headerView.update(headerLayout)
 

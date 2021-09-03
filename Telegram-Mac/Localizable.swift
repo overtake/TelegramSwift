@@ -1959,6 +1959,8 @@ internal final class L10n {
   internal static var chatGroupCallSpeakersZero: String  { return L10n.tr("Localizable", "Chat.GroupCall.Speakers_zero") }
   /// Voice Chat
   internal static var chatGroupCallTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Title") }
+  /// Live Stream
+  internal static var chatGroupCallLiveTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Live.Title") }
   /// Starts %@
   internal static func chatGroupCallScheduledStatus(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.GroupCall.Scheduled.Status", p1)

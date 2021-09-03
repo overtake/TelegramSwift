@@ -387,6 +387,10 @@ class WPArticleContentView: WPContentView {
                 updateImageSignal = crossplatformPreview(account: layout.context.account, palette: palette, wallpaper: wallpaper, mode: .thumbnail)
                 
                 
+                self.playIcon?.removeFromSuperview()
+                self.playIcon = nil
+
+                
                 if imageView == nil {
                     imageView = TransformImageView()
                     self.addSubview(imageView!)
