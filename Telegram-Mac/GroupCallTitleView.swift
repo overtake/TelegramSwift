@@ -257,7 +257,19 @@ final class GroupCallTitleView : Control {
         let participantsUpdated = state.summaryState?.participantCount != currentState?.summaryState?.participantCount || state.state.scheduleTimestamp != currentState?.state.scheduleTimestamp
         
        
-        let speaking = state.memberDatas.filter({ $0.isSpeaking && $0.peer.id != peer.id })
+        let pinned = state.pinnedData.focused?.id ?? state.pinnedData.permanent
+        
+        let speaking = state.memberDatas.filter { member in
+            if member.isSpeaking && member.peer.id != peer.id {
+                if pinned == nil {
+                    return member.videoEndpoint == nil && member.presentationEndpoint == nil
+                } else {
+                    return member.videoEndpoint != pinned && member.presentationEndpoint != pinned
+                }
+            } else {
+                return false
+            }
+        }
         if (!state.isFullScreen || state.tooltipSpeaker == nil) && !speaking.isEmpty {
             let current: GroupCallSpeakingView
             var presented = false

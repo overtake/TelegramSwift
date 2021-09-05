@@ -1301,6 +1301,12 @@ extension Peer {
         }
         return false
     }
+    var isGigagroup:Bool {
+        if let peer = self as? TelegramChannel {
+            return peer.flags.contains(.isGigagroup)
+        }
+        return false
+    }
 }
 
 

@@ -312,7 +312,7 @@ protocol PresentationGroupCall: class {
     func joinAsSpeakerIfNeeded(_ joinHash: String)
     func reconnect(as peerId: PeerId) -> Void
     func updateTitle(_ title: String, force: Bool) -> Void
-    func setShouldBeRecording(_ shouldBeRecording: Bool, title: String?) -> Void
+    func setShouldBeRecording(_ shouldBeRecording: Bool, title: String?, videoOrientation: Bool?) -> Void
     func startScheduled()
     func toggleScheduledSubscription(_ subscribe: Bool)
 }

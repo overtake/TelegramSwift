@@ -86,6 +86,7 @@
 		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */; };
+		2783BA9526E24795004A1591 /* GroupCallVideoOrientationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
 		278E86D4265D0F330006685D /* GroupCallAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E86D3265D0F330006685D /* GroupCallAvatarView.swift */; };
@@ -1180,6 +1181,7 @@
 		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputMenuView.swift; sourceTree = "<group>"; };
+		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
 		278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPatternPreviewController.swift; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
 		278E86D3265D0F330006685D /* GroupCallAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarView.swift; sourceTree = "<group>"; };
@@ -2301,6 +2303,7 @@
 				276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */,
 				278E86D3265D0F330006685D /* GroupCallAvatarView.swift */,
 				275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */,
+				2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -5801,6 +5804,7 @@
 				C2271DB11DAE126B001792B6 /* GeneralRowItem.swift in Sources */,
 				C2A87DE81F4C6910002D3F73 /* InstantViewWindow.swift in Sources */,
 				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
+				2783BA9526E24795004A1591 /* GroupCallVideoOrientationRowItem.swift in Sources */,
 				D00EECD1252B47B1001EB99F /* CallFeedbackController.swift in Sources */,
 				D0E7BED0256EA7140068644D /* GroupCallSettingsController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
