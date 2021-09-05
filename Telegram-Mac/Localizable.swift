@@ -1669,8 +1669,40 @@ internal final class L10n {
   internal static var chatAlertForwardActionCancel: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Cancel") }
   /// Hide Sender's Names
   internal static var chatAlertForwardActionHide: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide") }
+  /// %d
+  internal static func chatAlertForwardActionHide1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_countable", p1)
+  }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Few: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_few") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Many: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_many") }
+  /// Hide Sender Name
+  internal static var chatAlertForwardActionHide1One: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_one") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Other: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_other") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Two: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_two") }
+  /// Hide Sender's Names
+  internal static var chatAlertForwardActionHide1Zero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_zero") }
   /// Show Sender's Names
   internal static var chatAlertForwardActionShow: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show") }
+  /// %d
+  internal static func chatAlertForwardActionShow1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_countable", p1)
+  }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Few: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_few") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Many: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_many") }
+  /// Show Sender Name
+  internal static var chatAlertForwardActionShow1One: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_one") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Other: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_other") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Two: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_two") }
+  /// Show Sender's Names
+  internal static var chatAlertForwardActionShow1Zero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_zero") }
   /// %d
   internal static func chatAlertForwardTextInnerCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_countable", p1)
@@ -9527,8 +9559,8 @@ internal final class L10n {
   internal static var voiceChatRaisedHandTitle: String  { return L10n.tr("Localizable", "VoiceChat.RaisedHand.Title") }
   /// Start
   internal static var voiceChatRecordingStartOK: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.OK") }
-  /// Do you want to start recording this chat and save the result into an audio file?\n\nOther members will see that the chat is being recorded.
-  internal static var voiceChatRecordingStartText: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.Text") }
+  /// Do you want to start recording this chat and save the result into an file?\n\nOther members will see that the chat is being recorded.
+  internal static var voiceChatRecordingStartText1: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.Text1") }
   /// Start Recording
   internal static var voiceChatRecordingStartTitle: String  { return L10n.tr("Localizable", "VoiceChat.Recording.Start.Title") }
   /// Stop
@@ -9625,6 +9657,12 @@ internal final class L10n {
   internal static var voiceChatSettingsPushToTalkUndefined: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Undefined") }
   /// Please allow Accessibility for Telegram in [Privacy Settings.](access)\n\nApp restart may be required.
   internal static var voiceChatSettingsPushToTalkAccessOld: String  { return L10n.tr("Localizable", "VoiceChat.Settings.PushToTalk.Access.Old") }
+  /// Include Video
+  internal static var voiceChatSettingsRecordIncludeVideo: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Record.IncludeVideo") }
+  /// Landscape
+  internal static var voiceChatSettingsRecordOrientationLandscape: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Record.Orientation.Landscape") }
+  /// Portrait
+  internal static var voiceChatSettingsRecordOrientationPortrait: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Record.Orientation.Portrait") }
   /// Speaker Link has been revoked.
   internal static var voiceChatSettingsResetLinkSuccess: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink.Success") }
   /// Title...
@@ -9777,10 +9815,14 @@ internal final class L10n {
   internal static var voiceChatVideoVideoSourceShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.VideoSource.Share") }
   /// Unavailable to share your camera, please grant access is [System Settings](camera).
   internal static var voiceChatVideoShareUnavailable: String  { return L10n.tr("Localizable", "VoiceChat.VideoShare.Unavailable") }
-  /// Audio Title (Optional)
-  internal static var voiecChatSettingsRecordPlaceholder: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Placeholder") }
+  /// Title (Optional)
+  internal static var voiecChatSettingsRecordPlaceholder1: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Placeholder1") }
   /// RECORD VOICE CHAT
   internal static var voiecChatSettingsRecordTitle: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Title") }
+  /// RECORD LIVE STREAM
+  internal static var voiecChatSettingsRecordLiveTitle: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Live.Title") }
+  /// RECORD VIDEO CHAT
+  internal static var voiecChatSettingsRecordVideoTitle: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Video.Title") }
   /// Edit
   internal static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
   /// Apply

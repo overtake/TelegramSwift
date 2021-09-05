@@ -755,6 +755,8 @@ final class GroupCallUIController : ViewController {
         }
         
         
+        let callState: ValuePromise<GroupCallUIState> = ValuePromise(ignoreRepeated: true)
+        
         struct ActiveVideos : Equatable {
             var set: [GroupCallUIState.ActiveVideo]
             var index: Int
@@ -817,7 +819,7 @@ final class GroupCallUIController : ViewController {
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, call: self.data.call))
+            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, callState: callState.get(), call: self.data.call))
         }, invite: { [weak self] peerId in
             _ = self?.data.call.invitePeer(peerId)
         }, mute: { [weak self] peerId, isMuted in
@@ -1081,7 +1083,7 @@ final class GroupCallUIController : ViewController {
             if let window = self?.window {
                 if state.canManageCall {
                     confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
-                        self?.data.call.setShouldBeRecording(false, title: nil)
+                        self?.data.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                         if let window = window {
                             showModalText(for: window, text: L10n.voiceChatToastStop)
                         }
@@ -1797,6 +1799,8 @@ final class GroupCallUIController : ViewController {
             
             
             currentState = state
+            
+            callState.set(state)
 
         })
         

@@ -38,6 +38,11 @@ struct GroupCallTheme {
     static let declineColor = NSColor(hexString: "#FF3B30")!.withAlphaComponent(0.3)
     static let settingsColor = NSColor(hexString: "#333333")!
     
+    
+    static let purple = NSColor(rgb: 0x3252ef)
+    static let pink = NSColor(rgb: 0xef436c)
+
+    
     static var accent: NSColor {
         return speakInactiveColor
     }

@@ -2394,14 +2394,14 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         }
     }
 
-    func setShouldBeRecording(_ shouldBeRecording: Bool, title: String?) {
+    func setShouldBeRecording(_ shouldBeRecording: Bool, title: String?, videoOrientation: Bool?) {
         if !self.stateValue.canManageCall {
             return
         }
         if (self.stateValue.recordingStartTimestamp != nil) == shouldBeRecording {
             return
         }
-        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title, videoOrientation: nil)
+        self.participantsContext?.updateShouldBeRecording(shouldBeRecording, title: title, videoOrientation: videoOrientation)
     }
     
     private func requestCall(movingFromBroadcastToRtc: Bool) {

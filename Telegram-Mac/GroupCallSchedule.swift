@@ -24,8 +24,8 @@ private final class GroupCallScheduleTimerView : View {
     private let mask: View
     required init(frame frameRect: NSRect) {
         mask = View(frame: NSMakeRect(0, 0, frameRect.width, 64))
-        let purple = NSColor(rgb: 0x3252ef)
-        let pink = NSColor(rgb: 0xef436c)
+        let purple = GroupCallTheme.purple
+        let pink = GroupCallTheme.pink
         
         headerView.userInteractionEnabled = false
         headerView.isSelectable = false

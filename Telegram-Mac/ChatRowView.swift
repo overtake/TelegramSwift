@@ -1612,10 +1612,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             
             let rightFrame = self.rightFrame(item)
             
-            if rightFrame.width != rightView.frame.width && rightFrame.minX < rightView.frame.minX {
-                rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
-            }
+//            if rightFrame.width != rightView.frame.width && rightFrame.minX < rightView.frame.minX {
+//                rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
+//            }
             rightView.change(pos: rightFrame.origin, animated: animated)
+            rightView.change(size: rightFrame.size, animated: animated)
+            
             replyView?._change(pos: replyFrame(item).origin, animated: animated)
             replyMarkupView?.change(pos: replyMarkupFrame(item).origin, animated: animated)
             for view in captionViews {
