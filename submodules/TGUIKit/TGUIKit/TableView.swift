@@ -50,7 +50,7 @@ public protocol RevealTableView {
     func completeReveal(direction: SwipeDirection)
 }
 
-public enum TableBackgroundMode {
+public enum TableBackgroundMode: Equatable {
     case plain
     case color(color: NSColor)
     case gradient(colors: [NSColor], rotation: Int32?)
@@ -1119,7 +1119,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let stickClass = stickClass as? TableStickItem.Type {
             if stickView == nil {
                 let stickItem:TableStickItem = stickClass.init(frame.size)
-                
+                stickItem.table = self
                 self.stickItem = stickItem
                 if visible {
                     let vz = stickItem.viewClass() as! TableStickView.Type

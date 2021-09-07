@@ -483,9 +483,17 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         case let .setChatTheme(emoji):
             let text: String
             if message.author?.id == account.peerId {
-                text = L10n.chatServiceUpdateThemeYou(emoji)
+                if emoji.isEmpty {
+                    text = L10n.chatServiceDisabledThemeYou
+                } else {
+                    text = L10n.chatServiceUpdateThemeYou(emoji)
+                }
             } else {
-                text = L10n.chatServiceUpdateTheme(authorName, emoji)
+                if emoji.isEmpty {
+                    text = L10n.chatServiceDisabledTheme(authorName)
+                } else {
+                    text = L10n.chatServiceUpdateTheme(authorName, emoji)
+                }
             }
             return text
         }

@@ -281,7 +281,7 @@ public final class AnimatedGradientBackgroundView: ImageView {
         let sizeUpdated = self.validLayout != size
         self.validLayout = size
 
-        let imageSize = size.fitted(CGSize(width: 32, height: 32)).integralFloor
+        let imageSize = size.fitted(CGSize(width: 16, height: 16)).integralFloor
 
         let positions = gatherPositions(shiftArray(array: AnimatedGradientBackgroundView.basePositions, offset: self.phase % 8))
 

@@ -1,5 +1,5 @@
 //
-//  ExpCardView.swift
+//  WidgetView.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 08.07.2021.
@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 
 
-struct ExpCardData {
+struct WidgetData {
     struct Button {
         var text: ()->String
         var selected: ()->Bool
@@ -22,10 +22,10 @@ struct ExpCardData {
     var desc: ()->String
     var descClick:()->Void
     var buttons:[Button]
-    
+    var contentHeight: CGFloat? = nil
 }
 
-final class ExpCardView<T> : View  where T:View {
+final class WidgetView<T> : View  where T:View {
         
     private let titleView = TextView()
     private let descView = TextView()
@@ -57,13 +57,13 @@ final class ExpCardView<T> : View  where T:View {
         descView.isSelectable = false
     }
     
-    fileprivate var data: ExpCardData?
-    func update(_ data: ExpCardData) {
+    fileprivate var data: WidgetData?
+    func update(_ data: WidgetData) {
         self.data = data
         
         buttonsView.removeAllSubviews()
         for data in data.buttons {
-            let button = ExpCardButton()
+            let button = WidgetButton()
             buttonsView.addSubview(button)
             button.set(handler: { _ in
                 data.click()
@@ -86,7 +86,7 @@ final class ExpCardView<T> : View  where T:View {
         }
         
         for (i, buttonData) in data.buttons.enumerated() {
-            let button = self.buttonsView.subviews[i] as! ExpCardButton
+            let button = self.buttonsView.subviews[i] as! WidgetButton
             button.update(buttonData.selected(), icon: buttonData.image(), text: buttonData.text())
         }
         
@@ -117,7 +117,7 @@ final class ExpCardView<T> : View  where T:View {
         if buttonsView.subviews.isEmpty {
             dataView?.frame = NSMakeRect(15, 53, frame.width - 30, 144 + 50)
         } else {
-            dataView?.frame = NSMakeRect(15, 103, frame.width - 30, 144)
+            dataView?.frame = NSMakeRect(15, 103, frame.width - 30, self.data?.contentHeight ?? 144)
         }
         
         buttonsView.frame = NSMakeRect(15, 53, frame.width - 30, 30)

@@ -138,7 +138,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
         }
         
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt32Value() % 7)))
+        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
         
         
         let symbol = letters.reduce("", { (current, letter) -> String in
@@ -299,7 +299,7 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt32Value() % 7)))
+        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))

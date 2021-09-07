@@ -12,11 +12,11 @@ import TelegramCore
 import Postbox
 
 
-let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(1271266957))
-let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(708513))
+let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(1271266957))
+let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(708513))
 
 
-var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(1271266957))
+var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(1271266957))
 
 
 extension ChatListFilterPeerCategories {
@@ -51,7 +51,7 @@ final class TelegramFilterCategory : Peer {
     let category: ChatListFilterPeerCategories
     
     init(category: ChatListFilterPeerCategories) {
-        self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt32Value(category.rawValue))
+        self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt64Value(Int64(category.rawValue)))
         self.indexName = .title(title: "", addressName: "")
         self.notificationSettingsPeerId = nil
         self.category = category

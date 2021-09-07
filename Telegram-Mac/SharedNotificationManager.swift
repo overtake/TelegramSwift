@@ -14,8 +14,8 @@ import TelegramCore
 import TGUIKit
 
 func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -> MessageId? {
-    if let msgId = userInfo["\(prefix).message.id"] as? Int32, let msgNamespace = userInfo["\(prefix).message.namespace"] as? Int32, let namespace = userInfo["\(prefix).peer.namespace"] as? Int32, let id = userInfo["\(prefix).peer.id"] as? Int32 {
-        return MessageId(peerId: PeerId(namespace: PeerId.Namespace._internalFromInt32Value(namespace), id: PeerId.Id._internalFromInt32Value(id)), namespace: msgNamespace, id: msgId)
+    if let msgId = userInfo["\(prefix).message.id"] as? Int32, let msgNamespace = userInfo["\(prefix).message.namespace"] as? Int32, let namespace = userInfo["\(prefix).peer.namespace"] as? Int32, let id = userInfo["\(prefix).peer.id"] as? Int64 {
+        return MessageId(peerId: PeerId(namespace: PeerId.Namespace._internalFromInt32Value(namespace), id: PeerId.Id._internalFromInt64Value(id)), namespace: msgNamespace, id: msgId)
     }
     return nil
 }
@@ -406,18 +406,18 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let sourceReference = message.sourceReference, let threadId = message.replyAttribute?.threadMessageId, message.id.peerId == repliesPeerId {
                                 dict["source.message.id"] = sourceReference.messageId.id
                                 dict["source.message.namespace"] = sourceReference.messageId.namespace
-                                dict["source.peer.id"] = sourceReference.messageId.peerId.id._internalGetInt32Value()
+                                dict["source.peer.id"] = sourceReference.messageId.peerId.id._internalGetInt64Value()
                                 dict["source.peer.namespace"] = sourceReference.messageId.peerId.namespace._internalGetInt32Value()
                                 
                                 dict["thread.message.id"] = threadId.id
                                 dict["thread.message.namespace"] = threadId.namespace
-                                dict["thread.peer.id"] = threadId.peerId.id._internalGetInt32Value()
+                                dict["thread.peer.id"] = threadId.peerId.id._internalGetInt64Value()
                                 dict["thread.peer.namespace"] = threadId.peerId.namespace._internalGetInt32Value()
                             }
                             
                             dict["reply.message.id"] =  message.id.id
                             dict["reply.message.namespace"] =  message.id.namespace
-                            dict["reply.peer.id"] =  message.id.peerId.id._internalGetInt32Value()
+                            dict["reply.peer.id"] =  message.id.peerId.id._internalGetInt64Value()
                             dict["reply.peer.namespace"] =  message.id.peerId.namespace._internalGetInt32Value()
                             
                             dict["groupId"] = groupId.rawValue

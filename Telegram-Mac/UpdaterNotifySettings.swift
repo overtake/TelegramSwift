@@ -23,7 +23,7 @@ enum LaunchNavigation : PostboxCoding, Equatable {
         case let .chat(peerId, necessary):
             encoder.encodeInt32(0, forKey: "t")
             encoder.encodeInt32(peerId.namespace._internalGetInt32Value(), forKey: "p.n")
-            encoder.encodeInt32(peerId.id._internalGetInt32Value(), forKey: "p.id")
+            encoder.encodeInt64(peerId.id._internalGetInt64Value(), forKey: "p.id")
             encoder.encodeBool(necessary, forKey: "n")
         case .settings:
             encoder.encodeInt32(1, forKey: "t")
@@ -31,12 +31,12 @@ enum LaunchNavigation : PostboxCoding, Equatable {
             encoder.encodeInt32(2, forKey: "t")
             
             encoder.encodeInt32(threadId.peerId.namespace._internalGetInt32Value(), forKey: "t.p.n")
-            encoder.encodeInt32(threadId.peerId.id._internalGetInt32Value(), forKey: "t.p.id")
+            encoder.encodeInt64(threadId.peerId.id._internalGetInt64Value(), forKey: "t.p.id")
             encoder.encodeInt32(threadId.id, forKey: "t.m.id")
             encoder.encodeInt32(threadId.namespace, forKey: "t.m.n")
             
             encoder.encodeInt32(fromId.peerId.namespace._internalGetInt32Value(), forKey: "f.p.n")
-            encoder.encodeInt32(fromId.peerId.id._internalGetInt32Value(), forKey: "f.p.id")
+            encoder.encodeInt64(fromId.peerId.id._internalGetInt64Value(), forKey: "f.p.id")
             encoder.encodeInt32(fromId.id, forKey: "f.m.id")
             encoder.encodeInt32(fromId.namespace, forKey: "f.m.n")
             
@@ -45,7 +45,7 @@ enum LaunchNavigation : PostboxCoding, Equatable {
             encoder.encodeInt32(3, forKey: "t")
 
             encoder.encodeInt32(peerId.namespace._internalGetInt32Value(), forKey: "p.n")
-            encoder.encodeInt32(peerId.id._internalGetInt32Value(), forKey: "p.id")
+            encoder.encodeInt64(peerId.id._internalGetInt64Value(), forKey: "p.id")
 
             encoder.encodeBool(necessary, forKey: "n")
 
@@ -55,26 +55,26 @@ enum LaunchNavigation : PostboxCoding, Equatable {
     init(decoder: PostboxDecoder) {
         switch decoder.decodeInt32ForKey("t", orElse: 0) {
         case 0:
-            let peerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("p.n", orElse: 0)), id: PeerId.Id._internalFromInt32Value(decoder.decodeInt32ForKey("p.id", orElse: 0)))
+            let peerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("p.n", orElse: 0)), id: PeerId.Id._internalFromInt64Value(decoder.decodeInt64ForKey("p.id", orElse: 0)))
             self = .chat(peerId, necessary: decoder.decodeBoolForKey("n", orElse: false))
         case 1:
             self = .settings
         case 2:
             
-            let threadPeerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("t.p.n", orElse: 0)), id: PeerId.Id._internalFromInt32Value(decoder.decodeInt32ForKey("t.p.id", orElse: 0)))
+            let threadPeerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("t.p.n", orElse: 0)), id: PeerId.Id._internalFromInt64Value(decoder.decodeInt64ForKey("t.p.id", orElse: 0)))
 
             
             let threadId = MessageId(peerId: threadPeerId, namespace: decoder.decodeInt32ForKey("t.m.id", orElse: 0), id: decoder.decodeInt32ForKey("t.m.n", orElse: 0))
 
             
-            let fromPeerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("f.p.n", orElse: 0)), id: PeerId.Id._internalFromInt32Value(decoder.decodeInt32ForKey("f.p.id", orElse: 0)))
+            let fromPeerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("f.p.n", orElse: 0)), id: PeerId.Id._internalFromInt64Value(decoder.decodeInt64ForKey("f.p.id", orElse: 0)))
             
             let fromId = MessageId(peerId: fromPeerId, namespace: decoder.decodeInt32ForKey("f.m.id", orElse: 0), id: decoder.decodeInt32ForKey("f.m.n", orElse: 0))
 
             self = .thread(threadId, fromId, necessary: decoder.decodeBoolForKey("n", orElse: false))
         case 3:
             
-            let peerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("p.n", orElse: 0)), id: PeerId.Id._internalFromInt32Value(decoder.decodeInt32ForKey("p.id", orElse: 0)))
+            let peerId = PeerId(namespace: PeerId.Namespace._internalFromInt32Value(decoder.decodeInt32ForKey("p.n", orElse: 0)), id: PeerId.Id._internalFromInt64Value(decoder.decodeInt64ForKey("p.id", orElse: 0)))
             self = .profile(peerId, necessary: decoder.decodeBoolForKey("n", orElse: false))
         default:
             fatalError()
@@ -217,7 +217,7 @@ func applyUpdateTextIfNeeded(_ postbox: Postbox) -> Signal<Never, NoError> {
             }
             
             
-            let peerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(777000))
+            let peerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
             let message = StoreMessage(peerId: peerId, namespace: Namespaces.Message.Local, globallyUniqueId: nil, groupingKey: nil, threadId: nil, timestamp: Int32(Date().timeIntervalSince1970), flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, authorId: peerId, text: applyText, attributes: attributes, media: [])
             _ = transaction.addMessages([message], location: .UpperHistoryBlock)
             

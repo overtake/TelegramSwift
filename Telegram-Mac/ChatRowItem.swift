@@ -1446,13 +1446,13 @@ class ChatRowItem: TableRowItem {
                     self.peer = author
                 } else if let signature = info.authorSignature {
                     
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -1507,7 +1507,9 @@ class ChatRowItem: TableRowItem {
             
             
             if let peer = messageMainPeer(message) as? TelegramUser, peer.botInfo != nil || peer.id == context.peerId {
-                self.isRead = true
+                if !peer.flags.contains(.isSupport) {
+                    self.isRead = true
+                }
             }
             
             if let info = message.forwardInfo, !message.isImported {
@@ -1691,7 +1693,7 @@ class ChatRowItem: TableRowItem {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
                                 nameColor = presentation.colors.accentIconBubble_outgoing
                             } else {
-                                let value = abs(Int(peer.id.id._internalGetInt32Value()) % 7)
+                                let value = abs(Int(peer.id.id._internalGetInt64Value()) % 7)
                                 nameColor = presentation.chat.peerName(value)
                             }
                         }
@@ -1703,7 +1705,7 @@ class ChatRowItem: TableRowItem {
                     
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
-                        if peer.id.id._internalGetInt32Value() != 0 {
+                        if peer.id.id._internalGetInt64Value() != 0 {
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId:peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo), range: range)
                         } else {
                             nameHide = L10n.chatTooltipHiddenForwardName
@@ -2460,7 +2462,7 @@ class ChatRowItem: TableRowItem {
             return super.menuItems(in: location)
         }
         if let message = message {
-            return chatMenuItems(for: message, chatInteraction: chatInteraction)
+            return chatMenuItems(for: message, item: self, chatInteraction: chatInteraction)
         }
         return super.menuItems(in: location)
     }
@@ -2504,13 +2506,15 @@ class ChatRowItem: TableRowItem {
     }
 }
 
-func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
+func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     if let _ = message.adAttribute {
         return .single([ContextMenuItem(L10n.chatMessageSponsoredWhat, handler: {
             execute(inapp: .external(link: L10n.chatMessageSponsoredLink, false))
         })])
     }
+    
+    
     
     let account = chatInteraction.context.account
     let context = chatInteraction.context
@@ -2529,6 +2533,17 @@ func chatMenuItems(for message: Message, chatInteraction: ChatInteraction) -> Si
     
     var items:[ContextMenuItem] = []
     
+    
+    if (MessageReadMenuItem.canViewReadStats(message: message, appConfig: chatInteraction.context.appConfiguration)), item.isRead {
+        let item = ContextMenuItem("-------------------------")
+        let stats = MessageReadMenuItem(context: context, message: message)
+        item.contextObject = stats
+        item.view = stats.view
+        items.append(item)
+        
+        items.append(ContextSeparatorItem())
+
+    }
     
     if message.id.peerId == repliesPeerId, let author = message.chatPeer(context.peerId), author.id != context.peerId {
         

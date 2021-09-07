@@ -379,7 +379,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         
         let previous:Atomic<[AppearanceWrapperEntry<QuickSwitcherEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        disposable.set((combineLatest(start(context: context, recentlyUsed: context.recentlyPeerUsed, search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
+        disposable.set((combineLatest(start(context: context, recentlyUsed: Array(context.recentlyPeerUsed.prefix(3)), search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
             let entries = value.0.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments), value.1)
         } |> deliverOnMainQueue).start(next: { [weak self] value in

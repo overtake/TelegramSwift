@@ -1622,7 +1622,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     if peer.addressName == nil {
                         let state = strongSelf.contextChatInteraction.presentation.effectiveInput
                         var attributes = state.attributes
-                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt32Value()))
+                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt64Value()))
                         let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
                         strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
                     }

@@ -348,7 +348,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
 }
 
 
-private func generateExpCardThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
+private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wallpaper) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
         let image = generateImage(NSMakeSize(132, 86), rotatedContext: { size, ctx in
             let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -520,8 +520,8 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
     
     var thumbGenerator = generateThumb
     switch thumbSource {
-    case .expCard:
-        thumbGenerator = generateExpCardThumb
+    case .widget:
+        thumbGenerator = generateWidgetThumb
     case .general:
         thumbGenerator = generateThumb
     }

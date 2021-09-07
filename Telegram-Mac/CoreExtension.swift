@@ -794,7 +794,7 @@ extension SuggestedLocalizationInfo {
 
 public extension MessageId {
     func toInt64() -> Int64 {
-        return (Int64(id) << 32) | Int64(peerId.id._internalGetInt32Value())
+        return (Int64(id) << 32) | peerId.id._internalGetInt64Value()
     }
 }
 
@@ -3213,7 +3213,7 @@ extension TelegramThemeSettings {
     }
     
     var accent: PaletteAccentColor {
-        let messages = self.messageColors.map { NSColor(argb: UInt32(bitPattern: $0)) }
+        let messages = self.messageColors.map { NSColor(rgb: UInt32(bitPattern: $0)) }
         return PaletteAccentColor(NSColor(rgb: UInt32(bitPattern: self.accentColor)), messages)
     }
     

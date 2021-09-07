@@ -510,7 +510,7 @@ class ChatMediaItem: ChatRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:Signal<[ContextMenuItem], NoError> = .complete()
         if let message = message {
-            items = chatMenuItems(for: message, chatInteraction: chatInteraction)
+            items = chatMenuItems(for: message, item: self, chatInteraction: chatInteraction)
         }
         return items |> map { [weak self] items in
             var items = items

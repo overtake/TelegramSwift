@@ -1,5 +1,5 @@
 //
-//  ExpCardAppearance.swift
+//  WidgetAppearance.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 06.07.2021.
@@ -32,13 +32,13 @@ private final class ThemePreview : Control {
         
         func set(_ source: ThemeSource, bubbled: Bool, context: AccountContext) {
                         
-            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source, thumbSource: .expCard) |> deliverOnMainQueue
+            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source, thumbSource: .widget) |> deliverOnMainQueue
             
-            self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled, thumbSource: .expCard), clearInstantly: false)
+            self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled, thumbSource: .widget), clearInstantly: false)
 
             disposable.set(signal.start(next: { [weak self] image, data in
                 self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: false)
-                cacheThemeThumb(image, source: source, bubbled: bubbled, thumbSource: .expCard)
+                cacheThemeThumb(image, source: source, bubbled: bubbled, thumbSource: .widget)
             }))
         }
         
@@ -106,7 +106,7 @@ private final class ThemePreview : Control {
 }
 
 
-final class ExpCardAppearanceView : View {
+final class WidgetAppearanceView : View {
     
     private let minimalist = ThemePreview()
     private let colorful = ThemePreview()
@@ -194,7 +194,7 @@ final class ExpCardAppearanceView : View {
 
 
 
-final class ExpCardAppearanceController : TelegramGenericViewController<ExpCardView<ExpCardAppearanceView>> {
+final class WidgetAppearanceController : TelegramGenericViewController<WidgetView<WidgetAppearanceView>> {
     
     private struct State : Equatable {
         var dayInstall: InstallThemeSource?
@@ -286,7 +286,7 @@ final class ExpCardAppearanceController : TelegramGenericViewController<ExpCardV
             
         }
         
-        genericView.dataView = ExpCardAppearanceView(frame: .zero)
+        genericView.dataView = WidgetAppearanceView(frame: .zero)
         
         genericView.dataView?.getContext = { [weak self] in
             return self?.context
@@ -313,7 +313,7 @@ final class ExpCardAppearanceController : TelegramGenericViewController<ExpCardV
             self?.genericView.dataView?.darkInstall = state.darkInstall
             self?.genericView.updateLocalizationAndTheme(theme: theme)
             
-            var buttons:[ExpCardData.Button] = []
+            var buttons:[WidgetData.Button] = []
             
             buttons.append(.init(text: { L10n.emptyChatAppearanceSystem }, selected: {
                 return isSystemBased

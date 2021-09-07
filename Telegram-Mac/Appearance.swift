@@ -2523,7 +2523,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_action_reply_message: { NSImage(named: "Icon_ChatAction_ReplyMessage")!.precomposed(palette.accent) },
                                                chat_action_url_preview: { NSImage(named: "Icon_ChatAction_UrlPreview")!.precomposed(palette.accent) },
                                                chat_action_menu_update_chat: { NSImage(named: "Icon_ChatAction_Menu_UpdateChat")!.precomposed(palette.accent) },
-                                               chat_action_menu_selected: { NSImage(named: "Icon_UsernameAvailability")!.precomposed(palette.accent) }
+                                               chat_action_menu_selected: { NSImage(named: "Icon_UsernameAvailability")!.precomposed(palette.accent) },
+                                               widget_peers_favorite: { NSImage(named: "Icon_Widget_Peers_Favorite")!.precomposed(palette.text) },
+                                               widget_peers_recent: { NSImage(named: "Icon_Widget_Peers_Recent")!.precomposed(palette.text) },
+                                               widget_peers_favorite_active: { NSImage(named: "Icon_Widget_Peers_Favorite")!.precomposed(palette.accent) },
+                                               widget_peers_recent_active: { NSImage(named: "Icon_Widget_Peers_Recent")!.precomposed(palette.accent) }
     )
 
 }
