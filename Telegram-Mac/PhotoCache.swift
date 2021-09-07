@@ -44,7 +44,7 @@ public final class TransformImageResult {
 
 enum AppearanceThumbSource : Int32 {
     case general
-    case expCard
+    case widget
 }
 
 enum PhotoCacheKeyEntry : Hashable {

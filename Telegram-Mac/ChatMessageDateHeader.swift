@@ -40,10 +40,12 @@ class ChatDateStickItem : TableStickItem {
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
+    let presentation: TelegramPresentationTheme
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
+        self.presentation = theme
         if case let .DateEntry(index, _) = entry {
             self.timestamp = index.timestamp
         } else {
@@ -96,7 +98,7 @@ class ChatDateStickItem : TableStickItem {
         }
         
         
-        self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(theme.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.layout = TextViewLayout(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .medium(presentation.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 
         
         super.init(initialSize)
@@ -112,6 +114,7 @@ class ChatDateStickItem : TableStickItem {
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
         self.chatInteraction = nil
+        self.presentation = theme
         super.init(initialSize)
     }
     
@@ -225,13 +228,23 @@ class ChatDateStickView : TableStickView {
     override func updateColors() {
         super.updateColors()
         
-
-        textView.backgroundColor = theme.chatServiceItemColor
+        if let item = item as? ChatDateStickItem {
+            var presentation = item.presentation
+            if let table = item.table {
+                table.enumerateItems(with: { item in
+                    if let item = item as? ChatRowItem {
+                        presentation = item.presentation
+                        return false
+                    } else if let item = item as? ChatDateStickItem {
+                        presentation = item.presentation
+                        return false
+                    }
+                    return true
+                })
+            }
+            textView.backgroundColor = presentation.chatServiceItemColor
+        }
         
-        //containerView.layer?.borderColor = theme.colors.border.cgColor
-       // containerView.layer?.borderWidth = header || (theme.wallpaper != .none) ? 1.0 : 0
-        
-
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

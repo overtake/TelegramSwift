@@ -92,6 +92,10 @@ final class AccountContext {
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
+    private let _chatThemes: Promise<[String: TelegramPresentationTheme]> = Promise()
+    var chatThemes: Signal<[String: TelegramPresentationTheme], NoError> {
+        return _chatThemes.get() |> deliverOnMainQueue
+    }
     #endif
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
@@ -116,17 +120,18 @@ final class AccountContext {
     let hasPassportSettings: Promise<Bool> = Promise(false)
 
     private var _recentlyPeerUsed:[PeerId] = []
-
+    private let _recentlyUserPeerIds = ValuePromise<[PeerId]>([])
+    var recentlyUserPeerIds:Signal<[PeerId], NoError> {
+        return _recentlyUserPeerIds.get()
+    }
+    
     private(set) var recentlyPeerUsed:[PeerId] {
         set {
             _recentlyPeerUsed = newValue
+            _recentlyUserPeerIds.set(newValue)
         }
         get {
-            if _recentlyPeerUsed.count > 2 {
-                return Array(_recentlyPeerUsed.prefix(through: 2))
-            } else {
-                return _recentlyPeerUsed
-            }
+            return _recentlyPeerUsed
         }
     }
     
@@ -218,6 +223,8 @@ final class AccountContext {
             
         }))
         
+      
+        
         #if !SHARE
         let signal:Signal<Void, NoError> = Signal { subscriber in
             
@@ -241,8 +248,37 @@ final class AccountContext {
             }
         }
         
-        let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: Queue.concurrentDefaultQueue()))) |> restart
+        let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
         preloadGifsDisposable.set(updated.start())
+        
+       
+        let chatThemes: Signal<[String: TelegramPresentationTheme], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager) ) |> mapToSignal { appearance, themes in
+            var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
+            
+            for theme in themes {
+                let emoji = theme.emoji
+                let effective = appearance.presentation.dark ? theme.darkTheme : theme.theme
+                if let settings = effective.settings {
+                    var newTheme = appearance.presentation.withUpdatedColors(settings.palette)
+                    if let wallpaper = settings.wallpaper?.uiWallpaper {
+                        signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
+                            return (emoji, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))
+                        })
+                    } else {
+                        signals.append(.single((emoji, newTheme)))
+                    }
+                }
+            }
+            
+            return combineLatest(signals) |> map { values in
+                var dict: [String: TelegramPresentationTheme] = [:]
+                for value in values {
+                    dict[value.0] = value.1
+                }
+                return dict
+            }
+        }
+        self._chatThemes.set((chatThemes |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart)
         
         #endif
         
@@ -293,6 +329,7 @@ final class AccountContext {
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
+       
         
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
@@ -304,6 +341,8 @@ final class AccountContext {
                 
         }
         } |> runOn(.concurrentDefaultQueue())
+        
+        
         
         freeSpaceSignal = (freeSpaceSignal |> then(.complete() |> suspendAwareDelay(60.0 * 30, queue: Queue.concurrentDefaultQueue()))) |> restart
         
@@ -329,6 +368,7 @@ final class AccountContext {
         account.callSessionManager.updateVersions(versions: OngoingCallContext.versions(includeExperimental: true, includeReference: false).map { version, supportsVideo -> CallSessionManagerImplementationVersion in
             CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
         })
+        
         
         #endif
     }
@@ -416,7 +456,7 @@ final class AccountContext {
     
     func checkFirstRecentlyForDuplicate(peerId:PeerId) {
         if let index = recentlyPeerUsed.firstIndex(of: peerId), index == 0 {
-            recentlyPeerUsed.remove(at: index)
+         //   recentlyPeerUsed.remove(at: index)
         }
     }
     
@@ -425,9 +465,6 @@ final class AccountContext {
             recentlyPeerUsed.remove(at: index)
         }
         recentlyPeerUsed.insert(peerId, at: 0)
-        if recentlyPeerUsed.count > 4 {
-            recentlyPeerUsed = Array(recentlyPeerUsed.prefix(through: 4))
-        }
     }
     
     

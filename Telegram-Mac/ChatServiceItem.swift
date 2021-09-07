@@ -47,7 +47,7 @@ class ChatServiceItem: ChatRowItem {
                 if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                     return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
                 } else if context.peerId != peerId {
-                    let value = abs(Int(peerId.id._internalGetInt32Value()) % 7)
+                    let value = abs(Int(peerId.id._internalGetInt64Value()) % 7)
                     return theme.chat.peerName(value)
                 }
             }
@@ -396,6 +396,38 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
+                case let .setChatTheme(emoji):
+                    let text: String
+                    
+                    if message.author?.id == context.peerId {
+                        if emoji.isEmpty {
+                            text = L10n.chatServiceDisabledThemeYou
+                        } else {
+                            text = L10n.chatServiceUpdateThemeYou(emoji)
+                        }
+                    } else {
+                        if emoji.isEmpty {
+                            text = L10n.chatServiceDisabledTheme(authorName)
+                        } else {
+                            text = L10n.chatServiceUpdateTheme(authorName, emoji)
+                        }
+                    }
+                    
+                    let parsed = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes.init(body: MarkdownAttributeSet(font: .normal(theme.fontSize), textColor: grayTextColor), bold: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: grayTextColor), link: MarkdownAttributeSet(font: .medium(theme.fontSize), textColor: linkColor), linkAttribute: { link in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                            
+                        }))
+                    }))
+                    attributedString.append(parsed)
+
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
+                    }
+
                     
                 case let .inviteToGroupPhoneCall(callId, accessHash, peerIds):
                     let text: String
@@ -492,7 +524,7 @@ class ChatServiceItem: ChatRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
         if isBubbled {
-            text.generateAutoBlock(backgroundColor: theme.chatServiceItemColor)
+            text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
         }
         return true
     }
@@ -565,7 +597,7 @@ class ChatServiceRowView: TableRowView {
     
     override var backdorColor: NSColor {
         if let item = item as? ChatServiceItem {
-            return item.isBubbled ? .clear : theme.chatBackground
+            return item.isBubbled ? .clear : item.presentation.chatBackground
         } else {
             return .clear
         }

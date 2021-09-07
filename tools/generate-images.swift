@@ -697,6 +697,12 @@ func initialize() -> [String] {
     array.append("chat_action_menu_update_chat")
     array.append("chat_action_menu_selected")
     
+    
+    array.append("widget_peers_favorite")
+    array.append("widget_peers_recent") 
+    array.append("widget_peers_favorite_active")
+    array.append("widget_peers_recent_active")
+
     return array
 }
 //swift ./tools/generate-images.swift

@@ -1,5 +1,5 @@
 //
-//  ExpCardButton.swift
+//  WidgetButton.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 08.07.2021.
@@ -9,7 +9,7 @@
 import Foundation
 import TGUIKit
 
-final class ExpCardButton: Button {
+final class WidgetButton: Button {
     private let textView = TextView()
     private let image = ImageView()
     private var text: String = ""

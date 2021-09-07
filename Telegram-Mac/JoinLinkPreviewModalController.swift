@@ -126,7 +126,7 @@ class JoinLinkPreviewModalController: ModalViewController {
         super.viewDidLoad()
         switch join {
         case let .invite(title: title, image, memberCount, participants):
-            let peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt32Value(0)), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
+            let peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt64Value(0)), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
                         genericView.update(with: peer, account: context.account, participants: participants, groupUserCount: memberCount)
         default:
             break

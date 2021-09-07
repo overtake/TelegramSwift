@@ -200,13 +200,8 @@ final class WallpaperColorPickerContainerView : View {
             guard let strongSelf = self else {
                 return
             }
-            var color = strongSelf.colorsView.selectedColor
+            let color = strongSelf.colorsView.selectedColor
             let index = strongSelf.colorsView.selected
-            if arc4random() % 2 == 0 {
-                color = color.darker()
-            } else {
-                color = color.lighter()
-            }
             let mode = strongSelf.mode.withAddedColor(color, at: index)
             strongSelf.modeDidUpdate?(mode)
         }, for: .Click)

@@ -1,5 +1,5 @@
 //
-//  ExpCardStickersController.swift
+//  WidgetStickersController.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 13.07.2021.
@@ -13,7 +13,7 @@ import TelegramCore
 
 import Postbox
 
-private final class ExpCardStickerView : Control {
+private final class WidgetStickerView : Control {
     private let animatedView = MediaAnimatedStickerView(frame: .zero)
     private let nameView = TextView()
     required init(frame frameRect: NSRect) {
@@ -64,7 +64,7 @@ private final class ExpCardStickerView : Control {
     }
 }
 
-final class ExpCardStickersContainer : View {
+final class WidgetStickersContainer : View {
     private let title = TextView()
     
     private let stickers: View = View()
@@ -80,10 +80,10 @@ final class ExpCardStickersContainer : View {
         title.isSelectable = false
         
     }
-    private var state: ExpCardStickersController.State?
+    private var state: WidgetStickersController.State?
     private var elements:[FeaturedStickerPackItem]?
     private var context: AccountContext?
-    func update(_ state: ExpCardStickersController.State, context: AccountContext, animated: Bool) {
+    func update(_ state: WidgetStickersController.State, context: AccountContext, animated: Bool) {
         self.state = state
         self.context = context
         
@@ -115,7 +115,7 @@ final class ExpCardStickersContainer : View {
         self.reload(state, ignore: ignore, context: context, animated: true)
     }
     
-    private func generateRandom(_ state: ExpCardStickersController.State, ignore: Int? = nil) -> [FeaturedStickerPackItem] {
+    private func generateRandom(_ state: WidgetStickersController.State, ignore: Int? = nil) -> [FeaturedStickerPackItem] {
         if let ignore = ignore, var elements = self.elements {
             let element = elements.remove(at: ignore)
             while let randomElement = state.stickers.randomElement() {
@@ -130,12 +130,12 @@ final class ExpCardStickersContainer : View {
         }
     }
     
-    private func reload(_ state: ExpCardStickersController.State, ignore: Int? = nil, context: AccountContext, animated: Bool) {
+    private func reload(_ state: WidgetStickersController.State, ignore: Int? = nil, context: AccountContext, animated: Bool) {
         let random = generateRandom(state, ignore: ignore)
         self.elements = random
         var ignore:Set<Int> = Set()
         for (i, sticker) in self.stickers.subviews.enumerated() {
-            if let sticker = sticker as? ExpCardStickerView {
+            if let sticker = sticker as? WidgetStickerView {
                 if sticker.data?.0.info.id != random[i].info.id {
                     performSubviewRemoval(sticker, animated: animated)
                     sticker.data = nil
@@ -146,7 +146,7 @@ final class ExpCardStickersContainer : View {
         }
         for (i, item) in random.enumerated() {
             if !ignore.contains(i) {
-                let view = ExpCardStickerView(frame: .zero)
+                let view = WidgetStickerView(frame: .zero)
                 stickers.subviews.insert(view, at: i)
                 view.data = (item, context)
                 if animated {
@@ -173,7 +173,7 @@ final class ExpCardStickersContainer : View {
         stickers.frame = NSMakeRect(0, title.frame.maxY + 10, frame.width, frame.height - (title.frame.maxY + 10))
         
         let subviews = stickers.subviews
-            .compactMap { $0 as? ExpCardStickerView }
+            .compactMap { $0 as? WidgetStickerView }
             .filter { $0.data != nil }
         
         for (i, sticker) in subviews.enumerated() {
@@ -200,7 +200,7 @@ final class ExpCardStickersContainer : View {
     }
 }
 
-final class ExpCardStickersController : TelegramGenericViewController<ExpCardView<ExpCardStickersContainer>> {
+final class WidgetStickersController : TelegramGenericViewController<WidgetView<WidgetStickersContainer>> {
 
     struct State : Equatable {
         static func == (lhs: State, rhs: State) -> Bool {
@@ -226,7 +226,7 @@ final class ExpCardStickersController : TelegramGenericViewController<ExpCardVie
         super.viewDidLoad()
         let context = self.context
 
-        self.genericView.dataView = ExpCardStickersContainer(frame: .zero)
+        self.genericView.dataView = WidgetStickersContainer(frame: .zero)
         
         self.genericView.dataView?.previewPack = { [weak self] item, f in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .id(id: item.info.id.id, accessHash: item.info.accessHash), onAdd: f), for: context.window)
@@ -270,7 +270,7 @@ final class ExpCardStickersController : TelegramGenericViewController<ExpCardVie
         
         disposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
             
-            var buttons: [ExpCardData.Button] = []
+            var buttons: [WidgetData.Button] = []
             
             let noneSelected = state.settings.emojiStickerSuggestionMode == .none
             let mySetsSelected = state.settings.emojiStickerSuggestionMode == .installed
@@ -306,7 +306,7 @@ final class ExpCardStickersController : TelegramGenericViewController<ExpCardVie
                 }).start()
             }))
             
-            let data: ExpCardData = .init(title: { L10n.emptyChatStickers }, desc: { L10n.emptyChatStickersDesc }, descClick: {
+            let data: WidgetData = .init(title: { L10n.emptyChatStickers }, desc: { L10n.emptyChatStickersDesc }, descClick: {
                 context.sharedContext.bindings.rootNavigation().push(FeaturedStickerPacksController(context))
             }, buttons: buttons)
             

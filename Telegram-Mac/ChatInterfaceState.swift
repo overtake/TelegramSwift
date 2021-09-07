@@ -47,7 +47,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case italic(Range<Int>)
     case pre(Range<Int>)
     case code(Range<Int>)
-    case uid(Range<Int>, Int32)
+    case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
@@ -65,7 +65,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 2:
             self = .pre(range)
         case 3:
-            self = .uid(range, try container.decode(Int32.self, forKey: "uid"))
+            self = .uid(range, try container.decode(Int64.self, forKey: "uid"))
         case 4:
             self = .code(range)
         case 5:
@@ -195,7 +195,7 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
         case .Pre:
             inputAttributes.append(.pre(entity.range))
         case let .TextMention(peerId: peerId):
-            inputAttributes.append(.uid(entity.range, peerId.id._internalGetInt32Value()))
+            inputAttributes.append(.uid(entity.range, peerId.id._internalGetInt64Value()))
         case let .TextUrl(url):
             inputAttributes.append(.url(entity.range, url))
         case .Strikethrough:
@@ -233,7 +233,7 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                 }
             } else if let tag = value as? TGInputTextTag {
                 if let uid = tag.attachment as? NSNumber {
-                    inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int32Value))
+                    inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int64Value))
                 } else if let url = tag.attachment as? String {
                     inputAttributes.append(.url(range.location ..< range.location + range.length, url))
                 }
@@ -602,7 +602,7 @@ final class ChatTextInputState: Codable, Equatable {
             case let .code(range):
                 entities.append(.init(range: range, type: .Code))
             case let .uid(range, uid):
-                entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt32Value(uid)))))
+                entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(uid)))))
             case let .url(range, url):
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
             }

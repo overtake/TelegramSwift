@@ -28,6 +28,7 @@ public class ContextMenuItem : NSMenuItem {
     let handler:()->Void
     private let dynamicTitle:(()->String)?
     
+    public var contextObject: Any? = nil
     
     public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil) {
         self.handler = handler

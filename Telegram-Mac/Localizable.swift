@@ -2233,6 +2233,96 @@ internal final class L10n {
   internal static var chatMessageJoinVoiceChatAsSpeaker: String  { return L10n.tr("Localizable", "Chat.Message.JoinVoiceChat.AsSpeaker") }
   /// MTProxy Configuration
   internal static var chatMessageMTProxyConfig: String  { return L10n.tr("Localizable", "Chat.Message.MTProxy.Config") }
+  /// No Listens
+  internal static var chatMessageReadStatsEmptyListens: String  { return L10n.tr("Localizable", "Chat.Message.ReadStats.EmptyListens") }
+  /// No Views
+  internal static var chatMessageReadStatsEmptyViews: String  { return L10n.tr("Localizable", "Chat.Message.ReadStats.EmptyViews") }
+  /// No Watches
+  internal static var chatMessageReadStatsEmptyWatches: String  { return L10n.tr("Localizable", "Chat.Message.ReadStats.EmptyWatches") }
+  /// %d
+  internal static func chatMessageReadStatsListenedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_countable", p1)
+  }
+  /// %d Listened
+  internal static func chatMessageReadStatsListenedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_few", p1)
+  }
+  /// %d Listened
+  internal static func chatMessageReadStatsListenedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_many", p1)
+  }
+  /// %d Listened
+  internal static func chatMessageReadStatsListenedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_one", p1)
+  }
+  /// %d Listened
+  internal static func chatMessageReadStatsListenedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_other", p1)
+  }
+  /// %d Listened
+  internal static func chatMessageReadStatsListenedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_two", p1)
+  }
+  /// %d Listened
+  internal static func chatMessageReadStatsListenedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Listened_zero", p1)
+  }
+  /// %d
+  internal static func chatMessageReadStatsSeenCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_countable", p1)
+  }
+  /// %d Seen
+  internal static func chatMessageReadStatsSeenFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_few", p1)
+  }
+  /// %d Seen
+  internal static func chatMessageReadStatsSeenMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_many", p1)
+  }
+  /// %d Seen
+  internal static func chatMessageReadStatsSeenOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_one", p1)
+  }
+  /// %d Seen
+  internal static func chatMessageReadStatsSeenOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_other", p1)
+  }
+  /// %d Seen
+  internal static func chatMessageReadStatsSeenTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_two", p1)
+  }
+  /// %d Seen
+  internal static func chatMessageReadStatsSeenZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Seen_zero", p1)
+  }
+  /// %d
+  internal static func chatMessageReadStatsWatchedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_countable", p1)
+  }
+  /// %d Watched
+  internal static func chatMessageReadStatsWatchedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_few", p1)
+  }
+  /// %d Watched
+  internal static func chatMessageReadStatsWatchedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_many", p1)
+  }
+  /// %d Watched
+  internal static func chatMessageReadStatsWatchedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_one", p1)
+  }
+  /// %d Watched
+  internal static func chatMessageReadStatsWatchedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_other", p1)
+  }
+  /// %d Watched
+  internal static func chatMessageReadStatsWatchedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_two", p1)
+  }
+  /// %d Watched
+  internal static func chatMessageReadStatsWatchedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_zero", p1)
+  }
   /// SOCKS5 Configuration
   internal static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
   /// https://telegram.org
@@ -2479,6 +2569,10 @@ internal final class L10n {
   internal static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
   }
+  /// %1$@ disabled the chat theme
+  internal static func chatServiceDisabledTheme(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.DisabledTheme", p1)
+  }
   /// You have successfully transferred **%1$@** to **%2$@** for **%3$@**
   internal static func chatServicePaymentSent1(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent1", p1, p2, p3)
@@ -2553,6 +2647,8 @@ internal final class L10n {
   }
   /// channel video updated
   internal static var chatServiceChannelUpdatedVideo: String  { return L10n.tr("Localizable", "Chat.Service.Channel.UpdatedVideo") }
+  /// You disabled the chat theme
+  internal static var chatServiceDisabledThemeYou: String  { return L10n.tr("Localizable", "Chat.Service.DisabledTheme.You") }
   /// %1$@ invited %2$@
   internal static func chatServiceGroupAddedMembers1(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.AddedMembers1", p1, p2)
@@ -9861,6 +9957,16 @@ internal final class L10n {
   internal static var weekdayShortTuesday: String  { return L10n.tr("Localizable", "Weekday.ShortTuesday") }
   /// Wed
   internal static var weekdayShortWednesday: String  { return L10n.tr("Localizable", "Weekday.ShortWednesday") }
+  /// Use ⌘ + K to quick enter the [search](search) mode.
+  internal static var widgetRecentDesc: String  { return L10n.tr("Localizable", "Widget.Recent.Desc") }
+  /// Both
+  internal static var widgetRecentMixed: String  { return L10n.tr("Localizable", "Widget.Recent.Mixed") }
+  /// Popular
+  internal static var widgetRecentPopular: String  { return L10n.tr("Localizable", "Widget.Recent.Popular") }
+  /// Recent
+  internal static var widgetRecentRecent: String  { return L10n.tr("Localizable", "Widget.Recent.Recent") }
+  /// Chats
+  internal static var widgetRecentTitle: String  { return L10n.tr("Localizable", "Widget.Recent.Title") }
   /// Edit
   internal static var ns103Title: String  { return L10n.tr("Localizable", "_NS103.title") }
   /// Window

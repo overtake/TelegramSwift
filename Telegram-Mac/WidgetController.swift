@@ -1,5 +1,5 @@
 //
-//  ExpCardController.swift
+//  WidgetController.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 06.07.2021.
@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 
-private final class ExpCardNavigationButton : Control {
+private final class WidgetNavigationButton : Control {
     
     
     enum Direction {
@@ -82,7 +82,7 @@ private final class ExpCardNavigationButton : Control {
     }
 }
 
-final class ExpCardListView: View {
+final class WidgetListView: View {
     
     enum PresentMode {
         case immidiate
@@ -98,8 +98,8 @@ final class ExpCardListView: View {
     
     private var controller: ViewController?
     
-    private var prev: ExpCardNavigationButton?
-    private var next: ExpCardNavigationButton?
+    private var prev: WidgetNavigationButton?
+    private var next: WidgetNavigationButton?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -223,7 +223,7 @@ final class ExpCardListView: View {
     }
 }
 
-final class ExpCardController : TelegramGenericViewController<ExpCardListView> {
+final class WidgetController : TelegramGenericViewController<WidgetListView> {
     
     private var controllers:[ViewController] = []
     
@@ -240,7 +240,7 @@ final class ExpCardController : TelegramGenericViewController<ExpCardListView> {
         controller.loadViewIfNeeded()
     }
     
-    private func presentSelected(_ mode: ExpCardListView.PresentMode) {
+    private func presentSelected(_ mode: WidgetListView.PresentMode) {
         let controller = controllers[selected]
         loadController(controller)
         genericView.present(controller: controller, hasNext: controllers.count - 1 > selected, hasPrev: selected > 0, mode: mode)
@@ -278,9 +278,10 @@ final class ExpCardController : TelegramGenericViewController<ExpCardListView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        controllers.append(ExpCardAppearanceController(context))
-        controllers.append(ExpCardStorageController(context))
-        controllers.append(ExpCardStickersController(context))
+        controllers.append(WidgetRecentPeersController(context))
+        controllers.append(WidgetAppearanceController(context))
+        controllers.append(WidgetStorageController(context))
+        controllers.append(WidgetStickersController(context))
 
         let current = controllers[selected]
         

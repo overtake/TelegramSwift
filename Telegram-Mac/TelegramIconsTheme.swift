@@ -8051,6 +8051,58 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var widget_peers_favorite: CGImage {
+      if let image = cached.with({ $0["widget_peers_favorite"] }) {
+          return image
+      } else {
+          let image = _widget_peers_favorite()
+          _ = cached.modify { current in 
+              var current = current
+              current["widget_peers_favorite"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var widget_peers_recent: CGImage {
+      if let image = cached.with({ $0["widget_peers_recent"] }) {
+          return image
+      } else {
+          let image = _widget_peers_recent()
+          _ = cached.modify { current in 
+              var current = current
+              current["widget_peers_recent"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var widget_peers_favorite_active: CGImage {
+      if let image = cached.with({ $0["widget_peers_favorite_active"] }) {
+          return image
+      } else {
+          let image = _widget_peers_favorite_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["widget_peers_favorite_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var widget_peers_recent_active: CGImage {
+      if let image = cached.with({ $0["widget_peers_recent_active"] }) {
+          return image
+      } else {
+          let image = _widget_peers_recent_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["widget_peers_recent_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8671,6 +8723,10 @@ final class TelegramIconsTheme {
   private let _chat_action_url_preview: ()->CGImage
   private let _chat_action_menu_update_chat: ()->CGImage
   private let _chat_action_menu_selected: ()->CGImage
+  private let _widget_peers_favorite: ()->CGImage
+  private let _widget_peers_recent: ()->CGImage
+  private let _widget_peers_favorite_active: ()->CGImage
+  private let _widget_peers_recent_active: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9291,7 +9347,11 @@ final class TelegramIconsTheme {
       chat_action_reply_message: @escaping()->CGImage,
       chat_action_url_preview: @escaping()->CGImage,
       chat_action_menu_update_chat: @escaping()->CGImage,
-      chat_action_menu_selected: @escaping()->CGImage
+      chat_action_menu_selected: @escaping()->CGImage,
+      widget_peers_favorite: @escaping()->CGImage,
+      widget_peers_recent: @escaping()->CGImage,
+      widget_peers_favorite_active: @escaping()->CGImage,
+      widget_peers_recent_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9912,5 +9972,9 @@ final class TelegramIconsTheme {
       self._chat_action_url_preview = chat_action_url_preview
       self._chat_action_menu_update_chat = chat_action_menu_update_chat
       self._chat_action_menu_selected = chat_action_menu_selected
+      self._widget_peers_favorite = widget_peers_favorite
+      self._widget_peers_recent = widget_peers_recent
+      self._widget_peers_favorite_active = widget_peers_favorite_active
+      self._widget_peers_recent_active = widget_peers_recent_active
   }
 }

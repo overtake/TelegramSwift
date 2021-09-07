@@ -127,9 +127,9 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     
     
     
-    private let cards: ExpCardController
+    private let cards: WidgetController
     override init(_ context: AccountContext) {
-        cards = ExpCardController(context)
+        cards = WidgetController(context)
         super.init(context)
         self.bar = NavigationBarStyle(height:0)
     }

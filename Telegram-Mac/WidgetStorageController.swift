@@ -1,5 +1,5 @@
 //
-//  ExpCardStorage.swift
+//  WidgetStorage.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 08.07.2021.
@@ -25,7 +25,7 @@ private extension CacheUsageStatsResult {
     }
 }
 
-private final class ExpCardStorageProgress: View {
+private final class WidgetStorageProgress: View {
     private var animators: [DisplayLinkAnimator] = []
     private var removeAnimators: [Int : DisplayLinkAnimator] = [:]
     
@@ -168,10 +168,10 @@ private final class ExpCardStorageProgress: View {
     }
 }
 
-final class ExpCardStorageContainer : View {
-    private let clearButton = ExpCardButton()
+final class WidgetStorageContainer : View {
+    private let clearButton = WidgetButton()
     private let storageTitle = TextView()
-    private let progressIndicator: ExpCardStorageProgress = ExpCardStorageProgress(frame: .zero)
+    private let progressIndicator: WidgetStorageProgress = WidgetStorageProgress(frame: .zero)
     private let storageDesc = TextView()
     
     var clearAll:(()->Void)? = nil
@@ -192,11 +192,11 @@ final class ExpCardStorageContainer : View {
             self?.clearAll?()
         }, for: .Click)
     }
-    private var state: ExpCardStorageController.State?
+    private var state: WidgetStorageController.State?
     
     private let progressDisposable = MetaDisposable()
     
-    func update(_ state: ExpCardStorageController.State, animated: Bool) {
+    func update(_ state: WidgetStorageController.State, animated: Bool) {
 
         let progress = state.progressValues
         progressIndicator.setProgress(progress.values, tooltips: progress.tooltips)
@@ -265,7 +265,7 @@ final class ExpCardStorageContainer : View {
     }
 }
 
-final class ExpCardStorageController : TelegramGenericViewController<ExpCardView<ExpCardStorageContainer>> {
+final class WidgetStorageController : TelegramGenericViewController<WidgetView<WidgetStorageContainer>> {
 
     struct State : Equatable {
         
@@ -409,7 +409,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
         
         let context = self.context
         
-        genericView.dataView = ExpCardStorageContainer(frame: .zero)
+        genericView.dataView = WidgetStorageContainer(frame: .zero)
         
        
         
@@ -424,7 +424,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
         
         disposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
             
-            var buttons: [ExpCardData.Button] = []
+            var buttons: [WidgetData.Button] = []
             
             let lowIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 5
             let normalIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 32
@@ -460,7 +460,7 @@ final class ExpCardStorageController : TelegramGenericViewController<ExpCardView
                 }).start()
             }))
             
-            let data: ExpCardData = .init(title: { L10n.emptyChatStorageUsageData }, desc: { L10n.emptyChatStorageUsageDesc }, descClick: {
+            let data: WidgetData = .init(title: { L10n.emptyChatStorageUsageData }, desc: { L10n.emptyChatStorageUsageDesc }, descClick: {
                 context.sharedContext.bindings.rootNavigation().push(DataAndStorageViewController(context))
             }, buttons: buttons)
             

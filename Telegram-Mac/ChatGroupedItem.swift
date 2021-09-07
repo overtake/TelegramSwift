@@ -371,7 +371,7 @@ class ChatGroupedItem: ChatRowItem {
             }
         }
         if let message = _message {
-            return chatMenuItems(for: message, chatInteraction: self.chatInteraction)
+            return chatMenuItems(for: message, item: self, chatInteraction: self.chatInteraction)
         }
         
         guard let message = layout.messages.first else {
