@@ -850,9 +850,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         
         func makeItem(_ entry: ChatWrapperEntry) -> TableRowItem {
             
-            let theme: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
+            let presentation: TelegramPresentationTheme = entry.entry.additionalData.chatTheme ?? theme
             
-            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.automaticDownload, theme: theme)
+            let item:TableRowItem = ChatRowItem.item(initialSize, from: entry.appearance.entry, interaction: interaction, downloadSettings: entry.automaticDownload, theme: presentation)
             _ = item.makeSize(initialSize.width)
             return item;
         }
