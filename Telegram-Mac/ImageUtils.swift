@@ -78,7 +78,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                         if let image = capHolder[key] {
                             return .single((image, false))
                         } else {
-                            let size = NSMakeSize(max(30, displayDimensions.width), max(30, displayDimensions.height))
+                            let size = NSMakeSize(max(15, displayDimensions.width), max(15, displayDimensions.height))
                             capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
                             return .single((capHolder[key]!, false))
                         }

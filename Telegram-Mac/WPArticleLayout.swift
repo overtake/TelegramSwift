@@ -29,7 +29,7 @@ class WPArticleLayout: WPLayout {
     private(set) var groupLayout: GroupedLayout?
     private(set) var parameters:[ChatMediaLayoutParameters] = []
 
-    init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences) {
+    init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences, theme: TelegramPresentationTheme) {
         if let duration = content.duration {
             self.durationAttributed = .initialize(string: String.durationTransformed(elapsed: duration), color: .white, font: .normal(.text))
         } else {
@@ -94,7 +94,7 @@ class WPArticleLayout: WPLayout {
                     
                 }, showMessage: { [weak chatInteraction] _ in
                     chatInteraction?.focusMessageId(nil, parent.id, .CenterEmpty)
-                }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: presentation.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: autoplayMedia)
+                }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: presentation.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: autoplayMedia)
                 
                 weakParameters = parameters
                 

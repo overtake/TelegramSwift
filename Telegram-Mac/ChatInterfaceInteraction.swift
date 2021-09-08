@@ -163,6 +163,9 @@ final class ChatInteraction : InterfaceObserver  {
     
     var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
 
+    
+    var getCachedData:()->CachedPeerData? = { return nil }
+    
     var showDeleterSetup:(Control)->Void = { _ in }
 
     func chatLocationInput() -> ChatLocationInput {

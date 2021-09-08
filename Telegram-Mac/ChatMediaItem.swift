@@ -384,7 +384,7 @@ class ChatMediaItem: ChatRowItem {
             
             }, showMessage: { [weak self] message in
                 self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
+            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
         
         self.parameters = parameters
         
