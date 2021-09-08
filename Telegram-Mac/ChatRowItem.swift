@@ -2534,8 +2534,8 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     var items:[ContextMenuItem] = []
     
     
-    if (MessageReadMenuItem.canViewReadStats(message: message, appConfig: chatInteraction.context.appConfiguration)), item.isRead {
-        let item = ContextMenuItem("-------------------------")
+    if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)), item.isRead {
+        let item = ContextMenuItem("-")
         let stats = MessageReadMenuItem(context: context, message: message)
         item.contextObject = stats
         item.view = stats.view

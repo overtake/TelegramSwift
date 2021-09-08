@@ -219,11 +219,32 @@ open class BackgroundView: View {
                     imageView.backgroundColor = .clear
                     imageView.contents = image
                     let colors = colors?.map { $0.withAlphaComponent(1) }
+                    
+
                     var shouldTile = false
                     if let colors = colors, !colors.isEmpty {
+                        
+                                                
+//                        let brightness = colors.reduce(colors[0], { current, value in
+//                            return current.blended(withFraction: 0.5, of: value)!
+//                        }).hsb.2
+//                        let patternIsBlack = brightness <= 0.25
+
+                        
                         shouldTile = true
                         imageView.opacity = Float((abs(intensity ?? 50))) / 100.0 * 0.5
-                        imageView.compositingFilter = "softLightBlendMode"
+//                        if patternIsBlack {
+//                            imageView.compositingFilter = nil
+//                        } else {
+                            imageView.compositingFilter = "softLightBlendMode"
+//                        }
+//                        let invertPattern = (intensity ?? 0) < 0
+//                        if invertPattern {
+//                            self.imageView.backgroundColor = .black
+//                        } else {
+//                            self.imageView.backgroundColor = nil
+//                        }
+
 
                         if colors.count > 2 {
                             if let bg = self.backgroundView as? AnimatedGradientBackgroundView {

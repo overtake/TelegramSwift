@@ -45,7 +45,7 @@ private final class MessageViewsMenuItemView : View {
             } else {
                 let image = generateImage(size, rotatedContext: { size, ctx in
                     ctx.clear(size.bounds)
-                    ctx.setFillColor(NSColor.lightGray.cgColor)
+                    ctx.setFillColor(theme.colors.grayUI.withAlphaComponent(0.8).cgColor)
                     ctx.fillEllipse(in: size.bounds)
                 })!
                 self.images = [image, image, image]
@@ -188,9 +188,9 @@ private final class MessageViewsMenuItemView : View {
     
     func updateIsSelected(_ isSelected: Bool, message: Message, context: AccountContext, state: MessageReadMenuItem.State, animated: Bool) {
         selectedView.isHidden = !isSelected
-        selectedView.backgroundColor = NSColor.selectedMenuItemColor
+        selectedView.backgroundColor = theme.colors.accent //NSColor.selectedMenuItemColor
        
-        let textColor = isSelected ? NSColor.selectedMenuItemTextColor : NSColor.text
+        let textColor = isSelected ? theme.colors.underSelectedColor : theme.colors.text
         let textLayot: TextViewLayout?
         let contentView: AvatarContentView?
         let loadingView: View?
@@ -373,7 +373,7 @@ final class MessageReadMenuItem {
     }
     
     
-    static func canViewReadStats(message: Message, appConfig: AppConfiguration) -> Bool {
+    static func canViewReadStats(message: Message, chatInteraction: ChatInteraction, appConfig: AppConfiguration) -> Bool {
         if message.flags.contains(.Incoming) {
             return false
         }
@@ -408,7 +408,17 @@ final class MessageReadMenuItem {
         case let channel as TelegramChannel:
             if case .broadcast = channel.info {
                 return false
+            } else {
+                if let cachedData = chatInteraction.getCachedData() as? CachedChannelData {
+                    let members = cachedData.participantsSummary.memberCount ?? 0
+                    if members > maxParticipantCount {
+                        return false
+                    }
+                } else {
+                    return false
+                }
             }
+            
         case let group as TelegramGroup:
             if group.participantCount > maxParticipantCount {
                 return false

@@ -842,10 +842,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             default:
                 break
             }
-        } else {
-            var bp:Int = 0
-            bp += 1
-        }
+        } 
         
         
         func makeItem(_ entry: ChatWrapperEntry) -> TableRowItem {
@@ -3637,6 +3634,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
             
             
+        }
+        
+        chatInteraction.getCachedData = { [weak self] in
+            return ((self?.centerBarView as? ChatTitleBarView)?.postboxView as? PeerView)?.cachedData
         }
         
         chatInteraction.reportSpamAndClose = { [weak self] in

@@ -2256,7 +2256,7 @@ public extension NSAttributedString {
             }
         })
         
-        return (modified.trimmed, attachments)
+        return (modified, attachments) //.trimmed
     }
     
     func appendAttributedString(_ string: NSAttributedString, selectedRange: NSRange = NSMakeRange(0, 0)) -> (NSAttributedString, NSRange) {
