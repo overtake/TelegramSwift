@@ -8077,6 +8077,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var widget_peers_both: CGImage {
+      if let image = cached.with({ $0["widget_peers_both"] }) {
+          return image
+      } else {
+          let image = _widget_peers_both()
+          _ = cached.modify { current in 
+              var current = current
+              current["widget_peers_both"] = image
+              return current
+          }
+          return image
+      }
+  }
   var widget_peers_favorite_active: CGImage {
       if let image = cached.with({ $0["widget_peers_favorite_active"] }) {
           return image
@@ -8098,6 +8111,19 @@ final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["widget_peers_recent_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  var widget_peers_both_active: CGImage {
+      if let image = cached.with({ $0["widget_peers_both_active"] }) {
+          return image
+      } else {
+          let image = _widget_peers_both_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["widget_peers_both_active"] = image
               return current
           }
           return image
@@ -8725,8 +8751,10 @@ final class TelegramIconsTheme {
   private let _chat_action_menu_selected: ()->CGImage
   private let _widget_peers_favorite: ()->CGImage
   private let _widget_peers_recent: ()->CGImage
+  private let _widget_peers_both: ()->CGImage
   private let _widget_peers_favorite_active: ()->CGImage
   private let _widget_peers_recent_active: ()->CGImage
+  private let _widget_peers_both_active: ()->CGImage
 
   init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9350,8 +9378,10 @@ final class TelegramIconsTheme {
       chat_action_menu_selected: @escaping()->CGImage,
       widget_peers_favorite: @escaping()->CGImage,
       widget_peers_recent: @escaping()->CGImage,
+      widget_peers_both: @escaping()->CGImage,
       widget_peers_favorite_active: @escaping()->CGImage,
-      widget_peers_recent_active: @escaping()->CGImage
+      widget_peers_recent_active: @escaping()->CGImage,
+      widget_peers_both_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9974,7 +10004,9 @@ final class TelegramIconsTheme {
       self._chat_action_menu_selected = chat_action_menu_selected
       self._widget_peers_favorite = widget_peers_favorite
       self._widget_peers_recent = widget_peers_recent
+      self._widget_peers_both = widget_peers_both
       self._widget_peers_favorite_active = widget_peers_favorite_active
       self._widget_peers_recent_active = widget_peers_recent_active
+      self._widget_peers_both_active = widget_peers_both_active
   }
 }

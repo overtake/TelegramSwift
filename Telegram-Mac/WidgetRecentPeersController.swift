@@ -139,6 +139,8 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
         self.bar = .init(height: 0)
     }
     
+    
+    
     deinit {
         actionsDisposable.dispose()
         disposable.dispose()
@@ -180,6 +182,12 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
                 var current = current
                 current.favorite = favorite
                 current.recent = recent
+                if current.section == .favorite, favorite.isEmpty {
+                    current.section = .recent
+                }
+                if current.section == .recent, recent.isEmpty {
+                    current.section = .favorite
+                }
                 return current
             }
         }))
@@ -188,41 +196,47 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             var buttons: [WidgetData.Button] = []
             
 
-            buttons.append(.init(text: { L10n.widgetRecentPopular }, selected: {
-                return state.section == .favorite
-            }, image: {
-                return state.section == .favorite ? theme.icons.widget_peers_favorite_active: theme.icons.widget_peers_favorite
-            }, click: {
-                updateState { current in
-                    var current = current
-                    current.section = .favorite
-                    return current
-                }
-            }))
-            
-            buttons.append(.init(text: { L10n.widgetRecentRecent }, selected: {
-                return state.section == .recent
-            }, image: {
-                return state.section == .recent ? theme.icons.widget_peers_recent_active: theme.icons.widget_peers_recent
-            }, click: {
-                updateState { current in
-                    var current = current
-                    current.section = .recent
-                    return current
-                }
-            }))
-            
-//            buttons.append(.init(text: { L10n.widgetRecentMixed }, selected: {
-//                return state.section == .both
-//            }, image: {
-//                return state.section == .both ? theme.icons.widget_peers_favorite_active: theme.icons.widget_peers_favorite
-//            }, click: {
-//                updateState { current in
-//                    var current = current
-//                    current.section = .both
-//                    return current
-//                }
-//            }))
+            if !state.favorite.isEmpty {
+                buttons.append(.init(text: { L10n.widgetRecentPopular }, selected: {
+                    return state.section == .favorite
+                }, image: {
+                    return state.section == .favorite ? theme.icons.widget_peers_favorite_active: theme.icons.widget_peers_favorite
+                }, click: {
+                    updateState { current in
+                        var current = current
+                        current.section = .favorite
+                        return current
+                    }
+                }))
+            }
+           
+            if !state.recent.isEmpty {
+                buttons.append(.init(text: { L10n.widgetRecentRecent }, selected: {
+                    return state.section == .recent
+                }, image: {
+                    return state.section == .recent ? theme.icons.widget_peers_recent_active: theme.icons.widget_peers_recent
+                }, click: {
+                    updateState { current in
+                        var current = current
+                        current.section = .recent
+                        return current
+                    }
+                }))
+            }
+          
+            if !state.recent.isEmpty && !state.favorite.isEmpty {
+                buttons.append(.init(text: { L10n.widgetRecentMixed }, selected: {
+                    return state.section == .both
+                }, image: {
+                    return state.section == .both ? theme.icons.widget_peers_both_active: theme.icons.widget_peers_both
+                }, click: {
+                    updateState { current in
+                        var current = current
+                        current.section = .both
+                        return current
+                    }
+                }))
+            }
             
             
             let data: WidgetData = .init(title: { L10n.widgetRecentTitle }, desc: { L10n.widgetRecentDesc }, descClick: {

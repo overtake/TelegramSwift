@@ -147,12 +147,14 @@ private final class MessageViewsMenuItemView : View {
                 var items:[ContextMenuItem] = []
                 for peer in peers {
                     let item = ContextMenuItem(peer.displayTitle.prefix(30), handler: {
-                        context.sharedContext.bindings.rootNavigation().push(PeerInfoController.init(context: context, peerId: peer.id))
+                        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
                     })
                     let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
 
                     disposableSet.set(avatar.start(next: { [weak item] image, _ in
-                        item?.image = image?._NSImage
+                        DispatchQueue.main.async {
+                            item?.image = image?._NSImage
+                        }
                     }), forKey: peer.id)
                     
                     items.append(item)
@@ -267,7 +269,7 @@ private final class MessageViewsMenuItemView : View {
     }
     
     override func layout() {
-        if let view = superview {
+        if let view = superview, self.frame != view.bounds {
             self.frame = view.bounds
         }
         

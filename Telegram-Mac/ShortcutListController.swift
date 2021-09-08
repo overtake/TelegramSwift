@@ -42,9 +42,20 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("search_in_chat"), data: InputDataGeneralData(name: L10n.shortcutsControllerChatSearchMessages, color: theme.colors.text, icon: nil, type: .context("⌘F"), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
-    // messages
+    // video chat
     
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
     
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerVideoChat), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("toggle_camera"), data: InputDataGeneralData(name: L10n.shortcutsControllerVideoChatToggleCamera, color: theme.colors.text, icon: nil, type: .context("⌘E"), viewType: .firstItem, enabled: true, description: nil)))
+    index += 1
+
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("toggle_screen"), data: InputDataGeneralData(name: L10n.shortcutsControllerVideoChatToggleScreencast, color: theme.colors.text, icon: nil, type: .context("⌘T"), viewType: .lastItem, enabled: true, description: nil)))
+    index += 1
+
     
     //search
     

@@ -699,9 +699,11 @@ func initialize() -> [String] {
     
     
     array.append("widget_peers_favorite")
-    array.append("widget_peers_recent") 
+    array.append("widget_peers_recent")
+    array.append("widget_peers_both")
     array.append("widget_peers_favorite_active")
     array.append("widget_peers_recent_active")
+    array.append("widget_peers_both_active")
 
     return array
 }

@@ -8203,6 +8203,8 @@ internal final class L10n {
   internal static var shortcutsControllerSearch: String  { return L10n.tr("Localizable", "ShortcutsController.Search") }
   /// Shortcuts
   internal static var shortcutsControllerTitle: String  { return L10n.tr("Localizable", "ShortcutsController.Title") }
+  /// VIDEO CHAT
+  internal static var shortcutsControllerVideoChat: String  { return L10n.tr("Localizable", "ShortcutsController.VideoChat") }
   /// Edit Last Message
   internal static var shortcutsControllerChatEditLastMessage: String  { return L10n.tr("Localizable", "ShortcutsController.Chat.EditLastMessage") }
   /// Open Info
@@ -8253,6 +8255,10 @@ internal final class L10n {
   internal static var shortcutsControllerSearchGlobalSearch: String  { return L10n.tr("Localizable", "ShortcutsController.Search.GlobalSearch") }
   /// Quick Search
   internal static var shortcutsControllerSearchQuickSearch: String  { return L10n.tr("Localizable", "ShortcutsController.Search.QuickSearch") }
+  /// Toggle Camera
+  internal static var shortcutsControllerVideoChatToggleCamera: String  { return L10n.tr("Localizable", "ShortcutsController.VideoChat.ToggleCamera") }
+  /// Toggle Screen Share
+  internal static var shortcutsControllerVideoChatToggleScreencast: String  { return L10n.tr("Localizable", "ShortcutsController.VideoChat.ToggleScreencast") }
   /// The sidebar is only available while chatting
   internal static var sidebarAvalability: String  { return L10n.tr("Localizable", "Sidebar.Avalability") }
   /// Hide Panel
