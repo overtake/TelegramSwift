@@ -492,15 +492,9 @@ class ChatControllerView : View, ChatInputDelegate {
         super.layout()
         updateFrame(frame, transition: .immediate)
     }
-    private var validLayout: NSRect? = nil
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
-        
-        if frame == validLayout {
-            return
-        }
-        
-        self.validLayout = frame
+    
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }

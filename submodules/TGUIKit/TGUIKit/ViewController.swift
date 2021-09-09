@@ -225,10 +225,10 @@ open class BackgroundView: View {
                     if let colors = colors, !colors.isEmpty {
                         
                                                 
-//                        let brightness = colors.reduce(colors[0], { current, value in
-//                            return current.blended(withFraction: 0.5, of: value)!
-//                        }).hsb.2
-//                        let patternIsBlack = brightness <= 0.25
+                        let brightness = colors.reduce(colors[0], { current, value in
+                            return current.blended(withFraction: 0.5, of: value)!
+                        }).hsb.2
+                        let patternIsBlack = brightness <= 0.25
 
                         
                         shouldTile = true
