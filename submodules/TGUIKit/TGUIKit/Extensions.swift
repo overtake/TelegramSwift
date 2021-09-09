@@ -2235,3 +2235,13 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
         view.removeFromSuperview()
     }
 }
+
+public func performSubviewPosRemoval(_ view: NSView, pos: NSPoint, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut) {
+    if animated {
+        view.layer?.animatePosition(from: view.frame.origin, to: pos, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] _ in
+            view?.removeFromSuperview()
+        })
+    } else {
+        view.removeFromSuperview()
+    }
+}

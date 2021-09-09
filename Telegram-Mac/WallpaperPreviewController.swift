@@ -121,10 +121,10 @@ enum WallpaperColorSelectMode : Equatable {
             return self
         case let .gradient(colors, selected, rotation):
             var colors = colors
-            colors.remove(at: index)
             if colors.count == 1 {
-                return .single(colors[0])
+                return .gradient(colors, 0, rotation)
             }
+            colors.remove(at: index)
             return .gradient(colors, min(selected, colors.count - 1), rotation)
         }
     }
