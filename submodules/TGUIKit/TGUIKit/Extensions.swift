@@ -1503,6 +1503,28 @@ public extension NSEdgeInsets {
 
 public extension NSColor {
     
+    static func average(of colors: [NSColor]) -> NSColor {
+           var sr: CGFloat = 0.0
+           var sg: CGFloat = 0.0
+           var sb: CGFloat = 0.0
+           var sa: CGFloat = 0.0
+
+           for color in colors {
+               var r: CGFloat = 0.0
+               var g: CGFloat = 0.0
+               var b: CGFloat = 0.0
+               var a: CGFloat = 0.0
+               color.getRed(&r, green: &g, blue: &b, alpha: &a)
+               sr += r
+               sg += g
+               sb += b
+               sa += a
+           }
+
+           return NSColor(red: sr / CGFloat(colors.count), green: sg / CGFloat(colors.count), blue: sb / CGFloat(colors.count), alpha: sa / CGFloat(colors.count))
+       }
+
+    
     convenience init?(hexString: String) {
         let scanner = Scanner(string: hexString.prefix(7))
         if hexString.hasPrefix("#") {
