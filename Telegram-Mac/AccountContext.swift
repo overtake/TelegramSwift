@@ -259,7 +259,7 @@ final class AccountContext {
                 let emoji = theme.emoji
                 let effective = appearance.presentation.dark ? theme.darkTheme : theme.theme
                 if let settings = effective.settings {
-                    var newTheme = appearance.presentation.withUpdatedColors(settings.palette)
+                    let newTheme = appearance.presentation.withUpdatedColors(settings.palette)
                     if let wallpaper = settings.wallpaper?.uiWallpaper {
                         signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
                             return (emoji, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))

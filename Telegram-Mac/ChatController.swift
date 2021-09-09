@@ -492,8 +492,15 @@ class ChatControllerView : View, ChatInputDelegate {
         super.layout()
         updateFrame(frame, transition: .immediate)
     }
+    private var validLayout: NSRect? = nil
+    
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
         
+        if frame == validLayout {
+            return
+        }
+        
+        self.validLayout = frame
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
@@ -503,7 +510,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         let tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
         
-        (transition.isAnimated ? tableView.animator() : tableView).frame = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight))
 
 
         
@@ -536,7 +543,8 @@ class ChatControllerView : View, ChatInputDelegate {
         transition.updateFrame(view: floatingPhotosView, frame: tableView.frame)
 
         if let backgroundView = backgroundView, let navigationView = navigationView {
-            transition.updateFrame(view: backgroundView, frame: navigationView.bounds)
+            let size = NSMakeSize(navigationView.bounds.width, navigationView.bounds.height)
+            transition.updateFrame(view: backgroundView, frame: NSMakeRect(0, -frame.minY, size.width, size.height))
         }
     }
 

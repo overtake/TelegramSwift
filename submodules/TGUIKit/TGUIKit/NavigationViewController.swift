@@ -117,9 +117,13 @@ open class NavigationHeader {
                     inset += supplyHeader.height
                     contentInset += supplyHeader.height
                 }
-                
-                let animator = animated ? view.animator() : view
-                animator.setFrameOrigin(NSMakePoint(0, inset))
+                let transition: ContainedViewLayoutTransition
+                if animated {
+                    transition = .animated(duration: 0.2, curve: .easeInOut)
+                } else {
+                    transition = .immediate
+                }
+                transition.updateFrame(view: view, frame: NSMakeRect(0, inset, view.frame.width, view.frame.height))
 
                 navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
                 
@@ -138,16 +142,8 @@ open class NavigationHeader {
         
         if let navigation = navigation, let view = _view {
             _view = nil
-            if animated {
-                NSAnimationContext.runAnimationGroup({ ctx in
-                    let animator = animated ? view.animator() : view
-                    animator.setFrameOrigin(NSMakePoint(0, navigation.controller.bar.height - height))
-                }, completionHandler: { [weak view] in
-                    view?.removeFromSuperview()
-                })
-            } else {
-                view.removeFromSuperview()
-            }
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, navigation.controller.bar.height - height), animated: animated, duration: 0.2, timingFunction: .easeInEaseOut)
+
             var inset:CGFloat = navigation.controller.bar.height
             if let supplyHeader = supplyHeader, supplyHeader.needShown  {
                 inset += supplyHeader.height
@@ -177,19 +173,26 @@ public class CallNavigationHeader : NavigationHeader {
                 var contentInset = navigation.controller.bar.height + height
                 navigation.containerView.addSubview(view, positioned: .above, relativeTo: navigation.navigationBar)
                 
-                let navigationBar = animated ? navigation.navigationBar.animator() : navigation.navigationBar
                 
-                navigationBar.setFrameOrigin(NSMakePoint(0, height))
+                let transition: ContainedViewLayoutTransition
+                if animated {
+                    transition = .animated(duration: 0.2, curve: .easeInOut)
+                } else {
+                    transition = .immediate
+                }
+                
+                let size = navigation.navigationBar.frame.size
+                transition.updateFrame(view: navigation.navigationBar, frame: CGRect.init(origin: NSMakePoint(0, height), size: size))
 
                 if let simpleHeader = self?.simpleHeader, simpleHeader.needShown {
-                    let view = animated ? simpleHeader.view.animator() : simpleHeader.view
-                    view.setFrameOrigin(NSMakePoint(0, height + navigation.controller.bar.height))
+                    let view = simpleHeader.view
+                    let size = view.frame.size
+                    transition.updateFrame(view: view, frame: CGRect(origin: NSMakePoint(0, height + navigation.controller.bar.height), size: size))
                     contentInset += simpleHeader.height
                 }
 
-                let headerView = animated ? view.animator() : view
-                
-                headerView.setFrameOrigin(NSMakePoint(0, 0))
+                transition.updateFrame(view: view, frame: CGRect(origin: .zero, size: view.frame.size))
+
                 navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
                 
             }
@@ -206,25 +209,22 @@ public class CallNavigationHeader : NavigationHeader {
         
         if let navigation = navigation, let view = _view {
             _view = nil
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, -realHeight), animated: animated, duration: 0.2, timingFunction: .easeInEaseOut)
+
+            let transition: ContainedViewLayoutTransition
             if animated {
-                NSAnimationContext.runAnimationGroup({ ctx in
-                    view.animator().setFrameOrigin(NSMakePoint(0, -realHeight))
-                }, completionHandler: { [weak view] in
-                    view?.removeFromSuperview()
-                })
+                transition = .animated(duration: 0.2, curve: .easeInOut)
             } else {
-                view.removeFromSuperview()
+                transition = .immediate
             }
-            
             var contentInset: CGFloat = navigation.controller.bar.height
             if let header = simpleHeader, header.needShown {
-                let headerView = animated ? header.view.animator() : header.view
-                headerView.setFrameOrigin(NSMakePoint(0, navigation.controller.bar.height))
+                transition.updateFrame(view: header.view, frame: CGRect.init(origin: NSMakePoint(0, navigation.controller.bar.height), size: header.view.frame.size))
                 contentInset += header.height
             }
+                        
+            transition.updateFrame(view: navigation.navigationBar, frame: CGRect.init(origin: .zero, size: navigation.navigationBar.frame.size))
             
-            let navigationBar = animated ? navigation.navigationBar.animator() : navigation.navigationBar
-            navigationBar.setFrameOrigin(.zero)
             navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
         }
         
