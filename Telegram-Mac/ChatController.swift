@@ -1748,12 +1748,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             adMessages = .single([])
         }
         
-        let cachedData: Signal<CachedPeerData?, NoError> = self.peerView.get() |> map {
+        let themeEmoticon: Signal<String?, NoError> = self.peerView.get() |> map {
             ($0 as? PeerView)?.cachedData
-        }
-        
-        let chatTheme:Signal<TelegramPresentationTheme, NoError> = combineLatest(context.chatThemes, cachedData, appearanceSignal) |> map { chatThemes, cachedData, appearance in
-            
+        } |> map { cachedData in
             var themeEmoticon: String? = nil
             if let cachedData = cachedData as? CachedUserData {
                 themeEmoticon = cachedData.themeEmoticon
@@ -1762,6 +1759,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             } else if let cachedData = cachedData as? CachedChannelData {
                 themeEmoticon = cachedData.themeEmoticon
             }
+            return themeEmoticon
+        } |> distinctUntilChanged
+        
+        
+        let chatTheme:Signal<TelegramPresentationTheme, NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance in
+            
             var theme: TelegramPresentationTheme = appearance.presentation
             if let themeEmoticon = themeEmoticon {
                 let chatThemeData = chatThemes[themeEmoticon]
@@ -3024,8 +3027,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     strongSelf?.setLocation(.Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated))
                                 })
                             }
-                        }, completed: {
-                                
                         }))
                         //  }
                     }
