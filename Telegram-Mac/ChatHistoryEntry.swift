@@ -230,6 +230,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         switch self {
         case let .MessageEntry(_,_,_,_,_,_,data):
             return data.additionData
+        case let .groupedPhotos(entries,_):
+            return entries.first?.additionalData ?? MessageEntryAdditionalData()
         default:
             return MessageEntryAdditionalData()
         }

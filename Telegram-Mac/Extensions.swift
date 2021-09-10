@@ -2198,7 +2198,7 @@ public extension NSAttributedString {
     func applyRtf() -> (NSAttributedString, [NSTextAttachment]) {
         let string = self.mutableCopy() as! NSMutableAttributedString
         
-        let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
+        let modified: NSMutableAttributedString = string.trimNewLines.mutableCopy() as! NSMutableAttributedString
         
         
         var index: Int = 1
@@ -2214,7 +2214,7 @@ public extension NSAttributedString {
         
         var attachments:[NSTextAttachment] = []
         
-        string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
+        modified.enumerateAttributes(in: modified.range, options: [], using: { attr, range, _ in
             if let url = attr[.link] {
                 var string: String?
                 if let url = url as? NSURL, let link = url.absoluteString {
