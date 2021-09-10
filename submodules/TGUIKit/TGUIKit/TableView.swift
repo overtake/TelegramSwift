@@ -3045,7 +3045,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self.areSuspended = false
                     self.enqueueTransitions()
                 })
-                self.onCAScroll(edgeRect, bounds)
+                if animate {
+                    self.onCAScroll(edgeRect, bounds)
+                }
             }
         } else {
             if let item = item, focus.focus {

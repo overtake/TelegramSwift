@@ -376,12 +376,29 @@ final class MessageReadMenuItem {
     
     
     static func canViewReadStats(message: Message, chatInteraction: ChatInteraction, appConfig: AppConfiguration) -> Bool {
-        if message.flags.contains(.Incoming) {
-            return false
-        }
+        
         guard let peer = message.peers[message.id.peerId] else {
             return false
         }
+        
+        if message.flags.contains(.Incoming) {
+            switch peer {
+            case let peer as TelegramChannel:
+                if peer.adminRights == nil || !peer.groupAccess.isCreator || peer.isChannel {
+                    return false
+                }
+            case let peer as TelegramGroup:
+                switch peer.role {
+                case .member:
+                    return false
+                default:
+                    break
+                }
+            default:
+                return false
+            }
+        }
+
         for media in message.media {
             if let _ = media as? TelegramMediaAction {
                 return false

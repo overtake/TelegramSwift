@@ -540,6 +540,12 @@ class ChatControllerView : View, ChatInputDelegate {
             let size = NSMakeSize(navigationView.bounds.width, navigationView.bounds.height)
             transition.updateFrame(view: backgroundView, frame: NSMakeRect(0, -frame.minY, size.width, size.height))
         }
+        
+        tableView.enumerateVisibleViews(with: { view in
+            if let view = view as? ChatRowView {
+                view.updateBackground(animated: transition.isAnimated, item: view.item)
+            }
+        })
     }
 
     override var responder: NSResponder? {

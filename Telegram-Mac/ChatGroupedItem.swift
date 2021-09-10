@@ -666,16 +666,15 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     
     
     private func selectedIcon(_ item: ChatGroupedItem) -> CGImage {
-        return theme.icons.chatGroupToggleSelected
+        return item.presentation.icons.chatGroupToggleSelected
     }
     
     private func unselectedIcon(_ item: ChatGroupedItem) -> CGImage {
-        //theme.icons.chatGroupToggleUnselected, selectedImage: theme.icons.chatGroupToggleSelected
         switch item.layout.type {
         case .files:
-            return item.isBubbled ? (item.isIncoming ? theme.icons.group_selection_foreground_bubble_incoming : theme.icons.group_selection_foreground_bubble_outgoing) : theme.icons.group_selection_foreground
+            return item.isBubbled ? (item.isIncoming ? item.presentation.icons.group_selection_foreground_bubble_incoming : item.presentation.icons.group_selection_foreground_bubble_outgoing) : item.presentation.icons.group_selection_foreground
         case .photoOrVideo:
-            return theme.icons.chatGroupToggleUnselected
+            return item.presentation.icons.chatGroupToggleUnselected
         }
     }
     
@@ -1027,13 +1026,13 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         
         if let _ = contextMenu {
-            return theme.colors.selectMessage
+            return item.presentation.colors.selectMessage
         }
 
         
         for message in item.layout.messages {
             if item.chatInteraction.presentation.isSelectedMessageId(message.id) {
-                return theme.colors.selectMessage
+                return item.presentation.colors.selectMessage
             }
         }
         
@@ -1076,7 +1075,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 
                 frame.origin.y = bubbleFrame.height - frame.maxY + 6
                 
-                return (item.isIncoming ? theme.colors.bubbleBackground_incoming.darker().withAlphaComponent(0.5) : theme.colors.blendedOutgoingColors.darker().withAlphaComponent(0.5)
+                return (item.isIncoming ? item.presentation.colors.bubbleBackground_incoming.darker().withAlphaComponent(0.5) : item.presentation.colors.blendedOutgoingColors.darker().withAlphaComponent(0.5)
                     , frame: frame, flags: [], superview: self.bubbleView)
             } else {
                 
@@ -1103,7 +1102,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 
                 frame.origin.y -= 4
                 
-                return (color: theme.colors.accentIcon.withAlphaComponent(0.15), frame: frame, flags: [], superview: self.rowView)
+                return (color: item.presentation.colors.accentIcon.withAlphaComponent(0.15), frame: frame, flags: [], superview: self.rowView)
             }
         }
     }

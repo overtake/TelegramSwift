@@ -2534,7 +2534,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     var items:[ContextMenuItem] = []
     
     
-    if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)), item.isRead {
+    if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)) {
         let item = ContextMenuItem("-")
         let stats = MessageReadMenuItem(context: context, message: message)
         item.contextObject = stats
@@ -2706,9 +2706,122 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
    
     
     if canForwardMessage(message, chatInteraction: chatInteraction) {
-        items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [unowned chatInteraction] in
+        let forwardItem = ContextMenuItem(L10n.messageContextForward, handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
-        }))
+        })
+        let forwardMenu = ContextMenu()
+        
+        let dialogs: Signal<[Peer], NoError> = context.account.postbox.tailChatListView(groupId: .root, count: 6, summaryComponents: .init())
+            |> take(1)
+            |> map { view in
+                return view.0.entries.compactMap { entry in
+                    switch entry {
+                    case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                        return renderedPeer.peer
+                    default:
+                        return nil
+                    }
+                }
+            }
+            |> deliverOnMainQueue
+        
+        
+        let recent: Signal<[Peer], NoError> = context.recentlyUserPeerIds |> mapToSignal { ids in
+            return context.account.postbox.transaction { transaction in
+                let peers = ids.compactMap { transaction.getPeer($0) }
+                return Array(peers.map { $0 }.prefix(6))
+            }
+        }
+        |> take(1)
+        |> deliverOnMainQueue
+        let favorite: Signal<[Peer], NoError> = context.engine.peers.recentPeers() |> map { recent in
+            switch recent {
+            case .disabled:
+                return []
+            case let .peers(peers):
+                return Array(peers.map { $0 }.prefix(6))
+            }
+        }
+        |> take(1)
+        |> deliverOnMainQueue
+        
+        let accountPeer = context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue
+        
+        _ = combineLatest(queue: .mainQueue(), dialogs, recent, favorite, accountPeer).start(next: { [weak forwardMenu] dialogs, recent, favorite, accountPeer in
+            guard let menu = forwardMenu else {
+                return
+            }
+            
+            let forwardObject = ForwardMessagesObject(context, messageIds: [message.id])
+            
+            var dialogs = Array(dialogs.reversed())
+            dialogs.removeAll(where: {
+                (recent + favorite).map { $0.id }.contains($0.id) || $0.id == context.peerId
+            })
+            var favorite = favorite
+            favorite.removeAll(where: {
+                recent.map { $0.id }.contains($0.id) || $0.id == context.peerId
+            })
+            var recent = recent
+            recent.removeAll(where: {
+                $0.id == context.peerId
+            })
+            var items:[ContextMenuItem] = []
+            
+            func makeItem(_ peer: Peer) -> ContextMenuItem {
+                let title = peer.id == context.peerId ? L10n.peerSavedMessages : peer.displayTitle.prefix(30)
+                let item = ContextMenuItem(title, handler: {
+                    _ = forwardObject.perform(to: [peer.id]).start()
+                })
+                let signal:Signal<(CGImage?, Bool), NoError>
+                if peer.id == context.peerId {
+                    let icon = theme.icons.searchSaved
+                    signal = generateEmptyPhoto(NSMakeSize(15, 15), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
+                } else {
+                    signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(7), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                }
+
+                _ = signal.start(next: { [weak item] image, _ in
+                    DispatchQueue.main.async {
+                        item?.image = image?._NSImage
+                    }
+                })
+                return item
+            }
+            
+            
+            items.append(makeItem(accountPeer))
+            if !recent.isEmpty || !dialogs.isEmpty || !favorite.isEmpty {
+                items.append(ContextSeparatorItem())
+            }
+            for peer in recent {
+                items.append(makeItem(peer))
+            }
+            if !recent.isEmpty {
+                items.append(ContextSeparatorItem())
+            }
+            for peer in favorite {
+                items.append(makeItem(peer))
+            }
+            if (!favorite.isEmpty || !recent.isEmpty) && !dialogs.isEmpty {
+                items.append(ContextSeparatorItem())
+            }
+            for peer in dialogs {
+                items.append(makeItem(peer))
+            }
+            if !items.isEmpty {
+                items.append(ContextSeparatorItem())
+                let more = ContextMenuItem("Show More", handler: { [unowned chatInteraction] in
+                    chatInteraction.forwardMessages([message.id])
+                })
+                items.append(more)
+            }
+            
+            menu.items = items
+        })
+        
+        forwardItem.submenu = forwardMenu
+        items.append(forwardItem)
     } else if message.id.peerId.namespace == Namespaces.Peer.SecretChat, !message.containsSecretMedia {
         items.append(ContextMenuItem(L10n.messageContextShare, handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
