@@ -239,7 +239,8 @@ class ChatControllerView : View, ChatInputDelegate {
     func updateBackground(_ mode: TableBackgroundMode, navigationView: NSView?) {
         if mode != theme.controllerBackgroundMode {
             if backgroundView == nil, let navigationView = navigationView {
-                backgroundView = BackgroundView(frame: navigationView.bounds)
+                let point = NSMakePoint(0, -frame.minY)
+                backgroundView = BackgroundView(frame: CGRect.init(origin: point, size: navigationView.bounds.size))
                 backgroundView?.useSharedAnimationPhase = false
                 addSubview(backgroundView!, positioned: .below, relativeTo: self.subviews.first)
             }
@@ -3018,7 +3019,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if let strongSelf = strongSelf, let message = message {
                                 let message = message
                                 let toIndex = MessageIndex(message)
-                                strongSelf.setLocation(.Scroll(index: MessageHistoryAnchorIndex.message(toIndex), anchorIndex: MessageHistoryAnchorIndex.message(toIndex), sourceIndex: MessageHistoryAnchorIndex.message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: strongSelf.requestCount, animated: state.animated))
+                                let requestCount = strongSelf.requestCount
+                                delay(0.15, closure: { [weak strongSelf] in
+                                    strongSelf?.setLocation(.Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated))
+                                })
                             }
                         }, completed: {
                                 

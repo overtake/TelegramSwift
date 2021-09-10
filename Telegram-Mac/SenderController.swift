@@ -190,7 +190,7 @@ class Sender: NSObject {
             input = ChatTextInputState(inputText: "")
         }
         
-        if let media = mediaPreview {
+        if let media = mediaPreview, !disablePreview {
             mediaReference = AnyMediaReference.standalone(media: media)
         }
         
