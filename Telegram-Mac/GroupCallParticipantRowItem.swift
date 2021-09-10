@@ -709,7 +709,9 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                     if let event = NSApp.currentEvent, let button = self?.button {
                         let menu = NSMenu()
                         menu.appearance = darkPalette.appearance
-                        menu.items = items
+                        for item in items {
+                            menu.addItem(item)
+                        }
                         NSMenu.popUpContextMenu(menu, with: event, for: button)
                     }
                 })

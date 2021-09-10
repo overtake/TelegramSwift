@@ -200,8 +200,9 @@ final class AccentColorRowView : TableRowView {
             if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
                 let items = item.menuItems(accent)
                 let menu = ContextMenu()
-                menu.items = items
-                
+                for item in items {
+                    menu.addItem(item)
+                }
                 return menu
             }
         }
