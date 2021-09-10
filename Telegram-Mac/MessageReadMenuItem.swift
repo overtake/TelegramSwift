@@ -159,7 +159,9 @@ private final class MessageViewsMenuItemView : View {
                     
                     items.append(item)
                 }
-                menu.items = items
+                for item in items {
+                    menu.addItem(item)
+                }
                 item.submenu = menu
             default:
                 break

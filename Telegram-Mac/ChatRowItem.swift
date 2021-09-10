@@ -2709,7 +2709,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         let forwardItem = ContextMenuItem(L10n.messageContextForward, handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
         })
-        let forwardMenu = ContextMenu()
+        let forwardMenu = NSMenu()
         
         let dialogs: Signal<[Peer], NoError> = context.account.postbox.tailChatListView(groupId: .root, count: 25, summaryComponents: .init())
             |> take(1)
@@ -2746,7 +2746,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         |> deliverOnMainQueue
         
         let accountPeer = context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue
-        
+                
         _ = combineLatest(queue: .mainQueue(), dialogs, recent, favorite, accountPeer).start(next: { dialogs, recent, favorite, accountPeer in
             
             let forwardObject = ForwardMessagesObject(context, messageIds: [message.id])
@@ -2815,10 +2815,10 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 })
                 items.append(more)
             }
-            
-            forwardMenu.items = items
+            for item in items {
+                forwardMenu.addItem(item)
+            }
         })
-        
         forwardItem.submenu = forwardMenu
         items.append(forwardItem)
     } else if message.id.peerId.namespace == Namespaces.Peer.SecretChat, !message.containsSecretMedia {

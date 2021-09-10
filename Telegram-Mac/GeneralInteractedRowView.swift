@@ -333,8 +333,11 @@ class GeneralInteractedRowView: GeneralRowView {
                         if let customTheme = item.customTheme {
                             menu.appearance = customTheme.appearance
                         }
-                        menu.items = items.map{ pItem -> ContextMenuItem in
+                        let items = items.map{ pItem -> ContextMenuItem in
                             return ContextMenuItem(pItem.title, handler: pItem.handler, dynamicTitle: nil, state: value == pItem.title ? .on : nil)
+                        }
+                        for item in items {
+                            menu.addItem(item)
                         }
                         NSMenu.popUpContextMenu(menu, with: event, for: textView)
                     } else {
