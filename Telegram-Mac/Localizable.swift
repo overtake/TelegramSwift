@@ -1883,6 +1883,8 @@ internal final class L10n {
   internal static var chatContextClearScheduledConfirmInfo: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Info") }
   /// Clear All
   internal static var chatContextClearScheduledConfirmOK: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.OK") }
+  /// more...
+  internal static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
   /// Reschedule
   internal static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
