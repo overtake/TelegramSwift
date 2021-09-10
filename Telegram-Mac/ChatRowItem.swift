@@ -2747,10 +2747,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         
         let accountPeer = context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue
         
-        _ = combineLatest(queue: .mainQueue(), dialogs, recent, favorite, accountPeer).start(next: { [weak forwardMenu] dialogs, recent, favorite, accountPeer in
-            guard let menu = forwardMenu else {
-                return
-            }
+        _ = combineLatest(queue: .mainQueue(), dialogs, recent, favorite, accountPeer).start(next: { dialogs, recent, favorite, accountPeer in
             
             let forwardObject = ForwardMessagesObject(context, messageIds: [message.id])
             
@@ -2813,13 +2810,13 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             }
             if !items.isEmpty {
                 items.append(ContextSeparatorItem())
-                let more = ContextMenuItem("Show More", handler: { [unowned chatInteraction] in
+                let more = ContextMenuItem(L10n.chatContextForwardMore, handler: { [unowned chatInteraction] in
                     chatInteraction.forwardMessages([message.id])
                 })
                 items.append(more)
             }
             
-            menu.items = items
+            forwardMenu.items = items
         })
         
         forwardItem.submenu = forwardMenu
