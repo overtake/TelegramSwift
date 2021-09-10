@@ -2534,7 +2534,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     var items:[ContextMenuItem] = []
     
     
-    if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)) {
+    if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)), message.flags.contains(.Incoming) || item.isRead {
         let item = ContextMenuItem("-")
         let stats = MessageReadMenuItem(context: context, message: message)
         item.contextObject = stats
@@ -2711,7 +2711,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         })
         let forwardMenu = ContextMenu()
         
-        let dialogs: Signal<[Peer], NoError> = context.account.postbox.tailChatListView(groupId: .root, count: 6, summaryComponents: .init())
+        let dialogs: Signal<[Peer], NoError> = context.account.postbox.tailChatListView(groupId: .root, count: 25, summaryComponents: .init())
             |> take(1)
             |> map { view in
                 return view.0.entries.compactMap { entry in
@@ -2729,7 +2729,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         let recent: Signal<[Peer], NoError> = context.recentlyUserPeerIds |> mapToSignal { ids in
             return context.account.postbox.transaction { transaction in
                 let peers = ids.compactMap { transaction.getPeer($0) }
-                return Array(peers.map { $0 }.prefix(6))
+                return Array(peers.map { $0 })
             }
         }
         |> take(1)
@@ -2739,7 +2739,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             case .disabled:
                 return []
             case let .peers(peers):
-                return Array(peers.map { $0 }.prefix(6))
+                return Array(peers.map { $0 })
             }
         }
         |> take(1)
@@ -2754,22 +2754,24 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             
             let forwardObject = ForwardMessagesObject(context, messageIds: [message.id])
             
-            var dialogs = Array(dialogs.reversed())
-            dialogs.removeAll(where: {
-                (recent + favorite).map { $0.id }.contains($0.id) || $0.id == context.peerId
-            })
-            var favorite = favorite
-            favorite.removeAll(where: {
-                recent.map { $0.id }.contains($0.id) || $0.id == context.peerId
-            })
-            var recent = recent
-            recent.removeAll(where: {
-                $0.id == context.peerId
-            })
+            let recent = recent.filter {
+                $0.id != context.peerId && $0.canSendMessage()
+            }.prefix(5)
+            
+            let favorite = favorite.filter {
+                !recent.map { $0.id }.contains($0.id) && $0.id != context.peerId && $0.canSendMessage()
+            }.prefix(5)
+            
+            let dialogs = dialogs.reversed().filter {
+                !(recent + favorite).map { $0.id }.contains($0.id)
+                    && $0.id != context.peerId
+                    && $0.canSendMessage()
+            }.prefix(5)
+            
             var items:[ContextMenuItem] = []
             
             func makeItem(_ peer: Peer) -> ContextMenuItem {
-                let title = peer.id == context.peerId ? L10n.peerSavedMessages : peer.displayTitle.prefix(30)
+                let title = peer.id == context.peerId ? L10n.peerSavedMessages : peer.displayTitle.prefixWithDots(25)
                 let item = ContextMenuItem(title, handler: {
                     _ = forwardObject.perform(to: [peer.id]).start()
                 })

@@ -260,6 +260,9 @@ final class GroupCallTitleView : Control {
         let pinned = state.pinnedData.focused?.id ?? state.pinnedData.permanent
         
         let speaking = state.memberDatas.filter { member in
+            if state.videoActive(.list).isEmpty {
+                return false
+            }
             if member.isSpeaking && member.peer.id != peer.id {
                 if pinned == nil {
                     return member.videoEndpoint == nil && member.presentationEndpoint == nil

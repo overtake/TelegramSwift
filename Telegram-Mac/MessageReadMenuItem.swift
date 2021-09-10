@@ -146,7 +146,7 @@ private final class MessageViewsMenuItemView : View {
                 let menu = ContextMenu()
                 var items:[ContextMenuItem] = []
                 for peer in peers {
-                    let item = ContextMenuItem(peer.displayTitle.prefix(30), handler: {
+                    let item = ContextMenuItem(peer.displayTitle.prefixWithDots(25), handler: {
                         context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
                     })
                     let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
@@ -192,7 +192,15 @@ private final class MessageViewsMenuItemView : View {
         selectedView.isHidden = !isSelected
         selectedView.backgroundColor = theme.colors.accent //NSColor.selectedMenuItemColor
        
-        let textColor = isSelected ? theme.colors.underSelectedColor : theme.colors.text
+        let isDark:Bool
+
+        if #available(macOS 10.14, *) {
+            isDark = appearance?.name == .darkAqua || appearance?.name == .vibrantDark
+        } else {
+            isDark = appearance?.name == .vibrantDark
+        }
+        
+        let textColor: NSColor = isSelected ? .white : (isDark ? .white : .black)
         let textLayot: TextViewLayout?
         let contentView: AvatarContentView?
         let loadingView: View?

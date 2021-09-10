@@ -580,19 +580,19 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
                 let oldTo = pinnedMessage.messageId > self.pinnedMessage!.messageId ? NSMakePoint(oldContainer.frame.minX, -oldContainer.frame.height) : NSMakePoint(oldContainer.frame.minX, frame.height)
                 
                 
-                oldContainer.layer?.animatePosition(from: oldFrom, to: oldTo, duration: 0.3, timingFunction: .spring, removeOnCompletion: false, completion: { [weak oldContainer] _ in
+                oldContainer.layer?.animatePosition(from: oldFrom, to: oldTo, duration: 0.2, timingFunction: .easeInEaseOut, removeOnCompletion: false, completion: { [weak oldContainer] _ in
                     oldContainer?.removeFromSuperview()
                 })
-                oldContainer.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, timingFunction: .spring, removeOnCompletion: false)
+                oldContainer.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, timingFunction: .easeInEaseOut, removeOnCompletion: false)
                 
                 
                 let newTo = newContainer.frame.origin
                 let newFrom = pinnedMessage.messageId < self.pinnedMessage!.messageId ? NSMakePoint(newContainer.frame.minX, -newContainer.frame.height) : NSMakePoint(newContainer.frame.minX, frame.height)
                 
                 
-                newContainer.layer?.animatePosition(from: newFrom, to: newTo, duration: 0.3, timingFunction: .spring)
-                newContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.3
-                    , timingFunction: .spring)
+                newContainer.layer?.animatePosition(from: newFrom, to: newTo, duration: 0.2, timingFunction: .easeInEaseOut)
+                newContainer.layer?.animateAlpha(from: 0, to: 1, duration: 0.2
+                    , timingFunction: .easeInEaseOut)
             } else {
                 oldContainer.removeFromSuperview()
             }
@@ -1744,8 +1744,8 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.userInteractionEnabled = !activeCall
         joinButton.isEventLess = activeCall
         
-        let duration: Double = 0.4
-        let timingFunction: CAMediaTimingFunctionName = .spring
+        let duration: Double = 0.2
+        let timingFunction: CAMediaTimingFunctionName = .easeInEaseOut
 
 
         var topPeers: [Avatar] = []
