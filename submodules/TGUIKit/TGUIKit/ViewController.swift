@@ -116,8 +116,7 @@ open class BackgroundView: View {
                     }
                     while self.tileLayers.count < rects.count {
                         let layer = CALayer()
-                        layer.disableActions()
-                        layer.contentsGravity = .resize
+//                        layer.disableActions()
                         self.tileLayers.append(layer)
                     }
                     
@@ -126,6 +125,7 @@ open class BackgroundView: View {
                         layer.backgroundColor = main.backgroundColor
                         layer.contents = main.contents
                         layer.opacity = main.opacity
+//                        layer.contentsGravity = .resize
 
                         transition.updateFrame(layer: layer, frame: rects[i])
                         superlayer.addSublayer(layer)
@@ -163,7 +163,7 @@ open class BackgroundView: View {
     public required init(frame frameRect: NSRect) {
         tileControl = TileControl(main: imageView)
         super.init(frame: frameRect)
-        imageView.disableActions()
+//        imageView.disableActions()
         imageView.frame = frameRect.size.bounds
 //        container.addSubview(imageView)
         autoresizesSubviews = false
@@ -219,32 +219,22 @@ open class BackgroundView: View {
                     imageView.backgroundColor = .clear
                     imageView.contents = image
                     let colors = colors?.map { $0.withAlphaComponent(1) }
-                    
+
 
                     var shouldTile = false
                     if let colors = colors, !colors.isEmpty {
                         
-                                                
-                        let brightness = colors.reduce(colors[0], { current, value in
-                            return current.blended(withFraction: 0.5, of: value)!
-                        }).hsb.2
-                        let patternIsBlack = brightness <= 0.25
-
-                        
                         shouldTile = true
-                        imageView.opacity = Float((abs(intensity ?? 50))) / 100.0 * 0.5
-//                        if patternIsBlack {
-//                            imageView.compositingFilter = nil
-//                        } else {
-                            imageView.compositingFilter = "softLightBlendMode"
-//                        }
-//                        let invertPattern = (intensity ?? 0) < 0
-//                        if invertPattern {
-//                            self.imageView.backgroundColor = .black
-//                        } else {
-//                            self.imageView.backgroundColor = nil
-//                        }
-
+                        let intense = Float((abs(intensity ?? 50))) / 100.0
+                        
+                        let invertPattern = presentation.colors.isDark
+                        if invertPattern {
+                            self.imageView.compositingFilter = nil
+                            imageView.opacity = 1.0
+                        } else {
+                            self.imageView.compositingFilter = "softLightBlendMode"
+                            imageView.opacity = intense
+                        }
 
                         if colors.count > 2 {
                             if let bg = self.backgroundView as? AnimatedGradientBackgroundView {

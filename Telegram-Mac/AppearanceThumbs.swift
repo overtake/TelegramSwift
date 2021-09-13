@@ -13,7 +13,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 
-func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
+func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
     switch backgroundMode {
     case let .background(image, intensity, colors, rotation):
         let imageSize = image.size.aspectFilled(rect.size)
@@ -21,6 +21,15 @@ func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, 
         ctx.translateBy(x: 1, y: -1)
 
         if let colors = colors, !colors.isEmpty {
+            
+            if palette.isDark {
+                ctx.setBlendMode(.normal)
+                ctx.clear(rect.focus(imageSize))
+                ctx.setFillColor(palette.background.cgColor)
+                ctx.fill(rect.focus(imageSize))
+                ctx.clip(to: rect.focus(imageSize), mask: image._cgImage!)
+            }
+            
             if colors.count > 2 {
                 let preview = AnimatedGradientBackgroundView.generatePreview(size: NSMakeSize(200, 100).fitted(NSMakeSize(32, 32)), colors: colors)
                 
@@ -54,14 +63,11 @@ func drawBg(_ backgroundMode: TableBackgroundMode, bubbled: Bool, rect: NSRect, 
         }
         
         if let colors = colors, !colors.isEmpty {
-            if let image = image._cgImage {
+            if let image = image._cgImage, !palette.isDark {
                 ctx.setBlendMode(.softLight)
-                ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0 * 0.5)
+                ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0)
                 ctx.draw(image, in: rect.focus(imageSize))
             }
-        } else {
-            var bp = 0
-            bp += 1
         }
         ctx.restoreGState()
     case let .color(color):
@@ -331,7 +337,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                 
                 
             }
-            drawBg(backgroundMode, bubbled: bubbled, rect: rect, in: ctx)
+            drawBg(backgroundMode, palette: palette, bubbled: bubbled, rect: rect, in: ctx)
             if bubbled {
                 applyBubbles()
             } else {
@@ -499,7 +505,7 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
                     ctx.draw(text1, in: NSMakeRect(42, 69, text1.backingSize.width, text1.backingSize.height))
                 }
             }
-            drawBg(backgroundMode, bubbled: bubbled, rect: rect, in: ctx)
+            drawBg(backgroundMode, palette: palette, bubbled: bubbled, rect: rect, in: ctx)
             if bubbled {
                 applyBubbles()
             } else {

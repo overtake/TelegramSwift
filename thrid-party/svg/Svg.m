@@ -114,7 +114,7 @@ NSImage * _Nullable drawSvgImageNano(NSData * _Nonnull data, CGSize size) {
     
     startTime = [NSDate date];
     
-    NSColor *backgroundColor = [NSColor whiteColor];
+    NSColor *backgroundColor = [NSColor clearColor];
     NSColor *foregroundColor = [NSColor blackColor];
     
     
@@ -134,8 +134,10 @@ NSImage * _Nullable drawSvgImageNano(NSData * _Nonnull data, CGSize size) {
     CGContextTranslateCTM(context, 0, size.height );
     CGContextScaleCTM(context, 1.0, -1.0);
     
-    CGContextSetFillColorWithColor(context, backgroundColor.CGColor);
-    CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
+    CGContextClearRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
+    
+//    CGContextSetFillColorWithColor(context, backgroundColor.CGColor);
+//    CGContextFillRect(context, CGRectMake(0.0f, 0.0f, size.width, size.height));
     
     CGSize svgSize = CGSizeMake(image->width, image->height);
     CGSize drawingSize = aspectFillSize(svgSize, size);

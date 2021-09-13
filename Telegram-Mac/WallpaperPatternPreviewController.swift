@@ -102,6 +102,28 @@ final class WallpaperPatternPreviewView: View {
     }
     
     func update(with patterns: [Wallpaper?], selected: Wallpaper?, account: Account, select: @escaping(Wallpaper?) -> Void) {
+        
+        
+        var files:Set<Int64> = Set()
+        
+        let patterns = patterns.filter { value in
+            switch value {
+            case let .file(_, file, _, _):
+                if let id = file.id?.id {
+                    if files.contains(id) {
+                        return false
+                    } else {
+                        files.insert(id)
+                        return true
+                    }
+                } else {
+                    return false
+                }
+            default:
+                return true
+            }
+        }
+        
         documentView.removeAllSubviews()
         var x: CGFloat = 10
         for pattern in patterns {
@@ -115,7 +137,6 @@ final class WallpaperPatternPreviewView: View {
             x += patternView.frame.width + 10
         }
         documentView.setFrameSize(NSMakeSize(x, 100))
-        
     }
     
     override func layout() {

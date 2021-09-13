@@ -263,7 +263,7 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
             ctx.translateBy(x: size.width / 2.0, y: size.height / 2.0)
             ctx.scaleBy(x: 1.0, y: -1.0)
             ctx.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-            drawBg(backgroundMode, bubbled: true, rect: rect, in: ctx)
+            drawBg(backgroundMode, palette: palette, bubbled: true, rect: rect, in: ctx)
             ctx.restoreGState()
         default:
             break
@@ -1496,6 +1496,23 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         
     case let .file(_, file, settings, _):
         if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
+            
+            let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
+            
+            var image = image
+            if presentation.colors.isDark, settings.colors.count > 1 {
+                image = generateImage(image.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(palette.background.cgColor)
+                    ctx.fill(size.bounds)
+                    ctx.clip(to: size.bounds, mask: image._cgImage!)
+                    
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(palette.background.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })!._NSImage
+            }
+
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
             backgroundMode = TelegramPresentationTheme.defaultBackground
