@@ -29,7 +29,7 @@ private final class MessageViewsMenuItemView : View {
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: false)
+                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: size, scale: System.backingScale, font: .avatar(size.height / 3 + 3), genCap: true, synchronousLoad: false)
                 })
                 
                 
@@ -149,7 +149,7 @@ private final class MessageViewsMenuItemView : View {
                     let item = ContextMenuItem(peer.displayTitle.prefixWithDots(25), handler: {
                         context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
                     })
-                    let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                    let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
 
                     disposableSet.set(avatar.start(next: { [weak item] image, _ in
                         DispatchQueue.main.async {
@@ -197,9 +197,9 @@ private final class MessageViewsMenuItemView : View {
         let isDark:Bool
 
         if #available(macOS 10.14, *) {
-            isDark = appearance?.name == .darkAqua || appearance?.name == .vibrantDark
+            isDark = effectiveAppearance.name == .darkAqua || effectiveAppearance.name == .vibrantDark
         } else {
-            isDark = appearance?.name == .vibrantDark
+            isDark = effectiveAppearance.name == .vibrantDark
         }
         
         let textColor: NSColor = isSelected ? .white : (isDark ? .white : .black)
@@ -278,8 +278,10 @@ private final class MessageViewsMenuItemView : View {
         needsLayout = true
     }
     
+    private var frameSetted: Bool = false
     override func layout() {
-        if let view = superview, self.frame != view.bounds {
+        if let view = superview, self.frame != view.bounds, !frameSetted {
+            frameSetted = true
             self.frame = view.bounds
         }
         
@@ -392,21 +394,22 @@ final class MessageReadMenuItem {
         }
         
         if message.flags.contains(.Incoming) {
-            switch peer {
-            case let peer as TelegramChannel:
-                if peer.adminRights == nil || !peer.groupAccess.isCreator || peer.isChannel {
-                    return false
-                }
-            case let peer as TelegramGroup:
-                switch peer.role {
-                case .member:
-                    return false
-                default:
-                    break
-                }
-            default:
-                return false
-            }
+            return false
+//            switch peer {
+//            case let peer as TelegramChannel:
+//                if peer.adminRights == nil || !peer.groupAccess.isCreator || peer.isChannel {
+//                    return false
+//                }
+//            case let peer as TelegramGroup:
+//                switch peer.role {
+//                case .member:
+//                    return false
+//                default:
+//                    break
+//                }
+//            default:
+//                return false
+//            }
         }
 
         for media in message.media {

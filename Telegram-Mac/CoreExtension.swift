@@ -2525,7 +2525,7 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         let wallpapers = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".jpg"
+        let out = wallpapers + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".png"
         
         if !FileManager.default.fileExists(atPath: out) {
             try? FileManager.default.removeItem(atPath: out)
@@ -2559,7 +2559,7 @@ extension WallpaperSettings {
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, settings: WallpaperSettings) -> String {
-    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".jpg"
+    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".png"
 }
 
 

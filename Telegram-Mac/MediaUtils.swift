@@ -3105,7 +3105,7 @@ private func patternWallpaperDatas(account: Account, representations: [ImageRepr
 
 
 
-private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, prominent: Bool, scale: CGFloat, drawPatternOnly: Bool) -> Signal<ImageDataTransformation, NoError> {
+private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, prominent: Bool, scale: CGFloat, drawPatternOnly: Bool, palette: ColorPalette) -> Signal<ImageDataTransformation, NoError> {
 
     return signal |> map { data in
         
@@ -3195,6 +3195,21 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                             c.setFillColor(color.cgColor)
                             c.fill(arguments.drawingRect)
                         } else {
+                            
+                            if palette.isDark, let image = fullSizeImage {
+                                let size = image.size.aspectFilled(arguments.drawingRect.size)
+                                let rect = arguments.drawingRect.focus(size)
+
+                                c.clear(rect)
+                                c.setFillColor(palette.background.cgColor)
+                                c.fill(rect)
+                                c.clip(to: rect, mask: image)
+                                
+                                c.clear(rect)
+                                c.setFillColor(palette.background.withAlphaComponent(1).cgColor)
+                                c.fill(rect)
+                            }
+                            
                             if colors.count <= 2 {
                                 let gradientColors = colors.map { $0.cgColor } as CFArray
                                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -3226,10 +3241,10 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                         }
                     }
                     
-                    if let fullSizeImage = fullSizeImage {
+                    if let fullSizeImage = fullSizeImage, !palette.isDark {
                         if !drawPatternOnly {
                             c.setBlendMode(.softLight)
-                            c.setAlpha(intensity * 0.5)
+                            c.setAlpha(intensity)
                         }
                         c.draw(fullSizeImage, in: fittedRect)
                     }
@@ -3268,16 +3283,16 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
 }
 
 
-func patternWallpaperImage(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, scale: CGFloat = 2.0, autoFetchFullSize: Bool = false, drawPatternOnly: Bool) -> Signal<ImageDataTransformation, NoError> {
+func patternWallpaperImage(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, scale: CGFloat = 2.0, autoFetchFullSize: Bool = false, drawPatternOnly: Bool, palette: ColorPalette) -> Signal<ImageDataTransformation, NoError> {
     var prominent = false
     if case .thumbnail = mode {
         prominent = false
     }
-    return chatWallpaperInternal(patternWallpaperDatas(account: account, representations: representations, mode: mode, autoFetchFullSize: autoFetchFullSize), prominent: prominent, scale: scale, drawPatternOnly: drawPatternOnly)
+    return chatWallpaperInternal(patternWallpaperDatas(account: account, representations: representations, mode: mode, autoFetchFullSize: autoFetchFullSize), prominent: prominent, scale: scale, drawPatternOnly: drawPatternOnly, palette: palette)
 }
 
 
-func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, slug: String? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false, drawPatternOnly: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+func chatWallpaper(account: Account, representations: [TelegramMediaImageRepresentation], file: TelegramMediaFile? = nil, webpage: TelegramMediaWebpage? = nil, slug: String? = nil, mode: PatternWallpaperDrawMode, isPattern: Bool, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false, drawPatternOnly: Bool = false, palette: ColorPalette = theme.colors) -> Signal<ImageDataTransformation, NoError> {
     var prominent = false
     if case .thumbnail = mode {
         prominent = false
@@ -3295,7 +3310,7 @@ func chatWallpaper(account: Account, representations: [TelegramMediaImageReprese
     } else {
         signal = chatWallpaperDatas(account: account, representations: representations, file: file, webpage: webpage, autoFetchFullSize: autoFetchFullSize, isBlurred: isBlurred, synchronousLoad: synchronousLoad)
     }
-    return chatWallpaperInternal(signal, prominent: prominent, scale: scale, drawPatternOnly: drawPatternOnly)
+    return chatWallpaperInternal(signal, prominent: prominent, scale: scale, drawPatternOnly: drawPatternOnly, palette: palette)
 }
 
 

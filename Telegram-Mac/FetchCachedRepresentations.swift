@@ -132,7 +132,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
                 let size = NSMakeSize(400, 800)
                 
                 if let image = drawSvgImageNano(data, size)?._cgImage {
-                    if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                    if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) {
                         CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
                         
                         let colorQuality: Float = 0.6
@@ -149,7 +149,7 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
             } else if let image = NSImage(data: data)?._cgImage {
                 
               
-                if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                if let alphaDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) {
                     CGImageDestinationSetProperties(alphaDestination, [:] as CFDictionary)
                     
                     let colorQuality: Float = 0.6
@@ -165,31 +165,26 @@ private func fetchCachedPatternWallpaperMaskRepresentation(resource: MediaResour
             }
             
             if let path = svgPath {
-                if let settings = representation.settings {
-                    if let image = NSImage(contentsOfFile: path)?._cgImage {
+                if let image = NSImage(contentsOfFile: path)?._cgImage {
 
-                        let finalPath = NSTemporaryDirectory() + "\(arc4random64())"
-                        let url = URL(fileURLWithPath: finalPath)
+                    let finalPath = NSTemporaryDirectory() + "\(arc4random64())"
+                    let url = URL(fileURLWithPath: finalPath)
+                    
+                    if let dest = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) {
+                        CGImageDestinationSetProperties(dest, [:] as CFDictionary)
                         
-                        if let dest = CGImageDestinationCreateWithURL(url as CFURL, kUTTypePNG, 1, nil) {
-                            CGImageDestinationSetProperties(dest, [:] as CFDictionary)
-                            
-                            let colorQuality: Float = 0.6
-                            
-                            let options = NSMutableDictionary()
-                            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                            
-                            CGImageDestinationAddImage(dest, image, options as CFDictionary)
-                            if CGImageDestinationFinalize(dest) {
-                                try? FileManager.default.removeItem(atPath: path)
-                                subscriber.putNext(.temporaryPath(finalPath))
-                                subscriber.putCompletion()
-                            }
+                        let colorQuality: Float = 0.6
+                        
+                        let options = NSMutableDictionary()
+                        options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                        
+                        CGImageDestinationAddImage(dest, image, options as CFDictionary)
+                        if CGImageDestinationFinalize(dest) {
+                            try? FileManager.default.removeItem(atPath: path)
+                            subscriber.putNext(.temporaryPath(finalPath))
+                            subscriber.putCompletion()
                         }
                     }
-                } else {
-                    subscriber.putNext(.temporaryPath(path))
-                    subscriber.putCompletion()
                 }
             }
             

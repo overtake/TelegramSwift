@@ -1435,7 +1435,11 @@ class ChatRowItem: TableRowItem {
                 let icons = presentation.icons
                 let neighbors: MessageBubbleImageNeighbors = isFull && !message.isHasInlineKeyboard ? .none : .both
                 bubbleImage = isIncoming ? (neighbors == .none ? icons.chatBubble_none_incoming_withInset : icons.chatBubble_both_incoming_withInset) : (neighbors == .none ? icons.chatBubble_none_outgoing_withInset : icons.chatBubble_both_outgoing_withInset)
-                bubbleBorderImage = isIncoming ? (neighbors == .none ? icons.chatBubbleBorder_none_incoming_withInset : icons.chatBubbleBorder_both_incoming_withInset) : (neighbors == .none ? icons.chatBubbleBorder_none_outgoing_withInset : icons.chatBubbleBorder_both_outgoing_withInset)
+                if !isIncoming && theme.colors.bubbleBackground_outgoing.count > 1 {
+                    bubbleBorderImage = nil
+                } else {
+                    bubbleBorderImage = isIncoming ? (neighbors == .none ? icons.chatBubbleBorder_none_incoming_withInset : icons.chatBubbleBorder_both_incoming_withInset) : (neighbors == .none ? icons.chatBubbleBorder_none_outgoing_withInset : icons.chatBubbleBorder_both_outgoing_withInset)
+                }
             }
             
             self.itemType = itemType

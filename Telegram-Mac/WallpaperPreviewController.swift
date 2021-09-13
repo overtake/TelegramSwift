@@ -195,6 +195,9 @@ private final class WallpaperPreviewView: View {
     private var previewState: WallpaperPreviewState = .normal
     private var imageSize: NSSize = NSZeroSize
     private let context: AccountContext
+    
+    fileprivate var ready:(()->Void)? = nil
+    
     private(set) var wallpaper: Wallpaper {
         didSet {
             if oldValue != wallpaper {
@@ -657,11 +660,27 @@ private final class WallpaperPreviewView: View {
         }
     }
     
-    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, boundingSize: NSSize) {
+    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, palette: ColorPalette, boundingSize: NSSize) {
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
         
-        let signal = signal |> map {
-            return $0.execute(arguments, $0.data)?.generateImage()
+        
+        let intense = CGFloat(abs(wallpaper.settings.intensity ?? 0)) / 100.0
+        let signal: Signal<CGImage?, NoError> = signal |> map { result in
+            var image = result.execute(arguments, result.data)?.generateImage()
+            if palette.isDark, let img = image {
+                image = generateImage(img.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(palette.background.cgColor)
+                    ctx.fill(size.bounds)
+                    ctx.clip(to: size.bounds, mask: img)
+                    
+                    ctx.clear(size.bounds)
+                    
+                    ctx.setFillColor(palette.background.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })
+            }
+            return image
         } |> deliverOnMainQueue
         
         loadImageDisposable.set(signal.start(next: { [weak self] image in
@@ -670,6 +689,7 @@ private final class WallpaperPreviewView: View {
             }
             strongSelf.image = image
             strongSelf.updateBackground(strongSelf.wallpaper, image: image)
+            strongSelf.ready?()
         }))
     }
     
@@ -705,7 +725,7 @@ private final class WallpaperPreviewView: View {
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
             
-            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), boundingSize: boundingSize)
+            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize)
 
             
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
@@ -739,7 +759,7 @@ private final class WallpaperPreviewView: View {
             let boundingSize = dimensions.aspectFilled(frame.size)
 
             
-            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), boundingSize: boundingSize)
+            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize)
 
                         
             self.imageSize = dimensions
@@ -1219,8 +1239,9 @@ class WallpaperPreviewController: ModalViewController {
         default:
             break
         }
-        
-        readyOnce()
+        genericView.ready = { [weak self] in
+            self?.readyOnce()
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {

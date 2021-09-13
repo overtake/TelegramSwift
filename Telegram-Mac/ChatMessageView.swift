@@ -55,16 +55,17 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
 
             if let webpageLayout = item.webpageLayout {
                 webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentInnerInset, webpageLayout.size.width, webpageLayout.size.height)
-                
-                if let webpageContent = webpageContent, let actionButton = actionButton {
-                    actionButton.setFrameOrigin(0, webpageContent.frame.maxY + 6)
-                }
-            } else {
-                if let actionButton = actionButton {
-                    actionButton.setFrameOrigin(0, contentView.frame.height - actionButton.frame.height)
-                }
             }
-           
+            if let actionButton = actionButton {
+                var add = item.additionalLineForDateInBubbleState ?? 0
+                if !item.isBubbled {
+                    add = 0
+                } else if webpageContent != nil {
+                    add = 0
+                }
+                let contentRect = self.contentFrame(item)
+                actionButton.setFrameOrigin(contentRect.minX, contentRect.maxY - actionButton.frame.height + add)
+            }
         } 
     }
     
@@ -130,7 +131,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     actionButton?.layer?.borderWidth = 1
                     actionButton?.disableActions()
                     actionButton?.set(font: .normal(.text), for: .Normal)
-                    addSubview(actionButton!)
+                    self.rowView.addSubview(actionButton!)
                 }
                 actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
