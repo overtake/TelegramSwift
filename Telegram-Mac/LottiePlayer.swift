@@ -655,6 +655,7 @@ private final class PlayerContext {
 enum ASLiveTime : Int {
     case chat = 3_600
     case thumb = 259200
+    case effect = 241_920 // 7 days
 }
 
 enum ASCachePurpose {
@@ -691,7 +692,7 @@ struct LottieAnimationEntryKey : Hashable {
     }
 }
 
-enum LottieAnimationKey : Equatable {
+enum LottieAnimationKey : Hashable {
     case media(MediaId?)
     case bundle(String)
 }

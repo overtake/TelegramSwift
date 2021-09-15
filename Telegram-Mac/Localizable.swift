@@ -1883,7 +1883,7 @@ internal final class L10n {
   internal static var chatContextClearScheduledConfirmInfo: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Info") }
   /// Clear All
   internal static var chatContextClearScheduledConfirmOK: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.OK") }
-  /// more...
+  /// More...
   internal static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
   /// Reschedule
   internal static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
@@ -2235,11 +2235,11 @@ internal final class L10n {
   internal static var chatMessageJoinVoiceChatAsSpeaker: String  { return L10n.tr("Localizable", "Chat.Message.JoinVoiceChat.AsSpeaker") }
   /// MTProxy Configuration
   internal static var chatMessageMTProxyConfig: String  { return L10n.tr("Localizable", "Chat.Message.MTProxy.Config") }
-  /// No Listens
+  /// Nobody Listened
   internal static var chatMessageReadStatsEmptyListens: String  { return L10n.tr("Localizable", "Chat.Message.ReadStats.EmptyListens") }
-  /// No Views
+  /// Nobody Viewed
   internal static var chatMessageReadStatsEmptyViews: String  { return L10n.tr("Localizable", "Chat.Message.ReadStats.EmptyViews") }
-  /// No Watches
+  /// Nobody Viewed
   internal static var chatMessageReadStatsEmptyWatches: String  { return L10n.tr("Localizable", "Chat.Message.ReadStats.EmptyWatches") }
   /// %d
   internal static func chatMessageReadStatsListenedCountable(_ p1: Int) -> String {
@@ -2301,27 +2301,27 @@ internal final class L10n {
   internal static func chatMessageReadStatsWatchedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_countable", p1)
   }
-  /// %d Watched
+  /// %d Viewed
   internal static func chatMessageReadStatsWatchedFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_few", p1)
   }
-  /// %d Watched
+  /// %d Viewed
   internal static func chatMessageReadStatsWatchedMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_many", p1)
   }
-  /// %d Watched
+  /// %d Viewed
   internal static func chatMessageReadStatsWatchedOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_one", p1)
   }
-  /// %d Watched
+  /// %d Viewed
   internal static func chatMessageReadStatsWatchedOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_other", p1)
   }
-  /// %d Watched
+  /// %d Viewed
   internal static func chatMessageReadStatsWatchedTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_two", p1)
   }
-  /// %d Watched
+  /// %d Viewed
   internal static func chatMessageReadStatsWatchedZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Message.ReadStats.Watched_zero", p1)
   }
@@ -5987,6 +5987,10 @@ internal final class L10n {
   internal static func peerActivityChatChoosingSticker(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.ChoosingSticker", p1)
   }
+  /// %@ is enjoying %@ animations
+  internal static func peerActivityChatEnjoyingAnimations(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Peer.Activity.Chat.EnjoyingAnimations", p1, p2)
+  }
   /// %@ is playing a game
   internal static func peerActivityChatPlayingGame(_ p1: String) -> String {
     return L10n.tr("Localizable", "Peer.Activity.Chat.PlayingGame", p1)
@@ -6053,6 +6057,10 @@ internal final class L10n {
   }
   /// choosing sticker
   internal static var peerActivityUserChoosingSticker: String  { return L10n.tr("Localizable", "Peer.Activity.User.ChoosingSticker") }
+  /// enjoying %@ animations
+  internal static func peerActivityUserEnjoyingAnimations(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Peer.Activity.User.EnjoyingAnimations", p1)
+  }
   /// playing a game
   internal static var peerActivityUserPlayingGame: String  { return L10n.tr("Localizable", "Peer.Activity.User.PlayingGame") }
   /// recording voice
@@ -9965,7 +9973,7 @@ internal final class L10n {
   internal static var weekdayShortTuesday: String  { return L10n.tr("Localizable", "Weekday.ShortTuesday") }
   /// Wed
   internal static var weekdayShortWednesday: String  { return L10n.tr("Localizable", "Weekday.ShortWednesday") }
-  /// Use ⌘ + K to quick enter the [search](search) mode.
+  /// Use ⌘+K to quick enter the [search](search) mode.
   internal static var widgetRecentDesc: String  { return L10n.tr("Localizable", "Widget.Recent.Desc") }
   /// Both
   internal static var widgetRecentMixed: String  { return L10n.tr("Localizable", "Widget.Recent.Mixed") }

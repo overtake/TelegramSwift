@@ -3201,12 +3201,12 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                                 let rect = arguments.drawingRect.focus(size)
 
                                 c.clear(rect)
-                                c.setFillColor(palette.background.cgColor)
+                                c.setFillColor(NSColor.black.cgColor)
                                 c.fill(rect)
                                 c.clip(to: rect, mask: image)
                                 
                                 c.clear(rect)
-                                c.setFillColor(palette.background.withAlphaComponent(1).cgColor)
+                                c.setFillColor(NSColor.black.withAlphaComponent(0.3).cgColor)
                                 c.fill(rect)
                             }
                             

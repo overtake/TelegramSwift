@@ -18,6 +18,7 @@ class ChatMediaLayoutParameters : Equatable {
     var showMedia:(Message)->Void = {_ in }
     var showMessage:(Message)->Void = {_ in }
     
+    
     var chatLocationInput:()->ChatLocationInput = { fatalError() }
     var chatMode:ChatMode = .history
     
@@ -27,6 +28,8 @@ class ChatMediaLayoutParameters : Equatable {
     let presentation: ChatMediaPresentation
     let media: Media
     
+    
+    var runEmojiScreenEffect:(String)->Void = { _ in }
     
     private var _timeCodeInitializer: Double? = nil
 

@@ -25,7 +25,7 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
             if palette.isDark {
                 ctx.setBlendMode(.normal)
                 ctx.clear(rect.focus(imageSize))
-                ctx.setFillColor(palette.background.cgColor)
+                ctx.setFillColor(NSColor.black.cgColor)
                 ctx.fill(rect.focus(imageSize))
                 ctx.clip(to: rect.focus(imageSize), mask: image._cgImage!)
             }

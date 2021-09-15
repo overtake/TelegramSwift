@@ -163,6 +163,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
 
+    var runEmojiScreenEffect:(String, MessageId, Bool, Bool)->Void = { _, _, _, _ in }
+    
     
     var getCachedData:()->CachedPeerData? = { return nil }
     

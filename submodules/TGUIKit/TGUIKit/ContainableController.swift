@@ -132,7 +132,10 @@ public extension ContainedViewLayoutTransition {
     func updateFrame(layer: CALayer, frame: CGRect, completion: ((Bool) -> Void)? = nil) {
         switch self {
         case .immediate:
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
             layer.frame = frame
+            CATransaction.commit()
             if let completion = completion {
                 completion(true)
             }
