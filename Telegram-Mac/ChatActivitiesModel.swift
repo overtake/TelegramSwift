@@ -260,6 +260,14 @@ class ChatActivitiesModel: Node {
                         } else {
                             _ = text.append(string: L10n.peerActivityChatChoosingSticker(peer.compactDisplayTitle), color: theme.textColor, font: .normal(.text))
                         }
+                    case let .seeingEmojiInteraction(emoticon):
+                        animation = .choosingSticker
+                        if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {
+                            
+                            _ = text.append(string:tr(L10n.peerActivityUserEnjoyingAnimations(emoticon)), color: theme.textColor, font: .normal(.text))
+                        } else {
+                            _ = text.append(string: L10n.peerActivityChatEnjoyingAnimations(peer.compactDisplayTitle, emoticon), color: theme.textColor, font: .normal(.text))
+                        }
                     case .recordingInstantVideo:
                         animation = .recording
                         if activities.0.namespace == Namespaces.Peer.CloudUser || activities.0.namespace == Namespaces.Peer.SecretChat {

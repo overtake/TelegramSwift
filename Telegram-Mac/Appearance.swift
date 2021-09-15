@@ -1503,12 +1503,12 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
             if presentation.colors.isDark, settings.colors.count > 1 {
                 image = generateImage(image.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
-                    ctx.setFillColor(palette.background.cgColor)
+                    ctx.setFillColor(NSColor.black.cgColor)
                     ctx.fill(size.bounds)
                     ctx.clip(to: size.bounds, mask: image._cgImage!)
                     
                     ctx.clear(size.bounds)
-                    ctx.setFillColor(palette.background.withAlphaComponent(1 - intense).cgColor)
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
                     ctx.fill(size.bounds)
                 })!._NSImage
             }

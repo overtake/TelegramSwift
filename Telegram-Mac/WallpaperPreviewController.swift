@@ -670,13 +670,13 @@ private final class WallpaperPreviewView: View {
             if palette.isDark, let img = image {
                 image = generateImage(img.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
-                    ctx.setFillColor(palette.background.cgColor)
+                    ctx.setFillColor(NSColor.black.cgColor)
                     ctx.fill(size.bounds)
                     ctx.clip(to: size.bounds, mask: img)
                     
                     ctx.clear(size.bounds)
                     
-                    ctx.setFillColor(palette.background.withAlphaComponent(1 - intense).cgColor)
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
                     ctx.fill(size.bounds)
                 })
             }

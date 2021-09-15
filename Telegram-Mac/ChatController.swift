@@ -203,6 +203,8 @@ class ChatControllerView : View, ChatInputDelegate {
     
     let tableView:TableView
     
+    let emojiEffects: EmojiScreenEffect
+    
     var scroll: ScrollPosition {
         return self.tableView.scrollPosition().current
     }
@@ -257,9 +259,28 @@ class ChatControllerView : View, ChatInputDelegate {
         return backgroundView != nil
     }
     
+    func findItem(by messageId: MessageId) -> TableRowItem? {
+        var found: TableRowItem? = nil
+        self.tableView.enumerateVisibleItems(with: { item in
+            if let item = item as? ChatRowItem, item.message?.id == messageId {
+                found = item
+                return false
+            } else {
+                return true
+            }
+        })
+        return found
+    }
+    
     required init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         header = ChatHeaderController(chatInteraction)
+        
+        var takeTableItem:((MessageId)->TableRowItem?)? = nil
+        
+        emojiEffects = EmojiScreenEffect(context: chatInteraction.context, takeTableItem: { msgId in
+            return takeTableItem?(msgId)
+        })
         scroller = ChatNavigateScroller(chatInteraction.context, contextHolder: chatInteraction.contextHolder(), chatLocation: chatInteraction.chatLocation, mode: chatInteraction.mode)
         inputContextHelper = InputContextHelper(chatInteraction: chatInteraction)
         tableView = TableView(frame:NSMakeRect(0,0,frameRect.width,frameRect.height - 50), isFlipped:false)
@@ -352,6 +373,20 @@ class ChatControllerView : View, ChatInputDelegate {
                 view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, view.frame.minY - (from.minY - to.minY)), to: view.frame.origin, duration: 0.4, timingFunction: .spring)
             }
         }
+        
+        takeTableItem = { [weak self] msgId in
+            var found: TableRowItem? = nil
+            self?.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? ChatRowItem, item.message?.id == msgId {
+                    found = item
+                    return false
+                } else {
+                    return true
+                }
+            })
+            return found
+        }
+        tableView.addScroll(listener: emojiEffects.scrollUpdater)
     }
     
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
@@ -547,6 +582,8 @@ class ChatControllerView : View, ChatInputDelegate {
                 view.updateBackground(animated: transition.isAnimated, item: view.item)
             }
         })
+        
+        emojiEffects.updateLayout(rect: tableView.frame, transition: transition)
     }
 
     override var responder: NSResponder? {
@@ -2952,7 +2989,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.chatInteraction.focusMessageId(nil, messageId, .CenterActionEmpty { [weak self] _ in
                 self?.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(messageId)})
             })
-          //  self?.chatInteraction.update({ $0.wi})
+        }
+        
+        chatInteraction.runEmojiScreenEffect = { [weak self] emoji, messageId, mirror, isIncoming in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.genericView.emojiEffects.addAnimation(emoji, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: strongSelf.genericView.tableView.frame, for: strongSelf.genericView)
+            
+
         }
         
         chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
@@ -4447,6 +4492,32 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             |> deliverOnMainQueue).start(next: { [weak self] activities in
                 if let strongSelf = self, strongSelf.chatInteraction.peerId != strongSelf.context.peerId {
                     (strongSelf.centerBarView as? ChatTitleBarView)?.inputActivities = (strongSelf.chatInteraction.peerId, activities)
+                    
+                    for activity in activities {
+                        switch activity.1 {
+                        case let .interactingWithEmoji(emoticon, messageId, interaction: interaction):
+                            
+                            let animations = interaction?.animations ?? []
+                            
+                            let item = strongSelf.genericView.findItem(by: messageId) as? ChatRowItem
+                            
+                            if let item = item {
+                                let mirror = item.isIncoming && item.renderType == .bubble
+                                for animation in animations {
+                                    delay(Double(animation.timeOffset), closure: { [weak strongSelf] in
+                                        guard let strongSelf = strongSelf else {
+                                            return
+                                        }
+                                        strongSelf.genericView.emojiEffects.addAnimation(emoticon, index: animation.index, mirror: mirror, isIncoming: true, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: strongSelf.genericView.tableView.frame, for: strongSelf.genericView)
+                                    })
+                                }
+                            }
+                            
+                            break
+                        default:
+                            break
+                        }
+                    }
                 }
             }))
         
