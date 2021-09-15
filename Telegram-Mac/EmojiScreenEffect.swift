@@ -58,7 +58,7 @@ final class EmojiScreenEffect {
     
     private func checkItem(_ item: TableRowItem, _ messageId: MessageId, with emoji: String) -> Bool {
         if let item = item as? ChatRowItem, item.message?.text == emoji {
-            if let peer = item.peer, peer.isUser && !peer.isBot {
+            if messageId.peerId.namespace == Namespaces.Peer.CloudUser {
                 return context.sharedContext.baseSettings.bigEmoji
             }
         }
