@@ -121,10 +121,27 @@ public extension ContainedViewLayoutTransition {
                         completion?(completed)
                     })
                 }
+                
+                var notifyOnOrigin: Bool = false
+                var notifyOnSize: Bool = false
+                if frame.size != view.frame.size {
+                    notifyOnSize = true
+                } else if frame.origin != view.frame.origin {
+                    notifyOnOrigin = true
+                } else {
+                    completion?(true)
+                }
+                
                 view._change(size: frame.size, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
-                    completion?(completed)
+                    if notifyOnSize {
+                        completion?(completed)
+                    }
                 })
-                view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: curve.timingFunction)
+                view._change(pos: frame.origin, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
+                    if notifyOnOrigin {
+                        completion?(completed)
+                    }
+                })
                 CATransaction.commit()
             }
         }

@@ -203,7 +203,6 @@ class ChatControllerView : View, ChatInputDelegate {
     
     let tableView:TableView
     
-    let emojiEffects: EmojiScreenEffect
     
     var scroll: ScrollPosition {
         return self.tableView.scrollPosition().current
@@ -223,6 +222,8 @@ class ChatControllerView : View, ChatInputDelegate {
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
+    
+    private var themeSelectorView: NSView?
     
     private let floatingPhotosView: View = View()
     
@@ -259,6 +260,8 @@ class ChatControllerView : View, ChatInputDelegate {
         return backgroundView != nil
     }
     
+    
+    
     func findItem(by messageId: MessageId) -> TableRowItem? {
         var found: TableRowItem? = nil
         self.tableView.enumerateVisibleItems(with: { item in
@@ -276,11 +279,7 @@ class ChatControllerView : View, ChatInputDelegate {
         self.chatInteraction = chatInteraction
         header = ChatHeaderController(chatInteraction)
         
-        var takeTableItem:((MessageId)->TableRowItem?)? = nil
         
-        emojiEffects = EmojiScreenEffect(context: chatInteraction.context, takeTableItem: { msgId in
-            return takeTableItem?(msgId)
-        })
         scroller = ChatNavigateScroller(chatInteraction.context, contextHolder: chatInteraction.contextHolder(), chatLocation: chatInteraction.chatLocation, mode: chatInteraction.mode)
         inputContextHelper = InputContextHelper(chatInteraction: chatInteraction)
         tableView = TableView(frame:NSMakeRect(0,0,frameRect.width,frameRect.height - 50), isFlipped:false)
@@ -373,20 +372,6 @@ class ChatControllerView : View, ChatInputDelegate {
                 view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, view.frame.minY - (from.minY - to.minY)), to: view.frame.origin, duration: 0.4, timingFunction: .spring)
             }
         }
-        
-        takeTableItem = { [weak self] msgId in
-            var found: TableRowItem? = nil
-            self?.tableView.enumerateVisibleItems(with: { item in
-                if let item = item as? ChatRowItem, item.message?.id == msgId {
-                    found = item
-                    return false
-                } else {
-                    return true
-                }
-            })
-            return found
-        }
-        tableView.addScroll(listener: emojiEffects.scrollUpdater)
     }
     
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
@@ -420,6 +405,29 @@ class ChatControllerView : View, ChatInputDelegate {
         CATransaction.commit()
     }
     
+    
+    func showChatThemeSelector(_ view: NSView, animated: Bool) {
+        self.themeSelectorView?.removeFromSuperview()
+        self.themeSelectorView = view
+        addSubview(view)
+        updateFrame(self.frame, transition: animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate)
+    }
+    
+    func hideChatThemeSelector(animated: Bool) {
+        if let view = self.themeSelectorView {
+            self.themeSelectorView = nil
+            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate
+            self.updateFrame(self.frame, transition: transition)
+            if animated {
+                transition.updateFrame(view: view, frame: CGRect(origin: CGPoint(x: 0, y: frame.maxY), size: view.frame.size), completion: { [weak view] _ in
+                    view?.removeFromSuperview()
+                })
+            } else {
+                view.removeFromSuperview()
+            }
+        }
+    }
+    
     func updateScroller(_ historyState:ChatHistoryState) {
         self.historyState = historyState
         let isHidden = (tableView.documentOffset.y < 80 && historyState.isDownOfHistory) || tableView.isEmpty
@@ -444,17 +452,6 @@ class ChatControllerView : View, ChatInputDelegate {
             }
             failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: true )
         }
-    }
-    
-    
-    func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void {
-        if let view = header.currentView {
-//            view.layer?.animatePosition(from: NSMakePoint(0, -current), to: NSMakePoint(0, previous), duration: 0.2, removeOnCompletion: false)
-//            return { [weak view] in
-//               view?.layer?.removeAllAnimations()
-//            }
-        }
-        return {}
     }
     
     
@@ -538,13 +535,18 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: currentView, frame: NSMakeRect(0, 0, frame.width, currentView.frame.height))
         }
         
-        let tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
+        var tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
+        
+        if let themeSelector = themeSelectorView {
+            tableHeight -= themeSelector.frame.height
+            tableHeight += inputView.frame.height
+        }
         
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight))
-
-
         
-        transition.updateFrame(view: inputView, frame: NSMakeRect(0, tableView.frame.maxY, frame.width, inputView.frame.height))
+        let inputY: CGFloat = themeSelectorView != nil ? frame.height : tableView.frame.maxY
+        
+        transition.updateFrame(view: inputView, frame: NSMakeRect(0, inputY, frame.width, inputView.frame.height))
 
         
         transition.updateFrame(view: gradientMaskView, frame: tableView.frame)
@@ -583,7 +585,9 @@ class ChatControllerView : View, ChatInputDelegate {
             }
         })
         
-        emojiEffects.updateLayout(rect: tableView.frame, transition: transition)
+        if let themeSelectorView = self.themeSelectorView {
+            transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
+        }
     }
 
     override var responder: NSResponder? {
@@ -1150,8 +1154,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var chatLocation:ChatLocation
     private let peerView = Promise<PostboxView?>()
     
-    private let undoTooltipControl: UndoTooltipControl
-    
+    private let emojiEffects: EmojiScreenEffect
+
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
@@ -1207,8 +1211,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
     
-    
-    
+    private let chatThemeValue: Promise<(String?, TelegramPresentationTheme)> = Promise()
+    private let chatThemeTempValue: Promise<TelegramPresentationTheme?> = Promise(nil)
+
     private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
         return pollAnswersLoading.get()
     }
@@ -1283,7 +1288,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let adMessages: AdMessagesHistoryContext?
    
-    
+    private var themeSelector: ChatThemeSelectorController? = nil
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
     private let unsupportedMessageProcessingManager = ChatMessageThrottledProcessingManager()
@@ -1512,17 +1517,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
+        
         
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateFloatingPhotos(position, animated: false)
         }))
         
-        self.undoTooltipControl.getYInset = { [weak self] in
-            guard let `self` = self else {
-                return 10
-            }
-            return self.genericView.inputView.frame.height + 10
-        }
         
         let previousView = self.previousView
         let context = self.context
@@ -1800,16 +1801,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } |> distinctUntilChanged
         
         
-        let chatTheme:Signal<TelegramPresentationTheme, NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance in
+        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance in
             
             var theme: TelegramPresentationTheme = appearance.presentation
             if let themeEmoticon = themeEmoticon {
-                let chatThemeData = chatThemes[themeEmoticon]
+                let chatThemeData = chatThemes.first(where: { $0.0 == themeEmoticon})?.1
                 theme = chatThemeData ?? appearance.presentation
             }
-            return theme
+            return (themeEmoticon, theme)
         }
         
+        self.chatThemeValue.set(chatTheme)
+        
+        
+        let effectiveTheme = combineLatest(self.chatThemeValue.get() |> map { $0.1 }, chatThemeTempValue.get()) |> map {
+            $1 ?? $0
+        }
        
         let historyViewTransition = combineLatest(queue: messagesViewQueue,
                                                   historyViewUpdate,
@@ -1822,7 +1829,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   customThreadOutgoingReadState,
                                                   updatingMedia,
                                                   adMessages,
-                                                  chatTheme
+                                                  effectiveTheme
 ) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let maxReadIndex = readIndexAndOther.0
@@ -2040,7 +2047,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     chatInteraction?.update({$0.withRecordingState(state)})
                                 })
                             } else {
-                                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessVoiceMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                                confirm(for: context.window, information: L10n.requestAccesErrorHaveNotAccessVoiceMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
                                    switch result {
                                    case .thrid:
                                        openSystemSettings(.none)
@@ -2061,7 +2068,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: state.pipeline), for: context.window)
                                 chatInteraction.update({$0.withRecordingState(state)})
                             } else {
-                                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessVideoMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                                confirm(for: context.window, information: L10n.requestAccesErrorHaveNotAccessVideoMessages, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
                                     switch result {
                                     case .thrid:
                                         openSystemSettings(.none)
@@ -2995,9 +3002,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.genericView.emojiEffects.addAnimation(emoji, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: strongSelf.genericView.tableView.frame, for: strongSelf.genericView)
-            
-
+            strongSelf.emojiEffects.addAnimation(emoji, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
         }
         
         chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
@@ -4508,7 +4513,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         guard let strongSelf = strongSelf else {
                                             return
                                         }
-                                        strongSelf.genericView.emojiEffects.addAnimation(emoticon, index: animation.index, mirror: mirror, isIncoming: true, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: strongSelf.genericView.tableView.frame, for: strongSelf.genericView)
+                                        strongSelf.emojiEffects.addAnimation(emoticon, index: animation.index, mirror: mirror, isIncoming: true, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
                                     })
                                 }
                             }
@@ -4787,10 +4792,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         pollChannelDiscussionDisposable.set(discussion.start())
         
-    }
-    
-    override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
-        return genericView.navigationHeaderDidNoticeAnimation(current, previous, animated)
     }
 
     override func updateFrame(_ frame: NSRect, animated: Bool) {
@@ -5131,10 +5132,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
                                     }, theme.icons.chat_info_voice_chat))
                                 }
-                                if peer.isUser {
+                                if peer.isUser, peer.id != context.peerId {
                                     items.append(SPopoverItem(L10n.chatContextCreateGroup, { [weak self] in
                                         self?.createGroup()
                                     }, theme.icons.chat_info_create_group))
+                                    
+                                    items.append(SPopoverItem(L10n.peerInfoChatColors, { [weak self] in
+                                        self?.showChatThemeSelector()
+                                    }, theme.icons.chat_info_change_colors))
                                 }
                                 
                                 if let groupId = peerView.groupId, groupId != .root {
@@ -5881,7 +5886,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.messageId = messageId
         self.chatLocationContextHolder = chatLocationContextHolder
         self.mode = mode
-        self.undoTooltipControl = UndoTooltipControl(context: context)
         self.chatInteraction = ChatInteraction(chatLocation: chatLocation, context: context, mode: mode)
         if let action = initialAction {
             switch action {
@@ -5900,9 +5904,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.adMessages = nil
         }
         
+       
+        var takeTableItem:((MessageId)->TableRowItem?)? = nil
+        
+        self.emojiEffects = EmojiScreenEffect(context: chatInteraction.context, takeTableItem: { msgId in
+            return takeTableItem?(msgId)
+        })
         super.init(context)
     
-        //NSLog("init chat controller")
         self.chatInteraction.update(animated: false, {$0.updatedInitialAction(initialAction)})
         context.checkFirstRecentlyForDuplicate(peerId: chatInteraction.peerId)
         
@@ -5958,6 +5967,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.contextHolder = { [weak self] in
             return self?.chatLocationContextHolder ?? Atomic(value: nil)
+        }
+        
+        takeTableItem = { [weak self] msgId in
+            if self?.isLoaded() == false {
+                return nil
+            }
+            var found: TableRowItem? = nil
+            self?.genericView.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? ChatRowItem, item.message?.id == msgId {
+                    found = item
+                    return false
+                } else {
+                    return true
+                }
+            })
+            return found
         }
     }
     
@@ -6410,9 +6435,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        
     }
     
+    func showChatThemeSelector() {
+        self.themeSelector = ChatThemeSelectorController(context, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
+        self.themeSelector?.onReady = { [weak self] controller in
+            self?.genericView.showChatThemeSelector(controller.view, animated: true)
+        }
+        self.themeSelector?.close = { [weak self] drop in
+            if drop {
+                self?.chatThemeTempValue.set(.single(nil))
+            }
+            self?.genericView.hideChatThemeSelector(animated: true)
+        }
+        
+        self.themeSelector?.previewCurrent = { [weak self] theme in
+            self?.chatThemeTempValue.set(.single(theme))
+        }
+        
+        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 160)
+        self.themeSelector?.loadViewIfNeeded()
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
         (centerBarView as? ChatTitleBarView)?.updateStatus(presentation: chatInteraction.presentation)
     }
     

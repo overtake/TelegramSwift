@@ -35,7 +35,7 @@ class ChatUnreadRowItem: ChatRowItem {
     
     override var messageIndex:MessageIndex? {
         switch entry {
-        case .UnreadEntry(let index, _):
+        case .UnreadEntry(let index, _, _):
             return index
         default:
             break

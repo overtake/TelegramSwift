@@ -226,3 +226,37 @@ fragment float4 fragmentPlain(Varyings in[[stage_in]],
     return inputTexture.sample(sampler, in.texcoord);
 }
 
+
+
+
+struct VertexIn {
+  packed_float3 position;
+  packed_float2 texCoord;
+};
+
+struct VertexOut {
+  float4 position [[position]];
+  float2 texCoord;
+};
+
+vertex VertexOut basic_vertex(
+    const device VertexIn* vertex_array [[ buffer(0) ]],
+    unsigned int vid [[ vertex_id ]]) {
+    VertexIn in = vertex_array[vid];
+  
+    VertexOut out;
+    out.position = float4(in.position, 1.0);
+    out.texCoord = in.texCoord;
+    return out;
+}
+
+fragment float4 basic_fragment(
+    VertexOut interpolated [[stage_in]],
+    texture2d<float> tex2D [[ texture(0) ]],
+    sampler sampler2D [[ sampler(0) ]]) {
+    
+    float2 p = interpolated.texCoord;
+
+    float4 color = tex2D.sample(sampler2D, p);
+    return float4(color.r, color.g, color.b, color.a);
+}

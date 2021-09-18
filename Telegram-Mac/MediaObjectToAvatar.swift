@@ -165,6 +165,22 @@ private final class StickerToMp4Context {
         var index: Int32 = 0
         while true {
             let image = rlottie.renderFrame(frame, width: 640, height: 640).takeRetainedValue()
+            
+//            func pixellated(image: CGImage) -> CGImage? {
+//                let ciImage = CIImage(cgImage: image)
+//                guard let filter = CIFilter(name: "CIPixellate") else { return nil }
+//                filter.setValue(ciImage, forKey: "inputImage")
+//                filter.setValue(12, forKey: kCIInputScaleKey)
+//
+//                guard let output = filter.outputImage else { return nil }
+//
+//                return generateImage(image.size, contextGenerator: { size, ctx in
+//                    ctx.clear(size.bounds)
+//                    let ciContext = CIContext(cgContext: ctx, options: [CIContextOption.useSoftwareRenderer : NSNumber(value: true)])
+//                    ciContext.draw(output, in: CGRect(x: 0, y: 0, width: size.width, height: size.height), from: output.extent)
+//                })!
+//            }
+            
             let pixelBuffer = buffer(from: image)!
             
             let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);

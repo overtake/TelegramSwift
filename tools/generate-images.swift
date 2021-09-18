@@ -663,7 +663,8 @@ func initialize() -> [String] {
     array.append("chat_info_voice_chat")
     
     array.append("chat_info_create_group")
-    
+    array.append("chat_info_change_colors")
+
     array.append("empty_chat_system")
     array.append("empty_chat_dark")
     array.append("empty_chat_light")

@@ -161,8 +161,9 @@ final class EmojiScreenEffect {
         if mirror {
             let size = animationSize
             var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, viewFrame.width / 2, 0, 0)
             fr = CATransform3DScale(fr, -1, 1, 1)
-            fr = CATransform3DTranslate(fr, -size.width / 2, 0, 0)
+            fr = CATransform3DTranslate(fr, -size.width, 0, 0)
             view.layer?.sublayerTransform = fr
         } else {
             view.layer?.sublayerTransform = CATransform3DIdentity
@@ -244,8 +245,9 @@ final class EmojiScreenEffect {
                 if animation.mirror {
                     let size = value.animationSize
                     var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
                     fr = CATransform3DScale(fr, -1, 1, 1)
-                    fr = CATransform3DTranslate(fr, -size.width / 2, 0, 0)
+                    fr = CATransform3DTranslate(fr, -size.width, 0, 0)
                     value.layer?.sublayerTransform = fr
                 } else {
                     value.layer?.sublayerTransform = CATransform3DIdentity

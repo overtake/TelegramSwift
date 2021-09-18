@@ -92,8 +92,8 @@ final class AccountContext {
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
-    private let _chatThemes: Promise<[String: TelegramPresentationTheme]> = Promise()
-    var chatThemes: Signal<[String: TelegramPresentationTheme], NoError> {
+    private let _chatThemes: Promise<[(String, TelegramPresentationTheme)]> = Promise()
+    var chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> {
         return _chatThemes.get() |> deliverOnMainQueue
     }
     #endif
@@ -252,7 +252,7 @@ final class AccountContext {
         preloadGifsDisposable.set(updated.start())
         
        
-        let chatThemes: Signal<[String: TelegramPresentationTheme], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager) ) |> mapToSignal { appearance, themes in
+        let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager) ) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
             
             for theme in themes {
@@ -271,9 +271,9 @@ final class AccountContext {
             }
             
             return combineLatest(signals) |> map { values in
-                var dict: [String: TelegramPresentationTheme] = [:]
+                var dict: [(String, TelegramPresentationTheme)] = []
                 for value in values {
-                    dict[value.0] = value.1
+                    dict.append((value.0, value.1))
                 }
                 return dict
             }
