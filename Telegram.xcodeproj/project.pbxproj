@@ -147,6 +147,8 @@
 		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
 		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
 		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
+		27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */; };
+		27FE779C26F4AE4400E1C90B /* ChatThemeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779B26F4AE4400E1C90B /* ChatThemeRowItem.swift */; };
 		27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */; };
 		27FFCEC72694BC95006CA024 /* WidgetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC62694BC95006CA024 /* WidgetController.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
@@ -1248,6 +1250,8 @@
 		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
 		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
 		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
+		27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeSelectorController.swift; sourceTree = "<group>"; };
+		27FE779B26F4AE4400E1C90B /* ChatThemeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeRowItem.swift; sourceTree = "<group>"; };
 		27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAppearance.swift; sourceTree = "<group>"; };
 		27FFCEC62694BC95006CA024 /* WidgetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetController.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
@@ -2411,6 +2415,15 @@
 			name = formatter;
 			sourceTree = "<group>";
 		};
+		27FE779826F4941200E1C90B /* themes */ = {
+			isa = PBXGroup;
+			children = (
+				27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */,
+				27FE779B26F4AE4400E1C90B /* ChatThemeRowItem.swift */,
+			);
+			name = themes;
+			sourceTree = "<group>";
+		};
 		27FFCEC32694BA2C006CA024 /* widget-cards */ = {
 			isa = PBXGroup;
 			children = (
@@ -2816,6 +2829,7 @@
 		C20232A61D81D178007C9ADE /* chat */ = {
 			isa = PBXGroup;
 			children = (
+				27FE779826F4941200E1C90B /* themes */,
 				2773A53825FA1D8C00AB45E9 /* alerts */,
 				2775101F25E790E7003D58D1 /* payments */,
 				A7E83210255E8A6F0095A167 /* hover */,
@@ -5385,6 +5399,7 @@
 				C25FC7FB1D86FEA90041E303 /* ChatListHoleRowItem.swift in Sources */,
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
+				27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */,
 				9F17E5BB212F191F00C25A65 /* AutoNightThemePreferences.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */,
@@ -5607,6 +5622,7 @@
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
+				27FE779C26F4AE4400E1C90B /* ChatThemeRowItem.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
 				D0E7BD1A256A7D350068644D /* GroupCallWindow.swift in Sources */,

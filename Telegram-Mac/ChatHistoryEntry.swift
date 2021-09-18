@@ -161,8 +161,8 @@ final class ChatHistoryEntryData : Equatable {
 enum ChatHistoryEntry: Identifiable, Comparable {
     case MessageEntry(Message, MessageIndex, Bool, ChatItemRenderType, ChatItemType, ForwardItemType?, ChatHistoryEntryData)
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
-    case UnreadEntry(MessageIndex, ChatItemRenderType)
-    case DateEntry(MessageIndex, ChatItemRenderType)
+    case UnreadEntry(MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
+    case DateEntry(MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
     case bottom
     case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
     case repliesHeader(Bool, MessageIndex, ChatItemRenderType)
@@ -193,9 +193,9 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return renderType
         case .groupedPhotos(let entries, _):
             return entries.first!.renderType
-        case let .DateEntry(_, renderType):
+        case let .DateEntry(_, renderType, _):
             return renderType
-        case .UnreadEntry(_, let renderType):
+        case .UnreadEntry(_, let renderType, _):
             return renderType
         case .bottom:
             return .list
@@ -243,7 +243,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .message(message)
         case .groupedPhotos(_, let info):
             return .groupedPhotos(groupInfo: info)
-        case let .DateEntry(index, _):
+        case let .DateEntry(index, _, _):
             return .date(index)
         case .UnreadEntry:
             return .unread
@@ -264,9 +264,9 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return index
         case let .groupedPhotos(entries, _):
             return entries.last!.index
-        case let .UnreadEntry(index, _):
+        case let .UnreadEntry(index, _, _):
             return index
-        case let .DateEntry(index, _):
+        case let .DateEntry(index, _, _):
             return index
         case .bottom:
             return MessageIndex.absoluteUpperBound()
@@ -286,9 +286,9 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return MessageIndex(message)
         case let .groupedPhotos(entries, _):
             return entries.last!.index
-        case let .UnreadEntry(index, _):
+        case let .UnreadEntry(index, _, _):
             return index
-        case let .DateEntry(index, _):
+        case let .DateEntry(index, _, _):
             return index
         case .bottom:
             return MessageIndex.absoluteUpperBound()
@@ -357,16 +357,16 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         } else {
             return false
         }
-    case let .UnreadEntry(lhsIndex):
+    case let .UnreadEntry(index, renderType, theme):
         switch rhs {
-        case let .UnreadEntry(rhsIndex) where lhsIndex == rhsIndex:
+        case .UnreadEntry(index, renderType, theme):
             return true
         default:
             return false
         }
-    case let .DateEntry(lhsIndex):
+    case let .DateEntry(index, renderType, lhsTheme):
         switch rhs {
-        case let .DateEntry(rhsIndex) where lhsIndex == rhsIndex:
+        case .DateEntry(index, renderType, lhsTheme):
             return true
         default:
             return false
@@ -787,7 +787,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
 
             let dateId = chatDateId(for: timestamp)
             let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: 0), timestamp: Int32(dateId))
-            entries.append(.DateEntry(index, renderType))
+            entries.append(.DateEntry(index, renderType, chatTheme))
         }
         
         if let next = next, dayGrouping {
@@ -800,7 +800,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             
             if dateId != nextDateId {
                 let index = MessageIndex(id: MessageId(peerId: message.id.peerId, namespace: Namespaces.Message.Local, id: INT_MAX), timestamp: Int32(nextDateId))
-                entries.append(.DateEntry(index, renderType))
+                entries.append(.DateEntry(index, renderType, chatTheme))
             }
         }
         if let topMessageIndex = topMessageIndex, topMessageIndex == i {
@@ -815,7 +815,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     var hasUnread = false
     if let maxReadIndex = maxReadIndex {
         let timestamp = Int32(min(TimeInterval(maxReadIndex.timestamp) - timeDifference, TimeInterval(Int32.max)))
-        entries.append(.UnreadEntry(maxReadIndex.withUpdatedTimestamp(timestamp), renderType))
+        entries.append(.UnreadEntry(maxReadIndex.withUpdatedTimestamp(timestamp), renderType, chatTheme))
         hasUnread = true
     }
     

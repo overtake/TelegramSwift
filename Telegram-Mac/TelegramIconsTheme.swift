@@ -7713,6 +7713,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var chat_info_change_colors: CGImage {
+      if let image = cached.with({ $0["chat_info_change_colors"] }) {
+          return image
+      } else {
+          let image = _chat_info_change_colors()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_info_change_colors"] = image
+              return current
+          }
+          return image
+      }
+  }
   var empty_chat_system: CGImage {
       if let image = cached.with({ $0["empty_chat_system"] }) {
           return image
@@ -8723,6 +8736,7 @@ final class TelegramIconsTheme {
   private let _audioplayer_speed_x2: ()->CGImage
   private let _chat_info_voice_chat: ()->CGImage
   private let _chat_info_create_group: ()->CGImage
+  private let _chat_info_change_colors: ()->CGImage
   private let _empty_chat_system: ()->CGImage
   private let _empty_chat_dark: ()->CGImage
   private let _empty_chat_light: ()->CGImage
@@ -9350,6 +9364,7 @@ final class TelegramIconsTheme {
       audioplayer_speed_x2: @escaping()->CGImage,
       chat_info_voice_chat: @escaping()->CGImage,
       chat_info_create_group: @escaping()->CGImage,
+      chat_info_change_colors: @escaping()->CGImage,
       empty_chat_system: @escaping()->CGImage,
       empty_chat_dark: @escaping()->CGImage,
       empty_chat_light: @escaping()->CGImage,
@@ -9976,6 +9991,7 @@ final class TelegramIconsTheme {
       self._audioplayer_speed_x2 = audioplayer_speed_x2
       self._chat_info_voice_chat = chat_info_voice_chat
       self._chat_info_create_group = chat_info_create_group
+      self._chat_info_change_colors = chat_info_change_colors
       self._empty_chat_system = empty_chat_system
       self._empty_chat_dark = empty_chat_dark
       self._empty_chat_light = empty_chat_light

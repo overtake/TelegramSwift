@@ -46,7 +46,7 @@ class ChatDateStickItem : TableStickItem {
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
         self.presentation = theme
-        if case let .DateEntry(index, _) = entry {
+        if case let .DateEntry(index, _, _) = entry {
             self.timestamp = index.timestamp
         } else {
             fatalError()
@@ -109,7 +109,7 @@ class ChatDateStickItem : TableStickItem {
     }
     
     required init(_ initialSize: NSSize) {
-        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list)
+        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list, theme)
         timestamp = 0
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())

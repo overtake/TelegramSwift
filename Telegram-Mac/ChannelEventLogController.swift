@@ -279,7 +279,7 @@ private func eventLogItems(_ entries:[ChannelAdminEventLogEntry], isGroup: Bool,
             let nextDateId = chatDateId(for: nextEvent.date - timeDifference)
             if dateId != nextDateId {
                 let messageIndex = MessageIndex(id: MessageId(peerId: peerId, namespace: 0, id: INT_MAX), timestamp: Int32(dateId))
-                items.append(ChatDateStickItem(initialSize, .DateEntry(messageIndex, .list), interaction: chatInteraction, theme: theme))
+                items.append(ChatDateStickItem(initialSize, .DateEntry(messageIndex, .list, theme), interaction: chatInteraction, theme: theme))
             }
         }
         

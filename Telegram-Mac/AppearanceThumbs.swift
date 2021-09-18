@@ -520,6 +520,89 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
     } |> runOn(Queue.concurrentDefaultQueue())
 }
 
+func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode: TableBackgroundMode) -> Signal<CGImage, NoError> {
+    return Signal { subscriber in
+        let image = generateImage(NSMakeSize(80, 80), rotatedContext: { size, ctx in
+            let rect = NSMakeRect(0, 0, size.width, size.height)
+            ctx.clear(rect)
+            ctx.round(size, 10)
+            
+            func applyBubbles() {
+                let bubbleImage = NSImage(named: "Icon_ThemeBubble")
+                if let incoming = bubbleImage?.precomposed(palette.bubbleBackground_incoming, flipVertical: true) {
+                    ctx.draw(incoming, in: NSMakeRect(7, 9, 48, 16))
+                }
+                if let outgoing = bubbleImage?.precomposed(palette.bubbleBackground_outgoing, flipVertical: true, flipHorizontal: true) {
+                    ctx.draw(outgoing, in: NSMakeRect(size.width - 57, 9 + 16 + 5, 48, 16))
+                }
+            }
+            
+            func applyPlain() {
+                ctx.setFillColor(palette.accent.cgColor)
+                ctx.fillEllipse(in: NSMakeRect(10, 7, 17, 17))
+                
+                if true {
+                    let name1 = generateImage(NSMakeSize(20, 4), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, 2)
+                        ctx.setFillColor(palette.accent.cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(name1, in: NSMakeRect(10 + 17 + 3, 7 + 2, name1.backingSize.width, name1.backingSize.height))
+                    
+                    let text1 = generateImage(NSMakeSize(40, 4), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, 2)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
+                }
+                
+                if true {
+                    ctx.setFillColor(palette.accent.cgColor)
+                    ctx.fillEllipse(in: NSMakeRect(10, 7 + 17 + 7, 17, 17))
+                    
+                    let name1 = generateImage(NSMakeSize(20, 4), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, 2)
+                        ctx.setFillColor(palette.accent.cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(name1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2, name1.backingSize.width, name1.backingSize.height))
+                    
+                    let text1 = generateImage(NSMakeSize(40, 4), rotatedContext: { size, ctx in
+                        let rect = NSMakeRect(0, 0, size.width, size.height)
+                        ctx.clear(rect)
+                        ctx.round(size, 2)
+                        ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
+                        ctx.fill(rect)
+                    })!
+                    ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
+                }
+                
+                
+            }
+            drawBg(backgroundMode, palette: palette, bubbled: bubbled, rect: rect, in: ctx)
+            if bubbled {
+                applyBubbles()
+            } else {
+                applyPlain()
+            }
+            
+        })!
+        
+        subscriber.putNext(image)
+        subscriber.putCompletion()
+        
+        return EmptyDisposable
+    } |> runOn(Queue.concurrentDefaultQueue())
+}
+
+
 
 
 func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source: ThemeSource, thumbSource: AppearanceThumbSource = .general) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {

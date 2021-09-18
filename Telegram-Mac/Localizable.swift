@@ -1741,6 +1741,12 @@ internal final class L10n {
   internal static var chatCallOutgoing: String  { return L10n.tr("Localizable", "Chat.Call.Outgoing") }
   /// Sorry, this channel is not accessible.
   internal static var chatChannelUnaccessible: String  { return L10n.tr("Localizable", "Chat.Channel.Unaccessible") }
+  /// Apply Theme
+  internal static var chatChatThemeApplyTheme: String  { return L10n.tr("Localizable", "Chat.ChatTheme.ApplyTheme") }
+  /// Cancel
+  internal static var chatChatThemeCancel: String  { return L10n.tr("Localizable", "Chat.ChatTheme.Cancel") }
+  /// No\nTheme
+  internal static var chatChatThemeNoTheme: String  { return L10n.tr("Localizable", "Chat.ChatTheme.NoTheme") }
   /// You have been blocked to posting comments.
   internal static var chatCommentsKicked: String  { return L10n.tr("Localizable", "Chat.Comments.Kicked") }
   /// No comments here yet...
@@ -6249,6 +6255,8 @@ internal final class L10n {
   internal static var peerInfoChannelReported: String  { return L10n.tr("Localizable", "PeerInfo.ChannelReported") }
   /// Channel Type
   internal static var peerInfoChannelType: String  { return L10n.tr("Localizable", "PeerInfo.ChannelType") }
+  /// Change Colors
+  internal static var peerInfoChatColors: String  { return L10n.tr("Localizable", "PeerInfo.ChatColors") }
   /// Convert To Supergroup
   internal static var peerInfoConvertToSupergroup: String  { return L10n.tr("Localizable", "PeerInfo.ConvertToSupergroup") }
   /// Delete and Exit
@@ -9973,7 +9981,7 @@ internal final class L10n {
   internal static var weekdayShortTuesday: String  { return L10n.tr("Localizable", "Weekday.ShortTuesday") }
   /// Wed
   internal static var weekdayShortWednesday: String  { return L10n.tr("Localizable", "Weekday.ShortWednesday") }
-  /// Use ⌘+K to quick enter the [search](search) mode.
+  /// Use ⌘+K or ESC to enter [search](search) mode.
   internal static var widgetRecentDesc: String  { return L10n.tr("Localizable", "Widget.Recent.Desc") }
   /// Both
   internal static var widgetRecentMixed: String  { return L10n.tr("Localizable", "Widget.Recent.Mixed") }
