@@ -400,7 +400,6 @@ private final class WallpaperPreviewView: View {
             })
         }))
         
-        updateState(synchronousLoad: true)
     }
     
     private func addTableItems(_ context: AccountContext) {
@@ -1221,6 +1220,14 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.ready = { [weak self] in
+            self?.readyOnce()
+        }
+        
+        genericView.updateState(synchronousLoad: true)
+
+        
         genericView.blurCheckbox.isSelected = wallpaper.isBlurred
        
         switch wallpaper {
@@ -1239,9 +1246,7 @@ class WallpaperPreviewController: ModalViewController {
         default:
             break
         }
-        genericView.ready = { [weak self] in
-            self?.readyOnce()
-        }
+       
     }
     
     override func viewWillDisappear(_ animated: Bool) {
