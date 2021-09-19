@@ -94,42 +94,6 @@ func CoreMediaVideoIOTest(context: AccountContext) -> InputDataModalController {
                 $0.file
             }
         }
-
-    _ = stickers.start(next: { files in
-        
-        try? FileManager.default.removeItem(atPath: "/Users/mike/downloads/tgs")
-        try? FileManager.default.createDirectory(atPath: "/Users/mike/downloads/tgs", withIntermediateDirectories: true, attributes: nil)
-
-        var signals:[Signal<String?, NoError>] = []
-        for file in files {
-            signals.append(context.account.postbox.mediaBox.resourceData(file.resource)
-                |> filter { $0.complete }
-                |> map { $0.complete ? $0.path : nil })
-            
-            _ = freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: file)).start()
-        }
-        
-        let paths = combineLatest(signals)
-            |> map { $0.compactMap { $0 } }
-        
-        var cached:Set<String> = Set()
-        
-        
-        _ = paths.start(next: { paths in
-            for path in paths {
-                if !cached.contains(path) {
-                    let output = "/Users/mike/downloads/tgs/\(arc4random())"
-                    let data = try? Data(contentsOf: .init(fileURLWithPath: path), options: .mappedIfSafe)
-                    if let data = data {
-                        let unzip = TGGUnzipData(data, 8 * 1024 * 1024) ?? data
-                        try? unzip.write(to: .init(fileURLWithPath: output))
-                        cached.insert(path)
-                    }
-                }
-            }
-        })
-        
-    })
     
     return modalController
 }
