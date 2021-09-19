@@ -117,7 +117,7 @@ final class EmojiScreenEffect {
     func addAnimation(_ emoji: String, index: Int?, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
         if !isLimitExceed(messageId), let item = takeTableItem(messageId), checkItem(item, messageId, with: emoji) {
-            let signal: Signal<LottieAnimation?, NoError> = context.diceCache.animationEffect(for: emoji)
+            let signal: Signal<LottieAnimation?, NoError> = context.diceCache.animationEffect(for: emoji.emojiUnmodified)
             |> map { value -> LottieAnimation? in
                 if let random = value.randomElement(), let data = random.1 {
                     return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(emoji)"), size: animationSize, backingScale: Int(System.backingScale)), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
