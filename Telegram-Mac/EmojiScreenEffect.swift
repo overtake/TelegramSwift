@@ -101,6 +101,10 @@ final class EmojiScreenEffect {
     
     deinit {
         dataDisposable.dispose()
+        let animations = self.animations
+        for animation in animations {
+            deinitAnimation(key: animation.key, animated: false)
+        }
     }
     private func isLimitExceed(_ messageId: MessageId) -> Bool {
         let onair = animations.filter { $0.key.messageId == messageId }
@@ -136,6 +140,7 @@ final class EmojiScreenEffect {
             dataDisposable.set(nil, forKey: emoji)
         }
     }
+    
     
     private func deinitAnimation(key: Key, animated: Bool) {
         let view = animations.removeValue(forKey: key)?.view.value
