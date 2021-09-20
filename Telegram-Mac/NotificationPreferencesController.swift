@@ -12,6 +12,95 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 
+private let modernSoundsNamePaths: [String] = [
+    L10n.notificationsSoundNote,
+    L10n.notificationsSoundAurora,
+    L10n.notificationsSoundBamboo,
+    L10n.notificationsSoundChord,
+    L10n.notificationsSoundCircles,
+    L10n.notificationsSoundComplete,
+    L10n.notificationsSoundHello,
+    L10n.notificationsSoundInput,
+    L10n.notificationsSoundKeys,
+    L10n.notificationsSoundPopcorn,
+    L10n.notificationsSoundPulse,
+    L10n.notificationsSoundSynth
+]
+
+private let classicSoundNamePaths: [String] = [
+    L10n.notificationsSoundTritone,
+    L10n.notificationsSoundTremolo,
+    L10n.notificationsSoundAlert,
+    L10n.notificationsSoundBell,
+    L10n.notificationsSoundCalypso,
+    L10n.notificationsSoundChime,
+    L10n.notificationsSoundGlass,
+    L10n.notificationsSoundTelegraph
+]
+
+private func soundName(sound: PeerMessageSound) -> String {
+    switch sound {
+        case .none:
+            return L10n.notificationsSoundNone
+        case .default:
+            return ""
+        case let .bundledModern(id):
+            if id >= 0 && Int(id) < modernSoundsNamePaths.count {
+                return modernSoundsNamePaths[Int(id)]
+            }
+            return "Sound \(id)"
+        case let .bundledClassic(id):
+            if id >= 0 && Int(id) < classicSoundNamePaths.count {
+                return classicSoundNamePaths[Int(id)]
+            }
+            return "Sound \(id)"
+    }
+}
+
+public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil) -> String {
+    switch sound {
+        case .default:
+            if let defaultSound = `default` {
+                let name = soundName(sound: defaultSound)
+                let actualName: String
+                if name.isEmpty {
+                    actualName = soundName(sound: .bundledModern(id: 0))
+                } else {
+                    actualName = name
+                }
+                return L10n.peerInfoNotificationsDefaultSound(actualName)
+            } else {
+                return L10n.peerInfoNotificationsDefault
+            }
+        default:
+            return soundName(sound: sound)
+    }
+}
+
+func fileNameForNotificationSound(_ sound: PeerMessageSound, defaultSound: PeerMessageSound?) -> String {
+    switch sound {
+        case .none:
+            return ""
+        case .default:
+            if let defaultSound = defaultSound {
+                if case .default = defaultSound {
+                    return "\(100)"
+                } else {
+                    return fileNameForNotificationSound(defaultSound, defaultSound: nil)
+                }
+            } else {
+                return "default"
+            }
+        case let .bundledModern(id):
+            return "\(id + 100)"
+        case let .bundledClassic(id):
+            return "\(id + 2)"
+    }
+}
+
+
+
+
 
 enum NotificationsAndSoundsEntryTag: ItemListItemTag {
     case allAccounts
@@ -51,7 +140,7 @@ private final class NotificationArguments {
     let resetAllNotifications:() -> Void
     let toggleMessagesPreview:() -> Void
     let toggleNotifications:() -> Void
-    let notificationTone:(String) -> Void
+    let notificationTone:(PeerMessageSound) -> Void
     let toggleIncludeUnreadChats:(Bool) -> Void
     let toggleCountUnreadMessages:(Bool) -> Void
     let toggleIncludeGroups:(Bool) -> Void
@@ -62,7 +151,7 @@ private final class NotificationArguments {
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
     let toggleInAppSounds:(Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(PeerMessageSound) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -160,17 +249,35 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     index += 1
     
     
-    let tones = ObjcUtils.notificationTones("Default")
-    var tonesItems:[SPopoverItem] = []
-    for tone in tones {
-        tonesItems.append(SPopoverItem(localizedString(tone), {
-            arguments.notificationTone(tone)
-        }))
-    }
+    
+   
+    
     if #available(macOS 10.14, *) {
+        var tonesItems:[SPopoverItem] = []
+        
+        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .default), {
+            arguments.notificationTone(.default)
+        }))
 
-    } else {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(settings.tone.isEmpty ? L10n.notificationSettingsToneDefault : localizedString(settings.tone), tonesItems), viewType: .innerItem)))
+        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .none), {
+            arguments.notificationTone(.none)
+        }))
+        
+        
+        for i in 0 ..< 12 {
+            let sound: PeerMessageSound = .bundledModern(id: Int32(i))
+            tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
+                arguments.notificationTone(sound)
+            }))
+        }
+        for i in 0 ..< 8 {
+            let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
+            tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
+                arguments.notificationTone(sound)
+            }))
+        }
+        
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(localizedPeerNotificationSoundString(sound: settings.tone), tonesItems), viewType: .innerItem)))
         index += 1
     }
 
@@ -276,7 +383,12 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }, toggleNotifications: {
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedEnables(!$0.enabled)}).start()
     }, notificationTone: { tone in
-        _ = NSSound(named: tone)?.play()
+        if tone == .default {
+            
+        } else if tone != .none {
+            let name = fileNameForNotificationSound(tone, defaultSound: nil)
+            SoundEffectPlay.play(postbox: context.account.postbox, name: name, type: "m4a")
+        }
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTone(tone)}).start()
     }, toggleIncludeUnreadChats: { enable in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()

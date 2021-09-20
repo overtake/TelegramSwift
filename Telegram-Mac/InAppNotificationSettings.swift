@@ -40,11 +40,52 @@ import SwiftSignalKit
 import TelegramCore
 
 
+private enum PeerMessageSoundValue: Int32 {
+    case none
+    case bundledModern
+    case bundledClassic
+    case `default`
+}
+
+extension PeerMessageSound {
+    fileprivate static func decodeInline(_ decoder: PostboxDecoder) -> PeerMessageSound {
+        switch decoder.decodeInt32ForKey("s1.v", orElse: 1) {
+            case PeerMessageSoundValue.none.rawValue:
+                return .none
+            case PeerMessageSoundValue.bundledModern.rawValue:
+                return .bundledModern(id: decoder.decodeInt32ForKey("s1.i", orElse: 0))
+            case PeerMessageSoundValue.bundledClassic.rawValue:
+                return .bundledClassic(id: decoder.decodeInt32ForKey("s1.i", orElse: 0))
+            case PeerMessageSoundValue.default.rawValue:
+                return .default
+            default:
+                assertionFailure()
+                return .bundledModern(id: 0)
+        }
+    }
+
+    fileprivate func encodeInline(_ encoder: PostboxEncoder) {
+        switch self {
+            case .none:
+                encoder.encodeInt32(PeerMessageSoundValue.none.rawValue, forKey: "s1.v")
+            case let .bundledModern(id):
+                encoder.encodeInt32(PeerMessageSoundValue.bundledModern.rawValue, forKey: "s1.v")
+                encoder.encodeInt32(id, forKey: "s1.i")
+            case let .bundledClassic(id):
+                encoder.encodeInt32(PeerMessageSoundValue.bundledClassic.rawValue, forKey: "s1.v")
+                encoder.encodeInt32(id, forKey: "s1.i")
+            case .default:
+                encoder.encodeInt32(PeerMessageSoundValue.default.rawValue, forKey: "s1.v")
+        }
+    }
+}
+
+
 
 struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let enabled: Bool
     let playSounds: Bool
-    let tone: String
+    let tone: PeerMessageSound
     let displayPreviews: Bool
     let muteUntil: Int32
     let notifyAllAccounts: Bool
@@ -55,10 +96,10 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     let badgeEnabled: Bool
     let requestUserAttention: Bool
     static var defaultSettings: InAppNotificationSettings {
-        return InAppNotificationSettings(enabled: true, playSounds: true, tone: "Default", displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: .all, notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true, requestUserAttention: false)
+        return InAppNotificationSettings(enabled: true, playSounds: true, tone: .default, displayPreviews: true, muteUntil: 0, totalUnreadCountDisplayStyle: .filtered, totalUnreadCountDisplayCategory: .chats, totalUnreadCountIncludeTags: .all, notifyAllAccounts: true, showNotificationsOutOfFocus: true, badgeEnabled: true, requestUserAttention: false)
     }
     
-    init(enabled:Bool, playSounds: Bool, tone: String, displayPreviews: Bool, muteUntil: Int32, totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: PeerSummaryCounterTags, notifyAllAccounts: Bool, showNotificationsOutOfFocus: Bool, badgeEnabled: Bool, requestUserAttention: Bool) {
+    init(enabled:Bool, playSounds: Bool, tone: PeerMessageSound, displayPreviews: Bool, muteUntil: Int32, totalUnreadCountDisplayStyle: TotalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: TotalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: PeerSummaryCounterTags, notifyAllAccounts: Bool, showNotificationsOutOfFocus: Bool, badgeEnabled: Bool, requestUserAttention: Bool) {
         self.enabled = enabled
         self.playSounds = playSounds
         self.tone = tone
@@ -76,7 +117,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     init(decoder: PostboxDecoder) {
         self.enabled = decoder.decodeInt32ForKey("e", orElse: 0) != 0
         self.playSounds = decoder.decodeInt32ForKey("s", orElse: 0) != 0
-        self.tone = decoder.decodeStringForKey("t", orElse: "")
+        self.tone = PeerMessageSound.decodeInline(decoder)
         self.displayPreviews = decoder.decodeInt32ForKey("p", orElse: 0) != 0
         self.muteUntil = decoder.decodeInt32ForKey("m2", orElse: 0)
         self.notifyAllAccounts = decoder.decodeBoolForKey("naa", orElse: true)
@@ -111,7 +152,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     func encode(_ encoder: PostboxEncoder) {
         encoder.encodeInt32(self.enabled ? 1 : 0, forKey: "e")
         encoder.encodeInt32(self.playSounds ? 1 : 0, forKey: "s")
-        encoder.encodeString(self.tone, forKey: "t")
+        self.tone.encodeInline(encoder)
         encoder.encodeInt32(self.displayPreviews ? 1 : 0, forKey: "p")
         encoder.encodeInt32(self.muteUntil, forKey: "m2")
         encoder.encodeBool(self.notifyAllAccounts, forKey: "naa")
@@ -131,7 +172,7 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
         return InAppNotificationSettings(enabled: self.enabled, playSounds: playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled, requestUserAttention: self.requestUserAttention)
     }
     
-    func withUpdatedTone(_ tone: String) -> InAppNotificationSettings {
+    func withUpdatedTone(_ tone: PeerMessageSound) -> InAppNotificationSettings {
         return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: self.totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled, requestUserAttention: self.requestUserAttention)
     }
     
