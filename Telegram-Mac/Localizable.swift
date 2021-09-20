@@ -5803,6 +5803,48 @@ internal final class L10n {
   internal static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
   /// Mute
   internal static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
+  /// Alert
+  internal static var notificationsSoundAlert: String  { return L10n.tr("Localizable", "NotificationsSound.Alert") }
+  /// Aurora
+  internal static var notificationsSoundAurora: String  { return L10n.tr("Localizable", "NotificationsSound.Aurora") }
+  /// Bamboo
+  internal static var notificationsSoundBamboo: String  { return L10n.tr("Localizable", "NotificationsSound.Bamboo") }
+  /// Bell
+  internal static var notificationsSoundBell: String  { return L10n.tr("Localizable", "NotificationsSound.Bell") }
+  /// Calypso
+  internal static var notificationsSoundCalypso: String  { return L10n.tr("Localizable", "NotificationsSound.Calypso") }
+  /// Chime
+  internal static var notificationsSoundChime: String  { return L10n.tr("Localizable", "NotificationsSound.Chime") }
+  /// Chord
+  internal static var notificationsSoundChord: String  { return L10n.tr("Localizable", "NotificationsSound.Chord") }
+  /// Circles
+  internal static var notificationsSoundCircles: String  { return L10n.tr("Localizable", "NotificationsSound.Circles") }
+  /// Complete
+  internal static var notificationsSoundComplete: String  { return L10n.tr("Localizable", "NotificationsSound.Complete") }
+  /// Glass
+  internal static var notificationsSoundGlass: String  { return L10n.tr("Localizable", "NotificationsSound.Glass") }
+  /// Hello
+  internal static var notificationsSoundHello: String  { return L10n.tr("Localizable", "NotificationsSound.Hello") }
+  /// Input
+  internal static var notificationsSoundInput: String  { return L10n.tr("Localizable", "NotificationsSound.Input") }
+  /// Keys
+  internal static var notificationsSoundKeys: String  { return L10n.tr("Localizable", "NotificationsSound.Keys") }
+  /// None
+  internal static var notificationsSoundNone: String  { return L10n.tr("Localizable", "NotificationsSound.None") }
+  /// Note
+  internal static var notificationsSoundNote: String  { return L10n.tr("Localizable", "NotificationsSound.Note") }
+  /// Popcorn
+  internal static var notificationsSoundPopcorn: String  { return L10n.tr("Localizable", "NotificationsSound.Popcorn") }
+  /// Pulse
+  internal static var notificationsSoundPulse: String  { return L10n.tr("Localizable", "NotificationsSound.Pulse") }
+  /// Synth
+  internal static var notificationsSoundSynth: String  { return L10n.tr("Localizable", "NotificationsSound.Synth") }
+  /// Telegraph
+  internal static var notificationsSoundTelegraph: String  { return L10n.tr("Localizable", "NotificationsSound.Telegraph") }
+  /// Tremolo
+  internal static var notificationsSoundTremolo: String  { return L10n.tr("Localizable", "NotificationsSound.Tremolo") }
+  /// Tri-tone
+  internal static var notificationsSoundTritone: String  { return L10n.tr("Localizable", "NotificationsSound.Tritone") }
   /// Minimize
   internal static var oy7WFPoVTitle: String  { return L10n.tr("Localizable", "OY7-WF-poV.title") }
   /// Hide
@@ -6325,6 +6367,12 @@ internal final class L10n {
   }
   /// Notifications
   internal static var peerInfoNotifications: String  { return L10n.tr("Localizable", "PeerInfo.Notifications") }
+  /// Default
+  internal static var peerInfoNotificationsDefault: String  { return L10n.tr("Localizable", "PeerInfo.NotificationsDefault") }
+  /// Default (%@)
+  internal static func peerInfoNotificationsDefaultSound(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.NotificationsDefaultSound", p1)
+  }
   /// Permissions
   internal static var peerInfoPermissions: String  { return L10n.tr("Localizable", "PeerInfo.Permissions") }
   /// phone

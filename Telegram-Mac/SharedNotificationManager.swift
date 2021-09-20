@@ -371,19 +371,20 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             notification.identifier = "msg_\(message.id.toInt64())"
                             
-                            if localizedString(inAppSettings.tone) != tr(L10n.notificationSettingsToneNone) {
-                                notification.soundName = inAppSettings.tone
-                            } else {
-                                notification.soundName = nil
+                            if #available(macOS 10.14, *) {
+                                switch inAppSettings.tone {
+                                case .none:
+                                    notification.soundName = nil
+                                default:
+                                    notification.soundName = fileNameForNotificationSound(inAppSettings.tone, defaultSound: nil)
+                                }
                             }
-                            
+
                             if message.muted {
                                 notification.soundName = nil
                                 title += " 🔕"
                             }
-                            
-                   
-                            
+                                                        
                             if self.activeAccounts.accounts.count > 1 && !screenIsLocked {
                                 title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
                             }

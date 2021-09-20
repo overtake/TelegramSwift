@@ -118,32 +118,7 @@ class UNUserNotifications : NSObject {
     }
     
     func add(_ notification: NSUserNotification) -> Void {
-        if #available(macOS 10.14, *) {
-            let content = UNMutableNotificationContent()
-            content.title = notification.title ?? ""
-            content.body = notification.informativeText ?? ""
-            content.subtitle = notification.subtitle ?? ""
-            if let _ = notification.soundName {
-                let sound: UNNotificationSound = .default
-                content.sound = sound
-            }
-            if notification.hasActionButton {
-                content.categoryIdentifier = UNNotification.replyCategory
-            }
-            
-            if let image = notification.contentImage {
-                if let attachment = UNNotificationAttachment.create(identifier: "image", image: image, options: nil) {
-                    content.attachments = [attachment]
-                }
-            }
-            content.userInfo = notification.userInfo ?? [:]
-            
-            UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
-                
-            })
-        } else {
-            NSUserNotificationCenter.default.deliver(notification)
-        }
+        
     }
     
     func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
@@ -273,9 +248,13 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.title = notification.title ?? ""
         content.body = notification.informativeText ?? ""
         content.subtitle = notification.subtitle ?? ""
-        if let _ = notification.soundName {
-            let sound: UNNotificationSound = .default
-            content.sound = sound
+        if let soundName = notification.soundName {
+            if soundName == "default" {
+                content.sound = .default
+            } else {
+                appDelegate?.playSound(soundName)
+            }
+            
         }
         if notification.hasActionButton {
             content.categoryIdentifier = UNNotification.replyCategory
