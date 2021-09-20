@@ -972,7 +972,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func playSound(_ sound: String) {
         if let context = self.contextValue?.context {
-            SoundEffectPlay.play(postbox: context.account.postbox, name: sound, type: "m4a")
+            SoundEffectPlay.play(postbox: context.account.postbox, name: sound, type: "m4a", volume: 0.7)
         }
     }
 
