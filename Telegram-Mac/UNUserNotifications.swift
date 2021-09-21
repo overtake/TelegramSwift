@@ -207,6 +207,7 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
 @available(macOS 10.14, *)
 final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCenterDelegate {
     
+    private var soundSettings: UNNotificationSetting? = nil
     required init(manager: SharedNotificationManager) {
         super.init(manager: manager)
         UNUserNotificationCenter.current().delegate = self
@@ -248,6 +249,10 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         
         let replyCategory = UNNotificationCategory(identifier: "reply", actions: [replyAction], intentIdentifiers: [], options: [])
         UNUserNotificationCenter.current().setNotificationCategories([replyCategory])
+        
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            self?.soundSettings = settings.soundSetting
+        }
     }
     override func add(_ notification: NSUserNotification) -> Void {
         let content = UNMutableNotificationContent()
@@ -258,7 +263,14 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
             if soundName == "default" {
                 content.sound = .default
             } else {
-                appDelegate?.playSound(soundName)
+                if let soundSettings = soundSettings {
+                    switch soundSettings {
+                    case .enabled:
+                        appDelegate?.playSound(soundName)
+                    default:
+                        break
+                    }
+                }
             }
             
         }
@@ -337,7 +349,7 @@ private extension UNNotificationAttachment {
             let fileURL = tmpSubFolderURL.appendingPathComponent(imageFileIdentifier)
             let imageData = image.tiffRepresentation(using: .jpeg, factor: 1)
             try imageData?.write(to: fileURL)
-            let imageAttachment = try UNNotificationAttachment.init(identifier: imageFileIdentifier, url: fileURL, options: options)
+            let imageAttachment = try UNNotificationAttachment(identifier: imageFileIdentifier, url: fileURL, options: options)
             return imageAttachment
         } catch {
             print("error " + error.localizedDescription)
