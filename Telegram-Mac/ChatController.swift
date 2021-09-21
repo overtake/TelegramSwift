@@ -6450,6 +6450,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.chatThemeTempValue.set(.single(nil))
             }
             self?.genericView.hideChatThemeSelector(animated: true)
+            self?.themeSelector = nil
             self?.chatInteraction.update({ $0.updatedInterfaceState({ $0.withUpdatedThemeEditing(false) })})
         }
         

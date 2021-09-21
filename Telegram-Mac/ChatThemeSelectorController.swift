@@ -45,17 +45,17 @@ final class ChatThemeSelectorView : View {
         cancel.layer?.borderWidth = 1
     }
     
-    fileprivate func updateThemes(_ themes: [(String, CGImage, TelegramPresentationTheme)], context: AccountContext, chatTheme: (String?, TelegramPresentationTheme)?, previewCurrent: @escaping((String, TelegramPresentationTheme)?) -> Void) {
+    fileprivate func updateThemes(_ themes: [(String, CGImage, TelegramPresentationTheme)], emojies: [String: StickerPackItem], context: AccountContext, chatTheme: (String?, TelegramPresentationTheme)?, previewCurrent: @escaping((String, TelegramPresentationTheme)?) -> Void) {
         tableView.beginTableUpdates()
         tableView.removeAll()
         
         _ = tableView.addItem(item: GeneralRowItem(.zero, height: 10))
-        _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: arc4random(), theme: nil, selected: chatTheme?.0 == nil, select: { _ in
+        _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: arc4random(), emojies: emojies, theme: nil, selected: chatTheme?.0 == nil, select: { _ in
             previewCurrent(nil)
         }))
         
         for theme in themes {
-            _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: theme.0, theme: theme, selected: chatTheme?.0 == theme.0, select: { theme in
+            _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: theme.0, emojies: emojies, theme: theme, selected: chatTheme?.0 == theme.0, select: { theme in
                 previewCurrent(theme)
             }))
         }
@@ -125,6 +125,10 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         self.bar = .init(height: 0)
     }
     
+    deinit {
+       
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -147,11 +151,27 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         
         currentSelectedValue.set(chatTheme |> take(1) |> map { $0 })
         
-        disposable.set(combineLatest(queue: .mainQueue(), themesAndThumbs, chatTheme, currentSelectedValue.get()).start(next: { [weak self] themes, chatTheme, currentSelected in
+        let animatedEmojiStickers = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+            |> map { result -> [String: StickerPackItem] in
+                switch result {
+                case let .result(_, items, _):
+                    var animatedEmojiStickers: [String: StickerPackItem] = [:]
+                    for case let item as StickerPackItem in items {
+                        if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                            animatedEmojiStickers[emoji] = item
+                        }
+                    }
+                    return animatedEmojiStickers
+                default:
+                    return [:]
+                }
+        } |> deliverOnMainQueue
+        
+        disposable.set(combineLatest(queue: .mainQueue(), themesAndThumbs, chatTheme, currentSelectedValue.get(), animatedEmojiStickers).start(next: { [weak self] themes, chatTheme, currentSelected, emojies in
             
             let selected: (String?, TelegramPresentationTheme)? = currentSelected
             
-            self?.genericView.updateThemes(themes, context: context, chatTheme: selected, previewCurrent: { preview in
+            self?.genericView.updateThemes(themes, emojies: emojies, context: context, chatTheme: selected, previewCurrent: { preview in
                 self?.previewCurrent(preview?.1 ?? theme)
                 self?.currentSelected = preview
             })
@@ -178,4 +198,5 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
             self?.close(false)
         }, for: .SingleClick)
     }
+    
 }

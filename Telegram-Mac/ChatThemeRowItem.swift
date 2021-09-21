@@ -18,11 +18,13 @@ final class ChatThemeRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let selected: Bool
     fileprivate let select:((String, TelegramPresentationTheme)?)->Void
-    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, theme: (String, CGImage, TelegramPresentationTheme)?, selected: Bool, select:@escaping((String, TelegramPresentationTheme)?)->Void) {
+    fileprivate let emojies: [String: StickerPackItem]
+    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, emojies: [String: StickerPackItem], theme: (String, CGImage, TelegramPresentationTheme)?, selected: Bool, select:@escaping((String, TelegramPresentationTheme)?)->Void) {
         self.theme = theme
         self.select = select
         self.selected = selected
         self.context = context
+        self.emojies = emojies
         super.init(initialSize, stableId: stableId)
     }
     
@@ -44,7 +46,6 @@ private final class ChatThemeRowView: HorizontalRowView {
     private let textView = TextView()
     private let selectionView: View = View()
     
-    private let stickersDisposable = MetaDisposable()
     
     private var noThemeTextView: TextView?
     
@@ -89,7 +90,8 @@ private final class ChatThemeRowView: HorizontalRowView {
     }
     
     deinit {
-        stickersDisposable.dispose()
+        var bp = 0
+        bp += 1
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -110,28 +112,10 @@ private final class ChatThemeRowView: HorizontalRowView {
                 
                 let context = item.context
                 
-                let animatedEmojiStickers = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
-                    |> map { result -> [String: StickerPackItem] in
-                        switch result {
-                        case let .result(_, items, _):
-                            var animatedEmojiStickers: [String: StickerPackItem] = [:]
-                            for case let item as StickerPackItem in items {
-                                if let emoji = item.getStringRepresentationsOfIndexKeys().first {
-                                    animatedEmojiStickers[emoji] = item
-                                }
-                            }
-                            return animatedEmojiStickers
-                        default:
-                            return [:]
-                        }
-                } |> deliverOnMainQueue
-                
-                stickersDisposable.set(animatedEmojiStickers.start(next: { [weak self] stickers in
-                    if let first = stickers[current.0.fixed] {
-                        let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, alwaysAccept: true, media: first.file)
-                        self?.emojiView.update(with: first.file, size: NSMakeSize(25, 25), context: context, table: nil, parameters: params, animated: animated)
-                    }
-                }))
+                if let first = item.emojies[current.0.fixed]  {
+                    let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, alwaysAccept: true, media: first.file)
+                    self.emojiView.update(with: first.file, size: NSMakeSize(25, 25), context: context, table: nil, parameters: params, animated: animated)
+                }
                 
                 self.imageView.image = current.1
                 self.imageView.sizeToFit()
