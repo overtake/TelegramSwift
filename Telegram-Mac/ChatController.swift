@@ -5280,6 +5280,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invokeNext
         }
         
+        if chatInteraction.presentation.interfaceState.themeEditing {
+            self.themeSelector?.close(true)
+            return .invoked
+        }
+        
         var result:KeyHandlerResult = .rejected
         if chatInteraction.presentation.botMenu?.revealed == true {
             self.chatInteraction.update({
@@ -6445,6 +6450,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.chatThemeTempValue.set(.single(nil))
             }
             self?.genericView.hideChatThemeSelector(animated: true)
+            self?.chatInteraction.update({ $0.updatedInterfaceState({ $0.withUpdatedThemeEditing(false) })})
         }
         
         self.themeSelector?.previewCurrent = { [weak self] theme in
@@ -6453,6 +6459,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 160)
         self.themeSelector?.loadViewIfNeeded()
+        
+        self.chatInteraction.update({ $0.updatedInterfaceState({ $0.withUpdatedThemeEditing(true) })})
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

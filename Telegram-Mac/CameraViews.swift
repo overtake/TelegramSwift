@@ -21,7 +21,7 @@ enum CameraState : Equatable {
 final class OutgoingVideoView : Control {
     
     private var progressIndicator: ProgressIndicator? = nil
-    private let videoContainer = View()
+    private let videoContainer = Control()
     var isMirrored: Bool = false {
         didSet {
             CATransaction.begin()
@@ -232,6 +232,7 @@ final class OutgoingVideoView : Control {
                 let fromFrame = self.frame
                 let toFrame = frame
                 
+                
                 let animation = DisplayLinkAnimator(duration: duration, from: 0.0, to: 1.0, update: { [weak self] value in
                     let x = fromFrame.minX - (fromFrame.minX - toFrame.minX) * value
                     let y = fromFrame.minY - (fromFrame.minY - toFrame.minY) * value
@@ -302,7 +303,6 @@ final class IncomingVideoView : Control {
             _cameraInitialized.set(.initializing)
             
             if let videoView = videoView {
-                videoView.setVideoContentMode(.resizeAspect)
 
                 addSubview(videoView.view, positioned: .below, relativeTo: self.subviews.first)
                 videoView.view.background = .clear

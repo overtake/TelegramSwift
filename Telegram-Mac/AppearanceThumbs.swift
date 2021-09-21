@@ -522,7 +522,7 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
 
 func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode: TableBackgroundMode) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
-        let image = generateImage(NSMakeSize(80, 80), rotatedContext: { size, ctx in
+        let image = generateImage(NSMakeSize(70, 80), rotatedContext: { size, ctx in
             let rect = NSMakeRect(0, 0, size.width, size.height)
             ctx.clear(rect)
             ctx.round(size, 10)
@@ -530,10 +530,10 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
             func applyBubbles() {
                 let bubbleImage = NSImage(named: "Icon_ThemeBubble")
                 if let incoming = bubbleImage?.precomposed(palette.bubbleBackground_incoming, flipVertical: true) {
-                    ctx.draw(incoming, in: NSMakeRect(7, 9, 48, 16))
+                    ctx.draw(incoming, in: NSMakeRect(7, 9, 38, 16))
                 }
                 if let outgoing = bubbleImage?.precomposed(palette.bubbleBackground_outgoing, flipVertical: true, flipHorizontal: true) {
-                    ctx.draw(outgoing, in: NSMakeRect(size.width - 57, 9 + 16 + 5, 48, 16))
+                    ctx.draw(outgoing, in: NSMakeRect(size.width - 47, 9 + 16 + 5, 38, 16))
                 }
             }
             

@@ -45,18 +45,17 @@ final class ChatThemeSelectorView : View {
         cancel.layer?.borderWidth = 1
     }
     
-    fileprivate func updateThemes(_ themes: [(String, CGImage, TelegramPresentationTheme)], chatTheme: (String?, TelegramPresentationTheme)?, previewCurrent: @escaping((String, TelegramPresentationTheme)?) -> Void) {
+    fileprivate func updateThemes(_ themes: [(String, CGImage, TelegramPresentationTheme)], context: AccountContext, chatTheme: (String?, TelegramPresentationTheme)?, previewCurrent: @escaping((String, TelegramPresentationTheme)?) -> Void) {
         tableView.beginTableUpdates()
         tableView.removeAll()
         
         _ = tableView.addItem(item: GeneralRowItem(.zero, height: 10))
-        
-        _ = tableView.addItem(item: ChatThemeRowItem(frame.size, width: 120, stableId: arc4random(), theme: nil, selected: chatTheme?.0 == nil, select: { _ in
+        _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: arc4random(), theme: nil, selected: chatTheme?.0 == nil, select: { _ in
             previewCurrent(nil)
         }))
         
         for theme in themes {
-            _ = tableView.addItem(item: ChatThemeRowItem(frame.size, width: 120, stableId: theme.0, theme: theme, selected: chatTheme?.0 == theme.0, select: { theme in
+            _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: theme.0, theme: theme, selected: chatTheme?.0 == theme.0, select: { theme in
                 previewCurrent(theme)
             }))
         }
@@ -152,7 +151,7 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
             
             let selected: (String?, TelegramPresentationTheme)? = currentSelected
             
-            self?.genericView.updateThemes(themes, chatTheme: selected, previewCurrent: { preview in
+            self?.genericView.updateThemes(themes, context: context, chatTheme: selected, previewCurrent: { preview in
                 self?.previewCurrent(preview?.1 ?? theme)
                 self?.currentSelected = preview
             })
