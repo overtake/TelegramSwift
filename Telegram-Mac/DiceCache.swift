@@ -243,12 +243,12 @@ class DiceCache {
                 return
             }
             for diceData in data {
-                let context = self.dataContexts[diceData.key] ?? EmojiDataContext()
+                let context = self.dataContexts[diceData.key.fixed] ?? EmojiDataContext()
                 context.data = diceData.value
                 for subscriber in context.subscribers.copyItems() {
                     subscriber(diceData.value)
                 }
-                self.dataContexts[diceData.key] = context
+                self.dataContexts[diceData.key.fixed] = context
             }
             for effect in dataEffects {
                 let context = self.dataEffectsContexts[effect.key] ?? EmojiDataContext()
@@ -273,13 +273,13 @@ class DiceCache {
             let invoke = {
                 if !cancelled {
                     var dataContext: EmojiDataContext
-                    if let dc = self.dataEffectsContexts[emoji] {
+                    if let dc = self.dataEffectsContexts[emoji.fixed] {
                         dataContext = dc
                     } else {
                         dataContext = EmojiDataContext()
                     }
                     
-                    self.dataEffectsContexts[emoji] = dataContext
+                    self.dataEffectsContexts[emoji.fixed] = dataContext
                     
                     let index = dataContext.subscribers.add({ data in
                         if !cancelled {
@@ -289,7 +289,7 @@ class DiceCache {
                     subscriber.putNext(dataContext.data)
                     disposable.set(ActionDisposable { [weak self] in
                         resourcesQueue.async {
-                            if let current = self?.dataEffectsContexts[emoji] {
+                            if let current = self?.dataEffectsContexts[emoji.fixed] {
                                 current.subscribers.remove(index)
                             }
                         }
