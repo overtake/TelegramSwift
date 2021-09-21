@@ -523,6 +523,9 @@ struct ChatPresentationInterfaceState: Equatable {
             if self.chatMode == .preview {
                 return .block("")
             }
+            if self.interfaceState.themeEditing {
+                return .block("")
+            }
 
             
             switch chatMode {

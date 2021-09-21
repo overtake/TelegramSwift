@@ -248,38 +248,32 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
+    var tonesItems:[SPopoverItem] = []
     
-    
-   
-    
-    if #available(macOS 10.14, *) {
-        var tonesItems:[SPopoverItem] = []
-        
-        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .default), {
-            arguments.notificationTone(.default)
-        }))
+    tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .default), {
+        arguments.notificationTone(.default)
+    }))
 
-        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .none), {
-            arguments.notificationTone(.none)
+    tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .none), {
+        arguments.notificationTone(.none)
+    }))
+    
+    
+    for i in 0 ..< 12 {
+        let sound: PeerMessageSound = .bundledModern(id: Int32(i))
+        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
+            arguments.notificationTone(sound)
         }))
-        
-        
-        for i in 0 ..< 12 {
-            let sound: PeerMessageSound = .bundledModern(id: Int32(i))
-            tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
-                arguments.notificationTone(sound)
-            }))
-        }
-        for i in 0 ..< 8 {
-            let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
-            tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
-                arguments.notificationTone(sound)
-            }))
-        }
-        
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(localizedPeerNotificationSoundString(sound: settings.tone), tonesItems), viewType: .innerItem)))
-        index += 1
     }
+    for i in 0 ..< 8 {
+        let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
+        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
+            arguments.notificationTone(sound)
+        }))
+    }
+    
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(localizedPeerNotificationSoundString(sound: settings.tone), tonesItems), viewType: .innerItem)))
+    index += 1
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: L10n.notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
         arguments.toggleRequestUserAttention()

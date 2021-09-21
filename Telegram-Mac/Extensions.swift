@@ -139,7 +139,7 @@ public extension String {
         str = str.replacingOccurrences(of: "➡", with: "➡️")
         str = str.replacingOccurrences(of: "⚰", with: "⚰️")
         str = str.replacingOccurrences(of: "⚡", with: "⚡️")
-
+        str = str.replacingOccurrences(of: "⛄", with: "⛄️")
         
             
 

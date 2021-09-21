@@ -194,6 +194,12 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
     }
     
     override func add(_ notification: NSUserNotification) -> Void {
+        if let soundName = notification.soundName {
+            if soundName != "default" {
+                appDelegate?.playSound(soundName)
+                notification.soundName = nil
+            }
+        }
         NSUserNotificationCenter.default.deliver(notification)
     }
 }

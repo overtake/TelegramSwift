@@ -75,11 +75,12 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
-        accept = parameters?.alwaysAccept ?? accept 
         
         if NSIsEmptyRect(self.visibleRect) || self.window == nil {
             accept = false
         }
+        
+        accept = parameters?.alwaysAccept ?? accept
         
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept && self.sticker != nil {
@@ -178,7 +179,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         updatePlayerIfNeeded()
     }
     
-    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message?, table: TableView?, parameters: ChatMediaLayoutParameters?, animated: Bool, positionFlags: LayoutPositionFlags?, approximateSynchronousValue: Bool) {
+    override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message? = nil, table: TableView?, parameters: ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         
         guard let file = media as? TelegramMediaFile else { return }
