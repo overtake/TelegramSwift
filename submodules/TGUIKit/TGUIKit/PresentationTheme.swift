@@ -149,7 +149,7 @@ public class ColorPalette : Equatable {
     public var blendedOutgoingColors:NSColor {
         let first = bubbleBackground_outgoing.first!
         return bubbleBackground_outgoing.reduce(first, {
-            $0.blended(withFraction: 0.5, of: $1)!
+            $0.blended(withFraction: 0.5, of: $1.withAlphaComponent(1))!
         })
     }
     

@@ -382,21 +382,27 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
             
             var bubble = image
             bubble = generateImage(NSMakeSize(150, 30), contextGenerator: { size, ctx in
-                let colors = palette.bubbleBackground_outgoing
+                let colors = palette.bubbleBackground_outgoing.map { $0.withAlphaComponent(1.0) }
                 let rect = NSMakeRect(0, 0, size.width, size.height)
                 ctx.clear(rect)
                 ctx.clip(to: rect, mask: image)
                 
-                let gradientColors = colors.map { $0.cgColor } as CFArray
-                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                
-                var locations: [CGFloat] = []
-                for i in 0 ..< colors.count {
-                    locations.append(delta * CGFloat(i))
+                if colors.count > 1 {
+                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else if colors.count == 1 {
+                    ctx.setFillColor(colors[0].cgColor)
+                    ctx.fill(rect)
                 }
-                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                
             })!
             ctx.draw(bubble, in: NSMakeRect(160, 230, 150, 30))
            

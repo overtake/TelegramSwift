@@ -378,11 +378,21 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 default:
                                     notification.soundName = fileNameForNotificationSound(inAppSettings.tone, defaultSound: nil)
                                 }
+                            } else {
+                                switch inAppSettings.tone {
+                                case .none:
+                                    notification.soundName = nil
+                                default:
+                                    break
+                                }
                             }
 
                             if message.muted {
                                 notification.soundName = nil
                                 title += " 🔕"
+                            }
+                            if screenIsLocked {
+                                notification.soundName = nil
                             }
                                                         
                             if self.activeAccounts.accounts.count > 1 && !screenIsLocked {

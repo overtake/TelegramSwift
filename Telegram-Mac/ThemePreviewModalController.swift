@@ -28,6 +28,9 @@ private final class ThemePreviewView : BackgroundView {
         segmentContainer.addSubview(segmentControl.view)
         self.addSubview(segmentContainer)
         
+        self.useSharedAnimationPhase = false
+        self.checkDarkPattern = false
+        
         
         layout()
 

@@ -155,7 +155,8 @@ open class BackgroundView: View {
     private var backgroundView: NSView?
     
     public var useSharedAnimationPhase: Bool = true
-    
+    public var checkDarkPattern: Bool = true
+
     private let container: View = View()
     
     private var tileControl: TileControl
@@ -227,7 +228,7 @@ open class BackgroundView: View {
                         shouldTile = true
                         let intense = Float((abs(intensity ?? 50))) / 100.0
                         
-                        let invertPattern = presentation.colors.isDark
+                        let invertPattern = presentation.colors.isDark && checkDarkPattern
                         if invertPattern {
                             self.imageView.compositingFilter = nil
                             imageView.opacity = 1.0
