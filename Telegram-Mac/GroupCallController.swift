@@ -1774,17 +1774,6 @@ final class GroupCallUIController : ViewController {
                 return
             }
             let state = value.0
-
-            if state == currentState {
-                var bp = 0
-                bp += 1
-            }
-            
-            if value.1.inserted.count == 2, value.1.updated.count == 1, value.1.deleted.count == 0 {
-                var bp = 0
-                bp += 1
-            }
-            
             
             if currentState == nil {
                 _ = strongSelf.disableScreenSleep()
