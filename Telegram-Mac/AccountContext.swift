@@ -92,7 +92,7 @@ final class AccountContext {
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
-    private let _chatThemes: Promise<[(String, TelegramPresentationTheme)]> = Promise()
+    private let _chatThemes: Promise<[(String, TelegramPresentationTheme)]> = Promise([])
     var chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> {
         return _chatThemes.get() |> deliverOnMainQueue
     }
@@ -270,7 +270,8 @@ final class AccountContext {
                 }
             }
             
-            return combineLatest(signals) |> map { values in
+            let first = Signal<[(String, TelegramPresentationTheme)], NoError>.single([])
+            return first |> then(combineLatest(signals)) |> map { values in
                 var dict: [(String, TelegramPresentationTheme)] = []
                 for value in values {
                     dict.append((value.0, value.1))
