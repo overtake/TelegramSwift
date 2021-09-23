@@ -46,6 +46,7 @@ private final class ChatThemeRowView: HorizontalRowView {
     private let textView = TextView()
     private let selectionView: View = View()
     
+    private let overlay = OverlayControl()
     
     private var noThemeTextView: TextView?
     
@@ -57,7 +58,7 @@ private final class ChatThemeRowView: HorizontalRowView {
         addSubview(emojiView)
         addSubview(textView)
         addSubview(selectionView)
-        
+        addSubview(overlay)
         imageView.isEventLess = true
         emojiView.userInteractionEnabled = false
         selectionView.isEventLess = true
@@ -66,33 +67,39 @@ private final class ChatThemeRowView: HorizontalRowView {
         textView.userInteractionEnabled = false
 
         
-        
         selectionView.layer?.cornerRadius = 12
         selectionView.layer?.borderWidth = 2.5
-
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
         
-        guard let item = item as? ChatThemeRowItem else {
-            return
-        }
-        if let theme = item.theme {
-            item.select((theme.0, theme.2))
-        } else {
-            item.select(nil)
-        }
+        
+        overlay.set(handler: { [weak self] _ in
+            guard let item = self?.item as? ChatThemeRowItem else {
+                return
+            }
+            if let theme = item.theme {
+                item.select((theme.0, theme.2))
+            } else {
+                item.select(nil)
+            }
+        }, for: .Click)
+
+        overlay.set(handler: { [weak self] _ in
+            self?.emojiView.overridePlayValue = true
+        }, for: .Hover)
+        
+        overlay.set(handler: { [weak self] _ in
+            self?.emojiView.overridePlayValue = false
+        }, for: .Normal)
     }
+
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     deinit {
-        var bp = 0
-        bp += 1
+        
     }
+    
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
@@ -113,10 +120,11 @@ private final class ChatThemeRowView: HorizontalRowView {
                 let context = item.context
                 
                 if let first = item.emojies[current.0.fixed]  {
-                    let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, alwaysAccept: true, media: first.file)
+                    let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, media: first.file)
                     self.emojiView.update(with: first.file, size: NSMakeSize(25, 25), context: context, table: nil, parameters: params, animated: animated)
                 }
                 
+                self.emojiView.overridePlayValue = false
                 self.imageView.image = current.1
                 self.imageView.sizeToFit()
                 self.imageView.isHidden = false
@@ -150,5 +158,6 @@ private final class ChatThemeRowView: HorizontalRowView {
         self.textView.centerX(y: 60)
         self.emojiView.centerX(y: 55)
         self.noThemeTextView?.centerX(y: 15)
+        self.overlay.frame = bounds
     }
 }

@@ -18,7 +18,7 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
     case let .background(image, intensity, colors, rotation):
         let imageSize = image.size.aspectFilled(rect.size)
         ctx.saveGState()
-        ctx.translateBy(x: 1, y: -1)
+//        ctx.translateBy(x: 1, y: -1)
 
         if let colors = colors, !colors.isEmpty {
             

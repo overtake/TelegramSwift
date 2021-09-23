@@ -69,19 +69,28 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     
     private var previousAccept: Bool = false
     
+    var overridePlayValue: Bool? = nil {
+        didSet {
+            updatePlayerIfNeeded()
+        }
+    }
     
     @objc func updatePlayerIfNeeded() {
         var accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
         
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
+        accept = parameters?.alwaysAccept ?? accept
+
         
         if NSIsEmptyRect(self.visibleRect) || self.window == nil {
             accept = false
         }
         
-        accept = parameters?.alwaysAccept ?? accept
-        
+        if let value = overridePlayValue {
+            accept = value
+        }
+       
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept && self.sticker != nil {
             signal = signal |> delay(accept ? 0.1 : 0, queue: .mainQueue())

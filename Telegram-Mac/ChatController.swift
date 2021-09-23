@@ -1211,7 +1211,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
     
-    private let chatThemeValue: Promise<(String?, TelegramPresentationTheme)> = Promise()
+    private let chatThemeValue: Promise<(String?, TelegramPresentationTheme)> = Promise((nil, theme))
     private let chatThemeTempValue: Promise<TelegramPresentationTheme?> = Promise(nil)
 
     private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
