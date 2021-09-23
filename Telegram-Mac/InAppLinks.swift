@@ -249,11 +249,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         }
         url = String(reversedUrl.reversed())
-        if !url.hasPrefix("http") && !url.hasPrefix("ftp"), url.range(of: "://") == nil {
-            if isValidEmail(link) {
-              //  url = "mailto:" + url
+        if !url.hasPrefix("http") && !url.hasPrefix("ftp") {
+            if let range = url.range(of: "://") {
+                if url.length > 10, range.lowerBound > url.index(url.startIndex, offsetBy: 10) {
+                    url = "http://" + url
+                }
             } else {
-                url = "http://" + url
+                if isValidEmail(link) {
+                  //  url = "mailto:" + url
+                } else {
+                    url = "http://" + url
+                }
             }
         }
         let urlValue = url
