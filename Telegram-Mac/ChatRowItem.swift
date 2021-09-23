@@ -2539,8 +2539,10 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     
     
     if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)), message.flags.contains(.Incoming) || item.isRead {
-        let item = ContextMenuItem("-")
         let stats = MessageReadMenuItem(context: context, message: message)
+
+        let item = ContextMenuItem("-")
+        
         item.contextObject = stats
         item.view = stats.view
         items.append(item)
