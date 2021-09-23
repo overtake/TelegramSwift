@@ -145,6 +145,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private let proxyDisposable = MetaDisposable()
     private var activity:Any?
     private var executeUrlAfterLogin: String? = nil
+    private var timer: SwiftSignalKit.Timer?
     
     private(set) var appEncryption: AppEncryptionParameters!
 
@@ -932,6 +933,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             sharedNotificationManager.didUpdateLocked = { value in
                 self.updatePeerPresence()
             }
+            
+            self.timer = SwiftSignalKit.Timer(timeout: 5, repeat: true, completion: {
+                self.updatePeerPresence()
+            }, queue: .mainQueue())
+            self.timer?.start()
         })
         
     }
@@ -958,7 +964,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func updatePeerPresence() {
         if let sharedApplicationContextValue = sharedApplicationContextValue {
-            let isOnline = NSApp.isActive && NSApp.isRunning && !NSApp.isHidden && !sharedApplicationContextValue.sharedWakeupManager.isSleeping && !sharedApplicationContextValue.notificationManager._lockedValue.screenLock && !sharedApplicationContextValue.notificationManager._lockedValue.passcodeLock
+            let isOnline = NSApp.isActive && NSApp.isRunning && !NSApp.isHidden && !sharedApplicationContextValue.sharedWakeupManager.isSleeping && !sharedApplicationContextValue.notificationManager._lockedValue.screenLock && !sharedApplicationContextValue.notificationManager._lockedValue.passcodeLock && SystemIdleTime() < 30
+            
+            
+            
             #if DEBUG
             NSLog("accountIsOnline: \(isOnline)")
             #endif

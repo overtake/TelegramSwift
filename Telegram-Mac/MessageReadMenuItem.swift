@@ -15,7 +15,7 @@ import Postbox
 
 
 
-private final class MessageViewsMenuItemView : View {
+private final class MessageViewsMenuItemView : Control {
     
     final class AvatarContentView: View {
         private var disposable: Disposable?
@@ -143,26 +143,30 @@ private final class MessageViewsMenuItemView : View {
             
             switch state {
             case let .stats(peers):
-                let menu = ContextMenu()
-                var items:[ContextMenuItem] = []
-                for peer in peers {
-                    let item = ContextMenuItem(peer.displayTitle.prefixWithDots(25), handler: {
-                        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
-                    })
-                    let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                if peers.count > 1 {
+                    let menu = ContextMenu()
+                    var items:[ContextMenuItem] = []
 
-                    disposableSet.set(avatar.start(next: { [weak item] image, _ in
-                        DispatchQueue.main.async {
-                            item?.image = image?._NSImage
-                        }
-                    }), forKey: peer.id)
-                    
-                    items.append(item)
+                    for peer in peers {
+                        let item = ContextMenuItem(peer.displayTitle.prefixWithDots(25), handler: {
+                            context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
+                        })
+                        let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+
+                        disposableSet.set(avatar.start(next: { [weak item] image, _ in
+                            DispatchQueue.main.async {
+                                item?.image = image?._NSImage
+                            }
+                        }), forKey: peer.id)
+                        
+                        items.append(item)
+                    }
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    item.submenu = menu
                 }
-                for item in items {
-                    menu.addItem(item)
-                }
-                item.submenu = menu
+               
             default:
                 break
             }
@@ -190,10 +194,7 @@ private final class MessageViewsMenuItemView : View {
 
     }
     
-    func updateIsSelected(_ isSelected: Bool, message: Message, context: AccountContext, state: MessageReadMenuItem.State, animated: Bool) {
-        selectedView.isHidden = !isSelected
-        selectedView.backgroundColor = theme.colors.accent //NSColor.selectedMenuItemColor
-       
+    var isDark: Bool {
         let isDark:Bool
 
         if #available(macOS 10.14, *) {
@@ -201,6 +202,14 @@ private final class MessageViewsMenuItemView : View {
         } else {
             isDark = effectiveAppearance.name == .vibrantDark
         }
+        return isDark
+    }
+    
+    func updateIsSelected(_ isSelected: Bool, message: Message, context: AccountContext, state: MessageReadMenuItem.State, animated: Bool) {
+        selectedView.isHidden = !isSelected
+        selectedView.backgroundColor = theme.colors.accent //NSColor.selectedMenuItemColor
+       
+       
         
         let textColor: NSColor = isSelected ? .white : (isDark ? .white : .black)
         let textLayot: TextViewLayout?
@@ -228,23 +237,31 @@ private final class MessageViewsMenuItemView : View {
             contentView = .init(context: context, message: message, peers: nil, size: NSMakeSize(15, 15))
             loadingView = View(frame: NSMakeRect(0, 0, 20, 6))
             loadingView?.layer?.cornerRadius = 3
-            loadingView?.backgroundColor = NSColor.lightGray
+            loadingView?.backgroundColor = (isDark ? .white : .black)
         case let .stats(peers):
-            let text: String
-            if let media = message.media.first as? TelegramMediaFile {
-                if media.isInstantVideo {
-                    text = L10n.chatMessageReadStatsWatchedCountable(peers.count)
-                } else if media.isVoice {
-                    text = L10n.chatMessageReadStatsListenedCountable(peers.count)
+            if peers.count == 1 {
+                let text: String = peers[0].displayTitle
+                textLayot = TextViewLayout(.initialize(string: text, color: textColor, font: .normal(.text)))
+                loadingView = nil
+                contentView = .init(context: context, message: message, peers: peers, size: NSMakeSize(15, 15))
+            } else {
+                let text: String
+                if let media = message.media.first as? TelegramMediaFile {
+                    if media.isInstantVideo {
+                        text = L10n.chatMessageReadStatsWatchedCountable(peers.count)
+                    } else if media.isVoice {
+                        text = L10n.chatMessageReadStatsListenedCountable(peers.count)
+                    } else {
+                        text = L10n.chatMessageReadStatsSeenCountable(peers.count)
+                    }
                 } else {
                     text = L10n.chatMessageReadStatsSeenCountable(peers.count)
                 }
-            } else {
-                text = L10n.chatMessageReadStatsSeenCountable(peers.count)
+                textLayot = TextViewLayout(.initialize(string: text, color: textColor, font: .normal(.text)))
+                loadingView = nil
+                contentView = .init(context: context, message: message, peers: Array(peers.prefix(3)), size: NSMakeSize(15, 15))
             }
-            textLayot = TextViewLayout(.initialize(string: text, color: textColor, font: .normal(.text)))
-            loadingView = nil
-            contentView = .init(context: context, message: message, peers: Array(peers.prefix(3)), size: NSMakeSize(15, 15))
+           
         }
         textLayot?.measure(width: frame.width - 40)
         
@@ -260,7 +277,7 @@ private final class MessageViewsMenuItemView : View {
         }
         
         if let loadingView = self.loadingView {
-            performSubviewRemoval(loadingView, animated: animated)
+            performSubviewRemoval(loadingView, animated: false)
         }
         self.loadingView = loadingView
         if let loadingView = loadingView {
@@ -269,11 +286,25 @@ private final class MessageViewsMenuItemView : View {
                 loadingView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
         }
-        textView._change(opacity: textLayot != nil ? 1 : 0, animated: animated)
+        textView._change(opacity: textLayot != nil ? 1 : 0, animated: false)
         if let textLayot = textLayot {
             textView.attributedStringValue = textLayot.attributedString
             textView.sizeToFit()
         }
+        
+        self.removeAllHandlers()
+        self.set(handler: { control in
+            switch state {
+            case let .stats(peers):
+                if peers.count == 1 {
+                    let peer = peers[0]
+                    context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
+                    control.enclosingMenuItem?.menu?.cancelTracking()
+                }
+            default:
+                break
+            }
+        }, for: .Click)
         
         needsLayout = true
     }
@@ -323,7 +354,7 @@ final class MessageReadMenuItem {
             }
         }
     }
-    
+        
     fileprivate let context: AccountContext
     fileprivate let message: Message
     fileprivate let disposable = MetaDisposable()
@@ -339,16 +370,6 @@ final class MessageReadMenuItem {
     }
     
     func load() {
-//        #if DEBUG
-//        let readStats: Signal<State, NoError> = context.engine.peers.recentPeers() |> map { recent in
-//            switch recent {
-//            case let .peers(peers):
-//                return .stats(peers)
-//            case .disabled:
-//                return .empty
-//            }
-//        } |> take(1)
-//        #else
         let readStats: Signal<State, NoError> = context.engine.messages.messageReadStats(id: message.id)
             |> deliverOnMainQueue
             |> map { value in
@@ -358,9 +379,6 @@ final class MessageReadMenuItem {
                     return .empty
                 }
             }
-//        #endif
-               
-        
         self.state.set(readStats |> deliverOnMainQueue)
 
         
@@ -395,23 +413,7 @@ final class MessageReadMenuItem {
         
         if message.flags.contains(.Incoming) {
             return false
-//            switch peer {
-//            case let peer as TelegramChannel:
-//                if peer.adminRights == nil || !peer.groupAccess.isCreator || peer.isChannel {
-//                    return false
-//                }
-//            case let peer as TelegramGroup:
-//                switch peer.role {
-//                case .member:
-//                    return false
-//                default:
-//                    break
-//                }
-//            default:
-//                return false
-//            }
         }
-
         for media in message.media {
             if let _ = media as? TelegramMediaAction {
                 return false

@@ -244,7 +244,7 @@ final class GroupCallTitleView : Control {
     func update(_ peer: Peer, _ state: GroupCallUIState, _ account: Account, recordClick: @escaping()->Void, resizeClick: @escaping()->Void, hidePeersClick: @escaping()->Void, animated: Bool) {
         
         let oldMode = self.mode
-        let mode: Mode = .normal//state.isFullScreen && state.dominantSpeaker != nil & ? .transparent : .normal
+        let mode: Mode = .normal
         
         self.updateMode(mode, animated: animated)
                 
@@ -261,6 +261,9 @@ final class GroupCallTitleView : Control {
         
         let speaking = state.memberDatas.filter { member in
             if state.videoActive(.list).isEmpty {
+                return false
+            }
+            if !state.hideParticipants && state.isFullScreen {
                 return false
             }
             if member.isSpeaking && member.peer.id != peer.id {
