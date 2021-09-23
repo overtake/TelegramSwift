@@ -1133,19 +1133,43 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
                 return index;
             };
             
+            
+            NSUInteger (^giveupString)(NSString *symbol) = ^NSUInteger(NSString *symbol) {
+                
+                NSUInteger index = NSNotFound;
+                
+                for (int j = (int)substring.length ; j > 0; j --) {
+                    
+                    if([[substring substringWithRange:NSMakeRange(MAX(0, j-symbol.length), symbol.length)] rangeOfString:symbol].location != NSNotFound) {
+                        index = j;
+                        break;
+                    }
+                }
+                
+                return index;
+            };
+            
+            
             NSArray<NSCharacterSet *> *csets = @[[NSCharacterSet newlineCharacterSet],[NSCharacterSet whitespaceCharacterSet]];
             
             NSUInteger index = substring.length;
             
             if(index + inc > message.length) {
                 
-                for (NSCharacterSet *set in csets) {
-                    NSUInteger idx = giveup(set);
-                    if(idx != NSNotFound) {
-                        index = idx;
-                        break;
+                NSUInteger idx = giveupString(@"\n\n");
+                if (idx != NSNotFound) {
+                    index = idx;
+                } else {
+                    for (NSCharacterSet *set in csets) {
+                        NSUInteger idx = giveup(set);
+                        if(idx != NSNotFound) {
+                            index = idx;
+                            break;
+                        }
                     }
                 }
+                
+                
                 
             }
             
