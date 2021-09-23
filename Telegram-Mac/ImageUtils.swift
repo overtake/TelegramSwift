@@ -288,7 +288,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
                 ctx.draw(icon, in: rect)
             }
             
-        })
+        }, scale: 1)
         subscriber.putNext(image)
         subscriber.putCompletion()
         return EmptyDisposable

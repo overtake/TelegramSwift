@@ -910,7 +910,7 @@ func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize) -> CGImag
         ctx.round(size, size.width/2)
         ctx.setFillColor(foregroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-    })!
+    }, scale: 1.0)!
 }
 
 private func deleteItemIcon(_ color: NSColor) -> CGImage {
