@@ -2781,9 +2781,9 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 let signal:Signal<(CGImage?, Bool), NoError>
                 if peer.id == context.peerId {
                     let icon = theme.icons.searchSaved
-                    signal = generateEmptyPhoto(NSMakeSize(15, 15), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
+                    signal = generateEmptyPhoto(NSMakeSize(30, 30), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
                 } else {
-                    signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(15, 15), scale: System.backingScale, font: .avatar(7), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                    signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(30, 30), scale: 1, font: .avatar(7), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
                 }
 
                 _ = signal.start(next: { [weak item] image, _ in
