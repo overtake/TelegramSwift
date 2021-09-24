@@ -151,11 +151,11 @@ private final class MessageViewsMenuItemView : Control {
                         let item = ContextMenuItem(peer.displayTitle.prefixWithDots(25), handler: {
                             context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peer.id))
                         })
-                        let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(30, 30), scale: 1, font: .avatar(5), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                        let avatar = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(30, 30), font: .avatar(8), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
 
                         disposableSet.set(avatar.start(next: { [weak item] image, _ in
-                            DispatchQueue.main.async {
-                                item?.image = image?._NSImage
+                            if let image = image {
+                                item?.image = NSImage(cgImage: image, size: NSMakeSize(15, 15))
                             }
                         }), forKey: peer.id)
                         

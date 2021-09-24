@@ -834,7 +834,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         }
                         self.window.deminiaturize(self)
                         NSApp.activate(ignoringOtherApps: true)
-                        
+                         
                         
                     }
                 })
