@@ -172,48 +172,6 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
     }
 }
 
-/*
- case let .group(peerIds, representations, displayLetters):
- var combine:[Signal<(CGImage?, Bool), NoError>] = []
- let inGroupSize = NSMakeSize(displayDimensions.width / 2 - 2, displayDimensions.height / 2 - 2)
- for peerId in peerIds {
- let representation: TelegramMediaImageRepresentation? = representations[peerId]
- let letters = displayLetters[peerId] ?? ["", ""]
- combine.append(peerImage(account: account, peerId: peerId, displayDimensions: inGroupSize, representation: representation, displayLetters: letters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad))
- }
- return combineLatest(combine) |> deliverOn(graphicsThreadPool) |> map { images -> (CGImage?, Bool) in
- var animated: Bool = false
- for image in images {
- if image.1 {
- animated = true
- break
- }
- }
- return (generateImage(displayDimensions, rotatedContext: { size, ctx in
- var x: CGFloat = 0
- var y: CGFloat = 0
- ctx.clear(NSMakeRect(0, 0, size.width, size.height))
- for i in 0 ..< images.count {
- let image = images[i].0
- if let image = image {
- let img = generateImage(image.size, rotatedContext: { size, ctx in
- ctx.clear(NSMakeRect(0, 0, size.width, size.height))
- ctx.draw(image, in: NSMakeRect(0, 0, image.size.width, image.size.height))
- })!
- ctx.draw(img, in: NSMakeRect(x, y, inGroupSize.width, inGroupSize.height))
- }
- x += inGroupSize.width + 4
- if (i + 1) % 2 == 0 {
- x = 0
- y += inGroupSize.height + 4
- }
- }
- 
- }), animated)
- 
- }
- */
-
 enum EmptyAvatartType {
     case peer(colors:(top:NSColor, bottom: NSColor), letter: [String], font: NSFont)
     case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize, cornerRadius: CGFloat?)
@@ -288,7 +246,7 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
                 ctx.draw(icon, in: rect)
             }
             
-        }, scale: 1)
+        })
         subscriber.putNext(image)
         subscriber.putCompletion()
         return EmptyDisposable
