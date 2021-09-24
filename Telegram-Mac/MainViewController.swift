@@ -699,7 +699,7 @@ class MainViewController: TelegramViewController {
     
     override func updateFrame(_ frame: NSRect, animated: Bool) {
         super.updateFrame(frame, animated: animated)
-        self.tabController.updateFrame(frame, animated: animated)
+        self.tabController.updateFrame(frame.size.bounds, animated: animated)
     }
     
     override init(_ context: AccountContext) {
