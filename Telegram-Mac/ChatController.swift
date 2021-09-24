@@ -4513,7 +4513,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         guard let strongSelf = strongSelf else {
                                             return
                                         }
-                                        strongSelf.emojiEffects.addAnimation(emoticon, index: animation.index, mirror: mirror, isIncoming: true, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
+                                        strongSelf.emojiEffects.addAnimation(emoticon.fixed, index: animation.index, mirror: mirror, isIncoming: true, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
                                     })
                                 }
                             }

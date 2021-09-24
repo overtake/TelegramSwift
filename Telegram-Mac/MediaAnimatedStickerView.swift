@@ -146,6 +146,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
     }
     
+    func playAgain() {
+        self.playerView.playIfNeeded(true)
+    }
+    
     var chatLoopAnimated: Bool {
         if let context = self.context {
             return context.autoplayMedia.loopAnimatedStickers

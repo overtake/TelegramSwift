@@ -153,6 +153,10 @@ final class EmojiScreenEffect {
     
     private func initAnimation(_ animation: LottieAnimation, emoji: String, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
         
+        
+        let mediaView = (takeTableItem(messageId)?.view as? ChatMediaView)?.contentNode as? MediaAnimatedStickerView
+        mediaView?.playAgain()
+        
         let key: Key = .init(animationKey: animation.key.key, messageId: messageId, timestamp: Date().timeIntervalSince1970, isIncoming: isIncoming)
         
         animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak self] in
