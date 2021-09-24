@@ -578,7 +578,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     fileprivate let endCall:ImageButton = ImageButton()
     fileprivate let statusTextView:TextView = TextView()
     fileprivate let muteControl:ImageButton = ImageButton()
-
+    fileprivate let capView = View()
     let disposable = MetaDisposable()
     let hideDisposable = MetaDisposable()
 
@@ -648,6 +648,7 @@ class CallHeaderBasicView : NavigationHeaderView {
         
         backgroundView.frame = bounds
         backgroundView.wantsLayer = true
+        addSubview(capView)
         addSubview(backgroundView)
         addSubview(container)
         statusTextView.backgroundColor = .clear
@@ -736,6 +737,8 @@ class CallHeaderBasicView : NavigationHeaderView {
     override func layout() {
         super.layout()
         
+        capView.frame = NSMakeRect(0, 0, frame.width, height)
+        
         backgroundView.frame = bounds
         container.frame = NSMakeRect(0, 0, frame.width, height)
         muteControl.centerY(x:18)
@@ -750,6 +753,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
+        self.capView.backgroundColor = theme.colors.background
         endCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         endCall.set(image: theme.icons.callInlineDecline, for: .Highlight)
         _ = endCall.sizeToFit(NSMakeSize(10, 10), thatFit: false)
