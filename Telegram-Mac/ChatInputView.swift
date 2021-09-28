@@ -433,7 +433,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func updateAttachments(_ inputState:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        if let botMenu = inputState.botMenu, !inputState.interfaceState.inputState.inputText.isEmpty {
+        if let botMenu = inputState.botMenu, inputState.interfaceState.inputState.inputText.isEmpty {
             let current: ChatInputMenuView
             if let view = self.botMenuView {
                 current = view

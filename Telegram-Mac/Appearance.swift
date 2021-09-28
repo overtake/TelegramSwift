@@ -1750,11 +1750,9 @@ class TelegramPresentationTheme : PresentationTheme {
             if bubbled {
                 switch backgroundMode {
                 case let .background(image, _, colors, _):
-                    if let colors = colors, let first = colors.first {
-                        let blended = colors.reduce(first, { color, with in
-                            return color.blended(withFraction: 0.5, of: with)!
-                        })
-                        chatServiceItemColor = getAverageColor(blended)
+                    if let colors = colors, colors.count > 0 {
+                        let blended = NSColor.average(of: colors)
+                        chatServiceItemColor = NSColor.average(of: [getAverageColor(image), getAverageColor(blended)])
                     } else {
                         chatServiceItemColor = getAverageColor(image)
                     }

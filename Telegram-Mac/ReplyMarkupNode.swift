@@ -123,7 +123,7 @@ class ReplyMarkupNode: Node {
     }
     
     func proccess(_ control:Control, _ button:ReplyMarkupButton) {
-        interactions.proccess(button, { [weak control] loading in
+        interactions.proccess(button, { _ in
            // control?.backgroundColor = loading ? .black : theme.colors.grayBackground
         })
     }
@@ -144,7 +144,7 @@ class ReplyMarkupNode: Node {
                 let btnView:TextView? = view?.subviews[i] as? TextView
                 
                 if !self.isInput && button.presentation.controllerBackgroundMode.hasWallpaper {
-                    btnView?.blurBackground = theme.chatServiceItemColor
+                    btnView?.blurBackground = button.presentation.chatServiceItemColor
                     btnView?.backgroundColor = .clear
                 } else {
                     btnView?.blurBackground = nil
