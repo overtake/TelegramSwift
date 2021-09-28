@@ -18,7 +18,6 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
     case let .background(image, intensity, colors, rotation):
         let imageSize = image.size.aspectFilled(rect.size)
         ctx.saveGState()
-//        ctx.translateBy(x: 1, y: -1)
 
         if let colors = colors, !colors.isEmpty {
             
@@ -68,6 +67,8 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
                 ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0)
                 ctx.draw(image, in: rect.focus(imageSize))
             }
+        } else if let image = image._cgImage {
+            ctx.draw(image, in: rect.focus(imageSize))
         }
         ctx.restoreGState()
     case let .color(color):
