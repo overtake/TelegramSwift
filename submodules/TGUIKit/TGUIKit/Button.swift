@@ -40,6 +40,7 @@ open class Button: Control {
     }
     
     open override func layout() {
+        super.layout()
         visualEffect?.frame = bounds
     }
 
