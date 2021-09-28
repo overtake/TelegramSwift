@@ -192,7 +192,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
         }))
         
-        disposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
+        disposable.set(combineLatest(queue: .mainQueue(), statePromise.get(), appearanceSignal).start(next: { [weak self] state, _ in
             var buttons: [WidgetData.Button] = []
             
 

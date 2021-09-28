@@ -91,7 +91,7 @@ class SecretChatKeyView : View {
         imageView.centerX(y: 30)
         textView.centerX(y: imageView.frame.maxY + 30)
         
-        descriptionView.layout?.measure(width: frame.width - 60)
+        descriptionView.textLayout?.measure(width: frame.width - 60)
         descriptionView.centerX(y: textView.frame.maxY + 30)
     }
 }

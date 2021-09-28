@@ -1103,12 +1103,12 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
 //    
 //}
 
-public class TextView: Control, NSViewToolTipOwner {
+public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     public func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
         
-        guard let layout = self.layout else { return "" }
+        guard let layout = self.textLayout else { return "" }
         
         if let link = layout.link(at: point), let resolved = layout.interactions.resolveLink(link.0)?.removingPercentEncoding {
             return resolved.prefixWithDots(70)
@@ -1119,9 +1119,22 @@ public class TextView: Control, NSViewToolTipOwner {
     }
     
     
+    private var visualEffect: VisualEffect? = nil
+    private var textView: View? = nil
+    private var blockMask: CALayer?
+    public var blurBackground: NSColor? = nil {
+        didSet {
+            updateBackgroundBlur()
+            if blurBackground != nil {
+                self.backgroundColor = .clear
+            }
+        }
+    }
+    
+    
     private let menuDisposable = MetaDisposable()
     
-    private(set) public var layout:TextViewLayout?
+    private(set) public var textLayout:TextViewLayout?
     
     private var beginSelect:NSPoint = NSZeroPoint
     private var endSelect:NSPoint = NSZeroPoint
@@ -1163,14 +1176,25 @@ public class TextView: Control, NSViewToolTipOwner {
 //        self.layer?.delegate = nil
        // self.layer?.drawsAsynchronously = System.drawAsync
     }
-
-    public var disableBackgroundDrawing: Bool = false
+    private var _disableBackgroundDrawing: Bool = false
+    public var disableBackgroundDrawing: Bool {
+        set {
+            _disableBackgroundDrawing = newValue
+        }
+        get {
+            return _disableBackgroundDrawing || blurBackground != nil
+        }
+    }
 
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         //backgroundColor = .random
         super.draw(layer, in: ctx)
 
-        if let layout = layout {
+        if blurBackground != nil, layer != textView?.layer {
+            return
+        }
+        
+        if let layout = textLayout {
             
             
             ctx.setAllowsFontSubpixelPositioning(true)
@@ -1199,7 +1223,7 @@ public class TextView: Control, NSViewToolTipOwner {
            
             
             
-            if let image = layout.blockImage.1 {
+            if let image = layout.blockImage.1, blurBackground == nil {
                 ctx.draw(image, in: NSMakeRect(layout.blockImage.0.x, layout.blockImage.0.y, image.backingSize.width, image.backingSize.height))
             }
             
@@ -1349,7 +1373,7 @@ public class TextView: Control, NSViewToolTipOwner {
     
     
     public override func rightMouseDown(with event: NSEvent) {
-        if let layout = layout, userInteractionEnabled, layout.mayItems {
+        if let layout = textLayout, userInteractionEnabled, layout.mayItems {
             let location = convert(event.locationInWindow, from: nil)
             if (!layout.selectedRange.hasSelectText || !layout.inSelectedRange(location)) && (!layout.alwaysStaticItems || layout.link(at: location) != nil) {
                 layout.selectWord(at : location)
@@ -1429,14 +1453,13 @@ public class TextView: Control, NSViewToolTipOwner {
     }
     
     public func isEqual(to layout:TextViewLayout) -> Bool {
-        return self.layout == layout
+        return self.textLayout == layout
     }
 
     //
     
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
-        self.layout = layout
-        
+        self.textLayout = layout
         
         
         if let layout = layout {
@@ -1461,18 +1484,24 @@ public class TextView: Control, NSViewToolTipOwner {
         
        
 
-        
+        updateBackgroundBlur()
+
         self.setNeedsDisplayLayer()
     }
     
     public func set(layout:TextViewLayout?) {
-        self.layout = layout
+        self.textLayout = layout
         self.setNeedsDisplayLayer()
+    }
+    
+    public override func setNeedsDisplayLayer() {
+        super.setNeedsDisplayLayer()
+        self.textView?.layer?.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
         
-        if let layout = layout {
+        if let layout = textLayout {
             layout.selectedRange = TextSelectedRange(range:range, color: layout.selectText, def:true)
         }
         
@@ -1499,7 +1528,7 @@ public class TextView: Control, NSViewToolTipOwner {
         if !userInteractionEnabled {
             super.mouseDown(with: event)
         }
-        else if let layout = layout {
+        else if let layout = textLayout {
             let point = self.convert(event.locationInWindow, from: nil)
             let index = layout.findIndex(location: point)
             if point.x > layout.lines[index].frame.maxX {
@@ -1570,7 +1599,7 @@ public class TextView: Control, NSViewToolTipOwner {
         }
         
         endSelect = self.convert(event.locationInWindow, from: nil)
-        if let layout = layout {
+        if let layout = textLayout {
             layout.selectedRange.range = layout.selectedRange(startPoint: beginSelect, currentPoint: endSelect)
             layout.selectedRange.cursorAlignment = beginSelect.x > endSelect.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
         }
@@ -1609,7 +1638,7 @@ public class TextView: Control, NSViewToolTipOwner {
         
         self.locationInWindow = nil
         
-        if let layout = layout, userInteractionEnabled {
+        if let layout = textLayout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
             if event.clickCount == 3, isSelectable {
                 layout.selectAll(at: point)
@@ -1660,32 +1689,85 @@ public class TextView: Control, NSViewToolTipOwner {
         let location = self.convert(event.locationInWindow, from: nil)
         
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
-            if layout?.color(at: location) != nil {
+            if textLayout?.color(at: location) != nil {
                 NSCursor.pointingHand.set()
-                layout?.interactions.hoverOnLink(.exited)
-            } else if let layout = layout, let (value, _, _, _) = layout.link(at: location) {
+                textLayout?.interactions.hoverOnLink(.exited)
+            } else if let layout = textLayout, let (value, _, _, _) = layout.link(at: location) {
                 NSCursor.pointingHand.set()
                 layout.interactions.hoverOnLink(.entered(value))
             } else if isSelectable {
                 NSCursor.iBeam.set()
-                layout?.interactions.hoverOnLink(.exited)
+                textLayout?.interactions.hoverOnLink(.exited)
             } else {
                 NSCursor.arrow.set()
-                layout?.interactions.hoverOnLink(.exited)
+                textLayout?.interactions.hoverOnLink(.exited)
             }
         } else {
             NSCursor.arrow.set()
-            layout?.interactions.hoverOnLink(.exited)
+            textLayout?.interactions.hoverOnLink(.exited)
         }
     }
     
     
-    public func resize(_ width: CGFloat, blockColor: NSColor? = nil) {
-        self.layout?.measure(width: width)
-        if let blockColor = blockColor {
-            self.layout?.generateAutoBlock(backgroundColor: blockColor)
+    private func updateBackgroundBlur() {
+        if let blurBackground = blurBackground {
+            if self.visualEffect == nil {
+                self.visualEffect = VisualEffect(frame: self.bounds)
+                addSubview(self.visualEffect!)
+                
+                self.textView = View(frame: self.bounds)
+                addSubview(self.textView!)
+            }
+            self.visualEffect?.layer?.backgroundColor = blurBackground.cgColor
+            self.textView?.displayDelegate = self
+            
+            
+            if let textlayout = self.textLayout, let blockImage = textlayout.blockImage.1 {
+                if blockMask == nil {
+                    blockMask = CALayer()
+                    blockMask?.contentsScale = System.backingScale
+                }
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                blockMask?.contents = blockImage
+                blockMask?.frame = CGRect(origin: .zero, size: blockImage.systemSize)
+                self.layer?.mask = blockMask
+                CATransaction.commit()
+            } else {
+                self.blockMask = nil
+                self.layer?.mask = nil
+            }
+        } else {
+            self.textView?.removeFromSuperview()
+            self.textView = nil
+            self.visualEffect?.removeFromSuperview()
+            self.visualEffect = nil
+            
+            self.blockMask?.removeFromSuperlayer()
+            self.blockMask = nil
+            self.layer?.mask = nil
         }
-        self.update(self.layout)
+        needsLayout = true
+    }
+    
+    public override var needsDisplay: Bool {
+        didSet {
+            textView?.needsDisplay = needsDisplay
+        }
+    }
+    
+    public override func layout() {
+        super.layout()
+        self.visualEffect?.frame = bounds
+        self.textView?.frame = bounds
+    }
+    
+    public func resize(_ width: CGFloat, blockColor: NSColor? = nil) {
+        self.textLayout?.measure(width: width)
+        if let blockColor = blockColor {
+            self.textLayout?.generateAutoBlock(backgroundColor: blockColor)
+        }
+        self.update(self.textLayout)
     }
     
     public override func becomeFirstResponder() -> Bool {
@@ -1715,14 +1797,14 @@ public class TextView: Control, NSViewToolTipOwner {
     public override func responds(to aSelector: Selector!) -> Bool {
         
         if NSStringFromSelector(aSelector) == "copy:" {
-            return self.layout?.selectedRange.range.location != NSNotFound
+            return self.textLayout?.selectedRange.range.location != NSNotFound
         }
         
         return super.responds(to: aSelector)
     }
     
     @objc public func copy(_ sender:Any) -> Void {
-        if let layout = layout {
+        if let layout = textLayout {
             if let copy = layout.interactions.copy {
                 if !copy() && layout.selectedRange.range.location != NSNotFound {
                     if !layout.interactions.copyAttributedString(layout.attributedString.attributedSubstring(from: layout.selectedRange.range)) {
@@ -1753,7 +1835,7 @@ public class TextView: Control, NSViewToolTipOwner {
     
     
     public func updateWithNewWidth(_ width: CGFloat) {
-        let layout = self.layout
+        let layout = self.textLayout
         layout?.measure(width: width)
         self.update(layout)
     }

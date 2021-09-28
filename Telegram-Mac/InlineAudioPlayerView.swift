@@ -390,7 +390,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                 
         let attr = attributedTitle(for: song)
         
-        if trackNameView.layout?.attributedString != attr.0 {
+        if trackNameView.textLayout?.attributedString != attr.0 {
             let artist = TextViewLayout(attr.0, maximumNumberOfLines:1, alignment: .left)
             self.trackNameView.update(artist)
         }
@@ -405,7 +405,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             } else {
                 current = self.artistNameView!
             }
-            if current.layout?.attributedString != attr {
+            if current.textLayout?.attributedString != attr {
                 let artist = TextViewLayout(attr, maximumNumberOfLines:1, alignment: .left)
                 current.update(artist)
             }

@@ -1980,8 +1980,8 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
         }
         
-        headerView.layout?.measure(width: frame.width - 100)
-        headerView.update(headerView.layout)
+        headerView.textLayout?.measure(width: frame.width - 100)
+        headerView.update(headerView.textLayout)
 
         
         headerView.setFrameOrigin(.init(x: 22, y: frame.midY - headerView.frame.height))

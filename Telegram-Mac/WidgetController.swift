@@ -21,9 +21,11 @@ private final class WidgetNavigationButton : Control {
     private let textView = TextView()
     private let imageView = ImageView()
     private let view = View()
+    private let visualEffect = VisualEffect()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(visualEffect)
         addSubview(view)
         view.addSubview(textView)
         view.addSubview(imageView)
@@ -38,7 +40,9 @@ private final class WidgetNavigationButton : Control {
         super.updateLocalizationAndTheme(theme: theme)
         
         let theme = theme as! TelegramPresentationTheme
-        self.background = theme.chatServiceItemColor
+        self.background = theme.controllerBackgroundMode.hasWallpaper ? .clear : theme.chatServiceItemColor
+        self.visualEffect.background = theme.chatServiceItemColor
+        self.visualEffect.isHidden = !theme.controllerBackgroundMode.hasWallpaper
     }
     
     private var direction: Direction?
@@ -57,6 +61,8 @@ private final class WidgetNavigationButton : Control {
     
     override func layout() {
         super.layout()
+        
+        visualEffect.frame = bounds
         
         view.setFrameSize(NSMakeSize(textView.frame.width + 4 + imageView.frame.width, frame.height))
         view.center()

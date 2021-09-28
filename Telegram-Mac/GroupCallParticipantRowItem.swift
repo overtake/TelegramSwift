@@ -893,7 +893,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             x += subview.frame.width + 2
         }
         
-        if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
+        if statusView?.textLayout?.attributedString.string != item.statusLayout.attributedString.string {
             if let statusView = statusView {
                 if animated {
                     statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in
@@ -905,7 +905,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                 }
             }
             
-            let animated = statusView?.layout != nil
+            let animated = statusView?.textLayout != nil
             
             let statusView = TextView()
             let hadOld = self.statusView != nil

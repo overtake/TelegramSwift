@@ -331,11 +331,11 @@ private final class ModalHeaderView: View {
             leftButton.centerY(x: 20)
         }
         
-        titleView.layout?.measure(width: frame.width - 40 - additionalSize)
-        titleView.update(titleView.layout)
+        titleView.textLayout?.measure(width: frame.width - 40 - additionalSize)
+        titleView.update(titleView.textLayout)
         
-        subtitleView?.layout?.measure(width: frame.width - 40 - additionalSize)
-        subtitleView?.update(subtitleView?.layout)
+        subtitleView?.textLayout?.measure(width: frame.width - 40 - additionalSize)
+        subtitleView?.update(subtitleView?.textLayout)
         
         if let subtitleView = subtitleView {
             let center = frame.midY

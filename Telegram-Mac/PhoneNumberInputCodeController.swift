@@ -146,11 +146,11 @@ class PhoneNumberInputCodeView : View, NSTextFieldDelegate {
         inputContainer.frame = NSMakeRect(0, 50, frame.width, 32)
         codeText.center()
         
-        yourCodeField.layout?.measure(width: frame.width - 60)
-        yourCodeField.update(yourCodeField.layout)
+        yourCodeField.textLayout?.measure(width: frame.width - 60)
+        yourCodeField.update(yourCodeField.textLayout)
         
-        sentCodeField.layout?.measure(width: frame.width - 60)
-        sentCodeField.update(sentCodeField.layout)
+        sentCodeField.textLayout?.measure(width: frame.width - 60)
+        sentCodeField.update(sentCodeField.textLayout)
         
         yourCodeField.setFrameOrigin(30, inputContainer.frame.minY - yourCodeField.frame.height - 8)
         sentCodeField.setFrameOrigin(30, inputContainer.frame.maxY + 8)

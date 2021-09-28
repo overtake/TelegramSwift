@@ -16,6 +16,33 @@ open class Button: Control {
     public var autohighlight:Bool = true
     public var highlightHovered:Bool = false
     public var _thatFit: Bool = false
+    
+    private var visualEffect: VisualEffect?
+    public var blurBackground: NSColor? = nil {
+        didSet {
+            updateBackgroundBlur()
+        }
+    }
+    
+    private func updateBackgroundBlur() {
+        if let blurBackground = blurBackground {
+            if self.visualEffect == nil {
+                self.visualEffect = VisualEffect(frame: self.bounds)
+                self.addSubview(self.visualEffect!, positioned: .below, relativeTo: self.subviews.first)
+            }
+            self.visualEffect?.layer?.backgroundColor = blurBackground.cgColor
+            
+        } else {
+            self.visualEffect?.removeFromSuperview()
+            self.visualEffect = nil
+        }
+        needsLayout = true
+    }
+    
+    open override func layout() {
+        visualEffect?.frame = bounds
+    }
+
 
     private var stateBackground:[ControlState:NSColor] = [:]
     

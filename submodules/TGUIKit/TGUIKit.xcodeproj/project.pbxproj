@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		274CF53026988B8F009139CC /* SoftwareGradientBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274CF52F26988B8F009139CC /* SoftwareGradientBackground.swift */; };
+		276EB672270205FA00F6055E /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276EB671270205FA00F6055E /* VisualEffectView.swift */; };
 		27CBE70825BACBAA00560AC6 /* VolumeMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CBE70725BACBAA00560AC6 /* VolumeMenuItemView.swift */; };
 		9F1C279521D391BF003CD033 /* HorizontalScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */; };
 		9F4EEF9A21DCD260002C3B33 /* SliderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4EEF9921DCD260002C3B33 /* SliderView.swift */; };
@@ -121,6 +122,7 @@
 
 /* Begin PBXFileReference section */
 		274CF52F26988B8F009139CC /* SoftwareGradientBackground.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SoftwareGradientBackground.swift; sourceTree = "<group>"; };
+		276EB671270205FA00F6055E /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
 		27CBE70725BACBAA00560AC6 /* VolumeMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeMenuItemView.swift; sourceTree = "<group>"; };
 		9F1C279421D391BF003CD033 /* HorizontalScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizontalScrollView.swift; sourceTree = "<group>"; };
 		9F4EEF9921DCD260002C3B33 /* SliderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SliderView.swift; sourceTree = "<group>"; };
@@ -558,6 +560,7 @@
 				D00746C5257646D10000DF74 /* DynamicCounterTextView.swift */,
 				27CBE70725BACBAA00560AC6 /* VolumeMenuItemView.swift */,
 				274CF52F26988B8F009139CC /* SoftwareGradientBackground.swift */,
+				276EB671270205FA00F6055E /* VisualEffectView.swift */,
 			);
 			name = view;
 			sourceTree = "<group>";
@@ -725,6 +728,7 @@
 				C2449A151F0E490C00DF5650 /* ProgressIndicator.swift in Sources */,
 				C21AAE3A1DB2398B007638C5 /* DisplayLinkDispatcher.swift in Sources */,
 				C2271F431DB4EE2F0045E719 /* TableStickItem.swift in Sources */,
+				276EB672270205FA00F6055E /* VisualEffectView.swift in Sources */,
 				C2E8694F1F44481400BDD0A2 /* GridItem.swift in Sources */,
 				C2B9BE871EFC373D00D6B96F /* PresentationResourceCache.swift in Sources */,
 				C2271F451DB4EE3C0045E719 /* TableStickView.swift in Sources */,

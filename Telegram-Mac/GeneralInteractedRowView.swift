@@ -420,8 +420,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     if let name = item.nameLayout {
                         width = frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
                     }
-                    textView.layout?.measure(width: width)
-                    textView.update(textView.layout)
+                    textView.textLayout?.measure(width: width)
+                    textView.update(textView.textLayout)
                     textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
@@ -447,8 +447,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     if let name = item.nameLayout {
                         width = containerView.frame.width - name.0.size.width - innerInsets.right - insets.left - 10
                     }
-                    textView.layout?.measure(width: width)
-                    textView.update(textView.layout)
+                    textView.textLayout?.measure(width: width)
+                    textView.update(textView.textLayout)
                     textView.centerY(x: containerView.frame.width - innerInsets.right - textView.frame.width - nextInset)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)

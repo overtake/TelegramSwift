@@ -264,7 +264,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         actionView.backgroundColor = theme.colors.background
         if let item = item as? PeerMediaFileRowItem {
             nameView.update(item.nameLayout, origin: NSMakePoint(item.contentInset.left, item.contentInset.top + 2))
-            if actionView.layout == nil {
+            if actionView.textLayout == nil {
                 actionView.update(item.actionLayout, origin: NSMakePoint(item.contentInset.left, item.contentSize.height - item.actionLayout.layoutSize.height - item.contentInset.bottom - 2))
             }
 

@@ -525,7 +525,7 @@ class ChatMediaItem: ChatRowItem {
                 
                 if let view = self?.view as? ChatRowView, let textView = view.captionViews.first(where: { $0.id == self?.lastMessage?.stableId})?.view, let window = textView.window {
                     let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-                    if let layout = textView.layout {
+                    if let layout = textView.textLayout {
                         if let (link, _, range, _) = layout.link(at: point) {
                             var text:String = layout.attributedString.string.nsstring.substring(with: range)
                             if let link = link as? inAppLink {

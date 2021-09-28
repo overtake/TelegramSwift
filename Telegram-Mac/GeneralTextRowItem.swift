@@ -290,7 +290,7 @@ class GeneralTextRowView : GeneralRowView {
                     if let rightTextView = self.rightTextView {
                         rightTextView.setFrameOrigin(NSMakePoint(frame.width - rightTextView.frame.width - mid - insets.left - insets.right, frame.height - insets.bottom - rightTextView.frame.height))
                         
-                        if let layout = rightTextView.layout {
+                        if let layout = rightTextView.textLayout {
                             var animatedRange: NSRange? = nil
                             layout.attributedString.enumerateAttributes(in: layout.attributedString.range, options: [], using: { data, range, stop in
                                 if let _ = data[InputDataTextInsertAnimatedViewData.attributeKey] {

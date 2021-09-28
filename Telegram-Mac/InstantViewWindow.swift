@@ -129,8 +129,8 @@ private class HeaderView : View {
     
     override func layout() {
         super.layout()
-        titleView?.layout?.measure(width: frame.width - 280)
-        titleView?.update(titleView?.layout)
+        titleView?.textLayout?.measure(width: frame.width - 280)
+        titleView?.update(titleView?.textLayout)
         titleView?.center()
         if let titleView = titleView {
             titleView.setFrameOrigin(titleView.frame.minX, titleView.frame.minY - 1)
@@ -151,7 +151,7 @@ private class HeaderView : View {
         backgroundColor = theme.colors.background
         titleView?.backgroundColor = theme.colors.background
         
-        let nLayout = TextViewLayout(.initialize(string: titleView?.layout?.attributedString.string, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 2, alignment: .center)
+        let nLayout = TextViewLayout(.initialize(string: titleView?.textLayout?.attributedString.string, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 2, alignment: .center)
         titleView?.update(nLayout)
         share.set(image: theme.icons.instantViewShare, for: .Normal)
         actions.set(image: theme.icons.instantViewActions, for: .Normal)

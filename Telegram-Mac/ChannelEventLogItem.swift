@@ -147,8 +147,8 @@ private class ServiceEventLogMessagePanelView : View {
     
     override func layout() {
         super.layout()
-        headerView.update(headerView.layout, origin: NSMakePoint(8, 0))
-        textView.update(textView.layout, origin: NSMakePoint(8, headerView.frame.maxY + 2))
+        headerView.update(headerView.textLayout, origin: NSMakePoint(8, 0))
+        textView.update(textView.textLayout, origin: NSMakePoint(8, headerView.frame.maxY + 2))
     }
     
     func update(with panel: ServiceEventLogMessagePanel) {
@@ -786,7 +786,7 @@ private class ServiceEventLogRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        textView.update(textView.layout)
+        textView.update(textView.textLayout)
         textView.centerX(y: defaultContentInset.top)
         
         let contentInset: CGFloat = (textView.frame.height != 0 ?textView.frame.maxY : 0) + defaultContentInset.top

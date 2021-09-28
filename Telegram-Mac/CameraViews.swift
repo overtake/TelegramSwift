@@ -340,7 +340,7 @@ final class IncomingVideoView : Control {
         }
         
         if let textView = disabledView?.subviews.first as? TextView {
-            let layout = textView.layout
+            let layout = textView.textLayout
             layout?.measure(width: frame.width - 40)
             textView.update(layout)
             textView.center()

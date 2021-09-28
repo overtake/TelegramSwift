@@ -53,7 +53,8 @@ class EmptyChatView : View {
         
         toggleTips.set(image: theme.empty_chat_showtips, for: .Normal)
         toggleTips.setFrameSize(NSMakeSize(30, 30))
-        toggleTips.set(background: theme.chatServiceItemColor, for: .Normal)
+        toggleTips.set(background: .clear, for: .Normal)
+        toggleTips.blurBackground = theme.chatServiceItemColor
         toggleTips.autohighlight = false
         toggleTips.scaleOnClick = true
         toggleTips.layer?.cornerRadius = 15
@@ -79,11 +80,23 @@ class EmptyChatView : View {
         }
         
         toggleTips.set(image: cards != nil ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
-        toggleTips.set(background: theme.chatServiceItemColor, for: .Normal)
-                
+        if theme.controllerBackgroundMode.hasWallpaper {
+            toggleTips.set(background: .clear, for: .Normal)
+            toggleTips.blurBackground = theme.chatServiceItemColor
+        } else {
+            toggleTips.set(background: theme.chatServiceItemColor, for: .Normal)
+            toggleTips.blurBackground = nil
+        }
+
         imageView.sizeToFit()
         label.disableBackgroundDrawing = true
-        label.backgroundColor = imageView.isHidden ? theme.chatServiceItemColor : theme.chatBackground
+        if imageView.isHidden && theme.bubbled {
+            label.blurBackground = theme.chatServiceItemColor
+        } else {
+            label.blurBackground = nil
+            label.backgroundColor = theme.chatBackground
+        }
+
         label.update(TextViewLayout(.initialize(string: L10n.emptyPeerDescription, color: imageView.isHidden ? theme.chatServiceItemTextColor : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
         needsLayout = true
     }
@@ -94,8 +107,8 @@ class EmptyChatView : View {
     
     override func layout() {
         super.layout()
-        label.layout?.measure(width: frame.size.width - 20)
-        label.update(label.layout)
+        label.textLayout?.measure(width: frame.size.width - 20)
+        label.update(label.textLayout)
         
         cards?.frame = NSMakeRect(0, 0, frame.width, 370)
         cards?.center()

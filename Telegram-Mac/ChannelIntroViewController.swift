@@ -57,8 +57,8 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         super.layout()
         containerView.setFrameSize(frame.width, 0)
 
-        textView.layout?.measure(width: 380 - 60)
-        textView.update(textView.layout)
+        textView.textLayout?.measure(width: 380 - 60)
+        textView.update(textView.textLayout)
         imageView.centerX(y:30)
         textView.centerX(y:imageView.frame.maxY + 30)
         

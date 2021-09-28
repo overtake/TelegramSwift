@@ -223,7 +223,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
         
         self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, lineWidth: 2, clockwise: false)
         
-        let attributed = textView.layout?.attributedString.mutableCopy() as? NSMutableAttributedString
+        let attributed = textView.textLayout?.attributedString.mutableCopy() as? NSMutableAttributedString
         if let attributed = attributed {
             attributed.addAttribute(.foregroundColor, value: NSColor.white, range: attributed.range)
             self.textView.update(TextViewLayout(attributed, maximumNumberOfLines: 1))
@@ -245,7 +245,7 @@ final class UndoTooltipView : NSVisualEffectView, AppearanceViewProtocol {
         undoButton.centerY(x: frame.width - undoButton.frame.width - 10)
         durationContainer.centerY(x: progress.frame.minX + 1, addition: -1)
         
-        if let layout = textView.layout {
+        if let layout = textView.textLayout {
             layout.measure(width: frame.width - (progress.frame.maxX + 8) - undoButton.frame.width - 10)
             textView.update(layout)
         }
