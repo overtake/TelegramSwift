@@ -21,11 +21,12 @@ class ChatCommentsHeaderItem : TableStickItem {
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
+    let presentation: TelegramPresentationTheme
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
-       
+        self.presentation = theme
         
         let text: String
         switch entry {
@@ -54,6 +55,7 @@ class ChatCommentsHeaderItem : TableStickItem {
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
         self.chatInteraction = nil
+        self.presentation = theme
         super.init(initialSize)
     }
     
@@ -103,7 +105,16 @@ class ChatCommentsHeaderView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        textView.backgroundColor = theme.chatServiceItemColor
+        guard let item = item as? ChatCommentsHeaderItem else {
+            return
+        }
+        if item.presentation.controllerBackgroundMode.hasWallpaper {
+            textView.blurBackground = theme.chatServiceItemColor
+            textView.backgroundColor = .clear
+        } else {
+            textView.backgroundColor = theme.chatServiceItemColor
+            textView.blurBackground = nil
+        }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

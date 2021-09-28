@@ -142,12 +142,20 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
         if manager.requestUserAttention && !manager.window.isKeyWindow {
             NSApp.requestUserAttention(.informationalRequest)
         }
+        if let soundName = notification.soundName {
+            if soundName != "default" {
+                appDelegate?.playSound(soundName)
+                notification.soundName = nil
+            }
+        }
     }
     
     required init(manager: SharedNotificationManager) {
         super.init(manager: manager)
         NSUserNotificationCenter.default.delegate = self
     }
+    
+    
 
     @objc func userNotificationCenter(_ center: NSUserNotificationCenter, didDismissAlert notification: NSUserNotification) {
         if let userInfo = notification.userInfo, let timestamp = userInfo["timestamp"] as? Int32, let _ = userInfo["accountId"] as? Int64, let messageId = getNotificationMessageId(userInfo: userInfo, for: "reply") {
@@ -201,12 +209,6 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
     }
     
     override func add(_ notification: NSUserNotification) -> Void {
-        if let soundName = notification.soundName {
-            if soundName != "default" {
-                appDelegate?.playSound(soundName)
-                notification.soundName = nil
-            }
-        }
         NSUserNotificationCenter.default.deliver(notification)
     }
 }
@@ -222,11 +224,11 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
 
-           //If you don't want to show notification when app is open, do something here else and make a return here.
-           //Even you you don't implement this delegate method, you will not see the notification on the specified controller. So, you have to implement this delegate and make sure the below line execute. i.e. completionHandler.
-
-           completionHandler([.alert, .sound])
-       }
+        completionHandler([.alert, .sound])
+        var bp = 0
+        bp += 1
+    }
+    
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
     
@@ -280,6 +282,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         let soundSettings = self.soundSettings
         
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
+                        
             if let soundName = notification.soundName {
                 if soundName == "default" {
                     content.sound = .default

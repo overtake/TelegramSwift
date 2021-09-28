@@ -1725,12 +1725,12 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if let textlayout = self.textLayout, let blockImage = textlayout.blockImage.1 {
                 if blockMask == nil {
                     blockMask = CALayer()
-                    blockMask?.contentsScale = System.backingScale
                 }
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
+                blockMask?.contentsScale = 2.0
                 blockMask?.contents = blockImage
-                blockMask?.frame = CGRect(origin: .zero, size: blockImage.systemSize)
+                blockMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
                 self.layer?.mask = blockMask
                 CATransaction.commit()
             } else {
