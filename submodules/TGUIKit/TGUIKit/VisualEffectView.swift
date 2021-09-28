@@ -53,6 +53,36 @@ open class VisualEffect: NSVisualEffectView {
         }
     }
     
+    public func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
+        
+        self._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        
+        
+        func animate(_ layer: CALayer, main: Bool) -> Void {
+            if animated {
+                var presentBounds:NSRect = layer.bounds
+                let presentation = layer.presentation()
+                if let presentation = presentation, layer.animation(forKey:"bounds") != nil {
+                    presentBounds.size.width = NSWidth(presentation.bounds)
+                    presentBounds.size.height = NSHeight(presentation.bounds)
+                }
+                layer.animateBounds(from: presentBounds, to: NSMakeRect(0, 0, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, completion: main ? completion : nil)
+            } else {
+                layer.removeAnimation(forKey: "bounds")
+            }
+        }
+        
+        guard let backdrop = self.layer?.sublayers?.first else {
+            return
+        }
+        animate(backdrop, main: true)
+        
+        let sublayers = backdrop.sublayers ?? []
+        for layer in sublayers {
+            animate(layer, main: false)
+        }
+    
+    }
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
