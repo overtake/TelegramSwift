@@ -13,7 +13,48 @@ import TelegramCore
 
 
 
-class ChatRightView: View {
+class ChatRightView: View, ViewDisplayDelegate {
+    
+    
+    private var visualEffect: VisualEffect? = nil
+    private var textView: View? = nil
+    public var blurBackground: NSColor? = nil {
+        didSet {
+            updateBackgroundBlur()
+            if blurBackground != nil {
+                self.backgroundColor = .clear
+            }
+        }
+    }
+    
+    private func updateBackgroundBlur() {
+        if let blurBackground = blurBackground {
+            if self.visualEffect == nil {
+                self.visualEffect = VisualEffect(frame: self.bounds)
+                addSubview(self.visualEffect!, positioned: .below, relativeTo: self.subviews.first)
+
+                self.textView = View(frame: self.bounds)
+                addSubview(self.textView!, positioned: .above, relativeTo: self.visualEffect)
+            }
+            self.visualEffect?.layer?.backgroundColor = blurBackground.cgColor
+            self.textView?.displayDelegate = self
+            
+            
+        } else {
+            self.textView?.removeFromSuperview()
+            self.textView = nil
+            self.visualEffect?.removeFromSuperview()
+            self.visualEffect = nil
+        }
+        needsLayout = true
+    }
+    
+    public override var needsDisplay: Bool {
+        didSet {
+            textView?.needsDisplay = needsDisplay
+        }
+    }
+
     
     private var stateView:ImageView?
     private var readImageView:ImageView?
@@ -98,6 +139,11 @@ class ChatRightView: View {
 
     override func layout() {
         super.layout()
+        
+        visualEffect?.frame = bounds
+        textView?.frame = bounds
+        
+        
         if let item = item {
             var rightInset:CGFloat = 0
             if let date = item.date {
@@ -138,7 +184,7 @@ class ChatRightView: View {
         
         if let item = item {
             
-            if item.isStateOverlayLayout {
+            if item.isStateOverlayLayout, blurBackground == nil || layer != textView?.layer {
                 ctx.round(frame.size, frame.height/2)
                 ctx.setFillColor(item.stateOverlayBackgroundColor.cgColor)
                 ctx.fill(layer.bounds)
