@@ -1751,8 +1751,12 @@ class TelegramPresentationTheme : PresentationTheme {
                 switch backgroundMode {
                 case let .background(image, _, colors, _):
                     if let colors = colors, colors.count > 0 {
-                        let blended = NSColor.average(of: colors)
-                        chatServiceItemColor = NSColor.average(of: [getAverageColor(image), getAverageColor(blended)])
+                        let blended = NSColor.average(of: colors).withAlphaComponent(0.6)
+                        if self.colors.isDark {
+                            chatServiceItemColor = NSColor.average(of: [getAverageColor(image), getAverageColor(blended)])
+                        } else {
+                            chatServiceItemColor = getAverageColor(blended)
+                        }
                     } else {
                         chatServiceItemColor = getAverageColor(image)
                     }

@@ -293,6 +293,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
+        
+        rightView.blurBackground = item.isStateOverlayLayout ? item.presentation.chatServiceItemColor : nil
+        rightView.layer?.cornerRadius = rightView.blurBackground != nil ? item.rightSize.height / 2 : 0
+
         contentView.backgroundColor = .clear
         item.replyModel?.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
         nameView?.backgroundColor = contentColor
