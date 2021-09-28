@@ -56,6 +56,13 @@ class ChatRightView: View, ViewDisplayDelegate {
     }
 
     
+    override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
+        super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        self.textView?.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        self.visualEffect?.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+
+    }
+    
     private var stateView:ImageView?
     private var readImageView:ImageView?
     private var sendingView:SendingClockProgress?
@@ -133,6 +140,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         readImageView?.sizeToFit()
         sendingView?.set(item: item)
         self.needsLayout = true
+        self.needsDisplay = true
 
     }
     
@@ -177,6 +185,11 @@ class ChatRightView: View, ViewDisplayDelegate {
             }
         }
         self.setNeedsDisplay()
+    }
+    
+    override func setNeedsDisplay() {
+        super.setNeedsDisplay()
+        self.textView?.setNeedsDisplay()
     }
     
     

@@ -1622,6 +1622,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             rightView.change(pos: rightFrame.origin, animated: animated)
             rightView.change(size: rightFrame.size, animated: animated)
             
+            
             replyView?._change(pos: replyFrame(item).origin, animated: animated)
             replyMarkupView?.change(pos: replyMarkupFrame(item).origin, animated: animated)
             for view in captionViews {

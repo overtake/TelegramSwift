@@ -221,7 +221,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         }
     }
     
-    public func setNeedsDisplay() -> Void {
+    open func setNeedsDisplay() -> Void {
         self.layer?.setNeedsDisplay()
         assertOnMainThread()
     }
