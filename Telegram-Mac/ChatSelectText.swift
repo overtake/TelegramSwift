@@ -42,7 +42,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             for selection in ranges {
                 if let value = selection.1.value {
-                    value.layout?.clearSelect()
+                    value.textLayout?.clearSelect()
                     value.canBeResponder = true
                     value.setNeedsDisplay()
                 }
@@ -121,7 +121,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             var ranges = ranges
             if let last = ranges.last, let textView = last.1.value {
-                if last.2.range.max < last.2.text.length, let layout = textView.layout {
+                if last.2.range.max < last.2.text.length, let layout = textView.textLayout {
                     
                     var range = last.2.range
                     
@@ -158,7 +158,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             var ranges = ranges
             if let first = ranges.first, let textView = first.1.value {
-                if let layout = textView.layout {
+                if let layout = textView.textLayout {
                     
                     var range = first.2.range
                     
@@ -508,7 +508,7 @@ class ChatSelectText : NSObject {
                     for j in 0 ..< views.count {
                         let selectableView = views[j]
                         
-                        if let layout = selectableView.layout {
+                        if let layout = selectableView.textLayout {
                             let beginViewLocation = selectableView.convert(beginInnerLocation, from: table.documentView)
                             let endViewLocation = selectableView.convert(endInnerLocation, from: table.documentView)
                             

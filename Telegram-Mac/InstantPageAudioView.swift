@@ -116,8 +116,8 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         
         
         if let nameView = nameView {
-            nameView.layout?.measure(width: maxTitleWidth)
-            nameView.update(nameView.layout, origin: CGPoint(x: insets.left + leftInset, y: 5))
+            nameView.textLayout?.measure(width: maxTitleWidth)
+            nameView.update(nameView.textLayout, origin: CGPoint(x: insets.left + leftInset, y: 5))
         }
         
         var topOffset: CGFloat = 0.0

@@ -490,7 +490,7 @@ final class GroupCallControlsView : View {
             string.append(.initialize(string: secondary, color: .white, font: .normal(.short)))
         }
 
-        if string.string != self.speakText?.layout?.attributedString.string {
+        if string.string != self.speakText?.textLayout?.attributedString.string {
             let speakText = TextView()
             speakText.userInteractionEnabled = false
             speakText.isSelectable = false

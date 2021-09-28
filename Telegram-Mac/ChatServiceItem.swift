@@ -524,7 +524,7 @@ class ChatServiceItem: ChatRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
         if isBubbled {
-            text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
+            text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
         }
         return true
     }
@@ -706,10 +706,21 @@ class ChatServiceRowView: TableRowView {
         super.set(item: item, animated:animated)
         textView.disableBackgroundDrawing = true
 
+        guard let item = item as? ChatServiceItem else {
+            return
+        }
+        
+        if item.presentation.controllerBackgroundMode.hasWallpaper {
+            textView.blurBackground = item.presentation.chatServiceItemColor
+            textView.backgroundColor = .clear
+        } else {
+            textView.blurBackground = nil
+            textView.backgroundColor = item.presentation.chatServiceItemColor
+        }
 
         var interactiveTextView: Bool = false
 
-        if let item = item as? ChatServiceItem, let message = item.message, let action = message.media.first as? TelegramMediaAction {
+        if let message = item.message, let action = message.media.first as? TelegramMediaAction {
             switch action.action {
             case let .messageAutoremoveTimeoutUpdated(timeout):
                 if let peer = item.chatInteraction.peer {
@@ -722,7 +733,7 @@ class ChatServiceRowView: TableRowView {
         textView.scaleOnClick = interactiveTextView
 
 
-        if let item = item as? ChatServiceItem, let arguments = item.imageArguments {
+        if let arguments = item.imageArguments {
 
 
             if let image = item.image {

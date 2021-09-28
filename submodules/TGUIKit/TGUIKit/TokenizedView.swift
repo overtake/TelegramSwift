@@ -72,20 +72,20 @@ private class TokenView : Control {
     }
     
     fileprivate var isPerfectSized: Bool {
-        return nameView.layout?.isPerfectSized ?? false
+        return nameView.textLayout?.isPerfectSized ?? false
     }
     
     override func change(size: NSSize, animated: Bool = true, _ save: Bool = true, removeOnCompletion: Bool = false, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
-        nameView.layout?.measure(width: size.width - 30)
+        nameView.textLayout?.measure(width: size.width - 30)
         
-        let size = NSMakeSize(min(((nameView.layout?.layoutSize.width ?? 0) + 30), size.width), size.height)
+        let size = NSMakeSize(min(((nameView.textLayout?.layoutSize.width ?? 0) + 30), size.width), size.height)
         
         super.change(size: size, animated: animated, save, duration: duration, timingFunction: timingFunction)
         
         let point = focus(dismiss.frame.size)
         dismiss.change(pos: NSMakePoint(frame.width - 5 - dismiss.frame.width, point.minY), animated: animated)
         
-        nameView.update(nameView.layout)
+        nameView.update(nameView.textLayout)
     }
 
     override func layout() {

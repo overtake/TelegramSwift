@@ -113,7 +113,7 @@ final class PushToTalkRowView: GeneralContainableRowView {
         
         button.background = buttonColor
         
-        if self.textView?.layout?.attributedString.string != buttonText.attributedString.string {
+        if self.textView?.textLayout?.attributedString.string != buttonText.attributedString.string {
             let textView = TextView()
             textView.userInteractionEnabled = false
             textView.isSelectable = false

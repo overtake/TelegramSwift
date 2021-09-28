@@ -207,7 +207,7 @@ final class GroupCallTitleView : Control {
         
         if let recordingView = recordingView {
             
-            let layout = titleView.layout
+            let layout = titleView.textLayout
             
             layout?.measure(width: backgroundView.frame.width - 125 - recordingView.frame.width - 10 - 30 - add)
             titleView.update(layout)
@@ -220,7 +220,7 @@ final class GroupCallTitleView : Control {
             
         } else {
             
-            let layout = titleView.layout
+            let layout = titleView.textLayout
             layout?.measure(width: backgroundView.frame.width - 125 - add)
             titleView.update(layout)
             

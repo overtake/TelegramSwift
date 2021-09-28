@@ -116,7 +116,7 @@ class AboutModalController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.descView.layout?.interactions.processURL = { [weak self] url in
+        genericView.descView.textLayout?.interactions.processURL = { [weak self] url in
             if let url = url as? inAppLink {
                 execute(inapp: url)
             } else if let url = url as? String, url == "copy" {

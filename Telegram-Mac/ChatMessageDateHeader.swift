@@ -12,6 +12,9 @@ import TelegramCore
 
 import Postbox
 
+
+
+
 private let timezoneOffset: Int32 = {
     let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
     var now: time_t = time_t(nowTimestamp)
@@ -144,6 +147,9 @@ class ChatDateStickView : TableStickView {
     private let containerView: Control = Control()
     private var borderView: View = View()
     required init(frame frameRect: NSRect) {
+        
+        
+        
         self.textView = TextView()
         self.textView.isSelectable = false
        // self.textView.userInteractionEnabled = false
@@ -152,6 +158,7 @@ class ChatDateStickView : TableStickView {
        // textView.isEventLess = false
         super.init(frame: frameRect)
         addSubview(textView)
+        
         textView.set(handler: { [weak self] control in
              if let strongSelf = self, let item = strongSelf.item as? ChatDateStickItem, let table = item.table {
                 
@@ -242,7 +249,13 @@ class ChatDateStickView : TableStickView {
                     return true
                 })
             }
-            textView.backgroundColor = presentation.chatServiceItemColor
+            if presentation.controllerBackgroundMode.hasWallpaper {
+                textView.blurBackground = presentation.chatServiceItemColor
+                textView.backgroundColor = .clear
+            } else {
+                textView.backgroundColor = presentation.chatServiceItemColor
+                textView.blurBackground = nil
+            }
         }
         
     }
@@ -261,11 +274,9 @@ class ChatDateStickView : TableStickView {
             textView.update(item.layout)
             textView.setFrameSize(item.layout.layoutSize.width + 16, item.layout.layoutSize.height + 6)
             textView.layer?.cornerRadius = textView.frame.height / 2
-//            if animated {
-//                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//            }
-            
             self.needsLayout = true
+
+
         }
         super.set(item: item, animated:animated)
     }

@@ -129,6 +129,10 @@ class UNUserNotifications : NSObject {
     func clearNotifies(by msgIds: [MessageId]) {
        
     }
+    
+    func authorize(completion:@escaping(UNUserNotifications)->Void) {
+        
+    }
 
 }
 
@@ -154,6 +158,9 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
     
     func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
         center.removeDeliveredNotification(notification)
+    }
+    override func authorize(completion:@escaping(UNUserNotifications)->Void) {
+        completion(self)
     }
     
     override func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
@@ -259,21 +266,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.title = notification.title ?? ""
         content.body = notification.informativeText ?? ""
         content.subtitle = notification.subtitle ?? ""
-        if let soundName = notification.soundName {
-            if soundName == "default" {
-                content.sound = .default
-            } else {
-                if let soundSettings = soundSettings {
-                    switch soundSettings {
-                    case .enabled:
-                        appDelegate?.playSound(soundName)
-                    default:
-                        break
-                    }
-                }
-            }
-            
-        }
+        
         if notification.hasActionButton {
             content.categoryIdentifier = UNNotification.replyCategory
         }
@@ -284,10 +277,31 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
             }
         }
         content.userInfo = notification.userInfo ?? [:]
+        let soundSettings = self.soundSettings
         
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
-            var bp = 0
-            bp += 1
+            if let soundName = notification.soundName {
+                if soundName == "default" {
+                    content.sound = .default
+                } else {
+                    if let soundSettings = soundSettings {
+                        switch soundSettings {
+                        case .enabled:
+                            appDelegate?.playSound(soundName)
+                        default:
+                            break
+                        }
+                    }
+                }
+            }
+        })
+    }
+    
+    override func authorize(completion: @escaping (UNUserNotifications) -> Void) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { [weak self] completed, _ in
+            if completed, let strongSelf = self {
+                completion(strongSelf)
+            }
         })
     }
     

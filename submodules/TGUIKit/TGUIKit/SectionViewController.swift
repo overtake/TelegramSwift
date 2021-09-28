@@ -29,7 +29,7 @@ public class SectionControllerView : View {
                 for hContainer in header.subviews {
                     for t in hContainer.subviews {
                         if let t = t as? TextView {
-                            t.update(TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
+                            t.update(TextViewLayout(.initialize(string: t.textLayout?.attributedString.string, color: selectorIndex == index ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle))
                         }
                         
                     }
@@ -131,7 +131,7 @@ public class SectionControllerView : View {
             hContainer.background = presentation.colors.background
             for t in hContainer.subviews {
                 if let t = t as? TextView {
-                    let layout = TextViewLayout(.initialize(string: t.layout?.attributedString.string, color: selectorIndex == index ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle)
+                    let layout = TextViewLayout(.initialize(string: t.textLayout?.attributedString.string, color: selectorIndex == index ? presentation.colors.accent : presentation.colors.grayText, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle)
                     layout.measure(width: hContainer.frame.width - 20)
                     t.update(layout)
                     t.center()
@@ -159,8 +159,8 @@ public class SectionControllerView : View {
             let width = i == header.subviews.count - 1 ? frame.width - x : width
             hContainer.frame = NSMakeRect(x, 0, width, hContainer.frame.height)
             if let textView = hContainer.subviews.first as? TextView {
-                textView.layout?.measure(width: width - 10)
-                textView.update(textView.layout)
+                textView.textLayout?.measure(width: width - 10)
+                textView.update(textView.textLayout)
                 textView.center()
             }
             x += width

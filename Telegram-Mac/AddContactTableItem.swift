@@ -93,8 +93,8 @@ class AddContactTableRowView : TableRowView {
     override func layout() {
         super.layout()
         imageView.centerY(x: floorToScreenPixels(backingScaleFactor, (56 - imageView.frame.width)/2))
-        textView.layout?.measure(width: frame.width - 66)
-        textView.update(textView.layout)
+        textView.textLayout?.measure(width: frame.width - 66)
+        textView.update(textView.textLayout)
         textView.centerY(x: 56)
     }
     

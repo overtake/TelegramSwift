@@ -37,8 +37,8 @@ class SEUnauthorizedView : View {
     override func layout() {
         super.layout()
         imageView.centerX(y: 30)
-        textView.layout?.measure(width: frame.width - 60)
-        textView.update(textView.layout)
+        textView.textLayout?.measure(width: frame.width - 60)
+        textView.update(textView.textLayout)
         textView.center()
         cancel.centerX(y: textView.frame.maxY + 20)
     }

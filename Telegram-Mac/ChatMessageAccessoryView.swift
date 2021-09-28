@@ -66,7 +66,7 @@ class ChatMessageAccessoryView: Control {
             imageView.centerY(x: frame.width - imageView.frame.width - 6)
         }
         
-        if let textLayout = textView.layout {
+        if let textLayout = textView.textLayout {
             var rect = focus(textLayout.layoutSize)
             rect.origin.x = 6
             if hasStremingControls  {

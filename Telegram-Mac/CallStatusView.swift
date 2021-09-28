@@ -71,7 +71,7 @@ class CallStatusView: View {
     }
     
     func sizeThatFits(_ size: NSSize) -> NSSize {
-        if let layout = self.statusTextView.layout {
+        if let layout = self.statusTextView.textLayout {
             layout.measure(width: size.width)
             statusTextView.update(layout)
             return NSMakeSize(max(layout.layoutSize.width, 60) + 28, size.height)

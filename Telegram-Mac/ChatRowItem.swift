@@ -1875,9 +1875,6 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                
-//                if FastSettings.isTestLiked(message.id) {
-//                    likesAttributed = .initialize(string: "1", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
-//                }
                 
                 let paid: Bool
                 if let invoice = message.media.first as? TelegramMediaInvoice {
@@ -1887,49 +1884,9 @@ class ChatRowItem: TableRowItem {
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     if message.restrictedText(context.contentSettings) == nil {
-                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), paid: paid)
+                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid)
                     }
                 }
-//                else if let attribute = attribute as? ReactionsMessageAttribute {
-//                    var buttons:[ReplyMarkupButton] = []
-//                    let sorted = attribute.reactions.sorted(by: { $0.count > $1.count })
-//                    for reaction in sorted {
-//                        buttons.append(ReplyMarkupButton(title: reaction.value + " \(reaction.count)", titleWhenForwarded: nil, action: .url(reaction.value)))
-//                    }
-//                    if !buttons.isEmpty {
-//                        replyMarkupModel = ReplyMarkupNode([ReplyMarkupRow(buttons: buttons)], [], ReplyMarkupInteractions(proccess: { (button, _) in
-//                            switch button.action {
-//                            case let .url(buttonReaction):
-//                                if let index = sorted.firstIndex(where: { $0.value == buttonReaction}) {
-//                                    let reaction = sorted[index]
-//                                    var newValues = sorted
-//                                    if reaction.isSelected {
-//                                        newValues.remove(at: index)
-//                                    } else {
-//                                        newValues[index] = MessageReaction(value: reaction.value, count: reaction.count + 1, isSelected: true)
-//                                    }
-//                                    chatInteraction.updateReactions(message.id, buttonReaction, { value in
-//                                    })
-//                                }
-//
-//                            default:
-//                                break
-//                            }
-//                        }))
-//                    }
-//                }
-                
-                /*
-                 let reactions = object.message?.attributes.first(where: { attr -> Bool in
-                 return attr is ReactionsMessageAttribute
-                 })
-                 
-                 if let reactions = reactions as? ReactionsMessageAttribute {
-                 var bp:Int = 0
-                 bp += 1
-                 }
- */
-              
             }
 
             if let attr = message.autoremoveAttribute, let begin = attr.countdownBeginTime {

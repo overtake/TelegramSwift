@@ -439,13 +439,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             alreadyNotified.insert(message.id)
                             
                             notification.userInfo = dict
-//                            NSUserNotificationCenter.default.deliver(notification)
                             
                             if self.shouldPresent(dict) {
                                 _ = UNUserNotifications.authorizationStatus.start(next: { status in
                                     switch status {
                                     case .authorized:
                                         UNUserNotifications.current?.add(notification)
+                                    case .notDetermined:
+                                        UNUserNotifications.current?.authorize { manager in
+                                            manager.add(notification)
+                                        }
                                     default:
                                         break
                                     }

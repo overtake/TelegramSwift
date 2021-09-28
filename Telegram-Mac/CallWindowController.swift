@@ -642,7 +642,7 @@ private class PhoneCallWindowView : View {
         case let .active(_, _, visual):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
-            let wasEmpty = secureTextView.layout == nil
+            let wasEmpty = secureTextView.textLayout == nil
             secureTextView.update(layout)
             if wasEmpty {
                 secureTextView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

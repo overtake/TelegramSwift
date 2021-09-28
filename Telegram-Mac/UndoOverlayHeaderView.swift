@@ -149,7 +149,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
         undoButton.centerY(x: frame.width - undoButton.frame.width - 20)
         durationContainer.centerY(x: progress.frame.minX + 1, addition: -1)
         
-        if let layout = textView.layout {
+        if let layout = textView.textLayout {
             layout.measure(width: frame.width - (progress.frame.maxX + 18) - undoButton.frame.width - 20)
             textView.update(layout)
         }
@@ -162,7 +162,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
         
         self.progress.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.text, lineWidth: 2, clockwise: false)
         
-        let attributed = textView.layout?.attributedString.mutableCopy() as? NSMutableAttributedString
+        let attributed = textView.textLayout?.attributedString.mutableCopy() as? NSMutableAttributedString
         if let attributed = attributed {
             attributed.addAttribute(.foregroundColor, value: theme.colors.text, range: attributed.range)
             self.textView.update(TextViewLayout(attributed, maximumNumberOfLines: 10))

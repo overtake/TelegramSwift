@@ -213,8 +213,8 @@ class ChannelEventLogView : View {
     override func layout() {
         super.layout()
         
-        emptyTextView.layout?.measure(width: frame.width - 40)
-        emptyTextView.update(emptyTextView.layout)
+        emptyTextView.textLayout?.measure(width: frame.width - 40)
+        emptyTextView.update(emptyTextView.textLayout)
         emptyTextView.center()
         tableView.setFrameOrigin(NSZeroPoint)
         whatButton.setFrameOrigin(NSMakePoint(0, frame.height - whatButton.frame.height))
