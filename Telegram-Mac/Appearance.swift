@@ -1739,7 +1739,9 @@ class TelegramPresentationTheme : PresentationTheme {
         }
     }
 
-    
+    var blurServiceColor: NSColor {
+        return NSColor.black.withAlphaComponent(0.2)
+    }
     
     private var _chatServiceItemColor: NSColor?
     var chatServiceItemColor: NSColor {
@@ -1818,6 +1820,10 @@ class TelegramPresentationTheme : PresentationTheme {
     }
     
     let fontSize: CGFloat
+    
+    var hasWallpaper: Bool {
+        return controllerBackgroundMode.hasWallpaper
+    }
     
     var controllerBackgroundMode: TableBackgroundMode {
         if self.bubbled {

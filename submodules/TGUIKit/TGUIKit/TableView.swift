@@ -60,8 +60,8 @@ public enum TableBackgroundMode: Equatable {
         switch self {
         case .plain:
             return false
-        case let .color(color):
-            return color != presentation.colors.chatBackground
+        case .color:
+            return false
         default:
             return true
         }

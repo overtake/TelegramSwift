@@ -249,8 +249,8 @@ class ChatDateStickView : TableStickView {
                     return true
                 })
             }
-            if presentation.controllerBackgroundMode.hasWallpaper {
-                textView.blurBackground = presentation.chatServiceItemColor
+            if presentation.hasWallpaper {
+                textView.blurBackground = presentation.blurServiceColor
                 textView.backgroundColor = .clear
             } else {
                 textView.backgroundColor = presentation.chatServiceItemColor
