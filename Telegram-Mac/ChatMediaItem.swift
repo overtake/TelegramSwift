@@ -765,6 +765,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         
         let rightView = ChatRightView(frame: NSZeroRect)
         rightView.set(item: item, animated: false)
+        rightView.blurBackground = self.rightView.blurBackground
         var rect = self.rightView.convert(self.rightView.bounds, to: contentNode)
         
         if contentNode.visibleRect.minY < rect.midY && contentNode.visibleRect.minY + contentNode.visibleRect.height > rect.midY {

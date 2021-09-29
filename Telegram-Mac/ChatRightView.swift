@@ -197,7 +197,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         
         if let item = item {
             
-            if item.isStateOverlayLayout, blurBackground == nil || layer != textView?.layer {
+            if item.isStateOverlayLayout, blurBackground == nil {
                 ctx.round(frame.size, frame.height/2)
                 ctx.setFillColor(item.stateOverlayBackgroundColor.cgColor)
                 ctx.fill(layer.bounds)
