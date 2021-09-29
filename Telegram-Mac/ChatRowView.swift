@@ -1216,20 +1216,22 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.setFrameOrigin(shareViewPoint(item))
             }
             
-            if item.isBubbled && item.presentation.backgroundMode.hasWallpaper  {
+            if item.isBubbled && item.presentation.controllerBackgroundMode.hasWallpaper  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))
                 let size = NSMakeSize(control.frame.width, control.frame.height)
                 control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
-                control.set(additionBackgroundColor: item.presentation.chatServiceItemColor, for: .Normal)
-                control.set(additionBackgroundColor: item.presentation.chatServiceItemColor, for: .Hover)
                 
                 control.set(cornerRadius: .half, for: .Normal)
+                
+                control.blurBackground = item.presentation.chatServiceItemColor
+
             } else {
                 control.set(image: item.hasSource ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))
                 control.background = .clear
+                control.blurBackground = nil
             }
             
             control.removeAllHandlers()
