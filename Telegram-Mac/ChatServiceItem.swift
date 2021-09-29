@@ -710,8 +710,8 @@ class ChatServiceRowView: TableRowView {
             return
         }
         
-        if item.presentation.controllerBackgroundMode.hasWallpaper {
-            textView.blurBackground = item.presentation.chatServiceItemColor
+        if item.presentation.hasWallpaper {
+            textView.blurBackground = item.presentation.blurServiceColor
             textView.backgroundColor = .clear
         } else {
             textView.blurBackground = nil

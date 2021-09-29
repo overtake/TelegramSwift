@@ -294,8 +294,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         
-        rightView.blurBackground = item.isStateOverlayLayout ? item.presentation.chatServiceItemColor : nil
-        rightView.layer?.cornerRadius = rightView.blurBackground != nil ? item.rightSize.height / 2 : 0
+        if item.isStateOverlayLayout, item.presentation.hasWallpaper {
+            rightView.blurBackground = item.presentation.blurServiceColor
+            rightView.layer?.cornerRadius = item.rightSize.height / 2
+        } else {
+            rightView.blurBackground = nil
+            rightView.layer?.cornerRadius = 0
+        }
 
         contentView.backgroundColor = .clear
         item.replyModel?.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
@@ -1216,7 +1221,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.setFrameOrigin(shareViewPoint(item))
             }
             
-            if item.isBubbled && item.presentation.controllerBackgroundMode.hasWallpaper  {
+            if item.isBubbled && item.presentation.hasWallpaper  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))
@@ -1225,7 +1230,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 
                 control.set(cornerRadius: .half, for: .Normal)
                 
-                control.blurBackground = item.presentation.chatServiceItemColor
+                control.blurBackground = item.presentation.blurServiceColor
 
             } else {
                 control.set(image: item.hasSource ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
