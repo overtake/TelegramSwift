@@ -1728,6 +1728,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
+                
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
+                fr = CATransform3DScale(fr, 1, -1, 1)
+                fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
+                
+                blockMask?.transform = fr
                 blockMask?.contentsScale = 2.0
                 blockMask?.contents = blockImage
                 blockMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
