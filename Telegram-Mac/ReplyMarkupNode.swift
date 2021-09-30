@@ -104,8 +104,8 @@ class ReplyMarkupNode: Node {
                 btnView.isSelectable = false
                 btnView.disableBackgroundDrawing = true
 
-                if !self.isInput && button.presentation.hasWallpaper {
-                    btnView.blurBackground = button.presentation.chatServiceItemColor
+                if !self.isInput && button.presentation.shoundBlurService {
+                    btnView.blurBackground = button.presentation.blurServiceColor
                     btnView.backgroundColor = .clear
                 } else {
                     btnView.blurBackground = nil
@@ -143,8 +143,8 @@ class ReplyMarkupNode: Node {
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let btnView:TextView? = view?.subviews[i] as? TextView
                 
-                if !self.isInput && button.presentation.hasWallpaper {
-                    btnView?.blurBackground = button.presentation.chatServiceItemColor
+                if !self.isInput && button.presentation.shoundBlurService {
+                    btnView?.blurBackground = button.presentation.blurServiceColor
                     btnView?.backgroundColor = .clear
                 } else {
                     btnView?.blurBackground = nil
