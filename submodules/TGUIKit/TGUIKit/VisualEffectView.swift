@@ -32,6 +32,11 @@ open class VisualEffect: NSVisualEffectView {
         self.blendingMode = .withinWindow
         self.state = .active
         self.bgColor = NSColor.black.withAlphaComponent(0.2)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        self.overlay.frame = bounds
+        CATransaction.commit()
+        layer?.addSublayer(self.overlay)
     }
     
     
@@ -61,8 +66,7 @@ open class VisualEffect: NSVisualEffectView {
             }
             return true
         }
-        self.overlay.frame = bounds
-        self.layer?.addSublayer(overlay)
+        
     }
     
     public func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
@@ -93,9 +97,24 @@ open class VisualEffect: NSVisualEffectView {
         for layer in sublayers {
             animate(layer, main: false)
         }
-        animate(overlay, main: false)
-    
+        if animated {
+            animate(overlay, main: false)
+        } else {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            self.overlay.frame = bounds
+            CATransaction.commit()
+        }
     }
+    
+    open override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        self.overlay.frame = bounds
+        CATransaction.commit()
+    }
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
