@@ -10,6 +10,7 @@ import Foundation
 
 
 open class VisualEffect: NSVisualEffectView {
+    private let overlay: CALayer = CALayer()
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
@@ -19,11 +20,20 @@ open class VisualEffect: NSVisualEffectView {
         setup()
     }
     
+    public var bgColor: NSColor = NSColor.black.withAlphaComponent(0.2) {
+        didSet {
+            overlay.backgroundColor = bgColor.cgColor
+        }
+    }
+    
+    
     func setup() {
         self.wantsLayer = true
         self.blendingMode = .withinWindow
         self.state = .active
+        self.bgColor = NSColor.black.withAlphaComponent(0.2)
     }
+    
     
     open override func updateLayer() {
         super.updateLayer()
@@ -51,6 +61,8 @@ open class VisualEffect: NSVisualEffectView {
             }
             return true
         }
+        self.overlay.frame = bounds
+        self.layer?.addSublayer(overlay)
     }
     
     public func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
@@ -81,6 +93,7 @@ open class VisualEffect: NSVisualEffectView {
         for layer in sublayers {
             animate(layer, main: false)
         }
+        animate(overlay, main: false)
     
     }
     required public init?(coder: NSCoder) {

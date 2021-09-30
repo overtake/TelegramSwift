@@ -223,6 +223,14 @@ class ChatControllerView : View, ChatInputDelegate {
     private var historyState:ChatHistoryState?
     private let chatInteraction: ChatInteraction
     
+    var chatTheme: TelegramPresentationTheme? {
+        didSet {
+            if chatTheme != oldValue {
+                updateLocalizationAndTheme(theme: theme)
+            }
+        }
+    }
+    
     private var themeSelectorView: NSView?
     
     private let floatingPhotosView: View = View()
@@ -767,7 +775,7 @@ class ChatControllerView : View, ChatInputDelegate {
         progressView?.backgroundColor = theme.colors.background
         (progressView?.subviews.first as? NSProgressIndicator)?.set(color: theme.colors.indicatorColor)
         scroller.updateLocalizationAndTheme(theme: theme)
-        tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction)
+        tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction, theme: self.chatTheme ?? theme)
     }
 
     
@@ -4931,6 +4939,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
         
+        genericView.chatTheme = processedView.theme
                 
         let animated: Bool
         switch transition.state {
@@ -6182,7 +6191,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
 
             if value.peer != nil && oldValue.peer == nil {
-                genericView.tableView.emptyItem = ChatEmptyPeerItem(genericView.tableView.frame.size, chatInteraction: chatInteraction)
+                genericView.tableView.emptyItem = ChatEmptyPeerItem(genericView.tableView.frame.size, chatInteraction: chatInteraction, theme: previousView.with { $0?.theme ?? theme })
             }
             
             var upgradedToPeerId: PeerId?

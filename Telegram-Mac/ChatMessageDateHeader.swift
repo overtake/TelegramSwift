@@ -154,7 +154,7 @@ class ChatDateStickView : TableStickView {
         self.textView.isSelectable = false
        // self.textView.userInteractionEnabled = false
         self.containerView.wantsLayer = true
-        self.textView.disableBackgroundDrawing = true
+//        self.textView.disableBackgroundDrawing = true
        // textView.isEventLess = false
         super.init(frame: frameRect)
         addSubview(textView)
@@ -232,6 +232,7 @@ class ChatDateStickView : TableStickView {
         }
     }
     
+    
     override func updateColors() {
         super.updateColors()
         
@@ -249,7 +250,7 @@ class ChatDateStickView : TableStickView {
                     return true
                 })
             }
-            if presentation.hasWallpaper {
+            if presentation.shoundBlurService {
                 textView.blurBackground = presentation.blurServiceColor
                 textView.backgroundColor = .clear
             } else {
