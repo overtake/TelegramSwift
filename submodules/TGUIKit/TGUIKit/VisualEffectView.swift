@@ -66,7 +66,10 @@ open class VisualEffect: NSVisualEffectView {
             }
             return true
         }
-        
+        for sublayer in sublayers {
+            sublayer.backgroundColor = nil
+            sublayer.isOpaque = false
+        }
     }
     
     public func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {

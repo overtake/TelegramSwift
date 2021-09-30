@@ -165,7 +165,7 @@ final class ChatListRevealView : TableStickView {
                     if item.selected == tab || unreadCount.hasUnmutedUnread {
                         ctx.setFillColor(theme.colors.accent.cgColor)
                     } else {
-                        ctx.setFillColor(theme.colors.grayText.cgColor)
+                        ctx.setFillColor(theme.colors.badgeMuted.cgColor)
                     }
                     
                     
