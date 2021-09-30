@@ -113,14 +113,14 @@ class DiceCache {
         
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
-            return view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
         } |> map {
             return InteractiveEmojiConfiguration.with(appConfiguration: $0)
         } |> distinctUntilChanged
         
         
         let emojiesSound = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
-            return view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
         } |> map { value -> EmojiesSoundConfiguration in
             return EmojiesSoundConfiguration.with(appConfiguration: value)
         } |> distinctUntilChanged |> mapToSignal { value -> Signal<Never, NoError> in

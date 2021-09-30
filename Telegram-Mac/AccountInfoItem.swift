@@ -182,7 +182,7 @@ class AccountInfoView : TableRowView {
             textView.update(isSelect ? item.activeTextlayout : item.textLayout)
             if !item.photos.isEmpty {
                 if let first = item.photos.first, let video = first.image.videoRepresentations.last {
-                    let equal = videoRepresentation?.resource.id.isEqual(to: video.resource.id) ?? false
+                    let equal = videoRepresentation?.resource.id == video.resource.id
                     if !equal {
                         
                         self.photoVideoView?.removeFromSuperview()

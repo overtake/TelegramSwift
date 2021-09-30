@@ -9,8 +9,9 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
-public struct AutomaticMediaDownloadCategoryPeers: PostboxCoding, Equatable {
+public struct AutomaticMediaDownloadCategoryPeers: Codable, Equatable {
     public let privateChats: Bool
     public let groupChats: Bool
     public let channels: Bool
@@ -22,22 +23,26 @@ public struct AutomaticMediaDownloadCategoryPeers: PostboxCoding, Equatable {
         self.fileSize = fileSize
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.privateChats = decoder.decodeInt32ForKey("pc", orElse: 0) != 0
-        self.groupChats = decoder.decodeInt32ForKey("g", orElse: 0) != 0
-        self.channels = decoder.decodeInt32ForKey("c", orElse: 0) != 0
-        self.fileSize = decoder.decodeOptionalInt32ForKey("fs")
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.privateChats = try container.decode(Int32.self, forKey: "pc") != 0
+        self.groupChats = try container.decode(Int32.self, forKey: "g") != 0
+        self.channels = try container.decode(Int32.self, forKey: "c") != 0
+        self.fileSize = try container.decodeIfPresent(Int32.self, forKey: "fs")
 
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.privateChats ? 1 : 0, forKey: "pc")
-        encoder.encodeInt32(self.groupChats ? 1 : 0, forKey: "g")
-        encoder.encodeInt32(self.channels ? 1 : 0, forKey: "c")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(Int32(self.privateChats ? 1 : 0), forKey: "pc")
+        try container.encode(Int32(self.groupChats ? 1 : 0), forKey: "g")
+        try container.encode(Int32(self.channels ? 1 : 0), forKey: "c")
         if let fileSize = self.fileSize {
-            encoder.encodeInt32(fileSize, forKey: "fs")
+            try container.encode(fileSize, forKey: "fs")
         } else {
-            encoder.encodeNil(forKey: "fs")
+            try container.encodeNil(forKey: "fs")
         }
     }
     
@@ -73,35 +78,31 @@ public struct AutomaticMediaDownloadCategoryPeers: PostboxCoding, Equatable {
     }
 }
 
-public struct AutomaticMediaDownloadCategories: PostboxCoding, Equatable {
+public struct AutomaticMediaDownloadCategories: Codable, Equatable {
     public let photo: AutomaticMediaDownloadCategoryPeers
     public let video: AutomaticMediaDownloadCategoryPeers
     public let files: AutomaticMediaDownloadCategoryPeers
-//    public let instantVideo: AutomaticMediaDownloadCategoryPeers
-//    public let gif: AutomaticMediaDownloadCategoryPeers
     
     public init(photo: AutomaticMediaDownloadCategoryPeers, video: AutomaticMediaDownloadCategoryPeers, files: AutomaticMediaDownloadCategoryPeers) {
         self.photo = photo
         self.video = video
         self.files = files
-//        self.instantVideo = instantVideo
-//        self.gif = gif
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.photo = decoder.decodeObjectForKey("p", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-        self.video = decoder.decodeObjectForKey("vd", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-        self.files = decoder.decodeObjectForKey("f", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-//        self.instantVideo = decoder.decodeObjectForKey("iv", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
-//        self.gif = decoder.decodeObjectForKey("g", decoder: { AutomaticMediaDownloadCategoryPeers(decoder: $0) }) as! AutomaticMediaDownloadCategoryPeers
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        
+        
+        self.photo = try container.decode(AutomaticMediaDownloadCategoryPeers.self, forKey: "p")
+        self.video = try container.decode(AutomaticMediaDownloadCategoryPeers.self, forKey: "vd")
+        self.files = try container.decode(AutomaticMediaDownloadCategoryPeers.self, forKey: "f")
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObject(self.photo, forKey: "p")
-        encoder.encodeObject(self.video, forKey: "vd")
-        encoder.encodeObject(self.files, forKey: "f")
-//        encoder.encodeObject(self.instantVideo, forKey: "iv")
-//        encoder.encodeObject(self.gif, forKey: "g")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(self.photo, forKey: "p")
+        try container.encode(self.video, forKey: "vd")
+        try container.encode(self.files, forKey: "f")
     }
     
     public func withUpdatedPhoto(_ photo: AutomaticMediaDownloadCategoryPeers) -> AutomaticMediaDownloadCategories {
@@ -140,7 +141,7 @@ public struct AutomaticMediaDownloadCategories: PostboxCoding, Equatable {
     }
 }
 
-public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
+public struct AutomaticMediaDownloadSettings: Codable, Equatable {
     public let categories: AutomaticMediaDownloadCategories
     public let automaticDownload: Bool
     public let downloadFolder: String
@@ -151,7 +152,6 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
     }
 
     
-    
     init(categories: AutomaticMediaDownloadCategories, automaticDownload: Bool, downloadFolder: String, automaticSaveDownloadedFiles: Bool) {
         self.categories = categories
         self.automaticDownload = automaticDownload
@@ -159,28 +159,23 @@ public struct AutomaticMediaDownloadSettings: PreferencesEntry, Equatable {
         self.automaticSaveDownloadedFiles = automaticSaveDownloadedFiles
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.categories = decoder.decodeObjectForKey("c", decoder: { AutomaticMediaDownloadCategories(decoder: $0) }) as! AutomaticMediaDownloadCategories
-        self.automaticDownload = decoder.decodeBoolForKey("a", orElse: true)
-        self.downloadFolder = decoder.decodeStringForKey("d", orElse: "~/Downloads/".nsstring.expandingTildeInPath)
-        self.automaticSaveDownloadedFiles = decoder.decodeBoolForKey("ad", orElse: false)
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        self.categories = try container.decode(AutomaticMediaDownloadCategories.self, forKey: "c")
+        self.automaticDownload = try container.decode(Bool.self, forKey: "a")
+        self.downloadFolder = try container.decodeIfPresent(String.self, forKey: "d") ?? AutomaticMediaDownloadSettings.defaultSettings.downloadFolder
+        self.automaticSaveDownloadedFiles = try container.decode(Bool.self, forKey: "ad")
     
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObject(self.categories, forKey: "c")
-        encoder.encodeBool(self.automaticDownload, forKey: "a")
-        encoder.encodeString(self.downloadFolder, forKey: "d")
-        encoder.encodeBool(self.automaticSaveDownloadedFiles, forKey: "ad")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.categories, forKey: "c")
+        try container.encode(self.automaticDownload, forKey: "a")
+        try container.encode(self.downloadFolder, forKey: "d")
+        try container.encode(self.automaticSaveDownloadedFiles, forKey: "ad")
         
-    }
-    
-    public func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? AutomaticMediaDownloadSettings {
-            return self == to
-        } else {
-            return false
-        }
     }
     
     public static func ==(lhs: AutomaticMediaDownloadSettings, rhs: AutomaticMediaDownloadSettings) -> Bool {
@@ -208,18 +203,18 @@ func updateMediaDownloadSettingsInteractively(postbox: Postbox, _ f: @escaping (
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings, { entry in
             let currentSettings: AutomaticMediaDownloadSettings
-            if let entry = entry as? AutomaticMediaDownloadSettings {
+            if let entry = entry?.get(AutomaticMediaDownloadSettings.self) {
                 currentSettings = entry
             } else {
                 currentSettings = AutomaticMediaDownloadSettings.defaultSettings
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }
 
 func automaticDownloadSettings(postbox: Postbox) -> Signal<AutomaticMediaDownloadSettings, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]) |> map { value in
-        return value.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings] as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
+        return value.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]?.get(AutomaticMediaDownloadSettings.self) ?? .defaultSettings
     }
 }

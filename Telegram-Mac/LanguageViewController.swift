@@ -379,7 +379,7 @@ class LanguageViewController: TableViewController {
         let initialSize = atomicSize
 
         let signal = context.account.postbox.preferencesView(keys: [PreferencesKeys.localizationListState]) |> map { value -> LocalizationListState? in
-            return value.values[PreferencesKeys.localizationListState] as? LocalizationListState
+            return value.values[PreferencesKeys.localizationListState]?.get(LocalizationListState.self)
         } |> deliverOnPrepareQueue
         
         let first: Atomic<Bool> = Atomic(value: true)

@@ -627,11 +627,11 @@ public extension Message {
             }
         }
         
-        if let peer = messageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
+        if let peer = coreMessageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
             _peer = peer
         } else if let author = effectiveAuthor, _peer == nil {
             if author is TelegramSecretChat {
-                return messageMainPeer(self)
+                return coreMessageMainPeer(self)
             } else {
                 _peer = author
             }
@@ -681,7 +681,7 @@ public extension Message {
                 return peers[peerId]
             }
         }
-        if let peer = messageMainPeer(self), peer.isBot {
+        if let peer = coreMessageMainPeer(self), peer.isBot {
             return peer
         }
         return nil
@@ -937,7 +937,7 @@ func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
 }
 
 func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool {
-    if let peer = messageMainPeer(message) {
+    if let peer = coreMessageMainPeer(message) {
         if message.isScheduledMessage {
             return false
         }
@@ -1020,7 +1020,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     
     var timeInCondition = Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
     
-    if let peer = messageMainPeer(message) as? TelegramChannel {
+    if let peer = coreMessageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
             if message.isScheduledMessage {
                 return peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
@@ -1074,7 +1074,7 @@ func canReportMessage(_ message: Message, _ account: Account) -> Bool {
     if message.isScheduledMessage || message.flags.contains(.Failed) || message.flags.contains(.Sending) {
         return false
     }
-    if let peer = messageMainPeer(message), message.author?.id != account.peerId {
+    if let peer = coreMessageMainPeer(message), message.author?.id != account.peerId {
         return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(account.peerId)?.isBot == true)
     } else {
         return false
@@ -2525,7 +2525,7 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         let wallpapers = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".png"
+        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
         
         if !FileManager.default.fileExists(atPath: out) {
             try? FileManager.default.removeItem(atPath: out)
@@ -2559,7 +2559,7 @@ extension WallpaperSettings {
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, settings: WallpaperSettings) -> String {
-    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".png"
+    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
 }
 
 
@@ -2671,7 +2671,7 @@ extension AutomaticMediaDownloadSettings {
             }
         }
         
-        if let peer = messageMainPeer(message) {
+        if let peer = coreMessageMainPeer(message) {
             if let _ = message.media.first as? TelegramMediaImage {
                 return ability(categories.photo, peer)
             } else if let media = message.media.first as? TelegramMediaFile {
@@ -2710,7 +2710,7 @@ func fileExtenstion(_ file: TelegramMediaFile) -> String {
 
 func proxySettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<ProxySettings, NoError>  {
     return accountManager.sharedData(keys: [SharedDataKeys.proxySettings]) |> map { view in
-        return view.entries[SharedDataKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
+        return view.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? ProxySettings.defaultSettings
     }
 }
 
@@ -2733,7 +2733,7 @@ extension ProxySettings {
     
     func withUpdatedServer(_ current: ProxyServerSettings, with updated: ProxyServerSettings) -> ProxySettings {
         var servers = self.servers
-        if let index = servers.index(where: {$0 == current}) {
+        if let index = servers.firstIndex(where: {$0 == current}) {
             servers[index] = updated
         } else {
             servers.append(updated)
@@ -3348,4 +3348,9 @@ func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
     } else {
         showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     }
+}
+
+
+func coreMessageMainPeer(_ message: Message) -> Peer? {
+    return messageMainPeer(.init(message))?._asPeer()
 }

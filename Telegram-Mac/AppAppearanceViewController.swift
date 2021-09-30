@@ -348,8 +348,8 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                 confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
                     let disableNightMode = context.sharedContext.accountManager.transaction { transaction -> Void in
                         transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
-                            let settings: AutoNightThemePreferences = entry as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings
-                            return settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil)
+                            let settings: AutoNightThemePreferences = entry?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings
+                            return PreferencesEntry(settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil))
                         })
                     } |> deliverOnMainQueue
                     _ = disableNightMode.start(next: {

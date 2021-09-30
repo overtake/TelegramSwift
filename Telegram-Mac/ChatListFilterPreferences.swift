@@ -57,7 +57,7 @@ extension ChatListFilter {
 
 
 
-struct ChatListFoldersSettings: PreferencesEntry, Equatable {
+struct ChatListFoldersSettings: Codable {
     
     let sidebar: Bool
     
@@ -69,21 +69,19 @@ struct ChatListFoldersSettings: PreferencesEntry, Equatable {
         self.sidebar = sidebar
     }
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let other = to as? ChatListFoldersSettings {
-            return other == self
-        } else {
-            return false
-        }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.sidebar = try container.decode(Int32.self, forKey: "t") == 1
     }
     
-    init(decoder: PostboxDecoder) {
-        self.sidebar = decoder.decodeOptionalInt32ForKey("t") == 1
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(Int32(self.sidebar ? 1 : 0), forKey: "t")
     }
     
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(sidebar ? 1 : 0, forKey: "t")
-    }
     
     func withUpdatedSidebar(_ sidebar: Bool) -> ChatListFoldersSettings {
         return ChatListFoldersSettings(sidebar: sidebar)
@@ -94,15 +92,16 @@ struct ChatListFoldersSettings: PreferencesEntry, Equatable {
 
 func chatListFolderSettings(_ postbox: Postbox) -> Signal<ChatListFoldersSettings, NoError> {
     return postbox.preferencesView(keys:  [ApplicationSpecificPreferencesKeys.chatListSettings]) |> map { view in
-        return view.values[ApplicationSpecificPreferencesKeys.chatListSettings] as? ChatListFoldersSettings ?? ChatListFoldersSettings.defaultValue
+        return view.values[ApplicationSpecificPreferencesKeys.chatListSettings]?.get(ChatListFoldersSettings.self) ?? ChatListFoldersSettings.defaultValue
     }
 }
 
 func updateChatListFolderSettings(_ postbox: Postbox, _ f: @escaping(ChatListFoldersSettings) -> ChatListFoldersSettings) -> Signal<Never, NoError> {
     return postbox.transaction { transaction in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.chatListSettings, { entry in
-            let current = entry as? ChatListFoldersSettings ?? ChatListFoldersSettings.defaultValue
-            return f(current)
+            let current = entry?.get(ChatListFoldersSettings.self) ?? ChatListFoldersSettings.defaultValue
+            let updated = f(current)
+            return PreferencesEntry(updated)
         })
     } |> ignoreValues
 }
@@ -173,7 +172,7 @@ func chatListFilterItems(engine: TelegramEngine, accountManager: AccountManager<
                 keys.append(.basicPeer(peerId))
             }
             
-            return combineLatest(queue: engine.account.postbox.queue,
+            return combineLatest(queue: resourcesQueue,
                                  engine.account.postbox.combinedView(keys: keys),
                                  Signal<Bool, NoError>.single(true)
                 )

@@ -33,7 +33,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         var peer:Peer? = message.chatPeer(interface.context.peerId)
         
         var title:String = peer?.displayTitle ?? ""
-        if let _peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
+        if let _peer = coreMessageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
             title = _peer.displayTitle
             peer = _peer
         }

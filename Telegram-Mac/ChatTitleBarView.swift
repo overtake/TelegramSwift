@@ -545,7 +545,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     
     func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
-        if chatInteraction.presentation.mainPeer?.largeProfileImage?.resource.id.uniqueId == stableId.base as? String {
+        if chatInteraction.presentation.mainPeer?.largeProfileImage?.resource.id.stringRepresentation == stableId.base as? String {
             return avatarControl
         }
         return nil
@@ -647,7 +647,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         if NSPointInRect(point, avatarControl.frame), chatInteraction.mode == .history, chatInteraction.peerId != chatInteraction.context.peerId {
             if let peer = chatInteraction.presentation.mainPeer, let large = peer.largeProfileImage {
-                showPhotosGallery(context: chatInteraction.context, peerId: peer.id, firstStableId: AnyHashable(large.resource.id.uniqueId), self, nil)
+                showPhotosGallery(context: chatInteraction.context, peerId: peer.id, firstStableId: AnyHashable(large.resource.id.stringRepresentation), self, nil)
                 return
             }
         }

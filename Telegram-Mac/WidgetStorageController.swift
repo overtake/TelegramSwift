@@ -375,7 +375,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
         let cacheSettingsPromise = Promise<CacheStorageSettings>()
         cacheSettingsPromise.set(context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.cacheStorageSettings])
             |> map { view -> CacheStorageSettings in
-                return view.entries[SharedDataKeys.cacheStorageSettings] as? CacheStorageSettings ?? CacheStorageSettings.defaultSettings
+                return view.entries[SharedDataKeys.cacheStorageSettings]?.get(CacheStorageSettings.self) ?? CacheStorageSettings.defaultSettings
             })
         
         

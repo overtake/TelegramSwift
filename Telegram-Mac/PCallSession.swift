@@ -406,9 +406,9 @@ class PCallSession {
         semaphore.wait()
        
 
-        let configuration = data.0.values[PreferencesKeys.voipConfiguration] as? VoipConfiguration ?? VoipConfiguration.defaultValue
-        let appConfiguration = data.0.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
-        let derivedState =  data.0.values[ApplicationSpecificPreferencesKeys.voipDerivedState] as? VoipDerivedState ?? VoipDerivedState.default
+        let configuration = data.0.values[PreferencesKeys.voipConfiguration]?.get(VoipConfiguration.self) ?? VoipConfiguration.defaultValue
+        let appConfiguration = data.0.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+        let derivedState =  data.0.values[ApplicationSpecificPreferencesKeys.voipDerivedState]?.get(VoipDerivedState.self) ?? VoipDerivedState.default
         
         self.serializedData = configuration.serializedData
         self.dataSaving = .never
@@ -1125,7 +1125,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
     
     
     var isVideoPossible = account.postbox.transaction { transaction -> VideoCallsConfiguration in
-        let appConfiguration: AppConfiguration = transaction.getPreferencesEntry(key: PreferencesKeys.appConfiguration) as? AppConfiguration ?? AppConfiguration.defaultValue
+        let appConfiguration: AppConfiguration = transaction.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
         return VideoCallsConfiguration(appConfiguration: appConfiguration)
     }
     |> map { callsConfiguration -> Bool in

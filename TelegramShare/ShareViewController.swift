@@ -33,9 +33,6 @@ class ShareViewController: NSViewController {
         super.viewDidLoad()
         
         
-        
-        declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
-        declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
 
         guard let containerUrl = ApiEnvironment.containerURL else {
             return
@@ -45,7 +42,7 @@ class ShareViewController: NSViewController {
         
         
         let rootPath = containerUrl.path
-        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true)
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true, useCaches: true)
 
         let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
         logger.logToConsole = false
@@ -63,7 +60,7 @@ class ShareViewController: NSViewController {
         var localization: LocalizationSettings? = nil
         let localizationSemaphore = DispatchSemaphore(value: 0)
         _ = (accountManager.transaction { transaction in
-            localization = transaction.getSharedData(SharedDataKeys.localizationSettings) as? LocalizationSettings
+            localization = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
             localizationSemaphore.signal()
         }).start()
         localizationSemaphore.wait()

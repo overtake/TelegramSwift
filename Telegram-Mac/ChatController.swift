@@ -1555,7 +1555,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let action = message.media.first as? TelegramMediaAction {
                         switch action.action {
                         case .groupCreated:
-                            return messageMainPeer(message)?.groupAccess.isCreator == false
+                            return coreMessageMainPeer(message)?.groupAccess.isCreator == false
                         case .groupMigratedToChannel:
                             return false
                         case .channelMigratedFromGroup:
@@ -3762,7 +3762,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return
             }
-            self.updateReqctionsDisposable.set((updateMessageReactionsInteractively(postbox: self.context.account.postbox, messageId: messageId, reaction: reaction) |> deliverOnMainQueue).start(), forKey: messageId)
+//            self.updateReqctionsDisposable.set((updateMessageReactionsInteractively(postbox: self.context.account.postbox, messageId: messageId, reaction: reaction) |> deliverOnMainQueue).start(), forKey: messageId)
         }
         chatInteraction.withToggledSelectedMessage = { [weak self] f in
             guard let `self` = self else {

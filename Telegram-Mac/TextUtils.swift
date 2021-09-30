@@ -197,7 +197,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             return attr
         }
         
-        var peer = messageMainPeer(message)
+        var peer = coreMessageMainPeer(message)
         
         
         
@@ -287,7 +287,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
     
     let authorId:PeerId? = message.author?.id
     
-    if let action = message.media.first as? TelegramMediaAction, let peer = messageMainPeer(message) {
+    if let action = message.media.first as? TelegramMediaAction, let peer = coreMessageMainPeer(message) {
         switch action.action {
         case let .addedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
@@ -399,7 +399,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             }
             var text = L10n.chatListServiceGameScored1Countable(Int(score), gameName)
-            if let peer = messageMainPeer(message) {
+            if let peer = coreMessageMainPeer(message) {
                 if peer.isGroup || peer.isSupergroup {
                     text = (message.author?.compactDisplayTitle ?? "") + " " + text
                 }

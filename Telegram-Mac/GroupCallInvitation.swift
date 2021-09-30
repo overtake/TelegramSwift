@@ -94,11 +94,13 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
         return search |> mapToSignal { search in
             var contacts:Signal<([Peer], [PeerId : PeerPresence]), NoError>
             if search.request.isEmpty {
-                contacts = account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true) |> map {
-                    return ($0.peers, $0.peerPresences)
+                contacts = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true)) |> map {
+                    return ($0.peers.map { $0._asPeer() }, $0.presences.mapValues { $0._asPresence() })
                 }
             } else {
-                contacts = account.postbox.searchContacts(query: search.request)
+                contacts = context.engine.contacts.searchContacts(query: search.request) |> map {
+                    ($0.0.map { $0._asPeer() }, $0.1.mapValues { $0._asPresence() })
+                }
             }
             contacts = combineLatest(account.postbox.peerView(id: peerId), contacts) |> map { peerView, contacts in
                 if let peer = peerViewMainPeer(peerView) {
@@ -116,7 +118,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
             if search.request.isEmpty {
                 globalSearch = .single([])
             } else if let peer = peer, peer.groupAccess.canAddMembers {
-                globalSearch = engine.peers.searchPeers(query: search.request.lowercased()) |> map {
+                globalSearch = engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map {
                     return $0.0.map {
                         $0.peer
                     } + $0.1.map {
@@ -336,7 +338,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
             if search.request.isEmpty {
                 globalSearch = .single([])
             } else {
-                globalSearch = engine.peers.searchPeers(query: search.request.lowercased()) |> map {
+                globalSearch = engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map {
                     return $0.0.map {
                         $0.peer
                     } + $0.1.map {

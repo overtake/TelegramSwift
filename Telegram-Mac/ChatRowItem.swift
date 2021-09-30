@@ -886,7 +886,7 @@ class ChatRowItem: TableRowItem {
         var canFillAuthorName: Bool = true
         switch chatInteraction.chatLocation {
         case .peer, .replyThread:
-            if renderType == .bubble, let peer = messageMainPeer(message) {
+            if renderType == .bubble, let peer = coreMessageMainPeer(message) {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
                 if let media = message.media.first {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
@@ -978,14 +978,14 @@ class ChatRowItem: TableRowItem {
                 }
             }
             
-            if let _peer = messageMainPeer(message) as? TelegramChannel, case let .broadcast(info) = _peer.info {
+            if let _peer = coreMessageMainPeer(message) as? TelegramChannel, case let .broadcast(info) = _peer.info {
                 if info.flags.contains(.hasDiscussionGroup) {
                     return true
                 }
                 peer = _peer
             } else if let author = message.effectiveAuthor, peer == nil {
                 if author is TelegramSecretChat {
-                    peer = messageMainPeer(message)
+                    peer = coreMessageMainPeer(message)
                 } else {
                     peer = author
                 }
@@ -1387,7 +1387,7 @@ class ChatRowItem: TableRowItem {
         var isScam = false
         var isForwardFake: Bool = false
         var isFake = false
-        if let message = message, let peer = messageMainPeer(message) {
+        if let message = message, let peer = coreMessageMainPeer(message) {
             if peer.isGroup || peer.isSupergroup {
                 if let author = message.forwardInfo?.author {
                     isForwardScam = author.isScam
@@ -1510,7 +1510,7 @@ class ChatRowItem: TableRowItem {
             }
             
             
-            if let peer = messageMainPeer(message) as? TelegramUser, peer.botInfo != nil || peer.id == context.peerId {
+            if let peer = coreMessageMainPeer(message) as? TelegramUser, peer.botInfo != nil || peer.id == context.peerId {
                 if !peer.flags.contains(.isSupport) {
                     self.isRead = true
                 }
@@ -1680,7 +1680,7 @@ class ChatRowItem: TableRowItem {
                 
                 if object.renderType == .list, let _ = message.forwardInfo?.psaType {
                     
-                } else if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info, message.adAttribute == nil {
+                } else if let peer = coreMessageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info, message.adAttribute == nil {
                     title = peer.displayTitle
                     titlePeer = peer
                 }
@@ -1690,8 +1690,8 @@ class ChatRowItem: TableRowItem {
                 if let peer = titlePeer {
                     var nameColor:NSColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                     
-                    if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
-                        if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+                    if coreMessageMainPeer(message) is TelegramChannel || coreMessageMainPeer(message) is TelegramGroup {
+                        if let peer = coreMessageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
                             nameColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                         } else if context.peerId != peer.id {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {

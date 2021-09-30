@@ -58,7 +58,9 @@ class ContextSearchMessageItem: GeneralRowItem {
         var peer:Peer = self.peer
         
         var title:String = peer.displayTitle
-        if let _peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = _peer.info {
+        let mainPeer = coreMessageMainPeer(message)
+
+        if let _peer = mainPeer as? TelegramChannel, case .broadcast(_) = _peer.info {
             title = _peer.displayTitle
             peer = _peer
         }
@@ -66,8 +68,8 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         var nameColor:NSColor = theme.chat.linkColor(true, false)
         
-        if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
-            if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+        if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
+            if let peer = mainPeer as? TelegramChannel, case .broadcast(_) = peer.info {
                 nameColor = theme.chat.linkColor(true, false)
             } else if context.peerId != peer.id {
                 let value = abs(Int(peer.id.id._internalGetInt64Value()) % 7)

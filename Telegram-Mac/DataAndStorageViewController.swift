@@ -380,17 +380,15 @@ private struct DataAndStorageControllerState: Equatable {
 
 private struct DataAndStorageData: Equatable {
     let automaticMediaDownloadSettings: AutomaticMediaDownloadSettings
-    let generatedMediaStoreSettings: GeneratedMediaStoreSettings
     let voiceCallSettings: VoiceCallSettings
     
-    init(automaticMediaDownloadSettings: AutomaticMediaDownloadSettings, generatedMediaStoreSettings: GeneratedMediaStoreSettings, voiceCallSettings: VoiceCallSettings) {
+    init(automaticMediaDownloadSettings: AutomaticMediaDownloadSettings, voiceCallSettings: VoiceCallSettings) {
         self.automaticMediaDownloadSettings = automaticMediaDownloadSettings
-        self.generatedMediaStoreSettings = generatedMediaStoreSettings
         self.voiceCallSettings = voiceCallSettings
     }
     
     static func ==(lhs: DataAndStorageData, rhs: DataAndStorageData) -> Bool {
-        return lhs.automaticMediaDownloadSettings == rhs.automaticMediaDownloadSettings && lhs.generatedMediaStoreSettings == rhs.generatedMediaStoreSettings && lhs.voiceCallSettings == rhs.voiceCallSettings
+        return lhs.automaticMediaDownloadSettings == rhs.automaticMediaDownloadSettings && lhs.voiceCallSettings == rhs.voiceCallSettings
     }
 }
 
@@ -493,15 +491,11 @@ class DataAndStorageViewController: TableViewController {
         let actionsDisposable = DisposableSet()
         
         let dataAndStorageDataPromise = Promise<DataAndStorageData>()
-        dataAndStorageDataPromise.set(combineLatest(context.account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings, ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings]), voiceCallSettings(context.sharedContext.accountManager))
+        dataAndStorageDataPromise.set(combineLatest(context.account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]), voiceCallSettings(context.sharedContext.accountManager))
             |> map { view, voiceCallSettings  -> DataAndStorageData in
-                let automaticMediaDownloadSettings: AutomaticMediaDownloadSettings = view.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings] as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
-
+                let automaticMediaDownloadSettings: AutomaticMediaDownloadSettings = view.values[ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]?.get(AutomaticMediaDownloadSettings.self) ?? AutomaticMediaDownloadSettings.defaultSettings
                 
-                let generatedMediaStoreSettings: GeneratedMediaStoreSettings = view.values[ApplicationSpecificPreferencesKeys.generatedMediaStoreSettings] as? GeneratedMediaStoreSettings ?? GeneratedMediaStoreSettings.defaultSettings
-                
-                
-                return DataAndStorageData(automaticMediaDownloadSettings: automaticMediaDownloadSettings, generatedMediaStoreSettings: generatedMediaStoreSettings, voiceCallSettings: voiceCallSettings)
+                return DataAndStorageData(automaticMediaDownloadSettings: automaticMediaDownloadSettings, voiceCallSettings: voiceCallSettings)
             })
         
         let arguments = DataAndStorageControllerArguments(openStorageUsage: {

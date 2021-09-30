@@ -503,14 +503,14 @@ class MainViewController: TelegramViewController {
                         
                         _ = context.sharedContext.accountManager.transaction { transaction -> Void in
                             transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
-                                let settings: AutoNightThemePreferences = entry as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings
-                                return settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil)
+                                let settings: AutoNightThemePreferences = entry?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings
+                                return PreferencesEntry(settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil))
                             })
                             transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
-                                let settings = entry as? ThemePaletteSettings ?? ThemePaletteSettings.defaultTheme
-                                return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
+                                let settings = entry?.get(ThemePaletteSettings.self) ?? ThemePaletteSettings.defaultTheme
+                                return PreferencesEntry(settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark))
                             })
-                            }.start()
+                        }.start()
                     })
                 } else {
                     _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in

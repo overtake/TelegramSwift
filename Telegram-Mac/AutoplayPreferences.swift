@@ -9,9 +9,10 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
 
-class AutoplayMediaPreferences : PreferencesEntry, Equatable {
+class AutoplayMediaPreferences : Codable, Equatable {
     let gifs: Bool
     let videos: Bool
     let soundOnHover: Bool
@@ -45,16 +46,29 @@ class AutoplayMediaPreferences : PreferencesEntry, Equatable {
         encoder.encodeInt32(loopAnimatedStickers ? 1 : 0, forKey: "las")
     }
     
-    static func == (lhs: AutoplayMediaPreferences, rhs: AutoplayMediaPreferences) -> Bool {
-        return lhs.gifs == rhs.gifs && lhs.videos == rhs.videos && lhs.soundOnHover == rhs.soundOnHover && lhs.preloadVideos == rhs.preloadVideos && lhs.loopAnimatedStickers == rhs.loopAnimatedStickers
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.gifs = try container.decode(Int32.self, forKey: "g") == 1
+        self.videos = try container.decode(Int32.self, forKey: "v") == 1
+        self.soundOnHover = try container.decode(Int32.self, forKey: "soh") == 1
+        self.preloadVideos = try container.decode(Int32.self, forKey: "pv") == 1
+        self.loopAnimatedStickers = try container.decode(Int32.self, forKey: "las") == 1
+
     }
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? AutoplayMediaPreferences {
-            return self == to
-        } else {
-            return false
-        }
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(Int32(self.gifs ? 1 : 0), forKey: "g")
+        try container.encode(Int32(self.videos ? 1 : 0), forKey: "v")
+        try container.encode(Int32(self.soundOnHover ? 1 : 0), forKey: "soh")
+        try container.encode(Int32(self.preloadVideos ? 1 : 0), forKey: "pv")
+        try container.encode(Int32(self.loopAnimatedStickers ? 1 : 0), forKey: "las")
+    }
+    
+    static func == (lhs: AutoplayMediaPreferences, rhs: AutoplayMediaPreferences) -> Bool {
+        return lhs.gifs == rhs.gifs && lhs.videos == rhs.videos && lhs.soundOnHover == rhs.soundOnHover && lhs.preloadVideos == rhs.preloadVideos && lhs.loopAnimatedStickers == rhs.loopAnimatedStickers
     }
     
     func withUpdatedAutoplayGifs(_ gifs: Bool) -> AutoplayMediaPreferences {
@@ -79,13 +93,13 @@ func updateAutoplayMediaSettingsInteractively(postbox: Postbox, _ f: @escaping (
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.autoplayMedia, { entry in
             let currentSettings: AutoplayMediaPreferences
-            if let entry = entry as? AutoplayMediaPreferences {
+            if let entry = entry?.get(AutoplayMediaPreferences.self) {
                 currentSettings = entry
             } else {
                 currentSettings = AutoplayMediaPreferences.defaultSettings
             }
             
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }
@@ -93,6 +107,6 @@ func updateAutoplayMediaSettingsInteractively(postbox: Postbox, _ f: @escaping (
 
 func autoplayMediaSettings(postbox: Postbox) -> Signal<AutoplayMediaPreferences, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]) |> map { views in
-        return views.values[ApplicationSpecificPreferencesKeys.autoplayMedia] as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings
+        return views.values[ApplicationSpecificPreferencesKeys.autoplayMedia]?.get(AutoplayMediaPreferences.self) ?? AutoplayMediaPreferences.defaultSettings
     }
 }

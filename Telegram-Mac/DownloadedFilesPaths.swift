@@ -9,8 +9,9 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
-struct DownloadedPath : PostboxCoding, Equatable {
+struct DownloadedPath : Codable, Equatable {
     let id: MediaId
     let downloadedPath: String
     let size: Int32
@@ -36,9 +37,27 @@ struct DownloadedPath : PostboxCoding, Equatable {
         encoder.encodeInt32(self.size, forKey: "s")
         encoder.encodeInt32(self.lastModified, forKey: "lm")
     }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        
+        self.id = try container.decode(MediaId.self, forKey: "id")
+        self.downloadedPath = try container.decode(String.self, forKey: "dp")
+        self.size = try container.decode(Int32.self, forKey: "s")
+        self.lastModified = try container.decode(Int32.self, forKey: "lm")
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)        
+        
+        try container.encode(self.id, forKey: "id")
+        try container.encode(self.downloadedPath, forKey: "dp")
+        try container.encode(self.size, forKey: "s")
+        try container.encode(self.lastModified, forKey: "lm")
+    }
 }
 
-struct DownloadedFilesPaths: PreferencesEntry, Equatable {
+struct DownloadedFilesPaths: Codable, Equatable {
     
     private let paths: [DownloadedPath]
     
@@ -50,20 +69,14 @@ struct DownloadedFilesPaths: PreferencesEntry, Equatable {
         self.paths = paths
     }
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let other = to as? DownloadedFilesPaths {
-            return other == self
-        } else {
-            return false
-        }
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        self.paths = try container.decode([DownloadedPath].self, forKey: "p")
     }
     
-    init(decoder: PostboxDecoder) {
-        self.paths = decoder.decodeObjectArrayForKey("p")
-    }
-    
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObjectArray(self.paths, forKey: "p")
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(self.paths, forKey: "p")
     }
     
     func path(for mediaId: MediaId) -> DownloadedPath? {
@@ -89,16 +102,16 @@ struct DownloadedFilesPaths: PreferencesEntry, Equatable {
 
 func downloadedFilePaths(_ postbox: Postbox) -> Signal<DownloadedFilesPaths, NoError> {
     return postbox.transaction { transaction in
-        return transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.downloadedPaths) as? DownloadedFilesPaths ?? DownloadedFilesPaths.defaultValue
+        return transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.downloadedPaths)?.get(DownloadedFilesPaths.self) ?? DownloadedFilesPaths.defaultValue
     }
 }
 
 func updateDownloadedFilePaths(_ postbox: Postbox, _ f: @escaping(DownloadedFilesPaths) -> DownloadedFilesPaths) -> Signal<Never, NoError> {
     return postbox.transaction { transaction in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.downloadedPaths, { entry in
-            let current = entry as? DownloadedFilesPaths ?? DownloadedFilesPaths.defaultValue
+            let current = entry?.get(DownloadedFilesPaths.self) ?? DownloadedFilesPaths.defaultValue
 
-            return f(current)
+            return PreferencesEntry(f(current))
         })
     }  |> ignoreValues
 }

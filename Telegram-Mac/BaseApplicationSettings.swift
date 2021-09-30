@@ -11,7 +11,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 
-class BaseApplicationSettings: PreferencesEntry, Equatable {
+class BaseApplicationSettings: Codable, Equatable {
     let handleInAppKeys: Bool
     let sidebar: Bool
     let showCallsTab: Bool
@@ -33,24 +33,29 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
         self.statusBar = statusBar
     }
     
-    required init(decoder: PostboxDecoder) {
-        self.showCallsTab = decoder.decodeInt32ForKey("c", orElse: 1) != 0
-        self.handleInAppKeys = decoder.decodeInt32ForKey("h", orElse: 0) != 0
-        self.sidebar = decoder.decodeInt32ForKey("e", orElse: 0) != 0
-        self.latestArticles = decoder.decodeInt32ForKey("la", orElse: 1) != 0
-        self.predictEmoji = decoder.decodeInt32ForKey("pe", orElse: 1) != 0
-        self.bigEmoji = decoder.decodeInt32ForKey("bi", orElse: 1) != 0
-        self.statusBar = decoder.decodeInt32ForKey("sb", orElse: 1) != 0
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        
+        self.showCallsTab = try container.decode(Int32.self, forKey: "c") != 0
+        self.handleInAppKeys = try container.decode(Int32.self, forKey: "h") != 0
+        self.sidebar = try container.decode(Int32.self, forKey: "e") != 0
+        self.latestArticles = try container.decode(Int32.self, forKey: "la") != 0
+        self.predictEmoji = try container.decode(Int32.self, forKey: "pe") != 0
+        self.bigEmoji = try container.decode(Int32.self, forKey: "bi") != 0
+        self.statusBar = try container.decode(Int32.self, forKey: "sb") != 0
     }
     
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.showCallsTab ? 1 : 0, forKey: "c")
-        encoder.encodeInt32(self.handleInAppKeys ? 1 : 0, forKey: "h")
-        encoder.encodeInt32(self.sidebar ? 1 : 0, forKey: "e")
-        encoder.encodeInt32(self.latestArticles ? 1 : 0, forKey: "la")
-        encoder.encodeInt32(self.predictEmoji ? 1 : 0, forKey: "pe")
-        encoder.encodeInt32(self.bigEmoji ? 1 : 0, forKey: "bi")
-        encoder.encodeInt32(self.statusBar ? 1 : 0, forKey: "sb")
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        
+        try container.encode(Int32(self.showCallsTab ? 1 : 0), forKey: "c")
+        try container.encode(Int32(self.handleInAppKeys ? 1 : 0), forKey: "h")
+        try container.encode(Int32(self.sidebar ? 1 : 0), forKey: "e")
+        try container.encode(Int32(self.latestArticles ? 1 : 0), forKey: "la")
+        try container.encode(Int32(self.predictEmoji ? 1 : 0), forKey: "pe")
+        try container.encode(Int32(self.bigEmoji ? 1 : 0), forKey: "bi")
+        try container.encode(Int32(self.statusBar ? 1 : 0), forKey: "sb")
     }
     
     func withUpdatedShowCallsTab(_ showCallsTab: Bool) -> BaseApplicationSettings {
@@ -82,13 +87,6 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
     }
 
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? BaseApplicationSettings {
-            return self == to
-        } else {
-            return false
-        }
-    }
     
     static func ==(lhs: BaseApplicationSettings, rhs: BaseApplicationSettings) -> Bool {
         if lhs.showCallsTab != rhs.showCallsTab {
@@ -114,13 +112,12 @@ class BaseApplicationSettings: PreferencesEntry, Equatable {
         }
         return true
     }
-
 }
 
 
 func baseAppSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<BaseApplicationSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.baseAppSettings]) |> map { prefs in
-        return prefs.entries[ApplicationSharedPreferencesKeys.baseAppSettings] as? BaseApplicationSettings ?? BaseApplicationSettings.defaultSettings
+        return prefs.entries[ApplicationSharedPreferencesKeys.baseAppSettings]?.get(BaseApplicationSettings.self) ?? BaseApplicationSettings.defaultSettings
     }
 }
 
@@ -128,12 +125,12 @@ func updateBaseAppSettingsInteractively(accountManager: AccountManager<TelegramA
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.baseAppSettings, { entry in
             let currentSettings: BaseApplicationSettings
-            if let entry = entry as? BaseApplicationSettings {
+            if let entry = entry?.get(BaseApplicationSettings.self) {
                 currentSettings = entry
             } else {
                 currentSettings = BaseApplicationSettings.defaultSettings
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }

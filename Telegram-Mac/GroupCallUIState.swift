@@ -126,10 +126,8 @@ final class GroupCallUIState : Equatable {
     let dismissedTooltips: Set<ControlsTooltip>
     
     let myPeer: PeerGroupCallData?
-    
-    let visualEffects: Bool
-    
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip>, videoJoined: Bool, visualEffects: Bool) {
+        
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip>, videoJoined: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -153,7 +151,6 @@ final class GroupCallUIState : Equatable {
         self.dismissedTooltips = dismissedTooltips
         self.videoJoined = videoJoined
         self.myPeer = memberDatas.first(where: { $0.peer.id == $0.accountPeerId })
-        self.visualEffects = visualEffects
         var modeMembers:[GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]] = [:]
         
         let modes:[GroupCallUIState.ActiveVideo.Mode] = [.list, .main]
@@ -300,7 +297,7 @@ final class GroupCallUIState : Equatable {
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, pinnedData: self.pinnedData, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker, controlsTooltip: self.controlsTooltip, dismissedTooltips: self.dismissedTooltips, videoJoined: self.videoJoined, visualEffects: self.visualEffects)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, pinnedData: self.pinnedData, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker, controlsTooltip: self.controlsTooltip, dismissedTooltips: self.dismissedTooltips, videoJoined: self.videoJoined)
     }
 }
 

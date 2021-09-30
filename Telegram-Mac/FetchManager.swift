@@ -13,7 +13,7 @@ private struct FetchManagerLocationEntryId: Hashable {
         if lhs.location != rhs.location {
             return false
         }
-        if !lhs.resourceId.isEqual(to: rhs.resourceId) {
+        if lhs.resourceId != rhs.resourceId {
             return false
         }
         if lhs.locationKey != rhs.locationKey {
@@ -22,9 +22,10 @@ private struct FetchManagerLocationEntryId: Hashable {
         return true
     }
     
-    var hashValue: Int {
-        return self.resourceId.hashValue &* 31 &+ self.locationKey.hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.resourceId.hashValue &* 31 &+ self.locationKey.hashValue)
     }
+    
 }
 
 private final class FetchManagerLocationEntry {
@@ -229,7 +230,7 @@ private final class FetchManagerCategoryContext {
         var id: FetchManagerLocationEntryId = entryId
         if self.entries[id] == nil {
             for (key, _) in self.entries {
-                if key.resourceId.isEqual(to: entryId.resourceId) {
+                if key.resourceId == entryId.resourceId {
                     id = key
                     break
                 }
@@ -395,7 +396,7 @@ final class FetchManager {
                                             assert(entry.elevatedPriorityReferenceCount >= 0)
                                         }
                                         if let userInitiatedIndex = assignedUserInitiatedIndex {
-                                            if let index = entry.userInitiatedPriorityIndices.index(of: userInitiatedIndex) {
+                                            if let index = entry.userInitiatedPriorityIndices.firstIndex(of: userInitiatedIndex) {
                                                 entry.userInitiatedPriorityIndices.remove(at: index)
                                             } else {
                                                 assertionFailure()

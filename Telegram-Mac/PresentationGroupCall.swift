@@ -67,10 +67,10 @@ func getGroupCallPanelData(context: AccountContext, peerId: PeerId) -> Signal<Gr
     return availableGroupCall
 }
 
-protocol AccountGroupCallContext: class {
+protocol AccountGroupCallContext {
 }
 
-protocol AccountGroupCallContextCache: class {
+protocol AccountGroupCallContextCache {
 }
 
 
@@ -825,9 +825,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             )
         })
         
-        if let initialCall = initialCall, let temporaryParticipantsContext = self.accountContext.cachedGroupCallContexts.impl.syncWith({ impl in
-            impl.get(context: accountContext, peerId: peerId, call: initialCall)
-        }) {
+        if let initialCall = initialCall {
+            let temporaryParticipantsContext = self.accountContext.cachedGroupCallContexts.impl.syncWith({ impl in
+                impl.get(context: accountContext, peerId: peerId, call: initialCall)
+            })
             self.switchToTemporaryParticipantsContext(sourceContext: temporaryParticipantsContext.context.participantsContext, oldMyPeerId: self.joinAsPeerId)
         } else {
             self.switchToTemporaryParticipantsContext(sourceContext: nil, oldMyPeerId: self.joinAsPeerId)

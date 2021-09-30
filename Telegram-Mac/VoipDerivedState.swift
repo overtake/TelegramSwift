@@ -9,45 +9,42 @@
 import Foundation
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
-public struct VoipDerivedState: Equatable, PreferencesEntry {
-    public var data: Data
+struct VoipDerivedState: Equatable, Codable {
+    var data: Data
     
-    public static var `default`: VoipDerivedState {
+    static var `default`: VoipDerivedState {
         return VoipDerivedState(data: Data())
     }
     
-    public init(data: Data) {
+    init(data: Data) {
         self.data = data
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.data = decoder.decodeDataForKey("data") ?? Data()
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        self.data = try container.decode(Data.self, forKey: "data")
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeData(self.data, forKey: "data")
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(self.data, forKey: "data")
     }
     
-    public func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? VoipDerivedState {
-            return self == to
-        } else {
-            return false
-        }
-    }
 }
 
-public func updateVoipDerivedStateInteractively(postbox: Postbox, _ f: @escaping (VoipDerivedState) -> VoipDerivedState) -> Signal<Void, NoError> {
+func updateVoipDerivedStateInteractively(postbox: Postbox, _ f: @escaping (VoipDerivedState) -> VoipDerivedState) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.voipDerivedState, { entry in
             let currentSettings: VoipDerivedState
-            if let entry = entry as? VoipDerivedState {
+            if let entry = entry?.get(VoipDerivedState.self) {
                 currentSettings = entry
             } else {
                 currentSettings = .default
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }

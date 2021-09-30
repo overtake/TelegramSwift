@@ -13,7 +13,7 @@ import TelegramCore
 
 
 
-struct PasscodeSettings: PreferencesEntry, Equatable {
+struct PasscodeSettings: Codable, Equatable {
     
     let timeout: Int32?
     
@@ -25,13 +25,6 @@ struct PasscodeSettings: PreferencesEntry, Equatable {
         self.timeout = timeout
     }
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let other = to as? PasscodeSettings {
-            return other == self
-        } else {
-            return false
-        }
-    }
     
     init(decoder: PostboxDecoder) {
         self.timeout = decoder.decodeOptionalInt32ForKey("t")
@@ -45,6 +38,17 @@ struct PasscodeSettings: PreferencesEntry, Equatable {
         }
     }
     
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        self.timeout = try container.decodeIfPresent(Int32.self, forKey: "t")
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encodeIfPresent(self.timeout, forKey: "t")
+    }
+    
     
     func withUpdatedTimeout(_ timeout: Int32?) -> PasscodeSettings {
         return PasscodeSettings(timeout: timeout)
@@ -53,21 +57,21 @@ struct PasscodeSettings: PreferencesEntry, Equatable {
 
 
 func passcodeSettings(_ transaction: AccountManagerModifier<TelegramAccountManagerTypes>) -> PasscodeSettings {
-    return transaction.getSharedData(ApplicationSharedPreferencesKeys.passcodeSettings) as? PasscodeSettings ?? PasscodeSettings.defaultValue
+    return transaction.getSharedData(ApplicationSharedPreferencesKeys.passcodeSettings)?.get(PasscodeSettings.self) ?? PasscodeSettings.defaultValue
 }
 
 func passcodeSettingsView(_ accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<PasscodeSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.passcodeSettings]) |> map { view in
-        return view.entries[ApplicationSharedPreferencesKeys.passcodeSettings] as? PasscodeSettings ?? PasscodeSettings.defaultValue
+        return view.entries[ApplicationSharedPreferencesKeys.passcodeSettings]?.get(PasscodeSettings.self) ?? PasscodeSettings.defaultValue
     }
 }
 
 func updatePasscodeSettings(_ accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping(PasscodeSettings) -> PasscodeSettings) -> Signal<Never, NoError> {
     return accountManager.transaction { transaction in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.passcodeSettings, { entry in
-            let current = entry as? PasscodeSettings ?? PasscodeSettings.defaultValue
+            let current = entry?.get(PasscodeSettings.self) ?? PasscodeSettings.defaultValue
             
-            return f(current)
+            return PreferencesEntry(f(current))
         })
     }  |> ignoreValues
 }

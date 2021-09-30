@@ -456,7 +456,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         }
                     }
                     var disableStickers: Bool = false
-                    if let peer = messageMainPeer(message) as? TelegramChannel {
+                    if let peer = coreMessageMainPeer(message) as? TelegramChannel {
                         if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
                             disableStickers = true
                         }
@@ -546,10 +546,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         
-        let rawRank = ranks?.ranks.first(where: { $0.peerId == message.author?.id })
+        let rawRank = ranks?.ranks.first(where: { $0.key == message.author?.id })?.value
         var rank:String? = nil
         if let rawRank = rawRank {
-            switch rawRank.type {
+            switch rawRank {
             case .admin:
                 rank = L10n.chatAdminBadge
             case .owner:

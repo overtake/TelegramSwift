@@ -24,7 +24,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
    
     
     var header: String? {
-        if let item = item as? ChatRowItem, let message = item.message, let peer = messageMainPeer(message) {
+        if let item = item as? ChatRowItem, let message = item.message, let peer = coreMessageMainPeer(message) {
             if !peer.isChannel, let date = item.fullDate, let name = item.authorText?.attributedString.string {
                 return "\(name), [\(date)]:"
             }

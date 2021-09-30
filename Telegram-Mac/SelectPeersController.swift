@@ -220,20 +220,19 @@ struct SelectPeerValue : Equatable {
     }
 }
 
-private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], searchView:MultiplePeersView, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil) -> [SelectPeerEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searchPeers:[PeerId], searchView:MultiplePeersView, excludeIds:[PeerId] = [], linkInvation: ((Int)->Void)? = nil) -> [SelectPeerEntry] {
     var entries: [SelectPeerEntry] = []
-
+    
     if let linkInvation = linkInvation {
         let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.colors.accent, flipVertical: true)
         entries.append(SelectPeerEntry.inviteLink(L10n.peerSelectInviteViaLink, icon, 0, GeneralRowItem.Theme(), linkInvation))
     }
-    
-    //entries.append(.search(false))
-    if let accountPeer = view.accountPeer {
-        var index:Int32 = 0
         
+    var index:Int32 = 0
+    
+    if let accountPeer = accountPeer {
         let searchPeers = searchView.peers.map({$0.value}).sorted(by: <)
-        let peers = view.peers.sorted(by: <)
+        let peers = view.peers.map { $0._asPeer() }.sorted(by: <)
         
         var isset:[PeerId:PeerId] = [:]
         for peer in searchPeers {
@@ -259,19 +258,19 @@ private func entriesForView(_ view: ContactPeersView, searchPeers:[PeerId], sear
                     }
                 }
                 
-                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.peerPresences[peer.id], subscribers: nil), index, !excludeIds.contains(peer.id)))
+                entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil), index, !excludeIds.contains(peer.id)))
                 index += 1
                 if index == 230 {
                     break
                 }
             }
         }
-        
-        if entries.count == 1 {
-            entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
-        }
-    }
 
+    }
+    
+    if entries.count == 1 {
+        entries.append(.searchEmpty(.init(), theme.icons.emptySearch))
+    }
     
     return entries
 }
@@ -662,7 +661,7 @@ class SelectChannelMembersBehavior : SelectPeersBehavior {
 
             let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
             
-            let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = context.engine.peers.searchPeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)}
+            let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = context.engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)}
             
             
             let contactsSearch: Signal<([TemporaryPeer], [TemporaryPeer], Bool), NoError>
@@ -914,7 +913,7 @@ class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
                 
             } else  {
                 let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased())
-                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then (context.engine.peers.searchPeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
+                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then (context.engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
                 
                 return combineLatest(foundLocalPeers |> map {$0.compactMap( {$0.chatMainPeer })}, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
                     return (uniquePeers(from: values.0), values.1.0 + values.1.1, values.1.2 && search.request.length >= 5)
@@ -1000,17 +999,22 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
             
             if search.request.isEmpty {
                 let inSearch:[PeerId] = self?.inSearchSelected.modify({$0}) ?? []
-                return combineLatest(account.postbox.contactPeersView(accountPeerId: account.peerId, includePresences: true), account.postbox.multiplePeersView(inSearch))
+                
+                let accountPeer = context.engine.data.get(
+                    TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
+                )
+                
+                return combineLatest(context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true)), account.postbox.multiplePeersView(inSearch), accountPeer)
                     |> deliverOn(prepareQueue)
-                    |> map { view, searchView -> ([SelectPeerEntry], Bool) in
+                    |> map { view, searchView, accountPeer -> ([SelectPeerEntry], Bool) in
                         let updatedSearch = previousSearch.swap(search.request) != search.request
-                        return (entriesForView(view, searchPeers: inSearch, searchView: searchView, excludeIds: excludePeerIds, linkInvation: linkInvation), updatedSearch)
+                        return (entriesForView(view, accountPeer: accountPeer?._asPeer(), searchPeers: inSearch, searchView: searchView, excludeIds: excludePeerIds, linkInvation: linkInvation), updatedSearch)
                 }
                 
             } else  {
                 
                 let foundLocalPeers = account.postbox.searchContacts(query: search.request.lowercased())
-                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then (context.engine.peers.searchPeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
+                let foundRemotePeers:Signal<([Peer], [Peer], Bool), NoError> = settings.contains(.remote) ? .single(([], [], true)) |> then (context.engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map {($0.map{$0.peer}, $1.map{$0.peer}, false)} ) : .single(([], [], false))
                 
                 return combineLatest(foundLocalPeers |> map {$0.0}, foundRemotePeers) |> map { values -> ([Peer], [Peer], Bool) in
                     return (uniquePeers(from: values.0), values.1.0 + values.1.1, values.1.2 && search.request.length >= 5)
@@ -1211,7 +1215,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
             }
             if let limitsConfiguration = limitsConfiguration {
                 self.interactions.update({$0.withUpdateLimit(limitsConfiguration.maxGroupMemberCount)})
-                if limitsConfiguration.isEqual(to: oldValue!) == false  {
+                if limitsConfiguration != oldValue  {
                     requestUpdateCenterBar()
                 }
             }
@@ -1298,7 +1302,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
         let initialSize = atomicSize
         
         let limitsSignal:Signal<LimitsConfiguration?, NoError> = isNewGroup ? account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]) |> map { values -> LimitsConfiguration? in
-            return values.values[PreferencesKeys.limitsConfiguration] as? LimitsConfiguration
+            return values.values[PreferencesKeys.limitsConfiguration]?.get(LimitsConfiguration.self)
         } : .single(nil)
         
         let first: Atomic<Bool> = Atomic(value: true)

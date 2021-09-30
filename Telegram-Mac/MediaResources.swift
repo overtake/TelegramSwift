@@ -36,7 +36,7 @@ public final class VideoMediaResourceAdjustments: PostboxCoding, Equatable {
     }
 }
 
-public struct VideoLibraryMediaResourceId: MediaResourceId {
+public struct VideoLibraryMediaResourceId {
     public let localIdentifier: String
     public let adjustmentsDigest: MemoryBuffer?
     
@@ -51,17 +51,13 @@ public struct VideoLibraryMediaResourceId: MediaResourceId {
     public var hashValue: Int {
         return self.localIdentifier.hashValue
     }
-    
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? VideoLibraryMediaResourceId {
-            return self.localIdentifier == to.localIdentifier
-        } else {
-            return false
-        }
-    }
 }
 
 public final class VideoLibraryMediaResource: TelegramMediaResource {
+    public func isEqual(to: MediaResource) -> Bool {
+        return to.id == self.id
+    }
+    
     public let localIdentifier: String
     public let adjustments: VideoMediaResourceAdjustments?
     
@@ -89,19 +85,12 @@ public final class VideoLibraryMediaResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return VideoLibraryMediaResourceId(localIdentifier: self.localIdentifier, adjustmentsDigest: self.adjustments?.digest)
+        return .init(VideoLibraryMediaResourceId(localIdentifier: self.localIdentifier, adjustmentsDigest: self.adjustments?.digest).uniqueId)
     }
-    
-    public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? VideoLibraryMediaResource {
-            return self.localIdentifier == to.localIdentifier && self.adjustments == to.adjustments
-        } else {
-            return false
-        }
-    }
+
 }
 
-public struct LocalFileGifMediaResourceId: MediaResourceId {
+public struct LocalFileGifMediaResourceId {
     public let randomId: Int64
     
     public var uniqueId: String {
@@ -111,27 +100,16 @@ public struct LocalFileGifMediaResourceId: MediaResourceId {
     public var hashValue: Int {
         return self.randomId.hashValue
     }
-    
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? LocalFileGifMediaResourceId {
-            return self.randomId == to.randomId
-        } else {
-            return false
-        }
-    }
+
 }
 
 
 
 public final class LocalFileGifMediaResource: TelegramMediaResource {
-    
     public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? LocalFileGifMediaResource {
-            return self.randomId == to.randomId && self.path == to.path
-        } else {
-            return false
-        }
+        return to.id == self.id
     }
+    
     
     public let randomId: Int64
     public let path: String
@@ -152,12 +130,12 @@ public final class LocalFileGifMediaResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return LocalFileGifMediaResourceId(randomId: self.randomId)
+        return .init(LocalFileGifMediaResourceId(randomId: self.randomId).uniqueId)
     }
     
 }
 
-public struct LocalFileVideoMediaResourceId: MediaResourceId {
+public struct LocalFileVideoMediaResourceId {
     public let randomId: Int64
     
     public var uniqueId: String {
@@ -168,25 +146,13 @@ public struct LocalFileVideoMediaResourceId: MediaResourceId {
         return self.randomId.hashValue
     }
     
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? LocalFileVideoMediaResourceId {
-            return self.randomId == to.randomId
-        } else {
-            return false
-        }
-    }
 }
 
 public final class LocalFileVideoMediaResource: TelegramMediaResource {
     
     public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? LocalFileVideoMediaResource {
-            return self.randomId == to.randomId && self.path == to.path
-        } else {
-            return false
-        }
+        return to.id == self.id
     }
-    
     public let randomId: Int64
     public let path: String
     
@@ -206,12 +172,12 @@ public final class LocalFileVideoMediaResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return LocalFileVideoMediaResourceId(randomId: self.randomId)
+        return .init(LocalFileVideoMediaResourceId(randomId: self.randomId).uniqueId)
     }
     
 }
 
-public struct LottieSoundMediaResourceId: MediaResourceId {
+public struct LottieSoundMediaResourceId {
     public let randomId: Int64
     
     public var uniqueId: String {
@@ -222,25 +188,12 @@ public struct LottieSoundMediaResourceId: MediaResourceId {
         return self.randomId.hashValue
     }
     
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? LottieSoundMediaResourceId {
-            return self.randomId == to.randomId
-        } else {
-            return false
-        }
-    }
 }
 
 public final class LottieSoundMediaResource: TelegramMediaResource {
-    
     public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? LottieSoundMediaResource {
-            return self.randomId == to.randomId && self.data == to.data
-        } else {
-            return false
-        }
+        return to.id == self.id
     }
-    
     public let randomId: Int64
     public let data: Data
     
@@ -260,14 +213,14 @@ public final class LottieSoundMediaResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return LottieSoundMediaResourceId(randomId: self.randomId)
+        return .init(LottieSoundMediaResourceId(randomId: self.randomId).uniqueId)
     }
     
 }
 
 
 
-public struct LocalFileArchiveMediaResourceId: MediaResourceId {
+public struct LocalFileArchiveMediaResourceId {
     public let randomId: Int64
     
     public var uniqueId: String {
@@ -277,17 +230,12 @@ public struct LocalFileArchiveMediaResourceId: MediaResourceId {
     public var hashValue: Int {
         return self.randomId.hashValue
     }
-    
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? LocalFileArchiveMediaResourceId {
-            return self.randomId == to.randomId
-        } else {
-            return false
-        }
-    }
 }
 
 public final class LocalFileArchiveMediaResource: TelegramMediaResource {
+    public func isEqual(to: MediaResource) -> Bool {
+        return to.id == self.id
+    }
     public let randomId: Int64
     public let path: String
     
@@ -311,20 +259,13 @@ public final class LocalFileArchiveMediaResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return LocalFileArchiveMediaResourceId(randomId: self.randomId)
+        return .init(LocalFileArchiveMediaResourceId(randomId: self.randomId).uniqueId)
     }
-    
-    public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? LocalFileArchiveMediaResource {
-            return self.randomId == to.randomId && self.path == to.path
-        } else {
-            return false
-        }
-    }
+
 }
 
 
-public struct ExternalMusicAlbumArtResourceId: MediaResourceId {
+public struct ExternalMusicAlbumArtResourceId {
     public let title: String
     public let performer: String
     public let isThumbnail: Bool
@@ -336,18 +277,13 @@ public struct ExternalMusicAlbumArtResourceId: MediaResourceId {
     public var hashValue: Int {
         return self.title.hashValue &* 31 &+ self.performer.hashValue
     }
-    
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? ExternalMusicAlbumArtResourceId {
-            return self.title == to.title && self.performer == to.performer && self.isThumbnail == to.isThumbnail
-        } else {
-            return false
-        }
-    }
 }
 
 
 public class ExternalMusicAlbumArtResource: TelegramMediaResource {
+    public func isEqual(to: MediaResource) -> Bool {
+        return to.id == self.id
+    }
     public let title: String
     public let performer: String
     public let isThumbnail: Bool
@@ -371,20 +307,13 @@ public class ExternalMusicAlbumArtResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return ExternalMusicAlbumArtResourceId(title: self.title, performer: self.performer, isThumbnail: self.isThumbnail)
+        return .init(ExternalMusicAlbumArtResourceId(title: self.title, performer: self.performer, isThumbnail: self.isThumbnail).uniqueId)
     }
-    
-    public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? ExternalMusicAlbumArtResource {
-            return self.title == to.title && self.performer == to.performer && self.isThumbnail == to.isThumbnail
-        } else {
-            return false
-        }
-    }
+
 }
 
 
-public struct LocalBundleResourceId: MediaResourceId {
+public struct LocalBundleResourceId {
     public let name: String
     public let ext: String
     
@@ -395,17 +324,12 @@ public struct LocalBundleResourceId: MediaResourceId {
     public var hashValue: Int {
         return self.name.hashValue
     }
-    
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? LocalBundleResourceId {
-            return self.name == to.name && self.ext == to.ext
-        } else {
-            return false
-        }
-    }
+
 }
 
 public class LocalBundleResource: TelegramMediaResource {
+    
+    
     public let name: String
     public let ext: String
     
@@ -425,14 +349,11 @@ public class LocalBundleResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return LocalBundleResourceId(name: self.name, ext: self.ext)
+        return .init(LocalBundleResourceId(name: self.name, ext: self.ext).uniqueId)
     }
     
     public func isEqual(to: MediaResource) -> Bool {
-        if let to = to as? LocalBundleResource {
-            return self.name == to.name && self.ext == to.ext
-        } else {
-            return false
-        }
+        return to.id == self.id
     }
+
 }

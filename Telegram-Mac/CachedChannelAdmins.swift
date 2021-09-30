@@ -13,75 +13,91 @@ import TelegramCore
 import SwiftSignalKit
 
 
-struct CachedChannelAdminRank : PostboxCoding, Equatable {
-   
-    
-    let peerId: PeerId
-    let type: CachedChannelAdminRankType
-    
-    init(peerId: PeerId, type: CachedChannelAdminRankType) {
-        self.peerId = peerId
-        self.type = type
-    }
-    
-    init(decoder: PostboxDecoder) {
-        self.peerId = PeerId(decoder.decodeInt64ForKey("peerId", orElse: 0))
-        self.type = decoder.decodeObjectForKey("type", decoder: { CachedChannelAdminRankType(decoder: $0) }) as! CachedChannelAdminRankType
-    }
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt64(self.peerId.toInt64(), forKey: "peerId")
-        encoder.encodeObject(self.type, forKey: "type")
-    }
-}
-
-enum CachedChannelAdminRankType: PostboxCoding, Equatable {
+public enum CachedChannelAdminRank: Codable, Equatable {
     case owner
     case admin
     case custom(String)
     
-    init(decoder: PostboxDecoder) {
-        let value: Int32 = decoder.decodeInt32ForKey("v", orElse: 0)
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        let value: Int32 = try container.decode(Int32.self, forKey: "v")
         switch value {
         case 0:
             self = .owner
         case 1:
             self = .admin
         case 2:
-            self = .custom(decoder.decodeStringForKey("s", orElse: ""))
+            self = .custom(try container.decode(String.self, forKey: "s"))
         default:
             self = .admin
         }
     }
     
-    func encode(_ encoder: PostboxEncoder) {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
         switch self {
         case .owner:
-            encoder.encodeInt32(0, forKey: "v")
+            try container.encode(0 as Int32, forKey: "v")
         case .admin:
-            encoder.encodeInt32(1, forKey: "v")
+            try container.encode(1 as Int32, forKey: "v")
         case let .custom(rank):
-            encoder.encodeInt32(2, forKey: "v")
-            encoder.encodeString(rank, forKey: "s")
+            try container.encode(2 as Int32, forKey: "v")
+            try container.encode(rank, forKey: "s")
         }
     }
 }
 
-final class CachedChannelAdminRanks: PostboxCoding {
-    let ranks: [CachedChannelAdminRank]
+public final class CachedChannelAdminRanks: Codable {
+    private struct DictionaryKey: Codable, Hashable {
+        var key: PeerId
+
+        init(_ key: PeerId) {
+            self.key = key
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+            self.key = PeerId(try container.decode(Int64.self, forKey: "k"))
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: StringCodingKey.self)
+
+            try container.encode(self.key.toInt64(), forKey: "k")
+        }
+    }
     
-    init(ranks: [CachedChannelAdminRank]) {
+    public let ranks: [PeerId: CachedChannelAdminRank]
+    
+    public init(ranks: [PeerId: CachedChannelAdminRank]) {
         self.ranks = ranks
     }
     
-    init(decoder: PostboxDecoder) {
-        self.ranks = decoder.decodeObjectArrayForKey("ranks1").compactMap { $0 as? CachedChannelAdminRank }
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        let dict = try container.decode([DictionaryKey: CachedChannelAdminRank].self, forKey: "ranks")
+        var mappedDict: [PeerId: CachedChannelAdminRank] = [:]
+        for (key, value) in dict {
+            mappedDict[key.key] = value
+        }
+        self.ranks = mappedDict
     }
     
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObjectArray(self.ranks, forKey: "ranks1")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        var mappedDict: [DictionaryKey: CachedChannelAdminRank] = [:]
+        for (k, v) in self.ranks {
+            mappedDict[DictionaryKey(k)] = v
+        }
+        try container.encode(mappedDict, forKey: "ranks")
     }
     
-    static func cacheKey(peerId: PeerId) -> ValueBoxKey {
+    public static func cacheKey(peerId: PeerId) -> ValueBoxKey {
         let key = ValueBoxKey(length: 8)
         key.setInt64(0, value: peerId.toInt64())
         return key
@@ -90,12 +106,14 @@ final class CachedChannelAdminRanks: PostboxCoding {
 
 private let collectionSpec = ItemCacheCollectionSpec(lowWaterItemCount: 100, highWaterItemCount: 200)
 
-func cachedChannelAdminRanksEntryId(peerId: PeerId) -> ItemCacheEntryId {
+public func cachedChannelAdminRanksEntryId(peerId: PeerId) -> ItemCacheEntryId {
     return ItemCacheEntryId(collectionId: 100, key: CachedChannelAdminRanks.cacheKey(peerId: peerId))
 }
 
-func updateCachedChannelAdminRanks(postbox: Postbox, peerId: PeerId, ranks: Dictionary<PeerId, CachedChannelAdminRankType>) -> Signal<Void, NoError> {
+func updateCachedChannelAdminRanks(postbox: Postbox, peerId: PeerId, ranks: Dictionary<PeerId, CachedChannelAdminRank>) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
-        transaction.putItemCacheEntry(id: ItemCacheEntryId(collectionId: 100, key: CachedChannelAdminRanks.cacheKey(peerId: peerId)), entry: CachedChannelAdminRanks(ranks: ranks.map { CachedChannelAdminRank(peerId: $0.key, type: $0.value)}), collectionSpec: collectionSpec)
+        if let entry = CodableEntry(CachedChannelAdminRanks(ranks: ranks)) {
+            transaction.putItemCacheEntry(id: ItemCacheEntryId(collectionId: 100, key: CachedChannelAdminRanks.cacheKey(peerId: peerId)), entry: entry, collectionSpec: collectionSpec)
+        }
     }
 }

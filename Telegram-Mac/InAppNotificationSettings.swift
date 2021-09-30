@@ -47,42 +47,50 @@ private enum PeerMessageSoundValue: Int32 {
     case `default`
 }
 
-extension PeerMessageSound {
-    fileprivate static func decodeInline(_ decoder: PostboxDecoder) -> PeerMessageSound {
-        switch decoder.decodeInt32ForKey("s1.v", orElse: 1) {
+final class PeerMessageSoundNativeCodable : Codable {
+    
+    let value: PeerMessageSound
+    init(_ value: PeerMessageSound) {
+        self.value = value
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+                
+        switch try container.decode(Int32.self, forKey: "s1.v") {
             case PeerMessageSoundValue.none.rawValue:
-                return .none
+                self.value = .none
             case PeerMessageSoundValue.bundledModern.rawValue:
-                return .bundledModern(id: decoder.decodeInt32ForKey("s1.i", orElse: 0))
+                self.value = .bundledModern(id: try container.decode(Int32.self, forKey: "s1.i"))
             case PeerMessageSoundValue.bundledClassic.rawValue:
-                return .bundledClassic(id: decoder.decodeInt32ForKey("s1.i", orElse: 0))
+                self.value = .bundledClassic(id: try container.decode(Int32.self, forKey: "s1.i"))
             case PeerMessageSoundValue.default.rawValue:
-                return .default
+                self.value = .default
             default:
-                assertionFailure()
-                return .bundledModern(id: 0)
+                self.value = .bundledModern(id: 0)
         }
     }
 
-    fileprivate func encodeInline(_ encoder: PostboxEncoder) {
-        switch self {
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        switch self.value {
             case .none:
-                encoder.encodeInt32(PeerMessageSoundValue.none.rawValue, forKey: "s1.v")
+                try container.encode(PeerMessageSoundValue.none.rawValue, forKey: "s1.v")
             case let .bundledModern(id):
-                encoder.encodeInt32(PeerMessageSoundValue.bundledModern.rawValue, forKey: "s1.v")
-                encoder.encodeInt32(id, forKey: "s1.i")
+                try container.encode(PeerMessageSoundValue.bundledModern.rawValue, forKey: "s1.v")
+                try container.encode(id, forKey: "s1.i")
             case let .bundledClassic(id):
-                encoder.encodeInt32(PeerMessageSoundValue.bundledClassic.rawValue, forKey: "s1.v")
-                encoder.encodeInt32(id, forKey: "s1.i")
+                try container.encode(PeerMessageSoundValue.bundledClassic.rawValue, forKey: "s1.v")
+                try container.encode(id, forKey: "s1.i")
             case .default:
-                encoder.encodeInt32(PeerMessageSoundValue.default.rawValue, forKey: "s1.v")
+                try container.encode(PeerMessageSoundValue.default.rawValue, forKey: "s1.v")
         }
     }
 }
 
 
 
-struct InAppNotificationSettings: PreferencesEntry, Equatable {
+struct InAppNotificationSettings: Codable, Equatable {
     let enabled: Bool
     let playSounds: Bool
     let tone: PeerMessageSound
@@ -114,54 +122,44 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
         self.requestUserAttention = requestUserAttention
     }
     
-    init(decoder: PostboxDecoder) {
-        self.enabled = decoder.decodeInt32ForKey("e", orElse: 0) != 0
-        self.playSounds = decoder.decodeInt32ForKey("s", orElse: 0) != 0
-        self.tone = PeerMessageSound.decodeInline(decoder)
-        self.displayPreviews = decoder.decodeInt32ForKey("p", orElse: 0) != 0
-        self.muteUntil = decoder.decodeInt32ForKey("m2", orElse: 0)
-        self.notifyAllAccounts = decoder.decodeBoolForKey("naa", orElse: true)
-        self.totalUnreadCountDisplayStyle = TotalUnreadCountDisplayStyle(rawValue: decoder.decodeInt32ForKey("tds", orElse: 1)) ?? .filtered
-        self.totalUnreadCountDisplayCategory = TotalUnreadCountDisplayCategory(rawValue: decoder.decodeInt32ForKey("totalUnreadCountDisplayCategory", orElse: 1)) ?? .chats
-        if let value = decoder.decodeOptionalInt32ForKey("totalUnreadCountIncludeTags_2") {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        
+        self.enabled = try container.decode(Int32.self, forKey: "e") != 0
+        self.playSounds = try container.decode(Int32.self, forKey: "s") != 0
+        self.tone = try container.decodeIfPresent(PeerMessageSoundNativeCodable.self, forKey: "tone")?.value ?? .default
+        self.displayPreviews = try container.decode(Int32.self, forKey: "p") != 0
+        self.muteUntil = try container.decode(Int32.self, forKey: "m2")
+        self.notifyAllAccounts = try container.decode(Bool.self, forKey: "naa")
+        self.totalUnreadCountDisplayStyle = TotalUnreadCountDisplayStyle(rawValue: try container.decode(Int32.self, forKey: "tds")) ?? .filtered
+        self.totalUnreadCountDisplayCategory = TotalUnreadCountDisplayCategory(rawValue: try container.decode(Int32.self, forKey: "totalUnreadCountDisplayCategory")) ?? .chats
+
+        if let value = try container.decodeIfPresent(Int32.self, forKey: "totalUnreadCountIncludeTags_2") {
             self.totalUnreadCountIncludeTags = PeerSummaryCounterTags(rawValue: value)
-        } else if let value = decoder.decodeOptionalInt32ForKey("totalUnreadCountIncludeTags") {
-            var resultTags: PeerSummaryCounterTags = []
-            for legacyTag in LegacyPeerSummaryCounterTags(rawValue: value) {
-                if legacyTag == .regularChatsAndPrivateGroups {
-                    resultTags.insert(.contact)
-                    resultTags.insert(.nonContact)
-                    resultTags.insert(.bot)
-                    resultTags.insert(.group)
-                } else if legacyTag == .publicGroups {
-                    resultTags.insert(.group)
-                } else if legacyTag == .channels {
-                    resultTags.insert(.channel)
-                }
-            }
-            self.totalUnreadCountIncludeTags = resultTags
         } else {
             self.totalUnreadCountIncludeTags = .all
         }
+        self.showNotificationsOutOfFocus = try container.decode(Int32.self, forKey: "snoof") != 0
+        self.badgeEnabled = try container.decode(Bool.self, forKey: "badge")
+        self.requestUserAttention = try container.decode(Bool.self, forKey: "requestUserAttention")
 
-        self.showNotificationsOutOfFocus = decoder.decodeInt32ForKey("snoof", orElse: 1) != 0
-        self.badgeEnabled = decoder.decodeBoolForKey("badge", orElse: true)
-        self.requestUserAttention = decoder.decodeBoolForKey("requestUserAttention", orElse: false)
     }
     
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.enabled ? 1 : 0, forKey: "e")
-        encoder.encodeInt32(self.playSounds ? 1 : 0, forKey: "s")
-        self.tone.encodeInline(encoder)
-        encoder.encodeInt32(self.displayPreviews ? 1 : 0, forKey: "p")
-        encoder.encodeInt32(self.muteUntil, forKey: "m2")
-        encoder.encodeBool(self.notifyAllAccounts, forKey: "naa")
-        encoder.encodeInt32(self.totalUnreadCountDisplayStyle.rawValue, forKey: "tds")
-        encoder.encodeInt32(self.totalUnreadCountDisplayCategory.rawValue, forKey: "totalUnreadCountDisplayCategory")
-        encoder.encodeInt32(self.totalUnreadCountIncludeTags.rawValue, forKey: "totalUnreadCountIncludeTags_2")
-        encoder.encodeInt32(self.showNotificationsOutOfFocus ? 1 : 0, forKey: "snoof")
-        encoder.encodeBool(self.badgeEnabled, forKey: "badge")
-        encoder.encodeBool(self.requestUserAttention, forKey: "requestUserAttention")
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.enabled ? 1 : 0, forKey: "e")
+        try container.encode(self.playSounds ? 1 : 0, forKey: "s")
+        try container.encode(PeerMessageSoundNativeCodable(self.tone), forKey: "tone")
+        try container.encode(self.displayPreviews ? 1 : 0, forKey: "p")
+        try container.encode(self.muteUntil, forKey: "m2")
+        try container.encode(self.notifyAllAccounts, forKey: "naa")
+        try container.encode(self.totalUnreadCountDisplayStyle.rawValue, forKey: "tds")
+        try container.encode(self.totalUnreadCountDisplayCategory.rawValue, forKey: "totalUnreadCountDisplayCategory")
+        try container.encode(self.totalUnreadCountIncludeTags.rawValue, forKey: "totalUnreadCountIncludeTags_2")
+        try container.encode(self.showNotificationsOutOfFocus ? 1 : 0, forKey: "snoof")
+        try container.encode(self.badgeEnabled, forKey: "badge")
+        try container.encode(self.requestUserAttention, forKey: "requestUserAttention")
     }
     
     func withUpdatedEnables(_ enabled: Bool) -> InAppNotificationSettings {
@@ -210,13 +208,6 @@ struct InAppNotificationSettings: PreferencesEntry, Equatable {
     func withUpdatedRequestUserAttention(_ requestUserAttention: Bool) -> InAppNotificationSettings {
         return InAppNotificationSettings(enabled: self.enabled, playSounds: self.playSounds, tone: self.tone, displayPreviews: self.displayPreviews, muteUntil: self.muteUntil, totalUnreadCountDisplayStyle: self.totalUnreadCountDisplayStyle, totalUnreadCountDisplayCategory: self.totalUnreadCountDisplayCategory, totalUnreadCountIncludeTags: totalUnreadCountIncludeTags, notifyAllAccounts: self.notifyAllAccounts, showNotificationsOutOfFocus: self.showNotificationsOutOfFocus, badgeEnabled: self.badgeEnabled, requestUserAttention: requestUserAttention)
     }
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? InAppNotificationSettings {
-            return self == to
-        } else {
-            return false
-        }
-    }
 }
 
 func updateInAppNotificationSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (InAppNotificationSettings) -> InAppNotificationSettings) -> Signal<Void, NoError> {
@@ -224,25 +215,25 @@ func updateInAppNotificationSettingsInteractively(accountManager: AccountManager
     return accountManager.transaction { transaction in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.inAppNotificationSettings, { entry in
             let currentSettings: InAppNotificationSettings
-            if let entry = entry as? InAppNotificationSettings {
+            if let entry = entry?.get(InAppNotificationSettings.self) {
                 currentSettings = entry
             } else {
                 currentSettings = InAppNotificationSettings.defaultSettings
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }
 
 func appNotificationSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<InAppNotificationSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.inAppNotificationSettings]) |> map { view in
-        return view.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings ?? InAppNotificationSettings.defaultSettings
+        return view.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings]?.get(InAppNotificationSettings.self) ?? InAppNotificationSettings.defaultSettings
     }
 }
 func globalNotificationSettings(postbox: Postbox) -> Signal<GlobalNotificationSettingsSet, NoError> {
     return postbox.preferencesView(keys: [PreferencesKeys.globalNotifications]) |> map { view in
         let viewSettings: GlobalNotificationSettingsSet
-        if let settings = view.values[PreferencesKeys.globalNotifications] as? GlobalNotificationSettings {
+        if let settings = view.values[PreferencesKeys.globalNotifications]?.get(GlobalNotificationSettings.self) {
             viewSettings = settings.effective
         } else {
             viewSettings = GlobalNotificationSettingsSet.defaultSettings
