@@ -63,11 +63,11 @@ class ChatGroupedItem: ChatRowItem {
                 _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
                 var types:ParsingType = [.Links, .Mentions, .Hashtags]
                 
-                if let peer = messageMainPeer(message) as? TelegramUser {
+                if let peer = coreMessageMainPeer(message) as? TelegramUser {
                     if peer.botInfo != nil {
                         types.insert(.Commands)
                     }
-                } else if let peer = messageMainPeer(message) as? TelegramChannel {
+                } else if let peer = coreMessageMainPeer(message) as? TelegramChannel {
                     switch peer.info {
                     case .group:
                         types.insert(.Commands)

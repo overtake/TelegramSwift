@@ -709,7 +709,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         
                         
                         
-                        foundRemotePeers = .single(([], [], true)) |> then(context.engine.peers.searchPeers(query: query)
+                        foundRemotePeers = .single(([], [], true)) |> then(context.engine.contacts.searchRemotePeers(query: query)
                             |> delay(0.2, queue: prepareQueue)
                             |> map { founds -> ([FoundPeer], [FoundPeer]) in
                                 

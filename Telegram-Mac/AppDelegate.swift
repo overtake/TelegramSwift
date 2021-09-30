@@ -297,7 +297,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
 
-        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true)
 
         if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
@@ -316,7 +316,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             var localization: LocalizationSettings? = nil
             let localizationSemaphore = DispatchSemaphore(value: 0)
             _ = (accountManager.transaction { transaction in
-                localization = transaction.getSharedData(SharedDataKeys.localizationSettings) as? LocalizationSettings
+                localization = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
                 localizationSemaphore.signal()
             }).start()
             localizationSemaphore.wait()
@@ -345,7 +345,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     subscriber.putCompletion()
                     DispatchQueue.main.async {
                         let appEncryption = AppEncryptionParameters(path: rootPath)
-                        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false)
+                        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true)
                         if let params = appEncryption.decrypt() {
                             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
                             self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
@@ -424,7 +424,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             var localization: LocalizationSettings? = nil
             let localizationSemaphore = DispatchSemaphore(value: 0)
             _ = (accountManager.transaction { transaction in
-                localization = transaction.getSharedData(SharedDataKeys.localizationSettings) as? LocalizationSettings
+                localization = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
                 localizationSemaphore.signal()
             }).start()
             localizationSemaphore.wait()
@@ -533,7 +533,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             let basicLocalization = Atomic<LocalizationSettings?>(value: localization)
             _ = (accountManager.sharedData(keys: [SharedDataKeys.localizationSettings]) |> deliverOnMainQueue).start(next: { view in
-                if let settings = view.entries[SharedDataKeys.localizationSettings] as? LocalizationSettings {
+                if let settings = view.entries[SharedDataKeys.localizationSettings]?.get(LocalizationSettings.self) {
                     if basicLocalization.swap(settings) != settings {
                         applyUILocalization(settings)
                     }
@@ -646,7 +646,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             self.sharedApplicationContextValue = sharedApplicationContext
             
             self.sharedContextPromise.set(accountManager.transaction { transaction -> (SharedApplicationContext, LoggingSettings) in
-                return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings) as? LoggingSettings ?? LoggingSettings.defaultSettings)
+                return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings)?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings)
             }
             |> mapToSignal { sharedApplicationContext, loggingSettings -> Signal<SharedApplicationContext, NoError> in
                 #if BETA || ALPHA
@@ -676,11 +676,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             if let account = account {
                                 var settings: LaunchSettings?
                                 if let action = sharedContext.getLaunchActionOnce(for: account.id) {
-                                    settings = LaunchSettings(applyText: nil, previousText: nil, navigation: action, openAtLaunch: true)
+                                    settings = LaunchSettings(applyText: nil, previousText: nil, navigation: action)
                                 } else {
                                     let semaphore = DispatchSemaphore(value: 0)
                                     _ = account.postbox.transaction { transaction in
-                                        settings = transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.launchSettings) as? LaunchSettings
+                                        settings = transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.launchSettings)?.get(LaunchSettings.self)
                                         semaphore.signal()
                                         }.start()
                                     semaphore.wait()
@@ -800,7 +800,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         }
                         #if !APP_STORE
                         networkDisposable.set((context.context.account.postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> delay(5.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { settings in
-                            let settings = settings.values[PreferencesKeys.networkSettings] as? NetworkSettings
+                            let settings = settings.values[PreferencesKeys.networkSettings]?.get(NetworkSettings.self)
                             
                             let applicationUpdateUrlPrefix: String?
                             if let prefix = settings?.applicationUpdateUrlPrefix {
@@ -866,7 +866,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                                 
                                 #if !APP_STORE
                                 networkDisposable.set((context.account.postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> delay(5.0, queue: Queue.mainQueue()) |> deliverOnMainQueue).start(next: { settings in
-                                    let settings = settings.values[PreferencesKeys.networkSettings] as? NetworkSettings
+                                    let settings = settings.values[PreferencesKeys.networkSettings]?.get(NetworkSettings.self)
                                     
                                     let applicationUpdateUrlPrefix: String?
                                     if let prefix = settings?.applicationUpdateUrlPrefix {

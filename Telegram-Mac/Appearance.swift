@@ -1172,7 +1172,37 @@ extension WallpaperSettings {
     }
 }
 
-enum Wallpaper : Equatable, PostboxCoding {
+public enum TelegramMediaImageRepresentationDecodingError: Error {
+    case generic
+}
+
+
+final class TelegramMediaImageRepresentationNativeCodable : Codable {
+    let value: TelegramMediaImageRepresentation
+    init(_ value: TelegramMediaImageRepresentation) {
+        self.value = value
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        let data = try container.decode(Data.self, forKey: "data")
+        let postboxDecoder = PostboxDecoder(buffer: MemoryBuffer(data: data))
+        guard let object = postboxDecoder.decodeRootObject() as? TelegramMediaImageRepresentation else {
+            throw TelegramMediaImageReferenceDecodingError.generic
+        }
+        self.value = object
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        let postboxEncoder = PostboxEncoder()
+        postboxEncoder.encodeRootObject(self.value)
+        
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(postboxEncoder.makeData(), forKey: "data")
+    }
+}
+
+enum Wallpaper : Equatable, Codable {
     case builtin
     case color(UInt32)
     case gradient(Int64?, [UInt32], Int32?)
@@ -1272,29 +1302,41 @@ enum Wallpaper : Equatable, PostboxCoding {
         }
     }
     
-    public init(decoder: PostboxDecoder) {
-        switch decoder.decodeInt32ForKey("v", orElse: 0) {
+    public init(from decoder: Decoder) throws {
+        
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        
+        switch try container.decode(Int32.self, forKey: "v") {
         case 0:
             self = .builtin
         case 1:
-            self = .color(UInt32(bitPattern: decoder.decodeInt32ForKey("c", orElse: 0)))
+            self = .color(UInt32(bitPattern: try container.decode(Int32.self, forKey: "c")))
         case 2:
-            let settings = decoder.decodeObjectForKey("settings", decoder: { WallpaperSettings(decoder: $0) }) as? WallpaperSettings ?? WallpaperSettings()
-            self = .image(decoder.decodeObjectArrayWithDecoderForKey("i"), settings: settings)
+            let settings = try container.decode(WallpaperSettings.self, forKey: "settings")
+            let reps = try container.decode([TelegramMediaImageRepresentationNativeCodable].self, forKey: "i").map { $0.value }
+            self = .image(reps, settings: settings)
         case 3:
-            let settings = decoder.decodeObjectForKey("settings", decoder: { WallpaperSettings(decoder: $0) }) as? WallpaperSettings ?? WallpaperSettings()
-            self = .file(slug: decoder.decodeStringForKey("slug", orElse: ""), file: decoder.decodeObjectForKey("file", decoder: { TelegramMediaFile(decoder: $0) }) as! TelegramMediaFile, settings: settings, isPattern: decoder.decodeInt32ForKey("p", orElse: 0) == 1)
+            let settings = try container.decode(WallpaperSettings.self, forKey: "settings")
+            let slug = try container.decode(String.self, forKey: "slug")
+            let file = try container.decode(TelegramMediaFile.self, forKey: "file")
+            let isPattern = try container.decode(Int32.self, forKey: "p") == 1
+            self = .file(slug: slug, file: file, settings: settings, isPattern: isPattern)
         case 4:
-            self = .custom(decoder.decodeObjectForKey("rep", decoder: { TelegramMediaImageRepresentation(decoder: $0) }) as! TelegramMediaImageRepresentation, blurred: decoder.decodeInt32ForKey("b", orElse: 0) == 1)
+            let rep = try container.decode(TelegramMediaImageRepresentationNativeCodable.self, forKey: "rep").value
+            let blurred = try container.decode(Int32.self, forKey: "b") == 1
+            self = .custom(rep, blurred: blurred)
         case 5:
             self = .none
         case 6:
-            var colors = decoder.decodeInt32ArrayForKey("c").map { UInt32(bitPattern: $0) }
-            
+            var colors = try container.decode([Int32].self, forKey: "c").map { UInt32(bitPattern: $0) }
             if colors.isEmpty {
-                colors = [UInt32(bitPattern: decoder.decodeInt32ForKey("ct", orElse: 0)), UInt32(bitPattern: decoder.decodeInt32ForKey("cb", orElse: 0))]
+                let ct = try container.decodeIfPresent(Int32.self, forKey: "ct") ?? 0
+                let cb = try container.decodeIfPresent(Int32.self, forKey: "cb") ?? 0
+                colors = [UInt32(bitPattern: ct), UInt32(bitPattern: cb)]
             }
-            self = .gradient(decoder.decodeOptionalInt64ForKey("id"), colors, decoder.decodeOptionalInt32ForKey("cr"))
+            let id = try container.decodeIfPresent(Int64.self, forKey: "id")
+            let cr = try container.decodeIfPresent(Int32.self, forKey: "cr")
+            self = .gradient(id, colors, cr)
 
         default:
             assertionFailure()
@@ -1303,41 +1345,43 @@ enum Wallpaper : Equatable, PostboxCoding {
     }
     
     
-    public func encode(_ encoder: PostboxEncoder) {
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
         switch self {
         case .builtin:
-            encoder.encodeInt32(0, forKey: "v")
+            try container.encode(Int32(0), forKey: "v")
         case let .color(color):
-            encoder.encodeInt32(1, forKey: "v")
-            encoder.encodeInt32(Int32(bitPattern: color), forKey: "c")
+            try container.encode(Int32(1), forKey: "v")
+            try container.encode(Int32(bitPattern: color), forKey: "c")
         case let .image(representations, settings):
-            encoder.encodeInt32(2, forKey: "v")
-            encoder.encodeObjectArray(representations, forKey: "i")
-            encoder.encodeObject(settings, forKey: "settings")
+            try container.encode(Int32(2), forKey: "v")
+            try container.encode(representations.map { TelegramMediaImageRepresentationNativeCodable($0) }, forKey: "i")
+            try container.encode(settings, forKey: "settings")
         case let .file(slug, file, settings, isPattern):
-            encoder.encodeInt32(3, forKey: "v")
-            encoder.encodeString(slug, forKey: "slug")
-            encoder.encodeObject(file, forKey: "file")
-            encoder.encodeObject(settings, forKey: "settings")
-            encoder.encodeInt32(isPattern ? 1 : 0, forKey: "p")
+            try container.encode(Int32(3), forKey: "v")
+            try container.encode(slug, forKey: "slug")
+            try container.encode(file, forKey: "file")
+            try container.encode(settings, forKey: "settings")
+            try container.encode(isPattern ? 1 : 0, forKey: "p")
         case let .custom(resource, blurred):
-            encoder.encodeInt32(4, forKey: "v")
-            encoder.encodeObject(resource, forKey: "rep")
-            encoder.encodeInt32(blurred ? 1 : 0, forKey: "b")
+            try container.encode(Int32(4), forKey: "v")
+            try container.encode(TelegramMediaImageRepresentationNativeCodable(resource), forKey: "rep")
+            try container.encode(Int32(blurred ? 1 : 0), forKey: "b")
         case .none:
-            encoder.encodeInt32(5, forKey: "v")
+            try container.encode(Int32(5), forKey: "v")
         case let .gradient(id, colors, rotation):
-            encoder.encodeInt32(6, forKey: "v")
-            encoder.encodeInt32Array(colors.map { Int32(bitPattern: $0) }, forKey: "c")
+            try container.encode(Int32(6), forKey: "v")
+            try container.encode(colors.map { Int32(bitPattern: $0) }, forKey: "c")
             if let rotation = rotation {
-                encoder.encodeInt32(rotation, forKey: "cr")
+                try container.encode(rotation, forKey: "cr")
             } else {
-                encoder.encodeNil(forKey: "cr")
+                try container.encodeNil(forKey: "cr")
             }
             if let id = id {
-                encoder.encodeInt64(id, forKey: "id")
+                try container.encode(id, forKey: "id")
             } else {
-                encoder.encodeNil(forKey: "id")
+                try container.encodeNil(forKey: "id")
             }
         }
     }

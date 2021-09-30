@@ -27,7 +27,7 @@ enum AutoNightSchedule : Equatable {
     }
 }
 
-struct AutoNightThemePreferences: PreferencesEntry, Equatable {
+struct AutoNightThemePreferences: Codable, Equatable {
     let schedule: AutoNightSchedule?
     let systemBased: Bool
     let theme: DefaultTheme
@@ -51,48 +51,52 @@ struct AutoNightThemePreferences: PreferencesEntry, Equatable {
         self.systemBased = systemBased
     }
     
-    init(decoder: PostboxDecoder) {
-        let type = decoder.decodeInt32ForKey("t", orElse: 0)
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        let type = try container.decode(Int32.self, forKey: "t")
         
         let defaultTheme = DefaultTheme(local: .nightAccent, cloud: nil)
         
-        self.theme = decoder.decodeObjectForKey("defTheme", decoder: { DefaultTheme(decoder: $0) }) as? DefaultTheme ?? defaultTheme
-        self.systemBased = decoder.decodeBoolForKey("sb", orElse: false)
+        self.theme = try container.decodeIfPresent(DefaultTheme.self, forKey: "defTheme") ?? defaultTheme
+        self.systemBased = try container.decode(Bool.self, forKey: "sb")
         switch type {
         case 1:
-            let latitude = decoder.decodeDoubleForKey("la", orElse: 0)
-            let longitude = decoder.decodeDoubleForKey("lo", orElse: 0)
-            let localizedGeo = decoder.decodeOptionalStringForKey("lg")
+            let latitude = try container.decode(Double.self, forKey: "la")
+            let longitude = try container.decode(Double.self, forKey: "lo")
+            let localizedGeo = try container.decodeIfPresent(String.self, forKey: "lg")
             self.schedule = .sunrise(latitude: latitude, longitude: longitude, localizedGeo: localizedGeo)
         case 2:
-            let from = decoder.decodeInt32ForKey("from", orElse: 22)
-            let to = decoder.decodeInt32ForKey("to", orElse: 9)
+            let from = try container.decodeIfPresent(Int32.self, forKey: "from") ?? 22
+            let to = try container.decodeIfPresent(Int32.self, forKey: "to") ?? 9
             self.schedule = .timeSensitive(from: from, to: to)
         default:
             self.schedule = nil
         }
     }
     
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObject(self.theme, forKey: "defTheme")
-        encoder.encodeBool(self.systemBased, forKey: "sb")
+    func encode(to encoder: Encoder) throws {
+        
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        
+        try container.encode(self.theme, forKey: "defTheme")
+        try container.encode(self.systemBased, forKey: "sb")
         if let schedule = schedule {
-            encoder.encodeInt32(schedule.typeValue, forKey: "t")
+            try container.encode(schedule.typeValue, forKey: "t")
             switch schedule {
-            case let .sunrise(location):
-                encoder.encodeDouble(location.latitude, forKey: "la")
-                encoder.encodeDouble(location.longitude, forKey: "lo")
-                if let localizedGeo = location.localizedGeo {
-                    encoder.encodeString(localizedGeo, forKey: "lg")
+            case let .sunrise(latitude, longitude, localizedGeo):
+                try container.encode(latitude, forKey: "la")
+                try container.encode(longitude, forKey: "lo")
+                if let localizedGeo = localizedGeo {
+                    try container.encode(localizedGeo, forKey: "lg")
                 } else {
-                    encoder.encodeNil(forKey: "lg")
+                    try container.encodeNil(forKey: "lg")
                 }
             case let .timeSensitive(from, to):
-                encoder.encodeInt32(from, forKey: "from")
-                encoder.encodeInt32(to, forKey: "to")
+                try container.encode(from, forKey: "from")
+                try container.encode(to, forKey: "to")
             }
         } else {
-            encoder.encodeInt32(0, forKey: "t")
+            try container.encode(0, forKey: "t")
         }
     }
     
@@ -108,31 +112,23 @@ struct AutoNightThemePreferences: PreferencesEntry, Equatable {
         return AutoNightThemePreferences(schedule: self.schedule, theme: self.theme, systemBased: systemBased)
     }
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? AutoNightThemePreferences {
-            return self == to
-        } else {
-            return false
-        }
-    }
-    
 }
 
 
 func autoNightSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<AutoNightThemePreferences, NoError> {
-    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.autoNight]) |> map { $0.entries[ApplicationSharedPreferencesKeys.autoNight] as? AutoNightThemePreferences ?? AutoNightThemePreferences.defaultSettings }
+    return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.autoNight]) |> map { $0.entries[ApplicationSharedPreferencesKeys.autoNight]?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings }
 }
 
 func updateAutoNightSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (AutoNightThemePreferences) -> AutoNightThemePreferences) -> Signal<Void, NoError> {
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
             let currentSettings: AutoNightThemePreferences
-            if let entry = entry as? AutoNightThemePreferences {
+            if let entry = entry?.get(AutoNightThemePreferences.self) {
                 currentSettings = entry
             } else {
                 currentSettings = AutoNightThemePreferences.defaultSettings
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }

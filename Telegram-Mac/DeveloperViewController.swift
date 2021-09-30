@@ -228,7 +228,7 @@ class DeveloperViewController: TableViewController {
         let signal = combineLatest(queue: prepareQueue, context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.loggingSettings]), appearanceSignal)
         
         genericView.merge(with: signal |> map { preferences, appearance in
-            let entries = developerEntries(loginSettings: preferences.entries[SharedDataKeys.loggingSettings] as? LoggingSettings ?? LoggingSettings.defaultSettings).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = developerEntries(loginSettings: preferences.entries[SharedDataKeys.loggingSettings]?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> deliverOnMainQueue)
         

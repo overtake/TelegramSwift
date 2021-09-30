@@ -305,7 +305,7 @@ class ChatPollItem: ChatRowItem {
     var isBotQuiz: Bool {
         if let message = message {
             if self.poll.isQuiz {
-                return messageMainPeer(message)?.isBot == true
+                return coreMessageMainPeer(message)?.isBot == true
             }
         }
         return false

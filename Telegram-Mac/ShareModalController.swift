@@ -449,13 +449,13 @@ class ShareMessageObject : ShareObject {
     init(_ context: AccountContext, _ message:Message, _ groupMessages:[Message] = []) {
         self.messageIds = groupMessages.isEmpty ? [message.id] : groupMessages.map{$0.id}
         self.message = message
-        var peer = messageMainPeer(message) as? TelegramChannel
+        var peer = coreMessageMainPeer(message) as? TelegramChannel
         var messageId = message.id
         if let author = message.forwardInfo?.author as? TelegramChannel {
             peer = author
             messageId = message.forwardInfo?.sourceMessageId ?? message.id
         }
-        //            peer = messageMainPeer(message) as? TelegramChannel
+        //            peer = coreMessageMainPeer(message) as? TelegramChannel
         //        }
         if let peer = peer, let address = peer.username {
             switch peer.info {
@@ -1336,7 +1336,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     })
                 }
                 
-                let remotePeers = Signal<[RenderedPeer], NoError>.single([]) |> then( context.engine.peers.searchPeers(query: query.request.lowercased()) |> map { $0.0.map {RenderedPeer($0)} + $0.1.map {RenderedPeer($0)} } )
+                let remotePeers = Signal<[RenderedPeer], NoError>.single([]) |> then( context.engine.contacts.searchRemotePeers(query: query.request.lowercased()) |> map { $0.0.map {RenderedPeer($0)} + $0.1.map {RenderedPeer($0)} } )
                 
                 return combineLatest(localPeers, remotePeers) |> map {$0 + $1} |> mapToSignal { peers -> Signal<([RenderedPeer], [PeerId: PeerStatusStringResult], Peer), NoError> in
                     let keys = peers.map {PostboxViewKey.peer(peerId: $0.peerId, components: .all)}

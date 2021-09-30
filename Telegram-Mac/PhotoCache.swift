@@ -55,8 +55,9 @@ enum PhotoCacheKeyEntry : Hashable {
     case platformTheme(TelegramThemeSettings, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case messageId(stableId: Int64, TransformImageArguments, CGFloat, LayoutPositionFlags)
     case theme(ThemeSource, Bool, AppearanceThumbSource)
-    var hashValue:Int {
-        return 0
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.stringValue)
     }
     
     var stringValue: NSString {
@@ -71,7 +72,7 @@ enum PhotoCacheKeyEntry : Hashable {
                 addition = "\(media.longitude)-\(media.latitude)"
             }
             if let media = media as? TelegramMediaFile {
-                addition += "\(media.resource.id.uniqueId)-\(String(describing: media.resource.size))"
+                addition += "\(media.resource.id.stringRepresentation)-\(String(describing: media.resource.size))"
                 #if !SHARE
                 if let fitz = media.animatedEmojiFitzModifier {
                     addition += "fitz-\(fitz.rawValue)"
@@ -121,7 +122,7 @@ enum PhotoCacheKeyEntry : Hashable {
                 if lhsScale != rhsScale {
                     return false
                 }
-                if !lhsRepresentation.resource.id.isEqual(to: rhsRepresentation.resource.id)  {
+                if lhsRepresentation.resource.id == rhsRepresentation.resource.id  {
                     return false
                 }
                 return true

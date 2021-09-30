@@ -392,7 +392,7 @@ class StorageUsageController: TableViewController {
         let cacheSettingsPromise = Promise<CacheStorageSettings>()
         cacheSettingsPromise.set(context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.cacheStorageSettings])
             |> map { view -> CacheStorageSettings in
-                return view.entries[SharedDataKeys.cacheStorageSettings] as? CacheStorageSettings ?? CacheStorageSettings.defaultSettings
+                return view.entries[SharedDataKeys.cacheStorageSettings]?.get(CacheStorageSettings.self) ?? CacheStorageSettings.defaultSettings
             })
         let statsPromise = Promise<CacheUsageStatsResult?>()
         statsPromise.set(.single(nil) |> then(context.engine.resources.collectCacheUsageStats(additionalCachePaths: [], logFilesPath: ApiEnvironment.containerURL!.appendingPathComponent("logs").path) |> map { Optional($0) }))
@@ -451,11 +451,11 @@ class StorageUsageController: TableViewController {
                                     media[peerId] = categories
                                 }
                                 
-                                var clearResourceIds = Set<WrappedMediaResourceId>()
+                                var clearResourceIds = Set<MediaResourceId>()
                                 for id in clearMediaIds {
                                     if let ids = stats.mediaResourceIds[id] {
                                         for resourceId in ids {
-                                            clearResourceIds.insert(WrappedMediaResourceId(resourceId))
+                                            clearResourceIds.insert(resourceId)
                                         }
                                     }
                                 }
@@ -464,7 +464,7 @@ class StorageUsageController: TableViewController {
                                 clearDisposable.set(context.engine.resources.clearCachedMediaResources(mediaResourceIds: clearResourceIds).start())
                             }
 
-                        }), for: mainWindow)
+                        }), for: context.window)
                     }
                 }
             })

@@ -40,7 +40,7 @@ enum QRLoginType : String {
 
 func unauthorizedConfiguration(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<UnauthorizedConfiguration, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.appConfiguration]) |> mapToSignal { view in
-        if let appConfiguration = view.entries[ApplicationSharedPreferencesKeys.appConfiguration] as? AppConfiguration {
+        if let appConfiguration = view.entries[ApplicationSharedPreferencesKeys.appConfiguration]?.get(AppConfiguration.self) {
             let configuration = UnauthorizedConfiguration.with(appConfiguration: appConfiguration)
             return .single(configuration)
         } else {
@@ -50,7 +50,7 @@ func unauthorizedConfiguration(accountManager: AccountManager<TelegramAccountMan
 }
 
 private func currentUnauthorizedAppConfiguration(transaction:AccountManagerModifier<TelegramAccountManagerTypes>) -> AppConfiguration {
-    if let entry = transaction.getSharedData(ApplicationSharedPreferencesKeys.appConfiguration) as? AppConfiguration {
+    if let entry = transaction.getSharedData(ApplicationSharedPreferencesKeys.appConfiguration)?.get(AppConfiguration.self) {
         return entry
     } else {
         return AppConfiguration.defaultValue
@@ -61,7 +61,7 @@ private func updateAppConfiguration(transaction: AccountManagerModifier<Telegram
     let current = currentUnauthorizedAppConfiguration(transaction: transaction)
     let updated = f(current)
     transaction.updateSharedData(ApplicationSharedPreferencesKeys.appConfiguration, { _ in
-        return updated
+        return PreferencesEntry(updated)
     })
 }
 

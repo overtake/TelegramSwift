@@ -116,11 +116,11 @@ class ChatMediaLayoutParameters : Equatable {
             var duration:Int = 0
             for attr in media.attributes {
                 switch attr {
-                case let .Audio(params):
-                    if let data = params.waveform?.makeData() {
+                case let .Audio(_, _duration, _, _, _data):
+                    if let data = _data {
                         waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
                     }
-                    duration = params.duration
+                    duration = _duration
                 default:
                     break
                 }
@@ -401,11 +401,11 @@ class ChatMediaItem: ChatRowItem {
             _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
             var types:ParsingType = [.Links, .Mentions, .Hashtags]
             
-            if let peer = messageMainPeer(message) as? TelegramUser {
+            if let peer = coreMessageMainPeer(message) as? TelegramUser {
                 if peer.botInfo != nil {
                     types.insert(.Commands)
                 }
-            } else if let peer = messageMainPeer(message) as? TelegramChannel {
+            } else if let peer = coreMessageMainPeer(message) as? TelegramChannel {
                 switch peer.info {
                 case .group:
                     types.insert(.Commands)

@@ -209,7 +209,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     }
     
     let suggested: Signal<ChatListFiltersFeaturedState?, NoError> = context.account.postbox.preferencesView(keys: [PreferencesKeys.chatListFiltersFeaturedState]) |> map { view in
-        return view.values[PreferencesKeys.chatListFiltersFeaturedState] as? ChatListFiltersFeaturedState
+        return view.values[PreferencesKeys.chatListFiltersFeaturedState]?.get(ChatListFiltersFeaturedState.self)
     }
 
     

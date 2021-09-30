@@ -13,7 +13,7 @@ import SwiftSignalKit
 import TelegramCore
 
 
-public struct AdditionalSettings: PreferencesEntry, Equatable {
+public struct AdditionalSettings: Codable, Equatable {
     public let useTouchId: Bool
     
     public static var defaultSettings: AdditionalSettings {
@@ -24,21 +24,17 @@ public struct AdditionalSettings: PreferencesEntry, Equatable {
         self.useTouchId = useTouchId
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.useTouchId = decoder.decodeBoolForKey("ti", orElse: false)
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        self.useTouchId = try container.decode(Bool.self, forKey: "ti")
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeBool(self.useTouchId, forKey: "ti")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(self.useTouchId, forKey: "ti")
     }
     
-    public func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? AdditionalSettings {
-            return self == to
-        } else {
-            return false
-        }
-    }
     
     public static func ==(lhs: AdditionalSettings, rhs: AdditionalSettings) -> Bool {
         return lhs.useTouchId == rhs.useTouchId
@@ -53,19 +49,19 @@ func updateAdditionalSettingsInteractively(accountManager: AccountManager<Telegr
     return accountManager.transaction { transaction -> Void in
         transaction.updateSharedData(ApplicationSharedPreferencesKeys.additionalSettings, { entry in
             let currentSettings: AdditionalSettings
-            if let entry = entry as? AdditionalSettings {
+            if let entry = entry?.get(AdditionalSettings.self) {
                 currentSettings = entry
             } else {
                 currentSettings = AdditionalSettings.defaultSettings
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }
 
 func additionalSettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<AdditionalSettings, NoError> {
     return accountManager.sharedData(keys: [ApplicationSharedPreferencesKeys.additionalSettings]) |> map { view in
-        return (view.entries[ApplicationSharedPreferencesKeys.additionalSettings] as? AdditionalSettings) ?? AdditionalSettings.defaultSettings
+        return view.entries[ApplicationSharedPreferencesKeys.additionalSettings]?.get(AdditionalSettings.self) ?? AdditionalSettings.defaultSettings
     }
 }
 

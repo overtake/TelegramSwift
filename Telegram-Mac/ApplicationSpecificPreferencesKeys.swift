@@ -14,8 +14,6 @@ import TelegramCore
 private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case inAppNotificationSettings
     case baseAppSettings
-    case generatedMediaStoreSettings
-    case instantViewAppearance = 11
     case additionalSettings = 15
     case themeSettings = 22
     case readArticles = 25
@@ -32,11 +30,11 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case chatListSettings = 47
     case recentEmoji = 48
     case voipDerivedState = 49
+    case instantViewAppearance = 50
 }
 
 struct ApplicationSpecificPreferencesKeys {
     static let automaticMediaDownloadSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.automaticMediaDownloadSettings.rawValue)
-    static let generatedMediaStoreSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.generatedMediaStoreSettings.rawValue)
     static let recentEmoji = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.recentEmoji.rawValue)
     static let instantViewAppearance = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.instantViewAppearance.rawValue)
     static let readArticles = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.readArticles.rawValue)

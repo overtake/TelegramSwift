@@ -266,7 +266,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 var photos:[Signal<(MessageId, CGImage?),NoError>] = []
                 for message in messages.reduce([], { current, value in return current + value.0}) {
                     var peer = message.author
-                    if let mainPeer = messageMainPeer(message) {
+                    if let mainPeer = coreMessageMainPeer(message) {
                         if mainPeer is TelegramChannel || mainPeer is TelegramGroup || message.wasScheduled {
                             peer = mainPeer
                         }

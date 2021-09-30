@@ -167,13 +167,11 @@ final class PeerChannelMemberCategoriesContextsManager {
     
     private func getContext(peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         assert(Queue.mainQueue().isCurrent())
-        if let (disposable, control) = self.impl.syncWith({ impl in
+        
+        return self.impl.syncWith({ impl in
             return impl.getContext(peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
-        }) {
-            return (disposable, control)
-        } else {
-            return (EmptyDisposable, nil)
-        }
+        })
+
     }
     
     func transferOwnership(peerId: PeerId, memberId: PeerId, password: String) -> Signal<Void, ChannelOwnershipTransferError> {

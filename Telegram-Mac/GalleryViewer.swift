@@ -848,7 +848,7 @@ class GalleryViewer: NSResponder {
     }
     
     private func deleteMessages(_ messages:[Message]) {
-        if !messages.isEmpty, let peer = messageMainPeer(messages[0]) {
+        if !messages.isEmpty, let peer = coreMessageMainPeer(messages[0]) {
             
             let peerId = messages[0].id.peerId
             let messageIds = messages.map {$0.id}

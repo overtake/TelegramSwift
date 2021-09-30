@@ -723,7 +723,7 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                     }
 
                     var fetchThumbnail: Disposable?
-                    if !thumbnailResource.id.isEqual(to: resource.id) {
+                    if thumbnailResource.id == resource.id {
                         fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
                     }
                     let disposable = (combineLatest(thumbnailData, fullSizeData)
@@ -906,7 +906,7 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
                     }
                     
                     var fetchThumbnail: Disposable?
-                    if !thumbnailResource.id.isEqual(to: resource.id) {
+                    if thumbnailResource.id == resource.id {
                         fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
                     }
                     let disposable = (combineLatest(thumbnailData, fullSizeData)

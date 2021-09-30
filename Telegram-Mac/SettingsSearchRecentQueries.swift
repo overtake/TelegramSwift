@@ -10,11 +10,17 @@ import Cocoa
 import Postbox
 import SwiftSignalKit
 
+
 private struct SettingsSearchRecentQueryItemId {
     public let rawValue: MemoryBuffer
     
     var value: Int64 {
-        return self.rawValue.makeData().withUnsafeBytes { $0.pointee } as Int64
+        return self.rawValue.makeData().withUnsafeBytes { buffer -> Int64 in
+            guard let bytes = buffer.baseAddress?.assumingMemoryBound(to: Int64.self) else {
+                return 0
+            }
+            return bytes.pointee
+        }
     }
     
     init(_ rawValue: MemoryBuffer) {
@@ -27,21 +33,23 @@ private struct SettingsSearchRecentQueryItemId {
     }
 }
 
-public final class RecentSettingsSearchQueryItem: OrderedItemListEntryContents {
-    public init() {
+final class RecentSettingsSearchQueryItem: Codable {
+    init() {
     }
     
-    public init(decoder: PostboxDecoder) {
+    init(from decoder: Decoder) throws {
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
+    func encode(to encoder: Encoder) throws {
     }
 }
 
 func addRecentSettingsSearchItem(postbox: Postbox, item: SettingsSearchableItemId) {
     let _ = (postbox.transaction { transaction in
         let itemId = SettingsSearchRecentQueryItemId(item.index)
-        transaction.addOrMoveToFirstPositionOrderedItemListItem(collectionId: ApplicationSpecificOrderedItemListCollectionId.settingsSearchRecentItems, item: OrderedItemListEntry(id: itemId.rawValue, contents: RecentSettingsSearchQueryItem()), removeTailIfCountExceeds: 100)
+        if let entry = CodableEntry(RecentSettingsSearchQueryItem()) {
+            transaction.addOrMoveToFirstPositionOrderedItemListItem(collectionId: ApplicationSpecificOrderedItemListCollectionId.settingsSearchRecentItems, item: OrderedItemListEntry(id: itemId.rawValue, contents: entry), removeTailIfCountExceeds: 100)
+        }
     }).start()
 }
 
@@ -60,19 +68,18 @@ func clearRecentSettingsSearchItems(postbox: Postbox) {
 
 func settingsSearchRecentItems(postbox: Postbox) -> Signal<[SettingsSearchableItemId], NoError> {
     return postbox.combinedView(keys: [.orderedItemList(id: ApplicationSpecificOrderedItemListCollectionId.settingsSearchRecentItems)])
-        |> mapToSignal { view -> Signal<[SettingsSearchableItemId], NoError> in
-            return postbox.transaction { transaction -> [SettingsSearchableItemId] in
-                var result: [SettingsSearchableItemId] = []
-                if let view = view.views[.orderedItemList(id: ApplicationSpecificOrderedItemListCollectionId.settingsSearchRecentItems)] as? OrderedItemListView {
-                    for item in view.items {
-                        let index = SettingsSearchRecentQueryItemId(item.id).value
-                        if let itemId = SettingsSearchableItemId(index: index) {
-                            result.append(itemId)
-                        }
+    |> mapToSignal { view -> Signal<[SettingsSearchableItemId], NoError> in
+        return postbox.transaction { transaction -> [SettingsSearchableItemId] in
+            var result: [SettingsSearchableItemId] = []
+            if let view = view.views[.orderedItemList(id: ApplicationSpecificOrderedItemListCollectionId.settingsSearchRecentItems)] as? OrderedItemListView {
+                for item in view.items {
+                    let index = SettingsSearchRecentQueryItemId(item.id).value
+                    if let itemId = SettingsSearchableItemId(index: index) {
+                        result.append(itemId)
                     }
                 }
-                return result
             }
+            return result
+        }
     }
 }
-

@@ -584,7 +584,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                     
                     
                     
-                    let foundRemotePeers:Signal<[Peer], NoError> = .single([]) |> then ( context.engine.peers.searchPeers(query: search.request.lowercased()) |> map { $0.map{$0.peer} + $1.map{$0.peer} } )
+                    let foundRemotePeers:Signal<[Peer], NoError> = .single([]) |> then ( context.engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map { $0.map{$0.peer} + $1.map{$0.peer} } )
 
                     signal = combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, account.postbox.loadedPeerWithId(account.peerId))
                     

@@ -267,10 +267,7 @@ class Sender: NSObject {
                 if let container = container as? VoiceSenderContainer {
                     let mimeType = voiceMime
                     var attrs:[TelegramMediaFileAttribute] = []
-                    var memoryWaveform:MemoryBuffer?
-                    if let waveformData = container.data.waveform {
-                        memoryWaveform = MemoryBuffer(data: waveformData)
-                    }
+                    let memoryWaveform:Data? = container.data.waveform
                     
                     let resource: TelegramMediaResource
                     if let id = container.id, let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {

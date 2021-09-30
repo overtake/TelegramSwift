@@ -293,13 +293,9 @@ class SharedAccountContext {
                                 switch result {
                                 case let .authorized(account):
                                     #if SHARE
-                                    setupAccount(account, fetchCachedResourceRepresentation: nil, transformOutgoingMessageMedia: nil, preFetchedResourcePath: { resource in
-                                        return nil
-                                    })
+                                    setupAccount(account)
                                     #else
-                                    setupAccount(account, fetchCachedResourceRepresentation: fetchCachedResourceRepresentation, transformOutgoingMessageMedia: transformOutgoingMessageMedia, preFetchedResourcePath: { resource in
-                                        return nil
-                                    })
+                                    setupAccount(account, fetchCachedResourceRepresentation: fetchCachedResourceRepresentation, transformOutgoingMessageMedia: transformOutgoingMessageMedia)
                                     #endif
 
                                     return .ready(id, account, attributes.sortIndex)

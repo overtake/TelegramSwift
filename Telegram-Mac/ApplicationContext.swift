@@ -570,7 +570,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         suggestedLocalizationDisposable.set(( context.account.postbox.preferencesView(keys: [PreferencesKeys.suggestedLocalization]) |> mapToSignal { preferences -> Signal<SuggestedLocalizationInfo, NoError> in
             
-            let preferences = preferences.values[PreferencesKeys.suggestedLocalization] as? SuggestedLocalizationEntry
+            let preferences = preferences.values[PreferencesKeys.suggestedLocalization]?.get(SuggestedLocalizationEntry.self)
             if preferences == nil || !preferences!.isSeen, preferences?.languageCode != appCurrentLanguage.languageCode, preferences?.languageCode != "en" {
                 let current = Locale.preferredLanguages[0]
                 let split = current.split(separator: "-")
@@ -735,7 +735,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }))
         
         
-        if let controller = globalAudio, let header = self.rightController.header {
+        if let controller = globalAudio, let _ = self.rightController.header {
             self.rightController.header?.show(false, contextObject: InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: nil, supportTableView: nil))
         }
         

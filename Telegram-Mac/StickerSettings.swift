@@ -1,6 +1,7 @@
 import Foundation
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
 enum EmojiStickerSuggestionMode: Int32 {
     case none
@@ -8,7 +9,7 @@ enum EmojiStickerSuggestionMode: Int32 {
     case installed
 }
 
-struct StickerSettings: PreferencesEntry, Equatable {
+struct StickerSettings: Codable, Equatable {
     var emojiStickerSuggestionMode: EmojiStickerSuggestionMode
     var trendingClosedOn: Int64?
     static var defaultSettings: StickerSettings {
@@ -32,12 +33,18 @@ struct StickerSettings: PreferencesEntry, Equatable {
         }
     }
     
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? StickerSettings {
-            return self == to
-        } else {
-            return false
-        }
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        let emoji = try container.decode(Int32.self, forKey: "emojiStickerSuggestionMode")
+        
+        self.emojiStickerSuggestionMode = EmojiStickerSuggestionMode(rawValue: emoji)!
+        self.trendingClosedOn = try container.decodeIfPresent(Int64.self, forKey: "t.c.o")
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(emojiStickerSuggestionMode.rawValue, forKey: "emojiStickerSuggestionMode")
+        try container.encodeIfPresent(self.trendingClosedOn, forKey: "t.c.o")
     }
     
     func withUpdatedEmojiStickerSuggestionMode(_ emojiStickerSuggestionMode: EmojiStickerSuggestionMode) -> StickerSettings {
@@ -52,12 +59,12 @@ func updateStickerSettingsInteractively(postbox: Postbox, _ f: @escaping (Sticke
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.stickerSettings, { entry in
             let currentSettings: StickerSettings
-            if let entry = entry as? StickerSettings {
+            if let entry = entry?.get(StickerSettings.self) {
                 currentSettings = entry
             } else {
                 currentSettings = StickerSettings.defaultSettings
             }
-            return f(currentSettings)
+            return PreferencesEntry(f(currentSettings))
         })
     }
 }
@@ -65,7 +72,7 @@ func updateStickerSettingsInteractively(postbox: Postbox, _ f: @escaping (Sticke
 func stickerSettings(postbox: Postbox) -> Signal<StickerSettings, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.stickerSettings]) |> map { preferencesView in
         var stickerSettings = StickerSettings.defaultSettings
-        if let value = preferencesView.values[ApplicationSpecificPreferencesKeys.stickerSettings] as? StickerSettings {
+        if let value = preferencesView.values[ApplicationSpecificPreferencesKeys.stickerSettings]?.get(StickerSettings.self) {
             stickerSettings = value
         }
         return stickerSettings

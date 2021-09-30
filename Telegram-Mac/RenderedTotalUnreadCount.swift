@@ -10,7 +10,7 @@ enum RenderedTotalUnreadCountType {
 
 func renderedTotalUnreadCount(transaction: Transaction) -> (Int32, RenderedTotalUnreadCountType) {
     let totalUnreadState = transaction.getTotalUnreadState(groupId: .root)
-    let inAppSettings: InAppNotificationSettings = (transaction.getPreferencesEntry(key: ApplicationSharedPreferencesKeys.inAppNotificationSettings) as? InAppNotificationSettings) ?? .defaultSettings
+    let inAppSettings: InAppNotificationSettings = transaction.getPreferencesEntry(key: ApplicationSharedPreferencesKeys.inAppNotificationSettings)?.get(InAppNotificationSettings.self) ?? .defaultSettings
     let type: RenderedTotalUnreadCountType
     switch inAppSettings.totalUnreadCountDisplayStyle {
         case .raw:
@@ -44,7 +44,7 @@ func renderedTotalUnreadCount(accountManager: AccountManager<TelegramAccountMana
             }
             
             let inAppSettings: InAppNotificationSettings
-            if let value = sharedData.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings] as? InAppNotificationSettings {
+            if let value = sharedData.entries[ApplicationSharedPreferencesKeys.inAppNotificationSettings]?.get(InAppNotificationSettings.self) {
                 inAppSettings = value
             } else {
                 inAppSettings = .defaultSettings

@@ -94,7 +94,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
     func item(_ arguments: RecentCallsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .calls(message, messages, editing, failed):
-            let peer = messageMainPeer(message)!
+            let peer = coreMessageMainPeer(message)!
 
             let interactionType:ShortPeerItemInteractionType
             if editing {

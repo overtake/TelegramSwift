@@ -931,7 +931,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             
             if let first = item.photos.first, let video = first.image.videoRepresentations.last, item.updatingPhotoState == nil {
                
-                let equal = videoRepresentation?.resource.id.isEqual(to: video.resource.id) ?? false
+                let equal = videoRepresentation?.resource.id == video.resource.id
                 
                 if !equal {
                     

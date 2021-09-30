@@ -526,7 +526,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasWallet: Bool, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -745,7 +745,6 @@ class LayoutAccountController : TableViewController {
     private let settings: Promise<(AccountPrivacySettings?, WebSessionsContextState, (ProxySettings, ConnectionStatus), Bool)> = Promise()
     private let syncLocalizations = MetaDisposable()
     fileprivate let passportPromise: Promise<Bool> = Promise(false)
-    fileprivate let hasWallet: Promise<Bool> = Promise(false)
     fileprivate let hasFilters: Promise<Bool> = Promise(false)
 
     private weak var arguments: AccountInfoArguments?
@@ -768,20 +767,10 @@ class LayoutAccountController : TableViewController {
         
         syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
         
-        self.hasWallet.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
-        |> map { view -> Bool in
-            let appConfiguration = view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? .defaultValue
-            let configuration = WalletConfiguration.with(appConfiguration: appConfiguration)
-            if #available(OSX 10.12, *) {
-                return configuration.config != nil
-            } else {
-                return false
-            }
-        })
         
         self.hasFilters.set(context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
         |> map { view -> Bool in
-            let configuration = ChatListFilteringConfiguration(appConfiguration: view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? .defaultValue)
+            let configuration = ChatListFilteringConfiguration(appConfiguration: view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue)
             return configuration.isEnabled
         })
         
@@ -791,10 +780,6 @@ class LayoutAccountController : TableViewController {
         let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.sharedContext.layout else {return}
-             var main = main
-            if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
-                main = false
-            }
             if main {
                 navigation.removeExceptMajor()
             }
@@ -828,8 +813,8 @@ class LayoutAccountController : TableViewController {
         }
 
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasWallet.get(), hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context)) |> map { peerView, accounts, appearance, settings, appUpdateState, hasWallet, hasFilters, sessionsCount, unAuthStatus -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasWallet: hasWallet, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context)) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)

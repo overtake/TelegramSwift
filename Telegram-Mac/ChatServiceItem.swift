@@ -42,9 +42,10 @@ class ChatServiceItem: ChatRowItem {
             if theme.controllerBackgroundMode.hasWallpaper {
                 return theme.chatServiceItemTextColor
             }
+            let mainPeer = coreMessageMainPeer(message)
             
-            if messageMainPeer(message) is TelegramChannel || messageMainPeer(message) is TelegramGroup {
-                if let peer = messageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
+            if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
+                if let peer = mainPeer as? TelegramChannel, case .broadcast(_) = peer.info {
                     return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
                 } else if context.peerId != peerId {
                     let value = abs(Int(peerId.id._internalGetInt64Value()) % 7)
@@ -58,7 +59,7 @@ class ChatServiceItem: ChatRowItem {
         let attributedString:NSMutableAttributedString = NSMutableAttributedString()
         if let media = message.media[0] as? TelegramMediaAction {
            
-            if let peer = messageMainPeer(message) {
+            if let peer = coreMessageMainPeer(message) {
                
                 switch media.action {
                 case let .groupCreated(title: title):
@@ -207,7 +208,7 @@ class ChatServiceItem: ChatRowItem {
                                 let _ =  attributedString.append(string: tr(L10n.chatServiceSecretChatDisabledTimerSelf1), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
                         } else {
-                            if let peer = messageMainPeer(message) {
+                            if let peer = coreMessageMainPeer(message) {
                                 if peer.isGroup || peer.isSupergroup {
                                     if seconds > 0 {
                                         let _ =  attributedString.append(string: L10n.chatServiceGroupSetTimer(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
@@ -539,7 +540,7 @@ class ChatServiceItem: ChatRowItem {
         let chatInteraction = self.chatInteraction
         if chatInteraction.presentation.state != .selecting {
             
-            if let message = message, let peer = messageMainPeer(message) {
+            if let message = message, let peer = coreMessageMainPeer(message) {
                 if !message.containsSecretMedia, canReplyMessage(message, peerId: peer.id, mode: chatInteraction.mode) {
                     items.append(ContextMenuItem(L10n.messageContextReply1, handler: {
                         chatInteraction.setupReplyMessage(message.id)

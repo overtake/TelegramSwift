@@ -64,7 +64,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     case let .stickers(query):
         
         return (inputQuery, context.account.postbox.transaction { transaction -> StickerSettings in
-            let stickerSettings: StickerSettings = (transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.stickerSettings) as? StickerSettings) ?? .defaultSettings
+            let stickerSettings: StickerSettings = transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.stickerSettings)?.get(StickerSettings.self) ?? .defaultSettings
             return stickerSettings
         }
         |> mapToSignal { stickerSettings -> Signal<[FoundStickerItem], NoError> in

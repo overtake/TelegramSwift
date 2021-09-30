@@ -28,7 +28,6 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case statusBar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case showCallsTab(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case enableRFTCopy(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
-    case openChatAtLaunch(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case acceptSecretChats(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchReply(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchEdit(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
@@ -57,8 +56,6 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 8
         case .enableRFTCopy:
             return 9
-        case .openChatAtLaunch:
-            return 10
         case .acceptSecretChats:
             return 11
         case .forceTouchReply:
@@ -87,8 +84,6 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .showCallsTab(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .enableRFTCopy(sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case let .openChatAtLaunch(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .acceptSecretChats(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -138,10 +133,6 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .enableRFTCopy(sectionId: _, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsCopyRTF, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleRTFEnabled(!enabled)
-            })
-        case let .openChatAtLaunch(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsOpenLatestChatOnLaunch, type: .switchable(enabled), viewType: viewType, action: {
-                arguments.openChatAtLaunch(!enabled)
             })
         case let .acceptSecretChats(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsAcceptSecretChats, type: .switchable(enabled), viewType: viewType, action: {
@@ -225,12 +216,11 @@ private final class GeneralSettingsArguments {
     let toggleBigEmoji: (Bool) -> Void
     let toggleStatusBar: (Bool) -> Void
     let toggleRTFEnabled: (Bool) -> Void
-    let openChatAtLaunch:(Bool)->Void
     let acceptSecretChats:(Bool)->Void
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
     let callSettings: ()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -245,7 +235,6 @@ private final class GeneralSettingsArguments {
         self.toggleBigEmoji = toggleBigEmoji
         self.toggleStatusBar = toggleStatusBar
         self.toggleRTFEnabled = toggleRTFEnabled
-        self.openChatAtLaunch = openChatAtLaunch
         self.acceptSecretChats = acceptSecretChats
         self.toggleWorkMode = toggleWorkMode
         self.openShortcuts = openShortcuts
@@ -299,7 +288,6 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsAdvancedHeader))
     headerUnique -= 1
     entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .firstItem))
-   // entries.append(.openChatAtLaunch(sectionId: sectionId, enabled: launchSettings.openAtLaunch, viewType: .innerItem))
     entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
     
     entries.append(.section(sectionId: sectionId))
@@ -397,14 +385,10 @@ class GeneralSettingsViewController: TableViewController {
             }).start()
         }, toggleRTFEnabled: { enable in
             FastSettings.enableRTF = enable
-        }, openChatAtLaunch: { enable in
-            _ = updateLaunchSettings(context.account.postbox, {
-                $0.withUpdatedOpenAtLaunch(enable)
-            }).start()
         }, acceptSecretChats: { enable in
             _ = context.account.postbox.transaction({ transaction -> Void in
                 transaction.updatePreferencesEntry(key: PreferencesKeys.secretChatSettings, { _ in
-                   return SecretChatSettings(acceptOnThisDevice: enable)
+                   return PreferencesEntry(SecretChatSettings(acceptOnThisDevice: enable))
                 })
             }).start()
         }, toggleWorkMode: { value in
@@ -425,7 +409,7 @@ class GeneralSettingsViewController: TableViewController {
             
             let baseSettings: BaseApplicationSettings = settings
             
-            let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings] as? SecretChatSettings ?? SecretChatSettings.defaultSettings
+            let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings]?.get(SecretChatSettings.self) ?? SecretChatSettings.defaultSettings
             
             let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)

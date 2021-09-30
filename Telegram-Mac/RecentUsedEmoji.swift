@@ -9,8 +9,9 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
+import TelegramCore
 
-struct EmojiSkinModifier : PostboxCoding, Equatable {
+struct EmojiSkinModifier : Codable, Equatable {
     let emoji: String
     let modifier: String
     init(emoji: String, modifier: String) {
@@ -21,9 +22,10 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
         self.emoji = emoji
         self.modifier = modifier
     }
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeString(emoji, forKey: "e")
-        encoder.encodeString(modifier, forKey: "m")
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(emoji, forKey: "e")
+        try container.encode(modifier, forKey: "m")
     }
     
     var modify: String {
@@ -39,15 +41,14 @@ struct EmojiSkinModifier : PostboxCoding, Equatable {
         return e
     }
     
-    init(decoder: PostboxDecoder) {
-         self.emoji = decoder.decodeStringForKey("e", orElse: "")
-         self.modifier = decoder.decodeStringForKey("m", orElse: "")
-        var bp:Int = 0
-        bp += 1
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        self.emoji = try container.decode(String.self, forKey: "e")
+        self.modifier = try container.decode(String.self, forKey: "m")
     }
 }
 
-class RecentUsedEmoji: PreferencesEntry, Equatable {
+class RecentUsedEmoji: Codable, Equatable {
     private let _emojies:[String]
     let skinModifiers:[EmojiSkinModifier]
     init(emojies:[String], skinModifiers: [EmojiSkinModifier]) {
@@ -87,9 +88,11 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
         })
     }
     
-    public required init(decoder: PostboxDecoder) {
-        let emojies = decoder.decodeStringArrayForKey("e")
-        self.skinModifiers = (try? decoder.decodeObjectArrayWithCustomDecoderForKey("sm_new", decoder: {EmojiSkinModifier(decoder: $0)})) ?? []
+    public required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+        
+        let emojies = try container.decode([String].self, forKey: "e")
+        self.skinModifiers = try container.decode([EmojiSkinModifier].self, forKey: "sm_new")
 
         var isset:[String: String] = [:]
         var list:[String] = []
@@ -111,18 +114,10 @@ class RecentUsedEmoji: PreferencesEntry, Equatable {
     }
     
     
-    
-    func isEqual(to: PreferencesEntry) -> Bool {
-        if let to = to as? RecentUsedEmoji {
-            return self == to
-        } else {
-            return false
-        }
-    }
-    
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeStringArray(_emojies, forKey: "e")
-        encoder.encodeObjectArray(skinModifiers, forKey: "sm_new")
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+        try container.encode(_emojies, forKey: "e")
+        try container.encode(skinModifiers, forKey: "sm_new")
     }
 }
 
@@ -135,7 +130,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             var emojies: [String]
-            if let entry = entry as? RecentUsedEmoji {
+            if let entry = entry?.get(RecentUsedEmoji.self) {
                 emojies = entry.emojies
             } else {
                 emojies = RecentUsedEmoji.defaultSettings.emojies
@@ -153,7 +148,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
                 }
             }
             emojies = Array(emojies.filter({$0.containsEmoji}).prefix(35))
-            return RecentUsedEmoji(emojies: emojies, skinModifiers: (entry as? RecentUsedEmoji)?.skinModifiers ?? [])
+            return PreferencesEntry(RecentUsedEmoji(emojies: emojies, skinModifiers: entry?.get(RecentUsedEmoji.self)?.skinModifiers ?? []))
         })
     }
 }
@@ -161,7 +156,7 @@ func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoError> {
 func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
-            let settings = (entry as? RecentUsedEmoji) ?? RecentUsedEmoji.defaultSettings
+            let settings = entry?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
             var skinModifiers = settings.skinModifiers
             let index:Int? = skinModifiers.firstIndex(where: {$0.emoji == emoji})
             
@@ -175,7 +170,7 @@ func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox) -> Sig
                 skinModifiers.remove(at: index)
             }
            
-            return RecentUsedEmoji(emojies: settings.emojies, skinModifiers: skinModifiers)
+            return PreferencesEntry(RecentUsedEmoji(emojies: settings.emojies, skinModifiers: skinModifiers))
             
         })
     }
@@ -183,7 +178,6 @@ func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox) -> Sig
 
 func recentUsedEmoji(postbox: Postbox) -> Signal<RecentUsedEmoji, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.recentEmoji]) |> map { preferences in
-        
-        return (preferences.values[ApplicationSpecificPreferencesKeys.recentEmoji] as? RecentUsedEmoji) ?? RecentUsedEmoji.defaultSettings
+        return preferences.values[ApplicationSpecificPreferencesKeys.recentEmoji]?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
     }
 }
