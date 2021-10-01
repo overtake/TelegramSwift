@@ -40,9 +40,9 @@ private final class WidgetNavigationButton : Control {
         super.updateLocalizationAndTheme(theme: theme)
         
         let theme = theme as! TelegramPresentationTheme
-        self.background = theme.controllerBackgroundMode.hasWallpaper ? .clear : theme.chatServiceItemColor
-        self.visualEffect.background = theme.chatServiceItemColor
-        self.visualEffect.isHidden = !theme.controllerBackgroundMode.hasWallpaper
+        self.background = theme.shoundBlurService ? .clear : theme.chatServiceItemColor
+        self.visualEffect.bgColor = theme.blurServiceColor
+        self.visualEffect.isHidden = !theme.shoundBlurService
     }
     
     private var direction: Direction?

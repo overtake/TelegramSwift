@@ -1718,7 +1718,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 self.textView = View(frame: self.bounds)
                 addSubview(self.textView!)
             }
-            self.visualEffect?.layer?.backgroundColor = blurBackground.cgColor
+            self.visualEffect?.bgColor = blurBackground
             self.textView?.displayDelegate = self
             
             

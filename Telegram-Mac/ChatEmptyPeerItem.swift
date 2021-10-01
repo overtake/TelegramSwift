@@ -38,10 +38,10 @@ class ChatEmptyPeerItem: TableRowItem {
     }
     
     private let peerViewDisposable = MetaDisposable()
-    
-    init(_ initialSize: NSSize, chatInteraction:ChatInteraction) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, chatInteraction:ChatInteraction, theme: TelegramPresentationTheme) {
         self.chatInteraction = chatInteraction
-        
+        self.presentation = theme
         let attr = NSMutableAttributedString()
         var lineSpacing: CGFloat? = 5
         switch chatInteraction.mode {
@@ -178,6 +178,9 @@ class ChatEmptyPeerView : TableRowView {
     }
     
     override var backdorColor: NSColor {
+        guard let theme = (item as? ChatEmptyPeerItem)?.presentation else {
+            return super.backdorColor
+        }
         return theme.wallpaper.wallpaper != .none ? .clear : theme.chatBackground
     }
     

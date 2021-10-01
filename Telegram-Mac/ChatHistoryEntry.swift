@@ -232,6 +232,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return data.additionData
         case let .groupedPhotos(entries,_):
             return entries.first?.additionalData ?? MessageEntryAdditionalData()
+        case let .DateEntry(_, _, theme):
+            return MessageEntryAdditionalData(chatTheme: theme)
         default:
             return MessageEntryAdditionalData()
         }

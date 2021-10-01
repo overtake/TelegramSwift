@@ -1784,7 +1784,7 @@ class TelegramPresentationTheme : PresentationTheme {
     }
 
     var blurServiceColor: NSColor {
-        return NSColor.black.withAlphaComponent(0.2)
+        return NSColor.black.withAlphaComponent(colors.isDark ? 0.5 : 0.2)
     }
     
     private var _chatServiceItemColor: NSColor?
@@ -1867,6 +1867,9 @@ class TelegramPresentationTheme : PresentationTheme {
     
     var hasWallpaper: Bool {
         return controllerBackgroundMode.hasWallpaper
+    }
+    var shoundBlurService: Bool {
+        return hasWallpaper
     }
     
     var controllerBackgroundMode: TableBackgroundMode {

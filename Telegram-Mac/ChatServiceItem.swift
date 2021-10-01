@@ -711,7 +711,7 @@ class ChatServiceRowView: TableRowView {
             return
         }
         
-        if item.presentation.hasWallpaper {
+        if item.presentation.shoundBlurService {
             textView.blurBackground = item.presentation.blurServiceColor
             textView.backgroundColor = .clear
         } else {

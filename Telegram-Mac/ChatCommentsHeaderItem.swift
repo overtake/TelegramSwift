@@ -108,7 +108,7 @@ class ChatCommentsHeaderView : TableRowView {
         guard let item = item as? ChatCommentsHeaderItem else {
             return
         }
-        if item.presentation.hasWallpaper {
+        if item.presentation.shoundBlurService {
             textView.blurBackground = theme.blurServiceColor
             textView.backgroundColor = .clear
         } else {
