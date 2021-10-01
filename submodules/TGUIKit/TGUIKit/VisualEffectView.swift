@@ -10,6 +10,7 @@ import Foundation
 
 
 open class VisualEffect: NSVisualEffectView {
+    private let overlay: CALayer = CALayer()
     override public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setup()
@@ -19,11 +20,25 @@ open class VisualEffect: NSVisualEffectView {
         setup()
     }
     
+    public var bgColor: NSColor = NSColor.black.withAlphaComponent(0.2) {
+        didSet {
+            overlay.backgroundColor = bgColor.cgColor
+        }
+    }
+    
+    
     func setup() {
         self.wantsLayer = true
         self.blendingMode = .withinWindow
         self.state = .active
+        self.bgColor = NSColor.black.withAlphaComponent(0.2)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        self.overlay.frame = bounds
+        CATransaction.commit()
+        layer?.addSublayer(self.overlay)
     }
+    
     
     open override func updateLayer() {
         super.updateLayer()
@@ -50,6 +65,10 @@ open class VisualEffect: NSVisualEffectView {
                 return false
             }
             return true
+        }
+        for sublayer in sublayers {
+            sublayer.backgroundColor = nil
+            sublayer.isOpaque = false
         }
     }
     
@@ -81,8 +100,24 @@ open class VisualEffect: NSVisualEffectView {
         for layer in sublayers {
             animate(layer, main: false)
         }
-    
+        if animated {
+            animate(overlay, main: false)
+        } else {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            self.overlay.frame = bounds
+            CATransaction.commit()
+        }
     }
+    
+    open override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        self.overlay.frame = bounds
+        CATransaction.commit()
+    }
+    
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

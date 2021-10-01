@@ -30,7 +30,7 @@ open class Button: Control {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 self.addSubview(self.visualEffect!, positioned: .below, relativeTo: self.subviews.first)
             }
-            self.visualEffect?.layer?.backgroundColor = blurBackground.cgColor
+            self.visualEffect?.bgColor = blurBackground
             
         } else {
             self.visualEffect?.removeFromSuperview()

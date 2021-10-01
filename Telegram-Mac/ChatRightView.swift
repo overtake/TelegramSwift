@@ -36,7 +36,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 self.textView = View(frame: self.bounds)
                 addSubview(self.textView!, positioned: .above, relativeTo: self.visualEffect)
             }
-            self.visualEffect?.layer?.backgroundColor = blurBackground.cgColor
+            self.visualEffect?.bgColor = blurBackground
             self.textView?.displayDelegate = self
             
             

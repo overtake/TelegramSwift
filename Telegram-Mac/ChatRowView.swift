@@ -294,7 +294,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         
-        if item.isStateOverlayLayout, item.presentation.hasWallpaper {
+        if item.isStateOverlayLayout, item.presentation.shoundBlurService {
             rightView.blurBackground = item.presentation.blurServiceColor
             rightView.layer?.cornerRadius = item.rightSize.height / 2
         } else {
@@ -332,15 +332,19 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-
+    private var mouseDownPoint: NSPoint = .zero
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
-        mouseDragged = true
+        
+        let current = convert(event.locationInWindow, from: nil)
+        mouseDragged = mouseDragged || abs(mouseDownPoint.x - current.x) > 5 || abs(mouseDownPoint.y - current.y) > 5
+        
     }
     
     
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
+        mouseDownPoint = convert(event.locationInWindow, from: nil)
         mouseDragged = false
     }
     
@@ -1199,13 +1203,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             var isPresented: Bool = true
             if shareView == nil {
                 shareView = ImageButton()
-                shareView?.set(hoverAdditionPolicy: .enlarge(value: 1.05), for: .Hover)
-                shareView?.set(hoverAdditionPolicy: .enlarge(value: 1.0), for: .Normal)
-                shareView?.set(hoverAdditionPolicy: .enlarge(value: 1.05), for: .Highlight)
-                shareView?.set(additionBackgroundMultiplier: 0.95, for: .Normal)
-                shareView?.set(additionBackgroundMultiplier: 0.95, for: .Hover)
-                shareView?.set(additionBackgroundMultiplier: 0.95, for: .Highlight)
                 shareView?.disableActions()
+                shareView?.scaleOnClick = true
                 shareView?.change(opacity: 0, animated: false)
                 rowView.addSubview(shareView!)
                 isPresented = false
@@ -1221,7 +1220,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.setFrameOrigin(shareViewPoint(item))
             }
             
-            if item.isBubbled && item.presentation.hasWallpaper  {
+            if item.isBubbled && item.presentation.shoundBlurService  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))
@@ -1276,12 +1275,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             var isPresented: Bool = true
             if likeView == nil {
                 likeView = ImageButton()
-                likeView?.set(hoverAdditionPolicy: .enlarge(value: 1.05), for: .Hover)
-                likeView?.set(hoverAdditionPolicy: .enlarge(value: 1.0), for: .Normal)
-                likeView?.set(hoverAdditionPolicy: .enlarge(value: 1.05), for: .Highlight)
-                likeView?.set(additionBackgroundMultiplier: 0.95, for: .Normal)
-                likeView?.set(additionBackgroundMultiplier: 0.95, for: .Hover)
-                likeView?.set(additionBackgroundMultiplier: 0.95, for: .Highlight)
+                likeView?.scaleOnClick = true
                 likeView?.autohighlight = false
                 likeView?.disableActions()
                 likeView?.change(opacity: 0, animated: false)

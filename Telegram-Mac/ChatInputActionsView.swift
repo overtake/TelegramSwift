@@ -191,7 +191,7 @@ class ChatInputActionsView: View, Notifable {
                 let chatInteraction = strongSelf.chatInteraction
                 let window = chatInteraction.context.window
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if window.frame.width >= 1030 && chatInteraction.context.sharedContext.layout == .dual || mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize {
+                    if window.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual || mainWindow.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize {
                         
                         chatInteraction.toggleSidebar()
                     }
