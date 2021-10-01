@@ -531,7 +531,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         window.set(handler: { _ -> KeyHandlerResult in
             
             
-            showModal(with: CoreMediaVideoIOTest(context: context), for: window)
+            showModal(with: RequestJoinChatModalController(context: context, peerId: context.peerId), for: window)
             
 //            filePanel(with: ["webp"], allowMultiple: false, for: window, completion: { values in
 //                if let first = values?.first {
