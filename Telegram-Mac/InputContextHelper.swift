@@ -791,11 +791,7 @@ class InputContextHelper: NSObject {
                 break
             }
         }
-        if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing {
-            entriesValue.set(entries(for: result, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
-        } else {
-            entriesValue.set(.single([]))
-        }
+        entriesValue.set(entries(for: result, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
         
         let makeSignal = combineLatest(queue: prepareQueue, entriesValue.get(), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
                             

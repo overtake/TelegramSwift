@@ -1501,6 +1501,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let item = value[value.count - 1]
             let view = cached[item.message!.id] ?? ChatRowView.makePhotoView(item)
             let control = view as? AvatarControl
+            if let peer = item.peer {
+                control?.setPeer(account: item.context.account, peer: peer, message: item.message)
+            }
+            control?.toolTip = item.nameHide
             control?.removeAllHandlers()
             control?.set(handler: { [weak item] _ in
                 item?.openInfo()
