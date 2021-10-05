@@ -3957,6 +3957,8 @@ internal final class L10n {
   internal static var editInvitationNewTitle: String  { return L10n.tr("Localizable", "EditInvitation.NewTitle") }
   /// Number of Users
   internal static var editInvitationNumberOfUsers: String  { return L10n.tr("Localizable", "EditInvitation.NumberOfUsers") }
+  /// Request Admin Approval.
+  internal static var editInvitationRequestApproval: String  { return L10n.tr("Localizable", "EditInvitation.RequestApproval") }
   /// Save
   internal static var editInvitationSave: String  { return L10n.tr("Localizable", "EditInvitation.Save") }
   /// Unlimited
@@ -3965,6 +3967,14 @@ internal final class L10n {
   internal static var editInvitationOKCreate: String  { return L10n.tr("Localizable", "EditInvitation.OK.Create") }
   /// Save
   internal static var editInvitationOKSave: String  { return L10n.tr("Localizable", "EditInvitation.OK.Save") }
+  /// New users will be able to join the channel without being approved by the admins.
+  internal static var editInvitationRequestApprovalChannelOff: String  { return L10n.tr("Localizable", "EditInvitation.RequestApproval.Channel.Off") }
+  /// New users will be able to join the channel only after having been approved by the admins.
+  internal static var editInvitationRequestApprovalChannelOn: String  { return L10n.tr("Localizable", "EditInvitation.RequestApproval.Channel.On") }
+  /// New users will be able to join the group without being approved by the admins.
+  internal static var editInvitationRequestApprovalGroupOff: String  { return L10n.tr("Localizable", "EditInvitation.RequestApproval.Group.Off") }
+  /// New users will be able to join the group only after having been approved by the admins.
+  internal static var editInvitationRequestApprovalGroupOn: String  { return L10n.tr("Localizable", "EditInvitation.RequestApproval.Group.On") }
   /// This name is already taken.
   internal static var editThameNameAlreadyTaken: String  { return L10n.tr("Localizable", "EditThame.Name.AlreadyTaken") }
   /// Save
@@ -6365,6 +6375,8 @@ internal final class L10n {
   internal static func peerInfoMembersHeaderZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.MembersHeader_zero", p1)
   }
+  /// Member Requests
+  internal static var peerInfoMembersRequest: String  { return L10n.tr("Localizable", "PeerInfo.MembersRequest") }
   /// Notifications
   internal static var peerInfoNotifications: String  { return L10n.tr("Localizable", "PeerInfo.Notifications") }
   /// Default
@@ -7451,6 +7463,58 @@ internal final class L10n {
   internal static var requestAccesErrorHaveNotAccessVideoMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VideoMessages") }
   /// Telegram needs access to your microphone to record voice messages.
   internal static var requestAccesErrorHaveNotAccessVoiceMessages: String  { return L10n.tr("Localizable", "RequestAcces.Error.HaveNotAccess.VoiceMessages") }
+  /// Request to Join
+  internal static var requestJoinButton: String  { return L10n.tr("Localizable", "RequestJoin.Button") }
+  /// Request to join sent.
+  internal static var requestJoinSent: String  { return L10n.tr("Localizable", "RequestJoin.Sent") }
+  /// This channel accepts new subscribtions only after they are approved by it's admins.
+  internal static var requestJoinDescChannel: String  { return L10n.tr("Localizable", "RequestJoin.Desc.Channel") }
+  /// This group accepts new subscribtions only after they are approved by it's admins.
+  internal static var requestJoinDescGroup: String  { return L10n.tr("Localizable", "RequestJoin.Desc.Group") }
+  /// Some [addition links]() are set up to accept requests to join the channel.
+  internal static var requestJoinListDescription: String  { return L10n.tr("Localizable", "RequestJoin.List.Description") }
+  /// %d
+  internal static func requestJoinListListHeaderCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_countable", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func requestJoinListListHeaderFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_few", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func requestJoinListListHeaderMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_many", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func requestJoinListListHeaderOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_one", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func requestJoinListListHeaderOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_other", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func requestJoinListListHeaderTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_two", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func requestJoinListListHeaderZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.ListHeader_zero", p1)
+  }
+  /// Add to Channel
+  internal static var requestJoinListApproveChannel: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Channel") }
+  /// Dismiss
+  internal static var requestJoinListApproveDismiss: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Dismiss") }
+  /// Add to Group
+  internal static var requestJoinListApproveGroup: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Group") }
+  /// **%@** has been added to the channel.
+  internal static func requestJoinListTooltipApprovedChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.Tooltip.Approved.Channel", p1)
+  }
+  /// **%@** has been added to the group.
+  internal static func requestJoinListTooltipApprovedGroup(_ p1: String) -> String {
+    return L10n.tr("Localizable", "RequestJoin.List.Tooltip.Approved.Group", p1)
+  }
   /// Select All
   internal static var ruw6mB2mTitle: String  { return L10n.tr("Localizable", "Ruw-6m-B2m.title") }
   /// Send on %@ at %@

@@ -18,6 +18,8 @@ class AnimtedStickerHeaderItem: GeneralRowItem {
         self.sticker = sticker
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
+        
+        self.textLayout.interactions = globalLinkExecutor
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -44,7 +46,7 @@ private final class AnimtedStickerHeaderView : TableRowView {
         addSubview(textView)
         
         textView.isSelectable = false
-        textView.userInteractionEnabled = false
+        textView.userInteractionEnabled = true
     }
     
     override var backdorColor: NSColor {

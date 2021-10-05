@@ -14,7 +14,7 @@ import Postbox
 import SwiftSignalKit
 
 private class JoinLinkPreviewView : View {
-    private let imageView:AvatarControl = AvatarControl(font: .avatar(.huge))
+    private let imageView:AvatarControl = AvatarControl(font: .avatar(30))
     private let titleView:TextView = TextView()
     private let basicContainer:View = View()
     private let usersContainer: View = View()
@@ -28,6 +28,9 @@ private class JoinLinkPreviewView : View {
         basicContainer.addSubview(imageView)
         basicContainer.addSubview(titleView)
         addSubview(usersContainer)
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
     }
     
     func update(with peer:TelegramGroup, account:Account, participants:[Peer]? = nil, groupUserCount: Int32 = 0) -> Void {
@@ -125,7 +128,7 @@ class JoinLinkPreviewModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         switch join {
-        case let .invite(title: title, image, memberCount, participants):
+        case let .invite(_, title, _, image, memberCount, participants):
             let peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt64Value(0)), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
                         genericView.update(with: peer, account: context.account, participants: participants, groupUserCount: memberCount)
         default:
@@ -150,7 +153,7 @@ class JoinLinkPreviewModalController: ModalViewController {
         
         var rect = NSMakeRect(0, 0, 270, 180)
         switch join {
-        case let .invite(_, _, _, participants):
+        case let .invite(_, _, _, _, _, participants):
             if let participants = participants, participants.count > 0 {
                 rect.size.height = 230
             }

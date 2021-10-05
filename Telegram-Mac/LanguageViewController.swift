@@ -333,15 +333,27 @@ class LanguageViewController: TableViewController {
         }
 
         
-        let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none)
-        let searchState: ValuePromise<TableSearchViewState> = ValuePromise(.none, ignoreRepeated: true)
+        let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in
+            updateState { _ in
+                return searchState
+            }
+        }))
+        let searchState: ValuePromise<TableSearchViewState> = ValuePromise(.none({ searchState in
+            updateState { _ in
+                return searchState
+            }
+        }), ignoreRepeated: true)
         let updateSearchValue:((TableSearchViewState)->TableSearchViewState)->Void = { f in
             searchState.set(searchValue.modify(f))
         }
         
         let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: {
             updateSearchValue { _ in
-                return .none
+                return .none({ searchState in
+                    updateState { _ in
+                        return searchState
+                    }
+                })
             }
         }, updateState: { searchState in
             updateState { _ in
@@ -356,7 +368,11 @@ class LanguageViewController: TableViewController {
                 case .none:
                     return .visible(searchData)
                 case .visible:
-                    return .none
+                    return .none({ searchState in
+                        updateState { _ in
+                            return searchState
+                        }
+                    })
                 }
             }
         }

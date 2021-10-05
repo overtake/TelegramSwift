@@ -37,7 +37,7 @@ extension ExportedInvitation {
     }
     
     func withUpdatedIsRevoked(_ isRevoked: Bool) -> ExportedInvitation {
-        return ExportedInvitation(link: self.link, isPermanent: self.isPermanent, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count)
+        return ExportedInvitation(link: self.link, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, approvedDate: self.approvedDate)
     }
 }
 
@@ -103,11 +103,11 @@ final class InviteLinkPeerManager {
         
     }
     
-    func createPeerExportedInvitation(expireDate: Int32?, usageLimit: Int32?) -> Signal<NoValue, NoError> {
+    func createPeerExportedInvitation(expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<NoValue, NoError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = context.engine.peers.createPeerExportedInvitation(peerId: peerId, expireDate: expireDate, usageLimit: usageLimit) |> deliverOnMainQueue
+            let signal = context.engine.peers.createPeerExportedInvitation(peerId: peerId, expireDate: expireDate, usageLimit: usageLimit, requestNeeded: requestNeeded) |> deliverOnMainQueue
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -124,11 +124,11 @@ final class InviteLinkPeerManager {
         }
     }
     
-    func editPeerExportedInvitation(link: ExportedInvitation, expireDate: Int32?, usageLimit: Int32?) -> Signal<NoValue, EditPeerExportedInvitationError> {
+    func editPeerExportedInvitation(link: ExportedInvitation, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<NoValue, EditPeerExportedInvitationError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
-            let signal = context.engine.peers.editPeerExportedInvitation(peerId: peerId, link: link.link, expireDate: expireDate, usageLimit: usageLimit)
+            let signal = context.engine.peers.editPeerExportedInvitation(peerId: peerId, link: link.link, expireDate: expireDate, usageLimit: usageLimit, requestNeeded: requestNeeded)
             let disposable = signal.start(next: { [weak self] value in
                 self?.updateState { state in
                     var state = state
@@ -593,14 +593,14 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         })
     }, editLink: { [weak manager] link in
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
-            let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? nil : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? nil : updated.count)
+            let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? nil : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? nil : updated.count, requestNeeded: updated.requestApproval)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: context.window).start()
             }
         }), for: context.window)
     }, newLink: { [weak manager] in
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, save: { [weak manager] link in
-            let signal = manager?.createPeerExportedInvitation(expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count)
+            let signal = manager?.createPeerExportedInvitation(expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: context.window).start()
             }

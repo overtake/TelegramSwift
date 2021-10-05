@@ -132,6 +132,18 @@ class ChannelInfoArguments : PeerInfoArguments {
         }
     }
     
+    private var _requestManager:PeerInvitationImportersContext?
+    var requestManager: PeerInvitationImportersContext {
+        if let _requestManager = _requestManager {
+            return _requestManager
+        } else {
+            let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, invite: nil)
+            _requestManager = importersContext
+            _requestManager!.loadMore()
+            return _requestManager!
+        }
+    }
+    
     private let reportPeerDisposable = MetaDisposable()
     private let updatePeerNameDisposable = MetaDisposable()
     private let toggleSignaturesDisposable = MetaDisposable()
@@ -1031,7 +1043,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {

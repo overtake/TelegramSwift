@@ -543,12 +543,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             switch result {
             case let .alreadyJoined(peerId):
                 interaction(peerId, true, nil, nil)
-            case .invite:
-                showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peerId in
-                    if let peerId = peerId {
-                        interaction(peerId, true, nil, nil)
-                    }
-                }), for: context.window)
+            case let .invite(flags, _, _, _, _, _):
+                if flags.requestNeeded {
+                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result), for: context.window)
+                } else {
+                    showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peerId in
+                        if let peerId = peerId {
+                            interaction(peerId, true, nil, nil)
+                        }
+                    }), for: context.window)
+                }
             case let .peek(peerId, peek):
                  interaction(peerId, true, nil, .closeAfter(peek))
             case .invalidHash:

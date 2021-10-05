@@ -5789,21 +5789,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let peerId = self.chatLocation.peerId
-        #if DEBUG
-        context.window.set(handler: { _ -> KeyHandlerResult in
-            showModal(with: RequestJoinChatModalController(context: context, peerId: peerId), for: context.window)
-          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
-        #endif
+
         
-        #if DEBUG
-        context.window.set(handler: { _ -> KeyHandlerResult in
-            context.sharedContext.bindings.rootNavigation().push(RequestJoinMemberListController(context: context, peerId: peerId))
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: .command)
-        #endif
-        
+      
         
         if !(context.window.firstResponder is NSTextView) {
             self.genericView.inputView.makeFirstResponder()

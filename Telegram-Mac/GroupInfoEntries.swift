@@ -102,6 +102,18 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
     }
     
+    private var _requestManager:PeerInvitationImportersContext?
+    var requestManager: PeerInvitationImportersContext {
+        if let _requestManager = _requestManager {
+            return _requestManager
+        } else {
+            let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, invite: nil)
+            _requestManager = importersContext
+            _requestManager!.loadMore()
+            return _requestManager!
+        }
+    }
+    
     override func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         
         let context = self.context
@@ -216,6 +228,11 @@ final class GroupInfoArguments : PeerInfoArguments {
     
     func openInviteLinks() {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
+    }
+    func openRequests() {
+        pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
+            self?.openInviteLinks()
+        }))
     }
     
     private func changeControllers(_ peerId: PeerId?) {
@@ -995,6 +1012,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case groupTypeSetup(section:Int, isPublic: Bool, viewType: GeneralViewType)
     case autoDeleteMessages(section:Int, timer: CachedPeerAutoremoveTimeout?, viewType: GeneralViewType)
     case inviteLinks(section:Int, count: Int32, viewType: GeneralViewType)
+    case requests(section:Int, count: Int32, viewType: GeneralViewType)
     case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
     case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
@@ -1024,6 +1042,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupTypeSetup(section, isPublic, _): return .groupTypeSetup(section: section, isPublic: isPublic, viewType: viewType)
         case let .autoDeleteMessages(section, timer, _): return .autoDeleteMessages(section: section, timer: timer, viewType: viewType)
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
+        case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .linkedChannel(section, channel, subscriber, _): return .linkedChannel(section: section, channel: channel, subscribers: subscriber, viewType: viewType)
         case let .groupDescriptionSetup(section, text, _): return .groupDescriptionSetup(section: section, text: text, viewType: viewType)
         case let .groupAboutDescription(section, _): return .groupAboutDescription(section: section, viewType: viewType)
@@ -1190,6 +1209,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .requests(sectionId, count, viewType):
+            if case .requests(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .linkedChannel(sectionId, lhsChannel, subscribers, viewType):
             if case .linkedChannel(sectionId, let rhsChannel, subscribers, viewType) = entry {
                 return lhsChannel.isEqual(rhsChannel)
@@ -1334,34 +1359,36 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 9
         case .inviteLinks:
             return 10
-        case .linkedChannel:
+        case .requests:
             return 11
-        case .preHistory:
+        case .linkedChannel:
             return 12
-        case .groupStickerset:
+        case .preHistory:
             return 13
-        case .autoDeleteMessages:
+        case .groupStickerset:
             return 14
-        case .groupManagementInfoLabel:
+        case .autoDeleteMessages:
             return 15
-        case .permissions:
+        case .groupManagementInfoLabel:
             return 16
-        case .blocked:
+        case .permissions:
             return 17
-        case .administrators:
+        case .blocked:
             return 18
-        case .usersHeader:
+        case .administrators:
             return 19
-        case .addMember:
+        case .usersHeader:
             return 20
+        case .addMember:
+            return 21
         case .member:
             fatalError("no stableIndex")
         case .showMore:
-            return 22
-        case .leave:
             return 23
-        case .media:
+        case .leave:
             return 24
+        case .media:
+            return 25
         case let .section(id):
             return (id + 1) * 100000 - id
         }
@@ -1390,6 +1417,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .autoDeleteMessages(sectionId, _, _):
             return sectionId
         case let .inviteLinks(sectionId, _, _):
+            return sectionId
+        case let .requests(sectionId, _, _):
             return sectionId
         case let .linkedChannel(sectionId, _, _, _):
             return sectionId
@@ -1447,6 +1476,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .autoDeleteMessages(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .inviteLinks(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .requests(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .linkedChannel(sectionId, _, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1547,6 +1578,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupAutoDeleteMessages, icon: theme.icons.profile_group_destruct, type: .nextContext(text), viewType: viewType, action: arguments.autoremoveController)
         case let .inviteLinks(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+        case let .requests(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoMembersRequest, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openRequests)
         case let .linkedChannel(_, channel, _, viewType):
             let title: String
             if let address = channel.addressName {
@@ -1633,7 +1666,7 @@ enum GroupInfoSection : Int {
 }
 
 
-func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32) -> [PeerInfoEntry] {
+func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32) -> [PeerInfoEntry] {
     var entries: [GroupInfoEntry] = []
     if let group = peerViewMainPeer(view), let arguments = arguments as? GroupInfoArguments, let state = arguments.state as? GroupInfoState {
         
@@ -1692,7 +1725,6 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .singleItem))
                     }
 //                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: (view.cachedData as? CachedGroupData)?.autoremoveTimeout, viewType: .singleItem))
-                    applyBlock(actionBlock)
                 default:
                     break
                 }
@@ -1709,12 +1741,19 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         activePermissionCount = count
                     }
                     
-                    entries.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .firstItem))
+                    actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .firstItem))
+                    
+                    if joinRequestsCount > 0 {
+                        actionBlock.append(.requests(section: GroupInfoSection.type.rawValue, count: joinRequestsCount, viewType: .singleItem))
+                    }
 
                     
-                    entries.append(GroupInfoEntry.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .innerItem))
-                    entries.append(GroupInfoEntry.administrators(section: GroupInfoSection.admin.rawValue, count: "", viewType: .lastItem))
+                    actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .innerItem))
+                    actionBlock.append(.administrators(section: GroupInfoSection.type.rawValue, count: "", viewType: .lastItem))
                 }
+                
+                applyBlock(actionBlock)
+
             } else if let channel = view.peers[view.peerId] as? TelegramChannel, let cachedChannelData = view.cachedData as? CachedChannelData {
                 
                 var actionBlock:[GroupInfoEntry] = []
@@ -1735,9 +1774,6 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if cachedChannelData.flags.contains(.canSetStickerSet) && access.canEditGroupInfo {
                     actionBlock.append(.groupStickerset(section: GroupInfoSection.type.rawValue, packName: cachedChannelData.stickerPack?.title ?? "", viewType: .singleItem))
                 }
-//                if access.canEditGroupInfo {
-//                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: cachedChannelData.autoremoveTimeout, viewType: .singleItem))
-//                }
                 applyBlock(actionBlock)
                 
                 var canViewAdminsAndBanned = false
@@ -1764,7 +1800,11 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                                         
                     if (access.isCreator || access.canCreateInviteLink) {
                         block.append(.inviteLinks(section: GroupInfoSection.admin.rawValue, count: inviteLinksCount, viewType: .singleItem))
+                        if joinRequestsCount > 0 {
+                            block.append(.requests(section: GroupInfoSection.admin.rawValue, count: joinRequestsCount, viewType: .singleItem))
+                        }
                     }
+                    
 
                     if !channel.flags.contains(.isGigagroup) {
                         if access.canEditMembers {
