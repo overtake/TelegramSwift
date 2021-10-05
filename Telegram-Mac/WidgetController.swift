@@ -284,8 +284,8 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        controllers.append(WidgetRecentPeersController(context))
         controllers.append(WidgetAppearanceController(context))
+        controllers.append(WidgetRecentPeersController(context))
         controllers.append(WidgetStorageController(context))
         controllers.append(WidgetStickersController(context))
 
