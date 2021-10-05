@@ -2825,7 +2825,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             
             return account.postbox.transaction { transaction -> [ContextMenuItem] in
                 if file.isAnimated && file.isVideo {
-                    let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
+                    let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap { $0.contents.get(RecentMediaItem.self) }
                     if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
                         items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                             let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()

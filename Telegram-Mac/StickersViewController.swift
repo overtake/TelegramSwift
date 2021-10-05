@@ -379,7 +379,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
             if !view.orderedItemListsViews[1].items.isEmpty {
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[1].items {
-                    if let entry = item.contents as? SavedStickerItem {
+                    if let entry = item.contents.get(SavedStickerItem.self) {
                         if let id = entry.file.id, ids[id] == nil, entry.file.isStaticSticker || entry.file.isAnimatedSticker {
                             ids[id] = id
                             files.append(entry.file)
@@ -402,7 +402,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
             if !view.orderedItemListsViews[0].items.isEmpty {
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[0].items {
-                    if let entry = item.contents as? RecentMediaItem {
+                    if let entry = item.contents.get(RecentMediaItem.self) {
                         if let file = entry.media as? TelegramMediaFile, let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
                             ids[id] = id
                             files.append(file)
