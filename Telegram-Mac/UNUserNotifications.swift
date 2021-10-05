@@ -281,22 +281,24 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.userInfo = notification.userInfo ?? [:]
         let soundSettings = self.soundSettings
         
-        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
-                        
-            if let soundName = notification.soundName {
-                if soundName == "default" {
-                    content.sound = .default
-                } else {
-                    if let soundSettings = soundSettings {
-                        switch soundSettings {
-                        case .enabled:
-                            appDelegate?.playSound(soundName)
-                        default:
-                            break
-                        }
+        if let soundName = notification.soundName {
+            if soundName == "default" {
+                content.sound = .default
+            } else {
+                if let soundSettings = soundSettings {
+                    switch soundSettings {
+                    case .enabled:
+                        appDelegate?.playSound(soundName)
+                    default:
+                        break
                     }
                 }
             }
+        }
+        
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
+                        
+           
         })
     }
     
