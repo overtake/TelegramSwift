@@ -40,7 +40,7 @@ class ChatLayoutUtils: NSObject {
                     if contentSize.width < 50 && contentSize.height < 50 {
                         contentSize = maxSize
                     }
-                } else if case .Audio = attr {
+                } else if case .Audio = attr, !file.isVideo {
                     return NSMakeSize(width, 40)
                 }
             }
