@@ -2378,6 +2378,58 @@ class ChatRowItem: TableRowItem {
     func resendMessage(_ ids: [MessageId]) {
        _ = resendMessages(account: context.account, messageIds: ids).start()
     }
+    func resendFailed(_ messageId: MessageId) {
+        let signal = chatInteraction.context.account.postbox.transaction { transaction -> [MessageId] in
+            return transaction.getMessageFailedGroup(messageId)?.compactMap({$0.id}) ?? []
+        } |> deliverOnMainQueue
+
+        
+        _ = signal.start(next: { [weak self] ids in
+            guard let context = self?.chatInteraction.context else {
+                return
+            }
+            if !ids.isEmpty {
+                let alert:NSAlert = NSAlert()
+                alert.window.appearance = theme.appearance
+                alert.alertStyle = .informational
+                alert.messageText = L10n.alertSendErrorHeader
+                alert.informativeText = L10n.alertSendErrorText
+                
+                
+                alert.addButton(withTitle: L10n.alertSendErrorResend)
+                
+                if ids.count > 1 {
+                    alert.addButton(withTitle: L10n.alertSendErrorResendItemsCountable(ids.count))
+                }
+                
+                alert.addButton(withTitle: L10n.alertSendErrorDelete)
+                
+               
+                
+                alert.addButton(withTitle: L10n.alertSendErrorIgnore)
+                
+                
+                alert.beginSheetModal(for: context.window, completionHandler: { response in
+                    switch response.rawValue {
+                    case 1000:
+                        self?.resendMessage([messageId])
+                    case 1001:
+                        if ids.count > 1 {
+                            self?.resendMessage(ids)
+                        } else {
+                            self?.deleteMessage()
+                        }
+                    case 1002:
+                        if ids.count > 1 {
+                            self?.deleteMessage()
+                        }
+                    default:
+                        break
+                    }
+                })
+            }
+        })
+    }
     
     func makeContentSize(_ width:CGFloat) -> NSSize {
         

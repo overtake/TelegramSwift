@@ -118,7 +118,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame(item).maxY) - 30
         let animated = animated && visibleRect.height > 0 && !clean && self.layer?.animation(forKey: "position") == nil
         let rect = self.frame
-        bubbleView.update(rect: rect.offsetBy(dx: 0, dy: inset), within: size, animated: animated, rotated: rotated)
+        bubbleView.update(rect: rect.offsetBy(dx: bubbleFrame(item).minX, dy: inset), within: size, animated: animated, rotated: rotated)
     }
     
 //    func updateFloatingPhoto() {
@@ -351,64 +351,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         
-        
         if let item = item as? ChatRowItem, !item.chatInteraction.isLogInteraction && !item.chatInteraction.disableSelectAbility, !item.sending, mouseInside(), !mouseDragged {
-            
-            if item.chatInteraction.presentation.state == .selecting {
-                forceSelectItem(item, onRightClick: false)
-            } else  {
+            if item.chatInteraction.presentation.state != .selecting {
                 let location = self.convert(event.locationInWindow, from: nil)
                 if NSPointInRect(location, rightView.frame) {
                     if item.isFailed,  let messageId = item.message?.id {
-                        
-                       
-                        
-                        let signal = item.context.account.postbox.transaction { transaction -> [MessageId] in
-                            return transaction.getMessageFailedGroup(messageId)?.compactMap({$0.id}) ?? []
-                        } |> deliverOnMainQueue
-
-                        
-                        _ = signal.start(next: { ids in
-                            let alert:NSAlert = NSAlert()
-                            alert.window.appearance = theme.appearance
-                            alert.alertStyle = .informational
-                            alert.messageText = L10n.alertSendErrorHeader
-                            alert.informativeText = L10n.alertSendErrorText
-                            
-                           
-                            
-                            alert.addButton(withTitle: L10n.alertSendErrorResend)
-                            
-                            if ids.count > 1 {
-                                alert.addButton(withTitle: L10n.alertSendErrorResendItemsCountable(ids.count))
-                            }
-                            
-                            alert.addButton(withTitle: L10n.alertSendErrorDelete)
-                            
-                           
-                            
-                            alert.addButton(withTitle: L10n.alertSendErrorIgnore)
-                            
-                            
-                            alert.beginSheetModal(for: mainWindow, completionHandler: { [weak item] response in
-                                switch response.rawValue {
-                                case 1000:
-                                    item?.resendMessage([messageId])
-                                case 1001:
-                                    if ids.count > 1 {
-                                        item?.resendMessage(ids)
-                                    } else {
-                                        item?.deleteMessage()
-                                    }
-                                case 1002:
-                                    if ids.count > 1 {
-                                        item?.deleteMessage()
-                                    }
-                                default:
-                                    break
-                                }
-                            })
-                        })
+                        item.resendFailed(messageId)
                     } else {
                         forceSelectItem(item, onRightClick: true)
                     }
