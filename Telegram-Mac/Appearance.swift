@@ -1532,7 +1532,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
     var backgroundMode: TableBackgroundMode
     switch wallpaper {
     case .builtin:
-        backgroundMode = TelegramPresentationTheme.defaultBackground
+        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
     case let.color(color):
         backgroundMode = .color(color: NSColor(color))
     case let .gradient(_, colors, rotation):
@@ -1541,7 +1541,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
-            backgroundMode = TelegramPresentationTheme.defaultBackground
+            backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
         }
         
     case let .file(_, file, settings, _):
@@ -1550,7 +1550,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
             let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
             
             var image = image
-            if presentation.colors.isDark, settings.colors.count > 1 {
+            if palette.isDark, settings.colors.count > 1 {
                 image = generateImage(image.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
                     ctx.setFillColor(NSColor.black.cgColor)
@@ -1565,7 +1565,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
 
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
-            backgroundMode = TelegramPresentationTheme.defaultBackground
+            backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
         }
     case .none:
         backgroundMode = .color(color: palette.chatBackground)
@@ -1573,7 +1573,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
             backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
         } else {
-            backgroundMode = TelegramPresentationTheme.defaultBackground
+            backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
         }
     }
     return backgroundMode
@@ -1582,10 +1582,25 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
     #endif
 }
 #if !SHARE
-private func builtinBackgound() -> NSImage {
+private func builtinBackgound(_ palette: ColorPalette) -> NSImage {
     var data = try! Data(contentsOf: Bundle.main.url(forResource: "builtin-wallpaper-svg", withExtension: nil)!)
     data = TGGUnzipData(data, 8 * 1024 * 1024)!
-    return drawSvgImageNano(data, NSMakeSize(400, 800))!
+    var image = drawSvgImageNano(data, NSMakeSize(400, 800))!
+    
+    let intense = CGFloat(0.5)
+    if palette.isDark {
+        image = generateImage(image.size, contextGenerator: { size, ctx in
+            ctx.clear(size.bounds)
+            ctx.setFillColor(NSColor.black.cgColor)
+            ctx.fill(size.bounds)
+            ctx.clip(to: size.bounds, mask: image._cgImage!)
+            
+            ctx.clear(size.bounds)
+            ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+            ctx.fill(size.bounds)
+        })!._NSImage
+    }
+    return image
 }
 #endif
 class TelegramPresentationTheme : PresentationTheme {
@@ -1600,7 +1615,9 @@ class TelegramPresentationTheme : PresentationTheme {
     let wallpaper: ThemeWallpaper
     
     #if !SHARE
-    static let defaultBackground: TableBackgroundMode = .background(image: builtinBackgound(), intensity: nil, colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+    static func defaultBackground(_ palette: ColorPalette)-> TableBackgroundMode {
+        return .background(image: builtinBackgound(palette), intensity: nil, colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+    }
     #endif
 
    

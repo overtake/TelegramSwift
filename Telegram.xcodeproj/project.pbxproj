@@ -35,6 +35,8 @@
 		27335F0325C8295200FD040C /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0225C8295100FD040C /* GroupVideoView.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
+		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
+		2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */; };
 		273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC4DA9D21DD1C6C003E2A62 /* ImageCompression.swift */; };
 		273BE6CB26136D5200AAFE4E /* Mozjpeg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D0A51D3524F7EC2100D75641 /* Mozjpeg.framework */; };
 		2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */ = {isa = PBXBuildFile; fileRef = 2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */; };
@@ -1159,6 +1161,8 @@
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
+		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
+		2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerRequestJoinRowItem.swift; sourceTree = "<group>"; };
 		273F9C0A257BC486004EC51B /* HotKey.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HotKey.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2740AA3926BD5CEF004B3BCE /* builtin-wallpaper-svg */ = {isa = PBXFileReference; lastKnownFileType = file; path = "builtin-wallpaper-svg"; sourceTree = "<group>"; };
 		2744018426E6344D0035C55D /* WidgetRecentPeersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRecentPeersController.swift; sourceTree = "<group>"; };
@@ -2338,6 +2342,8 @@
 			children = (
 				2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */,
 				2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */,
+				2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */,
+				2738CADB27071F5900CDB1BF /* PeerRequestJoinRowItem.swift */,
 			);
 			name = "request-join";
 			sourceTree = "<group>";
@@ -5855,6 +5861,7 @@
 				9F1AE5E420B6D7AA002A9D8D /* LocationPlaceSuggestionRowItem.swift in Sources */,
 				A789E08423E05EAE00AEB34A /* ChatListFiltersListController.swift in Sources */,
 				C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */,
+				2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */,
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
 				9F354E9C2270630A006F1D42 /* HapticEngine.swift in Sources */,
 				27A0A4E725F7764600B789AF /* GroupCallPeerAvatarRowItem.swift in Sources */,
@@ -6106,6 +6113,7 @@
 				C230BEB21EE97B290029586C /* ChannelEventLogController.swift in Sources */,
 				C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */,
 				C2905E1E207E545600990AD7 /* InstantPageAudioItem.swift in Sources */,
+				2738CADC27071F5900CDB1BF /* PeerRequestJoinRowItem.swift in Sources */,
 				D074A56724A1DF5200E92F8A /* VoipDerivedState.swift in Sources */,
 				C2F93A2D1F3C55C500BCD48F /* EmojiToleranceController.swift in Sources */,
 				D071E8A6214A805C001B6024 /* ChatTouchBar.swift in Sources */,

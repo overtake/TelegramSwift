@@ -20,7 +20,8 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-
+    var peer: PeerEquatable?
+    
 }
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -33,6 +34,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     // entries
+    if let peer = state.peer?.peer {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("value"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return RequestJoinChatRowItem(initialSize, stableId: stableId, context: arguments.context, peer: peer, viewType: .singleItem)
+        }))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "This channel accepts new subscribtions only after they are approved by it's admins.", font: .normal(.text), color: theme.colors.grayText)
+        }))
+        index += 1
+        
+    }
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -56,6 +73,21 @@ func RequestJoinChatModalController(context: AccountContext, peerId: PeerId) -> 
 
     let arguments = Arguments(context: context)
     
+    let peerSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
+    
+    actionsDisposable.add(peerSignal.start(next: { peer in
+        updateState { current in
+            var current = current
+            if let peer = peer?._asPeer() {
+                current.peer = .init(peer)
+            } else {
+                current.peer = nil
+            }
+            return current
+        }
+    }))
+    
+    
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
@@ -78,6 +110,10 @@ func RequestJoinChatModalController(context: AccountContext, peerId: PeerId) -> 
     
     close = { [weak modalController] in
         modalController?.modal?.close()
+    }
+    
+    controller.afterTransaction = { controller in
+        
     }
     
     return modalController

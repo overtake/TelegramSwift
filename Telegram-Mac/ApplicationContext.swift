@@ -527,40 +527,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         
-        #if DEBUG
-        window.set(handler: { _ -> KeyHandlerResult in
-            
-            
-            showModal(with: RequestJoinChatModalController(context: context, peerId: context.peerId), for: window)
-            
-//            filePanel(with: ["webp"], allowMultiple: false, for: window, completion: { values in
-//                if let first = values?.first {
-//                    showModal(with: AnimatedWebpController(context: context, path: first), for: window)
-//                }
-//            })
-            
-//            showModalText(for: context.window, text: "qkwjeh fkqwejfh qkwef hqwkef hqwkef hqwkef hqwkef hqwekf qwhflkj")
-
-//
-//            _ = presentDesktopCapturerWindow(select: { _ in
-//
-//            }, devices: context.sharedContext.devicesContext)
-            
-//            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
-//                if let first = values?.first {
-//                    let asset = AVURLAsset(url: URL(fileURLWithPath: first))
-//                    let track = asset.tracks(withMediaType: .video).first
-//                    if let track = track {
-//                        showModal(with: VideoAvatarModalController(context: context, asset: asset, track: track), for: window)
-//                    }
-//                }
-//            })
-          //  showModal(with: VideoAvatarModalController(context: context), for: window)
-            
-          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
-        #endif
+//        #if DEBUG
+//        window.set(handler: { _ -> KeyHandlerResult in
+//            showModal(with: RequestJoinChatModalController(context: context, peerId: context.peerId), for: window)
+//          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+//            return .invoked
+//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
+//        #endif
+//        
+//        #if DEBUG
+//        window.set(handler: { _ -> KeyHandlerResult in
+//            context.sharedContext.bindings.rootNavigation().push(RequestJoinMemberListController(context: context, peerId: context.peerId))
+//            return .invoked
+//        }, with: self, for: .Y, priority: .supreme, modifierFlags: .command)
+//        #endif
         
         
         appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in

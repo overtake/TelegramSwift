@@ -248,7 +248,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
             if bubbled {
                 switch wallpaper {
                 case .builtin:
-                    backgroundMode = TelegramPresentationTheme.defaultBackground
+                    backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
                 case let .gradient(_, colors, rotation):
@@ -257,14 +257,14 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                     
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
@@ -272,7 +272,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
                         backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 }
             } else {
@@ -367,7 +367,7 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
             if bubbled {
                 switch wallpaper {
                 case .builtin:
-                    backgroundMode = TelegramPresentationTheme.defaultBackground
+                    backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
                 case let .gradient(_, colors, rotation):
@@ -376,14 +376,14 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                     
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
@@ -391,7 +391,7 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
                         backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 }
             } else {

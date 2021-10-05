@@ -124,7 +124,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
                         var items: [ContextMenuItem] = []
                         if let mediaId = file.id {
-                            let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
+                            let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap { $0.contents.get(RecentMediaItem.self) }
                             if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
                                 items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
                                     let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
@@ -170,7 +170,7 @@ private func prepareTabTransition(left:[GifTabEntry], right:[GifTabEntry], initi
 private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
         
-        let result: [ChatContextResult] = view.items.compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map { file in
+        let result: [ChatContextResult] = view.items.compactMap({ $0.contents.get(RecentMediaItem.self)?.media }).map { file in
             let reference = ChatContextResult.InternalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: file, message: .auto(caption: "", entities: nil, replyMarkup: nil))
             return .internalReference(reference)
         }
