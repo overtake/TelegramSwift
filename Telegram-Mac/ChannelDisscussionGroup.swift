@@ -308,8 +308,16 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     }
     
     
-    let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none)
-    let searchPromise: ValuePromise<TableSearchViewState> = ValuePromise(.none, ignoreRepeated: true)
+    let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in
+        updateState {
+            $0.withUpdatedSearchState(searchState)
+        }
+    }))
+    let searchPromise: ValuePromise<TableSearchViewState> = ValuePromise(.none({ searchState in
+        updateState {
+            $0.withUpdatedSearchState(searchState)
+        }
+    }), ignoreRepeated: true)
     let updateSearchValue:((TableSearchViewState)->TableSearchViewState)->Void = { f in
         searchPromise.set(searchValue.modify(f))
     }
@@ -317,7 +325,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     
     let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: {
         updateSearchValue { _ in
-            return .none
+            return .none({ searchState in
+                updateState {
+                    $0.withUpdatedSearchState(searchState)
+                }
+            })
         }
     }, updateState: { searchState in
         updateState {
@@ -359,7 +371,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
                 context.sharedContext.bindings.rootNavigation().back()
             }
             updateSearchValue { current in
-                return .none
+                return .none({ searchState in
+                    updateState {
+                        $0.withUpdatedSearchState(searchState)
+                    }
+                })
             }
         }, error: { upgradeError, discussError in
             if let error = upgradeError {
@@ -468,7 +484,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
                 case .none:
                     return .visible(searchData)
                 case .visible:
-                    return .none
+                    return .none({ searchState in
+                        updateState {
+                            $0.withUpdatedSearchState(searchState)
+                        }
+                    })
                 }
             }
         }, for: .Click)
@@ -513,7 +533,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
                 case .none:
                     return .visible(searchData)
                 case .visible:
-                    return .none
+                    return .none({ searchState in
+                        updateState {
+                            $0.withUpdatedSearchState(searchState)
+                        }
+                    })
                 }
             }
         }

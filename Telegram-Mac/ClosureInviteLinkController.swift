@@ -20,12 +20,14 @@ private final class InviteLinkArguments {
     let limitDate: (Int32)->Void
     let tempCount:(Int32?)->Void
     let tempDate:(Int32?)->Void
-    init(context: AccountContext, usageLimit: @escaping(Int32)->Void, limitDate: @escaping(Int32)->Void, tempCount:@escaping(Int32?)->Void, tempDate: @escaping(Int32?)->Void) {
+    let toggleRequestApproval: (Bool)->Void
+    init(context: AccountContext, usageLimit: @escaping(Int32)->Void, limitDate: @escaping(Int32)->Void, tempCount:@escaping(Int32?)->Void, tempDate: @escaping(Int32?)->Void, toggleRequestApproval: @escaping(Bool)->Void) {
         self.context = context
         self.usageLimit = usageLimit
         self.limitDate = limitDate
         self.tempCount = tempCount
         self.tempDate = tempDate
+        self.toggleRequestApproval = toggleRequestApproval
     }
 }
 
@@ -34,6 +36,7 @@ struct ClosureInviteLinkState: Equatable {
     fileprivate(set) var count: Int32
     fileprivate var tempCount: Int32?
     fileprivate var tempDate: Int32?
+    fileprivate(set) var requestApproval: Bool
 }
 
 //
@@ -43,13 +46,16 @@ private let _id_period_precise = InputDataIdentifier("_id_period_precise")
 private let _id_count = InputDataIdentifier("_id_count")
 private let _id_count_precise = InputDataIdentifier("_id_count_precise")
 
+
+private let _id_request_approval = InputDataIdentifier("_id_request_approval")
+
 private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteLinkArguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -110,7 +116,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationExpiryDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -169,7 +175,28 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     index += 1
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    sectionId += 1
+    
+    
+   
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: L10n.editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
+        arguments.toggleRequestApproval(state.requestApproval)
+    })))
+
+    
+    let requestApprovalText: String
+    if state.requestApproval {
+        requestApprovalText = L10n.editInvitationRequestApprovalChannelOn
+    } else {
+        requestApprovalText = L10n.editInvitationRequestApprovalChannelOff
+    }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+    
+    
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -206,7 +233,7 @@ enum InviteLinkClosureMode {
 }
 
 func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: InviteLinkClosureMode, save:@escaping(ClosureInviteLinkState)->Void) -> InputDataModalController {
-    var initialState = ClosureInviteLinkState(date: 0, count: 0)
+    var initialState = ClosureInviteLinkState(date: 0, count: 0, requestApproval: false)
     let week: Int32 = 60 * 60 * 24 * 1 * 7
     switch mode {
     case .new:
@@ -218,6 +245,7 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         } else {
             initialState.date = week
         }
+        initialState.requestApproval = invitation.requestApproval
         initialState.tempDate = initialState.date
         if let alreadyCount = invitation.count, let usageLimit = invitation.usageLimit {
             initialState.count = usageLimit - alreadyCount
@@ -261,6 +289,12 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
             current.tempDate = value
             return current
         }
+    }, toggleRequestApproval: { value in
+        updateState { current in
+            var current = current
+            current.requestApproval = !value
+            return current
+        }
     })
     
     let dataSignal = state.get() |> deliverOnPrepareQueue |> map { state in
@@ -279,7 +313,6 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     })
     
     controller.updateDatas = { data in
-       
         return .none
     }
     

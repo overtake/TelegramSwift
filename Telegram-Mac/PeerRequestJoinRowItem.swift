@@ -17,29 +17,38 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
     
     fileprivate let nameLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
-    fileprivate let aboutLayout: TextViewLayout
+    fileprivate let aboutLayout: TextViewLayout?
 
     fileprivate let add: (PeerId)->Void
     fileprivate let dismiss: (PeerId)->Void
-    
+    fileprivate let openInfo:(PeerId)->Void
     fileprivate let statusLayout: TextViewLayout?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, data: PeerRequestChatJoinData, add: @escaping(PeerId)->Void, dismiss: @escaping(PeerId)->Void, viewType: GeneralViewType) {
+    fileprivate let isChannel: Bool
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isChannel: Bool, data: PeerRequestChatJoinData, add: @escaping(PeerId)->Void, dismiss: @escaping(PeerId)->Void, openInfo:@escaping(PeerId)->Void, viewType: GeneralViewType) {
         self.data = data
         self.context = context
         self.add = add
         self.dismiss = dismiss
+        self.openInfo = openInfo
+        self.isChannel = isChannel
         self.nameLayout = TextViewLayout(.initialize(string: data.peer.peer.displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
         
-        self.aboutLayout = TextViewLayout(.initialize(string: data.about, color: theme.colors.grayText, font: .normal(.text)))
+        if let about = data.about {
+            self.aboutLayout = TextViewLayout(.initialize(string: about, color: theme.colors.grayText, font: .normal(.text)))
+        } else {
+            self.aboutLayout = nil
+        }
         self.dateLayout = TextViewLayout(.initialize(string: DateUtils.string(forMessageListDate: Int32(data.timeInterval)), color: theme.colors.grayText, font: .normal(.text)))
         
         if data.added || data.dismissed {
             let text: String
+            //TODOLANG
             if data.added {
-                text = "\(data.peer.peer.compactDisplayTitle) is added"
+                text = "Approved"
             } else {
-                text = "\(data.peer.peer.compactDisplayTitle) is dismissed"
+                text = "Dismissed"
             }
             self.statusLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .medium(.text)))
         } else {
@@ -51,13 +60,17 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
     
     override var height: CGFloat {
         let inset = viewType.innerInset
-        return max(inset.top + nameLayout.layoutSize.height + inset.top / 2 + aboutLayout.layoutSize.height + 30 + inset.bottom * 2, 40 + inset.top + inset.bottom)
+        var height: CGFloat =  max(inset.top + nameLayout.layoutSize.height + 30 + inset.bottom * 2, 40 + inset.top + inset.bottom)
+        if let about = self.aboutLayout {
+            height += inset.top / 2 + about.layoutSize.height
+        }
+        return height
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.aboutLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right - 40 - viewType.innerInset.right)
+        self.aboutLayout?.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right - 40 - viewType.innerInset.right)
         self.dateLayout.measure(width: .greatestFiniteMagnitude)
         self.nameLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right - 40 - viewType.innerInset.left - self.dateLayout.layoutSize.width - viewType.innerInset.right)
         
@@ -113,6 +126,13 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
             }
             item.dismiss(item.data.peer.peer.id)
         }, for: .Click)
+        
+        self.avatar.set(handler: { [weak self] _ in
+            guard let item = self?.item as? PeerRequestJoinRowItem else {
+                return
+            }
+            item.openInfo(item.data.peer.peer.id)
+        }, for: .Click)
     }
     
     
@@ -151,7 +171,7 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         
         avatar.setPeer(account: item.context.account, peer: item.data.peer.peer)
         
-        self.addButton.set(text: "Add to Channel", for: .Normal)
+        self.addButton.set(text: item.isChannel ? L10n.requestJoinListApproveChannel : L10n.requestJoinListApproveGroup, for: .Normal)
         self.addButton.set(font: .medium(.text), for: .Normal)
         self.addButton.set(color: theme.colors.underSelectedColor, for: .Normal)
         self.addButton.set(background: theme.colors.accent, for: .Normal)
@@ -160,7 +180,7 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         self.addButton.layer?.cornerRadius = self.addButton.frame.height / 2
         
         
-        self.dismissButton.set(text: "Dismiss", for: .Normal)
+        self.dismissButton.set(text: L10n.requestJoinListApproveDismiss, for: .Normal)
         self.dismissButton.set(font: .medium(.text), for: .Normal)
         self.dismissButton.set(color: theme.colors.accent, for: .Normal)
         self.dismissButton.set(color: theme.colors.accent.lighter(), for: .Highlight)

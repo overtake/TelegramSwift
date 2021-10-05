@@ -156,7 +156,7 @@ public struct TableSearchVisibleData {
 }
 
 public enum TableSearchViewState : Equatable {
-    case none
+    case none((SearchState)->Void)
     case visible(TableSearchVisibleData)
     
     public static func ==(lhs: TableSearchViewState, rhs: TableSearchViewState) -> Bool {
@@ -2628,13 +2628,25 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 return
             }
             switch searchState {
-            case .none:
+            case let .none(updateState):
                 searchView.change(pos: NSMakePoint(0, -searchView.frame.height), animated: true)
                 searchView.searchView.cancel(true)
+                
+                searchView.searchView.searchInteractions = SearchInteractions({ state, _ in
+                    updateState(state)
+                }, { state in
+                    updateState(state)
+                })
             case let .visible(data):
                 searchView.change(pos: NSZeroPoint, animated: true)
                 searchView.applySearchResponder()
                 searchView.updateDatas(data)
+                
+                searchView.searchView.searchInteractions = SearchInteractions({ state, _ in
+                    data.updateState(state)
+                }, { state in
+                    data.updateState(state)
+                })
             }
         } else {
             self.searchView?.removeFromSuperview()

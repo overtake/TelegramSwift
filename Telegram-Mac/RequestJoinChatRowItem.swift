@@ -14,20 +14,36 @@ import TelegramCore
 
 final class RequestJoinChatRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
-    fileprivate let peer: Peer
     fileprivate let titleLayout: TextViewLayout
     fileprivate let statusLayout: TextViewLayout
-    fileprivate let aboutLayout: TextViewLayout
+    fileprivate let aboutLayout: TextViewLayout?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, viewType: GeneralViewType) {
+    fileprivate let photo: TelegramMediaImageRepresentation?
+    fileprivate let peer: Peer
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, photo: TelegramMediaImageRepresentation?, title: String, about: String?, participantsCount: Int, isChannelOrMegagroup: Bool, viewType: GeneralViewType) {
         self.context = context
-        self.peer = peer
+        self.photo = photo
         
-        self.titleLayout = TextViewLayout(.initialize(string: peer.displayTitle, color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1, truncationType: .middle)
+        self.titleLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1, truncationType: .middle)
         
-        self.statusLayout = TextViewLayout(.initialize(string: "48,000 subscribers", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        
+        self.peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt64Value(0)), title: title, photo: [photo].compactMap { $0 }, participantCount: 0, role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
 
-        self.aboutLayout = TextViewLayout(.initialize(string: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        
+        let countText: String
+        if isChannelOrMegagroup {
+            countText = L10n.peerStatusSubscribersCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
+        } else {
+            countText = L10n.peerStatusMemberCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
+        }
+        
+        self.statusLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+
+        if let about = about {
+            self.aboutLayout = TextViewLayout(.initialize(string: about, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        } else {
+            self.aboutLayout = nil
+        }
 
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -35,7 +51,13 @@ final class RequestJoinChatRowItem : GeneralRowItem {
     
     override var height: CGFloat {
         let top = self.viewType.innerInset.top
-        return top + 80 + top + self.titleLayout.layoutSize.height + self.statusLayout.layoutSize.height + top + self.aboutLayout.layoutSize.height + top
+        
+        var height = top + 80 + top + self.titleLayout.layoutSize.height + self.statusLayout.layoutSize.height + top
+        if let about = aboutLayout {
+            height += top + about.layoutSize.height
+        }
+        
+        return height
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -43,7 +65,7 @@ final class RequestJoinChatRowItem : GeneralRowItem {
         
         self.titleLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
         self.statusLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
-        self.aboutLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
+        self.aboutLayout?.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
 
         return true
     }
@@ -55,7 +77,7 @@ final class RequestJoinChatRowItem : GeneralRowItem {
 
 
 private final class RequestJoinChatRowView : GeneralContainableRowView {
-    private let avatar: AvatarControl = AvatarControl(font: .avatar(20))
+    private let avatar: AvatarControl = AvatarControl(font: .avatar(30))
     private let titleView = TextView()
     private let statusView = TextView()
     private let aboutView = TextView()

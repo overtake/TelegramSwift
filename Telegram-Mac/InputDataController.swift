@@ -356,7 +356,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var centerModalHeader: ModalHeaderData? = nil
     var keyWindowUpdate:(Bool, InputDataController) -> Void = { _, _ in }
     var hasBackSwipe:()->Bool = { return true }
-    private let searchKeyInvocation:() -> InputDataDeleteResult
+    var searchKeyInvocation:() -> InputDataDeleteResult
     var getBackgroundColor: ()->NSColor
     let identifier: String
     var ignoreRightBarHandler: Bool = false

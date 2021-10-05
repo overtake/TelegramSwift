@@ -96,7 +96,7 @@ struct AutoNightThemePreferences: Codable, Equatable {
                 try container.encode(to, forKey: "to")
             }
         } else {
-            try container.encode(0, forKey: "t")
+            try container.encode(Int32(0), forKey: "t")
         }
     }
     

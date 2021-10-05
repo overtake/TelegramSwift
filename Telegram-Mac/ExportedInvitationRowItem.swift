@@ -336,67 +336,70 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         let duration: Double = 0.4
         let timingFunction: CAMediaTimingFunctionName = .spring
         
-        var topPeers: [Avatar] = []
-        if !item.lastPeers.isEmpty {
-            var index:Int = 0
-            for participant in item.lastPeers {
-                if let peer = participant.peer {
-                    topPeers.append(Avatar(peer: peer, index: index))
-                    index += 1
+        if item.exportedLink != nil {
+            var topPeers: [Avatar] = []
+            if !item.lastPeers.isEmpty {
+                var index:Int = 0
+                for participant in item.lastPeers {
+                    if let peer = participant.peer {
+                        topPeers.append(Avatar(peer: peer, index: index))
+                        index += 1
+                    }
                 }
             }
-        }
-        
-        let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.topPeers, rightList: topPeers)
-        
-        let avatarSize = NSMakeSize(38, 38)
-        
-        for removed in removed.reversed() {
-            let control = avatars.remove(at: removed)
-            let peer = self.topPeers[removed]
-            let haveNext = topPeers.contains(where: { $0.stableId == peer.stableId })
-            control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: false, animated: animated)
-            control.layer?.opacity = 0
-            if animated && !haveNext {
-                control.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
-                    control?.removeFromSuperview()
-                })
-                control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: duration, bounce: false)
-            } else {
-                control.removeFromSuperview()
-            }
-        }
-        for inserted in inserted {
-            let control = AvatarContentView(context: item.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: avatarSize, inset: 6)
-            control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: inserted.0 != 0, animated: animated)
-            control.userInteractionEnabled = false
-            control.setFrameSize(avatarSize)
-            control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * (avatarSize.width - 14), 0))
-            avatars.insert(control, at: inserted.0)
-            avatarsContainer.subviews.insert(control, at: inserted.0)
-            if animated {
-                if let index = inserted.2 {
-                    control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * (avatarSize.width - 14), 0), to: control.frame.origin, timingFunction: timingFunction)
+            
+            let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.topPeers, rightList: topPeers)
+            
+            let avatarSize = NSMakeSize(38, 38)
+            
+            for removed in removed.reversed() {
+                let control = avatars.remove(at: removed)
+                let peer = self.topPeers[removed]
+                let haveNext = topPeers.contains(where: { $0.stableId == peer.stableId })
+                control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: false, animated: animated)
+                control.layer?.opacity = 0
+                if animated && !haveNext {
+                    control.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
+                        control?.removeFromSuperview()
+                    })
+                    control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: duration, bounce: false)
                 } else {
-                    control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
-                    control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration, bounce: false)
+                    control.removeFromSuperview()
                 }
             }
-        }
-        for updated in updated {
-            let control = avatars[updated.0]
-            control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: updated.0 != 0, animated: animated)
-            let updatedPoint = NSMakePoint(CGFloat(updated.0) * (avatarSize.width - 14), 0)
-            if animated {
-                control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
+            for inserted in inserted {
+                let control = AvatarContentView(context: item.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: avatarSize, inset: 6)
+                control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: inserted.0 != 0, animated: animated)
+                control.userInteractionEnabled = false
+                control.setFrameSize(avatarSize)
+                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * (avatarSize.width - 14), 0))
+                avatars.insert(control, at: inserted.0)
+                avatarsContainer.subviews.insert(control, at: inserted.0)
+                if animated {
+                    if let index = inserted.2 {
+                        control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * (avatarSize.width - 14), 0), to: control.frame.origin, timingFunction: timingFunction)
+                    } else {
+                        control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
+                        control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration, bounce: false)
+                    }
+                }
             }
-            control.setFrameOrigin(updatedPoint)
+            for updated in updated {
+                let control = avatars[updated.0]
+                control.updateLayout(size: avatarSize - NSMakeSize(8, 8), isClipped: updated.0 != 0, animated: animated)
+                let updatedPoint = NSMakePoint(CGFloat(updated.0) * (avatarSize.width - 14), 0)
+                if animated {
+                    control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
+                }
+                control.setFrameOrigin(updatedPoint)
+            }
+            var index: CGFloat = 10
+            for control in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }) {
+                control.layer?.zPosition = index
+                index -= 1
+            }
         }
-        var index: CGFloat = 10
-        for control in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }) {
-            control.layer?.zPosition = index
-            index -= 1
-        }
+       
                 
         share.set(font: .medium(.text), for: .Normal)
         share.set(text: L10n.manageLinksContextShare, for: .Normal)

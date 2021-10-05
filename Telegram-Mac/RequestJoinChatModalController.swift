@@ -20,7 +20,12 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var peer: PeerEquatable?
+    let flags: ExternalJoiningChatState.InviteFlags
+    let title: String
+    let about: String?
+    let photoRepresentation: TelegramMediaImageRepresentation?
+    let participantsCount: Int32
+    let isChannelOrMegagroup: Bool
     
 }
 
@@ -34,22 +39,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     // entries
-    if let peer = state.peer?.peer {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("value"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return RequestJoinChatRowItem(initialSize, stableId: stableId, context: arguments.context, peer: peer, viewType: .singleItem)
-        }))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "This channel accepts new subscribtions only after they are approved by it's admins.", font: .normal(.text), color: theme.colors.grayText)
-        }))
-        index += 1
-        
-    }
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("value"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        return RequestJoinChatRowItem(initialSize, stableId: stableId, context: arguments.context, photo: state.photoRepresentation, title: state.title, about: state.about, participantsCount: Int(state.participantsCount), isChannelOrMegagroup: state.isChannelOrMegagroup, viewType: .singleItem)
+    }))
+    index += 1
     
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.flags.isChannel ? L10n.requestJoinDescChannel : L10n.requestJoinDescGroup, font: .normal(.text), color: theme.colors.grayText)
+    }))
+    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -57,64 +60,81 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func RequestJoinChatModalController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
+func RequestJoinChatModalController(context: AccountContext, joinhash: String, invite: ExternalJoiningChatState) -> InputDataModalController {
 
-    let actionsDisposable = DisposableSet()
 
-    let initialState = State()
-    
-    var close:(()->Void)? = nil
-    
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
-    let stateValue = Atomic(value: initialState)
-    let updateState: ((State) -> State) -> Void = { f in
-        statePromise.set(stateValue.modify (f))
-    }
+    switch invite {
+    case let .invite(flags, title, about, photoRepresentation, participantsCount, _):
+        let actionsDisposable = DisposableSet()
 
-    let arguments = Arguments(context: context)
-    
-    let peerSignal = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
-    
-    actionsDisposable.add(peerSignal.start(next: { peer in
-        updateState { current in
-            var current = current
-            if let peer = peer?._asPeer() {
-                current.peer = .init(peer)
-            } else {
-                current.peer = nil
-            }
-            return current
-        }
-    }))
-    
-    
-    let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
-    }
-    
-    let controller = InputDataController(dataSignal: signal, title: "Join Channel")
-    
-    controller.onDeinit = {
-        actionsDisposable.dispose()
-    }
-
-    let modalInteractions = ModalInteractions(acceptTitle: "Request to Join", accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
-    
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
-    
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
-        modalController?.close()
-    })
-    
-    close = { [weak modalController] in
-        modalController?.modal?.close()
-    }
-    
-    controller.afterTransaction = { controller in
+        let initialState = State(flags: flags, title: title, about: about, photoRepresentation: photoRepresentation, participantsCount: participantsCount, isChannelOrMegagroup: flags.isChannel || flags.isMegagroup)
         
+        var close:(()->Void)? = nil
+        
+        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+        let stateValue = Atomic(value: initialState)
+        let updateState: ((State) -> State) -> Void = { f in
+            statePromise.set(stateValue.modify (f))
+        }
+
+        let arguments = Arguments(context: context)
+        
+        
+        
+        let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+            return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        }
+        
+        let controller = InputDataController(dataSignal: signal, title: title)
+        
+        controller.onDeinit = {
+            actionsDisposable.dispose()
+        }
+
+        let modalInteractions = ModalInteractions(acceptTitle: L10n.requestJoinButton, accept: { [weak controller] in
+            _ = controller?.returnKeyAction()
+        }, drawBorder: true, height: 50, singleButton: true)
+        
+        let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+        
+        controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
+            modalController?.close()
+        })
+        
+        close = { [weak modalController] in
+            modalController?.modal?.close()
+        }
+        
+        controller.afterTransaction = { controller in
+            
+        }
+        
+        controller.returnKeyInvocation = { _, _ in
+            close?()
+            _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: joinhash), for: context.window).start(next: { peerId in
+                if let _ = peerId {
+                    let navigation = context.sharedContext.bindings.rootNavigation()
+                    navigation.controller.show(toaster: .init(text: L10n.requestJoinSent))
+                }
+            }, error: { error in
+                let text: String
+                switch error {
+                case .generic:
+                    text = L10n.unknownError
+                case .tooMuchJoined:
+                    showInactiveChannels(context: context, source: .join)
+                    return
+                case .tooMuchUsers:
+                    text = L10n.groupUsersTooMuchError
+                }
+                alert(for: context.window, info: text)
+            })
+            return .default
+        }
+        
+        return modalController
+    default:
+        fatalError("I thought it's impossible.")
     }
     
-    return modalController
 }
