@@ -3685,6 +3685,18 @@ internal final class L10n {
   internal static var connectingStatusUpdating: String  { return L10n.tr("Localizable", "ConnectingStatus.updating") }
   /// waiting for network
   internal static var connectingStatusWaitingNetwork: String  { return L10n.tr("Localizable", "ConnectingStatus.waitingNetwork") }
+  /// Connected
+  internal static var connectionStatusConnected: String  { return L10n.tr("Localizable", "ConnectionStatus.Connected") }
+  /// Connecting...
+  internal static var connectionStatusConnecting: String  { return L10n.tr("Localizable", "ConnectionStatus.Connecting") }
+  /// Connecting To Proxy...
+  internal static var connectionStatusConnectingToProxy: String  { return L10n.tr("Localizable", "ConnectionStatus.ConnectingToProxy") }
+  /// Updated
+  internal static var connectionStatusUpdated: String  { return L10n.tr("Localizable", "ConnectionStatus.Updated") }
+  /// Updating...
+  internal static var connectionStatusUpdating: String  { return L10n.tr("Localizable", "ConnectionStatus.Updating") }
+  /// Waiting For Network...
+  internal static var connectionStatusWaitingForNetwork: String  { return L10n.tr("Localizable", "ConnectionStatus.WaitingForNetwork") }
   /// birthday
   internal static var contactInfoBirthdayLabel: String  { return L10n.tr("Localizable", "ContactInfo.BirthdayLabel") }
   /// Contact Info

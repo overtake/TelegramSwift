@@ -332,30 +332,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
         didSet {
             if connectionStatus != oldValue {
-                if case .online = connectionStatus {
-                    
-                    //containerView.change(pos: NSMakePoint(0, 0), animated: true)
-                    if let connectionStatusView = connectionStatusView {
-                        
-                        connectionStatusView.change(pos: NSMakePoint(0, -frame.height), animated: true)
-                        connectionStatusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] completed in
-                            self?.connectionStatusView?.removeFromSuperview()
-                            self?.connectionStatusView = nil
-                        })
-                        
-                    }
-                    
-                } else {
-                    if connectionStatusView == nil {
-                        connectionStatusView = ConnectionStatusView(frame: NSMakeRect(0, -frame.height, frame.width, frame.height))
-                        connectionStatusView?.isSingleLayout = isSingleLayout
-                        connectionStatusView?.disableProxy = chatInteraction.disableProxy
-                        addSubview(connectionStatusView!)
-                        connectionStatusView?.change(pos: NSMakePoint(0,0), animated: true)
-                    }
-                    connectionStatusView?.status = connectionStatus
-                    applyVideoAvatarIfNeeded(nil)
-                }
+                self.updateStatus(presentation: self.chatInteraction.presentation)
             }
         }
     }
@@ -890,6 +867,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             } else if (status == nil || !status!.isEqual(to: result.status) || force) && chatInteraction.mode != .scheduled && chatInteraction.mode.threadId == nil && chatInteraction.mode != .pinned {
                 status = result.status
                 shouldUpdateLayout = true
+            }
+            switch connectionStatus {
+            case let .connecting(proxy, _):
+                status = .initialize(string: (proxy != nil ? L10n.chatConnectingStatusConnectingToProxy : L10n.chatConnectingStatusConnecting).lowercased(), color: theme.colors.grayText, font: .normal(.short))
+            case .updating:
+                status = .initialize(string: L10n.chatConnectingStatusUpdating.lowercased(), color: theme.colors.grayText, font: .normal(.short))
+            case .waitingForNetwork:
+                status = .initialize(string: L10n.chatConnectingStatusWaitingNetwork.lowercased(), color: theme.colors.grayText, font: .normal(.short))
+            case .online:
+                break
             }
             
             if text == nil || !text!.isEqual(to: result.title) || force {

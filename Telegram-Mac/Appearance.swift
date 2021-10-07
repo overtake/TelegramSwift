@@ -1841,7 +1841,7 @@ class TelegramPresentationTheme : PresentationTheme {
     var hasWallpaper: Bool {
         return controllerBackgroundMode.hasWallpaper
     }
-    var shoundBlurService: Bool {
+    var shouldBlurService: Bool {
         return hasWallpaper
     }
     

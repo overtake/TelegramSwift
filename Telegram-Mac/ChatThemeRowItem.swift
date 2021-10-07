@@ -130,7 +130,7 @@ private final class ChatThemeRowView: HorizontalRowView {
                 self.imageView.isHidden = false
                 self.noThemeTextView?.removeFromSuperview()
                 self.noThemeTextView = nil
-
+                self.textView.update(nil)
             }
         } else {
             let layout = TextViewLayout(.initialize(string: "❌", color: theme.colors.text, font: .normal(15)))

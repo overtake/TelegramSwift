@@ -531,33 +531,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         window.set(handler: { _ -> KeyHandlerResult in
             
             
-            showModal(with: CoreMediaVideoIOTest(context: context), for: window)
-            
-//            filePanel(with: ["webp"], allowMultiple: false, for: window, completion: { values in
-//                if let first = values?.first {
-//                    showModal(with: AnimatedWebpController(context: context, path: first), for: window)
-//                }
-//            })
-            
-//            showModalText(for: context.window, text: "qkwjeh fkqwejfh qkwef hqwkef hqwkef hqwkef hqwkef hqwekf qwhflkj")
-
-//
-//            _ = presentDesktopCapturerWindow(select: { _ in
-//
-//            }, devices: context.sharedContext.devicesContext)
-            
-//            filePanel(with: ["mov", "mp4"], allowMultiple: false, for: window, completion: { values in
-//                if let first = values?.first {
-//                    let asset = AVURLAsset(url: URL(fileURLWithPath: first))
-//                    let track = asset.tracks(withMediaType: .video).first
-//                    if let track = track {
-//                        showModal(with: VideoAvatarModalController(context: context, asset: asset, track: track), for: window)
-//                    }
-//                }
-//            })
-          //  showModal(with: VideoAvatarModalController(context: context), for: window)
-            
-          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            //showModal(with: CoreMediaVideoIOTest(context: context), for: window)
+  
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
         #endif

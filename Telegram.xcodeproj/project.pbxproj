@@ -162,6 +162,7 @@
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
 		27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB092689C71E003D6164 /* MetalFunctions.metal */; };
+		27E7E4A5270F0F9A00CF3A24 /* NetwotkStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E7E4A4270F0F9A00CF3A24 /* NetwotkStatusManager.swift */; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -1287,6 +1288,7 @@
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
 		27E6DB092689C71E003D6164 /* MetalFunctions.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalFunctions.metal; sourceTree = "<group>"; };
+		27E7E4A4270F0F9A00CF3A24 /* NetwotkStatusManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetwotkStatusManager.swift; sourceTree = "<group>"; };
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
@@ -2488,6 +2490,14 @@
 			name = formatter;
 			sourceTree = "<group>";
 		};
+		27E7E4A3270F0F8200CF3A24 /* connecting */ = {
+			isa = PBXGroup;
+			children = (
+				27E7E4A4270F0F9A00CF3A24 /* NetwotkStatusManager.swift */,
+			);
+			name = connecting;
+			sourceTree = "<group>";
+		};
 		27FE779826F4941200E1C90B /* themes */ = {
 			isa = PBXGroup;
 			children = (
@@ -3308,6 +3318,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				27E7E4A3270F0F8200CF3A24 /* connecting */,
 				D0CBB0F32492972A00620C65 /* Video-Avatar */,
 				9F354E9A227062F3006F1D42 /* haptic */,
 				9F3D5F6122044D3500CB0CAA /* updater */,
@@ -5591,6 +5602,7 @@
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
 				C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
+				27E7E4A5270F0F9A00CF3A24 /* NetwotkStatusManager.swift in Sources */,
 				D076F86D22959958004F895A /* InlineLoginController.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
 				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,

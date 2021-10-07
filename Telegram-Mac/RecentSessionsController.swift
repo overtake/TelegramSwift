@@ -256,7 +256,7 @@ private func recentSessionsControllerEntries(state: RecentSessionsControllerStat
             existingSessionIds.insert(sessions[index].hash)
             entries.append(.currentSession(sectionId: sectionId, sessions[index], viewType: .firstItem))
         }
-        entries.append(.terminateOtherSessions(sectionId: sectionId, viewType: .lastItem))
+        entries.append(.terminateOtherSessions(sectionId: sectionId, viewType: existingSessionIds.isEmpty ? .singleItem : .lastItem))
         entries.append(.currentSessionInfo(sectionId: sectionId, viewType: .textBottomItem))
         
         if sessions.count > 1 {

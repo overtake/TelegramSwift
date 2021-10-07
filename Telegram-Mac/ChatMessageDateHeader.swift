@@ -250,7 +250,7 @@ class ChatDateStickView : TableStickView {
                     return true
                 })
             }
-            if presentation.shoundBlurService {
+            if presentation.shouldBlurService {
                 textView.blurBackground = presentation.blurServiceColor
                 textView.backgroundColor = .clear
             } else {

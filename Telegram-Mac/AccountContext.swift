@@ -82,6 +82,7 @@ final class AccountContext {
     let fetchManager: FetchManager
     let diceCache: DiceCache
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
+    let networkStatusManager: NetworkStatusManager
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -203,6 +204,7 @@ final class AccountContext {
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
         self.activeSessionsContext = engine.privacy.activeSessions()
         self.webSessions = engine.privacy.webSessions()
+        self.networkStatusManager = NetworkStatusManager(account: account, window: window)
         #endif
         
         
