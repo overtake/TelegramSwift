@@ -496,6 +496,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             }
             return text
+        case .joinedByRequest:
+            let text: String
+            if message.peers[message.id.peerId]?.isChannel == true {
+                text = L10n.chatServiceJoinedChannelByRequest
+            } else {
+                text = L10n.chatServiceJoinedGroupByRequest
+            }
+            return text
         }
     }
     

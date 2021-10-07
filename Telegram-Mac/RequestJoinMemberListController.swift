@@ -41,12 +41,17 @@ struct PeerRequestChatJoinData : Equatable {
 private struct State : Equatable {
     var peer: PeerEquatable?
     var state:PeerInvitationImportersState?
-    var adding:Set<PeerId> = Set()
     var added:Set<PeerId> = Set()
-    var dismissing:Set<PeerId> = Set()
     var dismissed:Set<PeerId> = Set()
     
     var searchState: SearchState?
+    
+    var empty: Bool {
+        if let state = state {
+            return state.importers.isEmpty
+        }
+        return true
+    }
 }
 
 
@@ -55,89 +60,127 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     var sectionId:Int32 = 0
     var index: Int32 = 0
-    
-   
-    
-    
-    
-    if let peer = state.peer?.peer {
         
-        if let searchState = state.searchState {
-            switch searchState.state {
-            case .Focus:
-                entries.append(.sectionId(sectionId, type: .customModern(80)))
-                sectionId += 1
-            default:
+    if let peer = state.peer?.peer {
+        if !state.empty {
+            if let searchState = state.searchState {
+                switch searchState.state {
+                case .Focus:
+                    entries.append(.sectionId(sectionId, type: .customModern(80)))
+                    sectionId += 1
+                default:
+                    entries.append(.sectionId(sectionId, type: .normal))
+                    sectionId += 1
+                }
+                
+            } else {
                 entries.append(.sectionId(sectionId, type: .normal))
                 sectionId += 1
             }
             
-        } else {
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-        }
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            
-            
-            
-            let text: String = L10n.requestJoinListDescription
-            
-            let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
-                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in
-                    arguments.openInviteLinks()
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                
+                
+                
+                let text: String = L10n.requestJoinListDescription
+                
+                let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in
+                        arguments.openInviteLinks()
+                    }))
                 }))
+                
+                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.request_join_link, text: attr)
             }))
+            index += 1
             
-            return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: attr)
-        }))
-        index += 1
-        
-       
-        let isChannel = peer.isChannel
-        
-        if let importerState = state.state {
+           
+            let isChannel = peer.isChannel
             
-            let importers = importerState.importers.filter { $0.approvedBy == nil }.filter { value in
-                if let search = state.searchState {
-                    if !search.request.isEmpty {
-                        return value.peer.peer?.displayTitle.lowercased().components(separatedBy: " ").filter {
-                            $0.hasPrefix(search.request.lowercased())
-                        }.isEmpty == false
+            if let importerState = state.state {
+                
+                let importers = importerState.importers.filter { $0.approvedBy == nil }.filter { value in
+                    if let search = state.searchState {
+                        if !search.request.isEmpty {
+                            return value.peer.peer?.displayTitle.lowercased().components(separatedBy: " ").filter {
+                                $0.hasPrefix(search.request.lowercased())
+                            }.isEmpty == false
+                        } else {
+                            return true
+                        }
                     } else {
                         return true
                     }
-                } else {
-                    return true
+                }
+                
+
+                if !importers.isEmpty {
+                    entries.append(.sectionId(sectionId, type: .normal))
+                    sectionId += 1
+
+
+                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                    
+                    
+                    for (i, importer) in importers.enumerated() {
+                        
+                        let data: PeerRequestChatJoinData = .init(peer: PeerEquatable(importer.peer.peer!), about: importer.about, timeInterval: TimeInterval(importer.date), added: state.added.contains(importer.peer.peerId), adding: false, dismissing: false, dismissed: state.dismissed.contains(importer.peer.peerId))
+                        
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("peer_id_\(importer.peer.peerId)"), equatable: .init(data), comparable: nil, item: { initialSize, stableId in
+                            return PeerRequestJoinRowItem(initialSize, stableId: stableId, context: arguments.context, isChannel: isChannel, data: data, add: arguments.add, dismiss: arguments.dismiss, openInfo: arguments.openInfo, viewType: bestGeneralViewType(importers, for: i))
+                        }))
+                        index += 1
+                    }
+
                 }
             }
             
-
-            if !importers.isEmpty {
-                entries.append(.sectionId(sectionId, type: .normal))
-                sectionId += 1
-
-
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        } else if let _ = state.state {
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("dynamic_top"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return DynamicHeightRowItem(initialSize, stableId: stableId, side: .top)
+            }))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("center"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                 
-                
-                for (i, importer) in importers.enumerated() {
-                    
-                    let data: PeerRequestChatJoinData = .init(peer: PeerEquatable(importer.peer.peer!), about: nil, timeInterval: TimeInterval(importer.date), added: state.added.contains(importer.peer.peerId), adding: state.adding.contains(importer.peer.peerId), dismissing: state.dismissing.contains(importer.peer.peerId), dismissed: state.dismissed.contains(importer.peer.peerId))
-                    
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("peer_id_\(importer.peer.peerId)"), equatable: .init(data), comparable: nil, item: { initialSize, stableId in
-                        return PeerRequestJoinRowItem(initialSize, stableId: stableId, context: arguments.context, isChannel: isChannel, data: data, add: arguments.add, dismiss: arguments.dismiss, openInfo: arguments.openInfo, viewType: bestGeneralViewType(importers, for: i))
-                    }))
-                    index += 1
-                }
+                let attr = NSMutableAttributedString()
+                _ = attr.append(string: L10n.requestJoinListEmpty1, color: theme.colors.text, font: .medium(.header))
+                _ = attr.append(string: "\n", color: theme.colors.text, font: .medium(.header))
+                _ = attr.append(string: peer.isChannel ? L10n.requestJoinListEmpty2Channel : L10n.requestJoinListEmpty2Group, color: theme.colors.listGrayText, font: .normal(.text))
 
-            }
+                
+                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.thumbsup, text: attr)
+            }))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("dynamic_bottom"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return DynamicHeightRowItem(initialSize, stableId: stableId, side: .bottom)
+            }))
+            index += 1
+        } else {
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("dynamic_top"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return DynamicHeightRowItem(initialSize, stableId: stableId, side: .top)
+            }))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("progress"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return LoadingTableItem(initialSize, height: 100, stableId: stableId)
+            }))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("dynamic_bottom"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return DynamicHeightRowItem(initialSize, stableId: stableId, side: .bottom)
+            }))
+            index += 1
         }
-        
+       
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+
     
     return entries
 }
@@ -146,7 +189,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(peer: nil, state: nil, adding: Set(), added: Set(), dismissing: Set(), dismissed: Set(), searchState: SearchState(state: .None, request: nil))
+    let initialState = State(peer: nil, state: nil, added: Set(), dismissed: Set(), searchState: SearchState(state: .None, request: nil))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -258,7 +301,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     var updateBarIsHidden:((Bool)->Void)? = nil
 
     
-    let controller = InputDataController(dataSignal: signal, title: "Members Requests", removeAfterDisappear: false, customRightButton: { controller in
+    let controller = InputDataController(dataSignal: signal, title: L10n.requestJoinListTitle, removeAfterDisappear: false, customRightButton: { controller in
         let bar = ImageBarView(controller: controller, theme.icons.chatSearch)
         bar.button.set(handler: { _ in
             updateSearchValue { current in

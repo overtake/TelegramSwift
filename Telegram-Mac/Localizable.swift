@@ -3487,6 +3487,10 @@ internal final class L10n {
   internal static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// channel created
   internal static var chatServiceChannelCreated: String  { return L10n.tr("Localizable", "ChatService.ChannelCreated") }
+  /// Your request to join the channel was approved
+  internal static var chatServiceJoinedChannelByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedChannelByRequest") }
+  /// Your request to join the group was approved
+  internal static var chatServiceJoinedGroupByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedGroupByRequest") }
   /// Report Messages
   internal static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default
@@ -4999,6 +5003,32 @@ internal final class L10n {
   internal static func inviteLinkRemainingZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.Remaining_zero", p1)
   }
+  /// %d
+  internal static func inviteLinkRequestedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_countable", p1)
+  }
+  /// %d requested
+  internal static func inviteLinkRequestedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_few", p1)
+  }
+  /// %d requested
+  internal static func inviteLinkRequestedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_many", p1)
+  }
+  /// %d requested
+  internal static func inviteLinkRequestedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_one", p1)
+  }
+  /// %d requested
+  internal static func inviteLinkRequestedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_other", p1)
+  }
+  /// %d requested
+  internal static func inviteLinkRequestedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_two", p1)
+  }
+  /// no one requested yet
+  internal static var inviteLinkRequestedZero: String  { return L10n.tr("Localizable", "InviteLink.Requested_zero") }
   /// Share Link
   internal static var inviteLinkShareLink: String  { return L10n.tr("Localizable", "InviteLink.ShareLink") }
   ///  • expired
@@ -7473,6 +7503,8 @@ internal final class L10n {
   internal static var requestJoinDescGroup: String  { return L10n.tr("Localizable", "RequestJoin.Desc.Group") }
   /// Some [addition links]() are set up to accept requests to join the channel.
   internal static var requestJoinListDescription: String  { return L10n.tr("Localizable", "RequestJoin.List.Description") }
+  /// No Member Requests
+  internal static var requestJoinListEmpty1: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty1") }
   /// %d
   internal static func requestJoinListListHeaderCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.ListHeader_countable", p1)
@@ -7501,12 +7533,18 @@ internal final class L10n {
   internal static func requestJoinListListHeaderZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.ListHeader_zero", p1)
   }
+  /// Members Requests
+  internal static var requestJoinListTitle: String  { return L10n.tr("Localizable", "RequestJoin.List.Title") }
   /// Add to Channel
   internal static var requestJoinListApproveChannel: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Channel") }
   /// Dismiss
   internal static var requestJoinListApproveDismiss: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Dismiss") }
   /// Add to Group
   internal static var requestJoinListApproveGroup: String  { return L10n.tr("Localizable", "RequestJoin.List.Approve.Group") }
+  /// You have no pending requests to join the channel
+  internal static var requestJoinListEmpty2Channel: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty2.Channel") }
+  /// You have no pending requests to join the group
+  internal static var requestJoinListEmpty2Group: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty2.Group") }
   /// **%@** has been added to the channel.
   internal static func requestJoinListTooltipApprovedChannel(_ p1: String) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.Tooltip.Approved.Channel", p1)

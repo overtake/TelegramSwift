@@ -37,7 +37,7 @@ extension ExportedInvitation {
     }
     
     func withUpdatedIsRevoked(_ isRevoked: Bool) -> ExportedInvitation {
-        return ExportedInvitation(link: self.link, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, approvedDate: self.approvedDate)
+        return ExportedInvitation(link: self.link, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, approvedCount: self.approvedCount)
     }
 }
 
@@ -588,31 +588,41 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
     }, revokeLink: { [weak manager] link in
         confirm(for: context.window, header: L10n.channelRevokeLinkConfirmHeader, information: L10n.channelRevokeLinkConfirmText, okTitle: L10n.channelRevokeLinkConfirmOK, cancelTitle: L10n.modalCancel, successHandler: { _ in
             if let manager = manager {
-                _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: context.window).start()
+                _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: context.window).start(completed:{
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                })
             }
         })
     }, editLink: { [weak manager] link in
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
             let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? nil : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? nil : updated.count, requestNeeded: updated.requestApproval)
             if let signal = signal {
-                _ = showModalProgress(signal: signal, for: context.window).start()
+                _ = showModalProgress(signal: signal, for: context.window).start(completed:{
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                })
             }
         }), for: context.window)
     }, newLink: { [weak manager] in
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, save: { [weak manager] link in
             let signal = manager?.createPeerExportedInvitation(expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval)
             if let signal = signal {
-                _ = showModalProgress(signal: signal, for: context.window).start()
+                _ = showModalProgress(signal: signal, for: context.window).start(completed:{
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                })
             }
         }), for: context.window)
     }, deleteLink: { [weak manager] link in
         if let manager = manager {
-            _ = showModalProgress(signal: manager.deletePeerExportedInvitation(link: link), for: context.window).start()
+            _ = showModalProgress(signal: manager.deletePeerExportedInvitation(link: link), for: context.window).start(completed:{
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+            })
         }
     }, deleteAll: { [weak manager] in
         confirm(for: context.window, header: L10n.manageLinksDeleteAll, information: L10n.manageLinksDeleteAllConfirm, okTitle: L10n.manageLinksDeleteAll, cancelTitle: L10n.modalCancel, successHandler: { [weak manager] _ in
             if let manager = manager {
-                _ = showModalProgress(signal: manager.deleteAllRevokedPeerExportedInvitations(), for: context.window).start()
+                _ = showModalProgress(signal: manager.deleteAllRevokedPeerExportedInvitations(), for: context.window).start(completed:{
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                })
             }
         })
         

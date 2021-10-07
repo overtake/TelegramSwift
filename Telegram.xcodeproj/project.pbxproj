@@ -166,6 +166,8 @@
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
 		27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB092689C71E003D6164 /* MetalFunctions.metal */; };
+		27E7E49E270DFED900CF3A24 /* request_join_link.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E7E49D270DFED900CF3A24 /* request_join_link.tgs */; };
+		27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E7E49F270E040600CF3A24 /* thumbsup.tgs */; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -1292,6 +1294,8 @@
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
 		27E6DB092689C71E003D6164 /* MetalFunctions.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalFunctions.metal; sourceTree = "<group>"; };
+		27E7E49D270DFED900CF3A24 /* request_join_link.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = request_join_link.tgs; sourceTree = "<group>"; };
+		27E7E49F270E040600CF3A24 /* thumbsup.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbsup.tgs; sourceTree = "<group>"; };
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
@@ -4701,6 +4705,8 @@
 		D07450DB233D617B00769D7F /* tgs */ = {
 			isa = PBXGroup;
 			children = (
+				27E7E49F270E040600CF3A24 /* thumbsup.tgs */,
+				27E7E49D270DFED900CF3A24 /* request_join_link.tgs */,
 				275DDC39267B8702009CF884 /* bot_close_menu.tgs */,
 				275DDC38267B8701009CF884 /* bot_menu_close.tgs */,
 				274BB56F264013B800620D03 /* cameraoff.tgs */,
@@ -5147,6 +5153,7 @@
 				27672EAE26F8D62600297DB4 /* 0.m4a in Resources */,
 				27672EAF26F8D62800297DB4 /* 1.m4a in Resources */,
 				27672EB026F8D62A00297DB4 /* 2.m4a in Resources */,
+				27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */,
 				27672EB126F8D62C00297DB4 /* 3.m4a in Resources */,
 				27672EB226F8D62E00297DB4 /* 4.m4a in Resources */,
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
@@ -5246,6 +5253,7 @@
 				2773A55F25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
 				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
+				27E7E49E270DFED900CF3A24 /* request_join_link.tgs in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
 				D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,

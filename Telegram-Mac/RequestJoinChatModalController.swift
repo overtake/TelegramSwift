@@ -67,7 +67,7 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
     case let .invite(flags, title, about, photoRepresentation, participantsCount, _):
         let actionsDisposable = DisposableSet()
 
-        let initialState = State(flags: flags, title: title, about: about, photoRepresentation: photoRepresentation, participantsCount: participantsCount, isChannelOrMegagroup: flags.isChannel || flags.isMegagroup)
+        let initialState = State(flags: flags, title: title, about: about, photoRepresentation: photoRepresentation, participantsCount: participantsCount, isChannelOrMegagroup: flags.isChannel && flags.isBroadcast)
         
         var close:(()->Void)? = nil
         
