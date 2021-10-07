@@ -121,9 +121,15 @@ public final class InfiniteProgressView: View {
     public init(color: NSColor, lineWidth: CGFloat?) {
         self.color = color
         self.lineWidth = lineWidth
-        
+
         super.init()
+        pLayer.contentsScale = backingScaleFactor
         layer?.addSublayer(pLayer)
+    }
+    
+    public override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        pLayer.contentsScale = backingScaleFactor
     }
     
     public override func layout() {

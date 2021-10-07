@@ -59,6 +59,28 @@ public class ProgressIndicator : Control {
     
     public var alwaysAnimate: Bool = false
     
+    private var visualEffect: VisualEffect?
+    public var blurBackground: NSColor? = nil {
+        didSet {
+            updateBackgroundBlur()
+        }
+    }
+    
+    private func updateBackgroundBlur() {
+        if let blurBackground = blurBackground {
+            if self.visualEffect == nil {
+                self.visualEffect = VisualEffect(frame: self.bounds)
+                self.addSubview(self.visualEffect!, positioned: .below, relativeTo: self.subviews.first)
+            }
+            self.visualEffect?.bgColor = blurBackground
+            
+        } else {
+            self.visualEffect?.removeFromSuperview()
+            self.visualEffect = nil
+        }
+        needsLayout = true
+    }
+    
     public var progressColor: NSColor? = nil {
         didSet {
             indicator.color = progressColor ?? presentation.colors.text
@@ -91,6 +113,7 @@ public class ProgressIndicator : Control {
         super.layout()
         indicator.setFrameSize(NSMakeSize(frame.width - innerInset, frame.height - innerInset))
         indicator.center()
+        visualEffect?.frame = bounds
     }
     
     public override init() {

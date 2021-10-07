@@ -710,7 +710,7 @@ class ChatServiceRowView: TableRowView {
             return
         }
         
-        if item.presentation.shoundBlurService {
+        if item.presentation.shouldBlurService {
             textView.blurBackground = item.presentation.blurServiceColor
             textView.backgroundColor = .clear
         } else {

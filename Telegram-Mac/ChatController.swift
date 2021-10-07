@@ -559,11 +559,8 @@ class ChatControllerView : View, ChatInputDelegate {
         
         transition.updateFrame(view: gradientMaskView, frame: tableView.frame)
         
-        if let progressView = progressView?.subviews.first {
-            transition.updateFrame(view: progressView, frame: progressView.centerFrame())
-        }
         if let progressView = progressView {
-            transition.updateFrame(view: progressView, frame: progressView.centerFrame())
+            transition.updateFrame(view: progressView, frame: progressView.centerFrame().offsetBy(dx: 0, dy: -inputView.frame.height/2))
         }
         
         
@@ -616,7 +613,15 @@ class ChatControllerView : View, ChatInputDelegate {
                     addSubview(progressView!)
                     progressView!.center()
                 }
-                progressView?.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+                let theme = self.chatTheme ?? theme
+                if theme.shouldBlurService {
+                    progressView?.blurBackground = theme.blurServiceColor
+                    progressView?.backgroundColor = .clear
+                } else {
+                    progressView?.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+                    progressView?.blurBackground = nil
+                }
+                progressView?.progressColor = theme.chatServiceItemTextColor
                 progressView?.layer?.cornerRadius = 15
             case .visible:
                 if animated {
@@ -772,8 +777,16 @@ class ChatControllerView : View, ChatInputDelegate {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        progressView?.backgroundColor = theme.colors.background
-        (progressView?.subviews.first as? NSProgressIndicator)?.set(color: theme.colors.indicatorColor)
+        
+        let chatTheme = self.chatTheme ?? theme
+        if chatTheme.shouldBlurService {
+            progressView?.blurBackground = chatTheme.blurServiceColor
+            progressView?.backgroundColor = .clear
+        } else {
+            progressView?.backgroundColor = chatTheme.colors.background.withAlphaComponent(0.7)
+            progressView?.blurBackground = nil
+        }
+        progressView?.progressColor = theme.chatServiceItemTextColor
         scroller.updateLocalizationAndTheme(theme: theme)
         tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction, theme: self.chatTheme ?? theme)
     }

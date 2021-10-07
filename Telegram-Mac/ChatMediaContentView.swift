@@ -348,6 +348,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
     }
     
+    var canSpamClicks: Bool {
+        return false
+    }
+    
     override func mouseUp(with event: NSEvent) {
         if event.modifierFlags.contains(.control) {
             super.mouseUp(with: event)
@@ -355,7 +359,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         }
         
         
-        if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 {
+        if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 || canSpamClicks {
             executeInteraction(false)
         } else {
             super.superview?.mouseUp(with: event)
