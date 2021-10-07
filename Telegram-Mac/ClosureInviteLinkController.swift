@@ -55,125 +55,6 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        let hour: Int32 = 60 * 60
-        let day: Int32 = hour * 24 * 1
-        var sizes:[Int32] = [hour, day, day * 7, Int32.max]
-        
-        if let temp = state.tempDate {
-            var bestIndex: Int = 0
-            for (i, size) in sizes.enumerated() {
-                if size < temp {
-                    bestIndex = i
-                }
-            }
-            sizes[bestIndex] = temp
-        }
-        
-        let current = state.date
-        if sizes.firstIndex(where: { $0 == current }) == nil {
-            var bestIndex: Int = 0
-            for (i, size) in sizes.enumerated() {
-                if size < current {
-                    bestIndex = i
-                }
-            }
-            sizes[bestIndex] = current
-        }
-        let titles: [String] = sizes.map { value in
-            if value == Int32.max {
-                return "∞"
-            } else {
-                return autoremoveLocalized(Int(value))
-            }
-        }
-        return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: .firstItem, selectAction: { index in
-            arguments.limitDate(sizes[index])
-        })
-    }))
-    index += 1
-    
-    
-    let dateFormatter = makeNewDateFormatter()
-    dateFormatter.dateStyle = .medium
-    dateFormatter.timeStyle = .short
-    let dateString = state.date == .max ? L10n.editInvitationNever : dateFormatter.string(from: Date(timeIntervalSinceNow: TimeInterval(state.date)))
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_period_precise, data: .init(name: L10n.editInvitationExpiryDate, color: theme.colors.text, type: .context(dateString), viewType: .lastItem, action: {
-        showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date == .max ? Int32.secondsInWeek : state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
-            arguments.limitDate(Int32(date.timeIntervalSinceNow))
-            arguments.tempDate(Int32(date.timeIntervalSinceNow))
-            
-        }), for: arguments.context.window)
-    })))
-    index += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationExpiryDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        var sizes:[Int32] = [1, 10, 50, 100, Int32.max]
-        
-        if let temp = state.tempCount {
-            var bestIndex: Int = 0
-            for (i, size) in sizes.enumerated() {
-                if size < temp {
-                    bestIndex = i
-                }
-            }
-            sizes[bestIndex] = temp
-        }
-        
-        let current: Int32 = state.count
-        if sizes.firstIndex(where: { $0 == current }) == nil {
-            var bestIndex: Int = 0
-            for (i, size) in sizes.enumerated() {
-                if size < current {
-                    bestIndex = i
-                }
-            }
-            sizes[bestIndex] = current
-        }
-        let titles: [String] = sizes.map { value in
-            if value == Int32.max {
-                return "∞"
-            } else {
-                return Int(value).prettyNumber
-            }
-        }
-        return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: .firstItem, selectAction: { index in
-            arguments.usageLimit(sizes[index])
-        })
-    }))
-    index += 1
-    
-    let value = state.count == .max ? L10n.editInvitationUnlimited : Int(state.count).prettyNumber
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_precise, data: .init(name: L10n.editInvitationNumberOfUsers, color: theme.colors.text, type: .context(value), viewType: .lastItem, action: {
-        showModal(with: NumberSelectorController(base: state.count == .max ? nil : Int(state.count), title: L10n.editInvitationNumberOfUsers, placeholder: L10n.editInvitationEnterNumber, okTitle: L10n.editInvitationSave, updated: { updated in
-            if let updated = updated {
-                arguments.usageLimit(Int32(updated))
-            } else {
-                arguments.usageLimit(.max)
-            }
-            arguments.tempCount(updated != nil ? Int32(updated!) : nil)
-        }), for: arguments.context.window)
-    })))
-    index += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
-    
     
     entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
@@ -194,6 +75,130 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
+    
+    if !state.requestApproval {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            let hour: Int32 = 60 * 60
+            let day: Int32 = hour * 24 * 1
+            var sizes:[Int32] = [hour, day, day * 7, Int32.max]
+            
+            if let temp = state.tempDate {
+                var bestIndex: Int = 0
+                for (i, size) in sizes.enumerated() {
+                    if size < temp {
+                        bestIndex = i
+                    }
+                }
+                sizes[bestIndex] = temp
+            }
+            
+            let current = state.date
+            if sizes.firstIndex(where: { $0 == current }) == nil {
+                var bestIndex: Int = 0
+                for (i, size) in sizes.enumerated() {
+                    if size < current {
+                        bestIndex = i
+                    }
+                }
+                sizes[bestIndex] = current
+            }
+            let titles: [String] = sizes.map { value in
+                if value == Int32.max {
+                    return "∞"
+                } else {
+                    return autoremoveLocalized(Int(value))
+                }
+            }
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: .firstItem, selectAction: { index in
+                arguments.limitDate(sizes[index])
+            })
+        }))
+        index += 1
+        
+        
+        let dateFormatter = makeNewDateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .short
+        let dateString = state.date == .max ? L10n.editInvitationNever : dateFormatter.string(from: Date(timeIntervalSinceNow: TimeInterval(state.date)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_period_precise, data: .init(name: L10n.editInvitationExpiryDate, color: theme.colors.text, type: .context(dateString), viewType: .lastItem, action: {
+            showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date == .max ? Int32.secondsInWeek : state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
+                arguments.limitDate(Int32(date.timeIntervalSinceNow))
+                arguments.tempDate(Int32(date.timeIntervalSinceNow))
+                
+            }), for: arguments.context.window)
+        })))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationExpiryDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            var sizes:[Int32] = [1, 10, 50, 100, Int32.max]
+            
+            if let temp = state.tempCount {
+                var bestIndex: Int = 0
+                for (i, size) in sizes.enumerated() {
+                    if size < temp {
+                        bestIndex = i
+                    }
+                }
+                sizes[bestIndex] = temp
+            }
+            
+            let current: Int32 = state.count
+            if sizes.firstIndex(where: { $0 == current }) == nil {
+                var bestIndex: Int = 0
+                for (i, size) in sizes.enumerated() {
+                    if size < current {
+                        bestIndex = i
+                    }
+                }
+                sizes[bestIndex] = current
+            }
+            let titles: [String] = sizes.map { value in
+                if value == Int32.max {
+                    return "∞"
+                } else {
+                    return Int(value).prettyNumber
+                }
+            }
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: .firstItem, selectAction: { index in
+                arguments.usageLimit(sizes[index])
+            })
+        }))
+        index += 1
+        
+        let value = state.count == .max ? L10n.editInvitationUnlimited : Int(state.count).prettyNumber
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_precise, data: .init(name: L10n.editInvitationNumberOfUsers, color: theme.colors.text, type: .context(value), viewType: .lastItem, action: {
+            showModal(with: NumberSelectorController(base: state.count == .max ? nil : Int(state.count), title: L10n.editInvitationNumberOfUsers, placeholder: L10n.editInvitationEnterNumber, okTitle: L10n.editInvitationSave, updated: { updated in
+                if let updated = updated {
+                    arguments.usageLimit(Int32(updated))
+                } else {
+                    arguments.usageLimit(.max)
+                }
+                arguments.tempCount(updated != nil ? Int32(updated!) : nil)
+            }), for: arguments.context.window)
+        })))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+        
+    }
+    
+   
     
     
     entries.append(.sectionId(sectionId, type: .customModern(20)))
