@@ -43,7 +43,7 @@ class WPLayout: Equatable {
     
     
     var mediaCount: Int? {
-        if let instantPage = content.instantPage, isGalleryAssemble {
+        if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
             if let block = instantPage.blocks.filter({ value in
                 if case .slideshow = value {
                     return true
