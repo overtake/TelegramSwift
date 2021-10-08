@@ -204,7 +204,7 @@ final class AccountContext {
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
         self.activeSessionsContext = engine.privacy.activeSessions()
         self.webSessions = engine.privacy.webSessions()
-        self.networkStatusManager = NetworkStatusManager(account: account, window: window)
+        self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         #endif
         
         

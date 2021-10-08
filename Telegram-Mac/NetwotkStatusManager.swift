@@ -78,7 +78,7 @@ private enum Status : Equatable {
     }
 }
 
-private final class ConnectingStatusView: View {
+private final class ConnectingStatusView: Control {
     private let textView: TextView = TextView()
     private let visualEffect: VisualEffect
     private let container = View()
@@ -88,10 +88,15 @@ private final class ConnectingStatusView: View {
     
     private var status: Status?
     
+    private let overlay:OverlayControl
+    
+    var clickHandler:(()->Void)?
+    
     required init(frame frameRect: NSRect) {
         self.visualEffect = VisualEffect(frame: frameRect.size.bounds)
         self.imageView = ImageView(frame: frameRect.size.bounds)
         self.backgroundView = View(frame: frameRect.size.bounds)
+        self.overlay = OverlayControl()
         super.init(frame: frameRect)
         autoresizingMask = [.width, .height]
         addSubview(backgroundView)
@@ -99,9 +104,13 @@ private final class ConnectingStatusView: View {
         addSubview(self.visualEffect)
         addSubview(container)
         container.addSubview(textView)
-        
+        addSubview(overlay)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        overlay.set(handler: { [weak self] _ in
+            self?.clickHandler?()
+        }, for: .Click)
     }
     
     override func layout() {
@@ -119,7 +128,11 @@ private final class ConnectingStatusView: View {
         self.imageView.center()
         self.visualEffect.frame = bounds
         self.backgroundView.frame = bounds
+        self.overlay.frame = bounds
+        
     }
+    
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -198,14 +211,16 @@ private final class ConnectingStatusView: View {
 
 final class NetworkStatusManager {
     private let account: Account
+    private let sharedContext: SharedAccountContext
     private let window: Window
     private let disposable = MetaDisposable()
     
     private var currentView: ConnectingStatusView?
     private var backgroundView: View?
-    init(account: Account, window: Window) {
+    init(account: Account, window: Window, sharedContext: SharedAccountContext) {
         self.account = account
         self.window = window
+        self.sharedContext = sharedContext
         initialize()
     }
     
@@ -259,16 +274,9 @@ final class NetworkStatusManager {
         |> deliverOnMainQueue
         |> distinctUntilChanged
                 
-        disposable.set(combineLatest(connectionStatus, appearanceSignal).start(next: { [weak self] status, _ in
+        disposable.set(combineLatest(connectionStatus, appearanceSignal, window.fullScreen).start(next: { [weak self] status, _, _ in
             self?.updateStatus(status, animated: true)
         }))
-        
-        window.set(handler: { _ in
-            let fakes:[ConnectionStatus?] = [.online(proxyAddress: nil), .connecting(proxyAddress: nil, proxyHasConnectionIssues: false), .waitingForNetwork, .updating(proxyAddress: nil), nil]
-            fakeStatus.set(fakes.randomElement()!)
-            
-            return .rejected
-        }, with: window, for: .A, priority: .supreme)
     }
     
     private func updateStatus(_ status: Status?, animated: Bool) {
@@ -279,13 +287,34 @@ final class NetworkStatusManager {
         if let status = status {
             let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
             view.set(status, animated: animated)
-            self.currentView = view
             
-            windowView.superview.addSubview(view, positioned: .above, relativeTo: windowView.aboveView)
-            
-            if animated {
+            if animated, self.currentView == nil {
                 view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
+            
+            view.clickHandler = { [weak self] in
+                guard let sharedContext = self?.sharedContext, let account = self?.account else {
+                    return
+                }
+                switch status {
+                case let .core(status):
+                    switch status {
+                    case .connecting, .waitingForNetwork:
+                        self?.sharedContext.bindings.rootNavigation().push(proxyListController(accountManager: sharedContext.accountManager, network: account.network, pushController: { controller in
+                            sharedContext.bindings.rootNavigation().push(controller)
+                        }))
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+            }
+            
+            self.currentView = view
+            windowView.superview.addSubview(view, positioned: .above, relativeTo: windowView.aboveView)
+            
+            window.title = ""
             
             if self.backgroundView == nil {
                 self.backgroundView = View(frame: view.bounds)
@@ -302,6 +331,7 @@ final class NetworkStatusManager {
                 performSubviewRemoval(view, animated: animated)
                 self.currentView = nil
             }
+            window.title = appName
         }
     }
     
@@ -311,7 +341,7 @@ final class NetworkStatusManager {
         let aboveView: NSView?
     }
     var windowView: WindowView? {
-        guard let title = self.window.titleView else {
+        guard let title = self.window.titleView ?? self.currentView?.superview else {
             return nil
         }
         let subviews = title.subviews

@@ -2146,10 +2146,11 @@ extension NSImage {
 
 extension Window {
     var titleView: NSView? {
-        if let windowView = contentView?.superview {
-            return ObjcUtils.findElements(byClass: "NSTitlebarView", in: windowView).first
-        }
-        return nil
+        return self.standardWindowButton(.closeButton)?.superview
+//        if let windowView = contentView?.superview {
+//            return ObjcUtils.findElements(byClass: "NSTitlebarView", in: windowView).first
+//        }
+//        return nil
     }
 }
 
