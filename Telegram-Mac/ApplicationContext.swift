@@ -525,23 +525,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
-        
-        
-//        #if DEBUG
-//        window.set(handler: { _ -> KeyHandlerResult in
-//            showModal(with: RequestJoinChatModalController(context: context, peerId: context.peerId), for: window)
-//          //  context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: .command)
-//        #endif
-//        
-//        #if DEBUG
-//        window.set(handler: { _ -> KeyHandlerResult in
-//            context.sharedContext.bindings.rootNavigation().push(RequestJoinMemberListController(context: context, peerId: context.peerId))
-//            return .invoked
-//        }, with: self, for: .Y, priority: .supreme, modifierFlags: .command)
-//        #endif
-        
+      
         
         appUpdateDisposable.set((context.account.stateManager.appUpdateInfo |> deliverOnMainQueue).start(next: { info in
             

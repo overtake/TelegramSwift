@@ -128,9 +128,13 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     private var nextForceAccept: Bool = false
 
     
+    override var canSpamClicks: Bool {
+        return true
+    }
+    
     override func previewMediaIfPossible() -> Bool {
         if let table = table, let context = context, let window = window as? Window {
-            _ = startModalPreviewHandle(table, window: window, context: context)
+            startModalPreviewHandle(table, window: window, context: context)
         }
         return true
     }

@@ -170,7 +170,16 @@ class ChatEmptyPeerView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        textView.background = theme.chatServiceItemColor
+        guard let theme = (item as? ChatEmptyPeerItem)?.presentation else {
+            return
+        }
+        if theme.shouldBlurService {
+            textView.blurBackground = theme.blurServiceColor
+            textView.backgroundColor = backdorColor
+        } else {
+            textView.backgroundColor = theme.chatServiceItemColor
+            textView.blurBackground = nil
+        }
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -181,7 +190,7 @@ class ChatEmptyPeerView : TableRowView {
         guard let theme = (item as? ChatEmptyPeerItem)?.presentation else {
             return super.backdorColor
         }
-        return theme.wallpaper.wallpaper != .none ? .clear : theme.chatBackground
+        return theme.backgroundMode.hasWallpaper ? .clear : theme.chatBackground
     }
     
     override func set(item: TableRowItem, animated: Bool) {

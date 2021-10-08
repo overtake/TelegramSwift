@@ -294,7 +294,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         rowView.backgroundColor = backdorColor
         rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         
-        if item.isStateOverlayLayout, item.presentation.shoundBlurService {
+        if item.isStateOverlayLayout, item.presentation.shouldBlurService {
             rightView.blurBackground = item.presentation.blurServiceColor
             rightView.layer?.cornerRadius = item.rightSize.height / 2
         } else {
@@ -303,7 +303,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
 
         contentView.backgroundColor = .clear
-        item.replyModel?.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
+        if let replyModel = item.replyModel {
+            replyModel.backgroundColor = item.hasBubble ? contentColor : item.isBubbled ? item.presentation.colors.bubbleBackground_incoming : contentColor
+        }
         nameView?.backgroundColor = contentColor
         forwardName?.backgroundColor = contentColor
         for captionView in captionViews {
@@ -1164,7 +1166,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.setFrameOrigin(shareViewPoint(item))
             }
             
-            if item.isBubbled && item.presentation.shoundBlurService  {
+            if item.isBubbled && item.presentation.shouldBlurService  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 control.setFrameSize(NSMakeSize(29, 29))

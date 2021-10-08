@@ -3689,6 +3689,18 @@ internal final class L10n {
   internal static var connectingStatusUpdating: String  { return L10n.tr("Localizable", "ConnectingStatus.updating") }
   /// waiting for network
   internal static var connectingStatusWaitingNetwork: String  { return L10n.tr("Localizable", "ConnectingStatus.waitingNetwork") }
+  /// Connected
+  internal static var connectionStatusConnected: String  { return L10n.tr("Localizable", "ConnectionStatus.Connected") }
+  /// Connecting...
+  internal static var connectionStatusConnecting: String  { return L10n.tr("Localizable", "ConnectionStatus.Connecting") }
+  /// Connecting To Proxy...
+  internal static var connectionStatusConnectingToProxy: String  { return L10n.tr("Localizable", "ConnectionStatus.ConnectingToProxy") }
+  /// Up to date
+  internal static var connectionStatusUpdated: String  { return L10n.tr("Localizable", "ConnectionStatus.Updated") }
+  /// Updating...
+  internal static var connectionStatusUpdating: String  { return L10n.tr("Localizable", "ConnectionStatus.Updating") }
+  /// Waiting For Network...
+  internal static var connectionStatusWaitingForNetwork: String  { return L10n.tr("Localizable", "ConnectionStatus.WaitingForNetwork") }
   /// birthday
   internal static var contactInfoBirthdayLabel: String  { return L10n.tr("Localizable", "ContactInfo.BirthdayLabel") }
   /// Contact Info
@@ -7501,6 +7513,10 @@ internal final class L10n {
   internal static var requestJoinDescChannel: String  { return L10n.tr("Localizable", "RequestJoin.Desc.Channel") }
   /// This group accepts new subscribtions only after they are approved by it's admins.
   internal static var requestJoinDescGroup: String  { return L10n.tr("Localizable", "RequestJoin.Desc.Group") }
+  /// You have already sent request to join channel
+  internal static var requestJoinErrorAlreadySentChannel: String  { return L10n.tr("Localizable", "RequestJoin.Error.AlreadySent.Channel") }
+  /// You have already sent request to join group
+  internal static var requestJoinErrorAlreadySentGroup: String  { return L10n.tr("Localizable", "RequestJoin.Error.AlreadySent.Group") }
   /// Some [addition links]() are set up to accept requests to join the channel.
   internal static var requestJoinListDescription: String  { return L10n.tr("Localizable", "RequestJoin.List.Description") }
   /// No Member Requests

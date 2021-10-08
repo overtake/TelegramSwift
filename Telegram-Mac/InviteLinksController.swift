@@ -37,7 +37,7 @@ extension ExportedInvitation {
     }
     
     func withUpdatedIsRevoked(_ isRevoked: Bool) -> ExportedInvitation {
-        return ExportedInvitation(link: self.link, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, approvedCount: self.approvedCount)
+        return ExportedInvitation(link: self.link, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, requestedCount: self.requestedCount)
     }
 }
 

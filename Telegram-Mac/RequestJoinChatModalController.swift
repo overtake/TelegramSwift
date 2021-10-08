@@ -126,6 +126,12 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
                     return
                 case .tooMuchUsers:
                     text = L10n.groupUsersTooMuchError
+                case .requestAlreadySent:
+                    if flags.isChannel && flags.isBroadcast {
+                        text = L10n.requestJoinErrorAlreadySentChannel
+                    } else {
+                        text = L10n.requestJoinErrorAlreadySentGroup
+                    }
                 }
                 alert(for: context.window, info: text)
             })
