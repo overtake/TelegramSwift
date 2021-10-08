@@ -613,15 +613,15 @@ class ChatControllerView : View, ChatInputDelegate {
                     addSubview(progressView!)
                     progressView!.center()
                 }
-                let theme = self.chatTheme ?? theme
-                if theme.shouldBlurService {
-                    progressView?.blurBackground = theme.blurServiceColor
+                let currentTheme = self.chatTheme ?? theme
+                if currentTheme.shouldBlurService {
+                    progressView?.blurBackground = currentTheme.blurServiceColor
                     progressView?.backgroundColor = .clear
                 } else {
-                    progressView?.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+                    progressView?.backgroundColor = currentTheme.colors.background.withAlphaComponent(0.7)
                     progressView?.blurBackground = nil
                 }
-                progressView?.progressColor = theme.chatServiceItemTextColor
+                progressView?.progressColor = currentTheme.chatServiceItemTextColor
                 progressView?.layer?.cornerRadius = 15
             case .visible:
                 if animated {
