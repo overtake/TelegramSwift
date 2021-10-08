@@ -888,19 +888,18 @@ open class Window: NSWindow {
     }
     
     open override func toggleFullScreen(_ sender: Any?) {
-        self.onToggleFullScreen?(!isFullScreen)
-        isFullScreenValue.set(!isFullScreen)
+        let newValue = !isFullScreen
+        self.onToggleFullScreen?(newValue)
         
         if let process = processFullScreen {
-            process(!isFullScreen, { [weak self] value in
+            process(newValue, { [weak self] value in
                 self?.invokeFullScreen(nil)
+                self?.onToggleFullScreen?(newValue)
             })
         } else {
             invokeFullScreen(nil)
+            isFullScreenValue.set(newValue)
         }
-        
-       
-        
     }
     
     public var _windowDidExitFullScreen:(()->Void)?
