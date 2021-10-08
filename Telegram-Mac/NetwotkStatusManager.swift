@@ -78,7 +78,7 @@ private enum Status : Equatable {
     }
 }
 
-private final class ConnectingStatusView: Control {
+private final class ConnectingStatusView: View {
     private let textView: TextView = TextView()
     private let visualEffect: VisualEffect
     private let container = View()
@@ -88,15 +88,11 @@ private final class ConnectingStatusView: Control {
     
     private var status: Status?
     
-    private let overlay:OverlayControl
-    
-    var clickHandler:(()->Void)?
-    
+        
     required init(frame frameRect: NSRect) {
         self.visualEffect = VisualEffect(frame: frameRect.size.bounds)
         self.imageView = ImageView(frame: frameRect.size.bounds)
         self.backgroundView = View(frame: frameRect.size.bounds)
-        self.overlay = OverlayControl()
         super.init(frame: frameRect)
         autoresizingMask = [.width, .height]
         addSubview(backgroundView)
@@ -104,16 +100,12 @@ private final class ConnectingStatusView: Control {
         addSubview(self.visualEffect)
         addSubview(container)
         container.addSubview(textView)
-        addSubview(overlay)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
-        overlay.set(handler: { [weak self] _ in
-            self?.clickHandler?()
-        }, for: .Click)
-        
-        overlay.forceMouseDownCanMoveWindow = true
+    
     }
+    
     
     override func layout() {
         super.layout()
@@ -130,7 +122,6 @@ private final class ConnectingStatusView: Control {
         self.imageView.center()
         self.visualEffect.frame = bounds
         self.backgroundView.frame = bounds
-        self.overlay.frame = bounds
         
     }
     
@@ -297,25 +288,7 @@ final class NetworkStatusManager {
             if animated, self.currentView == nil {
                 view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            
-            view.clickHandler = { [weak self] in
-                guard let sharedContext = self?.sharedContext, let account = self?.account else {
-                    return
-                }
-                switch status {
-                case let .core(status):
-                    switch status {
-                    case .connecting, .waitingForNetwork:
-                        self?.sharedContext.bindings.rootNavigation().push(proxyListController(accountManager: sharedContext.accountManager, network: account.network, pushController: { controller in
-                            sharedContext.bindings.rootNavigation().push(controller)
-                        }))
-                    default:
-                        break
-                    }
-                default:
-                    break
-                }
-            }
+
             
             self.currentView = view
             windowView.superview.addSubview(view, positioned: .above, relativeTo: windowView.aboveView)
