@@ -111,6 +111,8 @@ private final class ConnectingStatusView: Control {
         overlay.set(handler: { [weak self] _ in
             self?.clickHandler?()
         }, for: .Click)
+        
+        overlay.forceMouseDownCanMoveWindow = true
     }
     
     override func layout() {
@@ -254,21 +256,25 @@ final class NetworkStatusManager {
                 break
             }
             return status
-        } |> mapToSignal { coreStatus in
+        } |> mapToQueue { coreStatus in
             let previous = previousStatus.swap(coreStatus)
             
-            switch coreStatus {
-            case .online:
-                switch previous {
-                case .connecting, .waitingForNetwork:
-                    return .single(.connected) |> then(.single(nil) |> delay(1.5, queue: .mainQueue()))
-                case .updating:
-                    return .single(.updated) |> then(.single(nil) |> delay(1.5, queue: .mainQueue()))
+            if previous != coreStatus {
+                switch coreStatus {
+                case .online:
+                    switch previous {
+                    case .connecting, .waitingForNetwork:
+                        return .single(.connected) |> then(.single(nil) |> delay(1.5, queue: .mainQueue()))
+                    case .updating:
+                        return .single(.updated) |> then(.single(nil) |> delay(1.5, queue: .mainQueue()))
+                    default:
+                        return .single(nil)
+                    }
                 default:
-                    return .single(nil)
+                    return .single(.core(coreStatus))
                 }
-            default:
-                return .single(.core(coreStatus))
+            } else {
+                return .complete()
             }
         }
         |> deliverOnMainQueue
