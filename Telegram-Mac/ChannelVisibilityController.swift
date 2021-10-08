@@ -854,7 +854,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         let importers: Signal<PeerInvitationImportersState?, NoError> = permanentLink |> deliverOnMainQueue |> mapToSignal { [weak manager] permanent in
             if let permanent = permanent {
                 if enableBetaFeatures {
-                    if let state = manager?.importer(for: permanent).state {
+                    if let state = manager?.importer(for: permanent).joined.state {
                         return state |> map(Optional.init)
                     } else {
                         return .single(nil)

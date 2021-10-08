@@ -60,7 +60,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func RequestJoinChatModalController(context: AccountContext, joinhash: String, invite: ExternalJoiningChatState) -> InputDataModalController {
+func RequestJoinChatModalController(context: AccountContext, joinhash: String, invite: ExternalJoiningChatState, interaction:@escaping(PeerId?)->Void) -> InputDataModalController {
 
 
     switch invite {
@@ -112,10 +112,7 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
         controller.returnKeyInvocation = { _, _ in
             close?()
             _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: joinhash), for: context.window).start(next: { peerId in
-                if let _ = peerId {
-                    let navigation = context.sharedContext.bindings.rootNavigation()
-                    navigation.controller.show(toaster: .init(text: L10n.requestJoinSent))
-                }
+                interaction(peerId)
             }, error: { error in
                 let text: String
                 switch error {
@@ -126,12 +123,10 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
                     return
                 case .tooMuchUsers:
                     text = L10n.groupUsersTooMuchError
-                case .requestAlreadySent:
-                    if flags.isChannel && flags.isBroadcast {
-                        text = L10n.requestJoinErrorAlreadySentChannel
-                    } else {
-                        text = L10n.requestJoinErrorAlreadySentGroup
-                    }
+                case .requestSent:
+                    let navigation = context.sharedContext.bindings.rootNavigation()
+                    navigation.controller.show(toaster: .init(text: L10n.requestJoinSent))
+                    return
                 }
                 alert(for: context.window, info: text)
             })

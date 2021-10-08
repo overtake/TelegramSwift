@@ -274,17 +274,24 @@ final class InviteLinkPeerManager {
         
     }
     
-    private var cachedImporters:[String : PeerInvitationImportersContext] = [:]
+    private struct CachedKey : Hashable {
+        let string: String
+        let requested: Bool
+    }
+    private var cachedImporters:[CachedKey : PeerInvitationImportersContext] = [:]
     
-    func importer(for link: ExportedInvitation) -> PeerInvitationImportersContext {
-        let cached = self.cachedImporters[link.link]
-        
-        if let cached = cached {
-            return cached
+    func importer(for link: ExportedInvitation) -> (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext) {
+        let joined = self.cachedImporters[.init(string: link.link, requested: false)]
+        let requested = self.cachedImporters[.init(string: link.link, requested: true)]
+
+        if let requested = requested, let joined = joined {
+            return (joined: joined, requested: requested)
         } else {
-            let value = context.engine.peers.peerInvitationImporters(peerId: peerId, invite: link)
-            cachedImporters[link.link] = value
-            return value
+            let joined = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .invite(invite: link, requested: false))
+            let requested = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .invite(invite: link, requested: true))
+            self.cachedImporters[.init(string: link.link, requested: false)] = joined
+            self.cachedImporters[.init(string: link.link, requested: true)] = requested
+            return (joined: joined, requested: requested)
         }
     }
 }
@@ -640,8 +647,8 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
 
     let importers: Signal<(PeerInvitationImportersState?, InviteLinkPeerManager.State), NoError> = manager.state |> deliverOnMainQueue |> mapToSignal { [weak manager] state in
         if let permanent = state.list?.first(where: { $0.isPermanent }) {
-            if let importer = manager?.importer(for: permanent).state {
-                return importer |> map(Optional.init) |> map { ($0, state) }
+            if let importer = manager?.importer(for: permanent).joined {
+                return importer.state |> map(Optional.init) |> map { ($0, state) }
             } else {
                 return .single((nil, state))
             }
@@ -725,7 +732,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         controller.requestUpdateCenterBar()
     }
 
-    controller.contextOject = manager
+    controller.contextObject = manager
     
     
     getController = { [weak controller] in

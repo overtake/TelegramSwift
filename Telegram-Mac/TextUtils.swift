@@ -498,11 +498,20 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             return text
         case .joinedByRequest:
             let text: String
-            if message.peers[message.id.peerId]?.isChannel == true {
-                text = L10n.chatServiceJoinedChannelByRequest
+            if message.author?.id == account.peerId {
+                if message.peers[message.id.peerId]?.isChannel == true {
+                    text = L10n.chatServiceJoinedChannelByRequest
+                } else {
+                    text = L10n.chatServiceJoinedGroupByRequest
+                }
             } else {
-                text = L10n.chatServiceJoinedGroupByRequest
+                if message.peers[message.id.peerId]?.isChannel == true {
+                    text = L10n.chatServiceUserJoinedChannelByRequest(authorName)
+                } else {
+                    text = L10n.chatServiceUserJoinedGroupByRequest(authorName)
+                }
             }
+            
             return text
         }
     }

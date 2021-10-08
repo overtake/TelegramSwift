@@ -219,7 +219,7 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
     
     let controller = InputDataController(dataSignal: signal, title: L10n.statsMessageTitle, removeAfterDisappear: false, hasDone: false)
     
-    controller.contextOject = statsContext
+    controller.contextObject = statsContext
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true

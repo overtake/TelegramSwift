@@ -3491,6 +3491,14 @@ internal final class L10n {
   internal static var chatServiceJoinedChannelByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedChannelByRequest") }
   /// Your request to join the group was approved
   internal static var chatServiceJoinedGroupByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedGroupByRequest") }
+  /// %@ joined the channel by request
+  internal static func chatServiceUserJoinedChannelByRequest(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatService.UserJoinedChannelByRequest", p1)
+  }
+  /// %@ joined the group by request
+  internal static func chatServiceUserJoinedGroupByRequest(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatService.UserJoinedGroupByRequest", p1)
+  }
   /// Report Messages
   internal static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default
@@ -4279,6 +4287,32 @@ internal final class L10n {
   }
   /// 
   internal static var exportedInvitationPeopleJoinedZero: String  { return L10n.tr("Localizable", "ExportedInvitation.PeopleJoined_zero") }
+  /// %d
+  internal static func exportedInvitationPeopleRequestedCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_countable", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func exportedInvitationPeopleRequestedFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_few", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func exportedInvitationPeopleRequestedMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_many", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func exportedInvitationPeopleRequestedOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_one", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func exportedInvitationPeopleRequestedOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_other", p1)
+  }
+  /// %d REQUESTED TO JOIN
+  internal static func exportedInvitationPeopleRequestedTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_two", p1)
+  }
+  /// 
+  internal static var exportedInvitationPeopleRequestedZero: String  { return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_zero") }
   /// Invite Link
   internal static var exportedInvitationTitle: String  { return L10n.tr("Localizable", "ExportedInvitation.Title") }
   /// Copy

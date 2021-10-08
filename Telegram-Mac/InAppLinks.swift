@@ -545,7 +545,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 interaction(peerId, true, nil, nil)
             case let .invite(flags, _, _, _, _, _):
                 if flags.requestNeeded {
-                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result), for: context.window)
+                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peerId in
+                        if let peerId = peerId {
+                            interaction(peerId, true, nil, nil)
+                        }
+                    }), for: context.window)
                 } else {
                     showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peerId in
                         if let peerId = peerId {

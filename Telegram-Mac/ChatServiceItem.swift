@@ -472,6 +472,28 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
+                case .joinedByRequest:
+                    let text: String
+                    if authorId == context.peerId {
+                        if message.peers[message.id.peerId]?.isChannel == true {
+                            text = L10n.chatServiceJoinedChannelByRequest
+                        } else {
+                            text = L10n.chatServiceJoinedGroupByRequest
+                        }
+                    } else {
+                        if message.peers[message.id.peerId]?.isChannel == true {
+                            text = L10n.chatServiceUserJoinedChannelByRequest(authorName)
+                        } else {
+                            text = L10n.chatServiceUserJoinedGroupByRequest(authorName)
+                        }
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
 
                 default:
                     break
