@@ -328,7 +328,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         theme.colors.background
     }
     
-    controller.contextOject = resultsContext
+    controller.contextObject = resultsContext
     
     let modalController = InputDataModalController(controller)
     

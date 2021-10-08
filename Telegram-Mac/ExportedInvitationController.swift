@@ -14,14 +14,14 @@ import Postbox
 import TGUIKit
 
 private final class ExportInvitationArguments {
-    let context: PeerInvitationImportersContext
+    let context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)
     let accountContext: AccountContext
     let copyLink: (String)->Void
     let shareLink: (String)->Void
     let openProfile:(PeerId)->Void
     let revokeLink: (ExportedInvitation)->Void
     let editLink:(ExportedInvitation)->Void
-    init(context: PeerInvitationImportersContext, accountContext: AccountContext, copyLink: @escaping(String)->Void, shareLink: @escaping(String)->Void, openProfile:@escaping(PeerId)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink: @escaping(ExportedInvitation)->Void) {
+    init(context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext), accountContext: AccountContext, copyLink: @escaping(String)->Void, shareLink: @escaping(String)->Void, openProfile:@escaping(PeerId)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink: @escaping(ExportedInvitation)->Void) {
         self.context = context
         self.accountContext = accountContext
         self.copyLink = copyLink
@@ -32,18 +32,22 @@ private final class ExportInvitationArguments {
     }
 }
 
-private struct ExportInvitationState : Equatable {
-    
+private struct State : Equatable {
+    var requestedState: PeerInvitationImportersState?
+    var joinedState: PeerInvitationImportersState?
 }
 
 private let _id_link = InputDataIdentifier("_id_link")
 private func _id_admin(_ peerId: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_admin_\(peerId.toInt64())")
 }
-private func _id_peer(_ peerId: PeerId) -> InputDataIdentifier {
-    return InputDataIdentifier("_id_peer_\(peerId.toInt64())")
+private func _id_peer(_ peerId: PeerId, joined: Bool) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_peer_\(peerId.toInt64())_\(joined)")
 }
-private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invitation: ExportedInvitation, arguments: ExportInvitationArguments) -> [InputDataEntry] {
+private func entries(_ state: State, admin: Peer?, invitation: ExportedInvitation, arguments: ExportInvitationArguments) -> [InputDataEntry] {
+    
+    let joinedState: PeerInvitationImportersState? = state.joinedState
+    let requestedState: PeerInvitationImportersState? = state.requestedState
     
     var entries:[InputDataEntry] = []
     
@@ -105,44 +109,81 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
         }))
     }
     
-    let importers = state.importers.filter { $0.peer.peer != nil }
-  
-    if !importers.isEmpty {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.exportedInvitationPeopleJoinedCountable(Int(state.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-        index += 1
-        
-        for importer in state.importers {
-            struct Tuple : Equatable {
-                let importer: PeerInvitationImportersState.Importer
-                let viewType: GeneralViewType
-            }
+    if let requestedState = requestedState {
+        let importers = requestedState.importers.filter { $0.peer.peer != nil }
+      
+        if !importers.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
             
-            let tuple = Tuple(importer: importer, viewType: bestGeneralViewType(state.importers, for: importer))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.exportedInvitationPeopleRequestedCountable(Int(requestedState.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
-                    arguments.openProfile(tuple.importer.peer.peerId)
-                }, contextMenuItems: {
-                    let items = [ContextMenuItem(L10n.exportedInvitationContextOpenProfile, handler: {
+            for importer in requestedState.importers {
+                struct Tuple : Equatable {
+                    let importer: PeerInvitationImportersState.Importer
+                    let viewType: GeneralViewType
+                }
+                
+                let tuple = Tuple(importer: importer, viewType: bestGeneralViewType(requestedState.importers, for: importer))
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId, joined: false), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
                         arguments.openProfile(tuple.importer.peer.peerId)
-                    })]
-                    
-                    return .single(items)
-                })
-            }))
+                    }, contextMenuItems: {
+                        let items = [ContextMenuItem(L10n.exportedInvitationContextOpenProfile, handler: {
+                            arguments.openProfile(tuple.importer.peer.peerId)
+                        })]
+                        
+                        return .single(items)
+                    })
+                }))
+            }
         }
     }
 
-    if state.count == 0, !invitation.isExpired, !invitation.isRevoked, let usageCount = invitation.usageLimit, invitation.count == nil {
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
+    
+    if let joinedState = joinedState {
+        let importers = joinedState.importers.filter { $0.peer.peer != nil }
+      
+        if !importers.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.exportedInvitationPeopleJoinedCountable(Int(joinedState.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            for importer in joinedState.importers {
+                struct Tuple : Equatable {
+                    let importer: PeerInvitationImportersState.Importer
+                    let viewType: GeneralViewType
+                }
+                
+                let tuple = Tuple(importer: importer, viewType: bestGeneralViewType(joinedState.importers, for: importer))
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId, joined: true), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
+                        arguments.openProfile(tuple.importer.peer.peerId)
+                    }, contextMenuItems: {
+                        let items = [ContextMenuItem(L10n.exportedInvitationContextOpenProfile, handler: {
+                            arguments.openProfile(tuple.importer.peer.peerId)
+                        })]
+                        
+                        return .single(items)
+                    })
+                }))
+            }
+        }
 
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_join_count"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.inviteLinkEmptyJoinDescCountable(Int(usageCount)), font: .normal(.text))
-        }))
+        if joinedState.count == 0, !invitation.isExpired, !invitation.isRevoked, let usageCount = invitation.usageLimit, invitation.count == nil {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_join_count"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.inviteLinkEmptyJoinDescCountable(Int(usageCount)), font: .normal(.text))
+            }))
+        }
+
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -151,8 +192,9 @@ private func entries(_ state: PeerInvitationImportersState, admin: Peer?, invita
     return entries
 }
 
-func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: PeerInvitationImportersContext) -> InputDataModalController {
+func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
     
+    let actionsDisposable = DisposableSet()
     
     var getController:(()->InputDataController?)? = nil
     var getModalController:(()->InputDataModalController?)? = nil
@@ -182,13 +224,31 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
         }), for: accountContext.window)
     })
     
-    let dataSignal = combineLatest(queue: prepareQueue, context.state, accountContext.account.postbox.transaction { $0.getPeer(invitation.adminId) }) |> deliverOnPrepareQueue |> map { state, admin in
+    let initialState = State()
+    
+    let statePromise = ValuePromise<State>(ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((State) -> State) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+    
+    actionsDisposable.add(combineLatest(context.joined.state, context.requested.state).start(next: { joined, requested in
+        updateState { current in
+            var current = current
+            current.requestedState = requested
+            current.joinedState = joined
+            return current
+        }
+    }))
+    
+    let dataSignal = combineLatest(queue: prepareQueue, statePromise.get(), accountContext.account.postbox.transaction { $0.getPeer(invitation.adminId) }) |> deliverOnPrepareQueue |> map { state, admin in
         return entries(state, admin: admin, invitation: invitation, arguments: arguments)
     } |> map { entries in
         return InputDataSignalValue(entries: entries)
     }
     
 
+    
     let controller = InputDataController(dataSignal: dataSignal, title: L10n.exportedInvitationTitle)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
@@ -238,6 +298,15 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
        
         return .none
     }
+    controller.onDeinit = {
+        actionsDisposable.dispose()
+        updateState { current in
+            var current = current
+            current.joinedState = nil
+            current.requestedState = nil
+            return current
+        }
+    }
     
     let modalInteractions = ModalInteractions(acceptTitle: L10n.exportedInvitationDone, accept: { [weak controller] in
           controller?.validateInputValues()
@@ -257,19 +326,33 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
             getModalController?()?.close()
         })
     }
+    let joined = context.joined
+    let requested = context.requested
     
-    controller.didLoaded = { [weak context] controller, _ in
-        controller.tableView.setScrollHandler { [weak context] position in
+    controller.didLoaded = { [weak requested, weak joined] controller, _ in
+        controller.tableView.setScrollHandler { [weak joined, weak requested] position in
             switch position.direction {
             case .bottom:
-                context?.loadMore()
+                let state = stateValue.with { $0 }
+                if let requestedState = state.requestedState {
+                    if requestedState.canLoadMore {
+                        requested?.loadMore()
+                        break
+                    }
+                }
+                if let joinedState = state.joinedState {
+                    if joinedState.canLoadMore {
+                        joined?.loadMore()
+                        break
+                    }
+                }
             default:
                 break
             }
         }
     }
 
-    let timer = SwiftSignalKit.Timer.init(timeout: 1, repeat: true, completion: { [weak modalController, weak controller] in
+    let timer = SwiftSignalKit.Timer(timeout: 1, repeat: true, completion: { [weak modalController, weak controller] in
         if let modalController = modalController {
             controller?.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: getSubtitle())
             modalController.updateLocalizationAndTheme(theme: theme)
@@ -278,7 +361,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
 
     timer.start()
 
-    controller.contextOject = timer
+    controller.contextObject = timer
     
     return modalController
 }

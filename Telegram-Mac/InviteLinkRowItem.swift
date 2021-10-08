@@ -269,11 +269,6 @@ private final class InviteLinkTokenView : Control {
                 if let count = link.count {
                     text = L10n.inviteLinkJoinedCountable(Int(count))
                     text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
-                    if link.requestApproval, let requestedCount = link.requestedCount {
-                        var textCount = L10n.inviteLinkRequestedCountable(Int(requestedCount))
-                        textCount = textCount.replacingOccurrences(of: "\(requestedCount)", with: Int(requestedCount).prettyNumber)
-                        text += ", \(textCount)"
-                    }
                 } else if let usageLimit = link.usageLimit {
                     if link.isExpired {
                         text = L10n.inviteLinkJoinedRevoked
@@ -282,6 +277,15 @@ private final class InviteLinkTokenView : Control {
                     }
                 } else {
                     text = L10n.inviteLinkJoinedZero
+                }
+                if link.requestApproval, let requestedCount = link.requestedCount {
+                    var textCount = L10n.inviteLinkRequestedCountable(Int(requestedCount))
+                    textCount = textCount.replacingOccurrences(of: "\(requestedCount)", with: Int(requestedCount).prettyNumber)
+                    if text.isEmpty {
+                        text += textCount
+                    } else {
+                        text += ", \(textCount)"
+                    }
                 }
             }
 

@@ -137,7 +137,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         if let _requestManager = _requestManager {
             return _requestManager
         } else {
-            let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, invite: nil)
+            let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests)
             _requestManager = importersContext
             _requestManager!.loadMore()
             return _requestManager!

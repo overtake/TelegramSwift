@@ -361,7 +361,7 @@ class InputDataController: GenericViewController<InputDataView> {
     let identifier: String
     var ignoreRightBarHandler: Bool = false
     
-    var contextOject: Any?
+    var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
     
     var _abolishWhenNavigationSame: Bool = false

@@ -290,7 +290,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
         actionsDisposable.dispose()
     }
     
-    controller.contextOject = timer
+    controller.contextObject = timer
 
     
     controller.validateData = { _ in

@@ -88,7 +88,7 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
     let controller = InputDataController(dataSignal: dataSignal, title: "")
     controller.bar = .init(height: 0)
     
-    controller.contextOject = contextValue
+    controller.contextObject = contextValue
     
     controller.onDeinit = {
         actionsDisposable.dispose()

@@ -284,7 +284,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     
     let controller = InputDataController(dataSignal: signal, title: L10n.channelStatsTitle, removeAfterDisappear: false, hasDone: false)
     
-    controller.contextOject = statsContext
+    controller.contextObject = statsContext
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true

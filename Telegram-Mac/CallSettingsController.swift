@@ -154,7 +154,7 @@ func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataCon
     let controller = InputDataController(dataSignal: signal, title: L10n.callSettingsTitle, hasDone: false)
     
     
-    controller.contextOject = combineLatest(requestCameraPermission(), requestMicrophonePermission()).start()
+    controller.contextObject = combineLatest(requestCameraPermission(), requestMicrophonePermission()).start()
     
     return controller
 }
