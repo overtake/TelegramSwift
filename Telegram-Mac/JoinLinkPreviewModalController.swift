@@ -181,6 +181,8 @@ class JoinLinkPreviewModalController: ModalViewController {
                         return
                     case .tooMuchUsers:
                         text = L10n.groupUsersTooMuchError
+                    case .requestAlreadySent:
+                        text = L10n.unknownError
                     }
                     alert(for: context.window, info: text)
                 })

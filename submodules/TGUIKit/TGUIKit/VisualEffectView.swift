@@ -42,33 +42,36 @@ open class VisualEffect: NSVisualEffectView {
     
     open override func updateLayer() {
         super.updateLayer()
-        guard let backdrop = self.layer?.sublayers?.first else {
-            return
-        }
-        let sublayers = backdrop.sublayers ?? []
-        for layer in sublayers {
-            if layer.name != "backdrop" && layer.name != "Backdrop" {
-                layer.removeFromSuperlayer()
+        
+        if #available(macOS 10.13, *) {
+            guard let backdrop = self.layer?.sublayers?.first else {
+                return
             }
-        }
-        let allowedKeys: [String] = [
-                                "colorSaturate",
-                                "gaussianBlur"
-                            ]
+            let sublayers = backdrop.sublayers ?? []
+            for layer in sublayers {
+                if layer.name != "backdrop" && layer.name != "Backdrop" {
+                    layer.removeFromSuperlayer()
+                }
+            }
+            let allowedKeys: [String] = [
+                                    "colorSaturate",
+                                    "gaussianBlur"
+                                ]
 
-        sublayers.first?.filters = sublayers.first?.filters?.filter { filter in
-            guard let filter = filter as? NSObject else {
+            sublayers.first?.filters = sublayers.first?.filters?.filter { filter in
+                guard let filter = filter as? NSObject else {
+                    return true
+                }
+                let filterName = String(describing: filter)
+                if !allowedKeys.contains(filterName) {
+                    return false
+                }
                 return true
             }
-            let filterName = String(describing: filter)
-            if !allowedKeys.contains(filterName) {
-                return false
+            for sublayer in sublayers {
+                sublayer.backgroundColor = nil
+                sublayer.isOpaque = false
             }
-            return true
-        }
-        for sublayer in sublayers {
-            sublayer.backgroundColor = nil
-            sublayer.isOpaque = false
         }
     }
     

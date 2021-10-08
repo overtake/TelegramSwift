@@ -267,19 +267,12 @@ private final class InviteLinkTokenView : Control {
                 text = L10n.inviteLinkJoinedRevoked
             } else {
                 if let count = link.count {
-                    
-                    
-                    if link.requestApproval, let approvedCount = link.approvedCount {
-                        
-                        
-                        let requestedCount = count - approvedCount
-                        
-                        var textCount = L10n.inviteLinkRequestedCountable(Int(approvedCount))
-                        textCount = textCount.replacingOccurrences(of: "\(approvedCount)", with: Int(approvedCount).prettyNumber)
+                    text = L10n.inviteLinkJoinedCountable(Int(count))
+                    text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
+                    if link.requestApproval, let requestedCount = link.requestedCount {
+                        var textCount = L10n.inviteLinkRequestedCountable(Int(requestedCount))
+                        textCount = textCount.replacingOccurrences(of: "\(requestedCount)", with: Int(requestedCount).prettyNumber)
                         text += ", \(textCount)"
-                    } else {
-                        text = L10n.inviteLinkJoinedCountable(Int(count))
-                        text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
                     }
                 } else if let usageLimit = link.usageLimit {
                     if link.isExpired {
