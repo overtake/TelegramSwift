@@ -60,19 +60,19 @@ private enum Status : Equatable {
     var color: NSColor {
         switch self {
         case .connected:
-            return theme.colors.greenUI
+            return theme.colors.accent
         case .updated:
-            return theme.colors.greenUI
+            return theme.colors.accent
         case let .core(status):
             switch status {
             case .connecting:
-                return theme.colors.peerAvatarRedTop
+                return theme.colors.grayText
             case .waitingForNetwork:
-                return theme.colors.peerAvatarRedTop
+                return theme.colors.grayText
             case .updating:
-                return theme.colors.accent
+                return theme.colors.grayText
             case .online:
-                return theme.colors.greenUI
+                return theme.colors.grayText
             }
         }
     }
@@ -193,7 +193,7 @@ private final class ConnectingStatusView: View {
         
         imageView.image = generateImage(frame.size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.withAlphaComponent(0.2).cgColor)
+            ctx.setFillColor(NSColor.black.withAlphaComponent(0.15).cgColor)
             ctx.round(size, size.height / 2)
             ctx.fill(size.bounds)
         })
@@ -201,7 +201,7 @@ private final class ConnectingStatusView: View {
         
         updateAnimation()
         
-        self.visualEffect.bgColor = NSColor.black.withAlphaComponent(0.2)
+        self.visualEffect.bgColor = NSColor.black.withAlphaComponent(0.0)
         
         if status.shouldAddProgress {
             if self.progressView == nil {
@@ -295,11 +295,11 @@ final class NetworkStatusManager {
             self?.updateStatus(status, animated: true)
         }))
         
-//        window.set(handler: { _ in
-//            let statuses:[ConnectionStatus] = [.waitingForNetwork, .connecting(proxyAddress: nil, proxyHasConnectionIssues: false), .online(proxyAddress: nil), .updating(proxyAddress: nil)]
-//            fakeStatus.set(statuses.randomElement()!)
-//            return .rejected
-//        }, with: window, for: .A)
+        window.set(handler: { _ in
+            let statuses:[ConnectionStatus] = [.waitingForNetwork, .connecting(proxyAddress: nil, proxyHasConnectionIssues: false), .online(proxyAddress: nil), .updating(proxyAddress: nil)]
+            fakeStatus.set(statuses.randomElement()!)
+            return .rejected
+        }, with: window, for: .A)
     }
     
     private func updateStatus(_ status: Status?, animated: Bool) {
@@ -307,36 +307,38 @@ final class NetworkStatusManager {
             return
         }
 
-        if let status = status {
-            let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
-            view.set(status, animated: animated)
-            
-            if animated, self.currentView == nil {
-                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
+        if #available(macOS 10.14, *) {
+            if let status = status {
+                let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
+                view.set(status, animated: animated)
+                
+                if animated, self.currentView == nil {
+                    view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
 
-            
-            self.currentView = view
-            windowView.superview.addSubview(view, positioned: .above, relativeTo: windowView.aboveView)
-            
-            window.title = ""
-            
-            if self.backgroundView == nil {
-                self.backgroundView = View(frame: view.bounds)
-                self.backgroundView?.autoresizingMask = [.width, .height]
+                
+                self.currentView = view
+                windowView.superview.addSubview(view, positioned: .below, relativeTo: windowView.aboveView)
+                
+                window.title = ""
+                
+                if self.backgroundView == nil {
+                    self.backgroundView = View(frame: view.bounds)
+                    self.backgroundView?.autoresizingMask = [.width, .height]
+                }
+                windowView.superview.addSubview(self.backgroundView!, positioned: .below, relativeTo: view)
+                self.backgroundView?.backgroundColor = theme.colors.grayBackground
+            } else {
+                if let view = self.backgroundView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundView = nil
+                }
+                if let view = currentView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.currentView = nil
+                }
+                window.title = appName
             }
-            windowView.superview.addSubview(self.backgroundView!, positioned: .below, relativeTo: view)
-            self.backgroundView?.backgroundColor = theme.colors.grayBackground
-        } else {
-            if let view = self.backgroundView {
-                performSubviewRemoval(view, animated: animated)
-                self.backgroundView = nil
-            }
-            if let view = currentView {
-                performSubviewRemoval(view, animated: animated)
-                self.currentView = nil
-            }
-            window.title = appName
         }
     }
     
@@ -349,9 +351,10 @@ final class NetworkStatusManager {
         guard let title = self.window.titleView ?? self.currentView?.superview else {
             return nil
         }
+        
         let subviews = title.subviews
         for subview in subviews {
-            if subview is NSTextField {
+            if subview == window.standardWindowButton(.closeButton) {
                 return .init(superview: title, aboveView: subview)
             }
         }
