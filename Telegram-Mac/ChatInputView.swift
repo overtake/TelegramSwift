@@ -136,11 +136,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
         
-        updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), false)
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
-        
         textView.delegate = self
         
+        DispatchQueue.main.async { [weak self] in
+            self?.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
+        }
         
         updateAdditions(interaction.presentation, false)
         
@@ -204,7 +205,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
             if value.effectiveInput != oldValue.effectiveInput {
-                updateInput(value, prevState: oldValue, animated)
+                updateInput(value, prevState: oldValue, animated: animated)
             }
             updateAttachments(value,animated)
             
@@ -386,9 +387,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         CATransaction.commit()
     }
     
-    func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
-            textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+    func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
+        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
+            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
         }
         let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
         if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
@@ -397,7 +398,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if prevState.effectiveInput.inputText.isEmpty {
             self.textView.scrollToCursor()
         }
-
+        if initial {
+            self.textView.update(true)
+            self.textViewHeightChanged(self.textView.frame.height, animated: animated)
+        }
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {

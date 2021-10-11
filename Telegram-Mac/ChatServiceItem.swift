@@ -524,7 +524,11 @@ class ChatServiceItem: ChatRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
         if isBubbled {
-            text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
+            if presentation.shouldBlurService {
+                text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
+            } else {
+                text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
+            }
         }
         return true
     }
@@ -715,7 +719,7 @@ class ChatServiceRowView: TableRowView {
             textView.backgroundColor = .clear
         } else {
             textView.blurBackground = nil
-            textView.backgroundColor = item.presentation.chatServiceItemColor
+            textView.backgroundColor = .clear
         }
 
         var interactiveTextView: Bool = false
