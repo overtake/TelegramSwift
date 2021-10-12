@@ -6484,7 +6484,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.chatThemeTempValue.set(.single(theme))
         }
         
-        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 160)
+        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 200)
         self.themeSelector?.loadViewIfNeeded()
         
         self.chatInteraction.update({ $0.updatedInterfaceState({ $0.withUpdatedThemeEditing(true) })})

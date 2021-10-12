@@ -44,7 +44,7 @@ public class SwitchView: Control {
         self.isOn = isOn
     }
     
-    private var isOn:Bool = false {
+    public private(set) var isOn:Bool = false {
         didSet {
             if isOn != oldValue {
                 afterChanged()

@@ -109,7 +109,7 @@ class ReplyMarkupNode: Node {
                     btnView.backgroundColor = .clear
                 } else {
                     btnView.blurBackground = nil
-                    btnView.backgroundColor = button.presentation.colors.grayBackground
+                    btnView.backgroundColor = button.presentation.chatServiceItemColor
                 }
                 btnView.set(layout:button.text)
                 
@@ -148,7 +148,7 @@ class ReplyMarkupNode: Node {
                     btnView?.backgroundColor = .clear
                 } else {
                     btnView?.blurBackground = nil
-                    btnView?.backgroundColor = theme.colors.grayBackground
+                    btnView?.backgroundColor = button.presentation.chatServiceItemColor
                 }
                 if let btnView = btnView {
                     btnView.frame = rect

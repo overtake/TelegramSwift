@@ -214,6 +214,8 @@ open class BackgroundView: View {
     open var backgroundMode:TableBackgroundMode = .plain {
         didSet {
             if oldValue != backgroundMode {
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
                 var backgroundView: NSView? = nil
                 switch backgroundMode {
                 case let .background(image, intensity, colors, rotation):
@@ -316,6 +318,7 @@ open class BackgroundView: View {
                     self.backgroundView = nil
                 }
             }
+            CATransaction.commit()
         }
     }
     
