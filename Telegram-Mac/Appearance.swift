@@ -1842,11 +1842,11 @@ class TelegramPresentationTheme : PresentationTheme {
         return controllerBackgroundMode.hasWallpaper
     }
     var shouldBlurService: Bool {
-//        if #available(macOS 10.14, *) {
-//            return hasWallpaper
-//        } else {
+        if #available(macOS 10.14, *) {
+            return hasWallpaper
+        } else {
             return false
-//        }
+        }
     }
     
     var controllerBackgroundMode: TableBackgroundMode {

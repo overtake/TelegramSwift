@@ -322,8 +322,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             control.set(background: item.presentation.colors.accent.withAlphaComponent(0.08), for: .Hover)
             control.set(background: item.presentation.colors.accent.withAlphaComponent(0.16), for: .Highlight)
         }
+
         if let control = channelCommentsBubbleSmallControl {
             control.set(background: item.presentation.chatServiceItemColor, for: .Normal)
+            if item.presentation.shouldBlurService {
+                control.set(background: .clear, for: .Normal)
+                control.blurBackground = item.presentation.blurServiceColor
+            } else {
+                control.set(background: item.presentation.chatServiceItemColor, for: .Normal)
+                control.blurBackground = nil
+            }
         }
 
         
@@ -1100,6 +1108,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsBubbleSmallControl = current
                 rowView.addSubview(current)
             }
+            if item.presentation.shouldBlurService {
+                current.set(background: .clear, for: .Normal)
+                current.blurBackground = item.presentation.blurServiceColor
+            } else {
+                current.set(background: contentColor, for: .Normal)
+                current.blurBackground = nil
+            }
+            current.scaleOnClick = true
             current.update(data: data, size: channelCommentsOverlayFrame(item).size, animated: animated)
             current.change(pos: channelCommentsOverlayFrame(item).origin, animated: animated)
         } else {
@@ -1121,7 +1137,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else {
                 current = ChannelCommentsControl(frame: NSMakeRect(0, 0, commentsData.size(false).width, ChatRowItem.channelCommentsHeight))
                 current.set(background: contentColor, for: .Normal)
-
                 self.channelCommentsControl = current
                 rowView.addSubview(current)
             }
@@ -1166,24 +1181,31 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 control.setFrameOrigin(shareViewPoint(item))
             }
             
-            if item.isBubbled && item.presentation.shouldBlurService  {
+            if item.presentation.shouldBlurService  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
-                control.setFrameSize(NSMakeSize(29, 29))
-                let size = NSMakeSize(control.frame.width, control.frame.height)
-                control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
                 
                 control.set(cornerRadius: .half, for: .Normal)
                 
                 control.blurBackground = item.presentation.blurServiceColor
-
-            } else {
-                control.set(image: item.hasSource ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
-                control.setFrameSize(NSMakeSize(29, 29))
                 control.background = .clear
+            } else {
+                if item.presentation.backgroundMode.hasWallpaper {
+                    control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
+                } else {
+                    control.set(image: item.hasSource ? item.presentation.icons.chat_goto_message : item.presentation.icons.chat_share_message, for: .Normal)
+                }
+                control.backgroundColor = item.presentation.chatServiceItemColor
+
                 control.blurBackground = nil
+                
+
             }
-            
+            control.setFrameSize(NSMakeSize(29, 29))
+            let size = NSMakeSize(control.frame.width, control.frame.height)
+            control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
+            control.set(cornerRadius: .half, for: .Normal)
+
             control.removeAllHandlers()
             control.set(handler: { [ weak item] _ in
                 if let item = item {
@@ -1237,7 +1259,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
             let isLiked = item.isLiked
             
-            if item.isBubbled && item.presentation.backgroundMode.hasWallpaper  {
+            if item.presentation.shouldBlurService  {
                 control.set(image: likeImage(item), for: .Normal)
                 
                 _ = control.sizeToFit()
@@ -1716,7 +1738,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         control.disableActions()
         
         
-        if item.isBubbled && item.presentation.backgroundMode.hasWallpaper {
+        if item.presentation.shouldBlurService {
             control.set(image: item.presentation.chat.chat_reply_swipe_bubble(theme: item.presentation), for: .Normal)
             control.autohighlight = false
             _ = control.sizeToFit()
