@@ -1040,8 +1040,6 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(.font, value: font, range: range)
             }
         }
-        NSLog("\(string)")
-//        string.setAttributes(nil, range: stri)
         return string.copy() as! NSAttributedString
     }
 }

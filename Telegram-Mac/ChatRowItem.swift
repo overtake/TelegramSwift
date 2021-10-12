@@ -1935,7 +1935,7 @@ class ChatRowItem: TableRowItem {
             return ChatGroupedItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
         case .DateEntry:
             return ChatDateStickItem(initialSize, entry, interaction: interaction, theme: theme)
-        case .bottom:
+        case let .bottom(theme):
             return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
         case .commentsHeader:
             return ChatCommentsHeaderItem(initialSize, entry, interaction: interaction, theme: theme)
