@@ -2233,6 +2233,12 @@ internal final class L10n {
   internal static var chatMessageViewChannel: String  { return L10n.tr("Localizable", "Chat.Message.ViewChannel") }
   /// VIEW GROUP
   internal static var chatMessageViewGroup: String  { return L10n.tr("Localizable", "Chat.Message.ViewGroup") }
+  /// Read More
+  internal static var chatMessageAdReadMore: String  { return L10n.tr("Localizable", "Chat.Message.Ad.ReadMore") }
+  /// Unlike other apps, Telegram never uses your private data to target ads. Sponsored messages on Telegram are based solely on the topic of the public channels in which they are shown. This means that no user data is mined or analyzed to display ads, and every user viewing a channel on Telegram sees the same sponsored messages.\n\nUnlike other apps, Telegram doesn't track whether you tapped on a sponsored message and doesn't profile you based on your activity. We also prevent external links in sponsored messages to ensure that third parties can’t spy on our users. We believe that everyone has the right to privacy, and technological platforms should respect that.\n\nTelegram offers a free and unlimited service to hundreds of millions of users, which involves significant server and traffic costs. In order to remain independent and stay true to its values, Telegram developed a paid tool to promote messages with user privacy in mind. We welcome responsible advertisers at:\n%@\nSponsored Messages are currently in test mode. Once they are fully launched and allow Telegram to cover its basic costs, we will start sharing ad revenue with the owners of public channels in which sponsored messages are displayed.\n\nOnline ads should no longer be synonymous with abuse of user privacy. Let us redefine how a tech company should operate – together.
+  internal static func chatMessageAdText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Message.Ad.Text", p1)
+  }
   /// This message was imported from another app. We can't guarantee it's real.
   internal static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
   /// JOIN AS LISTENER

@@ -2522,8 +2522,18 @@ class ChatRowItem: TableRowItem {
 func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     if let _ = message.adAttribute {
+        let context = chatInteraction.context
         return .single([ContextMenuItem(L10n.chatMessageSponsoredWhat, handler: {
-            execute(inapp: .external(link: L10n.chatMessageSponsoredLink, false))
+            let link = "https://promote.telegram.org"
+            confirm(for: context.window, information: L10n.chatMessageAdText(link), cancelTitle: "", thridTitle: L10n.chatMessageAdReadMore, successHandler: { result in
+                switch result {
+                case .thrid:
+                 let link = inAppLink.external(link: link, false)
+                 execute(inapp: link)
+                default:
+                    break
+                }
+            })
         })])
     }
     

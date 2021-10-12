@@ -80,7 +80,7 @@ class EmptyChatView : View {
         }
         
         toggleTips.set(image: cards != nil ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
-        if theme.controllerBackgroundMode.hasWallpaper {
+        if theme.shouldBlurService {
             toggleTips.set(background: .clear, for: .Normal)
             toggleTips.blurBackground = theme.chatServiceItemColor
         } else {

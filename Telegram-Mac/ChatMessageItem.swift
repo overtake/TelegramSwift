@@ -605,6 +605,9 @@ class ChatMessageItem: ChatRowItem {
         if unsupported {
             return rightSize.height
         }
+        if message?.adAttribute != nil {
+            return rightSize.height
+        }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
            // return rightSize.height
         }
