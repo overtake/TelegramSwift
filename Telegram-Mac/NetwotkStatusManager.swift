@@ -57,7 +57,7 @@ private enum Status : Equatable {
         }
     }
     
-    var color: NSColor {
+    func color(_ window: NSWindow) -> NSColor {
         switch self {
         case .connected:
             return theme.colors.accent
@@ -66,14 +66,26 @@ private enum Status : Equatable {
         case let .core(status):
             switch status {
             case .connecting:
-                return theme.colors.grayText
+                return window.backgroundColor
             case .waitingForNetwork:
-                return theme.colors.grayText
+                return window.backgroundColor
             case .updating:
-                return theme.colors.grayText
+                return window.backgroundColor
             case .online:
-                return theme.colors.grayText
+                return window.backgroundColor
             }
+        }
+    }
+    func textColor(_ window: NSWindow) -> NSColor {
+        switch self {
+        case .connected, .updated:
+            return theme.colors.underSelectedColor
+        default:
+            if let superview = window.standardWindowButton(.closeButton)?.superview, !theme.dark {
+                let view = ObjcUtils.findElements(byClass: "NSTextField", in: superview).first as? NSTextField
+                return view?.textColor ?? theme.colors.grayText
+            }
+            return theme.colors.grayText
         }
     }
 }
@@ -163,7 +175,12 @@ private final class ConnectingStatusView: View {
         self.status = status
         let text: String = status.text
         
-        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.underSelectedColor, font: .medium(.text)))
+        guard let window = appDelegate?.window else {
+            return
+        }
+        NSLog("\(status.textColor(window).hexString)")
+
+        let layout = TextViewLayout(.initialize(string: text, color: status.textColor(window), font: .bold(.text)))
         layout.measure(width: frame.width - 80)
         textView.update(layout)
         
@@ -171,7 +188,7 @@ private final class ConnectingStatusView: View {
         
         backgroundView.image = generateImage(frame.size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
-            ctx.setFillColor(status.color.cgColor)
+            ctx.setFillColor(status.color(window).cgColor)
             ctx.round(size, size.height / 2)
             ctx.fill(size.bounds)
         })
@@ -193,7 +210,7 @@ private final class ConnectingStatusView: View {
         
         imageView.image = generateImage(frame.size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.withAlphaComponent(0.15).cgColor)
+            ctx.setFillColor(NSColor.black.withAlphaComponent(0.08).cgColor)
             ctx.round(size, size.height / 2)
             ctx.fill(size.bounds)
         })
@@ -201,16 +218,17 @@ private final class ConnectingStatusView: View {
         
         updateAnimation()
         
-        self.visualEffect.bgColor = NSColor.black.withAlphaComponent(0.0)
+        self.visualEffect.bgColor = .clear
         
         if status.shouldAddProgress {
             if self.progressView == nil {
-                let progressView: InfiniteProgressView = .init(color: theme.colors.underSelectedColor, lineWidth: 1.5)
+                let progressView: InfiniteProgressView = .init(color: status.textColor(window), lineWidth: 2.0)
                 self.progressView = progressView
                 progressView.progress = nil
                 progressView.setFrameSize(NSMakeSize(layout.layoutSize.height - 3, layout.layoutSize.height - 3))
                 self.container.addSubview(progressView)
             }
+            self.progressView?.color = status.textColor(window)
             self.container.setFrameSize(NSMakeSize(layout.layoutSize.width + progressView!.frame.width + 5, max(progressView!.frame.height, layout.layoutSize.height)))
         } else {
             self.progressView?.removeFromSuperview()
@@ -310,6 +328,9 @@ final class NetworkStatusManager {
 
         if #available(macOS 10.14, *) {
             if let status = status {
+                
+                NSLog("\(status.color(window).hexString)")
+                
                 let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
                 view.set(status, animated: animated)
                 
@@ -328,7 +349,7 @@ final class NetworkStatusManager {
                     self.backgroundView?.autoresizingMask = [.width, .height]
                 }
                 windowView.superview.addSubview(self.backgroundView!, positioned: .below, relativeTo: view)
-                self.backgroundView?.backgroundColor = theme.colors.grayBackground
+                self.backgroundView?.backgroundColor = status.color(window)
             } else {
                 if let view = self.backgroundView {
                     performSubviewRemoval(view, animated: animated)
