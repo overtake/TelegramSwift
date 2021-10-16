@@ -178,7 +178,6 @@ private final class ConnectingStatusView: View {
         guard let window = appDelegate?.window else {
             return
         }
-        NSLog("\(status.textColor(window).hexString)")
 
         let layout = TextViewLayout(.initialize(string: text, color: status.textColor(window), font: .bold(.text)))
         layout.measure(width: frame.width - 80)
@@ -328,9 +327,7 @@ final class NetworkStatusManager {
 
         if #available(macOS 10.14, *) {
             if let status = status {
-                
-                NSLog("\(status.color(window).hexString)")
-                
+                                
                 let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
                 view.set(status, animated: animated)
                 
