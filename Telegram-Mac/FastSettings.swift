@@ -432,6 +432,22 @@ class FastSettings {
         return round(UserDefaults.standard.value(forKey: kLeftColumnWidth) as? CGFloat ?? 300)
     }
     
+    static func dismissPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) {
+        
+        var peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
+        peers.append(contentsOf: peerIds.map { $0.toInt64() })
+        peers = peers.uniqueElements
+        
+        UserDefaults.standard.set(peers, forKey: "pendingRequests2_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
+    static func canBeShownPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) -> Bool {
+        let peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
+        
+        let intersection = Set(peerIds.map { $0.toInt64() }).intersection(peers)
+        return intersection.count != peerIds.count
+    }
+    
     /*
  
      +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {

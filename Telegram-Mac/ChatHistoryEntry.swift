@@ -163,7 +163,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     case groupedPhotos([ChatHistoryEntry], groupInfo: MessageGroupInfo)
     case UnreadEntry(MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
     case DateEntry(MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
-    case bottom
+    case bottom(TelegramPresentationTheme)
     case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
     case repliesHeader(Bool, MessageIndex, ChatItemRenderType)
     case topThreadInset(CGFloat, MessageIndex, ChatItemRenderType)
@@ -373,10 +373,10 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         default:
             return false
         }
-    case .bottom:
+    case let .bottom(lhsTheme):
         switch rhs {
-        case .bottom:
-            return true
+        case let .bottom(rhsTheme):
+            return lhsTheme == rhsTheme
         default:
             return false
         }
@@ -824,7 +824,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     
     
     if includeBottom {
-        entries.append(.bottom)
+        entries.append(.bottom(chatTheme))
     }
     
     if !groupedPhotos.isEmpty, let key = groupInfo {

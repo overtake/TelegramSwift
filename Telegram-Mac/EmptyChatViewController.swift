@@ -34,7 +34,7 @@ class EmptyChatView : View {
                 view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
             }
         } else {
-            performSubviewRemoval(view, animated: animated, duration: 0.3, timingFunction: .spring)
+            performSubviewRemoval(view, animated: animated, duration: 0.3, timingFunction: .spring, checkCompletion: true)
             if animated {
                 view.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, bounce: false)
             }
@@ -80,7 +80,7 @@ class EmptyChatView : View {
         }
         
         toggleTips.set(image: cards != nil ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
-        if theme.controllerBackgroundMode.hasWallpaper {
+        if theme.shouldBlurService {
             toggleTips.set(background: .clear, for: .Normal)
             toggleTips.blurBackground = theme.chatServiceItemColor
         } else {

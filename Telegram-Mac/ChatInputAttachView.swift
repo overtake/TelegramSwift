@@ -98,7 +98,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     items.append(SPopoverItem(L10n.inputAttachPopoverPicture, { [weak self] in
                         guard let `self` = self else {return}
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: mainWindow, info: permissionText)
+                            alert(for: self.chatInteraction.context.window, info: permissionText)
                             return
                         }
                         self.chatInteraction.attachPicture()
@@ -128,7 +128,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 alert(for: mainWindow, info: permissionText)
                                 return
                             }
-                            showModal(with: NewPollController(chatInteraction: self.chatInteraction), for: mainWindow)
+                            showModal(with: NewPollController(chatInteraction: self.chatInteraction), for: self.chatInteraction.context.window)
                         }, theme.icons.chatAttachPoll))
                     }
                     
@@ -140,9 +140,11 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachFile(false)
                     }, theme.icons.chatAttachFile))
                     
+                    #if !APP_STORE
                     items.append(SPopoverItem(L10n.inputAttachPopoverLocation, { [weak self] in
                         self?.chatInteraction.attachLocation()
                     }, theme.icons.chatAttachLocation))
+                    #endif
                 }
                 
                 
@@ -157,13 +159,13 @@ class ChatInputAttachView: ImageButton, Notifable {
         set(handler: { [weak self] control in
             guard let `self` = self else {return}
             
-            if let editState = chatInteraction.presentation.interfaceState.editState {
+            if let _ = chatInteraction.presentation.interfaceState.editState {
                 return
             }
             
             if let peer = self.chatInteraction.presentation.peer {
                 if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                    alert(for: mainWindow, info: permissionText)
+                    alert(for: self.chatInteraction.context.window, info: permissionText)
                     return
                 }
                 self.controller?.popover?.hide()

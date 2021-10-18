@@ -540,7 +540,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
             
             func applyPlain() {
                 ctx.setFillColor(palette.accent.cgColor)
-                ctx.fillEllipse(in: NSMakeRect(10, 7, 17, 17))
+                ctx.fillEllipse(in: NSMakeRect(5, 7, 17, 17))
                 
                 if true {
                     let name1 = generateImage(NSMakeSize(20, 4), rotatedContext: { size, ctx in
@@ -550,7 +550,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.accent.cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(name1, in: NSMakeRect(10 + 17 + 3, 7 + 2, name1.backingSize.width, name1.backingSize.height))
+                    ctx.draw(name1, in: NSMakeRect(5 + 17 + 3, 7 + 2, name1.backingSize.width, name1.backingSize.height))
                     
                     let text1 = generateImage(NSMakeSize(40, 4), rotatedContext: { size, ctx in
                         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -559,12 +559,12 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
+                    ctx.draw(text1, in: NSMakeRect(5 + 17 + 3, 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
                 }
                 
                 if true {
                     ctx.setFillColor(palette.accent.cgColor)
-                    ctx.fillEllipse(in: NSMakeRect(10, 7 + 17 + 7, 17, 17))
+                    ctx.fillEllipse(in: NSMakeRect(5, 7 + 17 + 7, 17, 17))
                     
                     let name1 = generateImage(NSMakeSize(20, 4), rotatedContext: { size, ctx in
                         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -573,7 +573,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.accent.cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(name1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2, name1.backingSize.width, name1.backingSize.height))
+                    ctx.draw(name1, in: NSMakeRect(5 + 17 + 3, 7 + 17 + 7 + 2, name1.backingSize.width, name1.backingSize.height))
                     
                     let text1 = generateImage(NSMakeSize(40, 4), rotatedContext: { size, ctx in
                         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -582,7 +582,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
+                    ctx.draw(text1, in: NSMakeRect(5 + 17 + 3, 7 + 17 + 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
                 }
                 
                 

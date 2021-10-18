@@ -13,6 +13,42 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 
+
+private extension EngineCallList.Item {
+    var lowestIndex: EngineMessage.Index {
+        switch self {
+            case let .hole(index):
+                return index
+            case let .message(_, messages):
+                var lowest = messages[0].index
+                for i in 1 ..< messages.count {
+                    let index = messages[i].index
+                    if index < lowest {
+                        lowest = index
+                    }
+                }
+                return lowest
+        }
+    }
+    
+    var highestIndex: EngineMessage.Index {
+        switch self {
+        case let .hole(index):
+            return index
+        case let .message(_, messages):
+            var highest = messages[0].index
+            for i in 1 ..< messages.count {
+                let index = messages[i].index
+                if index > highest {
+                    highest = index
+                }
+            }
+            return highest
+        }
+    }
+}
+
+
 private final class RecentCallsArguments {
     let call:(PeerId)->Void
     let removeCalls:([MessageId], Peer) -> Void
@@ -166,6 +202,11 @@ class RecentCallsViewController: NavigationViewController {
         bar = .init(height: 0)
     }
     
+    override func scrollup(force: Bool = false) {
+        super.scrollup(force: force)
+        self.layoutController.scrollup(force: force)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.push(layoutController, false)
@@ -198,7 +239,7 @@ class RecentCallsViewController: NavigationViewController {
 }
 
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<RecentCallEntry>], right: [AppearanceWrapperEntry<RecentCallEntry>], initialSize:NSSize, arguments:RecentCallsArguments, animated: Bool) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<RecentCallEntry>], right: [AppearanceWrapperEntry<RecentCallEntry>], initialSize:NSSize, arguments:RecentCallsArguments, animated: Bool, scrollPosition: CallListViewScrollPosition?) -> TableUpdateTransition {
     
     let (removed, inserted, updated) = proccessEntries(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments, initialSize: initialSize)
@@ -211,7 +252,41 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<RecentCallEntry>
         _ = item.makeSize(initialSize.width, oldWidth: initialSize.width)
     }
     
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated)
+    var state: TableScrollState = .none(nil)
+    
+    if let scrollPosition = scrollPosition {
+        loop: switch scrollPosition {
+        case let .index(index, position, directionHint, animated: animated):
+            
+            var stableId: AnyHashable?
+            for entry in right {
+                switch entry.entry {
+                case let .calls(msg, msgs, _, _):
+                    if msg.id == index.id || msgs.contains(where: { $0.id == index.id }) {
+                        stableId = entry.stableId
+                        break loop
+                    }
+                default:
+                    break
+                }
+            }
+            if let stableId = stableId {
+                state = .saveVisible(.aroundIndex(stableId))
+            } else {
+                switch position {
+                case .Bottom:
+                    state = .saveVisible(.lower)
+                case .Top:
+                    state = .saveVisible(.upper)
+                default:
+                    state = .none(nil)
+                }
+            }
+            
+        }
+    }
+    
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: state)
 }
 
 private struct RecentCallsControllerState: Equatable {
@@ -265,9 +340,9 @@ private struct RecentCallsControllerState: Equatable {
 }
 
 
-private func makeEntries(from: [CallListViewEntry], state: RecentCallsControllerState) -> [RecentCallEntry] {
+private func makeEntries(from: CallListViewUpdate, state: RecentCallsControllerState) -> [RecentCallEntry] {
     var entries:[RecentCallEntry] = []
-    for entry in from {
+    for entry in from.view.items {
         switch entry {
         case let .message(message, messages):
             var failed:Bool = false
@@ -286,7 +361,7 @@ private func makeEntries(from: [CallListViewEntry], state: RecentCallsController
                     failed = !outgoing && missed
                 }
             }
-            entries.append(.calls( message, messages, state.editing, failed))
+            entries.append(.calls( message._asMessage(), messages.map { $0._asMessage() }, state.editing, failed))
         default:
             break
         }
@@ -361,50 +436,53 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         })
         
         
-        let callListView:Atomic<CallListView?> = Atomic(value: nil)
+        let callListView:Atomic<CallListViewUpdate?> = Atomic(value: nil)
         
-        let location:ValuePromise<MessageIndex> = ValuePromise()
+        let locationValue:ValuePromise<CallListLocation> = ValuePromise()
         
         let first:Atomic<Bool> = Atomic(value: true)
-        let signal: Signal<CallListView, NoError> = location.get() |> distinctUntilChanged |> mapToSignal { index in
-            return context.account.viewTracker.callListView(type: .all, index: index, count: 100)
+        let signal: Signal<CallListViewUpdate, NoError> = locationValue.get() |> distinctUntilChanged |> mapToSignal { location in
+            return callListViewForLocationAndType(locationAndType: .init(location: location, scope: .all), engine: context.engine) |> map { $0.0 }
         }
         
-        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, signal, statePromise.get(), appearanceSignal) |> map { result in
-            _ = callListView.swap(result.0)
-            let entries = makeEntries(from: result.0.entries, state: result.1).map({AppearanceWrapperEntry(entry: $0, appearance: result.2)})
-            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false))
+        let transition:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, signal, statePromise.get(), appearanceSignal) |> map { result, state, appearnace in
+            _ = callListView.swap(result)
+            let entries = makeEntries(from: result, state: state).map({AppearanceWrapperEntry(entry: $0, appearance: appearnace)})
+            return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, animated: !first.swap(false), scrollPosition: result.scrollPosition)
             } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition in
             self?.genericView.merge(with: transition)
+            self?.readyOnce()
         }))
         
         
-        readyOnce()
         
-        genericView.setScrollHandler({ scroll in
-            
-            let view = callListView.modify({$0})
-            
-            if let view = view {
-                var messageIndex:MessageIndex?
-                
-                switch scroll.direction {
-                case .bottom:
-                    messageIndex = view.earlier
-                case .top:
-                    messageIndex = view.later
-                case .none:
-                    break
-                }
-                if let messageIndex = messageIndex {
-                    _ = first.swap(true)
-                    location.set(messageIndex)
-                }
-            }
-        })
-        location.set(MessageIndex.absoluteUpperBound())
+//        genericView.setScrollHandler({ scroll in
+//            
+//            let view = callListView.with { $0 }
+//            
+//            if let view = view?.view {
+//                var location: CallListLocation?
+//                
+//                switch scroll.direction {
+//                case .bottom:
+//                    if view.hasEarlier {
+//                        location = .scroll(index: view.items[0].lowestIndex, sourceIndex: view.items[0].lowestIndex, scrollPosition: .Bottom, animated: false)
+//                    }
+//                case .top:
+//                    if view.hasLater {
+//                        location = .scroll(index: view.items[view.items.count - 1].highestIndex, sourceIndex: view.items[view.items.count - 1].highestIndex, scrollPosition: .Top, animated: false)
+//                    }
+//                case .none:
+//                    break
+//                }
+//                if let location = location {
+//                    locationValue.set(location)
+//                }
+//            }
+//        })
+        locationValue.set(.initial(count: 100))
         
     }
     
@@ -420,6 +498,11 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     
     override func backSettings() -> (String, CGImage?) {
         return ("", theme.icons.callSettings)
+    }
+    
+    override func scrollup(force: Bool = false) {
+        super.scrollup(force: force)
+        self.genericView.scroll(to: .up(true))
     }
     
     override func executeReturn() {

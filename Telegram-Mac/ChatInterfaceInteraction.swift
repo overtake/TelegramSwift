@@ -170,6 +170,9 @@ final class ChatInteraction : InterfaceObserver  {
     
     var showDeleterSetup:(Control)->Void = { _ in }
 
+    var openPendingRequests:()->Void = { }
+    var dismissPendingRequests:([PeerId])->Void = { _ in }
+
     func chatLocationInput() -> ChatLocationInput {
         return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
     }

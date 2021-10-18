@@ -29,7 +29,7 @@ protocol ChannelCommentRenderer {
 }
 
 
-class CommentsBasicControl : Control, ChannelCommentRenderer {
+class CommentsBasicControl : Button, ChannelCommentRenderer {
     
     fileprivate var textViews: [ChannelCommentsRenderData.Text : (TextView, ChannelCommentsRenderData.Text)] = [:]
     fileprivate var renderData: ChannelCommentsRenderData?

@@ -613,15 +613,15 @@ class ChatControllerView : View, ChatInputDelegate {
                     addSubview(progressView!)
                     progressView!.center()
                 }
-                let theme = self.chatTheme ?? theme
-                if theme.shouldBlurService {
-                    progressView?.blurBackground = theme.blurServiceColor
+                let currentTheme = self.chatTheme ?? theme
+                if currentTheme.shouldBlurService {
+                    progressView?.blurBackground = currentTheme.blurServiceColor
                     progressView?.backgroundColor = .clear
                 } else {
-                    progressView?.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+                    progressView?.backgroundColor = currentTheme.colors.background.withAlphaComponent(0.7)
                     progressView?.blurBackground = nil
                 }
-                progressView?.progressColor = theme.chatServiceItemTextColor
+                progressView?.progressColor = currentTheme.chatServiceItemTextColor
                 progressView?.layer?.cornerRadius = 15
             case .visible:
                 if animated {
@@ -656,7 +656,9 @@ class ChatControllerView : View, ChatInputDelegate {
         }
 
         var state:ChatHeaderState
-        if interfaceState.reportMode != nil {
+        if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty {
+            state = .pendingRequests(voiceChat, Int(count), inviteRequestsPendingPeers)
+        } else if interfaceState.reportMode != nil {
             state = .none(nil)
         } else if interfaceState.isSearchMode.0 {
             state = .search(voiceChat, searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
@@ -1467,9 +1469,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         let cached:[MessageId : NSView] = grouppedFloatingPhotos.reduce([:], { current, value in
             var current = current
-            let item = value.0[value.0.count - 1]
-            let view = value.1
-            current[item.message!.id] = view
+            for item in value.0 {
+                let view = value.1
+                current[item.message!.id] = view
+            }
             return current
         })
         
@@ -2711,6 +2714,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), true)
                 }
                 
+            }
+        }
+        
+        self.chatInteraction.openPendingRequests = { [weak self] in
+            if let importersContext = self?.tempImportersContext {
+                self?.navigationController?.push(RequestJoinMemberListController(context: context, peerId: peerId, manager: importersContext, openInviteLinks: { [weak self] in
+                    self?.navigationController?.push(InviteLinksController(context: context, peerId: peerId, manager: nil))
+                }))
+            }
+        }
+        self.chatInteraction.dismissPendingRequests = { [weak self] peerIds in
+            guard let `self` = self else {
+                return
+            }
+            FastSettings.dismissPendingRequests(peerIds, for: self.chatInteraction.peerId)
+            self.chatInteraction.update {
+                $0.withUpdatedInviteRequestsPending(nil)
+                    .withUpdatedInviteRequestsPendingPeers(nil)
             }
         }
         
@@ -4095,7 +4116,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else {
                                 return nil
                             }
-                        })
+                        }).withUpdatedInviteRequestsPending(cachedData.inviteRequestsPending)
                     }
                     if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                         present = present
@@ -4109,10 +4130,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                                 return nil
                             }
-//                                    .withUpdatedHasScheduled(cachedData.hasScheduledMessages)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                         present = present
                             .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
+                            .withUpdatedInviteRequestsPending(cachedData.inviteRequestsPending)
                             .updatedGroupCall({ currentValue in
                                 if let call = cachedData.activeCall {
                                     return ChatActiveGroupCallInfo(activeCall: call, data: currentValue?.data, callJoinPeerId: cachedData.callJoinPeerId, joinHash: currentValue?.joinHash)
@@ -4295,6 +4316,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                         } else if let cachedData = peerView.cachedData as? CachedChannelData {
                             present = present
+                                .withUpdatedInviteRequestsPending(cachedData.inviteRequestsPending)
                                 .withUpdatedPeerStatusSettings(contactStatus)
                                 .withUpdatedIsNotAccessible(cachedData.isNotAccessible)
                                 .updatedGroupCall({ current in
@@ -4329,6 +4351,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         } else if let cachedData = peerView.cachedData as? CachedGroupData {
                             present = present
+                                .withUpdatedInviteRequestsPending(cachedData.inviteRequestsPending)
                                 .withUpdatedPeerStatusSettings(contactStatus)
                                 .updatedGroupCall({ current in
                                     if let call = cachedData.activeCall {
@@ -5452,6 +5475,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         loadThreadDisposable.dispose()
         recordActivityDisposable.dispose()
         suggestionsDisposable.dispose()
+        tempImportersContextDisposable.dispose()
         peekDisposable.dispose()
         _ = previousView.swap(nil)
         
@@ -6025,6 +6049,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private var isPausedGlobalPlayer: Bool = false
+    private var tempImportersContext: PeerInvitationImportersContext? = nil
+    private let tempImportersContextDisposable = MetaDisposable()
     
     func notify(with value: Any, oldValue: Any, animated:Bool, force:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
@@ -6201,7 +6227,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             
-            if value.isSearchMode.0 != oldValue.isSearchMode.0 || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode {
+            if value.isSearchMode.0 != oldValue.isSearchMode.0 || value.pinnedMessageId != oldValue.pinnedMessageId || value.peerStatus != oldValue.peerStatus || value.interfaceState.dismissedPinnedMessageId != oldValue.interfaceState.dismissedPinnedMessageId || value.initialAction != oldValue.initialAction || value.restrictionInfo != oldValue.restrictionInfo || value.hidePinnedMessage != oldValue.hidePinnedMessage || value.groupCall != oldValue.groupCall || value.reportMode != oldValue.reportMode || value.inviteRequestsPendingPeers != oldValue.inviteRequestsPendingPeers {
                 genericView.updateHeader(value, animated, value.hidePinnedMessage != oldValue.hidePinnedMessage)
                 (centerBarView as? ChatTitleBarView)?.updateStatus(true, presentation: value)
             }
@@ -6250,6 +6276,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             dismissedPinnedIds.set(ChatDismissedPins(ids: value.interfaceState.dismissedPinnedMessageId, tempMaxId: value.tempPinnedMaxId))
            
+            
+            if value.inviteRequestsPending != oldValue.inviteRequestsPending, let value = value.inviteRequestsPending, value > 0 {
+                let peerId = self.chatLocation.peerId
+                let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
+                importersContext.loadMore()
+                self.tempImportersContext = importersContext
+                let state = importersContext.state
+                |> filter { !$0.isLoadingMore }
+                |> deliverOnMainQueue
+                tempImportersContextDisposable.set(state.start(next: { [weak self] state in
+                    let check = FastSettings.canBeShownPendingRequests(state.importers.compactMap { $0.peer.peer?.id }, for: peerId)
+                    if check || state.importers.isEmpty  {
+                        self?.chatInteraction.update {
+                            $0.withUpdatedInviteRequestsPendingPeers(state.importers)
+                        }
+                    }
+                }))
+            } else {
+                if value.inviteRequestsPending == nil || value.inviteRequestsPending == 0 {
+                    tempImportersContext = nil
+                    tempImportersContextDisposable.set(nil)
+                }
+            }
         }
     }
     
@@ -6487,7 +6536,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.chatThemeTempValue.set(.single(theme))
         }
         
-        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 160)
+        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 200)
         self.themeSelector?.loadViewIfNeeded()
         
         self.chatInteraction.update({ $0.updatedInterfaceState({ $0.withUpdatedThemeEditing(true) })})
