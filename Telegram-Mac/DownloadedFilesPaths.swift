@@ -24,20 +24,6 @@ struct DownloadedPath : Codable, Equatable {
     }
 
     
-    init(decoder: PostboxDecoder) {
-        self.id = decoder.decodeObjectForKey("id", decoder: { MediaId(decoder: $0) }) as! MediaId
-        self.downloadedPath = decoder.decodeStringForKey("dp", orElse: "")
-        self.size = decoder.decodeInt32ForKey("s", orElse: 0)
-        self.lastModified = decoder.decodeInt32ForKey("lm", orElse: 0)
-    }
-    
-    func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeObject(self.id, forKey: "id")
-        encoder.encodeString(self.downloadedPath, forKey: "dp")
-        encoder.encodeInt32(self.size, forKey: "s")
-        encoder.encodeInt32(self.lastModified, forKey: "lm")
-    }
-    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         

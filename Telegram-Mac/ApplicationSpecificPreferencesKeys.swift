@@ -23,7 +23,6 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case automaticMediaDownloadSettings = 31
     case autoplayMedia = 32
     case voiceCallSettings = 34
-    case downloadedPaths = 35
     case walletPasscodeTimeout = 37
     case passcodeSettings = 38
     case appConfiguration = 39
@@ -31,6 +30,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case recentEmoji = 48
     case voipDerivedState = 49
     case instantViewAppearance = 50
+    case downloadedPaths = 51
 }
 
 struct ApplicationSpecificPreferencesKeys {
