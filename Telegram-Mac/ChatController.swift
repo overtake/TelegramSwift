@@ -1467,9 +1467,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         let cached:[MessageId : NSView] = grouppedFloatingPhotos.reduce([:], { current, value in
             var current = current
-            let item = value.0[value.0.count - 1]
-            let view = value.1
-            current[item.message!.id] = view
+            for item in value.0 {
+                let view = value.1
+                current[item.message!.id] = view
+            }
             return current
         })
         
