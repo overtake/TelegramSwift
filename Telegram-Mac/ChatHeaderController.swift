@@ -2021,7 +2021,7 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
     private let dismiss:ImageButton = ImageButton()
     private let textView = TextView()
     private var avatars:[AvatarContentView] = []
-    private let avatarsContainer = View(frame: NSMakeRect(0, 0, 22 * 3, 22))
+    private let avatarsContainer = View(frame: NSMakeRect(0, 0, 35 * 3, 35))
     
     private struct Avatar : Comparable, Identifiable {
         static func < (lhs: Avatar, rhs: Avatar) -> Bool {
@@ -2110,7 +2110,7 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
                 let control = avatars.remove(at: removed)
                 let peer = self.peers[removed]
                 let haveNext = peers.contains(where: { $0.stableId == peer.stableId })
-                control.updateLayout(size: NSMakeSize(22, 22), isClipped: false, animated: animated)
+                control.updateLayout(size: NSMakeSize(35, 35), isClipped: false, animated: animated)
                 if animated && !haveNext {
                     control.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
                         control?.removeFromSuperview()
@@ -2121,16 +2121,16 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
                 }
             }
             for inserted in inserted {
-                let control = AvatarContentView(context: chatInteraction.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(22, 22))
-                control.updateLayout(size: NSMakeSize(22, 22), isClipped: inserted.0 != 0, animated: animated)
+                let control = AvatarContentView(context: chatInteraction.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(35, 35))
+                control.updateLayout(size: NSMakeSize(35, 35), isClipped: inserted.0 != 0, animated: animated)
                 control.userInteractionEnabled = false
-                control.setFrameSize(NSMakeSize(22, 22))
-                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 19, 0))
+                control.setFrameSize(NSMakeSize(35, 35))
+                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 32, 0))
                 avatars.insert(control, at: inserted.0)
                 avatarsContainer.subviews.insert(control, at: inserted.0)
                 if animated {
                     if let index = inserted.2 {
-                        control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 19, 0), to: control.frame.origin, timingFunction: timingFunction)
+                        control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 32, 0), to: control.frame.origin, timingFunction: timingFunction)
                     } else {
                         control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
                         control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
@@ -2140,7 +2140,7 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
             for updated in updated {
                 let control = avatars[updated.0]
                 control.updateLayout(size: NSMakeSize(22, 22), isClipped: updated.0 != 0, animated: animated)
-                let updatedPoint = NSMakePoint(CGFloat(updated.0) * 19, 0)
+                let updatedPoint = NSMakePoint(CGFloat(updated.0) * 32, 0)
                 if animated {
                     control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
                 }

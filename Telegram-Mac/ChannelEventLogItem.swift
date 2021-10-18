@@ -699,6 +699,13 @@ class ServiceEventLogItem: TableRowItem {
             case let .participantJoinedViaInvite(invite):
                 let text = L10n.channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let  .participantJoinByRequest(invite, peerId):
+                
+                if let secondary = entry.peers[peerId] {
+                    let secondaryLink = (range: secondary.displayTitle, link: inAppLink.peerInfo(link: "", peerId: secondary.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
+                    let text = L10n.channelAdminLogJoinedViaRequest(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""), secondary.displayTitle)
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
+                }
             case let .changeHistoryTTL(_, updatedValue):
                 let text: String
                 if let updatedValue = updatedValue, updatedValue > 0 {
@@ -746,7 +753,7 @@ class ServiceEventLogItem: TableRowItem {
             }
         }
         
-        textLayout = TextViewLayout(attributedString)
+        textLayout = TextViewLayout(attributedString, alignment: .center)
         textLayout.interactions = globalLinkExecutor
         super.init(initialSize)
     }

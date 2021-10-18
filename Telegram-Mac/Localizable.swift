@@ -955,6 +955,10 @@ internal final class L10n {
   internal static func channelAdminLogJoinedViaInviteLink(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.JoinedViaInviteLink", p1, p2)
   }
+  /// %1$@ joined via invite link %2$@, approved by %3$@
+  internal static func channelAdminLogJoinedViaRequest(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.JoinedViaRequest", p1, p2, p3)
+  }
   /// %1$@ disabled auto-remove timer
   internal static func channelAdminLogMessageChangedAutoremoveTimeoutRemove(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.MessageChangedAutoremoveTimeoutRemove", p1)
