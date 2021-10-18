@@ -763,7 +763,7 @@ class InputDataController: GenericViewController<InputDataView> {
                 return .invoked
             }
             
-        }, with: self, for: .F, priority: self.responderPriority, modifierFlags: nil)
+        }, with: self, for: .F, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             let view = self?.findReponsderView as? InputDataRowView

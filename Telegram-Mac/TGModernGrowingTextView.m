@@ -821,9 +821,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     
     if ((self._selectedRange.location != self.textView.selectedRange.location) || (self._selectedRange.length != self.textView.selectedRange.length)) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
-        });
+        [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
         self._selectedRange = self.textView.selectedRange;
     }
     
@@ -1451,12 +1449,15 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
     
+  
     
     NSRange selectedRange = _textView.selectedRange;
     if (selectedRange.location == self.textView.string.length) {
         selectedRange = NSMakeRange(attr.length, 0);
     }
     [_textView.textStorage setAttributedString:attr];
+    
+
     BOOL o = self.animates;
     self.animates = animated;
     [self update:animated];

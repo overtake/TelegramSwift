@@ -19,12 +19,14 @@ final class ChatThemeRowItem : GeneralRowItem {
     fileprivate let selected: Bool
     fileprivate let select:((String, TelegramPresentationTheme)?)->Void
     fileprivate let emojies: [String: StickerPackItem]
-    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, emojies: [String: StickerPackItem], theme: (String, CGImage, TelegramPresentationTheme)?, selected: Bool, select:@escaping((String, TelegramPresentationTheme)?)->Void) {
+    fileprivate let bubbled: Bool
+    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, bubbled: Bool, emojies: [String: StickerPackItem], theme: (String, CGImage, TelegramPresentationTheme)?, selected: Bool, select:@escaping((String, TelegramPresentationTheme)?)->Void) {
         self.theme = theme
         self.select = select
         self.selected = selected
         self.context = context
         self.emojies = emojies
+        self.bubbled = bubbled
         super.init(initialSize, stableId: stableId)
     }
     
@@ -90,6 +92,11 @@ private final class ChatThemeRowView: HorizontalRowView {
             self?.emojiView.overridePlayValue = false
         }, for: .Normal)
     }
+    
+    override func updateMouse() {
+        super.updateMouse()
+        overlay.updateState()
+    }
 
     
     required init?(coder: NSCoder) {
@@ -109,7 +116,7 @@ private final class ChatThemeRowView: HorizontalRowView {
         }
         selectionView.layer?.borderColor = item.selected ? theme.colors.accentSelect.cgColor : theme.colors.border.cgColor
 
-        let dBorder: CGFloat = item.theme?.2.bubbled == true ? 0 : 1
+        let dBorder: CGFloat = item.bubbled ? 0 : 1
         
         selectionView.layer?.borderWidth = item.selected ? 2 : (item.theme == nil ? 1 : dBorder)
         
@@ -125,13 +132,13 @@ private final class ChatThemeRowView: HorizontalRowView {
                 }
                 
                 self.emojiView.overridePlayValue = false
-                self.imageView.image = current.1
-                self.imageView.sizeToFit()
-                self.imageView.isHidden = false
                 self.noThemeTextView?.removeFromSuperview()
                 self.noThemeTextView = nil
                 self.textView.update(nil)
             }
+            self.imageView.image = current.1
+            self.imageView.sizeToFit()
+            self.imageView.isHidden = false
         } else {
             let layout = TextViewLayout(.initialize(string: "❌", color: theme.colors.text, font: .normal(15)))
             layout.measure(width: .greatestFiniteMagnitude)

@@ -127,6 +127,8 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
                     let navigation = context.sharedContext.bindings.rootNavigation()
                     navigation.controller.show(toaster: .init(text: L10n.requestJoinSent))
                     return
+                case .flood:
+                    text = L10n.joinLinkFloodError
                 }
                 alert(for: context.window, info: text)
             })

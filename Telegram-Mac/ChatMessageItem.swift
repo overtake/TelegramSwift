@@ -605,6 +605,9 @@ class ChatMessageItem: ChatRowItem {
         if unsupported {
             return rightSize.height
         }
+        if message?.adAttribute != nil {
+            return rightSize.height
+        }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
            // return rightSize.height
         }
@@ -789,6 +792,9 @@ class ChatMessageItem: ChatRowItem {
                 for i in 0 ..< items.count {
                     if items[i].title == L10n.messageContextReply1 {
                         index = i + 1
+                        if items.count > index!, items[index!] is ContextSeparatorItem {
+                            index = index! + 1
+                        }
                     }
                 }
             }
@@ -1040,7 +1046,6 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(.font, value: font, range: range)
             }
         }
-
         return string.copy() as! NSAttributedString
     }
 }

@@ -39,6 +39,12 @@ struct PeerRequestChatJoinData : Equatable {
 }
 
 private struct State : Equatable {
+    
+    struct SearchResult : Equatable {
+        var isLoading: Bool
+        var result: PeerInvitationImportersState?
+    }
+    
     var peer: PeerEquatable?
     var state:PeerInvitationImportersState?
     var added:Set<PeerId> = Set()
@@ -52,6 +58,8 @@ private struct State : Equatable {
         }
         return true
     }
+    
+    var searchResult: SearchResult?
 }
 
 
@@ -78,50 +86,65 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 sectionId += 1
             }
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                
-                
-                
-                let text: String = L10n.requestJoinListDescription
-                
-                let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in
-                        arguments.openInviteLinks()
+            if state.searchResult == nil {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                    
+                    
+                    
+                    let text: String = L10n.requestJoinListDescription
+                    
+                    let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in
+                            arguments.openInviteLinks()
+                        }))
                     }))
+                    
+                    return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.request_join_link, text: attr)
                 }))
-                
-                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.request_join_link, text: attr)
-            }))
-            index += 1
+                index += 1
+            }
+            
+         
             
            
             let isChannel = peer.isChannel
             
-            if let importerState = state.state {
+            
+            
+            let effectiveImporterState: PeerInvitationImportersState?
+            if let searchResult = state.searchResult {
+                effectiveImporterState = searchResult.result
                 
-                let importers = importerState.importers.filter { $0.approvedBy == nil }.filter { value in
-                    if let search = state.searchState {
-                        if !search.request.isEmpty {
-                            return value.peer.peer?.displayTitle.lowercased().components(separatedBy: " ").filter {
-                                $0.hasPrefix(search.request.lowercased())
-                            }.isEmpty == false
-                        } else {
-                            return true
-                        }
-                    } else {
-                        return true
-                    }
+                if searchResult.isLoading {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("searching"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                        return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .singleItem)
+                    }))
+                    index += 1
+                } else if let result = searchResult.result, result.count == 0, let request = state.searchState?.request {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_empty"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.requestJoinListSearchEmpty(request), font: .normal(.text), color: theme.colors.text, header: .init(text: L10n.requestJoinListSearchEmptyHeader, icon: nil))
+                    }))
+                    index += 1
                 }
+               
+                
+            } else {
+                effectiveImporterState = state.state
+            }
+            if let importerState = effectiveImporterState {
+                
+                let importers = importerState.importers.filter { $0.approvedBy == nil && !state.added.contains($0.peer.peerId) && !state.dismissed.contains($0.peer.peerId) }
                 
 
                 if !importers.isEmpty {
-                    entries.append(.sectionId(sectionId, type: .normal))
-                    sectionId += 1
+                   
 
-
-                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-                    
-                    
+                    if state.searchResult == nil {
+                        entries.append(.sectionId(sectionId, type: .normal))
+                        sectionId += 1
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                        index += 1
+                    }
                     for (i, importer) in importers.enumerated() {
                         
                         let data: PeerRequestChatJoinData = .init(peer: PeerEquatable(importer.peer.peer!), about: importer.about, timeInterval: TimeInterval(importer.date), added: state.added.contains(importer.peer.peerId), adding: false, dismissing: false, dismissed: state.dismissed.contains(importer.peer.peerId))
@@ -197,6 +220,14 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         statePromise.set(stateValue.modify (f))
     }
     
+    let searchStatePromise = ValuePromise(SearchState(state: .None, request: nil), ignoreRepeated: true)
+    let searchStateValue = Atomic(value: SearchState(state: .None, request: nil))
+    let updateSearchState: ((SearchState) -> SearchState) -> Void = { f in
+        searchStatePromise.set(searchStateValue.modify (f))
+    }
+
+    
+    
     var getController:(()->InputDataController?)? = nil
 
     let arguments = Arguments(context: context, add: { [weak manager] userId in
@@ -256,19 +287,52 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         }
     }))
 
+    var searchManager: PeerInvitationImportersContext?
+    let searchResultDisposable = MetaDisposable()
     
-    let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in
+    actionsDisposable.add(searchStatePromise.get().start(next: { state in
+        
+        let result: State.SearchResult?
+        if !state.request.isEmpty {
+            result = .init(isLoading: true, result: nil)
+        } else {
+            result = nil
+        }
         updateState { current in
             var current = current
-            current.searchState = searchState
+            current.searchState = state
+            current.searchResult = result
             return current
+        }
+        if result != nil {
+            let manager = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: state.request))
+            manager.loadMore()
+            searchManager = manager
+            searchResultDisposable.set(manager.state.start(next: { state in
+                updateState { current in
+                    var current = current
+                    if !state.isLoadingMore {
+                        current.searchResult = .init(isLoading: false, result: state)
+                    }
+                    return current
+                }
+            }))
+        } else {
+            searchManager = nil
+            searchResultDisposable.set(nil)
+        }
+        
+    }))
+
+    
+    let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in
+        updateSearchState { _ in
+            return searchState
         }
     }))
     let searchPromise: ValuePromise<TableSearchViewState> = ValuePromise(.none({ searchState in
-        updateState { current in
-            var current = current
-            current.searchState = searchState
-            return current
+        updateSearchState { _ in
+            return searchState
         }
     }), ignoreRepeated: true)
     let updateSearchValue:((TableSearchViewState)->TableSearchViewState)->Void = { f in
@@ -279,20 +343,18 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: {
         updateSearchValue { _ in
             return .none({ searchState in
-                updateState { current in
-                    var current = current
-                    current.searchState = searchState
-                    return current
+                updateSearchState { _ in
+                    return searchState
                 }
             })
         }
     }, updateState: { searchState in
-        updateState { current in
-            var current = current
-            current.searchState = searchState
-            return current
+        updateSearchState { _ in
+            return searchState
         }
     })
+    
+    
     
     let signal = combineLatest(statePromise.get(), searchPromise.get()) |> deliverOnPrepareQueue |> map { state, searchData in
         return InputDataSignalValue(entries: entries(state, arguments: arguments), searchState: searchData)
@@ -319,6 +381,8 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
                 }
             }
         }, for: .Click)
+        bar.button.autohighlight = false
+        bar.button.scaleOnClick = true
         updateBarIsHidden = { [weak bar] isHidden in
             bar?.button.alphaValue = isHidden ? 0 : 1
         }
@@ -328,6 +392,8 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+        searchResultDisposable.dispose()
+        searchManager = nil
     }
     
     controller.searchKeyInvocation = {

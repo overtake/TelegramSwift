@@ -57,23 +57,35 @@ private enum Status : Equatable {
         }
     }
     
-    var color: NSColor {
+    func color(_ window: NSWindow) -> NSColor {
         switch self {
         case .connected:
-            return theme.colors.greenUI
+            return theme.colors.accent
         case .updated:
-            return theme.colors.greenUI
+            return theme.colors.accent
         case let .core(status):
             switch status {
             case .connecting:
-                return theme.colors.peerAvatarRedTop
+                return window.backgroundColor
             case .waitingForNetwork:
-                return theme.colors.peerAvatarRedBottom
+                return window.backgroundColor
             case .updating:
-                return theme.colors.accent
+                return window.backgroundColor
             case .online:
-                return theme.colors.greenUI
+                return window.backgroundColor
             }
+        }
+    }
+    func textColor(_ window: NSWindow) -> NSColor {
+        switch self {
+        case .connected, .updated:
+            return theme.colors.underSelectedColor
+        default:
+            if let superview = window.standardWindowButton(.closeButton)?.superview, !theme.dark {
+                let view = ObjcUtils.findElements(byClass: "NSTextField", in: superview).first as? NSTextField
+                return view?.textColor ?? theme.colors.grayText
+            }
+            return theme.colors.grayText
         }
     }
 }
@@ -84,7 +96,7 @@ private final class ConnectingStatusView: View {
     private let container = View()
     private var progressView: InfiniteProgressView?
     private let imageView: ImageView
-    private let backgroundView: View
+    private var backgroundView: ImageView?
     
     private var status: Status?
     
@@ -92,10 +104,8 @@ private final class ConnectingStatusView: View {
     required init(frame frameRect: NSRect) {
         self.visualEffect = VisualEffect(frame: frameRect.size.bounds)
         self.imageView = ImageView(frame: frameRect.size.bounds)
-        self.backgroundView = View(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         autoresizingMask = [.width, .height]
-        addSubview(backgroundView)
         addSubview(imageView)
         addSubview(self.visualEffect)
         addSubview(container)
@@ -121,8 +131,8 @@ private final class ConnectingStatusView: View {
         self.container.center()
         self.imageView.center()
         self.visualEffect.frame = bounds
-        self.backgroundView.frame = bounds
-        
+        self.backgroundView?.frame = bounds
+        updateAnimation()
     }
     
     
@@ -131,66 +141,93 @@ private final class ConnectingStatusView: View {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private func updateAnimation() {
+        let animation = makeSpringAnimation("transform")
+        
+        let to: CGFloat = (frame.width - 40) / imageView.frame.width
+        let from: CGFloat = 0.1
+
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, floorToScreenPixels(System.backingScale, imageView.frame.width / 2), floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
+        fr = CATransform3DScale(fr, from, from, 1)
+        fr = CATransform3DTranslate(fr, -floorToScreenPixels(System.backingScale, imageView.frame.width / 2), -floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
+        
+        animation.timingFunction = .init(name: .easeInEaseOut)
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.fillMode = .forwards
+        animation.autoreverses = true
+        animation.repeatCount = .infinity
+        animation.beginTime = self.imageView.layer!.convertTime(CACurrentMediaTime(), from: nil)
+        let speed: Float = 1.0
+        animation.speed = speed * Float(animation.duration / 1.0)
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, floorToScreenPixels(System.backingScale, imageView.frame.width / 2), floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
+        tr = CATransform3DScale(tr, to, to, 1)
+        tr = CATransform3DTranslate(tr, -floorToScreenPixels(System.backingScale, imageView.frame.width / 2), -floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+
+        imageView.layer?.add(animation, forKey: "transform")
+    }
+    
     func set(_ status: Status, animated: Bool) {
         self.status = status
         let text: String = status.text
         
-        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.underSelectedColor, font: .medium(.text)))
+        guard let window = appDelegate?.window else {
+            return
+        }
+
+        let layout = TextViewLayout(.initialize(string: text, color: status.textColor(window), font: .bold(.text)))
         layout.measure(width: frame.width - 80)
         textView.update(layout)
         
-        backgroundView.backgroundColor = status.color
-        if animated {
-            backgroundView.layer?.animateBackground()
-        }
-        imageView.image = generateImage(NSMakeSize(frame.height, frame.height), contextGenerator: { size, ctx in
+        let backgroundView = ImageView(frame: bounds)
+        
+        backgroundView.image = generateImage(frame.size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.withAlphaComponent(0.2).cgColor)
+            ctx.setFillColor(status.color(window).cgColor)
+            ctx.round(size, size.height / 2)
+            ctx.fill(size.bounds)
+        })
+        if self.backgroundView != nil {
+            self.addSubview(backgroundView, positioned: .above, relativeTo: self.backgroundView)
+        } else {
+            self.addSubview(backgroundView, positioned: .below, relativeTo: self.subviews.first)
+        }
+        if animated && self.backgroundView != nil {
+            let current = self.backgroundView
+            backgroundView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 1.2, completion: { [weak current] _ in
+                current?.removeFromSuperview()
+            })
+        } else {
+            self.backgroundView?.removeFromSuperview()
+        }
+        self.backgroundView = backgroundView
+        
+        
+        imageView.image = generateImage(frame.size, contextGenerator: { size, ctx in
+            ctx.clear(size.bounds)
+            ctx.setFillColor(NSColor.black.withAlphaComponent(0.08).cgColor)
             ctx.round(size, size.height / 2)
             ctx.fill(size.bounds)
         })
         imageView.sizeToFit()
         
-        if animated {
-            let animation = makeSpringAnimation("transform")
-            
-            let to: CGFloat = frame.width / imageView.frame.width
-            let from: CGFloat = 0.1
-
-            var fr = CATransform3DIdentity
-            fr = CATransform3DTranslate(fr, floorToScreenPixels(System.backingScale, imageView.frame.width / 2), floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
-            fr = CATransform3DScale(fr, from, from, 1)
-            fr = CATransform3DTranslate(fr, -floorToScreenPixels(System.backingScale, imageView.frame.width / 2), -floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
-            
-            animation.timingFunction = .init(name: .easeInEaseOut)
-            animation.fromValue = NSValue(caTransform3D: fr)
-            animation.toValue = to
-            animation.fillMode = .forwards
-            animation.autoreverses = true
-            animation.repeatCount = .infinity
-            animation.beginTime = self.imageView.layer!.convertTime(CACurrentMediaTime(), from: nil) + 0.25
-            let speed: Float = 1.0
-            animation.speed = speed * Float(animation.duration / 1.0)
-            
-            var tr = CATransform3DIdentity
-            tr = CATransform3DTranslate(tr, floorToScreenPixels(System.backingScale, imageView.frame.width / 2), floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
-            tr = CATransform3DScale(tr, to, to, 1)
-            tr = CATransform3DTranslate(tr, -floorToScreenPixels(System.backingScale, imageView.frame.width / 2), -floorToScreenPixels(System.backingScale, imageView.frame.height / 2), 0)
-            animation.toValue = NSValue(caTransform3D: tr)
-
-            imageView.layer?.add(animation, forKey: "transform")
-        }
+        updateAnimation()
         
-        self.visualEffect.bgColor = NSColor.black.withAlphaComponent(0.2)
+        self.visualEffect.bgColor = .clear
         
         if status.shouldAddProgress {
             if self.progressView == nil {
-                let progressView: InfiniteProgressView = .init(color: theme.colors.underSelectedColor, lineWidth: 1.5)
+                let progressView: InfiniteProgressView = .init(color: status.textColor(window), lineWidth: 2.0)
                 self.progressView = progressView
                 progressView.progress = nil
                 progressView.setFrameSize(NSMakeSize(layout.layoutSize.height - 3, layout.layoutSize.height - 3))
                 self.container.addSubview(progressView)
             }
+            self.progressView?.color = status.textColor(window)
             self.container.setFrameSize(NSMakeSize(layout.layoutSize.width + progressView!.frame.width + 5, max(progressView!.frame.height, layout.layoutSize.height)))
         } else {
             self.progressView?.removeFromSuperview()
@@ -274,6 +311,13 @@ final class NetworkStatusManager {
         disposable.set(combineLatest(connectionStatus, appearanceSignal, window.fullScreen).start(next: { [weak self] status, _, _ in
             self?.updateStatus(status, animated: true)
         }))
+//        #if DEBUG
+//        window.set(handler: { _ in
+//            let statuses:[ConnectionStatus] = [.waitingForNetwork, .connecting(proxyAddress: nil, proxyHasConnectionIssues: false), .online(proxyAddress: nil), .updating(proxyAddress: nil)]
+//            fakeStatus.set(statuses.randomElement()!)
+//            return .rejected
+//        }, with: window, for: .A)
+//        #endif
     }
     
     private func updateStatus(_ status: Status?, animated: Bool) {
@@ -281,36 +325,39 @@ final class NetworkStatusManager {
             return
         }
 
-        if let status = status {
-            let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
-            view.set(status, animated: animated)
-            
-            if animated, self.currentView == nil {
-                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
+        if #available(macOS 10.14, *) {
+            if let status = status {
+                                
+                let view: ConnectingStatusView = self.currentView ?? .init(frame: windowView.superview.bounds)
+                view.set(status, animated: animated)
+                
+                if animated, self.currentView == nil {
+                    view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
 
-            
-            self.currentView = view
-            windowView.superview.addSubview(view, positioned: .above, relativeTo: windowView.aboveView)
-            
-            window.title = ""
-            
-            if self.backgroundView == nil {
-                self.backgroundView = View(frame: view.bounds)
-                self.backgroundView?.autoresizingMask = [.width, .height]
+                
+                self.currentView = view
+                windowView.superview.addSubview(view, positioned: .below, relativeTo: windowView.aboveView)
+                
+                window.title = ""
+                
+                if self.backgroundView == nil {
+                    self.backgroundView = View(frame: view.bounds)
+                    self.backgroundView?.autoresizingMask = [.width, .height]
+                }
+                windowView.superview.addSubview(self.backgroundView!, positioned: .below, relativeTo: view)
+                self.backgroundView?.backgroundColor = status.color(window)
+            } else {
+                if let view = self.backgroundView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundView = nil
+                }
+                if let view = currentView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.currentView = nil
+                }
+                window.title = appName
             }
-            windowView.superview.addSubview(self.backgroundView!, positioned: .below, relativeTo: view)
-            self.backgroundView?.backgroundColor = theme.colors.grayBackground
-        } else {
-            if let view = self.backgroundView {
-                performSubviewRemoval(view, animated: animated)
-                self.backgroundView = nil
-            }
-            if let view = currentView {
-                performSubviewRemoval(view, animated: animated)
-                self.currentView = nil
-            }
-            window.title = appName
         }
     }
     
@@ -323,9 +370,10 @@ final class NetworkStatusManager {
         guard let title = self.window.titleView ?? self.currentView?.superview else {
             return nil
         }
+        
         let subviews = title.subviews
         for subview in subviews {
-            if subview is NSTextField {
+            if subview == window.standardWindowButton(.closeButton) {
                 return .init(superview: title, aboveView: subview)
             }
         }

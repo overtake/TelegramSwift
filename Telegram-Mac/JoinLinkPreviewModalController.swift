@@ -183,6 +183,8 @@ class JoinLinkPreviewModalController: ModalViewController {
                         text = L10n.groupUsersTooMuchError
                     case .requestSent:
                         text = L10n.unknownError
+                    case .flood:
+                        text = L10n.joinLinkFloodError
                     }
                     alert(for: context.window, info: text)
                 })

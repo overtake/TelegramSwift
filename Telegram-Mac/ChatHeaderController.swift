@@ -33,6 +33,8 @@ enum ChatHeaderState : Identifiable, Equatable {
     case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
     case report(ChatActiveGroupCallInfo?, autoArchived: Bool)
     case promo(ChatActiveGroupCallInfo?, PromoChatListItem.Kind)
+    case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
+
     var stableId:Int {
         switch self {
         case .none:
@@ -49,6 +51,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 5
         case .shareInfo:
             return 6
+        case .pendingRequests:
+            return 7
         }
     }
 
@@ -68,6 +72,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return voiceChat
         case let .shareInfo(voiceChat):
             return voiceChat
+        case let .pendingRequests(voiceChat, _, _):
+            return voiceChat
         }
     }
     
@@ -85,6 +91,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatReportView.self
         case .promo:
             return ChatSponsoredView.self
+        case .pendingRequests:
+            return ChatPendingRequests.self
         case .none:
             return nil
         }
@@ -116,6 +124,8 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .pinned:
             height += 44
         case .promo:
+            height += 44
+        case .pendingRequests:
             height += 44
         }
         return height
@@ -296,6 +306,9 @@ class ChatHeaderController {
                 primary = ChatReportView(chatInteraction, state: _headerState, frame: primaryRect)
             case .promo:
                 primary = ChatSponsoredView(chatInteraction, state: _headerState, frame: primaryRect)
+            case .pendingRequests:
+                primary = ChatPendingRequests(chatInteraction, state: _headerState, frame: primaryRect)
+
             case .none:
                 primary = nil
             }
@@ -379,6 +392,8 @@ private extension PromoChatListItem.Kind {
         }
     }
 }
+
+
 
 private final class ChatSponsoredView : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction
@@ -1988,6 +2003,178 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         membersCountView.setFrameOrigin(.init(x: 22, y: frame.midY))
                 
         button.frame = bounds
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+private final class ChatPendingRequests : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let dismiss:ImageButton = ImageButton()
+    private let textView = TextView()
+    private var avatars:[AvatarContentView] = []
+    private let avatarsContainer = View(frame: NSMakeRect(0, 0, 22 * 3, 22))
+    
+    private struct Avatar : Comparable, Identifiable {
+        static func < (lhs: Avatar, rhs: Avatar) -> Bool {
+            return lhs.index < rhs.index
+        }
+        
+        var stableId: PeerId {
+            return peer.id
+        }
+        
+        static func == (lhs: Avatar, rhs: Avatar) -> Bool {
+            if lhs.index != rhs.index {
+                return false
+            }
+            if !lhs.peer.isEqual(rhs.peer) {
+                return false
+            }
+            return true
+        }
+        
+        let peer: Peer
+        let index: Int
+    }
+
+    private var peers:[Avatar] = []
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        super.init(frame: frame)
+        addSubview(avatarsContainer)
+        avatarsContainer.isEventLess = true
+
+        dismiss.disableActions()
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        _ = self.dismiss.sizeToFit()
+        
+        self.set(handler: { [weak self] _ in
+            self?.chatInteraction.openPendingRequests()
+        }, for: .Click)
+        
+        dismiss.set(handler: { [weak self] _ in
+            guard let `self` = self else {
+                return
+            }
+            self.chatInteraction.dismissPendingRequests(self.peers.map { $0.peer.id })
+        }, for: .SingleClick)
+
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        addSubview(dismiss)
+        addSubview(textView)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+      
+        
+        switch state {
+        case let .pendingRequests(_, count, peers):
+            let text = L10n.chatHeaderRequestToJoinCountable(count)
+            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
+            layout.measure(width: frame.width - 60)
+            textView.update(layout)
+            
+            let duration: TimeInterval = 0.4
+            let timingFunction: CAMediaTimingFunctionName = .spring
+
+            
+            let peers:[Avatar] = peers.reduce([], { current, value in
+                var current = current
+                if let peer = value.peer.peer {
+                    current.append(.init(peer: peer, index: current.count))
+                }
+                return current
+            })
+            
+            let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.peers, rightList: peers)
+            
+            for removed in removed.reversed() {
+                let control = avatars.remove(at: removed)
+                let peer = self.peers[removed]
+                let haveNext = peers.contains(where: { $0.stableId == peer.stableId })
+                control.updateLayout(size: NSMakeSize(22, 22), isClipped: false, animated: animated)
+                if animated && !haveNext {
+                    control.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
+                        control?.removeFromSuperview()
+                    })
+                    control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: duration)
+                } else {
+                    control.removeFromSuperview()
+                }
+            }
+            for inserted in inserted {
+                let control = AvatarContentView(context: chatInteraction.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(22, 22))
+                control.updateLayout(size: NSMakeSize(22, 22), isClipped: inserted.0 != 0, animated: animated)
+                control.userInteractionEnabled = false
+                control.setFrameSize(NSMakeSize(22, 22))
+                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 19, 0))
+                avatars.insert(control, at: inserted.0)
+                avatarsContainer.subviews.insert(control, at: inserted.0)
+                if animated {
+                    if let index = inserted.2 {
+                        control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 19, 0), to: control.frame.origin, timingFunction: timingFunction)
+                    } else {
+                        control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
+                        control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
+                    }
+                }
+            }
+            for updated in updated {
+                let control = avatars[updated.0]
+                control.updateLayout(size: NSMakeSize(22, 22), isClipped: updated.0 != 0, animated: animated)
+                let updatedPoint = NSMakePoint(CGFloat(updated.0) * 19, 0)
+                if animated {
+                    control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
+                }
+                control.setFrameOrigin(updatedPoint)
+            }
+            var index: CGFloat = 10
+            for control in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }) {
+                control.layer?.zPosition = index
+                index -= 1
+            }
+            
+            self.peers = peers
+            
+        default:
+            break
+        }
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+    }
+    
+    override func layout() {
+        super.layout()
+        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
+        textView.resize(frame.width - 60)
+        textView.center()
+        self.avatarsContainer.centerY(x: 13 + 6)
     }
     
     

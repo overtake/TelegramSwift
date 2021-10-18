@@ -1935,7 +1935,7 @@ class ChatRowItem: TableRowItem {
             return ChatGroupedItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
         case .DateEntry:
             return ChatDateStickItem(initialSize, entry, interaction: interaction, theme: theme)
-        case .bottom:
+        case let .bottom(theme):
             return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
         case .commentsHeader:
             return ChatCommentsHeaderItem(initialSize, entry, interaction: interaction, theme: theme)
@@ -2522,8 +2522,18 @@ class ChatRowItem: TableRowItem {
 func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     if let _ = message.adAttribute {
+        let context = chatInteraction.context
         return .single([ContextMenuItem(L10n.chatMessageSponsoredWhat, handler: {
-            execute(inapp: .external(link: L10n.chatMessageSponsoredLink, false))
+            let link = "https://promote.telegram.org"
+            confirm(for: context.window, information: L10n.chatMessageAdText(link), cancelTitle: "", thridTitle: L10n.chatMessageAdReadMore, successHandler: { result in
+                switch result {
+                case .thrid:
+                 let link = inAppLink.external(link: link, false)
+                 execute(inapp: link)
+                default:
+                    break
+                }
+            })
         })])
     }
     
@@ -2547,18 +2557,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     var items:[ContextMenuItem] = []
     
     
-    if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)), message.flags.contains(.Incoming) || item.isRead {
-        let stats = MessageReadMenuItem(context: context, message: message)
-
-        let item = ContextMenuItem("-")
-        
-        item.contextObject = stats
-        item.view = stats.view
-        items.append(item)
-        
-        items.append(ContextSeparatorItem())
-
-    }
+   
     
     if message.id.peerId == repliesPeerId, let author = message.chatPeer(context.peerId), author.id != context.peerId {
         
@@ -2609,6 +2608,10 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             chatInteraction.setupReplyMessage(message.id)
         }))
     }
+    
+    items.append(ContextSeparatorItem())
+
+    
     if chatInteraction.mode.threadId == nil, let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.isSupergroup {
         if let attr = message.replyThread, attr.count > 0 {
             var messageId: MessageId = message.id
@@ -2646,6 +2649,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         }))
     }
     
+    
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), !message.isScheduledMessage {
             items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: { [unowned chatInteraction] in
@@ -2659,7 +2663,6 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         }
     }
     
-    items.append(ContextSeparatorItem())
     
     if canEditMessage(message, chatInteraction: chatInteraction, context: context), chatInteraction.mode != .pinned {
         items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [unowned chatInteraction] in
@@ -3062,5 +3065,20 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         }
     }
     
-    return signal
+    return signal |> map { items in
+        var items = items
+        if (MessageReadMenuItem.canViewReadStats(message: message, chatInteraction: chatInteraction, appConfig: chatInteraction.context.appConfiguration)), message.flags.contains(.Incoming) || item.isRead {
+            let stats = MessageReadMenuItem(context: context, message: message)
+
+            let item = ContextMenuItem("-")
+            
+            item.contextObject = stats
+            item.view = stats.view
+            
+            items.append(ContextSeparatorItem())
+            items.append(item)
+            
+        }
+        return items
+    }
 }

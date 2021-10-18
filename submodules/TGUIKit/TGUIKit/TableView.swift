@@ -369,7 +369,6 @@ private final class TableSearchView : View {
         }, { state in
             datas.updateState(state)
         })
-        
         needsLayout = true
     }
     
@@ -2620,6 +2619,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if let searchState = transition.searchState {
+            
+//            if let scrollView = self.enclosingScrollView {
+//                scrollView.tile()
+//                scrollView.reflectScrolledClipView(scrollView.contentView)
+//            }
+//            
             if self.searchView == nil {
                 self.searchView = TableSearchView(frame: NSMakeRect(0, -50, frame.width, 50))
                 addSubview(self.searchView!)
