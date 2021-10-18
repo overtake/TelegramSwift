@@ -34,7 +34,7 @@ class EmptyChatView : View {
                 view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
             }
         } else {
-            performSubviewRemoval(view, animated: animated, duration: 0.3, timingFunction: .spring)
+            performSubviewRemoval(view, animated: animated, duration: 0.3, timingFunction: .spring, checkCompletion: true)
             if animated {
                 view.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, bounce: false)
             }

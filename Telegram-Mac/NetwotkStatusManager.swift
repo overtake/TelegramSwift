@@ -311,13 +311,13 @@ final class NetworkStatusManager {
         disposable.set(combineLatest(connectionStatus, appearanceSignal, window.fullScreen).start(next: { [weak self] status, _, _ in
             self?.updateStatus(status, animated: true)
         }))
-        #if DEBUG
-        window.set(handler: { _ in
-            let statuses:[ConnectionStatus] = [.waitingForNetwork, .connecting(proxyAddress: nil, proxyHasConnectionIssues: false), .online(proxyAddress: nil), .updating(proxyAddress: nil)]
-            fakeStatus.set(statuses.randomElement()!)
-            return .rejected
-        }, with: window, for: .A)
-        #endif
+//        #if DEBUG
+//        window.set(handler: { _ in
+//            let statuses:[ConnectionStatus] = [.waitingForNetwork, .connecting(proxyAddress: nil, proxyHasConnectionIssues: false), .online(proxyAddress: nil), .updating(proxyAddress: nil)]
+//            fakeStatus.set(statuses.randomElement()!)
+//            return .rejected
+//        }, with: window, for: .A)
+//        #endif
     }
     
     private func updateStatus(_ status: Status?, animated: Bool) {

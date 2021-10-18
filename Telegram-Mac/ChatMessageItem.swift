@@ -792,6 +792,9 @@ class ChatMessageItem: ChatRowItem {
                 for i in 0 ..< items.count {
                     if items[i].title == L10n.messageContextReply1 {
                         index = i + 1
+                        if items.count > index!, items[index!] is ContextSeparatorItem {
+                            index = index! + 1
+                        }
                     }
                 }
             }
