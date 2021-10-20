@@ -7336,6 +7336,19 @@ final class TelegramIconsTheme {
           return image
       }
   }
+  var profile_requests: CGImage {
+      if let image = cached.with({ $0["profile_requests"] }) {
+          return image
+      } else {
+          let image = _profile_requests()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_requests"] = image
+              return current
+          }
+          return image
+      }
+  }
   var profile_removed: CGImage {
       if let image = cached.with({ $0["profile_removed"] }) {
           return image
@@ -8707,6 +8720,7 @@ final class TelegramIconsTheme {
   private let _profile_group_type: ()->CGImage
   private let _profile_group_destruct: ()->CGImage
   private let _profile_group_discussion: ()->CGImage
+  private let _profile_requests: ()->CGImage
   private let _profile_removed: ()->CGImage
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
@@ -9335,6 +9349,7 @@ final class TelegramIconsTheme {
       profile_group_type: @escaping()->CGImage,
       profile_group_destruct: @escaping()->CGImage,
       profile_group_discussion: @escaping()->CGImage,
+      profile_requests: @escaping()->CGImage,
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
       destruct_clear_history: @escaping()->CGImage,
@@ -9962,6 +9977,7 @@ final class TelegramIconsTheme {
       self._profile_group_type = profile_group_type
       self._profile_group_destruct = profile_group_destruct
       self._profile_group_discussion = profile_group_discussion
+      self._profile_requests = profile_requests
       self._profile_removed = profile_removed
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history

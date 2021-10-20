@@ -624,6 +624,8 @@ func initialize() -> [String] {
     array.append("profile_group_type")
     array.append("profile_group_destruct")
     array.append("profile_group_discussion")
+    
+    array.append("profile_requests")
 
     array.append("profile_removed")
     array.append("profile_links")

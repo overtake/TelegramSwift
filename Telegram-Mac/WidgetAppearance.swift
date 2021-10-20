@@ -32,7 +32,7 @@ private final class ThemePreview : Control {
         
         func set(_ source: ThemeSource, bubbled: Bool, context: AccountContext) {
                         
-            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source, thumbSource: .widget) |> deliverOnMainQueue
+            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, parent: theme.colors, source: source, thumbSource: .widget) |> deliverOnMainQueue
             
             self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled, thumbSource: .widget), clearInstantly: false)
 

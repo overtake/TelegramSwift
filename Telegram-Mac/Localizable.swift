@@ -7623,12 +7623,10 @@ internal final class L10n {
   internal static func requestJoinListListHeaderZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.ListHeader_zero", p1)
   }
-  /// There were no results for "%@". Try a new search.
+  /// There were no results for "%@".\nTry a new search.
   internal static func requestJoinListSearchEmpty(_ p1: String) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.SearchEmpty", p1)
   }
-  /// No Result
-  internal static var requestJoinListSearchEmptyHeader: String  { return L10n.tr("Localizable", "RequestJoin.List.SearchEmptyHeader") }
   /// Members Requests
   internal static var requestJoinListTitle: String  { return L10n.tr("Localizable", "RequestJoin.List.Title") }
   /// Add to Channel
@@ -7641,6 +7639,8 @@ internal final class L10n {
   internal static var requestJoinListEmpty2Channel: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty2.Channel") }
   /// You have no pending requests to join the group
   internal static var requestJoinListEmpty2Group: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty2.Group") }
+  /// No Results Found
+  internal static var requestJoinListSearchEmptyHeader: String  { return L10n.tr("Localizable", "RequestJoin.List.SearchEmpty.Header") }
   /// **%@** has been added to the channel.
   internal static func requestJoinListTooltipApprovedChannel(_ p1: String) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.Tooltip.Approved.Channel", p1)

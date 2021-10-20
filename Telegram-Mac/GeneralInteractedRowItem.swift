@@ -35,6 +35,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let switchAppearance: SwitchViewAppearance
     let autoswitch: Bool
     
+    let badgeNode:BadgeNode?
+    
     let disabledAction:()->Void
     
     var nameWidth:CGFloat {
@@ -90,6 +92,11 @@ class GeneralInteractedRowItem: GeneralRowItem {
             self.thumb = GeneralThumbAdditional(thumb: icon, textInset: nil)
         } else {
             self.thumb = thumb
+        }
+        if case let .badge(text, color) = type {
+            self.badgeNode = .init(.initialize(string: text, color: .white, font: .medium(.short)), color)
+        } else {
+            self.badgeNode = nil
         }
         self.disabledAction = disabledAction
         self.autoswitch = autoswitch

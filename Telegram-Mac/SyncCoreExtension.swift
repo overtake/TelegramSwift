@@ -8,6 +8,7 @@
 
 import Cocoa
 import TelegramCore
+import TGUIKit
 
 extension PixelDimensions {
     var size: CGSize {
@@ -29,3 +30,37 @@ extension CGSize {
 enum AppLogEvents : String {
     case imageEditor = "image_editor_used"
 }
+
+extension TelegramTheme {
+    var effectiveSettings: TelegramThemeSettings? {
+        return self.settings?.first
+    }
+    func effectiveSettings(for colors: ColorPalette) -> TelegramThemeSettings? {
+        if let settings = self.settings {
+            for settings in settings {
+                switch settings.baseTheme {
+                case .classic:
+                    if colors.name == dayClassicPalette.name {
+                        return settings
+                    }
+                case .day:
+                    if colors.name == whitePalette.name {
+                        return settings
+                    }
+                case .night:
+                    if colors.name == darkPalette.name {
+                        return settings
+                    }
+                case .tinted:
+                    if colors.name == nightAccentPalette.name {
+                        return settings
+                    }
+                }
+            }
+        }
+        return nil
+    }
+}
+
+
+

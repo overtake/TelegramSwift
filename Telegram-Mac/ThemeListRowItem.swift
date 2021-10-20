@@ -137,7 +137,7 @@ private final class HorizontalThemeView : HorizontalRowView {
         
         progressIndicator.progressColor = item.theme.colors.grayIcon
         
-        let signal = themeAppearanceThumbAndData(context: item.context, bubbled: item.theme.bubbled, source: item.themeType) |> deliverOnMainQueue
+        let signal = themeAppearanceThumbAndData(context: item.context, bubbled: item.theme.bubbled, parent: item.theme.colors, source: item.themeType) |> deliverOnMainQueue
         
         self.imageView.setSignal(signal: cachedThemeThumb(source: item.themeType, bubbled: item.theme.bubbled), clearInstantly: false)
 

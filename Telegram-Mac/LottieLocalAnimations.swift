@@ -77,6 +77,7 @@ enum LocalAnimatedSticker : String {
     
     case request_join_link
     case thumbsup
+    case zoom
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

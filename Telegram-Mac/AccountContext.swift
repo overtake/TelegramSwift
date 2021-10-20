@@ -231,7 +231,7 @@ final class AccountContext {
         let signal:Signal<Void, NoError> = Signal { subscriber in
             
             let signal: Signal<Never, NoError> = account.postbox.transaction {
-                return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration) as? AppConfiguration ?? AppConfiguration.defaultValue
+                return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
             } |> mapToSignal { configuration in
                 let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
                 var signals = value.emojis.map {
@@ -254,13 +254,12 @@ final class AccountContext {
         preloadGifsDisposable.set(updated.start())
         
        
-        let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager) ) |> mapToSignal { appearance, themes in
+        let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager)) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
             
             for theme in themes {
-                let emoji = theme.emoji
-                let effective = appearance.presentation.dark ? theme.darkTheme : theme.theme
-                if let settings = effective.settings {
+                let effective = theme.effectiveSettings(for: appearance.presentation.colors)
+                if let settings = effective, let emoji = theme.emoticon?.fixed {
                     let newTheme = appearance.presentation.withUpdatedColors(settings.palette)
                     if let wallpaper = settings.wallpaper?.uiWallpaper {
                         signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
@@ -566,7 +565,7 @@ final class AccountContext {
 
 
 func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, install: Bool = false) -> Signal<Never, Void> {
-    if let cloudSettings = cloudTheme.settings {
+    if let cloudSettings = cloudTheme.effectiveSettings {
         return Signal { subscriber in
             #if !SHARE
             let wallpaperDisposable = DisposableSet()

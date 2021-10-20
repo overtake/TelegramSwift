@@ -87,7 +87,7 @@ enum PhotoCacheKeyEntry : Hashable {
         case let .theme(source, bubbled, thumbSource):
             switch source {
             case let .local(palette, cloud):
-                if let settings = cloud?.settings {
+                if let settings = cloud?.effectiveSettings(for: palette) {
                     #if !SHARE
                     return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(settings.desc)-\(thumbSource.rawValue)".nsstring
                     #else

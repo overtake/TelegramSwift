@@ -62,9 +62,11 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
         }
         
         if let colors = colors, !colors.isEmpty {
-            if let image = image._cgImage, !palette.isDark {
-                ctx.setBlendMode(.softLight)
-                ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0)
+            if let image = image._cgImage {
+                if !palette.isDark {
+                    ctx.setBlendMode(.softLight)
+                    ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0)
+                }
                 ctx.draw(image, in: rect.focus(imageSize))
             }
         } else if let image = image._cgImage {
@@ -174,7 +176,7 @@ private func localThemeData(context: AccountContext, theme: TelegramTheme, palet
         
         var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError> = .single(nil)
         var newSettings = WallpaperSettings()
-        if let wp = theme.settings?.wallpaper {
+        if let wp = theme.effectiveSettings(for: palette)?.wallpaper {
             wallpaper = .single(wp)
         } else {
             switch palette.wallpaper {
@@ -606,7 +608,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
 
 
 
-func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source: ThemeSource, thumbSource: AppearanceThumbSource = .general) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {
+func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, parent: ColorPalette, source: ThemeSource, thumbSource: AppearanceThumbSource = .general) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {
     
     var thumbGenerator = generateThumb
     switch thumbSource {
@@ -624,7 +626,8 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2)))
                 }
             }
-        } else if let palette = cloud.settings?.palette {
+        } else if let palette = cloud.effectiveSettings(for: parent)?.palette {
+            
             
             let settings = themeSettingsView(accountManager: context.sharedContext.accountManager) |> take(1)
             
@@ -637,7 +640,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
                 return (settings.wallpaper.wallpaper, settings.palette)
             } |> mapToSignal { wallpaper, palette in
                 return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
-                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper)))
                 }
             }
         } else {
@@ -656,7 +659,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
         } |> mapToSignal { wallpaper, palette in
             if let cloud = cloud {
                 return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
-                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper)))
                 }
             } else {
                 return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
@@ -694,7 +697,7 @@ func themeInstallSource(context: AccountContext, source: ThemeSource) -> Signal<
             return (settings.wallpaper.wallpaper, settings.palette)
         } |> map { wallpaper, palette in
             if let cloud = cloud {
-                return .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper))
+                return .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper))
             } else {
                 return .local(palette)
             }
