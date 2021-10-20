@@ -121,10 +121,36 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }))
                     index += 1
                 } else if let result = searchResult.result, result.count == 0, let request = state.searchState?.request {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_empty"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.requestJoinListSearchEmpty(request), font: .normal(.text), color: theme.colors.text, header: .init(text: L10n.requestJoinListSearchEmptyHeader, icon: nil))
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("dynamic_top"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                        return DynamicHeightRowItem(initialSize, stableId: stableId, side: .top)
                     }))
                     index += 1
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("empty_header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                        
+                        
+                        let text: String = L10n.requestJoinListSearchEmpty(request)
+                        
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: L10n.requestJoinListSearchEmptyHeader, color: theme.colors.text, font: .medium(.header))
+                        _ = attr.append(string: "\n", color: theme.colors.grayText, font: .normal(.title))
+                        _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.title))
+                        attr.detectBoldColorInString(with: .medium(.title))
+                        
+                        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.zoom, text: attr)
+                    }))
+                    index += 1
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("dynamic_bottom"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                        return DynamicHeightRowItem(initialSize, stableId: stableId, side: .bottom)
+                    }))
+                    index += 1
+//
+//                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_empty"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+//                        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.requestJoinListSearchEmpty(request), font: .normal(.text), color: theme.colors.text, header: .init(text: L10n.requestJoinListSearchEmptyHeader, icon: nil))
+//                    }))
+//                    index += 1
                 }
                
                 

@@ -267,8 +267,8 @@ final class AccentColorRowView : TableRowView {
             
             var accent = colorList[i]
             
-            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.settings {
-                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
+            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.effectiveSettings(for: item.theme.colors) {
+                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, parent: settings.palette, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
                 disposableSet.add(signal.start(next: { result in
                     switch result.1 {
                     case let .cloud(_, cachedData):

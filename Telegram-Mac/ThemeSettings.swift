@@ -86,7 +86,7 @@ struct AssociatedWallpaper : Codable, Equatable {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
         self.cloud = try container.decodeIfPresent(TelegramWallpaperNativeCodable.self, forKey: "c")?.value
-        self.wallpaper = try container.decodeIfPresent(Wallpaper.self, forKey: "1w") ?? .builtin
+        self.wallpaper = try container.decodeIfPresent(Wallpaper.self, forKey: "w1") ?? .builtin
     }
     
     func encode(to encoder: Encoder) throws {
@@ -123,7 +123,7 @@ struct ThemeWallpaper : Codable, Equatable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
         if let associated = self.associated {
-            try container.encode(associated, forKey: "as")
+            try container.encode(associated, forKey: "aw")
         } else {
             try container.encodeNil(forKey: "aw")
         }
@@ -388,7 +388,7 @@ final class ColorPaletteNativeCodable : Codable {
         try container.encode(self.value.wallpaper.toString, forKey: "pw")
         try container.encode(self.value.accentList.map { PaletteAccentColorNativeCodable($0) }, forKey: "accentList_1")
         
-        for child in Mirror(reflecting: self).children {
+        for child in Mirror(reflecting: self.value).children {
             if let label = child.label {
                 if let value = child.value as? NSColor {
                     var label = label
@@ -737,7 +737,7 @@ struct ThemePaletteSettings: Codable, Equatable {
     func withSavedAssociatedTheme() -> ThemePaletteSettings {
         var associated = self.associated
         if let cloudTheme = self.cloudTheme {
-            if cloudTheme.settings != nil {
+            if cloudTheme.effectiveSettings(for: self.palette) != nil {
                 let value = DefaultTheme(local: self.palette.parent, cloud: DefaultCloudTheme(cloud: cloudTheme, palette: self.palette, wallpaper: AssociatedWallpaper(cloud: self.wallpaper.associated?.cloud, wallpaper: self.wallpaper.wallpaper)))
                 if let index = associated.firstIndex(where: { $0.local == self.palette.parent }) {
                     associated[index] = value

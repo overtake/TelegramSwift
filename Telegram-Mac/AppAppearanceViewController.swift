@@ -123,7 +123,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
 
-    var accentList = appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil ? appearance.presentation.colors.accentList.map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
+    var accentList:[AppearanceAccentColor] = []
 
     var cloudThemes = cloudThemes
     if let cloud = appearance.presentation.cloudTheme {
@@ -135,7 +135,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         let copy = cloudThemes
         var cloudAccents:[AppearanceAccentColor] = []
         for cloudTheme in copy {
-            if let settings = cloudTheme.settings, settings.palette.parent == appearance.presentation.colors.parent {
+            if let settings = cloudTheme.effectiveSettings(for: appearance.presentation.colors) {
                 cloudAccents.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
             }
         }

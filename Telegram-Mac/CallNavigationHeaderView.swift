@@ -753,7 +753,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
-        self.capView.backgroundColor = theme.colors.background
+        self.capView.backgroundColor = backgroundView.backgroundColor
         endCall.set(image: theme.icons.callInlineDecline, for: .Normal)
         endCall.set(image: theme.icons.callInlineDecline, for: .Highlight)
         _ = endCall.sizeToFit(NSMakeSize(10, 10), thatFit: false)

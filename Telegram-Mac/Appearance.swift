@@ -1363,7 +1363,7 @@ enum Wallpaper : Equatable, Codable {
             try container.encode(slug, forKey: "slug")
             try container.encode(file, forKey: "file")
             try container.encode(settings, forKey: "settings")
-            try container.encode(isPattern ? 1 : 0, forKey: "p")
+            try container.encode(Int32(isPattern ? 1 : 0), forKey: "p")
         case let .custom(resource, blurred):
             try container.encode(Int32(4), forKey: "v")
             try container.encode(TelegramMediaImageRepresentationNativeCodable(resource), forKey: "rep")
@@ -2568,6 +2568,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_group_type: {NSImage(named: "Icon_Profile_GroupType")!.precomposed(flipVertical: true)},
                                                profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
                                                profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
+                                               profile_requests: {NSImage(named: "Icon_Profile_Requests")!.precomposed(palette.accent, flipVertical: true)},
                                                profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
                                                profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)},
                                                destruct_clear_history: { NSImage(named: "Icon_ClearChat")!.precomposed(palette.redUI, flipVertical: true) },

@@ -202,7 +202,7 @@ class ThemePreviewModalController: ModalViewController {
             modal?.updateLocalizationAndTheme(theme: theme)
             genericView.backgroundMode = theme.controllerBackgroundMode
         case let .cloudTheme(theme):
-            if let settings = theme.settings {
+            if let settings = theme.effectiveSettings {
                 let palette = settings.palette
                 let wallpaper: Wallpaper
                 let cloud = settings.wallpaper

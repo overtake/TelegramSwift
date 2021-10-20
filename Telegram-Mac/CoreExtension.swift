@@ -3207,6 +3207,8 @@ extension TelegramBaseTheme {
         }
     }
 }
+
+
 extension TelegramThemeSettings {
     var palette: ColorPalette {
         return baseTheme.palette.withAccentColor(accent)

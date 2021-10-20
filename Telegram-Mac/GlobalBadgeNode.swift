@@ -31,8 +31,6 @@ class GlobalBadgeNode: Node {
                 textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .middle, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
                 size = NSMakeSize(textLayout!.0.size.width + 8, textLayout!.0.size.height + 7)
                 size = NSMakeSize(max(size.height,size.width), size.height)
-                
-                
             } else {
                 textLayout = nil
                 size = NSZeroSize
@@ -84,7 +82,7 @@ class GlobalBadgeNode: Node {
     
     private let getColor: (Bool) -> NSColor
     
-    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil, removeWhenSidebar: Bool = false) {
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil, removeWhenSidebar: Bool = false, sync: Bool = false) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
@@ -128,9 +126,7 @@ class GlobalBadgeNode: Node {
         
         var unreadCountItems: [UnreadMessageCountsItem] = []
         unreadCountItems.append(.total(nil))
-        var keys: [PostboxViewKey] = []
-        let unreadKey: PostboxViewKey
-        unreadKey = .unreadCounts(items: [])
+        let keys: [PostboxViewKey] = []
         
         var s:Signal<Result, NoError>
         
@@ -187,9 +183,12 @@ class GlobalBadgeNode: Node {
             return Result(dockText: $0.dockText, total: $1.sidebar && removeWhenSidebar ? 0 : $0.total)
         } |> deliverOnMainQueue
         
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        
         self.disposable.set(s.start(next: { [weak self] result in
             if let strongSelf = self {
-                
+                                
                 if result.total == 0 {
                     strongSelf.attributedString = nil
                 } else {
@@ -202,7 +201,13 @@ class GlobalBadgeNode: Node {
                     forceUpdateStatusBarIconByDockTile(sharedContext: sharedContext)
                 }
             }
+            
+            semaphore.signal()
         }))
+        
+        if sync {
+            semaphore.wait()
+        }
     }
     
     override public func draw(_ layer: CALayer, in ctx: CGContext) {

@@ -77,6 +77,7 @@ enum GeneralInteractedType : Equatable {
     case button(String)
     case search(Bool)
     case colorSelector(NSColor)
+    case badge(String, NSColor)
     #if !SHARE
     case contextSelector(String, [SPopoverItem])
     #endif

@@ -19,7 +19,7 @@ class GeneralInteractedRowView: GeneralRowView {
     private(set) var descriptionView: TextView?
     private var nextView:ImageView = ImageView()
     
-    
+    private var badgeView: View?
     
     
     override func set(item:TableRowItem, animated:Bool = false) {
@@ -60,6 +60,19 @@ class GeneralInteractedRowView: GeneralRowView {
             } else {
                 switchView?.removeFromSuperview()
                 switchView = nil
+            }
+            
+            if let badgeNode = item.badgeNode {
+                if badgeView == nil {
+                    badgeView = View()
+                    containerView.addSubview(badgeView!)
+                }
+                badgeView?.setFrameSize(badgeNode.size)
+                badgeNode.view = badgeView
+                badgeNode.setNeedDisplay()
+            } else {
+                self.badgeView?.removeFromSuperview()
+                self.badgeView = nil
             }
             
             if case let .image(stateback) = item.type {
@@ -277,10 +290,7 @@ class GeneralInteractedRowView: GeneralRowView {
                     ctx.fillEllipse(in: NSMakeRect(containerView.frame.width - 14 - insets.right, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - 14) / 2), 14, 14))
                 }
             }
-            
-            
         }
-        
     }
     
    
@@ -415,6 +425,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let switchView = switchView {
                     switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
                 }
+                
+                if let badgeView = badgeView {
+                    badgeView.centerY(x:frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
+                }
+                
                 if let textView = textView {
                     var width:CGFloat = 100
                     if let name = item.nameLayout {
@@ -457,6 +472,10 @@ class GeneralInteractedRowView: GeneralRowView {
                 nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width, addition: -1)
                 if let progressView = progressView {
                     progressView.centerY(x: containerView.frame.width - innerInsets.right - progressView.frame.width, addition: -1)
+                }
+                
+                if let badgeView = badgeView {
+                    badgeView.centerY(x: containerView.frame.width - innerInsets.right - badgeView.frame.width - nextInset, addition: -1)
                 }
             }
         }

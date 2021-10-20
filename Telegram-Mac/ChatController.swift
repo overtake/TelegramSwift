@@ -1819,11 +1819,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } |> map { cachedData in
             var themeEmoticon: String? = nil
             if let cachedData = cachedData as? CachedUserData {
-                themeEmoticon = cachedData.themeEmoticon
+                themeEmoticon = cachedData.themeEmoticon?.fixed
             } else if let cachedData = cachedData as? CachedGroupData {
-                themeEmoticon = cachedData.themeEmoticon
+                themeEmoticon = cachedData.themeEmoticon?.fixed
             } else if let cachedData = cachedData as? CachedChannelData {
-                themeEmoticon = cachedData.themeEmoticon
+                themeEmoticon = cachedData.themeEmoticon?.fixed
             }
             return themeEmoticon
         } |> distinctUntilChanged
