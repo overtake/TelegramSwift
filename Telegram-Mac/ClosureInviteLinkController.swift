@@ -37,6 +37,7 @@ struct ClosureInviteLinkState: Equatable {
     fileprivate var tempCount: Int32?
     fileprivate var tempDate: Int32?
     fileprivate(set) var requestApproval: Bool
+    fileprivate(set) var title: String?
 }
 
 //
@@ -45,7 +46,7 @@ private let _id_period_precise = InputDataIdentifier("_id_period_precise")
 
 private let _id_count = InputDataIdentifier("_id_count")
 private let _id_count_precise = InputDataIdentifier("_id_count_precise")
-
+private let _id_title = InputDataIdentifier("_id_title")
 
 private let _id_request_approval = InputDataIdentifier("_id_request_approval")
 
@@ -60,11 +61,21 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     sectionId += 1
     
     
-   
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.editInvitationTitlePlaceholder, filter: { $0 }, limit: 32))
+    index += 1
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationTitleDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+
+    
+    
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    sectionId += 1
+    
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: L10n.editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
         arguments.toggleRequestApproval(state.requestApproval)
     })))
-
+    index += 1
     
     let requestApprovalText: String
     if state.requestApproval {
@@ -76,7 +87,6 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
-    if !state.requestApproval {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
@@ -121,7 +131,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
         }))
         index += 1
         
-        
+    if !state.requestApproval {
         let dateFormatter = makeNewDateFormatter()
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .short
@@ -252,6 +262,7 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         }
         initialState.requestApproval = invitation.requestApproval
         initialState.tempDate = initialState.date
+        initialState.title = invitation.title
         if let alreadyCount = invitation.count, let usageLimit = invitation.usageLimit {
             initialState.count = usageLimit - alreadyCount
         } else if let usageLimit = invitation.usageLimit {
@@ -262,6 +273,7 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
         if initialState.count != .max {
             initialState.tempCount = initialState.count
         }
+        
     }
     let state: ValuePromise<ClosureInviteLinkState> = ValuePromise(initialState)
     let stateValue: Atomic<ClosureInviteLinkState> = Atomic(value: initialState)
@@ -318,6 +330,11 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     })
     
     controller.updateDatas = { data in
+        updateState { current in
+            var current = current
+            current.title = data[_id_title]?.stringValue
+            return current
+        }
         return .none
     }
     

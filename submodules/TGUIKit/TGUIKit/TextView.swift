@@ -981,9 +981,13 @@ public final class TextViewLayout : Equatable {
                                 
                 if firstIndex > 0, !firstFound {
                     firstIndex -= 1
+                } else if firstFound {
+                    firstIndex = min(firstIndex + 1, self.attributedString.length - 1)
                 }
                 if lastIndex < self.attributedString.length - 1, !lastFound {
                     lastIndex += 1
+                } else if lastFound {
+                    lastIndex = max(lastIndex - 1, 0)
                 }
                
             }

@@ -25,7 +25,7 @@ class AccountInfoItem: GeneralRowItem {
 
     private let peerPhotosDisposable = MetaDisposable()
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, peer: TelegramUser, action: @escaping()->Void) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void) {
         self.context = context
         self.peer = peer
         
@@ -46,7 +46,7 @@ class AccountInfoItem: GeneralRowItem {
         let active = attr.mutableCopy() as! NSMutableAttributedString
         active.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: active.range)
         activeTextlayout = TextViewLayout(active, maximumNumberOfLines: 4)
-        super.init(initialSize, height: 90, stableId: stableId, action: action)
+        super.init(initialSize, height: 90, stableId: stableId, viewType: viewType, action: action, inset: inset)
         
         self.photos = syncPeerPhotos(peerId: peer.id)
         let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
@@ -73,7 +73,7 @@ class AccountInfoItem: GeneralRowItem {
     
 }
 
-class AccountInfoView : TableRowView {
+private class AccountInfoView : GeneralContainableRowView {
     
     
     private let avatarView:AvatarControl
@@ -105,14 +105,15 @@ class AccountInfoView : TableRowView {
         }, for: .Click)
         
         
+        self.containerView.set(handler: { [weak self] _ in
+            if let item = self?.item as? GeneralRowItem {
+                item.action()
+            }
+        }, for: .Click)
+        
     }
     
-    override func mouseUp(with event: NSEvent) {
-        if let item = item as? AccountInfoItem, mouseInside() {
-            item.action()
-        }
-    }
-    
+  
     override var backdorColor: NSColor {
         return isSelect ? theme.colors.accentSelect : theme.colors.background
     }
@@ -243,7 +244,7 @@ class AccountInfoView : TableRowView {
         super.layout()
         avatarView.centerY(x:16)
         textView.centerY(x: avatarView.frame.maxX + 25)
-        actionView.centerY(x: frame.width - actionView.frame.width - 10)
+        actionView.centerY(x: containerView.frame.width - actionView.frame.width - 10)
         photoVideoView?.frame = avatarView.frame
     }
     

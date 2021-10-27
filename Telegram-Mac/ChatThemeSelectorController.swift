@@ -80,12 +80,12 @@ final class ChatThemeSelectorView : View {
         tableView.removeAll()
         
         _ = tableView.addItem(item: GeneralRowItem(.zero, height: 10))
-        _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: arc4random(), bubbled: bubbled, emojies: emojies, theme: nil, selected: chatTheme?.0 == nil, select: { _ in
+        _ = tableView.addItem(item: SmartThemePreviewRowItem(frame.size, context: context, stableId: arc4random(), bubbled: bubbled, emojies: emojies, theme: nil, selected: chatTheme?.0 == nil, select: { _ in
             previewCurrent(nil)
         }))
                 
         for theme in themes {
-            _ = tableView.addItem(item: ChatThemeRowItem(frame.size, context: context, stableId: theme.0, bubbled: bubbled, emojies: emojies, theme: theme, selected: chatTheme?.0 == theme.0, select: { theme in
+            _ = tableView.addItem(item: SmartThemePreviewRowItem(frame.size, context: context, stableId: theme.0, bubbled: bubbled, emojies: emojies, theme: theme, selected: chatTheme?.0 == theme.0, select: { theme in
                 previewCurrent(theme)
             }))
         }
@@ -208,7 +208,7 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
                 switch result {
                 case let .result(_, items, _):
                     var animatedEmojiStickers: [String: StickerPackItem] = [:]
-                    for case let item as StickerPackItem in items {
+                    for case let item in items {
                         if let emoji = item.getStringRepresentationsOfIndexKeys().first {
                             animatedEmojiStickers[emoji] = item
                         }

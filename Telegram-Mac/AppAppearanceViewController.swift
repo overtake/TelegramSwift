@@ -15,6 +15,69 @@ import TGUIKit
 
 
 
+private extension TelegramBuiltinTheme {
+    var baseTheme: TelegramBaseTheme {
+        switch self {
+        case .dark:
+            return .night
+        case .nightAccent:
+            return .tinted
+        case .day:
+            return .day
+        case .dayClassic:
+            return .classic
+        default:
+            if !palette.isDark {
+                return .classic
+            } else {
+                return .tinted
+            }
+        }
+    }
+}
+
+struct SmartThemeCachedData : Equatable {
+    
+    enum Source : Equatable {
+        case local(ColorPalette)
+        case cloud(TelegramTheme)
+    }
+    struct Data : Equatable {
+        let appTheme: TelegramPresentationTheme
+        let previewIcon: CGImage
+        let emoticon: String
+    }
+    let source: Source
+    let data: Data
+}
+
+struct CloudThemesCachedData {
+    
+    struct Key : Hashable {
+        let base: TelegramBaseTheme
+        let bubbled: Bool
+        
+        var colors: ColorPalette {
+            return base.palette
+        }
+        
+        static var all: [Key] {
+            return [.init(base: .classic, bubbled: true),
+                    .init(base: .day, bubbled: true),
+                    .init(base: .night, bubbled: true),
+                    .init(base: .classic, bubbled: false),
+                    .init(base: .day, bubbled: false),
+                    .init(base: .night, bubbled: false)]
+        }
+    }
+    
+    let themes: [TelegramTheme]
+    let list: [Key : [SmartThemeCachedData]]
+    let `default`: SmartThemeCachedData?
+    let custom: SmartThemeCachedData?
+}
+
+
 struct AppearanceAccentColor : Equatable {
     let accent: PaletteAccentColor
     let cloudTheme: TelegramTheme?
@@ -82,7 +145,9 @@ private final class AppAppearanceViewArguments {
     let editTheme:(TelegramTheme)->Void
     let shareTheme:(TelegramTheme)->Void
     let shareLocal:(ColorPalette)->Void
-    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void, shareLocal:@escaping(ColorPalette)->Void) {
+    let toggleDarkMode:(Bool)->Void
+    let toggleRevealThemes:()->Void
+    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void, shareLocal:@escaping(ColorPalette)->Void, toggleDarkMode: @escaping(Bool)->Void, toggleRevealThemes:@escaping()->Void) {
         self.context = context
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -94,6 +159,8 @@ private final class AppAppearanceViewArguments {
         self.editTheme = editTheme
         self.shareTheme = shareTheme
         self.shareLocal = shareLocal
+        self.toggleDarkMode = toggleDarkMode
+        self.toggleRevealThemes = toggleRevealThemes
     }
 }
 
@@ -106,8 +173,12 @@ private let _id_theme_wallpaper1 = InputDataIdentifier("_id_theme_wallpaper")
 private let _id_theme_wallpaper2 = InputDataIdentifier("_id_theme_wallpaper")
 private let _id_theme_text_size = InputDataIdentifier("_id_theme_text_size")
 private let _id_theme_auto_night = InputDataIdentifier("_id_theme_auto_night")
+private let _id_theme_night_mode = InputDataIdentifier("_id_theme_night_mode")
 
-private func appAppearanceEntries(appearance: Appearance, settings: ThemePaletteSettings, cloudThemes: [TelegramTheme], autoNightSettings: AutoNightThemePreferences, arguments: AppAppearanceViewArguments) -> [InputDataEntry] {
+private let _id_cloud_themes = InputDataIdentifier("_id_cloud_themes")
+
+
+private func appAppearanceEntries(appearance: Appearance, state: State, settings: ThemePaletteSettings, cloudThemes: [TelegramTheme], generated:  CloudThemesCachedData, autoNightSettings: AutoNightThemePreferences, animatedEmojiStickers: [String: StickerPackItem], arguments: AppAppearanceViewArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     var sectionId: Int32 = 0
@@ -123,7 +194,7 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
 
-    var accentList:[AppearanceAccentColor] = []
+//    var accentList = appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil ? appearance.presentation.colors.accentList.prefix(1).map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
 
     var cloudThemes = cloudThemes
     if let cloud = appearance.presentation.cloudTheme {
@@ -131,15 +202,20 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
             cloudThemes.append(cloud)
         }
     }
-    if appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil {
-        let copy = cloudThemes
-        var cloudAccents:[AppearanceAccentColor] = []
-        for cloudTheme in copy {
-            if let settings = cloudTheme.effectiveSettings(for: appearance.presentation.colors) {
-                cloudAccents.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
-            }
-        }
-        accentList.insert(contentsOf: cloudAccents, at: 0)
+    
+    var smartThemesList:[SmartThemeCachedData] = []
+    var values:[SmartThemeCachedData] = generated.list[.init(base: appearance.presentation.colors.parent.baseTheme, bubbled: appearance.presentation.bubbled)] ?? []
+    if let value = generated.default {
+        smartThemesList.append(value)
+    }
+    if values.isEmpty {
+        values = generated.list[.init(base: appearance.presentation.dark ? .night : .classic, bubbled: appearance.presentation.bubbled)] ?? []
+    }
+    for smartTheme in values {
+        smartThemesList.append(smartTheme)
+    }
+    if let custom = generated.custom {
+        smartThemesList.append(custom)
     }
 
     cloudThemes.removeAll(where:{ $0.settings != nil })
@@ -148,97 +224,114 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
         let theme: TelegramPresentationTheme
         let cloudThemes:[TelegramTheme]
     }
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_list, equatable: InputDataEquatable(ListEquatable(theme: appearance.presentation, cloudThemes: cloudThemes)), comparable: nil, item: { initialSize, stableId in
 
-        let selected: ThemeSource
-        if let cloud = appearance.presentation.cloudTheme {
-            if let _ = cloud.settings {
-               selected = .local(appearance.presentation.colors, cloud)
-            } else {
-                selected = .cloud(cloud)
-            }
-        } else {
-            selected = .local(appearance.presentation.colors, nil)
-        }
-
-        let dayClassicCloud = settings.associated.first(where: { $0.local == dayClassicPalette.parent })?.cloud?.cloud
-        let dayCloud = settings.associated.first(where: { $0.local == whitePalette.parent })?.cloud?.cloud
-        let nightAccentCloud = settings.associated.first(where: { $0.local == nightAccentPalette.parent })?.cloud?.cloud
-
-        var locals: [LocalPaletteWithReference] = [LocalPaletteWithReference(palette: dayClassicPalette, cloud: dayClassicCloud),
-                                                   LocalPaletteWithReference(palette: whitePalette, cloud: dayCloud),
-                                                   LocalPaletteWithReference(palette: nightAccentPalette, cloud: nightAccentCloud),
-                                                   LocalPaletteWithReference(palette: systemPalette, cloud: nil)]
-
-        for (i, local) in locals.enumerated() {
-            if let accent = settings.accents.first(where: { $0.name == local.palette.parent }), accent.color.accent != local.palette.basicAccent {
-                locals[i] = local.withAccentColor(accent.color)
-            }
-        }
-
-        return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local: locals, cloudThemes: cloudThemes, viewType: accentList.isEmpty ? .lastItem : .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
-            var items:[ContextMenuItem] = []
-            var cloud: TelegramTheme?
-
-            switch source {
-            case let .cloud(c):
-                cloud = c
-            case let .local(_, c):
-                cloud = c
-            }
-
-            if let cloud = cloud {
-                if cloud.isCreator {
-                    items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
-                        arguments.editTheme(cloud)
-                    }))
-                }
-                items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
-                    arguments.shareTheme(cloud)
-                }))
-                items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
-                    arguments.removeTheme(cloud)
-                }))
-            }
-
-            return items
-        })
-    }))
-
-
-    if !accentList.isEmpty {
+    if !smartThemesList.isEmpty {
 
         struct ALEquatable : Equatable {
-            let accentList: [AppearanceAccentColor]
+            let themeList: [SmartThemeCachedData]
             let theme: TelegramPresentationTheme
         }
 
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList, theme: appearance.presentation)), comparable: nil, item: { initialSize, stableId in
-            return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
-                var items:[ContextMenuItem] = []
-                if let cloud = accent.cloudTheme {
-                    items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
-                        arguments.shareTheme(cloud)
-                    }))
-                    items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
-                        arguments.removeTheme(cloud)
-                    }))
-                }
-                return items
-            })
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(themeList: smartThemesList, theme: appearance.presentation)), comparable: nil, item: { initialSize, stableId in
+            
+
+            return SmartThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, list: smartThemesList, animatedEmojiStickers: animatedEmojiStickers, viewType: .innerItem, togglePalette: arguments.togglePalette)
+            
+//            return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
+//                var items:[ContextMenuItem] = []
+//                if let cloud = accent.cloudTheme {
+//                    items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+//                        arguments.shareTheme(cloud)
+//                    }))
+//                    items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+//                        arguments.removeTheme(cloud)
+//                    }))
+//                }
+//                return items
+//            })
         }))
         index += 1
+        
+        if state.revealed {
+            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_list, equatable: InputDataEquatable(ListEquatable(theme: appearance.presentation, cloudThemes: cloudThemes)), comparable: nil, item: { initialSize, stableId in
+        
+                let selected: ThemeSource
+                if let cloud = appearance.presentation.cloudTheme {
+                    if let _ = cloud.settings {
+                       selected = .local(appearance.presentation.colors, cloud)
+                    } else {
+                        selected = .cloud(cloud)
+                    }
+                } else {
+                    selected = .local(appearance.presentation.colors, nil)
+                }
+        
+                let dayClassicCloud = settings.associated.first(where: { $0.local == dayClassicPalette.parent })?.cloud?.cloud
+                let dayCloud = settings.associated.first(where: { $0.local == whitePalette.parent })?.cloud?.cloud
+                let nightAccentCloud = settings.associated.first(where: { $0.local == nightAccentPalette.parent })?.cloud?.cloud
+        
+                var locals: [LocalPaletteWithReference] = [LocalPaletteWithReference(palette: dayClassicPalette, cloud: dayClassicCloud),
+                                                           LocalPaletteWithReference(palette: whitePalette, cloud: dayCloud),
+                                                           LocalPaletteWithReference(palette: nightAccentPalette, cloud: nightAccentCloud),
+                                                           LocalPaletteWithReference(palette: systemPalette, cloud: nil)]
+        
+                for (i, local) in locals.enumerated() {
+                    if let accent = settings.accents.first(where: { $0.name == local.palette.parent }), accent.color.accent != local.palette.basicAccent {
+                        locals[i] = local.withAccentColor(accent.color)
+                    }
+                }
+        
+                return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local: locals, cloudThemes: cloudThemes, viewType: .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
+                    var items:[ContextMenuItem] = []
+                    var cloud: TelegramTheme?
+        
+                    switch source {
+                    case let .cloud(c):
+                        cloud = c
+                    case let .local(_, c):
+                        cloud = c
+                    }
+        
+                    if let cloud = cloud {
+                        if cloud.isCreator {
+                            items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
+                                arguments.editTheme(cloud)
+                            }))
+                        }
+                        items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                            arguments.shareTheme(cloud)
+                        }))
+                        items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                            arguments.removeTheme(cloud)
+                        }))
+                    }
+        
+                    return items
+                })
+            }))
+        }
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_cloud_themes, data: .init(name: !state.revealed ? L10n.appearanceSettingsShowMore : L10n.appearanceSettingsShowLess, color: appearance.presentation.colors.accent, type: .none, viewType: .lastItem, action: arguments.toggleRevealThemes)))
+        index += 1
+        
     }
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
   
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_chat_mode, data: InputDataGeneralData(name: L10n.appearanceSettingsBubblesMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.bubbled), viewType: appearance.presentation.bubbled ? .firstItem : .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_night_mode, data: InputDataGeneralData(name: L10n.appearanceSettingsDarkMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.dark), viewType: .firstItem, action: {
+        arguments.toggleDarkMode(!appearance.presentation.dark)
+    })))
+    index += 1
+    
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_chat_mode, data: InputDataGeneralData(name: L10n.appearanceSettingsBubblesMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.bubbled), viewType: appearance.presentation.bubbled ? .innerItem : .lastItem, action: {
         arguments.toggleBubbles(!appearance.presentation.bubbled)
     })))
     index += 1
     
+   
     if appearance.presentation.bubbled {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_wallpaper1, data: InputDataGeneralData(name: L10n.generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .lastItem, action: arguments.selectChatBackground)))
         index += 1
@@ -287,10 +380,23 @@ private func appAppearanceEntries(appearance: Appearance, settings: ThemePalette
     return entries
 }
 
+private struct State : Equatable {
+    var revealed: Bool
+}
+
 func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeSettingsEntryTag? = nil) -> InputDataController {
     
     let applyCloudThemeDisposable = MetaDisposable()
     let updateDisposable = MetaDisposable()
+    
+    
+    let initialState = State(revealed: false)
+    
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((State) -> State) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
     
     
     let applyTheme:(InstallThemeSource)->Void = { source in
@@ -317,7 +423,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                     settings = settings.updateWallpaper { _ in
                         return ThemeWallpaper(wallpaper: cached.wallpaper, associated: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper))
                     }
-                    let defaultTheme = DefaultTheme(local: settings.palette.parent, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
+                    let defaultTheme = DefaultTheme(local: cached.palette.parent, cloud: DefaultCloudTheme(cloud: cloud, palette: cached.palette, wallpaper: AssociatedWallpaper(cloud: cached.cloudWallpaper, wallpaper: cached.wallpaper)))
                     if cached.palette.isDark {
                         settings = settings.withUpdatedDefaultDark(defaultTheme)
                     } else {
@@ -329,8 +435,8 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                         .withSavedAssociatedTheme()
                 }).start())
                 
-                applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start())
-            } else if cloud.file != nil || cloud.settings != nil {
+                applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, palette: cached.palette, install: true).start())
+            } else if cloud.file != nil {
                 applyCloudThemeDisposable.set(showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start())
             } else {
                 showEditThemeModalController(context: context, theme: cloud)
@@ -432,16 +538,41 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(value.slug)")), for: context.window)
     }, shareLocal: { palette in
         
+    }, toggleDarkMode: { _ in
+        toggleDarkMode(context: context)
+    }, toggleRevealThemes: {
+        updateState { current in
+            var current = current
+            current.revealed = !current.revealed
+            return current
+        }
     })
     
-    let cloudThemes = telegramThemes(postbox: context.account.postbox, network: context.account.network, accountManager: context.sharedContext.accountManager)
+    
     let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager)
     
-    let signal:Signal<InputDataSignalValue, NoError> = combineLatest(queue: prepareQueue, appearanceSignal, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager), cloudThemes, nightSettings) |> map { appearance, themeSettings, cloudThemes, autoNightSettings in
-        return appAppearanceEntries(appearance: appearance, settings: themeSettings, cloudThemes: cloudThemes.reversed(), autoNightSettings: autoNightSettings, arguments: arguments)
+    
+    let animatedEmojiStickers = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+        |> map { result -> [String: StickerPackItem] in
+            switch result {
+            case let .result(_, items, _):
+                var animatedEmojiStickers: [String: StickerPackItem] = [:]
+                for case let item in items {
+                    if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                        animatedEmojiStickers[emoji] = item
+                    }
+                }
+                return animatedEmojiStickers
+            default:
+                return [:]
+            }
+    } |> deliverOnMainQueue
+    
+    let signal:Signal<InputDataSignalValue, NoError> = combineLatest(queue: prepareQueue, themeUnmodifiedSettings(accountManager: context.sharedContext.accountManager), context.cloudThemes, nightSettings, appearanceSignal, animatedEmojiStickers, statePromise.get()) |> map { themeSettings, themes, autoNightSettings, appearance, animatedEmojiStickers, state in
+        return appAppearanceEntries(appearance: appearance, state: state, settings: themeSettings, cloudThemes: themes.themes.reversed(), generated: themes, autoNightSettings: autoNightSettings, animatedEmojiStickers: animatedEmojiStickers, arguments: arguments)
     }
     |> map { entries in
-         return InputDataSignalValue(entries: entries, animated: false)
+         return InputDataSignalValue(entries: entries, animated: true)
     } |> deliverOnMainQueue
     
     
@@ -501,7 +632,37 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         if let focusOnItemTag = focusOnItemTag {
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
         }
+        controller.genericView.tableView.needUpdateVisibleAfterScroll = true
     }
     
     return controller
+}
+
+
+
+
+func toggleDarkMode(context: AccountContext) {
+    let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager) |> take(1) |> deliverOnMainQueue
+    
+    _ = nightSettings.start(next: { settings in
+        if settings.systemBased || settings.schedule != nil {
+            confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
+                
+                _ = context.sharedContext.accountManager.transaction { transaction -> Void in
+                    transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
+                        let settings: AutoNightThemePreferences = entry?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings
+                        return PreferencesEntry(settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil))
+                    })
+                    transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
+                        let settings = entry?.get(ThemePaletteSettings.self) ?? ThemePaletteSettings.defaultTheme
+                        return PreferencesEntry(settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark))
+                    })
+                }.start()
+            })
+        } else {
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
+                return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
+            }).start()
+        }
+    })
 }

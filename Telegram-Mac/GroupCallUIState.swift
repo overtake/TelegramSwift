@@ -21,10 +21,16 @@ final class GroupCallUIState : Equatable {
         let timestamp: TimeInterval
     }
     
-    enum ControlsTooltip : Equatable {
-        case camera
-        case micro
+    struct ControlsTooltip : Hashable {
+        enum `Type` : Int32 {
+            case camera
+            case micro
+        }
+        let type: `Type`
+        let timestamp: TimeInterval
     }
+    
+
     
     enum Mode : Equatable {
         case voice
@@ -123,11 +129,11 @@ final class GroupCallUIState : Equatable {
     let activeVideoMembers: [GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]]
     
     let controlsTooltip: ControlsTooltip?
-    let dismissedTooltips: Set<ControlsTooltip>
+    let dismissedTooltips: Set<ControlsTooltip.`Type`>
     
     let myPeer: PeerGroupCallData?
         
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip>, videoJoined: Bool) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -304,7 +310,7 @@ final class GroupCallUIState : Equatable {
 
 extension GroupCallUIState.ControlsTooltip {
     var text: String {
-        switch self {
+        switch self.type {
         case .camera:
             return L10n.voiceChatTooltipEnableCamera
         case .micro:

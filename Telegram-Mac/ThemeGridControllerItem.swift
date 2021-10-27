@@ -93,13 +93,12 @@ final class SettingsThemeWallpaperView: BackgroundView {
             
             self.imageView.set(arguments: arguments)
             
-            self.backgroundMode = .gradient(colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
+            self.backgroundMode = TelegramPresentationTheme.defaultBackground(theme.colors)
 
         case let .color(color):
             self.imageView.isHidden = true
             self.label.isHidden = true
             self.backgroundMode = .color(color: NSColor(UInt32(color)))
-          //  backgroundColor = NSColor(UInt32(color))
         case let .gradient(_, colors, rotation):
             self.imageView.isHidden = true
             self.label.isHidden = true
@@ -141,11 +140,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor)
             
 
-            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
-            
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false, cacheImage: { result in
-                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-            })
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false)
 
 
             self.imageView.set(arguments: arguments)

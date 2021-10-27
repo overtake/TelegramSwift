@@ -17,7 +17,7 @@ import SwiftSignalKit
 struct ChatFloatingPhoto {
     var point: NSPoint
     var items:[ChatRowItem]
-    weak var photoView: NSView?
+    var photoView: NSView?
     
 }
 

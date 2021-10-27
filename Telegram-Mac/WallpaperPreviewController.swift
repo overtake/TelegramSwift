@@ -659,14 +659,14 @@ private final class WallpaperPreviewView: View {
         }
     }
     
-    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, palette: ColorPalette, boundingSize: NSSize) {
+    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, palette: ColorPalette, boundingSize: NSSize, isPattern: Bool) {
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
         
         
         let intense = CGFloat(abs(wallpaper.settings.intensity ?? 0)) / 100.0
         let signal: Signal<CGImage?, NoError> = signal |> map { result in
             var image = result.execute(arguments, result.data)?.generateImage()
-            if palette.isDark, let img = image {
+            if palette.isDark, let img = image, isPattern {
                 image = generateImage(img.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
                     ctx.setFillColor(NSColor.black.cgColor)
@@ -705,6 +705,7 @@ private final class WallpaperPreviewView: View {
             self.patternCheckbox.hasPattern = false
             rotateColors.isHidden = true
             self.colorCheckbox.colorsValue = [color].map { NSColor($0) }
+            self.ready?()
         case let .gradient(_, colors, _):
             self.image = nil
             blurCheckbox.isHidden = true
@@ -714,6 +715,7 @@ private final class WallpaperPreviewView: View {
             self.patternCheckbox.hasPattern = false
             self.colorCheckbox.colorsValue = colors.map { NSColor($0) }
             self.rotateColors.update(colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
+            self.ready?()
         case let .image(representations, settings):
             self.patternCheckbox.hasPattern = false
             blurCheckbox.isHidden = false
@@ -724,7 +726,7 @@ private final class WallpaperPreviewView: View {
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
             
-            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize)
+            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize, isPattern: false)
 
             
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
@@ -758,7 +760,7 @@ private final class WallpaperPreviewView: View {
             let boundingSize = dimensions.aspectFilled(frame.size)
 
             
-            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize)
+            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize, isPattern: isPattern)
 
                         
             self.imageSize = dimensions

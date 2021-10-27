@@ -283,8 +283,8 @@ func AutoNightSettingsController(context: AccountContext) -> InputDataController
                 switch schedule {
                 case .sunrise:
                     return current
-                case let .timeSensitive(interval):
-                    return current.withUpdatedSchedule(.timeSensitive(from: value, to: interval.to))
+                case let .timeSensitive(from, to):
+                    return current.withUpdatedSchedule(.timeSensitive(from: value, to: to))
                 }
             }
             return current
@@ -296,8 +296,8 @@ func AutoNightSettingsController(context: AccountContext) -> InputDataController
                 switch schedule {
                 case .sunrise:
                     return current
-                case let .timeSensitive(interval):
-                    return current.withUpdatedSchedule(.timeSensitive(from: interval.from, to: value))
+                case let .timeSensitive(from, to):
+                    return current.withUpdatedSchedule(.timeSensitive(from: from, to: value))
                 }
             }
             return current

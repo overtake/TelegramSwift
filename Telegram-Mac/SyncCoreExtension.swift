@@ -47,19 +47,39 @@ extension TelegramTheme {
                     if colors.name == whitePalette.name {
                         return settings
                     }
-                case .night:
-                    if colors.name == darkPalette.name {
-                        return settings
-                    }
-                case .tinted:
+                case .night, .tinted:
                     if colors.name == nightAccentPalette.name {
                         return settings
                     }
                 }
             }
+
         }
         return nil
     }
+    func effectiveSettings(isDark: Bool) -> TelegramThemeSettings? {
+        if let settings = self.settings {
+            for settings in settings {
+                switch settings.baseTheme {
+                case .classic:
+                    if !isDark {
+                        return settings
+                    }
+                case .day:
+                    if !isDark {
+                        return settings
+                    }
+                case .night, .tinted:
+                    if isDark {
+                        return settings
+                    }
+                }
+            }
+
+        }
+        return nil
+    }
+
 }
 
 

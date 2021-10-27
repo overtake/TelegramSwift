@@ -217,7 +217,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
     }, editLink: { [weak manager] link in
         getModalController?()?.close()
         showModal(with: ClosureInviteLinkController(context: accountContext, peerId: peerId, mode: .edit(link), save: { [weak manager] updated in
-            let signal = manager?.editPeerExportedInvitation(link: link, expireDate: updated.date == .max ? 0 : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? 0 : updated.count)
+            let signal = manager?.editPeerExportedInvitation(link: link, title: updated.title, expireDate: updated.date == .max ? 0 : updated.date + Int32(Date().timeIntervalSince1970), usageLimit: updated.count == .max ? 0 : updated.count)
             if let signal = signal {
                 _ = showModalProgress(signal: signal, for: accountContext.window).start()
             }
@@ -249,7 +249,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
     
 
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.exportedInvitationTitle)
+    let controller = InputDataController(dataSignal: dataSignal, title: invitation.title ?? L10n.exportedInvitationTitle)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         getModalController?()?.close()
@@ -288,7 +288,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
 
 
    
-    controller.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: getSubtitle())
+    controller.centerModalHeader = ModalHeaderData(title: invitation.title ?? L10n.exportedInvitationTitle, subtitle: getSubtitle())
     
     getController = { [weak controller] in
         return controller
@@ -354,7 +354,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
 
     let timer = SwiftSignalKit.Timer(timeout: 1, repeat: true, completion: { [weak modalController, weak controller] in
         if let modalController = modalController {
-            controller?.centerModalHeader = ModalHeaderData(title: L10n.exportedInvitationTitle, subtitle: getSubtitle())
+            controller?.centerModalHeader = ModalHeaderData(title: invitation.title ?? L10n.exportedInvitationTitle, subtitle: getSubtitle())
             modalController.updateLocalizationAndTheme(theme: theme)
         }
     }, queue: .mainQueue())

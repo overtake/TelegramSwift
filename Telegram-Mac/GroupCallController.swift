@@ -28,7 +28,7 @@ final class GroupCallsConfig {
 }
 
 private struct Tooltips : Equatable {
-    var dismissed: Set<GroupCallUIState.ControlsTooltip>
+    var dismissed: Set<GroupCallUIState.ControlsTooltip.`Type`>
     var speachDetected: Bool
     
     static var initialValue: Tooltips {
@@ -517,7 +517,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     var controlsTooltip: GroupCallUIState.ControlsTooltip? = previous?.controlsTooltip
     
     
-    if let current = controlsTooltip, tooltips.dismissed.contains(current) {
+    if let current = controlsTooltip, tooltips.dismissed.contains(current.type) {
         controlsTooltip = nil
     }
     
@@ -525,7 +525,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         if let member = memberDatas.first(where: { $0.peer.id == $0.accountPeerId }) {
             if member.isSpeaking, !member.hasVideo, !activeVideoViews.isEmpty {
                 if !tooltips.dismissed.contains(.camera) {
-                    controlsTooltip = .camera
+                    controlsTooltip = .init(type: .camera, timestamp: Date().timeIntervalSince1970)
                 }
             }
         }
@@ -533,8 +533,12 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         
     if controlsTooltip == nil {
         if tooltips.speachDetected, !tooltips.dismissed.contains(.micro) {
-            controlsTooltip = .micro
+            controlsTooltip = .init(type: .micro, timestamp: Date().timeIntervalSince1970)
         }
+    }
+    
+    if let current = controlsTooltip, current.timestamp + 30 < Date().timeIntervalSince1970 {
+        controlsTooltip = nil
     }
     
     if state.networkState == .connecting {
@@ -1128,7 +1132,7 @@ final class GroupCallUIController : ViewController {
         }, dismissTooltip: { [weak self] tooltip in
             self?.updateTooltips { current in
                 var current = current
-                current.dismissed.insert(tooltip)
+                current.dismissed.insert(tooltip.type)
                 return current
             }
         }, focusVideo: { [weak self] endpointId in

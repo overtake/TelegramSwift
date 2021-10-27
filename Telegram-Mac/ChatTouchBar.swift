@@ -301,8 +301,8 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         guard let item = self.item(forIdentifier: .chatStickersAndEmojiPicker) as? NSPopoverTouchBarItem, let chatInteraction = self.chatInteraction else {return}
         var stickers: (favorite: [TelegramMediaFile], recent: [TelegramMediaFile], packs: [(StickerPackCollectionInfo, [TelegramMediaFile])]) = (favorite: [], recent: [], packs: [])
 
-        stickers.favorite = Array(itemCollectionView.orderedItemListsViews[0].items.compactMap {($0.contents  as? SavedStickerItem)?.file}.prefix(5))
-        stickers.recent = Array(itemCollectionView.orderedItemListsViews[1].items.compactMap {($0.contents  as? RecentMediaItem)?.media as? TelegramMediaFile}.prefix(20))
+        stickers.favorite = Array(itemCollectionView.orderedItemListsViews[0].items.compactMap { $0.contents.get(SavedStickerItem.self)?.file }.prefix(5))
+        stickers.recent = Array(itemCollectionView.orderedItemListsViews[1].items.compactMap { $0.contents.get(SavedStickerItem.self)?.file }.prefix(20))
 
         var collections: [ItemCollectionId : [TelegramMediaFile]] = [:]
 

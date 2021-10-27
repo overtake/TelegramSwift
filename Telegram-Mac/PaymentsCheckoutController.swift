@@ -436,11 +436,30 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             
         } else if let paymentForm = stateValue.with({ $0.form }) {
             showModal(with: PaymentWebInteractionController(context: context, url: paymentForm.url, intent: .addPaymentMethod({ token in
-                updateState { current in
-                    var current = current
-                    current.paymentMethod = .webToken(token)
-                    return current
+               
+                let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
+                if canSave {
+                    confirm(for: context.window, information: L10n.checkoutInfoSaveInfoHelp, okTitle: L10n.modalYes, cancelTitle: L10n.modalNotNow, successHandler: { _ in
+                        updateState { current in
+                            var current = current
+                            current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
+                            return current
+                        }
+                    }, cancelHandler: {
+                        updateState { current in
+                            var current = current
+                            current.paymentMethod = .webToken(token)
+                            return current
+                        }
+                    })
+                } else {
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = .webToken(token)
+                        return current
+                    }
                 }
+
             })), for: context.window)
         }
     }, pay: { savedCredentialsToken in

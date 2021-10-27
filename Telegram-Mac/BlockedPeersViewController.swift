@@ -202,7 +202,7 @@ private func blockedPeersControllerEntries(state: BlockedPeerControllerState, bl
     }
     
     if blockedState.peers.isEmpty {
-        entries.append(.empty(blockedState.peers.isEmpty))
+        entries.append(.empty(blockedState.isLoadingMore))
     } else {
         entries.append(.section(sectionId))
         sectionId += 1

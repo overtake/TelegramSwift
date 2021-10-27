@@ -269,8 +269,8 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
                         }
                         return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark).withSavedAssociatedTheme()
                     })
-                    _ = downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start()
-                } else if cloud.file != nil || cloud.settings != nil {
+                    _ = downloadAndApplyCloudTheme(context: context, theme: cloud, palette: cached.palette, install: true).start()
+                } else if cloud.file != nil {
                     _ = showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start()
                     update = .single(Void())
                 } else {
@@ -357,23 +357,23 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
         }))
         
         let loadSources: Signal<[InstallThemeSource], NoError> = themeSettings |> mapToSignal { settings in
-            let daySource: ThemeSource
-            let darkSource: ThemeSource
-            if let cloud = settings.defaultDay.cloud?.cloud {
-                daySource = .cloud(cloud)
-            } else {
-                daySource = .local(settings.defaultDay.local.palette, nil)
-            }
+            let daySource: InstallThemeSource
+            let darkSource: InstallThemeSource
                         
-            if let cloud = settings.defaultDark.cloud?.cloud {
-                darkSource = .cloud(cloud)
-            } else {
-                darkSource = .local(settings.defaultDark.local.palette, nil)
-            }
+            let daySettings = settings.withUpdatedToDefault(dark: false)
+            let darkSettings = settings.withUpdatedToDefault(dark: true)
             
-            return combineLatest(themeInstallSource(context: context, source: daySource), themeInstallSource(context: context, source: darkSource)) |> map {
-                return [$0, $1]
+            if let cloud = daySettings.defaultDay.cloud?.cloud {
+                daySource = .cloud(cloud, .init(palette: daySettings.defaultDay.local.palette, wallpaper: daySettings.wallpaper.paletteWallpaper.wallpaper, cloudWallpaper: daySettings.wallpaper.associated?.cloud))
+            } else {
+                daySource = .local(daySettings.defaultDay.local.palette)
             }
+            if let cloud = darkSettings.defaultDark.cloud?.cloud {
+                darkSource = .cloud(cloud, .init(palette: darkSettings.defaultDark.local.palette, wallpaper: darkSettings.wallpaper.paletteWallpaper.wallpaper, cloudWallpaper: darkSettings.wallpaper.associated?.cloud))
+            } else {
+                darkSource = .local(darkSettings.defaultDark.local.palette)
+            }
+            return .single([daySource, darkSource])
         } |> deliverOnMainQueue
         
         loadSourcesDisposable.set(loadSources.start(next: { sources in

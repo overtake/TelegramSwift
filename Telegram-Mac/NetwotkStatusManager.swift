@@ -280,6 +280,12 @@ final class NetworkStatusManager {
                 if isUpdating {
                     status = .updating(proxyAddress: proxyAddress)
                 }
+            case let .updating(proxyAddress):
+                if isUpdating {
+                    status = .updating(proxyAddress: proxyAddress)
+                } else {
+                    return .connecting(proxyAddress: proxyAddress, proxyHasConnectionIssues: false)
+                }
             default:
                 break
             }
