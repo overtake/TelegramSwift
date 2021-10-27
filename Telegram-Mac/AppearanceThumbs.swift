@@ -70,7 +70,12 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
                 ctx.draw(image, in: rect.focus(imageSize))
             }
         } else if let image = image._cgImage {
+            ctx.saveGState()
+            ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
+            ctx.scaleBy(x: 1, y: -1.0)
+            ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
             ctx.draw(image, in: rect.focus(imageSize))
+            ctx.restoreGState()
         }
         ctx.restoreGState()
     case let .color(color):

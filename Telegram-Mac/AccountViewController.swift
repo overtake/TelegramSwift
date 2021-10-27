@@ -113,39 +113,52 @@ private enum AccountInfoEntryId : Hashable {
     case index(Int)
     case account(AccountWithInfo)
     
-    var hashValue: Int {
-        return 0
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case let .index(value):
+            hasher.combine(value)
+        case let .account(info):
+            hasher.combine(info.account.id.int64)
+        }
+    }
+}
+
+private final class AnyUpdateStateEquatable  : Equatable {
+    let any: Any
+    init(any: Any) {
+        self.any = any
+    }
+    static func ==(lhs: AnyUpdateStateEquatable, rhs: AnyUpdateStateEquatable) -> Bool {
+        return lhs === rhs
     }
 }
 
 private enum AccountInfoEntry : TableItemListNodeEntry {
-    case info(index:Int, TelegramUser)
-    case accountRecord(index: Int, info: AccountWithInfo)
-    case addAccount(index: Int)
-    case proxy(index: Int, status: String?)
-    case general(index: Int)
-    case stickers(index: Int)
-    case notifications(index: Int, status: UNUserNotifications.AuthorizationStatus)
-    case language(index: Int, current: String)
-    case appearance(index: Int)
-    case privacy(index: Int, AccountPrivacySettings?, WebSessionsContextState)
-    case dataAndStorage(index: Int)
-    case activeSessions(index: Int, activeSessions: Int)
-    case passport(index: Int, peer: Peer)
-    case wallet(index: Int)
-    case update(index: Int, state: Any)
-    case filters(index: Int)
-    case readArticles(index: Int)
-    case about(index: Int)
-    case faq(index: Int)
-    case ask(index: Int)
+    case info(index:Int, viewType: GeneralViewType, PeerEquatable)
+    case accountRecord(index: Int, viewType: GeneralViewType, info: AccountWithInfo)
+    case addAccount(index: Int, viewType: GeneralViewType)
+    case proxy(index: Int, viewType: GeneralViewType, status: String?)
+    case general(index: Int, viewType: GeneralViewType)
+    case stickers(index: Int, viewType: GeneralViewType)
+    case notifications(index: Int, viewType: GeneralViewType, status: UNUserNotifications.AuthorizationStatus)
+    case language(index: Int, viewType: GeneralViewType, current: String)
+    case appearance(index: Int, viewType: GeneralViewType)
+    case privacy(index: Int, viewType: GeneralViewType, AccountPrivacySettings?, WebSessionsContextState)
+    case dataAndStorage(index: Int, viewType: GeneralViewType)
+    case activeSessions(index: Int, viewType: GeneralViewType, activeSessions: Int)
+    case passport(index: Int, viewType: GeneralViewType, peer: PeerEquatable)
+    case update(index: Int, viewType: GeneralViewType, state: AnyUpdateStateEquatable)
+    case filters(index: Int, viewType: GeneralViewType)
+    case about(index: Int, viewType: GeneralViewType)
+    case faq(index: Int, viewType: GeneralViewType)
+    case ask(index: Int, viewType: GeneralViewType)
     case whiteSpace(index:Int, height:CGFloat)
     
     var stableId: AccountInfoEntryId {
         switch self {
         case .info:
             return .index(0)
-        case let .accountRecord(_, info):
+        case let .accountRecord(_, _, info):
             return .account(info)
         case .addAccount:
             return .index(1)
@@ -173,10 +186,6 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(12)
         case .passport:
             return .index(13)
-        case .wallet:
-            return .index(14)
-        case .readArticles:
-            return .index(15)
         case .about:
             return .index(16)
         case .faq:
@@ -190,186 +199,44 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     var index:Int {
         switch self {
-        case let .info(index, _):
+        case let .info(index, _, _):
             return index
-        case let .accountRecord(index, _):
+        case let .accountRecord(index, _, _):
             return index
-        case let .addAccount(index):
+        case let .addAccount(index, _):
             return index
-        case let  .general(index):
+        case let  .general(index, _):
             return index
-        case let  .proxy(index, _):
+        case let  .proxy(index, _, _):
             return index
-        case let .stickers(index):
+        case let .stickers(index, _):
             return index
-        case let .notifications(index, _):
+        case let .notifications(index, _, _):
             return index
-        case let .language(index, _):
+        case let .language(index, _, _):
             return index
-        case let .appearance(index):
+        case let .appearance(index, _):
             return index
-        case let .privacy(index, _, _):
+        case let .privacy(index, _, _, _):
             return index
-        case let .dataAndStorage(index):
+        case let .dataAndStorage(index, _):
             return index
-        case let .activeSessions(index, _):
+        case let .activeSessions(index, _, _):
             return index
-        case let .about(index):
+        case let .about(index, _):
             return index
-        case let .passport(index, _):
+        case let .passport(index, _, _):
             return index
-        case let .filters(index):
+        case let .filters(index, _):
             return index
-        case let .wallet(index):
+        case let .faq(index, _):
             return index
-        case let .readArticles(index):
+        case let .ask(index, _):
             return index
-        case let .faq(index):
-            return index
-        case let .ask(index):
-            return index
-        case let .update(index, _):
+        case let .update(index, _, _):
             return index
         case let .whiteSpace(index, _):
             return index
-        }
-    }
-    
-    static func ==(lhs:AccountInfoEntry, rhs:AccountInfoEntry) -> Bool {
-        switch lhs {
-        case let .info(lhsIndex, lhsPeer):
-            if case let .info(rhsIndex, rhsPeer) = rhs {
-                return lhsIndex == rhsIndex && lhsPeer.isEqual(rhsPeer)
-            } else {
-                return false
-            }
-        case let .accountRecord(lhsIndex, lhsInfo):
-            if case let .accountRecord(rhsIndex, rhsInfo) = rhs {
-                return lhsIndex == rhsIndex && lhsInfo == rhsInfo
-            } else {
-                return false
-            }
-        case let .addAccount(lhsIndex):
-            if case let .addAccount(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .stickers(lhsIndex):
-            if case let .stickers(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .general(lhsIndex):
-            if case let .general(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .proxy(lhsIndex, lhsStatus):
-            if case let .proxy(rhsIndex, rhsStatus) = rhs {
-                return lhsIndex == rhsIndex && lhsStatus == rhsStatus
-            } else {
-                return false
-            }
-        case let .notifications(index, status):
-            if case .notifications(index, status) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .language(index, current):
-            if case .language(index, current) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .appearance(lhsIndex):
-            if case let .appearance(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .privacy(index, privacy, webSessions):
-            if case .privacy(index, privacy, webSessions) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .dataAndStorage(lhsIndex):
-            if case let .dataAndStorage(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .activeSessions(index, activeSessions):
-            if case .activeSessions(index, activeSessions) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .about(lhsIndex):
-            if case let .about(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .passport(lhsIndex, lhsPeer):
-            if case let .passport(rhsIndex, rhsPeer) = rhs {
-                return lhsIndex == rhsIndex && lhsPeer.isEqual(rhsPeer)
-            } else {
-                return false
-            }
-        case let .wallet(index):
-            if case .wallet(index) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .readArticles(lhsIndex):
-            if case let .readArticles(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .faq(lhsIndex):
-            if case let .faq(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .ask(lhsIndex):
-            if case let .ask(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .filters(lhsIndex):
-            if case let .filters(rhsIndex) = rhs {
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .update(lhsIndex, lhsState):
-            if case let .update(rhsIndex, rhsState) = rhs {
-                #if !APP_STORE
-                    let lhsState = lhsState as? AppUpdateState
-                    let rhsState = rhsState as? AppUpdateState
-                    if lhsState != rhsState {
-                        return false
-                    }
-                #endif
-                return lhsIndex == rhsIndex
-            } else {
-                return false
-            }
-        case let .whiteSpace(lhsIndex, lhsHeight):
-            if case let .whiteSpace(rhsIndex, rhsHeight) = rhs {
-                return lhsIndex == rhsIndex && lhsHeight == rhsHeight
-            } else {
-                return false
-            }
         }
     }
     
@@ -379,15 +246,15 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     func item(_ arguments: AccountInfoArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .info(_, peer):
-            return AccountInfoItem(initialSize, stableId: stableId, context: arguments.context, peer: peer, action: {
+        case let .info(_, viewType, peer):
+            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, action: {
                 let first: Atomic<Bool> = Atomic(value: true)
                 EditAccountInfoController(context: arguments.context, f: { controller in
                     arguments.presentController(controller, first.swap(false))
                 })
             })
-        case let .accountRecord(_, info):
-            return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left:16), action: {
+        case let .accountRecord(_, viewType, info):
+            return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
                 arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
             }, contextMenuItems: {
                 return .single([ContextMenuItem(L10n.accountSettingsDeleteAccount, handler: {
@@ -396,18 +263,18 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     })
                 })])
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }, sync: true), compactText: true)
-        case .addAccount:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, action: {
+        case let .addAccount(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: {
                 let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
                 arguments.context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
                 
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left:15))
-        case .general:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, action: {
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .general(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .proxy(_, let status):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .proxy(_, viewType, status):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
                 let controller = proxyListController(accountManager: arguments.context.sharedContext.accountManager, network: arguments.context.account.network, share: { servers in
                     var message: String = ""
                     for server in servers {
@@ -421,64 +288,50 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 })
                 arguments.presentController(controller, true)
 
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .stickers:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .stickers(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(InstalledStickerPacksController(arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .notifications(_, let status):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: status == .denied ? .image(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed()) : .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .notifications(_, viewType, status):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: status == .denied ? .image(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed()) : .next, viewType: viewType, action: {
                 arguments.presentController(NotificationPreferencesController(arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .language(_, current):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .language(_, viewType, current):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), viewType: viewType, action: {
                 arguments.presentController(LanguageViewController(arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .appearance:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .appearance(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(AppAppearanceViewController(context: arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .privacy(_,  privacySettings, webSessions):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .privacy(_, viewType,  privacySettings, _):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, viewType: viewType, action: {
                  arguments.presentController(PrivacyAndSecurityViewController(arguments.context, initialSettings: privacySettings), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .dataAndStorage:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .dataAndStorage(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(DataAndStorageViewController(arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .activeSessions(_, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsActiveSessions, icon: theme.icons.settingsSessions, activeIcon: theme.icons.settingsSessionsActive, type: .nextContext("\(count)"), action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .activeSessions(_, viewType, count):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsActiveSessions, icon: theme.icons.settingsSessions, activeIcon: theme.icons.settingsSessionsActive, type: .nextContext("\(count)"), viewType: viewType, action: {
                 arguments.presentController(RecentSessionsController(arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .about:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAbout, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .about(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAbout, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: {
                 showModal(with: AboutModalController(), for: mainWindow)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case let .passport(_, peer):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, action: {
-                arguments.presentController(PassportController(arguments.context, peer, request: nil, nil), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .wallet:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsWallet, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .next, action: {
-                let context = arguments.context
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .faq:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
-                
-                arguments.openFaq()
-                
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .readArticles:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsReadArticles, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, action: {
-                
-                
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .ask:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .passport(_, viewType, peer):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, viewType: viewType, action: {
+                arguments.presentController(PassportController(arguments.context, peer.peer, request: nil, nil), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .faq(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .ask(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, viewType: viewType, action: {
                 confirm(for: mainWindow, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
-                        
                         _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: mainWindow).start(next: {  peerId in
                             if let peerId = peerId {
                                 arguments.presentController(ChatController(context: arguments.context, chatLocation: .peer(peerId)), true)
@@ -489,16 +342,16 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     }
                 })
                 
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .filters:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFilters, icon: theme.icons.settingsFilters, activeIcon: theme.icons.settingsFiltersActive, type: .next, action: {
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .filters(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFilters, icon: theme.icons.settingsFilters, activeIcon: theme.icons.settingsFiltersActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(ChatListFiltersListController(context: arguments.context), true)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
-        case .update(_, let state):
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .update(_, viewType, state):
             
             var text: String = ""
             #if !APP_STORE
-            if let state = state as? AppUpdateState {
+            if let state = state.any as? AppUpdateState {
                 switch state.loadingState {
                 case let .loading(_, current, total):
                     text = "\(Int(Float(current) / Float(total) * 100))%"
@@ -514,12 +367,11 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }
             #endif
            
-            
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountViewControllerUpdate, icon: theme.icons.settingsUpdate, activeIcon: theme.icons.settingsUpdateActive, type: .nextContext(text), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountViewControllerUpdate, icon: theme.icons.settingsUpdate, activeIcon: theme.icons.settingsUpdateActive, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openUpdateApp()
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left:16))
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .whiteSpace(_, height):
-            return GeneralRowItem(initialSize, height: height, stableId: stableId, border:[BorderType.Right])
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, border: [BorderType.Right], backgroundColor: .clear)
         }
     }
     
@@ -532,7 +384,9 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     var index:Int = 0
         
     if let peer = peerViewMainPeer(peerView) as? TelegramUser {
-        entries.append(.info(index: index, peer))
+        entries.append(.whiteSpace(index: index, height: 20))
+        index += 1
+        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer)))
         index += 1
     }
     
@@ -541,12 +395,12 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     
     for account in accounts {
         if account.account.id != context.account.id {
-            entries.append(.accountRecord(index: index, info: account))
+            entries.append(.accountRecord(index: index, viewType: .singleItem, info: account))
             index += 1
         }
     }
     if accounts.count < 3 {
-        entries.append(.addAccount(index: index))
+        entries.append(.addAccount(index: index, viewType: .singleItem))
         index += 1
     }
     entries.append(.whiteSpace(index: index, height: 20))
@@ -560,37 +414,37 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         default:
             status = proxySettings.0.enabled ? L10n.accountSettingsProxyConnecting : L10n.accountSettingsProxyDisabled
         }
-        entries.append(.proxy(index: index, status: status))
+        entries.append(.proxy(index: index, viewType: .singleItem, status: status))
         index += 1
         
         entries.append(.whiteSpace(index: index, height: 20))
         index += 1
     }
     
-    entries.append(.general(index: index))
+    entries.append(.general(index: index, viewType: .singleItem))
     index += 1
-    entries.append(.notifications(index: index, status: unAuthStatus))
+    entries.append(.notifications(index: index, viewType: .singleItem, status: unAuthStatus))
     index += 1
-    entries.append(.privacy(index: index, privacySettings, webSessions))
+    entries.append(.privacy(index: index, viewType: .singleItem, privacySettings, webSessions))
     index += 1
-    entries.append(.dataAndStorage(index: index))
+    entries.append(.dataAndStorage(index: index, viewType: .singleItem))
     index += 1
-    entries.append(.activeSessions(index: index, activeSessions: sessionsCount))
+    entries.append(.activeSessions(index: index, viewType: .singleItem, activeSessions: sessionsCount))
     index += 1
-    entries.append(.appearance(index: index))
+    entries.append(.appearance(index: index, viewType: .singleItem))
     index += 1
-    entries.append(.language(index: index, current: language.localizedName))
+    entries.append(.language(index: index, viewType: .singleItem, current: language.localizedName))
     index += 1
-    entries.append(.stickers(index: index))
+    entries.append(.stickers(index: index, viewType: .singleItem))
     index += 1
     
     if hasFilters {
-        entries.append(.filters(index: index))
+        entries.append(.filters(index: index, viewType: .singleItem))
         index += 1
     }
     
     if let state = appUpdateState {
-        entries.append(.update(index: index, state: state))
+        entries.append(.update(index: index, viewType: .singleItem, state: AnyUpdateStateEquatable(any: state)))
         index += 1
     }
    
@@ -599,15 +453,15 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     index += 1
     
     if let peer = peerViewMainPeer(peerView) as? TelegramUser, passportVisible {
-        entries.append(.passport(index: index, peer: peer))
+        entries.append(.passport(index: index, viewType: .singleItem, peer: PeerEquatable(peer)))
         index += 1
     }
 
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
-    entries.append(.faq(index: index))
+    entries.append(.faq(index: index, viewType: .singleItem))
     index += 1
-    entries.append(.ask(index: index))
+    entries.append(.ask(index: index, viewType: .singleItem))
     index += 1
     
     entries.append(.whiteSpace(index: index, height: 20))
@@ -754,6 +608,7 @@ class LayoutAccountController : TableViewController {
         genericView.delegate = self
        // self.rightBarView.border = [.Right]
         let context = self.context
+        //theme.colors.listBackground
         genericView.getBackgroundColor = {
             return .clear
         }

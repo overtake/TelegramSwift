@@ -86,6 +86,10 @@ class ChatMessageItem: ChatRowItem {
             if webpage.isTheme {
                 return webpage.size.width
             }
+        } else if message?.adAttribute != nil {
+            if isBubbled {
+                return bubbleFrame.width - bubbleDefaultInnerInset
+            }
         }
         return self.contentSize.width
     }
@@ -146,8 +150,8 @@ class ChatMessageItem: ChatRowItem {
     }
     
     func invokeAction() {
-        if let _ = message?.adAttribute, let peer = peer {
-            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo)
+        if let adAttribute = message?.adAttribute, let peer = peer {
+            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: peer.isChannel, postId: adAttribute.messageId?.id, callback: chatInteraction.openInfo)
             execute(inapp: link)
         } else if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
@@ -605,9 +609,9 @@ class ChatMessageItem: ChatRowItem {
         if unsupported {
             return rightSize.height
         }
-        if message?.adAttribute != nil {
-            return rightSize.height
-        }
+//        if message?.adAttribute != nil {
+//            return rightSize.height
+//        }
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
            // return rightSize.height
         }

@@ -495,29 +495,7 @@ class MainViewController: TelegramViewController {
             }, theme.icons.fastSettingsLock))
         }
         items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, {
-            let nightSettings = autoNightSettings(accountManager: context.sharedContext.accountManager) |> take(1) |> deliverOnMainQueue
-            
-            _ = nightSettings.start(next: { settings in
-                if settings.systemBased || settings.schedule != nil {
-                    confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
-                        
-                        _ = context.sharedContext.accountManager.transaction { transaction -> Void in
-                            transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
-                                let settings: AutoNightThemePreferences = entry?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings
-                                return PreferencesEntry(settings.withUpdatedSystemBased(false).withUpdatedSchedule(nil))
-                            })
-                            transaction.updateSharedData(ApplicationSharedPreferencesKeys.themeSettings, { entry in
-                                let settings = entry?.get(ThemePaletteSettings.self) ?? ThemePaletteSettings.defaultTheme
-                                return PreferencesEntry(settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark))
-                            })
-                        }.start()
-                    })
-                } else {
-                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings -> ThemePaletteSettings in
-                        return settings.withUpdatedToDefault(dark: !theme.colors.isDark).withUpdatedDefaultIsDark(!theme.colors.isDark)
-                    }).start()
-                }
-            })
+            toggleDarkMode(context: context)
         }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
        
         

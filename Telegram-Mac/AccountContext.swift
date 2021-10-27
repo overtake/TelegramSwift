@@ -93,9 +93,18 @@ final class AccountContext {
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
+    
+    
     private let _chatThemes: Promise<[(String, TelegramPresentationTheme)]> = Promise([])
     var chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> {
         return _chatThemes.get() |> deliverOnMainQueue
+    }
+    
+    
+    
+    private let _cloudThemes:Promise<CloudThemesCachedData> = Promise()
+    var cloudThemes:Signal<CloudThemesCachedData, NoError> {
+        return _cloudThemes.get() |> deliverOnMainQueue
     }
     #endif
     
@@ -225,7 +234,7 @@ final class AccountContext {
             
         }))
         
-      
+        
         
         #if !SHARE
         let signal:Signal<Void, NoError> = Signal { subscriber in
@@ -257,19 +266,19 @@ final class AccountContext {
         let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager)) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
             
-            for theme in themes {
-                let effective = theme.effectiveSettings(for: appearance.presentation.colors)
-                if let settings = effective, let emoji = theme.emoticon?.fixed {
-                    let newTheme = appearance.presentation.withUpdatedColors(settings.palette)
-                    if let wallpaper = settings.wallpaper?.uiWallpaper {
-                        signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
-                            return (emoji, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))
-                        })
-                    } else {
-                        signals.append(.single((emoji, newTheme)))
-                    }
-                }
-            }
+//            for theme in themes {
+//                let effective = theme.effectiveSettings(isDark: appearance.presentation.dark)
+//                if let settings = effective, let emoji = theme.emoticon?.fixed {
+//                    let newTheme = appearance.presentation.withUpdatedColors(settings.palette)
+//                    if let wallpaper = settings.wallpaper?.uiWallpaper {
+//                        signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
+//                            return (emoji, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))
+//                        })
+//                    } else {
+//                        signals.append(.single((emoji, newTheme)))
+//                    }
+//                }
+//            }
             
             let first = Signal<[(String, TelegramPresentationTheme)], NoError>.single([])
             return first |> then(combineLatest(signals)) |> map { values in
@@ -282,7 +291,106 @@ final class AccountContext {
         }
         self._chatThemes.set((chatThemes |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart)
         
+        
+        let cloudThemes: Signal<[TelegramTheme], NoError> = telegramThemes(postbox: account.postbox, network: account.network, accountManager: sharedContext.accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs in
+            return lhs.count == rhs.count
+        })
+        
+        let themesList: Signal<([TelegramTheme], [CloudThemesCachedData.Key : [SmartThemeCachedData]]), NoError> = cloudThemes |> mapToSignal { themes in
+            var signals:[Signal<(CloudThemesCachedData.Key, Int64, TelegramPresentationTheme), NoError>] = []
+            
+            for key in CloudThemesCachedData.Key.all {
+                for theme in themes {
+                    let effective = theme.effectiveSettings(for: key.colors)
+                    if let settings = effective, theme.isDefault, let _ = theme.emoticon {
+                        let newTheme = appAppearance.presentation.withUpdatedColors(settings.palette)
+                        if let wallpaper = settings.wallpaper?.uiWallpaper {
+                            signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
+                                return (key, theme.id, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))
+                            })
+                        } else {
+                            signals.append(.single((key, theme.id, newTheme)))
+                        }
+                    }
+                }
+            }
+            
+            return combineLatest(signals) |> mapToSignal { values in
+                
+                var signals: [Signal<(CloudThemesCachedData.Key, Int64, SmartThemeCachedData), NoError>] = []
+                for value in values {
+                    let bubbled = value.0.bubbled
+                    let theme = value.2
+                    let themeId = value.1
+                    let key = value.0
+                    if let telegramTheme = themes.first(where: { $0.id == value.1 }) {
+                        signals.append(generateChatThemeThumb(palette: theme.colors, bubbled: bubbled, backgroundMode: bubbled ? theme.backgroundMode : .color(color: theme.colors.chatBackground)) |> map {
+                            (key, themeId, SmartThemeCachedData(source: .cloud(telegramTheme), data: .init(appTheme: theme, previewIcon: $0, emoticon: telegramTheme.emoticon ?? telegramTheme.title)))
+                        })
+                    }
+                }
+                return combineLatest(signals) |> map { values in
+                    var data:[CloudThemesCachedData.Key: [SmartThemeCachedData]] = [:]
+                    for value in values {
+                        var array:[SmartThemeCachedData] = data[value.0] ?? []
+                        array.append(value.2)
+                        data[value.0] = array
+                    }
+                    return (themes, data)
+
+                }
+            }
+        }
+        
+        
+        let defaultAndCustom: Signal<(SmartThemeCachedData, SmartThemeCachedData?), NoError> = combineLatest(appearanceSignal, themeSettingsView(accountManager: sharedContext.accountManager)) |> map { appearance, value -> (ThemePaletteSettings, TelegramPresentationTheme, ThemePaletteSettings?) in
+            
+            let `default` = value.withUpdatedToDefault(dark: appearance.presentation.dark)
+                .withUpdatedCloudTheme(nil)
+                .withUpdatedPalette(appearance.presentation.colors.parent.palette)
+                .installDefaultWallpaper()
+            
+            
+            let  customData = value.withUpdatedCloudTheme(appearance.presentation.cloudTheme)
+                .withUpdatedPalette(appearance.presentation.colors)
+                .installDefaultWallpaper()
+            
+            var custom: ThemePaletteSettings?
+            if let cloud = customData.cloudTheme, cloud.settings == nil {
+                custom = customData
+            } else if let cloud = customData.cloudTheme {
+                if let settings = cloud.effectiveSettings(for: value.palette.parent.palette) {
+                    if customData.wallpaper.wallpaper != settings.wallpaper?.uiWallpaper {
+                        custom = customData
+                    }
+                }
+            }
+            
+            return (`default`, appearance.presentation, custom)
+        } |> deliverOn(.concurrentBackgroundQueue()) |> mapToSignal { (value, theme, custom) in
+            
+            var signals:[Signal<SmartThemeCachedData, NoError>] = []
+            
+            let  values = [value, custom].compactMap { $0 }
+            for (i, value) in values.enumerated() {
+                let newTheme = theme.withUpdatedColors(value.palette).withUpdatedWallpaper(value.wallpaper)
+                signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: value.wallpaper.wallpaper) |> mapToSignal { _ in
+                    return generateChatThemeThumb(palette: newTheme.colors, bubbled: value.bubbled, backgroundMode: value.bubbled ? newTheme.backgroundMode : .color(color: newTheme.colors.chatBackground))
+                } |> map { previewIcon in
+                    return SmartThemeCachedData(source: .local(value.palette), data: .init(appTheme: newTheme, previewIcon: previewIcon, emoticon: i == 0 ? "🏠" : "🎨"))
+                })
+            }
+            
+            return combineLatest(signals) |> map { ($0[0], $0.count == 2 ? $0[1] : nil) }
+        }
+        
+        _cloudThemes.set(combineLatest(defaultAndCustom, themesList) |> map { defaultAndCustom, themesList in
+            return .init(themes: themesList.0, list: themesList.1, default: defaultAndCustom.0, custom: defaultAndCustom.1)
+        })
+        
         #endif
+        
+        
         
         let autoplayMedia = _autoplayMedia
         prefDisposable.add(account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.autoplayMedia]).start(next: { view in
@@ -452,6 +560,8 @@ final class AccountContext {
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
         self.diceCache.cleanup()
+        _chatThemes.set(.single([]))
+        _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))
         #endif
     }
    
@@ -564,8 +674,8 @@ final class AccountContext {
 }
 
 
-func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, install: Bool = false) -> Signal<Never, Void> {
-    if let cloudSettings = cloudTheme.effectiveSettings {
+func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: TelegramTheme, palette: ColorPalette? = nil, install: Bool = false) -> Signal<Never, Void> {
+    if let cloudSettings = cloudTheme.effectiveSettings(for: palette ?? theme.colors) {
         return Signal { subscriber in
             #if !SHARE
             let wallpaperDisposable = DisposableSet()

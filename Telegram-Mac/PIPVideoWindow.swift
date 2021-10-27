@@ -257,7 +257,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self._contentInteractions = contentInteractions
         self._type = type
         self.control = control
-        
         let minSize = control.view.frame.size.aspectFilled(NSMakeSize(300, 300))
       //  let difference = NSMakeSize(item.notFittedSize.width - item.sizeValue.width, item.notFittedSize.height - item.sizeValue.height)
         let size = item.notFittedSize.aspectFilled(NSMakeSize(300, 300)).aspectFilled(minSize)
@@ -265,7 +264,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.rect = newRect //NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.item = item
-        _window = Window(contentRect: control.view.bounds, styleMask: [.resizable], backing: .buffered, defer: true)
+        _window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
         //self.isOpaque = false
@@ -291,11 +290,12 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         
         _window.set(mouseHandler: { event -> KeyHandlerResult in
-            
+            NSCursor.arrow.set()
             return .invoked
         }, with: self, for: .mouseMoved, priority: .low)
         
         _window.set(mouseHandler: { event -> KeyHandlerResult in
+            NSCursor.arrow.set()
             return .invoked
         }, with: self, for: .mouseEntered, priority: .low)
         
@@ -461,15 +461,14 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         super.makeKeyAndOrderFront(sender)
         if let screen = NSScreen.main {
             let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
-            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), savedRect.height))
+            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 300), min(savedRect.height, 300)))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
+            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(300, 300))
             
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             
-            self.maxSize = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(frame.width / 3, frame.height / 3))
+            self.maxSize = self.rect.size.aspectFitted(frame.size)
 
-            
             self.setFrame(NSMakeRect(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50, convert_s.width, convert_s.height), display: true, animate: true)
            
         }

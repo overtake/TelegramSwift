@@ -235,6 +235,12 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     
+    func openRequests() {
+        pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
+            self?.openInviteLinks()
+        }))
+    }
+    
     func setupDiscussion() {
         _ = (self.context.account.postbox.loadedPeerWithId(self.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
             if let `self` = self {
@@ -607,6 +613,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case members(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
+    case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -631,6 +638,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .members(sectionId, count, _): return .members(sectionId: sectionId, count: count, viewType: viewType)
         case let .link(sectionId, addressName, _): return .link(sectionId: sectionId, addressName: addressName, viewType: viewType)
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
+        case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
@@ -755,6 +763,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .requests(sectionId, count, viewType):
+            if case .requests(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .discussion(sectionId, lhsGroup, participantsCount, viewType):
             if case .discussion(sectionId, let rhsGroup, participantsCount, viewType) = entry {
                 if let lhsGroup = lhsGroup, let rhsGroup = rhsGroup {
@@ -842,24 +856,26 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 11
         case .inviteLinks:
             return 12
-        case .discussion:
+        case .requests:
             return 13
-        case .discussionDesc:
+        case .discussion:
             return 14
-        case .aboutInput:
+        case .discussionDesc:
             return 15
-        case .aboutDesc:
+        case .aboutInput:
             return 16
-        case .signMessages:
+        case .aboutDesc:
             return 17
-        case .signDesc:
+        case .signMessages:
             return 18
-        case .report:
+        case .signDesc:
             return 19
-        case .leave:
+        case .report:
             return 20
-        case .media:
+        case .leave:
             return 21
+        case .media:
+            return 22
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -886,6 +902,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .link(sectionId, _, _):
             return sectionId.rawValue
         case let .inviteLinks(sectionId, _, _):
+            return sectionId.rawValue
+        case let .requests(sectionId, _, _):
             return sectionId.rawValue
         case let .discussion(sectionId, _, _, _):
             return sectionId.rawValue
@@ -931,6 +949,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .link(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .inviteLinks(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .requests(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussion(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -995,6 +1015,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, icon: theme.icons.profile_channel_type, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), viewType: viewType, action: arguments.visibilitySetup)
         case let .inviteLinks(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+        case let .requests(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoMembersRequest, icon: theme.icons.profile_requests, type: .badge(count > 0 ? "\(count)" : "", theme.colors.redUI), viewType: viewType, action: arguments.openRequests)
         case let .discussion(_, group, _, viewType):
             let title: String
             if let group = group {
@@ -1094,6 +1116,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
                 if channel.canInviteUsers {
                     block.append(.inviteLinks(section: .type, count: inviteLinksCount, viewType: .singleItem))
+                    if joinRequestsCount > 0 {
+                        block.append(.requests(section: .type, count: joinRequestsCount, viewType: .singleItem))
+                    }
                 }
                 if channel.adminRights?.rights.contains(.canChangeInfo) == true {
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))

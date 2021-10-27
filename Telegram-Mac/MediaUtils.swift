@@ -677,7 +677,7 @@ enum StickerDatasType {
 
 func chatMessageStickerResource(file: TelegramMediaFile, small: Bool) -> MediaResource {
     let resource: MediaResource
-    if small, let smallest = largestImageRepresentation(file.previewRepresentations) {
+    if small, let smallest = smallestImageRepresentation(file.previewRepresentations) {
         resource = smallest.resource
     } else {
         resource = file.resource
@@ -891,13 +891,13 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
             if maybeData.complete, let loadedData = loadedData, loadedData.count > 0 {
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
-                let thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier), complete: true)
+                let thumbnailData:Signal<MediaResourceData?, NoError> = .single(nil) |> then( postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier), complete: true) |> map(Optional.init))
                 
                 
                 let fullSizeData:Signal<ImageRenderData, NoError> = .single(ImageRenderData(nil, nil, false)) |> then(postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedAnimatedStickerRepresentation(thumb: false, size: size, fitzModifier: file.media.animatedEmojiFitzModifier), complete: true)
-                    |> map { next in
-                        return ImageRenderData(nil, !next.complete ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: .mappedIfSafe), next.complete)
-                    })
+                     |> map { next in
+                         return ImageRenderData(nil, !next.complete ? nil : try? Data(contentsOf: URL(fileURLWithPath: next.path), options: .mappedIfSafe), next.complete)
+                     })
                 
                 return Signal { subscriber in
                     var fetch: Disposable?
@@ -906,16 +906,17 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
                     }
                     
                     var fetchThumbnail: Disposable?
-                    if thumbnailResource.id == resource.id {
-                        fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
-                    }
+                    fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
+
                     let disposable = (combineLatest(thumbnailData, fullSizeData)
                         |> map { thumbnailData, fullSizeData -> ImageRenderData in
-                            return ImageRenderData(thumbnailData.complete && !fullSizeData.fullSizeComplete ? try? Data(contentsOf: URL(fileURLWithPath: thumbnailData.path)) : nil, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                            if let thumbnailData = thumbnailData {
+                                return ImageRenderData(thumbnailData.complete && !fullSizeData.fullSizeComplete ? try? Data(contentsOf: URL(fileURLWithPath: thumbnailData.path)) : nil, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                            } else {
+                                return ImageRenderData(nil, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                            }
                         }).start(next: { next in
                             subscriber.putNext(next)
-                        }, error: { error in
-                            subscriber.putError(error)
                         }, completed: {
                             subscriber.putCompletion()
                         })
@@ -3191,25 +3192,26 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                     c.setBlendMode(.normal)
 
                     if !drawPatternOnly {
+                        
+                        if palette.isDark, let image = fullSizeImage {
+                            let size = image.size.aspectFilled(arguments.drawingRect.size)
+                            let rect = arguments.drawingRect.focus(size)
+
+                            c.clear(rect)
+                            c.setFillColor(NSColor.black.cgColor)
+                            c.fill(rect)
+                            c.clip(to: rect, mask: image)
+                            
+                            c.clear(rect)
+                            c.setFillColor(NSColor.black.withAlphaComponent(0.7).cgColor)
+                            c.fill(rect)
+                        }
+                        
                         if colors.count == 1, let color = colors.first {
                             c.setFillColor(color.cgColor)
                             c.fill(arguments.drawingRect)
                         } else {
-                            
-                            if palette.isDark, let image = fullSizeImage {
-                                let size = image.size.aspectFilled(arguments.drawingRect.size)
-                                let rect = arguments.drawingRect.focus(size)
-
-                                c.clear(rect)
-                                c.setFillColor(NSColor.black.cgColor)
-                                c.fill(rect)
-                                c.clip(to: rect, mask: image)
-                                
-                                c.clear(rect)
-                                c.setFillColor(NSColor.black.withAlphaComponent(0.3).cgColor)
-                                c.fill(rect)
-                            }
-                            
+                        
                             if colors.count <= 2 {
                                 let gradientColors = colors.map { $0.cgColor } as CFArray
                                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)

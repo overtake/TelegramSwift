@@ -295,6 +295,12 @@ internal final class L10n {
   internal static var appearanceSettingsAutoNightHeader: String  { return L10n.tr("Localizable", "Appearance.Settings.AutoNightHeader") }
   /// Bubbles Mode
   internal static var appearanceSettingsBubblesMode: String  { return L10n.tr("Localizable", "Appearance.Settings.BubblesMode") }
+  /// Dark Mode
+  internal static var appearanceSettingsDarkMode: String  { return L10n.tr("Localizable", "Appearance.Settings.DarkMode") }
+  /// Show Less
+  internal static var appearanceSettingsShowLess: String  { return L10n.tr("Localizable", "Appearance.Settings.ShowLess") }
+  /// Show More
+  internal static var appearanceSettingsShowMore: String  { return L10n.tr("Localizable", "Appearance.Settings.ShowMore") }
   /// Accent
   internal static var appearanceThemeAccent: String  { return L10n.tr("Localizable", "Appearance.Theme.Accent") }
   /// Edit
@@ -4023,6 +4029,10 @@ internal final class L10n {
   internal static var editInvitationRequestApproval: String  { return L10n.tr("Localizable", "EditInvitation.RequestApproval") }
   /// Save
   internal static var editInvitationSave: String  { return L10n.tr("Localizable", "EditInvitation.Save") }
+  /// Only you and other admins will see this name.
+  internal static var editInvitationTitleDesc: String  { return L10n.tr("Localizable", "EditInvitation.TitleDesc") }
+  /// Link Name (Optional)
+  internal static var editInvitationTitlePlaceholder: String  { return L10n.tr("Localizable", "EditInvitation.TitlePlaceholder") }
   /// Unlimited
   internal static var editInvitationUnlimited: String  { return L10n.tr("Localizable", "EditInvitation.Unlimited") }
   /// Create

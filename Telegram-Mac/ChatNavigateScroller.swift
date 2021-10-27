@@ -24,6 +24,7 @@ class ChatNavigateScroller: ImageButton {
         self.context = context
         super.init()
         autohighlight = false
+        scaleOnClick = true
         set(image: theme.icons.chatScrollUp, for: .Normal)
         set(image: theme.icons.chatScrollUpActive, for: .Highlight)
         self.setFrameSize(60,60)

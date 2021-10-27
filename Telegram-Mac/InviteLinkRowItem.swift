@@ -252,7 +252,7 @@ private final class InviteLinkTokenView : Control {
 
             self.progressView.update(link: link)
 
-            let titleText = link.link.replacingOccurrences(of: "https://", with: "")
+            let titleText = link.title ?? link.link.replacingOccurrences(of: "https://", with: "")
 
             let titleAttr = NSMutableAttributedString()
             _ = titleAttr.append(string: titleText, color: theme.colors.text, font: .medium(.text))

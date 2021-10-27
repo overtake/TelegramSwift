@@ -16,10 +16,10 @@ import SwiftSignalKit
 
 private final class HorizontalThemeFirstItem : GeneralRowItem {
     override var width: CGFloat {
-        return 10
+        return 5
     }
     override var height: CGFloat {
-        return 10
+        return 5
     }
     override func viewClass() -> AnyClass {
         return HorizontalRowView.self
@@ -59,7 +59,7 @@ private final class HorizontalThemeItem : GeneralRowItem {
         }
         self.titleLayout = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .end, alignment: .center, alwaysStaticItems: true)
         self.titleLayout.measure(width: 80)
-        super.init(initialSize, height: 100, stableId: stableId)
+        super.init(initialSize, height: 90, stableId: stableId)
     }
     
     
@@ -239,29 +239,15 @@ class ThemeListRowItem: GeneralRowItem {
 }
 
 
-private final class ThemeListRowView : TableRowView {
-    private var containerView = GeneralRowContainerView(frame: NSZeroRect)
-    private let borderView: View = View()
+private final class ThemeListRowView : GeneralContainableRowView {
     private let tableView = HorizontalTableView(frame: NSZeroRect)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.containerView.addSubview(self.tableView)
-        self.containerView.addSubview(self.borderView)
-        
-        
-        self.addSubview(containerView)
+        self.addSubview(self.tableView)
     }
     
     
-    override func updateColors() {
-        guard let item = item as? ThemeListRowItem else {
-            return
-        }
-        self.containerView.backgroundColor = item.theme.colors.background
-        self.borderView.backgroundColor = item.theme.colors.border
-        self.backgroundColor = item.viewType.rowBackground
-    }
-    
+   
     override var backdorColor: NSColor {
         guard let item = item as? ThemeListRowItem else {
             return theme.colors.background
@@ -276,10 +262,6 @@ private final class ThemeListRowView : TableRowView {
         }
         
         let innerInset = item.viewType.innerInset
-        
-        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
-        self.containerView.setCorners(item.viewType.corners)
-        self.borderView.frame = NSMakeRect(innerInset.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInset.left - innerInset.right, .borderSize)
         
         self.tableView.frame = NSMakeRect(0, innerInset.top, self.containerView.frame.width, self.containerView.frame.height - innerInset.bottom - innerInset.top)
     }
@@ -300,9 +282,7 @@ private final class ThemeListRowView : TableRowView {
         self.tableView.getBackgroundColor = {
             item.theme.colors.background
         }
-        
-        borderView.isHidden = !item.viewType.hasBorder
-        
+                
         self.layout()
         
         if previous?.cloudThemes == item.cloudThemes && previous?.theme == item.theme && item.selected == previous?.selected {
@@ -347,6 +327,7 @@ private final class ThemeListRowView : TableRowView {
             }
         }
         
+        _ = tableView.addItem(item: HorizontalThemeFirstItem(tableView.frame.size), animation: reloadAnimated ? .effectFade : .none)
         _ = tableView.addItem(item: HorizontalThemeFirstItem(tableView.frame.size), animation: reloadAnimated ? .effectFade : .none)
         tableView.endTableUpdates()
         

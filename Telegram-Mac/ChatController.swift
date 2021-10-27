@@ -1773,7 +1773,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
         let applyHole:() -> Void = { [weak self] in
             guard let `self` = self else { return }
-            
             let visibleRows = self.genericView.tableView.visibleRows()
             var messageIndex: MessageIndex?
             for i in stride(from: visibleRows.max - 1, to: -1, by: -1) {
@@ -1788,7 +1787,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self.setLocation(location)
             }
         }
-        
         
         let _searchState: Atomic<SearchMessagesResultState> = Atomic(value: SearchMessagesResultState("", []))
         

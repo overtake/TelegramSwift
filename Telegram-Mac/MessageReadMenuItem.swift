@@ -240,7 +240,7 @@ private final class MessageViewsMenuItemView : Control {
             loadingView?.backgroundColor = (isDark ? .white : .black)
         case let .stats(peers):
             if peers.count == 1 {
-                let text: String = peers[0].displayTitle
+                let text: String = peers[0].displayTitle.prefixWithDots(20)
                 textLayot = TextViewLayout(.initialize(string: text, color: textColor, font: .normal(.text)))
                 loadingView = nil
                 contentView = .init(context: context, message: message, peers: peers, size: NSMakeSize(15, 15))

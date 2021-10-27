@@ -304,4 +304,9 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
             self?.prev()
         }
     }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
 }

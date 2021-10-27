@@ -1637,30 +1637,40 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
         
-        if let data = pasteboard.data(forType: .rtfd) ?? pasteboard.data(forType: .rtf) {
-            if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
-                
-                let (attributed, attachments) = attributed.applyRtf()
-                let current = genericView.textView.attributedString().copy() as! NSAttributedString
-                let currentRange = genericView.textView.selectedRange()
-                let (attributedString, range) = current.appendAttributedString(attributed.attributedSubstring(from: NSMakeRange(0, min(Int(self.maxCharactersLimit(genericView.textView)), attributed.length))), selectedRange: currentRange)
-                let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                genericView.textView.addSimpleItem(item)
-
-                if !attachments.isEmpty {
-                    pasteDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
-                        if !urls.isEmpty {
-                            self?.insertAdditionUrls?(urls)
-                        }
-                    }))
-                }
-                return true
+    
+        let pasteRtf:()->Void = { [weak self] in
+            guard let `self` = self else {
+                return
             }
+            if let data = pasteboard.data(forType: .rtfd) ?? pasteboard.data(forType: .rtf) {
+                if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
+                    
+                    let (attributed, attachments) = attributed.applyRtf()
+                    let current = self.genericView.textView.attributedString().copy() as! NSAttributedString
+                    let currentRange = self.genericView.textView.selectedRange()
+                    let (attributedString, range) = current.appendAttributedString(attributed.attributedSubstring(from: NSMakeRange(0, min(Int(self.maxCharactersLimit(self.genericView.textView)), attributed.length))), selectedRange: currentRange)
+                    let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
+                    self.genericView.textView.addSimpleItem(item)
+
+                    if !attachments.isEmpty {
+                        self.pasteDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
+                            if !urls.isEmpty {
+                                self?.insertAdditionUrls?(urls)
+                            }
+                        }))
+                    }
+                }
+            }
+            
         }
         
         if !result {
             self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
                 self?.insertAdditionUrls?(urls)
+                
+                if urls.isEmpty {
+                    pasteRtf()
+                }
             }))
         }
         

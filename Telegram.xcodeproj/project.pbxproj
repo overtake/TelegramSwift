@@ -116,6 +116,7 @@
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
+		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
 		2783BA9526E24795004A1591 /* GroupCallVideoOrientationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
@@ -178,8 +179,9 @@
 		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
 		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
 		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
+		27F7EC782726D35F002B05FF /* AppearanceMoreItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F7EC772726D35F002B05FF /* AppearanceMoreItem.swift */; };
 		27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */; };
-		27FE779C26F4AE4400E1C90B /* ChatThemeRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779B26F4AE4400E1C90B /* ChatThemeRowItem.swift */; };
+		27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */; };
 		27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */; };
 		27FFCEC72694BC95006CA024 /* WidgetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC62694BC95006CA024 /* WidgetController.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
@@ -1246,6 +1248,7 @@
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputMenuView.swift; sourceTree = "<group>"; };
 		2780DE3F271F0BB20092323F /* zoom.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom.tgs; sourceTree = "<group>"; };
+		2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemeListRowItem.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
 		278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPatternPreviewController.swift; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
@@ -1309,8 +1312,9 @@
 		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
 		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
 		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
+		27F7EC772726D35F002B05FF /* AppearanceMoreItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceMoreItem.swift; sourceTree = "<group>"; };
 		27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeSelectorController.swift; sourceTree = "<group>"; };
-		27FE779B26F4AE4400E1C90B /* ChatThemeRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeRowItem.swift; sourceTree = "<group>"; };
+		27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemePreviewRowItem.swift; sourceTree = "<group>"; };
 		27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAppearance.swift; sourceTree = "<group>"; };
 		27FFCEC62694BC95006CA024 /* WidgetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetController.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
@@ -2523,7 +2527,7 @@
 			isa = PBXGroup;
 			children = (
 				27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */,
-				27FE779B26F4AE4400E1C90B /* ChatThemeRowItem.swift */,
+				27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */,
 			);
 			name = themes;
 			sourceTree = "<group>";
@@ -4625,6 +4629,8 @@
 				D02BD7C2232D14E800D1814A /* ThemePreviewRowItem.swift */,
 				D02BD7C4232D204F00D1814A /* ThemeListRowItem.swift */,
 				D02BD7C6232D4DB200D1814A /* AppearanceThumbs.swift */,
+				2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */,
+				27F7EC772726D35F002B05FF /* AppearanceMoreItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -5757,7 +5763,7 @@
 				C2DE5D381F3CAD010081EC1E /* InstantPageTextStyleStack.swift in Sources */,
 				C29E0EE21F4EFB5100C0C7A8 /* GroupStickerSetController.swift in Sources */,
 				C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */,
-				27FE779C26F4AE4400E1C90B /* ChatThemeRowItem.swift in Sources */,
+				27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */,
 				9FFAE4F3205A8C89000C028E /* MediaPlayerAudioRenderer.swift in Sources */,
 				D0D81AEE243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift in Sources */,
 				D0E7BD1A256A7D350068644D /* GroupCallWindow.swift in Sources */,
@@ -5787,6 +5793,7 @@
 				276B597D261C78AD0029FD3F /* GroupCallView.swift in Sources */,
 				C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */,
 				27949115260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
+				27F7EC782726D35F002B05FF /* AppearanceMoreItem.swift in Sources */,
 				D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */,
 				9F7B5FCD220099220087D020 /* WallpaperPatternPreviewView.swift in Sources */,
 				C250B02E1DB7805E004E9FBE /* ChatLayoutUtils.swift in Sources */,
@@ -6165,6 +6172,7 @@
 				9F14CBF32007DEB300F22DA9 /* ChatWallpaperModalController.swift in Sources */,
 				9F262D5F21BFD5BC006817CD /* LocalizationPreviewModalController.swift in Sources */,
 				276B5989261C7AC60029FD3F /* GroupCallSchedule.swift in Sources */,
+				2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */,
 				C2FD38321DCA215F009DC28C /* GeneralInputRow.swift in Sources */,
 				C2FF14601E532C0A007B7B14 /* SearchEmptyRowItem.swift in Sources */,
 				C2167E5F1DC25C6900F98E03 /* InterfaceObserver.swift in Sources */,

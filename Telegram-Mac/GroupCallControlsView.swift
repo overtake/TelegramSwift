@@ -546,7 +546,7 @@ final class GroupCallControlsView : View {
                     }, for: .SingleClick)
                 }
                 let toView: NSView?
-                switch tooltip {
+                switch tooltip.type {
                 case .camera:
                     toView = self.leftButton1
                 case .micro:
