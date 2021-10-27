@@ -447,7 +447,7 @@ struct DefaultTheme : Equatable, Codable {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
         let localRawValue = try container.decode(String.self, forKey: "dl_1")
-        self.local = .init(rawValue: localRawValue) ?? .dayClassic
+        self.local = TelegramBuiltinTheme(rawValue: localRawValue) ?? .dayClassic
         self.cloud = try container.decodeIfPresent(DefaultCloudTheme.self, forKey: "dc")
     }
     
