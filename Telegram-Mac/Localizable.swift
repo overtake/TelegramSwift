@@ -1695,6 +1695,22 @@ internal final class L10n {
   internal static var chatAlertForwardActionHide1Two: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_two") }
   /// Hide Sender's Names
   internal static var chatAlertForwardActionHide1Zero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Hide1_zero") }
+  /// %d
+  internal static func chatAlertForwardActionHideCaptionCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_countable", p1)
+  }
+  /// Hide Captions
+  internal static var chatAlertForwardActionHideCaptionFew: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_few") }
+  /// Hide Captions
+  internal static var chatAlertForwardActionHideCaptionMany: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_many") }
+  /// Hide Caption
+  internal static var chatAlertForwardActionHideCaptionOne: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_one") }
+  /// Hide Captions
+  internal static var chatAlertForwardActionHideCaptionOther: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_other") }
+  /// Hide Captions
+  internal static var chatAlertForwardActionHideCaptionTwo: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_two") }
+  /// Hide Captions
+  internal static var chatAlertForwardActionHideCaptionZero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.HideCaption_zero") }
   /// Show Sender's Names
   internal static var chatAlertForwardActionShow: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show") }
   /// %d
@@ -1713,6 +1729,22 @@ internal final class L10n {
   internal static var chatAlertForwardActionShow1Two: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_two") }
   /// Show Sender's Names
   internal static var chatAlertForwardActionShow1Zero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.Show1_zero") }
+  /// %d
+  internal static func chatAlertForwardActionShowCaptionCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_countable", p1)
+  }
+  /// Show Captions
+  internal static var chatAlertForwardActionShowCaptionFew: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_few") }
+  /// Show Captions
+  internal static var chatAlertForwardActionShowCaptionMany: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_many") }
+  /// Show Caption
+  internal static var chatAlertForwardActionShowCaptionOne: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_one") }
+  /// Show Captions
+  internal static var chatAlertForwardActionShowCaptionOther: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_other") }
+  /// Show Captions
+  internal static var chatAlertForwardActionShowCaptionTwo: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_two") }
+  /// Show Captions
+  internal static var chatAlertForwardActionShowCaptionZero: String  { return L10n.tr("Localizable", "Chat.Alert.Forward.Action.ShowCaption_zero") }
   /// %d
   internal static func chatAlertForwardTextInnerCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Alert.Forward.Text.Inner_countable", p1)

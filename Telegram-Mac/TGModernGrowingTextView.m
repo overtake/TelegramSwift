@@ -821,7 +821,9 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     
     if ((self._selectedRange.location != self.textView.selectedRange.location) || (self._selectedRange.length != self.textView.selectedRange.length)) {
-        [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate textViewTextDidChangeSelectedRange:self.textView.selectedRange];
+        });
         self._selectedRange = self.textView.selectedRange;
     }
     
