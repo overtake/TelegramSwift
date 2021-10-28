@@ -110,7 +110,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func previewMediaIfPossible() -> Bool {
         guard let context = self.context, let window = self.kitWindow, let table = self.table, parent == nil || parent?.containsSecretMedia == false, fetchStatus == .Local else {return false}
-        _ = startModalPreviewHandle(table, window: window, context: context)
+        startModalPreviewHandle(table, window: window, context: context)
         return true
     }
     

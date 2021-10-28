@@ -404,15 +404,15 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                 cachedDataMessages = [messageId : messages]
             case let .preferencesEntry(key, value):
                 if key == PreferencesKeys.limitsConfiguration {
-                    limitsConfiguration = value as? LimitsConfiguration ?? LimitsConfiguration.defaultValue
+                    limitsConfiguration = value?.get(LimitsConfiguration.self) ?? .defaultValue
                 }
                 if key == ApplicationSpecificPreferencesKeys.autoplayMedia {
-                    autoplayMedia = value as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings
+                    autoplayMedia = value?.get(AutoplayMediaPreferences.self) ?? .defaultSettings
                     
                 }
                 
                 if key == ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings {
-                    autodownloadSettings = value as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
+                    autodownloadSettings = value?.get(AutomaticMediaDownloadSettings.self) ?? .defaultSettings
                 }
             case let .totalUnreadState(unreadState):
                 if let combinedReadStates = view.fixedReadStates {

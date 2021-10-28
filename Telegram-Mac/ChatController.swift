@@ -1693,7 +1693,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 switch result {
                 case let .result(_, items, _):
                     var animatedEmojiStickers: [String: StickerPackItem] = [:]
-                    for case let item as StickerPackItem in items {
+                    for case let item in items {
                         if let emoji = item.getStringRepresentationsOfIndexKeys().first {
                             animatedEmojiStickers[emoji] = item
                         }
@@ -1919,7 +1919,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let view = view {
                 for additionalEntry in view.additionalData {
                     if case let .cacheEntry(id, data) = additionalEntry {
-                        if id == cachedChannelAdminRanksEntryId(peerId: chatInteraction.peerId), let data = data as? CachedChannelAdminRanks {
+                        if id == cachedChannelAdminRanksEntryId(peerId: chatInteraction.peerId), let data = data?.get(CachedChannelAdminRanks.self)  {
                             ranks = data
                         }
                         break
