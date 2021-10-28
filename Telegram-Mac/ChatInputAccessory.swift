@@ -117,27 +117,53 @@ class ChatInputAccessory: Node {
                     }
                 }
             }
+            let setHideCaption = { [weak self] hide in
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedHideCaption(hide)
+                    }
+                }
+            }
             
             var items:[SPopoverItem] = []
             
             let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
 
+            let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
             
             items.append(SPopoverItem(L10n.chatAlertForwardActionShow1Countable(authors), {
                 setHideAction(false)
-            }, !state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
+            }, !hideSendersName ? theme.icons.chat_action_menu_selected : nil))
             
             items.append(SPopoverItem(L10n.chatAlertForwardActionHide1Countable(authors), {
                 setHideAction(true)
-            }, state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
+            }, hideSendersName ? theme.icons.chat_action_menu_selected : nil))
         
             items.append(SPopoverItem(true))
+            
+            let messagesWithCaption = state.interfaceState.forwardMessages.filter {
+                !$0.text.isEmpty && $0.media.first != nil
+            }.count
+            
+            if messagesWithCaption > 0 {
+                
+                items.append(SPopoverItem(L10n.chatAlertForwardActionShowCaptionCountable(messagesWithCaption), {
+                    setHideCaption(false)
+                }, !state.interfaceState.hideCaptions ? theme.icons.chat_action_menu_selected : nil))
+                
+                items.append(SPopoverItem(L10n.chatAlertForwardActionHideCaptionCountable(messagesWithCaption), {
+                    setHideCaption(true)
+                }, state.interfaceState.hideCaptions ? theme.icons.chat_action_menu_selected : nil))
+                
+                items.append(SPopoverItem(true))
+
+            }
             
             items.append(SPopoverItem(L10n.chatAlertForwardActionAnother, anotherAction, theme.icons.chat_action_menu_update_chat))
 
         
             container.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: items), inset: NSMakePoint(-5, 3))
+                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), inset: NSMakePoint(-5, 3))
             }, for: .Hover)
             
             dismiss.set(handler: { [weak self] _ in

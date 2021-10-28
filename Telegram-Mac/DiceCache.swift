@@ -113,7 +113,7 @@ class DiceCache {
         
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
-            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue
         } |> map {
             return InteractiveEmojiConfiguration.with(appConfiguration: $0)
         } |> distinctUntilChanged
@@ -141,7 +141,7 @@ class DiceCache {
                         switch result {
                         case let .result(_, items, _):
                             var dices: [StickerPackItem] = []
-                            for case let item as StickerPackItem in items {
+                            for case let item in items {
                                 dices.append(item)
                             }
                             return (emoji, dices)
@@ -158,7 +158,7 @@ class DiceCache {
                 switch result {
                 case let .result(_, items, _):
                     var effects: [StickerPackItem] = []
-                    for case let item as StickerPackItem in items {
+                    for case let item in items {
                         effects.append(item)
                     }
                     return effects
@@ -306,6 +306,31 @@ class DiceCache {
         }
     }
 
+    
+    func listOfEmojies(engine: TelegramEngine) -> Signal<[String], NoError> {
+        let availablePacks = engine.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue
+        } |> map {
+            return InteractiveEmojiConfiguration.with(appConfiguration: $0)
+        } |> distinctUntilChanged
+        
+        let emojies = engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+            |> map { result -> [String] in
+                switch result {
+                case let .result(_, items, _):
+                    var stickers: [String] = []
+                    for case let item in items {
+                        if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                            stickers.append(emoji)
+                        }
+                    }
+                    return stickers
+                default:
+                    return []
+                }
+        }
+        return emojies
+    }
     
     
     func interactiveSymbolData(baseSymbol: String, synchronous: Bool) -> Signal<[(String, Data?, TelegramMediaFile)], NoError> {

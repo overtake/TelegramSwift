@@ -872,11 +872,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             var index = index
             if mode == .selectAvatar {
                 index += 1
-            } else {
-                FastSettings.changeEntertainmentState(state)
             }
             
             let state = EntertainmentState(rawValue: Int32(index))!
+            if mode != .selectAvatar {
+                FastSettings.changeEntertainmentState(state)
+            }
             self?.chatInteraction?.update({ $0.withUpdatedIsEmojiSection(state == .emoji )})
             self?.genericView.updateSelected(state, mode: mode)
             

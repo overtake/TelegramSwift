@@ -445,7 +445,7 @@ class Sender: NSObject {
         return attrs
     }
     
-    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, hideNames: Bool = false, silent: Bool = false, atDate: Date? = nil) -> Signal<[MessageId?], NoError> {
+    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil) -> Signal<[MessageId?], NoError> {
         
         var fwdMessages:[EnqueueMessage] = []
         
@@ -455,8 +455,8 @@ class Sender: NSObject {
         if FastSettings.isChannelMessagesMuted(peerId) || silent {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
-        if hideNames {
-            attributes.append(ForwardOptionsMessageAttribute(hideNames: hideNames, hideCaptions: false))
+        if hideNames || hideCaptions {
+            attributes.append(ForwardOptionsMessageAttribute(hideNames: hideNames || hideCaptions, hideCaptions: hideCaptions))
         }
         
         if let date = atDate {

@@ -706,7 +706,13 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                 
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
-                var thumbnailData = postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedStickerAJpegRepresentation(size: nil), complete: true) |> map(Optional.init)
+                
+                /*
+                 let thumbnailData:Signal<MediaResourceData?, NoError> = .single(nil) |> then( postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier), complete: true) |> map(Optional.init))
+
+                 */
+                
+                var thumbnailData:Signal<MediaResourceData?, NoError> = .single(nil) |> then(postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedStickerAJpegRepresentation(size: nil), complete: true) |> map(Optional.init))
                 if resource is LocalFileReferenceMediaResource {
                     thumbnailData = .single(nil)
                 } 
@@ -723,9 +729,8 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                     }
 
                     var fetchThumbnail: Disposable?
-                    if thumbnailResource.id == resource.id {
-                        fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
-                    }
+                    fetchThumbnail = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: file.resourceReference(thumbnailResource)).start()
+
                     let disposable = (combineLatest(thumbnailData, fullSizeData)
                         |> map { thumbnailData, fullSizeData -> ImageRenderData in
                             if let thumbnailData = thumbnailData {
