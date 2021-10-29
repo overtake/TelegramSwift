@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
+#import <CoreGraphics/CoreGraphics.h>
 //! Project version number for Mozjpeg.
 FOUNDATION_EXPORT double MozjpegVersionNumber;
 

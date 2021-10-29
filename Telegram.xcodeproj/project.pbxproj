@@ -6447,7 +6447,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = Github;
@@ -6606,7 +6606,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = DebugHockeyapp;
@@ -6639,7 +6639,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = DebugAppStore;
@@ -6672,7 +6672,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = ReleaseAppStore;
@@ -6827,7 +6827,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = ReleaseHockeyapp;
@@ -6996,7 +6996,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SHARE;
 				SWIFT_OBJC_BRIDGING_HEADER = "Telegram-Mac/Telegram-Mac-Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 				VALID_ARCHS = "arm64 x86_64";
 			};
 			name = HockeyappMacAlpha;
