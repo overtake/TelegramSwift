@@ -545,7 +545,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
             }
             
-            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
+            let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedPlatformName: ApiEnvironment.resolvedPlatformName)
             
             let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
             

@@ -494,7 +494,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     }
     
     var tooltipSpeaker: PeerGroupCallData? = nil
-    if !activeVideoViews.isEmpty && isFullScreen {
+    if !activeVideoViews.isEmpty && isFullScreen && hideParticipants {
         if current != nil {
             if let previous = previous?.tooltipSpeaker {
                 let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
