@@ -14,6 +14,49 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 
+private func iconForSession(_ session: RecentAccountSession) -> (CGImage?, String?) {
+    let platform = session.platform.lowercased()
+    let device = session.deviceModel.lowercased()
+    let systemVersion = session.systemVersion.lowercased()
+    if device.contains("xbox") {
+        return (NSImage(named: "Icon_Device_Xbox")?.precomposed(), nil)
+    }
+    if device.contains("chrome") && !device.contains("chromebook") {
+        return (NSImage(named: "Icon_Device_Chrome")?.precomposed(), "device_chrome")
+    }
+    if device.contains("brave") {
+        return (NSImage(named: "Icon_Device_Brave")?.precomposed(), nil)
+    }
+    if device.contains("vivaldi") {
+        return (NSImage(named: "Icon_Device_Vivaldi")?.precomposed(), nil)
+    }
+    if device.contains("safari") {
+        return (NSImage(named: "Icon_Device_Safari")?.precomposed(), "device_safari")
+    }
+    if device.contains("firefox") {
+        return (NSImage(named: "Icon_Device_Firefox")?.precomposed(), nil)
+    }
+    if device.contains("opera") {
+        return (NSImage(named: "Icon_Device_Opera")?.precomposed(), nil)
+    }
+    if platform.contains("android") {
+        return (NSImage(named: "Icon_Device_Android")?.precomposed(), "device_android")
+    }
+    if platform.contains("ios") || platform.contains("macos") || systemVersion.contains("macos") {
+        return (NSImage(named: "Icon_Device_Apple")?.precomposed(), nil)
+    }
+    if platform.contains("ubuntu") || systemVersion.contains("ubuntu") {
+        return (NSImage(named: "Icon_Device_Ubuntu")?.precomposed(), nil)
+    }
+    if platform.contains("linux") || systemVersion.contains("linux") {
+        return (NSImage(named: "Icon_Device_Linux")?.precomposed(), nil)
+    }
+    if platform.contains("windows") || systemVersion.contains("windows") {
+        return (NSImage(named: "Icon_Device_Windows")?.precomposed(), nil)
+    }
+    return (nil, nil)
+}
+
 
 private final class RecentSessionsControllerArguments {
     let context: AccountContext
@@ -172,7 +215,7 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         case let .currentSessionHeader(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsCurrentSessionHeader, viewType: viewType)
         case let .currentSession(_, session, viewType):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, revoke: {})
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), revoke: {})
         case let .terminateOtherSessions(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.sessionsTerminateOthers, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.terminateOthers()
@@ -186,7 +229,7 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         case let .otherSessionsHeader(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsActiveSessionsHeader, viewType: viewType)
         case let .session(_, _, session, _, _, viewType):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, revoke: {
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), revoke: {
                 arguments.removeSession(session.hash)
             })
         case .section(sectionId: _):

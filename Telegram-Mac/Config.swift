@@ -62,6 +62,25 @@ final class ApiEnvironment {
         return ["debug", "stable", "appstore", "beta"]
     }
     
+    static var resolvedPlatformName:[String : String]? {
+        if let file = Bundle.main.path(forResource: "mac_devices", ofType: "txt") {
+            if let string = try? String(contentsOf: .init(fileURLWithPath: file)) {
+                let lines = string.components(separatedBy: "\n\n")
+                
+                var result:[String : String] = [:]
+                for line in lines {
+                    let resolved = line.components(separatedBy: "\n")
+                    if resolved.count == 2 {
+                        result[resolved[1]] = resolved[0]
+                    }
+                }
+                
+                return result
+            }
+        }
+        return nil
+    }
+    
     static var prefix: String {
         var prefix: String = ""
         #if DEBUG

@@ -36,31 +36,53 @@ fragment float4 fragmentColorConversion(
     texture2d<float, access::sample> textureY[[texture(0)]],
     texture2d<float, access::sample> textureU[[texture(1)]],
     texture2d<float, access::sample> textureV[[texture(2)]]) {
-    float y;
-    float u;
-    float v;
-    float r;
-    float g;
-    float b;
-    // Conversion for YUV to rgb from http://www.fourcc.org/fccyvrgb.php
-    
-    constexpr sampler quadSampler;
-    
-    y = textureY.sample(quadSampler, in.texcoord).r;
-    u = textureU.sample(quadSampler, in.texcoord).r;
-    v = textureV.sample(quadSampler, in.texcoord).r;
-    
-    y = y - 0.0625;
-    u = u - 0.5;
-    v = v - 0.5;
-    
-    r = 1.164 * y + 1.596 * v;
-    g = 1.164 * y - 0.392 * u - 0.813 * v;
-    b = 1.164 * y + 2.17 * u;
-    
-    float4 out = float4(r, g, b, 1.0);
-    
-    return float4(out);
+//    float y;
+//    float u;
+//    float v;
+//    float r;
+//    float g;
+//    float b;
+//    // Conversion for YUV to rgb from http://www.fourcc.org/fccyvrgb.php
+//
+//    constexpr sampler quadSampler;
+//
+//    y = textureY.sample(quadSampler, in.texcoord).r;
+//    u = textureU.sample(quadSampler, in.texcoord).r;
+//    v = textureV.sample(quadSampler, in.texcoord).r;
+//
+//    y = y - 0.0625;
+//    u = u - 0.5;
+//    v = v - 0.5;
+//
+//    r = 1.164 * y + 1.596 * v;
+//    g = 1.164 * y - 0.392 * u - 0.813 * v;
+//    b = 1.164 * y + 2.17 * u;
+//
+//    float4 out = float4(r, g, b, 1.0);
+//
+//    return float4(out);
+        
+        constexpr sampler s(address::clamp_to_edge, filter::linear);
+        float y;
+        float u;
+        float v;
+        float r;
+        float g;
+        float b;
+        // Conversion for YUV to rgb from http://www.fourcc.org/fccyvrgb.php
+        y = textureY.sample(s, in.texcoord).r;
+        u = textureU.sample(s, in.texcoord).r;
+        v = textureV.sample(s, in.texcoord).r;
+        u = u - 0.5;
+        v = v - 0.5;
+        r = y + 1.403 * v;
+        g = y - 0.344 * u - 0.714 * v;
+        b = y + 1.770 * u;
+
+        float4 out = float4(r, g, b, 1.0);
+
+        return out;
+
 }
          
 

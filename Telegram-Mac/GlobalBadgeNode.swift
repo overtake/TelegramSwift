@@ -280,6 +280,7 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
             ctx.round(size, size.height/2.0)
             ctx.fill(rect)
             
+            ctx.setBlendMode(.clear)
             let focus = NSMakePoint((rect.width - textLayout.0.size.width) / 2, (rect.height - textLayout.0.size.height) / 2)
             textLayout.1.draw(NSMakeRect(focus.x, 2, textLayout.0.size.width, textLayout.0.size.height), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
             
@@ -287,17 +288,28 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
     } else {
         generated = nil
     }
-    
+        
     let full = generateImage(NSMakeSize(24, 20), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
  
         ctx.draw(icon.precomposed(color), in: NSMakeRect((size.width - icon.size.width) / 2, 2, icon.size.width, icon.size.height))
+        
+        
         if let generated = generated {
+            ctx.setBlendMode(.clear)
+            
+            let cgPath = CGMutablePath()
+            cgPath.addRoundedRect(in: NSMakeRect(rect.width - generated.size.width / System.backingScale, 0, generated.size.width / System.backingScale, generated.size.height / System.backingScale), cornerWidth: generated.size.height / System.backingScale / 2, cornerHeight: generated.size.height / System.backingScale / 2)
+            
+            ctx.addPath(cgPath)
+            ctx.fillPath()
+            ctx.setBlendMode(.normal)
             ctx.draw(generated, in: NSMakeRect(rect.width - generated.size.width / System.backingScale, 0, generated.size.width / System.backingScale, generated.size.height / System.backingScale))
         }
     })!
     let image = NSImage(cgImage: full, size: full.backingSize)
+    image.isTemplate = true
     return image
 }
