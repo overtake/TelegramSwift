@@ -1688,6 +1688,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = DebugAppStore;
 		};
@@ -1695,6 +1711,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = ReleaseAppStore;
 		};
@@ -1705,6 +1737,22 @@
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = DebugAppStore;
 		};
@@ -1715,6 +1763,22 @@
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = ReleaseAppStore;
 		};
@@ -1729,6 +1793,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = ReleaseHockeyapp;
 		};
@@ -1739,6 +1819,22 @@
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = ReleaseHockeyapp;
 		};
@@ -1753,6 +1849,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = DebugHockeyapp;
 		};
@@ -1763,6 +1875,22 @@
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = DebugHockeyapp;
 		};
@@ -1777,6 +1905,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = HockeyappMacAlpha;
 		};
@@ -1787,6 +1931,22 @@
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = HockeyappMacAlpha;
 		};
@@ -1801,6 +1961,22 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = Github;
 		};
@@ -1811,6 +1987,22 @@
 				DEVELOPMENT_TEAM = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = NO;
+				WARNING_CFLAGS = (
+					"-Weverything",
+					"-Wno-objc-missing-property-synthesis",
+					"-Wno-float-equal",
+					"-Wno-pedantic",
+					"-Wno-padded",
+					"-Wno-sign-conversion",
+					"-Wno-c++98-compat",
+					"-Wno-c++98-compat-pedantic",
+					"-Wno-auto-import",
+					"-Wno-assign-enum",
+					"-Wno-exit-time-destructors",
+					"-Wno-global-constructors",
+					"-Wno-cast-align",
+					"-Wno-completion-handler",
+				);
 			};
 			name = Github;
 		};

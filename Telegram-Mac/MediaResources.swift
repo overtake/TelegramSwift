@@ -151,8 +151,17 @@ public struct LocalFileVideoMediaResourceId {
 public final class LocalFileVideoMediaResource: TelegramMediaResource {
     
     public func isEqual(to: MediaResource) -> Bool {
-        return to.id == self.id
+        if let to = to as? LocalFileVideoMediaResource {
+            return self.randomId == to.randomId && self.path == to.path
+        } else {
+            return false
+        }
     }
+    public var headerSize: Int32 {
+        return 32 * 1024
+    }
+
+
     public let randomId: Int64
     public let path: String
     
