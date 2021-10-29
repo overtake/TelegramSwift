@@ -62,7 +62,7 @@ final class ApiEnvironment {
         return ["debug", "stable", "appstore", "beta"]
     }
     
-    static var resolvedPlatformName:[String : String]? {
+    static var resolvedDeviceName:[String : String]? {
         if let file = Bundle.main.path(forResource: "mac_devices", ofType: "txt") {
             if let string = try? String(contentsOf: .init(fileURLWithPath: file)) {
                 let lines = string.components(separatedBy: "\n\n")
