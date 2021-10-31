@@ -1522,14 +1522,10 @@ class ChatRowItem: TableRowItem {
                 var accept:Bool = !isHasSource && message.id.peerId != context.peerId
                 
                 if let media = message.media.first as? TelegramMediaFile {
-                    if media.isAnimatedSticker {
-                        accept = false
-                    }
+                    
                   
                     for attr in media.attributes {
                         switch attr {
-                        case .Sticker:
-                            accept = false
                         case let .Audio(isVoice, _, _, _, _):
                             if !isVoice, let forwardInfo = message.forwardInfo, let source = forwardInfo.source, source.isChannel {
                                 accept = accept && forwardInfo.author?.id == forwardInfo.source?.id
