@@ -158,6 +158,7 @@
 		27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */; };
 		27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089925B0BD4E00372302 /* NumberSelectorController.swift */; };
 		27C4F5DE26B3F62E008123EC /* VideoMessageConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */; };
+		27CF5FA32732973E0021DA6D /* sent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27CF5FA22732973D0021DA6D /* sent.mp3 */; };
 		27CF9609268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CF9608268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
 		27D1D62E2611FB0D00684DEA /* rnnoise.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D1D62D2611FB0D00684DEA /* rnnoise.framework */; };
@@ -766,7 +767,6 @@
 		C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29A65061E098B610071BCEF /* ShareModalController.swift */; };
 		C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F3D1DC74DB400D13E65 /* SenderController.swift */; };
 		C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F401DC7859800D13E65 /* InputContextHelper.swift */; };
-		C29B5F431DC7970400D13E65 /* sent.caf in Resources */ = {isa = PBXBuildFile; fileRef = C29B5F421DC794C700D13E65 /* sent.caf */; };
 		C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */; };
 		C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */; };
 		C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */; };
@@ -1292,6 +1292,7 @@
 		27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureInviteLinkController.swift; sourceTree = "<group>"; };
 		27C4089925B0BD4E00372302 /* NumberSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberSelectorController.swift; sourceTree = "<group>"; };
 		27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoMessageConfig.swift; sourceTree = "<group>"; };
+		27CF5FA22732973D0021DA6D /* sent.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = sent.mp3; sourceTree = "<group>"; };
 		27CF9608268F5B3E0086515A /* SoftwareGradientBackgroundItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareGradientBackgroundItem.swift; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
 		27D1D62D2611FB0D00684DEA /* rnnoise.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = rnnoise.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1938,7 +1939,6 @@
 		C29A65061E098B610071BCEF /* ShareModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareModalController.swift; sourceTree = "<group>"; };
 		C29B5F3D1DC74DB400D13E65 /* SenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SenderController.swift; sourceTree = "<group>"; };
 		C29B5F401DC7859800D13E65 /* InputContextHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputContextHelper.swift; sourceTree = "<group>"; };
-		C29B5F421DC794C700D13E65 /* sent.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sent.caf; sourceTree = "<group>"; };
 		C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageActionsPanelView.swift; sourceTree = "<group>"; };
 		C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardPanelModel.swift; sourceTree = "<group>"; };
 		C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWDNavigationAction.swift; sourceTree = "<group>"; };
@@ -3875,7 +3875,7 @@
 				278C720325E67C2700F1B315 /* emoji1016.txt */,
 				C2844ADF1DA90C8A009308DC /* emoji.txt */,
 				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
-				C29B5F421DC794C700D13E65 /* sent.caf */,
+				27CF5FA22732973D0021DA6D /* sent.mp3 */,
 				C250B01B1DB670B4004E9FBE /* url-schemes.txt */,
 				C250B0361DB7BB09004E9FBE /* mime-types.txt */,
 				C21074251E77F79A006EE5EF /* Beta.xcconfig */,
@@ -5235,6 +5235,7 @@
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
 				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
+				27CF5FA32732973E0021DA6D /* sent.mp3 in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
 				2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */,
@@ -5251,7 +5252,6 @@
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
 				2763A165261DF5EF00C12762 /* voice_chat_cancel_reminder_to_mute.tgs in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
-				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
 				2773A54425FA324B00AB45E9 /* voice_chat_unmute.tgs in Resources */,
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,

@@ -5846,25 +5846,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: self.chatLocation.peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
            
            if FastSettings.inAppSounds {
-               let afterSentSound:NSSound? = {
-                   
-                   let p = Bundle.main.path(forResource: "sent", ofType: "caf")
-                   var sound:NSSound?
-                   if let p = p {
-                       sound = NSSound(contentsOfFile: p, byReference: true)
-                       sound?.volume = 1.0
-                   }
-                   
-                   return sound
-               }()
-               
                if let beginPendingTime = beginPendingTime {
                    if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
                        return
                    }
                }
                beginPendingTime = CFAbsoluteTimeGetCurrent()
-               afterSentSound?.play()
+               SoundEffectPlay.play(postbox: context.account.postbox, name: "sent", volume: 1.0)
            }
        }))
 
