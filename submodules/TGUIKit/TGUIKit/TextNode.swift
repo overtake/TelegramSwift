@@ -310,9 +310,15 @@ public class TextNode: NSObject {
                 context.textPosition = CGPoint(x: penOffset + dirtyRect.minX + line.frame.minX, y: line.frame.minY + dirtyRect.minY)
                 
                
-                
-                CTLineDraw(line.line, context)
-                
+                 let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
+                 if glyphRuns.count != 0 {
+                     for run in glyphRuns {
+                         let run = run as! CTRun
+                         let glyphCount = CTRunGetGlyphCount(run)
+                         CTRunDraw(run, context, CFRangeMake(0, glyphCount))
+                     }
+                 }
+                                
             }
             
             context.textMatrix = textMatrix
