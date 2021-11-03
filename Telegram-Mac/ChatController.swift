@@ -2735,6 +2735,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        self.chatInteraction.setupChatThemes = { [weak self] in
+            self?.showChatThemeSelector()
+        }
+        
         chatInteraction.openFeedInfo = { [weak self] groupId in
             guard let `self` = self else {return}
             self.navigationController?.push(ChatListController(context, groupId: groupId))

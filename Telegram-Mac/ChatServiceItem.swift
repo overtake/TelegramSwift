@@ -428,6 +428,15 @@ class ChatServiceItem: ChatRowItem {
                             attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                         }
                     }
+                    
+                    if !emoji.isEmpty {
+                        let range = attributedString.string.nsstring.range(of: emoji)
+                        if range.location != NSNotFound {
+                            attributedString.add(link:inAppLink.callback("", { [weak chatInteraction] _ in
+                                chatInteraction?.setupChatThemes()
+                            }), for: range, color: linkColor)
+                        }
+                    }
 
                     
                 case let .inviteToGroupPhoneCall(callId, accessHash, peerIds):
