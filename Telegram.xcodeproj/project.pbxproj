@@ -49,6 +49,9 @@
 		274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */; };
 		274B9E32272C2253009993C7 /* ChatCalendarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */; };
 		274B9E34272C3D15009993C7 /* mac_devices.txt in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E33272C3D15009993C7 /* mac_devices.txt */; };
+		274B9E40273008EB009993C7 /* sent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E3F273008EB009993C7 /* sent.mp3 */; };
+		274B9E4227300C79009993C7 /* ChatCalendarMonthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E4127300C79009993C7 /* ChatCalendarMonthRowItem.swift */; };
+		274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */; };
 		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
 		275045E525EE271D00872D20 /* GroupCallDisplayAsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */; };
@@ -766,7 +769,6 @@
 		C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29A65061E098B610071BCEF /* ShareModalController.swift */; };
 		C29B5F3E1DC74DB400D13E65 /* SenderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F3D1DC74DB400D13E65 /* SenderController.swift */; };
 		C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F401DC7859800D13E65 /* InputContextHelper.swift */; };
-		C29B5F431DC7970400D13E65 /* sent.caf in Resources */ = {isa = PBXBuildFile; fileRef = C29B5F421DC794C700D13E65 /* sent.caf */; };
 		C29B5F451DC7DA4B00D13E65 /* MessageActionsPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */; };
 		C29B5F4B1DC8ED5900D13E65 /* ForwardPanelModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */; };
 		C29B5F4F1DC8F39A00D13E65 /* FWDNavigationAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */; };
@@ -1183,6 +1185,9 @@
 		274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiScreenEffect.swift; sourceTree = "<group>"; };
 		274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarModalController.swift; sourceTree = "<group>"; };
 		274B9E33272C3D15009993C7 /* mac_devices.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mac_devices.txt; sourceTree = "<group>"; };
+		274B9E3F273008EB009993C7 /* sent.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = sent.mp3; sourceTree = "<group>"; };
+		274B9E4127300C79009993C7 /* ChatCalendarMonthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarMonthRowItem.swift; sourceTree = "<group>"; };
+		274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarHeaderRowItem.swift; sourceTree = "<group>"; };
 		274BB56C264013AC00620D03 /* cameraon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraon.tgs; sourceTree = "<group>"; };
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
@@ -1938,7 +1943,6 @@
 		C29A65061E098B610071BCEF /* ShareModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShareModalController.swift; sourceTree = "<group>"; };
 		C29B5F3D1DC74DB400D13E65 /* SenderController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SenderController.swift; sourceTree = "<group>"; };
 		C29B5F401DC7859800D13E65 /* InputContextHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InputContextHelper.swift; sourceTree = "<group>"; };
-		C29B5F421DC794C700D13E65 /* sent.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sent.caf; sourceTree = "<group>"; };
 		C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageActionsPanelView.swift; sourceTree = "<group>"; };
 		C29B5F4A1DC8ED5900D13E65 /* ForwardPanelModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardPanelModel.swift; sourceTree = "<group>"; };
 		C29B5F4E1DC8F39A00D13E65 /* FWDNavigationAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FWDNavigationAction.swift; sourceTree = "<group>"; };
@@ -3875,7 +3879,7 @@
 				278C720325E67C2700F1B315 /* emoji1016.txt */,
 				C2844ADF1DA90C8A009308DC /* emoji.txt */,
 				C27AAFE51DE9D2EE009B9629 /* PhoneCountries.txt */,
-				C29B5F421DC794C700D13E65 /* sent.caf */,
+				274B9E3F273008EB009993C7 /* sent.mp3 */,
 				C250B01B1DB670B4004E9FBE /* url-schemes.txt */,
 				C250B0361DB7BB09004E9FBE /* mime-types.txt */,
 				C21074251E77F79A006EE5EF /* Beta.xcconfig */,
@@ -4180,6 +4184,8 @@
 				C2A315AE1E2E64BE00D89000 /* CalendarController.swift */,
 				C2A315B01E2E656100D89000 /* CalendarMonthController.swift */,
 				274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */,
+				274B9E4127300C79009993C7 /* ChatCalendarMonthRowItem.swift */,
+				274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */,
 			);
 			name = calendar;
 			sourceTree = "<group>";
@@ -5235,6 +5241,7 @@
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
 				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
+				274B9E40273008EB009993C7 /* sent.mp3 in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
 				2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */,
@@ -5251,7 +5258,6 @@
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
 				2763A165261DF5EF00C12762 /* voice_chat_cancel_reminder_to_mute.tgs in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
-				C29B5F431DC7970400D13E65 /* sent.caf in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
 				2773A54425FA324B00AB45E9 /* voice_chat_unmute.tgs in Resources */,
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,
@@ -5974,6 +5980,7 @@
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */,
 				27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */,
+				274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */,
 				C230B8EF1DD3358C0057F596 /* AccountViewController.swift in Sources */,
 				9F4EEF8621D4FA68002C3B33 /* InstantPageArticleItem.swift in Sources */,
 				9F18DD94206D8FFD00A2AAD0 /* SecureIdVerificationDocument.swift in Sources */,
@@ -6001,6 +6008,7 @@
 				D0D81AF8243F69AD00CB9D20 /* PollTimerView.swift in Sources */,
 				C26A37EC1E5DE465006977AC /* ChannelAdminsViewController.swift in Sources */,
 				C29C3E5B1E421F1700193A7E /* ChatAccessoryModel.swift in Sources */,
+				274B9E4227300C79009993C7 /* ChatCalendarMonthRowItem.swift in Sources */,
 				C2BB2DB01F8BDF6700520255 /* Config.swift in Sources */,
 				9FC4DA9A21DD0BE6003E2A62 /* CachedChannelAdmins.swift in Sources */,
 				9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */,

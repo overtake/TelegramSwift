@@ -5720,7 +5720,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //        #if DEBUG
 //        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
 //            guard let `self` = self else {return .rejected}
-//            showModal(with: GigagroupLandingController(context: context, peerId: self.chatLocation.peerId), for: context.window)
+//            showModal(with: ChatCalendarModalController(context: context, peerId: self.chatLocation.peerId, messageTags: [.photoOrVideo]), for: context.window)
 //            return .invoked
 //        }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
 //        #endif
@@ -5846,25 +5846,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
        self.sentMessageEventsDisposable.set((context.account.pendingMessageManager.deliveredMessageEvents(peerId: self.chatLocation.peerId) |> deliverOn(Queue.concurrentDefaultQueue())).start(next: { _ in
            
            if FastSettings.inAppSounds {
-               let afterSentSound:NSSound? = {
-                   
-                   let p = Bundle.main.path(forResource: "sent", ofType: "caf")
-                   var sound:NSSound?
-                   if let p = p {
-                       sound = NSSound(contentsOfFile: p, byReference: true)
-                       sound?.volume = 1.0
-                   }
-                   
-                   return sound
-               }()
-               
                if let beginPendingTime = beginPendingTime {
                    if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.5 {
                        return
                    }
                }
                beginPendingTime = CFAbsoluteTimeGetCurrent()
-               afterSentSound?.play()
+               SoundEffectPlay.play(postbox: context.account.postbox, name: "sent", volume: 1.0)
            }
        }))
 

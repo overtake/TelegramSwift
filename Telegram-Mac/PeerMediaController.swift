@@ -497,7 +497,7 @@
     private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
     
-    
+     private var sparseCalendar: SparseMessageCalendar?
     
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
@@ -605,6 +605,93 @@
         navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
 
     }
+     
+     private var editButton:ImageButton? = nil
+     private var doneButton:TitleButton? = nil
+     
+     override func requestUpdateRightBar() {
+         super.requestUpdateRightBar()
+         editButton?.style = navigationButtonStyle
+         editButton?.set(image: theme.icons.chatActions, for: .Normal)
+         editButton?.set(image: theme.icons.chatActionsActive, for: .Highlight)
+
+         
+         editButton?.setFrameSize(70, 50)
+         editButton?.center()
+         doneButton?.set(color: theme.colors.accent, for: .Normal)
+         doneButton?.style = navigationButtonStyle
+     }
+     
+     
+     override func getRightBarViewOnce() -> BarView {
+         let back = BarView(70, controller: self) //MajorBackNavigationBar(self, account: account, excludePeerId: peerId)
+         
+         let editButton = ImageButton()
+        // editButton.disableActions()
+         back.addSubview(editButton)
+         
+         self.editButton = editButton
+ //
+         let doneButton = TitleButton()
+       //  doneButton.disableActions()
+         doneButton.set(font: .medium(.text), for: .Normal)
+         doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
+         
+         
+         _ = doneButton.sizeToFit()
+         back.addSubview(doneButton)
+         doneButton.center()
+         
+         self.doneButton = doneButton
+
+         
+         doneButton.isHidden = true
+         
+         doneButton.userInteractionEnabled = false
+         editButton.userInteractionEnabled = false
+         
+         back.set(handler: { [weak self] _ in
+             self?.showRightControls()
+         }, for: .Click)
+         requestUpdateRightBar()
+         return back
+     }
+
+     private func showRightControls() {
+         switch state {
+         case .Normal:
+             if let button = editButton {
+                 var items:[SPopoverItem] = []
+                 items.append(SPopoverItem(L10n.chatContextEdit1,  { [weak self] in
+                     self?.changeState()
+                 }, theme.icons.chatActionEdit))
+                 
+                 if self.mode == .photoOrVideo {
+                     let context = self.context
+                     items.append(SPopoverItem(L10n.peerMediaCalendarTitle, { [weak self] in
+                         guard let sparseCalendar = self?.sparseCalendar else {
+                             return
+                         }
+                         showModal(with: ChatCalendarModalController(context: context, sparseCalendar: sparseCalendar, jumpTo: { [weak self] message in
+                             self?.mediaGrid.jumpTo(message)
+                         }), for: context.window)
+                     }, theme.icons.chatSearchCalendar))
+                 }
+                
+                 
+                 if let popover = button.popover {
+                     popover.hide()
+                 } else {
+                     showPopover(for: button, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -65))
+                 }
+             }
+         case .Edit:
+             self.changeState()
+         case .Some:
+             break
+         }
+     }
+     
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -674,6 +761,9 @@
             if (value.state == .selecting) != (oldValue.state == .selecting) {
                 self.state = value.state == .selecting ? .Edit : .Normal
                 
+                doneButton?.isHidden = value.state != .selecting
+                editButton?.isHidden = value.state == .selecting
+
                 genericView.changeState(selectState: value.state == .selecting && self.mode != .members, animated: animated)
             }
             
@@ -690,6 +780,10 @@
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.sparseCalendar = context.engine.messages.sparseMessageCalendar(peerId: peerId, tag: [.photoOrVideo])
+
+        
         genericView.updateInteraction(interactions)
         
         if externalSearchData != nil {
@@ -1228,19 +1322,7 @@
     override func initializer() -> PeerMediaContainerView {
         return PeerMediaContainerView(frame: initializationRect, isSegmentHidden: self.externalSearchData != nil)
     }
-    
-    override func navigationHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> () -> Void {
-        for mediaList in listControllers {
-            if mediaList.view.superview != nil {
-                return mediaList.navigationHeaderDidNoticeAnimation(current, previous, animated)
-            }
-        }
-        
-        if mediaGrid.view.superview != nil {
-            return mediaGrid.navigationHeaderDidNoticeAnimation(current, previous, animated)
-        }
-        return {}
-    }
+
     
  }
  

@@ -38,7 +38,36 @@ final class CalendarMonthStruct {
     let dayHandler:(Int)->Void
     let onlyFuture: Bool
     let limitedBy: Date?
-    init(month:Date, selectDayAnyway: Bool, onlyFuture: Bool, limitedBy: Date?, dayHandler:@escaping (Int)->Void) {
+    
+    let dayPreview:(Int)->NSView?
+    
+    var linesCount: Int {
+        switch mode {
+        case .media:
+            var count: Int = 0
+            for i in 0 ..< 7 * 6 {
+                if i + 1 < currentStartDay {
+                    count += 1
+                } else if (i + 2) - currentStartDay > lastDayOfMonth {
+                } else {
+                    count += 1
+                }
+            }
+            let result = Int(ceil(Float(count) / 7))
+            return result
+        case .normal:
+            return 6
+        }
+       
+    }
+    
+    enum Mode {
+        case media
+        case normal
+    }
+    let mode: Mode
+    
+    init(month:Date, mode: Mode = .normal, selectDayAnyway: Bool, onlyFuture: Bool, limitedBy: Date?, dayHandler:@escaping (Int)->Void, dayPreview:@escaping(Int)->NSView? = { _ in return nil }) {
         self.month = month
         self.onlyFuture = onlyFuture
         self.limitedBy = limitedBy
@@ -48,6 +77,10 @@ final class CalendarMonthStruct {
         self.lastDayOfMonth = CalendarUtils.lastDay(ofTheMonth: month)
         self.lastDayOfPrevMonth = CalendarUtils.lastDay(ofTheMonth: month)
         self.lastDayOfNextMonth = CalendarUtils.lastDay(ofTheMonth: month)
+        self.mode = mode
+        self.dayPreview = dayPreview
+        
+        
         var calendar = NSCalendar.current
         
 //        calendar.timeZone = TimeZone(abbreviation: "UTC")!
@@ -66,39 +99,66 @@ final class CalendarMonthStruct {
 
 class CalendarMonthView : View {
     private var month:CalendarMonthStruct?
+    
+    private var dayPreviews: [Int : NSView] = [:]
+    private let dayPreviewsViews = View()
+    private let dayViews = View()
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(dayPreviewsViews)
+        addSubview(dayViews)
+        
         backgroundColor = theme.colors.background
     }
     
     override func scrollWheel(with event: NSEvent) {
-        
+        if let month = month {
+            switch month.mode {
+            case .media:
+                super.scrollWheel(with: event)
+            default:
+                break
+            }
+        }
     }
     
     func layout(for month:CalendarMonthStruct) {
+        dayPreviewsViews.removeAllSubviews()
+        dayViews.removeAllSubviews()
+        if self.month?.month != month.month {
+            self.dayPreviews.removeAll()
+        }
         self.month = month
-        self.removeAllSubviews()
-        
+
         for i in 0 ..< 7 * 6 {
             let day = TitleButton()
             day.set(font: .normal(.text), for: .Normal)
             day.set(background: theme.colors.background, for: .Normal)
-            
+            day.scaleOnClick = true
+            let hideExcess: Bool
+            switch month.mode {
+            case .media:
+                hideExcess = true
+            case .normal:
+                hideExcess = false
+            }
             let current:Int
             
             if i + 1 < month.currentStartDay {
                 current = (month.lastDayOfPrevMonth - month.currentStartDay) + i + 2
                 day.set(color: theme.colors.grayText, for: .Normal)
-
+                day.isHidden = hideExcess
             } else if (i + 2) - month.currentStartDay > month.lastDayOfMonth {
                 current = (i + 2) - (month.currentStartDay + month.lastDayOfMonth)
                 day.set(color: theme.colors.grayText, for: .Normal)
+                day.isHidden = hideExcess
             } else {
                 current = (i + 1) - month.currentStartDay + 1
                 
                 var skipDay: Bool = false
                 
-                var calendar = NSCalendar.current
+                let calendar = NSCalendar.current
 //                calendar.timeZone = TimeZone(abbreviation: "UTC")!
                 let components = calendar.dateComponents([.day, .year, .month], from: Date())
                 
@@ -113,38 +173,58 @@ class CalendarMonthView : View {
                 } else if CalendarUtils.isSameDate(month.month, date: Date(), checkDay: false), current > components.day! {
                     skipDay = true
                 }
+                let dayTimeinterval = CalendarUtils.monthDay(current, date: month.month).timeIntervalSince1970
+                
+                let dayPreview = self.dayPreviews[current] ?? month.dayPreview(Int(dayTimeinterval))
+                if let dayPreview = dayPreview {
+                    self.dayPreviews[current] = dayPreview
+                    self.dayPreviewsViews.addSubview(dayPreview)
+                }
+                day.contextObject = current
                 
                 if let limitedBy = month.limitedBy {
                     let limited = calendar.dateComponents([.year, .month, .day], from: limitedBy)
                     if limited.year! < month.components.year! || limited.month! < month.components.month! || limited.day! < current {
                         skipDay = true
                     }
-                    
                 }
                 if !skipDay {
                     day.set(color: theme.colors.underSelectedColor, for: .Highlight)
-
                     if (i + 1) % 7 == 0 || (i + 2) % 7 == 0 {
                         day.set(color: theme.colors.redUI, for: .Normal)
                     } else {
                         day.set(color: theme.colors.text, for: .Normal)
                     }
-                    
-                    day.layer?.cornerRadius = .cornerRadius
-                    
-                    if let selectedDay = month.selectedDay, current == selectedDay {
-                       // day.isSelected = true
-                        day.set(color: theme.colors.underSelectedColor, for: .Normal)
-
-                        day.set(background: theme.colors.accent, for: .Normal)
-                        day.set(background: theme.colors.accent, for: .Highlight)
+                    if dayPreview != nil {
+                        day.set(background: .clear, for: .Normal)
+                        day.set(background: .clear, for: .Highlight)
+                        day.set(color: .white, for: .Normal)
+                        day.set(font: .medium(.text), for: .Normal)
                     } else {
-                        day.set(background: theme.colors.background, for: .Normal)
-                        day.set(background: theme.colors.accent, for: .Highlight)
+                        switch month.mode {
+                        case .media:
+                            day.set(background: theme.colors.background, for: .Normal)
+                            day.set(background: theme.colors.background, for: .Highlight)
+                            day.set(color: theme.colors.text, for: .Highlight)
+                        case .normal:
+                            if let selectedDay = month.selectedDay, current == selectedDay {
+                               // day.isSelected = true
+                                day.set(color: theme.colors.underSelectedColor, for: .Normal)
+                                
+                                day.set(background: theme.colors.accent, for: .Normal)
+                                day.set(background: theme.colors.accent, for: .Highlight)
+                            } else {
+                                day.set(background: theme.colors.background, for: .Normal)
+                                day.set(background: theme.colors.accent, for: .Highlight)
+                            }
+                        }
+                        
                     }
-                    
+                   
                     day.set(handler: { [weak self] (control) in
-                        month.selectedDay = current
+                        if month.mode != .media {
+                            month.selectedDay = current
+                        }
                         month.dayHandler(current)
                         self?.layout(for: month)
                         
@@ -155,7 +235,7 @@ class CalendarMonthView : View {
             }
             day.set(text: "\(current)", for: .Normal)
             
-            addSubview(day)
+            dayViews.addSubview(day)
         }
         
         self.needsLayout = true
@@ -163,15 +243,39 @@ class CalendarMonthView : View {
     
     override func layout() {
         super.layout()
-        let oneSize:NSSize = NSMakeSize(floorToScreenPixels(backingScaleFactor, frame.width / 7), floorToScreenPixels(backingScaleFactor, frame.height / 6))
-        var inset:NSPoint = NSMakePoint(0, 0)
-        for i in 0 ..< subviews.count {
-            subviews[i].frame = NSMakeRect(inset.x, inset.y, oneSize.width, oneSize.height)
-            inset.x += oneSize.width
-            
-            if (i + 1) % 7 == 0 {
-                inset.x = 0
-                inset.y += oneSize.height
+        
+        dayViews.frame = bounds
+        dayPreviewsViews.frame = bounds
+        
+        guard let month = self.month else {
+            return
+        }
+
+        let oneSize:NSSize
+        var inset:NSPoint
+        switch month.mode {
+        case .normal:
+            oneSize = NSMakeSize(floorToScreenPixels(backingScaleFactor, (frame.width - 20) / 7), floorToScreenPixels(backingScaleFactor, (frame.height - 20) / CGFloat(month.linesCount)))
+            inset = NSMakePoint(10, 10)
+        case .media:
+            oneSize = NSMakeSize(floorToScreenPixels(backingScaleFactor, (frame.width - 20) / 7), floorToScreenPixels(backingScaleFactor, frame.height / CGFloat(month.linesCount)))
+            inset = NSMakePoint(10, 0)
+        }
+
+        for i in 0 ..< dayViews.subviews.count {
+            if let view = dayViews.subviews[i] as? TitleButton {
+                view.frame = NSMakeRect(inset.x, inset.y, oneSize.width, oneSize.height)
+                view.layer?.cornerRadius = view.frame.height / 2
+                if let currentDay = view.contextObject as? Int {
+                    if let preview = self.dayPreviews[currentDay] {
+                        preview.setFrameOrigin(inset.x + (view.frame.width - preview.frame.width) / 2, inset.y + (view.frame.height - preview.frame.height) / 2)
+                    }
+                }
+                inset.x += oneSize.width
+                if (i + 1) % 7 == 0 {
+                    inset.x = 10
+                    inset.y += oneSize.height
+                }
             }
         }
     }

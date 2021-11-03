@@ -363,7 +363,7 @@ class DateSelectorModalController: ModalViewController {
         
         self.genericView.dayPicker.set(handler: { [weak self] control in
             if let control = control as? DatePicker<Date>, let window = self?.window, !hasPopover(window) {
-                let calendar = CalendarController(NSMakeRect(0, 0, 250, 250), window, current: control.selected.value, onlyFuture: true, selectHandler: { [weak self] date in
+                let calendar = CalendarController(NSMakeRect(0, 0, 300, 300), window, current: control.selected.value, onlyFuture: true, selectHandler: { [weak self] date in
                     self?.applyDay(date)
                 })
                 showPopover(for: control, with: calendar, edge: .maxY, inset: NSMakePoint(-8, -60))
