@@ -1113,7 +1113,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         case let .search(_, interactions, _, initialString):
             self.interactions = interactions
             self.parentInteractions = chatInteraction
-            self.calendarController = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, selectHandler: interactions.calendarAction)
+            self.calendarController = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
             self.chatInteraction = ChatInteraction(chatLocation: chatInteraction.chatLocation, context: chatInteraction.context, mode: chatInteraction.mode)
             self.chatInteraction.update({$0.updatedPeer({_ in chatInteraction.presentation.peer})})
             self.inputContextHelper = InputContextHelper(chatInteraction: self.chatInteraction, highlightInsteadOfSelect: true)
@@ -1562,7 +1562,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         self.chatInteraction = chatInteraction
         self.parentInteractions = chatInteraction
         self.inputContextHelper = InputContextHelper(chatInteraction: chatInteraction, highlightInsteadOfSelect: true)
-        self.calendarController = CalendarController(NSMakeRect(0,0,250,250), chatInteraction.context.window, selectHandler: interactions.calendarAction)
+        self.calendarController = CalendarController(NSMakeRect(0,0,300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
         super.init(frame: frameRect)
         initialize()
     }

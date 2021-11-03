@@ -34,7 +34,7 @@ private final class DateSelectorView : View {
         
         self.dayPicker.set(handler: { [weak self] control in
             if let control = control as? DatePicker<Date>, let window = self?.kitWindow, !hasPopover(window) {
-                let calendar = CalendarController(NSMakeRect(0, 0, 250, 250), window, current: control.selected.value, onlyFuture: true, limitedBy: Date(timeIntervalSinceNow: 7 * 24 * 60 * 60), selectHandler: { [weak self] date in
+                let calendar = CalendarController(NSMakeRect(0, 0, 300, 300), window, current: control.selected.value, onlyFuture: true, limitedBy: Date(timeIntervalSinceNow: 7 * 24 * 60 * 60), selectHandler: { [weak self] date in
                     self?.applyDay(date)
                     if let date = self?.select() {
                         self?.update?(date)

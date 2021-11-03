@@ -115,7 +115,7 @@ public struct ChatHistoryCombinedInitialData {
     let autodownloadSettings: AutomaticMediaDownloadSettings
 }
 
-enum ChatHistoryViewUpdateType {
+enum ChatHistoryViewUpdateType : Equatable {
     case Initial(fadeIn: Bool)
     case Generic(type: ViewUpdateType)
 }

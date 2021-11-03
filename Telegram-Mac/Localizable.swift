@@ -573,6 +573,20 @@ internal final class L10n {
   internal static var broadcastGroupsLimitAlertTitle: String  { return L10n.tr("Localizable", "BroadcastGroups.LimitAlert.Title") }
   /// Hide Telegram
   internal static var cagYXWT6Title: String  { return L10n.tr("Localizable", "Cag-YX-WT6.title") }
+  /// F
+  internal static var calendarWeekDaysFriday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Friday") }
+  /// M
+  internal static var calendarWeekDaysMonday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Monday") }
+  /// S
+  internal static var calendarWeekDaysSaturday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Saturday") }
+  /// S
+  internal static var calendarWeekDaysSunday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Sunday") }
+  /// T
+  internal static var calendarWeekDaysThrusday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Thrusday") }
+  /// T
+  internal static var calendarWeekDaysTuesday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Tuesday") }
+  /// W
+  internal static var calendarWeekDaysWednesday: String  { return L10n.tr("Localizable", "Calendar.WeekDays.Wednesday") }
   /// Accept
   internal static var callAccept: String  { return L10n.tr("Localizable", "Call.Accept") }
   /// Camera
@@ -6305,6 +6319,36 @@ internal final class L10n {
   internal static var peerMediaSharedMusicEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedMusicEmptyList") }
   /// All voice and video messages shared in this chat will appear here.
   internal static var peerMediaSharedVoiceEmptyList: String  { return L10n.tr("Localizable", "Peer.Media.SharedVoiceEmptyList") }
+  /// %d
+  internal static func peerMediaCalendarMediaCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_countable", p1)
+  }
+  /// %d media
+  internal static func peerMediaCalendarMediaFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_few", p1)
+  }
+  /// %d media
+  internal static func peerMediaCalendarMediaMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_many", p1)
+  }
+  /// %d media
+  internal static func peerMediaCalendarMediaOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_one", p1)
+  }
+  /// %d media
+  internal static func peerMediaCalendarMediaOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_other", p1)
+  }
+  /// %d media
+  internal static func peerMediaCalendarMediaTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_two", p1)
+  }
+  /// %d media
+  internal static func peerMediaCalendarMediaZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Peer.Media.Calendar.Media_zero", p1)
+  }
+  /// Calendar
+  internal static var peerMediaCalendarTitle: String  { return L10n.tr("Localizable", "Peer.Media.Calendar.Title") }
   /// channel
   internal static var peerStatusChannel: String  { return L10n.tr("Localizable", "Peer.Status.channel") }
   /// group
