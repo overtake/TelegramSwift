@@ -328,13 +328,14 @@ final class MediaPlayerView: View {
     deinit {
         assert(Queue.mainQueue().isCurrent())
         self.videoLayer?.removeFromSuperlayer()
-        var videoLayer = self.videoLayer
+        var currentLayer = self.videoLayer
         if let (takeFrameQueue, _) = self.takeFrameAndQueue {
-            if let layer = videoLayer {
+            if let videoLayer = currentLayer {
                 takeFrameQueue.async {
-                    layer.flushAndRemoveImage()
+                    videoLayer.flushAndRemoveImage()
+                    
                     DispatchQueue.main.async {
-                        videoLayer = nil
+                        currentLayer = nil
                     }
                 }
             }

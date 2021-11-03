@@ -266,19 +266,19 @@ final class AccountContext {
         let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager)) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
             
-//            for theme in themes {
-//                let effective = theme.effectiveSettings(isDark: appearance.presentation.dark)
-//                if let settings = effective, let emoji = theme.emoticon?.fixed {
-//                    let newTheme = appearance.presentation.withUpdatedColors(settings.palette)
-//                    if let wallpaper = settings.wallpaper?.uiWallpaper {
-//                        signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
-//                            return (emoji, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))
-//                        })
-//                    } else {
-//                        signals.append(.single((emoji, newTheme)))
-//                    }
-//                }
-//            }
+            for theme in themes {
+                let effective = theme.effectiveSettings(isDark: appearance.presentation.dark)
+                if let settings = effective, let emoji = theme.emoticon?.fixed {
+                    let newTheme = appearance.presentation.withUpdatedColors(settings.palette)
+                    if let wallpaper = settings.wallpaper?.uiWallpaper {
+                        signals.append(moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper) |> map { wallpaper in
+                            return (emoji, newTheme.withUpdatedWallpaper(.init(wallpaper: wallpaper, associated: nil)))
+                        })
+                    } else {
+                        signals.append(.single((emoji, newTheme)))
+                    }
+                }
+            }
             
             let first = Signal<[(String, TelegramPresentationTheme)], NoError>.single([])
             return first |> then(combineLatest(signals)) |> map { values in

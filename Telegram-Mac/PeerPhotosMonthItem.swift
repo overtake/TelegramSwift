@@ -45,6 +45,21 @@ class PeerPhotosMonthItem: GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
+    static func rowCount(blockWidth: CGFloat, viewType: GeneralViewType) -> (Int, CGFloat) {
+        var rowCount:Int = 4
+        var perWidth: CGFloat = 0
+        while true {
+            let maximum = blockWidth - viewType.innerInset.left - viewType.innerInset.right - CGFloat(rowCount * 2)
+            perWidth = maximum / CGFloat(rowCount)
+            if perWidth >= 90 {
+                break
+            } else {
+                rowCount -= 1
+            }
+        }
+        return (rowCount, perWidth)
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
@@ -61,17 +76,8 @@ class PeerPhotosMonthItem: GeneralRowItem {
             
         }
         
-        var rowCount:Int = 4
-        var perWidth: CGFloat = 0
-        while true {
-            let maximum = self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right - CGFloat(rowCount * 2)
-            perWidth = maximum / CGFloat(rowCount)
-            if perWidth >= 90 {
-                break
-            } else {
-                rowCount -= 1
-            }
-        }
+        let (rowCount, perWidth) = PeerPhotosMonthItem.rowCount(blockWidth: self.blockWidth, viewType: self.viewType)
+        
         assert(rowCount >= 1)
                 
         let itemSize = NSMakeSize(ceil(perWidth) + 2, ceil(perWidth) + 2)

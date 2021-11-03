@@ -227,15 +227,17 @@ public final class TextViewLine {
     public let frame: NSRect
     public let range: NSRange
     public var penFlush: CGFloat
+    let isRTL: Bool
     let isBlocked: Bool
     let strikethrough:[TextViewStrikethrough]
-    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false, strikethrough: [TextViewStrikethrough] = []) {
+    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false, isRTL: Bool = false, strikethrough: [TextViewStrikethrough] = []) {
         self.line = line
         self.frame = frame
         self.range = range
         self.penFlush = penFlush
         self.isBlocked = isBlocked
         self.strikethrough = strikethrough
+        self.isRTL = isRTL
     }
     
 }
@@ -511,8 +513,16 @@ public final class TextViewLayout : Equatable {
                     }
                 }
 
+                var isRTL = false
+                let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
+                if glyphRuns.count != 0 {
+                    let run = glyphRuns[0] as! CTRun
+                    if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
+                        isRTL = true
+                    }
+                }
                 
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL))
                 
                 break
             } else {
@@ -549,8 +559,18 @@ public final class TextViewLayout : Equatable {
                             strikethroughs.append(TextViewStrikethrough(color: presentation.colors.text, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
                         }
                     }
+                    
+                    var isRTL = false
+                    let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
+                    if glyphRuns.count != 0 {
+                        let run = glyphRuns[0] as! CTRun
+                        if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
+                            isRTL = true
+                        }
+                    }
 
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, strikethrough: strikethroughs))
+
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -1347,7 +1367,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 
                 ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY + additionY)
                 
-                CTLineDraw(line.line, ctx)
+                let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
+                if glyphRuns.count != 0 {
+                    for run in glyphRuns {
+                        let run = run as! CTRun
+                        let glyphCount = CTRunGetGlyphCount(run)
+                        CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
+                    }
+                }
+
+                
+//                CTLineDraw(line.line, ctx)
                 
                 if !line.strikethrough.isEmpty {
                     for strikethrough in line.strikethrough {
