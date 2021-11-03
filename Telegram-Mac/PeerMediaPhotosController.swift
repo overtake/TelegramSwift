@@ -19,7 +19,7 @@ extension Message : Equatable {
 }
 
 private enum PeerMediaMonthEntry : TableItemListNodeEntry {
-    case month(index: MessageIndex, items: [Message], galleryType: GalleryAppearType, viewType: GeneralViewType)
+    case line(index: MessageIndex, items: [Message], galleryType: GalleryAppearType, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
         
@@ -31,7 +31,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy";
         switch self {
-        case let .month(index, _, _, _):
+        case let .line(index, _, _, _):
             let date = Date(timeIntervalSince1970: TimeInterval(index.timestamp))
             return "items: \(formatter.string(from: date))"
         case let .date(index):
@@ -45,7 +45,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     
     func item(_ arguments: PeerMediaPhotosArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .month(_, items, galleryType, viewType):
+        case let .line(_, items, galleryType, viewType):
             return PeerPhotosMonthItem(initialSize, stableId: stableId, viewType: viewType, context: arguments.context, chatInteraction: arguments.chatInteraction, gallerySupplyment: arguments.gallerySupplyment, items: items, galleryType: galleryType)
         case .date:
             return PeerMediaDateItem(initialSize, index: index, stableId: stableId)
@@ -60,7 +60,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _, _):
+        case let .line(index, _, _, _):
             return index
         case let .date(index):
             return index
@@ -134,7 +134,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                         viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))
                     }
                 }
-                entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
+                entries.append(.line(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
                 temp.removeAll()
             }
         } else {
@@ -143,23 +143,23 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
             
             if !entries.isEmpty {
                 switch entries[entries.count - 1] {
-                case let .month(prevIndex, items, galleryType, viewType):
+                case let .line(prevIndex, items, galleryType, viewType):
                     let prevDateId = mediaDateId(for: prevIndex.timestamp)
                     if prevDateId != dateId {
                         entries.append(.section(index: index.peerLocalSuccessor()))
                         entries.append(.date(index: index))
-                        entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                        entries.append(.line(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                     } else {
-                        entries[entries.count - 1] = .month(index: prevIndex, items: items + temp, galleryType: galleryType, viewType: viewType)
+                        entries[entries.count - 1] = .line(index: prevIndex, items: items + temp, galleryType: galleryType, viewType: viewType)
                     }
                 default:
                     assertionFailure()
                 }
             } else {
                 if isExternalSearch {
-                    entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                 } else {
-                    entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                 }
             }
             
@@ -168,8 +168,31 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
     if !state.messages.isEmpty {
         entries.append(.section(index: MessageIndex.absoluteLowerBound()))
     }
+    
+    var updated:[PeerMediaMonthEntry] = []
+    
+    
+    
+    for entry in entries {
+        switch entry {
+        case let .line(_, items, galleryType, _):
+            let chunks = items.chunks(4)
+            for (i, chunk) in chunks.enumerated() {
+                let message = chunk[0]
+                let index = MessageIndex(message)
 
-    return entries
+                let viewType = bestGeneralViewType(chunks, for: i)
+                let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                updated.append(.line(index: index, items: chunk, galleryType: galleryType, viewType: updatedViewType))
+            }
+        case .date:
+            updated.append(entry)
+        case .section:
+            updated.append(entry)
+        }
+    }
+
+    return updated
 }
 
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEntry>], right: [AppearanceWrapperEntry<PeerMediaMonthEntry>], animated: Bool, scroll: TableScrollState, scrollPostion: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?, initialSize:NSSize, arguments: PeerMediaPhotosArguments) -> TableUpdateTransition {

@@ -172,7 +172,7 @@ final class ChatInteraction : InterfaceObserver  {
 
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
-
+    var setupChatThemes:()->Void = { }
     func chatLocationInput() -> ChatLocationInput {
         return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
     }
