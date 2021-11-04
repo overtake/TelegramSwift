@@ -45,6 +45,10 @@ class PeerPhotosMonthItem: GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
+    override var canBeAnchor: Bool {
+        return true
+    }
+    
     static func rowCount(blockWidth: CGFloat, viewType: GeneralViewType) -> (Int, CGFloat) {
         var rowCount:Int = 4
         var perWidth: CGFloat = 0

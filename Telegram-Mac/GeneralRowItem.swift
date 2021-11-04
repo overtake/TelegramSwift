@@ -380,7 +380,7 @@ class GeneralRowItem: TableRowItem {
     }
     
     override var canBeAnchor: Bool {
-        return false
+        return true
     }
     
     
