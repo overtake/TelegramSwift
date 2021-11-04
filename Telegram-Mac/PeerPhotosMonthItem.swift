@@ -26,7 +26,7 @@ private struct LayoutItem : Equatable {
 }
 
 class PeerPhotosMonthItem: GeneralRowItem {
-    private let items:[Message]
+    let items:[Message]
     fileprivate let context: AccountContext
     private var contentHeight: CGFloat = 0
     
@@ -863,7 +863,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         let visibleRect = NSMakeRect(0, self.visibleRect.minY - item.itemSize.height, self.visibleRect.width, self.visibleRect.height + item.itemSize.height * 2)
         let size = item.itemSize
                 
-        if self.visibleRect != NSZeroRect && superview != nil && window != nil {
+        if self.visibleRect != NSZeroRect {
             let visibleRange = (Int(ceil(visibleRect.minY / (size.height))), Int(ceil(visibleRect.height / (size.height))))
             if visibleRange != self.previousRange {
                 self.previousRange = visibleRange

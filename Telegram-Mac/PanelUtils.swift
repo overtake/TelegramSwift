@@ -85,6 +85,11 @@ func savePanel(file:String, ext:String, for window:Window, defaultName: String? 
             try? FileManager.default.removeItem(atPath: saveUrl.path)
             try? FileManager.default.copyItem(atPath: file, toPath: saveUrl.path)
             completion?(saveUrl.path)
+            #if !SHARE
+            delay(0.3, closure: {
+                appDelegate?.showSavedPathSuccess(saveUrl.path)
+            })
+            #endif
         } else {
             completion?(nil)
         }

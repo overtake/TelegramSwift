@@ -33,7 +33,6 @@ private func parseColorArray(_ decoder: KeyedDecodingContainer<StringCodingKey>,
     } else {
         return list
     }
-    return nil
 }
 
 

@@ -1032,10 +1032,25 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self?.scrollDidLiveScrolling()
             })
             
+            var beginPendingTime:CFAbsoluteTime?
+
             NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: clipView, queue: OperationQueue.main, using: { [weak self] notification  in
                 Queue.mainQueue().justDispatch { [weak self] in
                     self?.scrollDidChangedBounds()
                 }
+               
+                var isNextCallLocked: Bool {
+                    if let beginPendingTime = beginPendingTime {
+                        if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.1 {
+                            return true
+                        }
+                    }
+                    beginPendingTime = CFAbsoluteTimeGetCurrent()
+                    return false
+                }
+                
+                
+                
                 if let strongSelf = self {
                     let reqCount = strongSelf.count / 6
                     
@@ -1047,23 +1062,31 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         
                         let range = scroll.current.visibleRows
                         
+                        if range.location == NSNotFound {
+                            return;
+                        }
+                        
                         if(scroll.current.direction != strongSelf.previousScroll?.direction && scroll.current.rect != strongSelf.previousScroll?.rect) {
                             
                             switch(scroll.current.direction) {
                             case .top:
                                 if(range.location  <= reqCount) {
-                                    strongSelf.scrollHandler(scroll.current)
+                                    if !isNextCallLocked {
+                                        strongSelf.scrollHandler(scroll.current)
+                                    }
                                     strongSelf.previousScroll = scroll.current
-                                    
                                 }
                             case .bottom:
                                 if(strongSelf.count - (range.location + range.length) <= reqCount) {
-                                    strongSelf.scrollHandler(scroll.current)
+                                    if !isNextCallLocked {
+                                        strongSelf.scrollHandler(scroll.current)
+                                    }
                                     strongSelf.previousScroll = scroll.current
-                                    
                                 }
                             case .none:
-                                strongSelf.scrollHandler(scroll.current)
+                                if !isNextCallLocked {
+                                    strongSelf.scrollHandler(scroll.current)
+                                }
                                 strongSelf.previousScroll = scroll.current
                                 
                             }
