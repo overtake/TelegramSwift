@@ -1478,7 +1478,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         var groupped:[[ChatRowItem]] = []
         var current:[ChatRowItem] = []
-        self.genericView.tableView.enumerateItems { item in
+        self.genericView.tableView.enumerateVisibleItems { item in
             var skipOrFill = true
             if let item = item as? ChatRowItem {
                 if item.canHasFloatingPhoto {
@@ -1547,6 +1547,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
+        
+
+        self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            self.collectFloatingPhotos(animated: false, currentAnimationRows: self.currentAnimationRows)
+        }))
         
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateFloatingPhotos(position, animated: false)
@@ -6055,8 +6063,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let selectionState = value.selectionState {
                     let ids = Array(selectionState.selectedIds)
                     loadSelectionMessagesDisposable.set((context.account.postbox.messagesAtIds(ids) |> deliverOnMainQueue).start( next:{ [weak self] messages in
-                        var canDelete:Bool = !ids.isEmpty
-                        var canForward:Bool = !ids.isEmpty
+                        var canDelete:Bool = !messages.isEmpty
+                        var canForward:Bool = !messages.isEmpty
                         if let chatInteraction = self?.chatInteraction {
                             for message in messages {
                                 if !canDeleteMessage(message, account: context.account, mode: mode) {

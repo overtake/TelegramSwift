@@ -46,9 +46,7 @@ open class ScrollView: NSScrollView{
         let rect = NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height)
         
         var d:ScrollDirection = .none
-        
-        
-        
+                
         if(currentpos.rect.minY > rect.minY) {
             d = .top
         } else if(currentpos.rect.minY < rect.minY) {
