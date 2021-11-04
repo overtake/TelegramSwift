@@ -812,6 +812,9 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if mode.threadId == message.id {
         return false
     }
+    if message.adAttribute != nil {
+        return false
+    }
     
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
@@ -850,6 +853,9 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
         return false
     }
     if message.isScheduledMessage {
+        return false
+    }
+    if message.adAttribute != nil {
         return false
     }
     
