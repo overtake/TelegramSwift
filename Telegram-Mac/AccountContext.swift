@@ -418,9 +418,11 @@ final class AccountContext {
                 }
         }))
         
-        
+        let passthrough: Atomic<Bool> = Atomic(value: false)
         let cloudSignal = appearanceSignal |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
             return lhs.presentation.cloudTheme == rhs.presentation.cloudTheme
+        }) |> take(until: { _ in
+            return .init(passthrough: passthrough.swap(true), complete: false)
         })
         |> map { value in
             return (value.presentation.cloudTheme, value.presentation.colors)
