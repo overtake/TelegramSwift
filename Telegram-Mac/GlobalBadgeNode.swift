@@ -301,7 +301,9 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
             ctx.setBlendMode(.clear)
             
             let cgPath = CGMutablePath()
-            cgPath.addRoundedRect(in: NSMakeRect(rect.width - generated.size.width / System.backingScale, 0, generated.size.width / System.backingScale, generated.size.height / System.backingScale), cornerWidth: generated.size.height / System.backingScale / 2, cornerHeight: generated.size.height / System.backingScale / 2)
+            
+            let clearSize = NSMakeSize(generated.size.width + 1, generated.size.height + 1)
+            cgPath.addRoundedRect(in: NSMakeRect(rect.width - clearSize.width / System.backingScale, 0, clearSize.width / System.backingScale, clearSize.height / System.backingScale), cornerWidth: clearSize.height / System.backingScale / 2, cornerHeight: clearSize.height / System.backingScale / 2)
             
             ctx.addPath(cgPath)
             ctx.fillPath()

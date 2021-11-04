@@ -26,6 +26,15 @@ private final class MediaPlayerViewLayer: AVSampleBufferDisplayLayer {
     override func action(forKey event: String) -> CAAction? {
         return NSNull()
     }
+    deinit {
+        if !Thread.isMainThread {
+            var bp = 0
+            bp += 1
+        } else {
+            var bp = 0
+            bp += 1
+        }
+    }
 }
 
 private final class MediaPlayerViewDisplayView: View {
@@ -59,9 +68,7 @@ final class MediaPlayerView: View {
     private var videoNode: MediaPlayerViewDisplayView
     
     private var videoLayer: AVSampleBufferDisplayLayer?
-    
-    private let videoQueue: Queue
-    
+        
     
     func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
         videoLayer?.videoGravity = gravity
@@ -127,11 +134,9 @@ final class MediaPlayerView: View {
     private func updateState() {
         if let (timebase, requestFrames, rotationAngle, aspect) = self.state {
             if let videoLayer = self.videoLayer {
-                videoQueue.async {
-                    if videoLayer.controlTimebase !== timebase || videoLayer.status == .failed {
-                        videoLayer.flush()
-                        videoLayer.controlTimebase = timebase
-                    }
+                if videoLayer.controlTimebase !== timebase || videoLayer.status == .failed {
+                    videoLayer.flush()
+                    videoLayer.controlTimebase = timebase
                 }
                 
                 if !self.currentRotationAngle.isEqual(to: rotationAngle) || !self.currentAspect.isEqual(to: aspect) {
@@ -273,11 +278,6 @@ final class MediaPlayerView: View {
     init(backgroundThread: Bool = false) {
         self.videoNode = MediaPlayerViewDisplayView()
         
-        if false && backgroundThread {
-            self.videoQueue = Queue()
-        } else {
-            self.videoQueue = Queue.mainQueue()
-        }
         
         super.init()
         
@@ -294,27 +294,19 @@ final class MediaPlayerView: View {
         }
         self.addSubview(self.videoNode)
         
-        self.videoQueue.async { [weak self] in
-            let videoLayer = MediaPlayerViewLayer()
-            videoLayer.videoGravity = .resize
-            
-            #if arch(x86_64)
-            if let sublayers = videoLayer.sublayers {
-                findContentsLayer(sublayers)?.minificationFilter = .trilinear
-            }
-            #endif
-            
-            
-            //videoLayer.sublayers?.first?.magnificationFilter = .nearest
-            Queue.mainQueue().async {
-                if let strongSelf = self {
-                    strongSelf.videoLayer = videoLayer
-                    strongSelf.updateLayout()
-                    strongSelf.layer?.addSublayer(videoLayer)
-                    strongSelf.updateState()
-                }
-            }
+        let videoLayer = MediaPlayerViewLayer()
+        videoLayer.videoGravity = .resize
+        
+        #if arch(x86_64)
+        if let sublayers = videoLayer.sublayers {
+            findContentsLayer(sublayers)?.minificationFilter = .trilinear
         }
+        #endif
+        
+        self.videoLayer = videoLayer
+        self.updateLayout()
+        self.layer?.addSublayer(videoLayer)
+        self.updateState()
     }
     
     required init?(coder: NSCoder) {
@@ -328,18 +320,7 @@ final class MediaPlayerView: View {
     deinit {
         assert(Queue.mainQueue().isCurrent())
         self.videoLayer?.removeFromSuperlayer()
-        var currentLayer = self.videoLayer
-        if let (takeFrameQueue, _) = self.takeFrameAndQueue {
-            if let videoLayer = currentLayer {
-                takeFrameQueue.async {
-                    videoLayer.flushAndRemoveImage()
-                    
-                    DispatchQueue.main.async {
-                        currentLayer = nil
-                    }
-                }
-            }
-        }
+        self.videoLayer?.flushAndRemoveImage()
     }
     
     override var frame: CGRect {

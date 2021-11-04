@@ -229,7 +229,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             self.sticker = nil
         }
 
-        
+        let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
+
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
@@ -272,7 +273,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             return nil
         } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
             if let data = data, let file = file, let `self` = self {
-                let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
+                let parameters = parameters
                 let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
                 var soundEffect: LottieSoundEffect? = nil
                 if file.isEmojiAnimatedSticker, let emoji = file.stickerText {
@@ -308,7 +309,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         
-        let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 40
+        let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 40 && (parameters == nil || parameters!.shimmer)
         if updated {
             if hasPlaceholder {
                 let current: StickerShimmerEffectView
@@ -339,14 +340,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 
         
         if !self.thumbView.isFullyLoaded {
-            
+
             let signal: Signal<ImageDataTransformation, NoError>
                 
             switch file.mimeType {
             case "image/webp":
                 signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width < 120, scale: backingScaleFactor, fetched: true)
             default:
-                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor, size: size, fetched: true)
+                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0)
             }
             self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
                 if let file = file {
@@ -372,8 +373,12 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     self.thumbView.removeFromSuperview()
                     self.removePlaceholder(animated: false)
                 case .stoped:
-                    self.playerView.removeFromSuperview()
-                    self.addSubview(self.thumbView)
+                    if let parameters = parameters, parameters.hidePlayer == false {
+                        break
+                    } else {
+                        self.playerView.removeFromSuperview()
+                        self.addSubview(self.thumbView)
+                    }
                 default:
                     break
                 }

@@ -433,23 +433,35 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
                         
-            updateTheme(with: themeSettings, for: window)
-            
+            telegramUpdateTheme(updateTheme(with: themeSettings, for: window), window: window, animated: false)
+
             
             let basicTheme = Atomic<ThemePaletteSettings?>(value: themeSettings)
             let viewDidChangedAppearance: ValuePromise<Bool> = ValuePromise(true)
             let backingProperties:ValuePromise<CGFloat> = ValuePromise(System.backingScale, ignoreRepeated: true)
             
             
-            var previousBackingScale = System.backingScale
-            _ = combineLatest(queue: .mainQueue(), themeSettingsView(accountManager: accountManager), backingProperties.get()).start(next: { settings, backingScale in
+            let previousBackingScale: Atomic<CGFloat> = Atomic(value: System.backingScale)
+            let signal: Signal<TelegramPresentationTheme?, NoError> = combineLatest(queue: resourcesQueue, themeSettingsView(accountManager: accountManager), backingProperties.get()) |> map { settings, backingScale in
                 let previous = basicTheme.swap(settings)
-                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper != settings.wallpaper || previous?.fontSize != settings.fontSize || previousBackingScale != backingScale  {
-                    updateTheme(with: settings, for: window, animated: window.isKeyWindow && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
+                let previousScale = previousBackingScale.swap(backingScale)
+                if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper.wallpaper != settings.wallpaper.wallpaper || previous?.fontSize != settings.fontSize || previousScale != backingScale  {
+                    return updateTheme(with: settings, animated: true && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
+                } else {
+                    return nil
+                }
+            } |> deliverOnMainQueue
+            
+            _ = signal.start(next: { updatedTheme in
+                if let theme = updatedTheme {
+                    telegramUpdateTheme(theme, window: window, animated: true)
                     self.contextValue?.applyNewTheme()
                 }
-                previousBackingScale = backingScale
             })
+            
+
+            
+            //
             
             NotificationCenter.default.addObserver(forName: NSWindow.didChangeBackingPropertiesNotification, object: window, queue: nil, using: { notification in
                 backingProperties.set(System.backingScale)
@@ -1247,6 +1259,25 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     @IBAction func closeWindow(_ sender: Any) {
         NSApp.keyWindow?.close()
+    }
+    
+    func showSavedPathSuccess(_ path: String) {
+        if let context = contextValue?.context {
+            
+            let text: String = L10n.savedAsModalOk
+            
+            let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(15), textColor: .white), bold: MarkdownAttributeSet(font: .bold(15), textColor: .white), link: MarkdownAttributeSet(font: .bold(15), textColor: .link), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in }))
+            })).mutableCopy() as! NSMutableAttributedString
+            
+            let layout = TextViewLayout(attributedText, alignment: .center, lineSpacing: 5.0, alwaysStaticItems: true)
+            layout.interactions = TextViewInteractions(processURL: { _ in
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+            })
+            layout.measure(width: 160)
+            
+            _ = showSaveModal(for: window, context: context, animation: LocalAnimatedSticker.success_saved, text: layout, delay: 5.0).start()
+        }
     }
     
     func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([NSUserActivityRestoring]) -> Void) -> Bool {

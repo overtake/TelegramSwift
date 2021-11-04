@@ -194,7 +194,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
 
-//    var accentList = appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil ? appearance.presentation.colors.accentList.prefix(1).map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
+    var accentList = appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil ? appearance.presentation.colors.accentList.map { AppearanceAccentColor(accent: $0, cloudTheme: nil) } : []
 
     var cloudThemes = cloudThemes
     if let cloud = appearance.presentation.cloudTheme {
@@ -203,20 +203,32 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
         }
     }
     
-    var smartThemesList:[SmartThemeCachedData] = []
-    var values:[SmartThemeCachedData] = generated.list[.init(base: appearance.presentation.colors.parent.baseTheme, bubbled: appearance.presentation.bubbled)] ?? []
-    if let value = generated.default {
-        smartThemesList.append(value)
+//    var smartThemesList:[SmartThemeCachedData] = []
+//    var values:[SmartThemeCachedData] = generated.list[.init(base: appearance.presentation.colors.parent.baseTheme, bubbled: appearance.presentation.bubbled)] ?? []
+//    if let value = generated.default {
+//        smartThemesList.append(value)
+//    }
+//    if values.isEmpty {
+//        values = generated.list[.init(base: appearance.presentation.dark ? .night : .classic, bubbled: appearance.presentation.bubbled)] ?? []
+//    }
+//    for smartTheme in values {
+//        smartThemesList.append(smartTheme)
+//    }
+//    if let custom = generated.custom {
+//        smartThemesList.append(custom)
+//    }
+    
+    if appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil {
+        let copy = cloudThemes
+        var cloudAccents:[AppearanceAccentColor] = []
+        for cloudTheme in copy {
+            if let settings = cloudTheme.effectiveSettings(for: appearance.presentation.colors) {
+                cloudAccents.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
+            }
+        }
+        accentList.insert(contentsOf: cloudAccents, at: 0)
     }
-    if values.isEmpty {
-        values = generated.list[.init(base: appearance.presentation.dark ? .night : .classic, bubbled: appearance.presentation.bubbled)] ?? []
-    }
-    for smartTheme in values {
-        smartThemesList.append(smartTheme)
-    }
-    if let custom = generated.custom {
-        smartThemesList.append(custom)
-    }
+
 
     cloudThemes.removeAll(where:{ $0.settings != nil })
 
@@ -224,95 +236,100 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
         let theme: TelegramPresentationTheme
         let cloudThemes:[TelegramTheme]
     }
+    
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_list, equatable: InputDataEquatable(ListEquatable(theme: appearance.presentation, cloudThemes: cloudThemes)), comparable: nil, item: { initialSize, stableId in
 
-    if !smartThemesList.isEmpty {
+        let selected: ThemeSource
+        if let cloud = appearance.presentation.cloudTheme {
+            if let _ = cloud.settings {
+               selected = .local(appearance.presentation.colors, cloud)
+            } else {
+                selected = .cloud(cloud)
+            }
+        } else {
+            selected = .local(appearance.presentation.colors, nil)
+        }
+
+        let dayClassicCloud = settings.associated.first(where: { $0.local == dayClassicPalette.parent })?.cloud?.cloud
+        let dayCloud = settings.associated.first(where: { $0.local == whitePalette.parent })?.cloud?.cloud
+        let nightAccentCloud = settings.associated.first(where: { $0.local == nightAccentPalette.parent })?.cloud?.cloud
+
+        var locals: [LocalPaletteWithReference] = [LocalPaletteWithReference(palette: dayClassicPalette, cloud: dayClassicCloud),
+                                                   LocalPaletteWithReference(palette: whitePalette, cloud: dayCloud),
+                                                   LocalPaletteWithReference(palette: nightAccentPalette, cloud: nightAccentCloud),
+                                                   LocalPaletteWithReference(palette: systemPalette, cloud: nil)]
+
+        for (i, local) in locals.enumerated() {
+            if let accent = settings.accents.first(where: { $0.name == local.palette.parent }), accent.color.accent != local.palette.basicAccent {
+                locals[i] = local.withAccentColor(accent.color)
+            }
+        }
+
+        return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local: locals, cloudThemes: cloudThemes, viewType: accentList.isEmpty ? .lastItem : .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
+            var items:[ContextMenuItem] = []
+            var cloud: TelegramTheme?
+
+            switch source {
+            case let .cloud(c):
+                cloud = c
+            case let .local(_, c):
+                cloud = c
+            }
+
+            if let cloud = cloud {
+                if cloud.isCreator {
+                    items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
+                        arguments.editTheme(cloud)
+                    }))
+                }
+                items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                    arguments.shareTheme(cloud)
+                }))
+                items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                    arguments.removeTheme(cloud)
+                }))
+            }
+
+            return items
+        })
+    }))
+
+    if !accentList.isEmpty {
 
         struct ALEquatable : Equatable {
-            let themeList: [SmartThemeCachedData]
+            let accentList: [AppearanceAccentColor]
             let theme: TelegramPresentationTheme
         }
 
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(themeList: smartThemesList, theme: appearance.presentation)), comparable: nil, item: { initialSize, stableId in
+
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_accent_list, equatable: InputDataEquatable(ALEquatable(accentList: accentList, theme: appearance.presentation)), comparable: nil, item: { initialSize, stableId in
             
 
-            return SmartThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, list: smartThemesList, animatedEmojiStickers: animatedEmojiStickers, viewType: .innerItem, togglePalette: arguments.togglePalette)
+//            return SmartThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, list: smartThemesList, animatedEmojiStickers: animatedEmojiStickers, viewType: .innerItem, togglePalette: arguments.togglePalette)
             
-//            return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
-//                var items:[ContextMenuItem] = []
-//                if let cloud = accent.cloudTheme {
-//                    items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
-//                        arguments.shareTheme(cloud)
-//                    }))
-//                    items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
-//                        arguments.removeTheme(cloud)
-//                    }))
-//                }
-//                return items
-//            })
+            return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
+                var items:[ContextMenuItem] = []
+                if let cloud = accent.cloudTheme {
+                    items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                        arguments.shareTheme(cloud)
+                    }))
+                    items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                        arguments.removeTheme(cloud)
+                    }))
+                }
+                return items
+            })
         }))
         index += 1
         
-        if state.revealed {
-            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_list, equatable: InputDataEquatable(ListEquatable(theme: appearance.presentation, cloudThemes: cloudThemes)), comparable: nil, item: { initialSize, stableId in
         
-                let selected: ThemeSource
-                if let cloud = appearance.presentation.cloudTheme {
-                    if let _ = cloud.settings {
-                       selected = .local(appearance.presentation.colors, cloud)
-                    } else {
-                        selected = .cloud(cloud)
-                    }
-                } else {
-                    selected = .local(appearance.presentation.colors, nil)
-                }
         
-                let dayClassicCloud = settings.associated.first(where: { $0.local == dayClassicPalette.parent })?.cloud?.cloud
-                let dayCloud = settings.associated.first(where: { $0.local == whitePalette.parent })?.cloud?.cloud
-                let nightAccentCloud = settings.associated.first(where: { $0.local == nightAccentPalette.parent })?.cloud?.cloud
+//        if state.revealed {
+//
+//        }
         
-                var locals: [LocalPaletteWithReference] = [LocalPaletteWithReference(palette: dayClassicPalette, cloud: dayClassicCloud),
-                                                           LocalPaletteWithReference(palette: whitePalette, cloud: dayCloud),
-                                                           LocalPaletteWithReference(palette: nightAccentPalette, cloud: nightAccentCloud),
-                                                           LocalPaletteWithReference(palette: systemPalette, cloud: nil)]
-        
-                for (i, local) in locals.enumerated() {
-                    if let accent = settings.accents.first(where: { $0.name == local.palette.parent }), accent.color.accent != local.palette.basicAccent {
-                        locals[i] = local.withAccentColor(accent.color)
-                    }
-                }
-        
-                return ThemeListRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, selected: selected, local: locals, cloudThemes: cloudThemes, viewType: .innerItem, togglePalette: arguments.togglePalette, menuItems: { source in
-                    var items:[ContextMenuItem] = []
-                    var cloud: TelegramTheme?
-        
-                    switch source {
-                    case let .cloud(c):
-                        cloud = c
-                    case let .local(_, c):
-                        cloud = c
-                    }
-        
-                    if let cloud = cloud {
-                        if cloud.isCreator {
-                            items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
-                                arguments.editTheme(cloud)
-                            }))
-                        }
-                        items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
-                            arguments.shareTheme(cloud)
-                        }))
-                        items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
-                            arguments.removeTheme(cloud)
-                        }))
-                    }
-        
-                    return items
-                })
-            }))
-        }
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_cloud_themes, data: .init(name: !state.revealed ? L10n.appearanceSettingsShowMore : L10n.appearanceSettingsShowLess, color: appearance.presentation.colors.accent, type: .none, viewType: .lastItem, action: arguments.toggleRevealThemes)))
-        index += 1
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_cloud_themes, data: .init(name: !state.revealed ? L10n.appearanceSettingsShowMore : L10n.appearanceSettingsShowLess, color: appearance.presentation.colors.accent, type: .none, viewType: .lastItem, action: arguments.toggleRevealThemes)))
+//        index += 1
         
     }
 
@@ -433,9 +450,10 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                         .saveDefaultWallpaper()
                         .withUpdatedDefaultIsDark(cached.palette.isDark)
                         .withSavedAssociatedTheme()
-                }).start())
+                }).start(completed: {
+                    applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, palette: cached.palette, install: true).start())
+                }))
                 
-                applyCloudThemeDisposable.set(downloadAndApplyCloudTheme(context: context, theme: cloud, palette: cached.palette, install: true).start())
             } else if cloud.file != nil {
                 applyCloudThemeDisposable.set(showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start())
             } else {

@@ -296,10 +296,14 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                     }
                     if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
                         let rlottie = RLottieBridge(json: json, key: resourceData.path)
+                        if let rlottie = rlottie {
+                            let unmanaged = rlottie.renderFrame(min(Int32(representation.frame), rlottie.endFrame()), width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+                            let colorImage = unmanaged.takeRetainedValue()
+                            return (colorImage, nil, resourceData)
+                        } else {
+                            return (nil, nil, resourceData)
+                        }
                         
-                        let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                        let colorImage = unmanaged?.takeRetainedValue()
-                        return (colorImage, nil, resourceData)
                     }
                 } else {
                     return (nil, data, resourceData)

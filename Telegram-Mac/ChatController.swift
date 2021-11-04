@@ -5721,13 +5721,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
     
-//        #if DEBUG
-//        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-//            guard let `self` = self else {return .rejected}
-//            showModal(with: ChatCalendarModalController(context: context, peerId: self.chatLocation.peerId, messageTags: [.photoOrVideo]), for: context.window)
-//            return .invoked
-//        }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
-//        #endif
+/*
+ #if DEBUG
+ self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+     _ = showSaveModal(for: context.window, context: context, animation: LocalAnimatedSticker.success_saved, text: .init(.init()), delay: 3.0).start()
+     return .invoked
+ }, with: self, for: .E, priority: .medium, modifierFlags: [.command])
+ #endif
+ */
       
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeBold()

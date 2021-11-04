@@ -384,9 +384,11 @@ final class AccountContext {
             return combineLatest(signals) |> map { ($0[0], $0.count == 2 ? $0[1] : nil) }
         }
         
-        _cloudThemes.set(combineLatest(defaultAndCustom, themesList) |> map { defaultAndCustom, themesList in
-            return .init(themes: themesList.0, list: themesList.1, default: defaultAndCustom.0, custom: defaultAndCustom.1)
+        _cloudThemes.set(cloudThemes |> map { cloudThemes in
+            return .init(themes: cloudThemes, list: [:], default: nil, custom: nil)
         })
+//        _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))
+
         
         #endif
         
@@ -417,11 +419,11 @@ final class AccountContext {
         }))
         
         
-        let cloudSignal = themeUnmodifiedSettings(accountManager: sharedContext.accountManager) |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
-            return lhs.cloudTheme == rhs.cloudTheme
+        let cloudSignal = appearanceSignal |> distinctUntilChanged(isEqual: { lhs, rhs -> Bool in
+            return lhs.presentation.cloudTheme == rhs.presentation.cloudTheme
         })
         |> map { value in
-            return (value.cloudTheme, value.palette)
+            return (value.presentation.cloudTheme, value.presentation.colors)
         }
         |> deliverOnMainQueue
         
@@ -697,7 +699,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
                                 var settings = settings.withUpdatedPalette(palette).withUpdatedCloudTheme(cloudTheme)
                                 var updateDefault:DefaultTheme = palette.isDark ? settings.defaultDark : settings.defaultDay
                                 updateDefault = updateDefault.updateCloud { _ in
-                                    return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: AssociatedWallpaper(cloud: cloud, wallpaper: wp))
+                                    return DefaultCloudTheme(cloud: cloudTheme, palette: palette, wallpaper: AssociatedWallpaper(cloud: cloud, wallpaper: wallpaper))
                                 }
                                 settings = palette.isDark ? settings.withUpdatedDefaultDark(updateDefault) : settings.withUpdatedDefaultDay(updateDefault)
                                 settings = settings.withUpdatedDefaultIsDark(palette.isDark)

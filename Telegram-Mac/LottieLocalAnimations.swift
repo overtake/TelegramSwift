@@ -104,6 +104,7 @@ enum LocalAnimatedSticker : String {
     var parameters: ChatAnimatedStickerMediaLayoutParameters {
         let playPolicy: LottiePlayPolicy?
         var hidePlayer: Bool = true
+        var thumbAtFrame: Int = 0
         switch self {
         case .brilliant_static:
             playPolicy = .loop
@@ -138,6 +139,7 @@ enum LocalAnimatedSticker : String {
         case .success_saved:
             playPolicy = .onceEnd
             hidePlayer = false
+            thumbAtFrame = 60
         case .dice_idle:
             playPolicy = .once
         case .folder:
@@ -173,6 +175,6 @@ enum LocalAnimatedSticker : String {
             playPolicy = .loop
             hidePlayer = false
         }
-        return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: true, cache: .temporaryLZ4(.thumb), hidePlayer: hidePlayer, media: self.file)
+        return ChatAnimatedStickerMediaLayoutParameters(playPolicy: playPolicy, alwaysAccept: true, cache: .temporaryLZ4(.thumb), hidePlayer: hidePlayer, media: self.file, shimmer: false, thumbAtFrame: thumbAtFrame)
     }
 }
