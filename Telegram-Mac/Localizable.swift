@@ -7693,6 +7693,8 @@ internal final class L10n {
   }
   /// Select All
   internal static var ruw6mB2mTitle: String  { return L10n.tr("Localizable", "Ruw-6m-B2m.title") }
+  /// Saved!\n[Show In Finder]()
+  internal static var savedAsModalOk: String  { return L10n.tr("Localizable", "SavedAs.ModalOk") }
   /// Send on %@ at %@
   internal static func scheduleSendDate(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Schedule.SendDate", p1, p2)

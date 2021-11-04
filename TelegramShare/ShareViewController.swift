@@ -69,8 +69,8 @@ class ShareViewController: NSViewController {
             applyShareUILocalization(localization)
         }
         
-        updateTheme(with: themeSettings)
-                
+        telegramUpdateTheme(updateTheme(with: themeSettings), window: nil, animated: false)
+
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
         

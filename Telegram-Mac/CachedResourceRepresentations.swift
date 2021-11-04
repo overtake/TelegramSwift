@@ -119,23 +119,25 @@ final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentati
     var uniqueId: String {
         let version: Int = 1
         if let fitzModifier = self.fitzModifier {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)"
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)"
         } else {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)"
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)"
         }
     }
     let thumb: Bool
     let size: NSSize
     let fitzModifier: EmojiFitzModifier?
-    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil) {
+    let frame: Int
+    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil, frame: Int = 0) {
         self.thumb = thumb
         self.size = size
         self.fitzModifier = fitzModifier
+        self.frame = frame
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedAnimatedStickerRepresentation {
-            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier
+            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier && self.frame == to.frame
         } else {
             return false
         }
