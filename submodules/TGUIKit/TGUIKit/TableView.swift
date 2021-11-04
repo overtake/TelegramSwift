@@ -1041,7 +1041,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                
                 var isNextCallLocked: Bool {
                     if let beginPendingTime = beginPendingTime {
-                        if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.1 {
+                        if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.05 {
                             return true
                         }
                     }
@@ -2145,7 +2145,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        return self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
+        let range = self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
+        if range.location == NSNotFound {
+            NSLog("visibleRect: \(self.tableView.visibleRect)")
+            var bp = 0
+            bp += 1
+        }
+        return range
     }
     
     public var listHeight:CGFloat {
@@ -2567,7 +2573,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         continue
                     }
                 }
-                if let item = self.item(stableId: visible.0.stableId) {
+                
+                var item = self.item(stableId: visible.0.stableId)
+                if item == nil {
+                    if let groupStableId = delegate?.findGroupStableId(for: visible.0.stableId) {
+                        item = self.item(stableId: groupStableId)
+                    }
+                }
+                if let item = item {
                     
                     if !item.canBeAnchor {
                         continue

@@ -304,8 +304,9 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 rowCount -= 1
             }
         }
-        let pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount))
-        return pageCount * 3
+        var pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount)) * 3
+        pageCount -= (pageCount % 4)
+        return pageCount
     }
     
     override func viewDidLoad() {
@@ -486,8 +487,8 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                             if let item = self?.genericView.item(at: i) as? PeerPhotosMonthItem {
                                 if let message = item.items.first {
                                     messageIndex = MessageIndex(message)
+                                    break
                                 }
-                                break
                             }
                         }
                     } else if view.laterId == nil, !view.holeLater, let locationValue = strongSelf.locationValue, !locationValue.isAtUpperBound, view.anchorIndex != .upperBound {
@@ -499,8 +500,8 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                             if let item = strongSelf.genericView.item(at: i) as? PeerPhotosMonthItem {
                                 if let message = item.items.last {
                                     messageIndex = MessageIndex(message)
+                                    break
                                 }
-                                break
                             }
                         }
                     }

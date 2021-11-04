@@ -48,9 +48,6 @@ open class ScrollView: NSScrollView{
         var d:ScrollDirection = .none
         
         
-        if abs(currentpos.rect.minY - rect.minY) < 5 {
-            return (currentpos, currentpos)
-        }
         
         if(currentpos.rect.minY > rect.minY) {
             d = .top
