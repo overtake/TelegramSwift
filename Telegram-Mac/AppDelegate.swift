@@ -325,8 +325,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
             
-            updateTheme(with: themeSettings, for: window)
-            
+            telegramUpdateTheme(updateTheme(with: themeSettings), window: window, animated: false)
+
             self.window.makeKeyAndOrderFront(self)
             NSApp.activate(ignoringOtherApps: true)
 
@@ -433,7 +433,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 applyUILocalization(localization)
             }
                         
-            telegramUpdateTheme(updateTheme(with: themeSettings, for: window), window: window, animated: false)
+            telegramUpdateTheme(updateTheme(with: themeSettings), window: window, animated: false)
 
             
             let basicTheme = Atomic<ThemePaletteSettings?>(value: themeSettings)
