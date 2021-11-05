@@ -1900,8 +1900,9 @@ class ChatRowItem: TableRowItem {
             } else {
                 updateCountDownTimer = nil
             }
-            
-            self.fullDate = fullDate
+            if message.adAttribute == nil {
+                self.fullDate = fullDate
+            }
         }
     }
     

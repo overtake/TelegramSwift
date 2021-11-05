@@ -2719,7 +2719,7 @@ func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Window? = n
     updateTheme(theme)
     if let window = window {
         
-        if animated, let contentView = window.contentView {
+        if animated, let contentView = window.contentView, window.isVisible, window.occlusionState.contains(.visible), window.windowNumber > 0 {
 
             let image = window.windowImageShot()
             let imageView = ImageView()
