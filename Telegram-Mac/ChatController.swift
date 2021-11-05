@@ -5988,7 +5988,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             isAdChat = false
         }
         
-        if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel {
+        if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel, mode == .history {
             self.adMessages = context.engine.messages.adMessages(peerId: chatLocation.peerId)
         } else {
             self.adMessages = nil
