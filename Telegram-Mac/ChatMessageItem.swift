@@ -571,6 +571,10 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
+    override var ignoreAtInitialization: Bool {
+        return message?.adAttribute != nil
+    }
+    
     override var isForceRightLine: Bool {
         if self.webpageLayout?.content.type == "proxy" {
             return true

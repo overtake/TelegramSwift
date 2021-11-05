@@ -19,6 +19,7 @@ enum ChatHistoryEntryId : Hashable {
     case unread
     case date(MessageIndex)
     case undefined
+    case empty(MessageIndex)
     case maybeId(AnyHashable)
     case commentsHeader
     case repliesHeader
@@ -65,6 +66,12 @@ enum ChatHistoryEntryId : Hashable {
             } else {
                 return false
             }
+        case let .empty(index):
+            if case .empty(index) = rhs {
+                return true
+            } else {
+                return false
+            }
         case .commentsHeader:
             if case .commentsHeader = rhs {
                 return true
@@ -106,6 +113,8 @@ enum ChatHistoryEntryId : Hashable {
             return UInt64(8) << 40
         case .topThreadInset:
             return UInt64(9) << 40
+        case .empty:
+            return UInt64(10) << 40
         }
     }
 
@@ -164,6 +173,7 @@ enum ChatHistoryEntry: Identifiable, Comparable {
     case UnreadEntry(MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
     case DateEntry(MessageIndex, ChatItemRenderType, TelegramPresentationTheme)
     case bottom(TelegramPresentationTheme)
+    case empty(MessageIndex, TelegramPresentationTheme)
     case commentsHeader(Bool, MessageIndex, ChatItemRenderType)
     case repliesHeader(Bool, MessageIndex, ChatItemRenderType)
     case topThreadInset(CGFloat, MessageIndex, ChatItemRenderType)
@@ -198,6 +208,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case .UnreadEntry(_, let renderType, _):
             return renderType
         case .bottom:
+            return .list
+        case .empty:
             return .list
         case let .commentsHeader(_, _, renderType):
             return renderType
@@ -251,6 +263,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return .unread
         case .bottom:
             return .undefined
+        case let .empty(index, _):
+            return .empty(index)
         case .commentsHeader:
             return .commentsHeader
         case .repliesHeader:
@@ -278,6 +292,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return index
         case let .topThreadInset(_, index, _):
             return index
+        case let .empty(index, _):
+            return index
         }
     }
     
@@ -299,6 +315,8 @@ enum ChatHistoryEntry: Identifiable, Comparable {
         case let .repliesHeader(_, index, _):
             return index
         case let .topThreadInset(_, index, _):
+            return index
+        case let .empty(index, _):
             return index
         }
     }
@@ -377,6 +395,13 @@ func ==(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
         switch rhs {
         case let .bottom(rhsTheme):
             return lhsTheme == rhsTheme
+        default:
+            return false
+        }
+    case let .empty(lhsIndex, lhsTheme):
+        switch rhs {
+        case let .empty(rhsIndex, rhsTheme):
+            return lhsTheme == rhsTheme && lhsIndex == rhsIndex
         default:
             return false
         }
@@ -846,7 +871,12 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
 
     
     if let lastMessage = entries.last(where: { $0.message != nil })?.message {
-        var nextAdMessageId: Int32 = 1
+        var nextAdMessageId: Int32 = 2
+        
+
+        if !adMessages.isEmpty {
+            entries.append(.empty(MessageIndex.init(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: nextAdMessageId - 1), timestamp: lastMessage.timestamp + nextAdMessageId - 1), chatTheme))
+        }
         for message in adMessages {
             let updatedMessage = Message(
                 stableId: UInt32.max - 1 - UInt32(nextAdMessageId),
