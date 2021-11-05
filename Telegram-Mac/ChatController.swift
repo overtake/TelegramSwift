@@ -1815,7 +1815,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let visibleRows = self.genericView.tableView.visibleRows()
             var messageIndex: MessageIndex?
             for i in stride(from: visibleRows.max - 1, to: -1, by: -1) {
-                if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, let message = item.message  {
+                if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, !item.ignoreAtInitialization, let message = item.message  {
                     messageIndex = MessageIndex(message)
                     break
                 }
@@ -4644,7 +4644,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .top:
                     if view.laterId != nil {
                         for i in visible.min ..< visible.max {
-                            if let item = self.genericView.tableView.item(at: i) as? ChatRowItem {
+                            if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, !item.ignoreAtInitialization {
                                 messageIndex = item.entry.index
                                 break
                             }
@@ -4655,7 +4655,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .bottom:
                     if view.earlierId != nil {
                         for i in stride(from: visible.max - 1, to: -1, by: -1) {
-                            if let item = self.genericView.tableView.item(at: i) as? ChatRowItem {
+                            if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, !item.ignoreAtInitialization {
                                 messageIndex = item.entry.index
                                 break
                             }
