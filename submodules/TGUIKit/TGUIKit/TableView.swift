@@ -2918,6 +2918,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var rowRect:NSRect = bounds
         
+        let findItem:(AnyHashable)->TableRowItem? = { [weak self] stableId in
+            var item: TableRowItem? = self?.item(stableId: stableId)
+            if item == nil {
+                if let groupStableId = self?.delegate?.findGroupStableId(for: stableId) {
+                    item = self?.item(stableId: groupStableId)
+                }
+            }
+            return item
+        }
+        
         var item:TableRowItem?
         var animate:Bool = false
         var focus: TableScrollFocus = .init(focus: false)
@@ -2925,19 +2935,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var innerId: AnyHashable? = nil
         switch state {
         case let .center(stableId, _innerId, _animate, _focus, _inset):
-            item = self.item(stableId: stableId)
+            item = findItem(stableId)
             animate = _animate
             relativeInset = _inset
             focus = _focus
             innerId = _innerId
         case let .bottom(stableId, _innerId, _animate, _focus, _inset):
-            item = self.item(stableId: stableId)
+            item = findItem(stableId)
             animate = _animate
             relativeInset = _inset
             focus = _focus
             innerId = _innerId
         case let .top(stableId, _innerId, _animate, _focus, _inset):
-            item = self.item(stableId: stableId)
+            item = findItem(stableId)
             animate = _animate
             relativeInset = _inset
             focus = _focus
