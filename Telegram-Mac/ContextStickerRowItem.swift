@@ -78,11 +78,16 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             }
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak item] in
-                    item?.chatInteraction.sendAppFile(file, true, nil)
+                    item?.chatInteraction.sendAppFile(file, true, nil, false)
                     item?.chatInteraction.clearInput()
                 }))
             }
-          
+            if let file = reference?.0.fileReference?.media {
+                menu.addItem(ContextMenuItem(L10n.chatSendScheduledMessage, handler: { [weak item] in
+                    item?.chatInteraction.sendAppFile(file, false, nil, true)
+                    item?.chatInteraction.clearInput()
+                }))
+            }
         }
         return menu
     }
@@ -128,14 +133,14 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         if let slowMode = item?.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                             showSlowModeTimeoutTooltip(slowMode, for: control)
                         } else {
-                            item?.chatInteraction.sendAppFile(data.file, false, nil)
+                            item?.chatInteraction.sendAppFile(data.file, false, nil, false)
                             item?.chatInteraction.clearInput()
                         }
                     }, for: .Click)
                     
                     container.set(handler: { [weak self, weak item] (control) in
                         if let window = self?.window as? Window, let item = item, let table = item.table {
-                            _ = startModalPreviewHandle(table, window: window, context: item.context)
+                            startModalPreviewHandle(table, window: window, context: item.context)
                         }
                     }, for: .LongMouseDown)
                     

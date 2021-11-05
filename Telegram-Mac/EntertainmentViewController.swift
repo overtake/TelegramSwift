@@ -481,8 +481,8 @@ public final class EntertainmentInteractions {
     var current:EntertainmentState = .emoji
     
     var sendEmoji:(String) ->Void = {_ in}
-    var sendSticker:(TelegramMediaFile, Bool) ->Void = { _, _ in}
-    var sendGIF:(TelegramMediaFile, Bool) ->Void = { _, _ in}
+    var sendSticker:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
+    var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
     var showEntertainment:(EntertainmentState, Bool)->Void = { _,_  in}
     var close:()->Void = {}
@@ -638,12 +638,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         interactions.close = { [weak self] in
             self?.closePopover()
         }
-        interactions.sendSticker = { [weak self] file, silent in
-            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query)
+        interactions.sendSticker = { [weak self] file, silent, scheduled in
+            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled)
             self?.closePopover()
         }
-        interactions.sendGIF = { [weak self] file, silent in
-            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query)
+        interactions.sendGIF = { [weak self] file, silent, scheduled in
+            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled)
             self?.closePopover()
         }
         interactions.sendEmoji = { [weak self] emoji in

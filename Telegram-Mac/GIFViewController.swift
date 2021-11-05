@@ -113,7 +113,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     switch result {
                     case let .internalReference(values):
                         if let file = values.file {
-                            arguments?.sendAppFile(file, view, false)
+                            arguments?.sendAppFile(file, view, false, false)
                         }
                     default:
                         break
@@ -135,7 +135,10 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                                 }))
                             }
                             items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: {
-                                arguments?.sendAppFile(file, view, true)
+                                arguments?.sendAppFile(file, view, true, false)
+                            }))
+                            items.append(ContextMenuItem(L10n.chatSendScheduledMessage, handler: {
+                                arguments?.sendAppFile(file, view, false, true)
                             }))
                         }
                         return items
@@ -228,7 +231,7 @@ private func gifEntries(for collection: ChatContextResultCollection?, results: [
 
 final class RecentGifsArguments {
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult, NSView) -> Void = { _,_,_  in}
-    var sendAppFile:(TelegramMediaFile, NSView, Bool) -> Void = { _,_,_ in}
+    var sendAppFile:(TelegramMediaFile, NSView, Bool, Bool) -> Void = { _,_,_, _ in}
     var searchBySuggestion:(String)->Void = { _ in }
 }
 
@@ -485,11 +488,11 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         _ = atomicSize.swap(_frameRect.size)
         let arguments = RecentGifsArguments()
         
-        arguments.sendAppFile = { [weak self] file, view, silent in
+        arguments.sendAppFile = { [weak self] file, view, silent, schedule in
             if let slowMode = self?.chatInteraction?.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else {
-                self?.interactions?.sendGIF(file, silent)
+                self?.interactions?.sendGIF(file, silent, schedule)
                 self?.makeSearchCommand?(.close)
                 self?.interactions?.close()
             }

@@ -349,7 +349,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                     control?.contextObject = convertor
                 }
                 
-                interactions.sendAppFile = { file, _, _ in
+                interactions.sendAppFile = { file, _, _, _ in
                     let object: MediaObjectToAvatar.Object
                     if file.isAnimatedSticker {
                         object = .animated(file)
