@@ -1095,10 +1095,12 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 }
             }
             var scrollState = state
+            var ignoreHeight: CGFloat = 0
             for (_, item) in firstInsertion.reversed() {
                 if item.ignoreAtInitialization {
-                    scrollState = .bottom(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: item.height)
-                    break
+                    ignoreHeight += item.height
+                } else {
+                    scrollState = .bottom(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: ignoreHeight)
                 }
             }
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: scrollState))
@@ -1143,9 +1145,21 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             } else {
                 grouping = true
             }
+            var scrollState = state
+            if removed.isEmpty, !inserted.isEmpty {
+                var addAdded: Bool = true
+                for inserted in inserted {
+                    if !inserted.1.ignoreAtInitialization {
+                        addAdded = false
+                        break
+                    }
+                }
+                if addAdded {
+                    scrollState = .saveVisible(.lower)
+                }
+            }
             
-            
-            subscriber.putNext(TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: state, grouping: grouping))
+            subscriber.putNext(TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: scrollState, grouping: grouping))
             subscriber.putCompletion()
         }
         

@@ -871,11 +871,12 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
 
     
     if let lastMessage = entries.last(where: { $0.message != nil })?.message {
-        var nextAdMessageId: Int32 = 2
+        var nextAdMessageId: Int32 = 1
         
 
         if !adMessages.isEmpty {
-            entries.append(.empty(MessageIndex.init(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: nextAdMessageId - 1), timestamp: lastMessage.timestamp + nextAdMessageId - 1), chatTheme))
+            entries.append(.empty(MessageIndex.init(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: lastMessage.id.id + nextAdMessageId), timestamp: lastMessage.timestamp + nextAdMessageId), chatTheme))
+            nextAdMessageId += 1
         }
         for message in adMessages {
             let updatedMessage = Message(
