@@ -558,7 +558,7 @@
     }
 
     var unableToHide: Bool {
-        return self.genericView.activePanel is SearchContainerView || self.state != .Normal
+        return self.genericView.activePanel is SearchContainerView || self.state != .Normal || !onTheTop
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -1246,7 +1246,6 @@
                 controller.updateLocalizationAndTheme(theme: theme)
             }
         }
-        
     }
     
     override public func update(with state:ViewControllerState) -> Void {
@@ -1265,6 +1264,15 @@
             return super.escapeKeyAction()
         }
     }
+     
+     var onTheTop: Bool {
+         switch self.mode {
+         case .photoOrVideo:
+             return self.mediaGrid.onTheTop
+         default:
+             return true
+         }
+     }
     
     private var centerBar: SearchTitleBarView {
         return centerBarView as! SearchTitleBarView

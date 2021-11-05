@@ -35,6 +35,9 @@ open class TableStickItem: TableRowItem {
         return TableStickView.self
     }
     
+    open override var canBeAnchor: Bool {
+        return false
+    }
     
     
 }
