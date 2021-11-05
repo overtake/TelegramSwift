@@ -225,9 +225,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEn
                 scrollState = .saveVisible(side ?? .upper)
             case .Generic(let type):
                 switch type {
-                case .Initial:
-                    scrollState = .saveVisible(side ?? .upper)
-                case .FillHole:
+                case .Initial, .FillHole, .UpdateVisible:
                     scrollState = .saveVisible(side ?? .upper)
                 default:
                     break
@@ -305,7 +303,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     private var isExternalSearch: Bool = false
     private let location: ValuePromise<ChatHistoryLocation> = ValuePromise(ignoreRepeated: false)
     private var locationValue: ChatHistoryLocation? = nil
-
+    private var isTopHistory: (()->Bool)? = nil
     private func setLocation(_ location: ChatHistoryLocation) -> Void {
         self.location.set(location)
         self.locationValue = location
@@ -547,6 +545,9 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         onDeinit = {
             _ = historyView.swap(nil)
         }
+        isTopHistory = {
+            return historyView.with { $0?.laterId == nil }
+        }
     }
     
     private let mediaSearchState:ValuePromise<MediaSearchState> = ValuePromise(ignoreRepeated: true)
@@ -629,6 +630,10 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
             })
         }
         return updatedStableId
+    }
+    
+    var onTheTop: Bool {
+        return self.isTopHistory?() ?? true
     }
     
     func toggleSearch() {
