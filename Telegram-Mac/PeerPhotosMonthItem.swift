@@ -105,51 +105,51 @@ class PeerPhotosMonthItem: GeneralRowItem {
             var bottomLeft: ImageCorner = .Corner(0)
             var bottomRight: ImageCorner = .Corner(0)
             
-            if self.items.count < rowCount {
-                if message == self.items.first {
-                    if self.viewType.position != .last {
-                        topLeft = .Corner(.cornerRadius)
-                    }
-                    bottomLeft = .Corner(.cornerRadius)
-                }
-            } else if self.items.count == rowCount {
-                if message == self.items.first {
-                    if self.viewType.position != .last {
-                        topLeft = .Corner(.cornerRadius)
-                    }
-                    bottomLeft = .Corner(.cornerRadius)
-                } else if message == self.items.last {
-                    if message == self.items.last {
+            if self.viewType.position != .first && self.viewType.position != .inner {
+                if self.items.count < rowCount {
+                    if message == self.items.first {
                         if self.viewType.position != .last {
-                            topRight = .Corner(.cornerRadius)
-                        }
-                        bottomRight = .Corner(.cornerRadius)
-                    }
-                }
-            } else {
-                let i = i + 1
-                let firstLine = i <= rowCount
-                let div = (items.count % rowCount) == 0 ? rowCount : (items.count % rowCount)
-                let lastLine = i > (items.count - div)
-                
-                if firstLine {
-                    if self.viewType.position != .last {
-                        if i % rowCount == 1 {
                             topLeft = .Corner(.cornerRadius)
-                        } else if i % rowCount == 0 {
-                            topRight = .Corner(.cornerRadius)
+                        }
+                        bottomLeft = .Corner(.cornerRadius)
+                    }
+                } else if self.items.count == rowCount {
+                    if message == self.items.first {
+                        if self.viewType.position != .last {
+                            topLeft = .Corner(.cornerRadius)
+                        }
+                        bottomLeft = .Corner(.cornerRadius)
+                    } else if message == self.items.last {
+                        if message == self.items.last {
+                            if self.viewType.position != .last {
+                                topRight = .Corner(.cornerRadius)
+                            }
+                            bottomRight = .Corner(.cornerRadius)
                         }
                     }
-                } else if lastLine {
-                    if i % rowCount == 1 {
-                        bottomLeft = .Corner(.cornerRadius)
-                    } else if i % rowCount == 0 {
-                        bottomRight = .Corner(.cornerRadius)
+                } else {
+                    let i = i + 1
+                    let firstLine = i <= rowCount
+                    let div = (items.count % rowCount) == 0 ? rowCount : (items.count % rowCount)
+                    let lastLine = i > (items.count - div)
+                    
+                    if firstLine {
+                        if self.viewType.position != .last {
+                            if i % rowCount == 1 {
+                                topLeft = .Corner(.cornerRadius)
+                            } else if i % rowCount == 0 {
+                                topRight = .Corner(.cornerRadius)
+                            }
+                        }
+                    } else if lastLine {
+                        if i % rowCount == 1 {
+                            bottomLeft = .Corner(.cornerRadius)
+                        } else if i % rowCount == 0 {
+                            bottomRight = .Corner(.cornerRadius)
+                        }
                     }
                 }
             }
-            
-            
             let corners = ImageCorners(topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
             self.layoutItems.append(LayoutItem(message: message, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, chatInteraction: self.chatInteraction))
             point.x += itemSize.width
@@ -249,7 +249,7 @@ private class MediaCell : Control {
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 arguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: layout.frame.size, intrinsicInsets: NSEdgeInsets())
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
-                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor) //mediaGridMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor)
+                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor) 
             } else {
                 return
             }

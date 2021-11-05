@@ -90,7 +90,7 @@ private final class PeerMediaPhotosArguments {
 
 private struct PeerMediaPhotosState : Equatable {
     static func == (lhs: PeerMediaPhotosState, rhs: PeerMediaPhotosState) -> Bool {
-        return lhs.isLoading == rhs.isLoading && lhs.messages == rhs.messages && lhs.searchState == rhs.searchState && lhs.contentSettings == rhs.contentSettings && lhs.scrollPosition == rhs.scrollPosition && lhs.updateType == rhs.updateType && lhs.side == rhs.side
+        return lhs.isLoading == rhs.isLoading && lhs.messages == rhs.messages && lhs.searchState == rhs.searchState && lhs.contentSettings == rhs.contentSettings && lhs.scrollPosition == rhs.scrollPosition && lhs.updateType == rhs.updateType && lhs.side == rhs.side && lhs.perRowCount == rhs.perRowCount
     }
     
     var isLoading: Bool
@@ -101,7 +101,8 @@ private struct PeerMediaPhotosState : Equatable {
     var updateType: ChatHistoryViewUpdateType?
     var side: TableSavingSide?
     var view: MessageHistoryView?
-    init(isLoading: Bool, messages: [Message], searchState: SearchState, contentSettings: ContentSettings, scrollPosition: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?) {
+    var perRowCount: Int
+    init(isLoading: Bool, messages: [Message], searchState: SearchState, contentSettings: ContentSettings, scrollPosition: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?, perRowCount: Int) {
         self.isLoading = isLoading
         self.messages = messages.reversed().filter { $0.restrictedText(contentSettings) == nil }
         self.searchState = searchState
@@ -109,6 +110,7 @@ private struct PeerMediaPhotosState : Equatable {
         self.updateType = updateType
         self.scrollPosition = scrollPosition
         self.side = side
+        self.perRowCount = perRowCount
     }
 }
 
@@ -183,18 +185,23 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
     
     
     
+    var j: Int = 0
     for entry in entries {
         switch entry {
         case let .line(index, _, items, galleryType, _):
-            let chunks = items.chunks(4)
+            let chunks = items.chunks(state.perRowCount)
             for (i, chunk) in chunks.enumerated() {
                 let message = chunk[0]
                 let stableId = MessageIndex(message)
 
-                let viewType = bestGeneralViewType(chunks, for: i)
+                var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
+                if i == 0 && j == 0 {
+                    viewType = chunks.count > 1 ? .innerItem : .lastItem
+                }
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 1, 0))
                 updated.append(.line(index: index, stableId: stableId, items: chunk, galleryType: galleryType, viewType: updatedViewType))
             }
+            j += 1
         case .date:
             updated.append(entry)
         case .section:
@@ -222,7 +229,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEn
         if let updateType = updateType {
             switch updateType {
             case .Initial:
-                scrollState = .saveVisible(side ?? .upper)
+                scrollState = .none(nil)
             case .Generic(let type):
                 switch type {
                 case .Initial, .FillHole, .UpdateVisible:
@@ -304,6 +311,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     private let location: ValuePromise<ChatHistoryLocation> = ValuePromise(ignoreRepeated: false)
     private var locationValue: ChatHistoryLocation? = nil
     private var isTopHistory: (()->Bool)? = nil
+    private var updatePerRowCount:((Int) -> Void)? = nil
     private func setLocation(_ location: ChatHistoryLocation) -> Void {
         self.location.set(location)
         self.locationValue = location
@@ -316,12 +324,12 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         super.init(context)
     }
     
-    private func perPageCount() -> Int {
+    private var perRowCount: Int {
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
-        let blockWidth = min(600, atomicSize.with { $0.width } - 60)
+        let blockWidth = min(600, atomicSize.with { $0.width })
         while true {
-            let maximum = blockWidth - 7 - 7 - CGFloat(rowCount * 2)
+            let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)
             if perWidth >= 90 {
                 break
@@ -329,9 +337,31 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 rowCount -= 1
             }
         }
-        var pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount)) * 3
-        pageCount -= (pageCount % 4)
+        return rowCount
+    }
+    
+    private func perPageCount() -> Int {
+        var rowCount:Int = 4
+        var perWidth: CGFloat = 0
+        let blockWidth = min(600, atomicSize.with { $0.width })
+        while true {
+            let maximum = blockWidth - CGFloat(rowCount * 2)
+            perWidth = maximum / CGFloat(rowCount)
+            if perWidth >= 90 {
+                break
+            } else {
+                rowCount -= 1
+            }
+        }
+        var pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount)) * 2
+        pageCount -= (pageCount % rowCount)
         return pageCount
+    }
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        
+        updatePerRowCount?(self.perRowCount)
     }
     
     override func viewDidLoad() {
@@ -358,11 +388,19 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         setLocation(.Initial(count: requestCount))
         
         
-        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings, scrollPosition: nil, updateType: nil, side: nil)
-        let state: ValuePromise<PeerMediaPhotosState> = ValuePromise()
+        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings, scrollPosition: nil, updateType: nil, side: nil, perRowCount: self.perPageCount())
+        let state: ValuePromise<PeerMediaPhotosState> = ValuePromise(ignoreRepeated: true)
         let stateValue: Atomic<PeerMediaPhotosState> = Atomic(value: initialState)
         let updateState:((PeerMediaPhotosState)->PeerMediaPhotosState) -> Void = { f in
             state.set(stateValue.modify(f))
+        }
+        
+        updatePerRowCount = { value in
+            updateState { current in
+                var current = current
+                current.perRowCount = value
+                return current
+            }
         }
         
         let supplyment = PeerMediaSupplyment(tableView: genericView)
