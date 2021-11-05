@@ -15,7 +15,7 @@ import Postbox
 
 final class StickerPanelArguments {
     let context: AccountContext
-    let sendMedia:(Media, NSView, Bool)->Void
+    let sendMedia:(Media, NSView, Bool, Bool)->Void
     let showPack:(StickerPackReference)->Void
     let navigate:(ItemCollectionViewEntryIndex)->Void
     let addPack: (StickerPackReference)->Void
@@ -24,7 +24,7 @@ final class StickerPanelArguments {
     let closeInlineFeatured:(Int64)->Void
     let openFeatured:(FeaturedStickerPackItem)->Void
     let mode: EntertainmentViewController.Mode
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, mode: EntertainmentViewController.Mode) {
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, mode: EntertainmentViewController.Mode) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
@@ -897,12 +897,12 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
         let previousPacks:Atomic<[AppearanceWrapperEntry<PackEntry>]> = Atomic(value: [])
 
-        let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view, silent in
+        let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view, silent, schedule in
             guard let `self` = self else { return }
             if let chatInteraction = self.chatInteraction, let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else if let file = media as? TelegramMediaFile {
-                self.interactions?.sendSticker(file, silent)
+                self.interactions?.sendSticker(file, silent, schedule)
             }
         }, showPack: { [weak self] reference in
             if let peerId = self?.chatInteraction?.peerId {

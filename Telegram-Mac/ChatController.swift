@@ -3365,20 +3365,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             showModal(with: LocationModalController(self.chatInteraction), for: context.window)
         }
         
-        chatInteraction.sendAppFile = { [weak self] file, silent, query in
+        chatInteraction.sendAppFile = { [weak self] file, silent, query, schedule in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate, query: query) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
                 }
+                
+                let shouldSchedule: Bool
                 switch strongSelf.mode {
                 case .scheduled:
+                    shouldSchedule = true
+                default:
+                    shouldSchedule = schedule
+                }
+                
+                if shouldSchedule {
                     showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                         if let controller = strongSelf {
                             apply(controller, atDate: date)
                         }
                     }), for: context.window)
-                default:
+                } else {
                     apply(strongSelf, atDate: nil)
                 }
             }
