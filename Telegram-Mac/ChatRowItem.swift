@@ -1934,12 +1934,14 @@ class ChatRowItem: TableRowItem {
             return ChatDateStickItem(initialSize, entry, interaction: interaction, theme: theme)
         case let .bottom(theme):
             return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
+        case let .empty(_, theme):
+            return GeneralRowItem(initialSize, height: theme.bubbled ? 10 : 20, stableId: entry.stableId, backgroundColor: .clear)
         case .commentsHeader:
             return ChatCommentsHeaderItem(initialSize, entry, interaction: interaction, theme: theme)
         case .repliesHeader:
             return RepliesHeaderRowItem(initialSize, entry: entry)
         case let .topThreadInset(height, _, _):
-            return GeneralRowItem(initialSize, height: height, stableId: entry.stableId, backgroundColor: .clear)
+            return GeneralRowItem(initialSize, height: height, stableId: entry.stableId, backgroundColor: .clear, ignoreAtInitialization: true)
         default:
             break
         }

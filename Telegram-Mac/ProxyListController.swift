@@ -212,10 +212,7 @@ func proxyListController(accountManager: AccountManager<TelegramAccountManagerTy
         if let proxy = proxy {
             pushController(addProxyController(accountManager: accountManager, network: network, settings: proxy, type: proxy.connection.type))
         } else {
-            let values: [ValuesSelectorValue<ProxyType>] = [ValuesSelectorValue(localized: L10n.proxySettingsSocks5, value: .socks5), ValuesSelectorValue(localized: L10n.proxySettingsMTP, value: .mtp)]
-            showModal(with: ValuesSelectorModalController(values: values, selected: nil, title: L10n.proxySettingsType, onComplete: { selected in
-                pushController(addProxyController(accountManager: accountManager, network: network, settings: nil, type: selected.value))
-            }), for: mainWindow)
+            pushController(addProxyController(accountManager: accountManager, network: network, settings: nil, type: .socks5))
         }
     }, delete: { proxy in
         updateDisposable.set(updateProxySettingsInteractively(accountManager: accountManager, { current in
@@ -290,8 +287,8 @@ private func addProxyController(accountManager: AccountManager<TelegramAccountMa
 
     let new = settings?.withHexedStringData() ?? ProxyServerSettings(host: "", port: 0, connection: type.defaultConnection)
     
-    let stateValue:Atomic<ProxySettingsState> = Atomic(value: ProxySettingsState(server: new))
-    let statePromise:ValuePromise<ProxySettingsState> = ValuePromise(ProxySettingsState(server: new), ignoreRepeated: false)
+    let stateValue:Atomic<ProxySettingsState> = Atomic(value: ProxySettingsState(server: new, type: settings == nil ? type : nil))
+    let statePromise:ValuePromise<ProxySettingsState> = ValuePromise(ProxySettingsState(server: new, type: settings == nil ? type : nil), ignoreRepeated: false)
     let updateState:(_ f:(ProxySettingsState)->ProxySettingsState)-> Void = { f in
         statePromise.set(stateValue.modify(f))
     }
@@ -307,7 +304,16 @@ private func addProxyController(accountManager: AccountManager<TelegramAccountMa
     weak var _controller: ViewController?
     
     let controller = InputDataController(dataSignal: combineLatest(statePromise.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
-        return addProxySettingsEntries(state: state)
+        return addProxySettingsEntries(state: state, updateType: { type in
+            updateState { current in
+                switch type {
+                case .socks5:
+                    return .init(server: ProxyServerSettings(host: current.server.host, port: current.server.port, connection: type.defaultConnection), type: type)
+                case .mtp:
+                    return .init(server: ProxyServerSettings(host: current.server.host, port: current.server.port, connection: type.defaultConnection), type: type)
+                }
+            }
+        })
     } |> map { InputDataSignalValue(entries: $0) }, title: title, validateData: { data -> InputDataValidation in
             if data[_id_export] != nil {
                 updateState { current in
@@ -392,12 +398,14 @@ private func addProxyController(accountManager: AccountManager<TelegramAccountMa
 
 private struct ProxySettingsState: Equatable {
     let server: ProxyServerSettings
-    init(server: ProxyServerSettings) {
+    let type: ProxyType?
+    init(server: ProxyServerSettings, type: ProxyType?) {
         self.server = server
+        self.type = type
     }
    
     func withUpdatedServer(_ server: ProxyServerSettings) -> ProxySettingsState {
-        return ProxySettingsState(server: server)
+        return ProxySettingsState(server: server, type: self.type)
     }
 }
 
@@ -414,7 +422,11 @@ private let _id_secret = InputDataIdentifier("secret")
 private let _id_pass = InputDataIdentifier("pass")
 private let _id_qrcode = InputDataIdentifier("_id_qrcode")
 
-private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEntry] {
+private let _id_mode_socks5 = InputDataIdentifier("_id_mode_socks5")
+private let _id_mode_mtproto = InputDataIdentifier("_id_mode_mtproto")
+
+
+private func addProxySettingsEntries(state: ProxySettingsState, updateType:@escaping(ProxyType)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -422,6 +434,25 @@ private func addProxySettingsEntries(state: ProxySettingsState) -> [InputDataEnt
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    
+    if let type = state.type {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.proxySettingsType.uppercased()), data: InputDataGeneralTextData(viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_mode_mtproto, data: InputDataGeneralData(name: L10n.proxySettingsMTP, color: theme.colors.text, icon: nil, type: .selectable(type == .mtp), viewType: .firstItem, action: {
+            updateType(.mtp)
+        })))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_mode_socks5, data: InputDataGeneralData(name: L10n.proxySettingsSocks5, color: theme.colors.text, icon: nil, type: .selectable(type == .socks5), viewType: .lastItem, action: {
+            updateType(.socks5)
+        })))
+        index += 1
+
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
     
     
     let server = state.server

@@ -954,7 +954,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     var j:Int = index
                     for i in stride(from: index, to: -1, by: -1) {
                         let item = makeItem(entries[i])
-                        height += item.height
+                        if !item.ignoreAtInitialization {
+                            height += item.height
+                        }
                         firstInsertion.append((index - j, item))
                         j -= 1
                         if initialSize.height + offset < height {
@@ -966,7 +968,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     if !success {
                         for i in (index + 1) ..< entries.count {
                             let item = makeItem(entries[i])
-                            height += item.height
+                            if !item.ignoreAtInitialization {
+                                height += item.height
+                            }
                             firstInsertion.insert((0, item), at: 0)
                             if initialSize.height + offset < height {
                                 success = true
@@ -1014,7 +1018,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 }
                 if let index = index {
                     let item = makeItem(entries[index])
-                    height += item.height
+                    if !item.ignoreAtInitialization {
+                        height += item.height
+                    }
                     firstInsertion.append((index, item))
                     
                     
@@ -1031,12 +1037,18 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         if  ((initialSize.height + offset) / 2) >= lowHeight && !lowSuccess {
                             let item = makeItem(entries[low])
                             lowHeight += item.height
+                            if !item.ignoreAtInitialization {
+                                lowHeight += item.height
+                            }
                             firstInsertion.append((low, item))
                         }
                         
                         if ((initialSize.height + offset) / 2) >= highHeight && !highSuccess  {
                             let item = makeItem(entries[high])
                             highHeight += item.height
+                            if !item.ignoreAtInitialization {
+                                highHeight += item.height
+                            }
                             firstInsertion.append((high, item))
                         }
                         
@@ -1063,28 +1075,33 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         return lhs.0 < rhs.0
                     })
                     
-                    var copy = firstInsertion
+                    let copy = firstInsertion
                     firstInsertion.removeAll()
                     for i in 0 ..< copy.count {
                         firstInsertion.append((i, copy[i].1))
                     }
                 }
-                
-                
                 break
             default:
-
                 for i in 0 ..< entries.count {
                     let item = makeItem(entries[i])
                     firstInsertion.append((i, item))
-                    height += item.height
-                    
+                    if !item.ignoreAtInitialization {
+                        height += item.height
+                    }
                     if initialSize.height < height {
                         break
                     }
                 }
             }
-            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state:state))
+            var scrollState = state
+            for (_, item) in firstInsertion.reversed() {
+                if item.ignoreAtInitialization {
+                    scrollState = .bottom(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: item.height)
+                    break
+                }
+            }
+            subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: scrollState))
              
             
             messagesViewQueue.async {

@@ -33,6 +33,10 @@ open class TableRowItem: NSObject {
         return true
     }
     
+    open var ignoreAtInitialization: Bool {
+        return false
+    }
+    
     open var instantlyResize:Bool {
         return false
     }
