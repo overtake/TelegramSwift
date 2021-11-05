@@ -922,7 +922,11 @@ open class Window: NSWindow {
     }
     
     public func windowImageShot() -> CGImage? {
-        return CGWindowListCreateImage(CGRect.null, [.optionIncludingWindow], CGWindowID(windowNumber), [.boundsIgnoreFraming])
+        if windowNumber >= 0 {
+            return CGWindowListCreateImage(CGRect.null, [.optionIncludingWindow], CGWindowID(windowNumber), [.boundsIgnoreFraming])
+        } else {
+            return nil
+        }
     }
 
 

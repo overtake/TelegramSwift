@@ -856,7 +856,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 groupingKey: nil,
                 groupInfo: nil,
                 threadId: nil,
-                timestamp: lastMessage.timestamp,
+                timestamp: lastMessage.timestamp + nextAdMessageId,
                 flags: message.flags,
                 tags: message.tags,
                 globalTags: message.globalTags,
