@@ -13,6 +13,12 @@
 
 
 ### Using Homebrew
+For latest version of homebrew (>=2.6.0)
+
+```
+brew install --cask telegram
+```
+For older version of homebrew (<2.6.0)
 
 ```
 brew cask install telegram
