@@ -876,17 +876,17 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                 return
             }
         } else {
-            self.previousRange = (0, 0)
-            CATransaction.begin()
-            if !isCleaned {
-                for (i, view) in self.contentViews.enumerated() {
-                    view?.removeFromSuperview()
-                    self.contentViews[i] = nil
-                }
-            }
-            isCleaned = true
-            CATransaction.commit()
-            return
+//            self.previousRange = (0, 0)
+//            CATransaction.begin()
+//            if !isCleaned {
+//                for (i, view) in self.contentViews.enumerated() {
+//                    view?.removeFromSuperview()
+//                    self.contentViews[i] = nil
+//                }
+//            }
+//            isCleaned = true
+//            CATransaction.commit()
+//            return
         }
         
 
