@@ -45,7 +45,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     
     func item(_ arguments: PeerMediaPhotosArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .line(_, _, items, galleryType, viewType):
+        case let .line(_, stableId, items, galleryType, viewType):
             return PeerPhotosMonthItem(initialSize, stableId: stableId, viewType: viewType, context: arguments.context, chatInteraction: arguments.chatInteraction, gallerySupplyment: arguments.gallerySupplyment, items: items, galleryType: galleryType)
         case .date:
             return PeerMediaDateItem(initialSize, index: index, stableId: stableId)
@@ -205,11 +205,38 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
     return updated
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEntry>], right: [AppearanceWrapperEntry<PeerMediaMonthEntry>], animated: Bool, scroll: TableScrollState, scrollPostion: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?, initialSize:NSSize, arguments: PeerMediaPhotosArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEntry>], right: [AppearanceWrapperEntry<PeerMediaMonthEntry>], animated: Bool, scrollPostion: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?, initialSize:NSSize, arguments: PeerMediaPhotosArguments) -> TableUpdateTransition {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments, initialSize: initialSize)
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: .saveVisible(side ?? .upper))
+    
+    var scrollState: TableScrollState = .none(nil)
+    if let scrollPostion = scrollPostion {
+        switch scrollPostion {
+        case .index(_, let position, _, _):
+            scrollState = position
+        default:
+            break
+        }
+    } else {
+        if let updateType = updateType {
+            switch updateType {
+            case .Initial:
+                scrollState = .saveVisible(side ?? .upper)
+            case .Generic(let type):
+                switch type {
+                case .Initial:
+                    scrollState = .saveVisible(side ?? .upper)
+                case .FillHole:
+                    scrollState = .saveVisible(side ?? .upper)
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: scrollState)
 }
 
 
@@ -444,12 +471,11 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         
         
         let animate = animated.swap(true)
-        let scroll:TableScrollState = .saveVisible(.upper)
 
         
         let transition: Signal<(TableUpdateTransition, PeerMediaPhotosState), NoError> = combineLatest(queue: prepareQueue, state.get(), appearanceSignal) |> map { state, appearance in
             let entries = mediaEntires(state: state, arguments: arguments, isExternalSearch: isExternalSearch).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
-            return (prepareTransition(left: previous.swap(entries), right: entries, animated: animate, scroll: scroll, scrollPostion: state.scrollPosition, updateType: state.updateType, side: state.side, initialSize: initialSize.with { $0 }, arguments: arguments), state)
+            return (prepareTransition(left: previous.swap(entries), right: entries, animated: animate, scrollPostion: state.scrollPosition, updateType: state.updateType, side: state.side, initialSize: initialSize.with { $0 }, arguments: arguments), state)
         } |> deliverOnMainQueue
         
         
@@ -513,7 +539,6 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                     guard location != strongSelf.locationValue else {
                         return
                     }
-                    NSLog("load next media: \(messageIndex.id.id)")
                     strongSelf.setLocation(location)
                 }
             }
@@ -571,7 +596,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 let requestCount = strongSelf.perPageCount()
                 
                 DispatchQueue.main.async { [weak strongSelf] in
-                    strongSelf?.location.set(.Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(toIndex), scrollPosition: TableScrollState.top(id: ChatHistoryEntryId.message(message), innerId: nil, animated: true, focus: .init(focus: true), inset: 0), count: requestCount, animated: true))
+                    strongSelf?.location.set(.Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(toIndex), scrollPosition: .top(id: MessageIndex(message), innerId: nil, animated: true, focus: .init(focus: true), inset: 0), count: requestCount, animated: true))
                 }
             }
         })
