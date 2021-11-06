@@ -151,21 +151,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 parameters?.runEmojiScreenEffect(sticker)
                 
             }
-            /*
-             else if let media = media as? TelegramMediaFile, let context = context {
-                 self.test = MediaObjectToAvatar(context: context, object: .webp(media))
-                 _ = self.test?.start().start(next: { result in
-                     switch result {
-                     case let .video(path):
-                         NSLog("\(path)")
-                         var bp = 0
-                         bp += 1
-                     default:
-                         break
-                     }
-                 })
-             }
-             */
         }
     }
     
@@ -229,11 +214,13 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             self.sticker = nil
         }
 
-        let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
 
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
+        
+        
+        let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
         
         let reference: FileMediaReference
         let mediaResource: MediaResourceReference
@@ -273,7 +260,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             return nil
         } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
             if let data = data, let file = file, let `self` = self {
-                let parameters = parameters
                 let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
                 var soundEffect: LottieSoundEffect? = nil
                 if file.isEmojiAnimatedSticker, let emoji = file.stickerText {
