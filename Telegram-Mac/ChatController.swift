@@ -1100,7 +1100,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 if item.ignoreAtInitialization {
                     ignoreHeight += item.height
                 } else {
-                    scrollState = .bottom(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: ignoreHeight)
+                    if ignoreHeight > 0 {
+                        scrollState = .bottom(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: ignoreHeight)
+                    }
                 }
             }
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: scrollState))
