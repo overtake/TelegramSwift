@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Telegram-Mac/Assets.xcassets/AppIcon.appiconset/Default_128x128.png">
+  <img src="Telegram-Mac/Assets.xcassets/AppIcon.appiconset/Logo_128.png">
   <h2 align="center">Telegram for macOS</h2>
 </div>
 
@@ -15,7 +15,7 @@
 ### Using Homebrew
 
 ```
-brew cask install telegram
+brew install --cask telegram
 ```
 
 ### Using `mas-cli`
