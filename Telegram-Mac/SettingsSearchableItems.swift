@@ -303,26 +303,26 @@ private func profileSearchableItems(context: AccountContext, canAddAccount: Bool
     }
     
     var items: [SettingsSearchableItem] = []
-    items.append(SettingsSearchableItem(id: .profile(0), title: L10n.editAccountTitle, alternate: synonyms(L10n.settingsSearchSynonymsEditProfileTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .profile(0), title: strings().editAccountTitle, alternate: synonyms(strings().settingsSearchSynonymsEditProfileTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
         presentProfileSettings(context, present, nil)
     }))
     
-    items.append(SettingsSearchableItem(id: .profile(1), title: L10n.accountSettingsBio, alternate: synonyms(L10n.settingsSearchSynonymsEditProfileTitle), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .profile(1), title: strings().accountSettingsBio, alternate: synonyms(strings().settingsSearchSynonymsEditProfileTitle), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, _, present in
         presentProfileSettings(context, present, .bio)
     }))
-    items.append(SettingsSearchableItem(id: .profile(2), title: L10n.editAccountChangeNumber, alternate: synonyms(L10n.settingsSearchSynonymsEditProfilePhoneNumber), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .profile(2), title: strings().editAccountChangeNumber, alternate: synonyms(strings().settingsSearchSynonymsEditProfilePhoneNumber), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, _, present in
         present(.push, PhoneNumberIntroController(context))
     }))
-    items.append(SettingsSearchableItem(id: .profile(3), title: L10n.editAccountUsername, alternate: synonyms(L10n.settingsSearchSynonymsEditProfileUsername), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .profile(3), title: strings().editAccountUsername, alternate: synonyms(strings().settingsSearchSynonymsEditProfileUsername), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, _, present in
         present(.push, UsernameSettingsViewController(context))
     }))
     if canAddAccount {
-        items.append(SettingsSearchableItem(id: .profile(4), title: L10n.editAccountAddAccount, alternate: synonyms(L10n.settingsSearchSynonymsEditProfileAddAccount), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, _, present in
+        items.append(SettingsSearchableItem(id: .profile(4), title: strings().editAccountAddAccount, alternate: synonyms(strings().settingsSearchSynonymsEditProfileAddAccount), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, _, present in
             let isTestingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
             context.sharedContext.beginNewAuth(testingEnvironment: isTestingEnvironment)
         }))
     }
-    items.append(SettingsSearchableItem(id: .profile(5), title: L10n.editAccountLogout, alternate: synonyms(L10n.settingsSearchSynonymsEditProfileLogout), icon: icon, breadcrumbs: [L10n.editAccountTitle], present: { context, navigationController, present in
+    items.append(SettingsSearchableItem(id: .profile(5), title: strings().editAccountLogout, alternate: synonyms(strings().settingsSearchSynonymsEditProfileLogout), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, navigationController, present in
         showModal(with: LogoutViewController(context: context, f: { controller in
             present(.push, controller)
         }), for: context.window)
@@ -341,16 +341,16 @@ private func stickerSearchableItems(context: AccountContext, archivedStickerPack
     
     var items: [SettingsSearchableItem] = []
     
-    items.append(SettingsSearchableItem(id: .stickers(0), title: L10n.accountSettingsStickers, alternate: synonyms(L10n.settingsSearchSynonymsStickersTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .stickers(0), title: strings().accountSettingsStickers, alternate: synonyms(strings().settingsSearchSynonymsStickersTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
         presentStickerSettings(context, present, nil)
     }))
-    items.append(SettingsSearchableItem(id: .stickers(1), title: L10n.stickersSuggestStickers, alternate: synonyms(L10n.settingsSearchSynonymsStickersSuggestStickers), icon: icon, breadcrumbs: [L10n.accountSettingsStickers], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .stickers(1), title: strings().stickersSuggestStickers, alternate: synonyms(strings().settingsSearchSynonymsStickersSuggestStickers), icon: icon, breadcrumbs: [strings().accountSettingsStickers], present: { context, _, present in
         presentStickerSettings(context, present, .suggestOptions)
     }))
-    items.append(SettingsSearchableItem(id: .stickers(3), title: L10n.installedStickersTranding, alternate: synonyms(L10n.settingsSearchSynonymsStickersFeaturedPacks), icon: icon, breadcrumbs: [L10n.accountSettingsStickers], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .stickers(3), title: strings().installedStickersTranding, alternate: synonyms(strings().settingsSearchSynonymsStickersFeaturedPacks), icon: icon, breadcrumbs: [strings().accountSettingsStickers], present: { context, _, present in
         present(.push, FeaturedStickerPacksController(context))
     }))
-    items.append(SettingsSearchableItem(id: .stickers(4), title: L10n.installedStickersArchived, alternate: synonyms(L10n.settingsSearchSynonymsStickersArchivedPacks), icon: icon, breadcrumbs: [L10n.accountSettingsStickers], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .stickers(4), title: strings().installedStickersArchived, alternate: synonyms(strings().settingsSearchSynonymsStickersArchivedPacks), icon: icon, breadcrumbs: [strings().accountSettingsStickers], present: { context, _, present in
         present(.push, ArchivedStickerPacksController(context, archived: nil, updatedPacks: { _ in }))
     }))
     return items
@@ -364,25 +364,25 @@ private func notificationSearchableItems(context: AccountContext, settings: Glob
     }
     
     return [
-        SettingsSearchableItem(id: .notifications(0), title: L10n.accountSettingsNotifications, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(0), title: strings().accountSettingsNotifications, alternate: synonyms(strings().settingsSearchSynonymsNotificationsTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
             presentNotificationSettings(context, present, nil)
         }),
-        SettingsSearchableItem(id: .notifications(2), title: L10n.notificationSettingsMessagesPreview, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsMessageNotificationsPreview), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsToggleNotificationsHeader], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(2), title: strings().notificationSettingsMessagesPreview, alternate: synonyms(strings().settingsSearchSynonymsNotificationsMessageNotificationsPreview), icon: icon, breadcrumbs: [strings().accountSettingsNotifications, strings().notificationSettingsToggleNotificationsHeader], present: { context, _, present in
             presentNotificationSettings(context, present, .messagePreviews)
         }),
-//        SettingsSearchableItem(id: .notifications(18), title: L10n.notificationSettingsIncludeGroups, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsBadgeIncludeMutedPublicGroups), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsBadgeHeader], present: { context, _, present in
+//        SettingsSearchableItem(id: .notifications(18), title: strings().notificationSettingsIncludeGroups, alternate: synonyms(strings().settingsSearchSynonymsNotificationsBadgeIncludeMutedPublicGroups), icon: icon, breadcrumbs: [strings().accountSettingsNotifications, strings().notificationSettingsBadgeHeader], present: { context, _, present in
 //            presentNotificationSettings(context, present, .includePublicGroups)
 //        }),
-        SettingsSearchableItem(id: .notifications(19), title: L10n.notificationSettingsIncludeChannels, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsBadgeIncludeMutedChannels), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsBadgeHeader], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(19), title: strings().notificationSettingsIncludeChannels, alternate: synonyms(strings().settingsSearchSynonymsNotificationsBadgeIncludeMutedChannels), icon: icon, breadcrumbs: [strings().accountSettingsNotifications, strings().notificationSettingsBadgeHeader], present: { context, _, present in
             presentNotificationSettings(context, present, .includeChannels)
         }),
-        SettingsSearchableItem(id: .notifications(20), title: L10n.notificationSettingsCountUnreadMessages, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsBadgeCountUnreadMessages), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications, L10n.notificationSettingsBadgeHeader], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(20), title: strings().notificationSettingsCountUnreadMessages, alternate: synonyms(strings().settingsSearchSynonymsNotificationsBadgeCountUnreadMessages), icon: icon, breadcrumbs: [strings().accountSettingsNotifications, strings().notificationSettingsBadgeHeader], present: { context, _, present in
             presentNotificationSettings(context, present, .unreadCountCategory)
         }),
-        SettingsSearchableItem(id: .notifications(21), title: L10n.notificationSettingsContactJoined, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsContactJoined), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(21), title: strings().notificationSettingsContactJoined, alternate: synonyms(strings().settingsSearchSynonymsNotificationsContactJoined), icon: icon, breadcrumbs: [strings().accountSettingsNotifications], present: { context, _, present in
             presentNotificationSettings(context, present, .joinedNotifications)
         }),
-        SettingsSearchableItem(id: .notifications(22), title: L10n.notificationSettingsResetNotifications, alternate: synonyms(L10n.settingsSearchSynonymsNotificationsResetAllNotifications), icon: icon, breadcrumbs: [L10n.accountSettingsNotifications], present: { context, _, present in
+        SettingsSearchableItem(id: .notifications(22), title: strings().notificationSettingsResetNotifications, alternate: synonyms(strings().settingsSearchSynonymsNotificationsResetAllNotifications), icon: icon, breadcrumbs: [strings().accountSettingsNotifications], present: { context, _, present in
             presentNotificationSettings(context, present, .reset)
         })
     ]
@@ -439,35 +439,35 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
     
 
     
-    let passcodeTitle: String = L10n.privacySettingsPasscode
+    let passcodeTitle: String = strings().privacySettingsPasscode
 
     
     return [
-        SettingsSearchableItem(id: .privacy(0), title: L10n.accountSettingsPrivacyAndSecurity, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(0), title: strings().accountSettingsPrivacyAndSecurity, alternate: synonyms(strings().settingsSearchSynonymsPrivacyTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
             presentPrivacySettings(context, present, nil)
         }),
-        SettingsSearchableItem(id: .privacy(1), title: L10n.privacySettingsBlockedUsers, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyBlockedUsers), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(1), title: strings().privacySettingsBlockedUsers, alternate: synonyms(strings().settingsSearchSynonymsPrivacyBlockedUsers), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             present(.push, BlockedPeersViewController(context))
         }),
-        SettingsSearchableItem(id: .privacy(2), title: L10n.privacySettingsLastSeen, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyLastSeen), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(2), title: strings().privacySettingsLastSeen, alternate: synonyms(strings().settingsSearchSynonymsPrivacyLastSeen), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentSelectivePrivacySettings(context, .presence, present)
         }),
-        SettingsSearchableItem(id: .privacy(3), title: L10n.privacySettingsProfilePhoto, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyProfilePhoto), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(3), title: strings().privacySettingsProfilePhoto, alternate: synonyms(strings().settingsSearchSynonymsPrivacyProfilePhoto), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentSelectivePrivacySettings(context, .profilePhoto, present)
         }),
-        SettingsSearchableItem(id: .privacy(4), title: L10n.privacySettingsForwards, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyForwards), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(4), title: strings().privacySettingsForwards, alternate: synonyms(strings().settingsSearchSynonymsPrivacyForwards), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentSelectivePrivacySettings(context, .forwards, present)
         }),
-        SettingsSearchableItem(id: .privacy(5), title: L10n.privacySettingsVoiceCalls, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyCalls), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(5), title: strings().privacySettingsVoiceCalls, alternate: synonyms(strings().settingsSearchSynonymsPrivacyCalls), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentSelectivePrivacySettings(context, .voiceCalls, present)
         }),
-        SettingsSearchableItem(id: .privacy(6), title: L10n.privacySettingsGroups, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyGroupsAndChannels), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(6), title: strings().privacySettingsGroups, alternate: synonyms(strings().settingsSearchSynonymsPrivacyGroupsAndChannels), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentSelectivePrivacySettings(context, .groupInvitations, present)
         }),
-        SettingsSearchableItem(id: .privacy(7), title: passcodeTitle, alternate: [], icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(7), title: passcodeTitle, alternate: [], icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             present(.push, PasscodeSettingsViewController(context))
         }),
-        SettingsSearchableItem(id: .privacy(8), title: L10n.privacySettingsTwoStepVerification, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyTwoStepAuth), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, navigation, present in
+        SettingsSearchableItem(id: .privacy(8), title: strings().privacySettingsTwoStepVerification, alternate: synonyms(strings().settingsSearchSynonymsPrivacyTwoStepAuth), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, navigation, present in
             present(.push, twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { controller, root, animated in
                 guard let navigation = navigation else {return}
                 if root {
@@ -480,16 +480,16 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
                 }
             }))
         }),
-        SettingsSearchableItem(id: .privacy(9), title: L10n.privacySettingsActiveSessions, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyAuthSessions), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(9), title: strings().privacySettingsActiveSessions, alternate: synonyms(strings().settingsSearchSynonymsPrivacyAuthSessions), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             present(.push, RecentSessionsController(context))
         }),
-        SettingsSearchableItem(id: .privacy(10), title: L10n.privacySettingsDeleteAccountHeader, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyDeleteAccountIfAwayFor), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(10), title: strings().privacySettingsDeleteAccountHeader, alternate: synonyms(strings().settingsSearchSynonymsPrivacyDeleteAccountIfAwayFor), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentPrivacySettings(context, present, .accountTimeout)
         }),
-        SettingsSearchableItem(id: .privacy(14), title: L10n.suggestFrequentContacts, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyDataTopPeers), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(14), title: strings().suggestFrequentContacts, alternate: synonyms(strings().settingsSearchSynonymsPrivacyDataTopPeers), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentPrivacySettings(context, present, .topPeers)
         }),
-        SettingsSearchableItem(id: .privacy(15), title: L10n.privacyAndSecurityClearCloudDrafts, alternate: synonyms(L10n.settingsSearchSynonymsPrivacyDataDeleteDrafts), icon: icon, breadcrumbs: [L10n.accountSettingsPrivacyAndSecurity], present: { context, _, present in
+        SettingsSearchableItem(id: .privacy(15), title: strings().privacyAndSecurityClearCloudDrafts, alternate: synonyms(strings().settingsSearchSynonymsPrivacyDataDeleteDrafts), icon: icon, breadcrumbs: [strings().accountSettingsPrivacyAndSecurity], present: { context, _, present in
             presentPrivacySettings(context, present, .cloudDraft)
         })
     ]
@@ -503,28 +503,28 @@ private func dataSearchableItems(context: AccountContext) -> [SettingsSearchable
     }
     
     return [
-        SettingsSearchableItem(id: .data(0), title: L10n.accountSettingsDataAndStorage, alternate: synonyms(L10n.settingsSearchSynonymsDataTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+        SettingsSearchableItem(id: .data(0), title: strings().accountSettingsDataAndStorage, alternate: synonyms(strings().settingsSearchSynonymsDataTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
            presentDataSettings(context, present, nil)
         }),
-        SettingsSearchableItem(id: .data(1), title: L10n.dataAndStorageStorageUsage, alternate: synonyms(L10n.settingsSearchSynonymsDataStorageTitle), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage], present: { context, _, present in
+        SettingsSearchableItem(id: .data(1), title: strings().dataAndStorageStorageUsage, alternate: synonyms(strings().settingsSearchSynonymsDataStorageTitle), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage], present: { context, _, present in
             present(.push, StorageUsageController(context))
         }),
-        SettingsSearchableItem(id: .data(2), title: L10n.storageUsageKeepMedia, alternate: synonyms(L10n.settingsSearchSynonymsDataStorageKeepMedia), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage, L10n.dataAndStorageStorageUsage], present: { context, _, present in
+        SettingsSearchableItem(id: .data(2), title: strings().storageUsageKeepMedia, alternate: synonyms(strings().settingsSearchSynonymsDataStorageKeepMedia), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage, strings().dataAndStorageStorageUsage], present: { context, _, present in
             present(.push, StorageUsageController(context))
         }),
-        SettingsSearchableItem(id: .data(3), title: L10n.logoutOptionsClearCacheTitle, alternate: synonyms(L10n.settingsSearchSynonymsDataStorageClearCache), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage, L10n.dataAndStorageStorageUsage], present: { context, _, present in
+        SettingsSearchableItem(id: .data(3), title: strings().logoutOptionsClearCacheTitle, alternate: synonyms(strings().settingsSearchSynonymsDataStorageClearCache), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage, strings().dataAndStorageStorageUsage], present: { context, _, present in
             present(.push, StorageUsageController(context))
         }),
-        SettingsSearchableItem(id: .data(4), title: L10n.dataAndStorageNetworkUsage, alternate: synonyms(L10n.settingsSearchSynonymsDataNetworkUsage), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage], present: { context, _, present in
+        SettingsSearchableItem(id: .data(4), title: strings().dataAndStorageNetworkUsage, alternate: synonyms(strings().settingsSearchSynonymsDataNetworkUsage), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage], present: { context, _, present in
             present(.push, networkUsageStatsController(context: context))
         }),
-        SettingsSearchableItem(id: .data(7), title: L10n.dataAndStorageAutomaticDownloadReset, alternate: synonyms(L10n.settingsSearchSynonymsDataAutoDownloadReset), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage], present: { context, _, present in
+        SettingsSearchableItem(id: .data(7), title: strings().dataAndStorageAutomaticDownloadReset, alternate: synonyms(strings().settingsSearchSynonymsDataAutoDownloadReset), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage], present: { context, _, present in
             presentDataSettings(context, present, .automaticDownloadReset)
         }),
-        SettingsSearchableItem(id: .data(8), title: L10n.dataAndStorageAutoplayGIFs, alternate: synonyms(L10n.settingsSearchSynonymsDataAutoplayGifs), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage, L10n.dataAndStorageAutoplayHeader], present: { context, _, present in
+        SettingsSearchableItem(id: .data(8), title: strings().dataAndStorageAutoplayGIFs, alternate: synonyms(strings().settingsSearchSynonymsDataAutoplayGifs), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage, strings().dataAndStorageAutoplayHeader], present: { context, _, present in
             presentDataSettings(context, present, .autoplayGifs)
         }),
-        SettingsSearchableItem(id: .data(9), title: L10n.dataAndStorageAutoplayVideos, alternate: synonyms(L10n.settingsSearchSynonymsDataAutoplayVideos), icon: icon, breadcrumbs: [L10n.accountSettingsDataAndStorage, L10n.dataAndStorageAutoplayHeader], present: { context, _, present in
+        SettingsSearchableItem(id: .data(9), title: strings().dataAndStorageAutoplayVideos, alternate: synonyms(strings().settingsSearchSynonymsDataAutoplayVideos), icon: icon, breadcrumbs: [strings().accountSettingsDataAndStorage, strings().dataAndStorageAutoplayHeader], present: { context, _, present in
             presentDataSettings(context, present, .autoplayVideos)
         })
     ]
@@ -549,10 +549,10 @@ private func proxySearchableItems(context: AccountContext, servers: [ProxyServer
     }
     
     var items: [SettingsSearchableItem] = []
-    items.append(SettingsSearchableItem(id: .proxy(0), title: L10n.accountSettingsProxy, alternate: synonyms(L10n.settingsSearchSynonymsProxyTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .proxy(0), title: strings().accountSettingsProxy, alternate: synonyms(strings().settingsSearchSynonymsProxyTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
         presentProxySettings(context, present)
     }))
-    items.append(SettingsSearchableItem(id: .proxy(1), title: L10n.proxySettingsAddProxy, alternate: synonyms(L10n.settingsSearchSynonymsProxyAddProxy), icon: icon, breadcrumbs: [L10n.accountSettingsProxy], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .proxy(1), title: strings().proxySettingsAddProxy, alternate: synonyms(strings().settingsSearchSynonymsProxyAddProxy), icon: icon, breadcrumbs: [strings().accountSettingsProxy], present: { context, _, present in
         presentProxySettings(context, present)
     }))
     
@@ -564,7 +564,7 @@ private func proxySearchableItems(context: AccountContext, servers: [ProxyServer
         }
     }
     if hasSocksServers {
-        items.append(SettingsSearchableItem(id: .proxy(2), title: L10n.proxySettingsUseForCalls, alternate: synonyms(L10n.settingsSearchSynonymsProxyUseForCalls), icon: icon, breadcrumbs: [L10n.accountSettingsProxy], present: { context, _, present in
+        items.append(SettingsSearchableItem(id: .proxy(2), title: strings().proxySettingsUseForCalls, alternate: synonyms(strings().settingsSearchSynonymsProxyUseForCalls), icon: icon, breadcrumbs: [strings().accountSettingsProxy], present: { context, _, present in
             presentProxySettings(context, present)
         }))
     }
@@ -579,22 +579,22 @@ private func appearanceSearchableItems(context: AccountContext) -> [SettingsSear
     }
     
     return [
-        SettingsSearchableItem(id: .appearance(0), title: L10n.accountSettingsTheme, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
+        SettingsSearchableItem(id: .appearance(0), title: strings().accountSettingsTheme, alternate: synonyms(strings().settingsSearchSynonymsAppearanceTitle), icon: icon, breadcrumbs: [], present: { context, _, present in
             presentAppearanceSettings(context, present, nil)
         }),
-        SettingsSearchableItem(id: .appearance(1), title: L10n.appearanceSettingsTextSizeHeader, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceTextSize), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
+        SettingsSearchableItem(id: .appearance(1), title: strings().appearanceSettingsTextSizeHeader, alternate: synonyms(strings().settingsSearchSynonymsAppearanceTextSize), icon: icon, breadcrumbs: [strings().accountSettingsTheme], present: { context, _, present in
             presentAppearanceSettings(context, present, .fontSize)
         }),
-        SettingsSearchableItem(id: .appearance(2), title: L10n.generalSettingsChatBackground, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceChatBackground), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
+        SettingsSearchableItem(id: .appearance(2), title: strings().generalSettingsChatBackground, alternate: synonyms(strings().settingsSearchSynonymsAppearanceChatBackground), icon: icon, breadcrumbs: [strings().accountSettingsTheme], present: { context, _, present in
             showModal(with: ChatWallpaperModalController(context), for: context.window)
         }),
-        SettingsSearchableItem(id: .appearance(5), title: L10n.appearanceSettingsAutoNight, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceAutoNightTheme), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
+        SettingsSearchableItem(id: .appearance(5), title: strings().appearanceSettingsAutoNight, alternate: synonyms(strings().settingsSearchSynonymsAppearanceAutoNightTheme), icon: icon, breadcrumbs: [strings().accountSettingsTheme], present: { context, _, present in
             present(.push, AutoNightSettingsController(context: context))
         }),
-        SettingsSearchableItem(id: .appearance(6), title: L10n.appearanceSettingsColorThemeHeader, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceColorTheme), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
+        SettingsSearchableItem(id: .appearance(6), title: strings().appearanceSettingsColorThemeHeader, alternate: synonyms(strings().settingsSearchSynonymsAppearanceColorTheme), icon: icon, breadcrumbs: [strings().accountSettingsTheme], present: { context, _, present in
             presentAppearanceSettings(context, present, .accentColor)
         }),
-        SettingsSearchableItem(id: .appearance(6), title: L10n.appearanceSettingsChatViewHeader, alternate: synonyms(L10n.settingsSearchSynonymsAppearanceChatMode), icon: icon, breadcrumbs: [L10n.accountSettingsTheme], present: { context, _, present in
+        SettingsSearchableItem(id: .appearance(6), title: strings().appearanceSettingsChatViewHeader, alternate: synonyms(strings().settingsSearchSynonymsAppearanceChatMode), icon: icon, breadcrumbs: [strings().accountSettingsTheme], present: { context, _, present in
             presentAppearanceSettings(context, present, .chatMode)
         }),
     ]
@@ -608,12 +608,12 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     }
     
     var items: [SettingsSearchableItem] = []
-    items.append(SettingsSearchableItem(id: .language(0), title: L10n.accountSettingsLanguage, alternate: synonyms(L10n.settingsSearchSynonymsAppLanguage), icon: icon, breadcrumbs: [], present: { context, _, present in
+    items.append(SettingsSearchableItem(id: .language(0), title: strings().accountSettingsLanguage, alternate: synonyms(strings().settingsSearchSynonymsAppLanguage), icon: icon, breadcrumbs: [], present: { context, _, present in
         present(.push, LanguageViewController(context))
     }))
     var index: Int32 = 1
     for localization in localizations {
-        items.append(SettingsSearchableItem(id: .language(index), title: localization.localizedTitle, alternate: [localization.title], icon: icon, breadcrumbs: [L10n.accountSettingsLanguage], present: { context, _, present in
+        items.append(SettingsSearchableItem(id: .language(index), title: localization.localizedTitle, alternate: [localization.title], icon: icon, breadcrumbs: [strings().accountSettingsLanguage], present: { context, _, present in
             applyLocalization(context, present, localization.languageCode)
         }))
         index += 1
@@ -727,8 +727,8 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
             allItems.append(contentsOf: languageItems)
             
 
-            let support = SettingsSearchableItem(id: .support(0), title: L10n.accountSettingsAskQuestion, alternate: synonyms(L10n.settingsSearchSynonymsSupport), icon: .support, breadcrumbs: [], present: { context, _, present in
-                confirm(for: context.window, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
+            let support = SettingsSearchableItem(id: .support(0), title: strings().accountSettingsAskQuestion, alternate: synonyms(strings().settingsSearchSynonymsSupport), icon: .support, breadcrumbs: [], present: { context, _, present in
+                confirm(for: context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
                         _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: {  peerId in
@@ -745,7 +745,7 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
             })
             allItems.append(support)
             
-            let faq = SettingsSearchableItem(id: .faq(0), title: L10n.accountSettingsFAQ, alternate: synonyms(L10n.settingsSearchSynonymsFAQ), icon: .faq, breadcrumbs: [], present: { context, navigationController, present in
+            let faq = SettingsSearchableItem(id: .faq(0), title: strings().accountSettingsFAQ, alternate: synonyms(strings().settingsSearchSynonymsFAQ), icon: .faq, breadcrumbs: [], present: { context, navigationController, present in
                 let _ = (cachedFaqInstantPage(context: context) |> deliverOnMainQueue).start(next: { resolvedUrl in
                     execute(inapp: resolvedUrl)
                 })

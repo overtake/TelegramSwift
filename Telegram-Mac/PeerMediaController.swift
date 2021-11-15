@@ -366,28 +366,28 @@
  private extension PeerMediaCollectionMode {
     var title: String {
         if self == .members {
-            return L10n.peerMediaMembers
+            return strings().peerMediaMembers
         }
         if self == .photoOrVideo {
-            return L10n.peerMediaMedia
+            return strings().peerMediaMedia
         }
         if self == .file {
-            return L10n.peerMediaFiles
+            return strings().peerMediaFiles
         }
         if self == .webpage {
-            return L10n.peerMediaLinks
+            return strings().peerMediaLinks
         }
         if self.tagsValue == .music {
-            return L10n.peerMediaMusic
+            return strings().peerMediaMusic
         }
         if self == .voice {
-            return L10n.peerMediaVoice
+            return strings().peerMediaVoice
         }
         if self == .commonGroups {
-            return L10n.peerMediaCommonGroups
+            return strings().peerMediaCommonGroups
         }
         if self == .gifs {
-            return L10n.peerMediaGifs
+            return strings().peerMediaGifs
         }
         return ""
     }
@@ -635,7 +635,7 @@
          let doneButton = TitleButton()
        //  doneButton.disableActions()
          doneButton.set(font: .medium(.text), for: .Normal)
-         doneButton.set(text: tr(L10n.navigationDone), for: .Normal)
+         doneButton.set(text: strings().navigationDone, for: .Normal)
          
          
          _ = doneButton.sizeToFit()
@@ -662,13 +662,13 @@
          case .Normal:
              if let button = editButton {
                  var items:[SPopoverItem] = []
-                 items.append(SPopoverItem(L10n.chatContextEdit1,  { [weak self] in
+                 items.append(SPopoverItem(strings().chatContextEdit1,  { [weak self] in
                      self?.changeState()
                  }, theme.icons.chatActionEdit))
                  
                  if self.mode == .photoOrVideo {
                      let context = self.context
-                     items.append(SPopoverItem(L10n.peerMediaCalendarTitle, { [weak self] in
+                     items.append(SPopoverItem(strings().peerMediaCalendarTitle, { [weak self] in
                          guard let sparseCalendar = self?.sparseCalendar else {
                              return
                          }
@@ -1038,11 +1038,11 @@
                             let isAdmin = admins.filter({$0.peer.id == messages[0].author?.id}).first != nil
                             if mustManageDeleteMessages(messages, for: peer, account: strongSelf.context.account), let memberId = messages[0].author?.id, !isAdmin {
                                 
-                                let options:[ModalOptionSet] = [ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true),
-                                                                ModalOptionSet(title: L10n.supergroupDeleteRestrictionBanUser, selected: false, editable: true),
-                                                                ModalOptionSet(title: L10n.supergroupDeleteRestrictionReportSpam, selected: false, editable: true),
-                                                                ModalOptionSet(title: L10n.supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true)]
-                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (L10n.modalOK, theme.colors.accent), title: L10n.supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
+                                let options:[ModalOptionSet] = [ModalOptionSet(title: strings().supergroupDeleteRestrictionDeleteMessage, selected: true, editable: true),
+                                                                ModalOptionSet(title: strings().supergroupDeleteRestrictionBanUser, selected: false, editable: true),
+                                                                ModalOptionSet(title: strings().supergroupDeleteRestrictionReportSpam, selected: false, editable: true),
+                                                                ModalOptionSet(title: strings().supergroupDeleteRestrictionDeleteAllMessages, selected: false, editable: true)]
+                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (strings().modalOK, theme.colors.accent), title: strings().supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
                                     
                                     var signals:[Signal<Void, NoError>] = []
                                     if result[0] == .selected {
@@ -1063,9 +1063,9 @@
                                     
                                 }), for: context.window)
                             } else {
-                                let thrid:String? = (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : nil)
+                                let thrid:String? = (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
                                 
-                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? L10n.chatConfirmActionUndonable : L10n.chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? L10n.chatConfirmDeleteForEveryoneCountable(messages.count) : L10n.chatConfirmDeleteMessages1Countable(messages.count) : nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
                                     
                                     guard let `strongSelf` = strongSelf else {
                                         return
@@ -1279,7 +1279,7 @@
     }
     
     private func searchGroupUsers() {
-        _ = (selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }

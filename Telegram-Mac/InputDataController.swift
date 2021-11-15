@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import HackUtils
 import SwiftSignalKit
 
 
@@ -414,7 +414,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: L10n.navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
+        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: strings().navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
     }
     
     private var doneView: TextButtonBarView {

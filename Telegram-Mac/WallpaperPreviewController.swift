@@ -180,9 +180,9 @@ private final class WallpaperPreviewView: View {
     private let tableView: TableView
     private let documentView: NSView
     
-    let blurCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: L10n.wallpaperPreviewBlurred)
-    let patternCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: L10n.chatWPPattern)
-    let colorCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: L10n.chatWPColor)
+    let blurCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().wallpaperPreviewBlurred)
+    let patternCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().chatWPPattern)
+    let colorCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().chatWPColor)
     
     private let rotateColors: WallpaperPlayRotateView = WallpaperPlayRotateView(frame: NSMakeRect(0, 0, 40, 40))
     
@@ -424,8 +424,8 @@ private final class WallpaperPreviewView: View {
         }
         
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
 
         let firstText: String
@@ -433,18 +433,18 @@ private final class WallpaperPreviewView: View {
         switch wallpaper {
         case let .file(_, _, _, isPattern):
             if isPattern {
-                firstText = L10n.chatWPColorFirstMessage
-                secondText = L10n.chatWPColorSecondMessage
+                firstText = strings().chatWPColorFirstMessage
+                secondText = strings().chatWPColorSecondMessage
             } else {
-                firstText = L10n.chatWPFirstMessage
-                secondText = L10n.chatWPSecondMessage
+                firstText = strings().chatWPFirstMessage
+                secondText = strings().chatWPSecondMessage
             }
         case .image:
-            firstText = L10n.chatWPFirstMessage
-            secondText = L10n.chatWPSecondMessage
+            firstText = strings().chatWPFirstMessage
+            secondText = strings().chatWPSecondMessage
         default:
-            firstText = L10n.chatWPColorFirstMessage
-            secondText = L10n.chatWPColorSecondMessage
+            firstText = strings().chatWPColorFirstMessage
+            secondText = strings().chatWPColorSecondMessage
         }
 
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
@@ -1149,7 +1149,7 @@ class WallpaperPreviewController: ModalViewController {
         
         return (left: ModalHeaderData.init(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }), center: ModalHeaderData(title: L10n.wallpaperPreviewHeader), right: !hasShare ? nil : ModalHeaderData(image: theme.icons.modalShare, handler: { [weak self] in
+        }), center: ModalHeaderData(title: strings().wallpaperPreviewHeader), right: !hasShare ? nil : ModalHeaderData(image: theme.icons.modalShare, handler: { [weak self] in
             self?.share()
         }))
     }
@@ -1290,7 +1290,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.wallpaperPreviewApply, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().wallpaperPreviewApply, accept: { [weak self] in
             self?.applyAndClose()
         }, drawBorder: true, height: 50, singleButton: true)
     }

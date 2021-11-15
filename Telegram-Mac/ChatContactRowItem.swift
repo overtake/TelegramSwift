@@ -173,7 +173,7 @@ class ChatContactRowView : ChatRowView {
 //                    let controller = VCardModalController(item.account, vCard: vCard, contact: item.contact)
 //                    showModal(with: controller, for: mainWindow)
 //                }, for: .Click)
-                actionButton?.set(text: L10n.chatViewContact, for: .Normal)
+                actionButton?.set(text: strings().chatViewContact, for: .Normal)
                 actionButton?.layer?.borderColor = item.appearance.activity.cgColor
                 actionButton?.set(color: item.appearance.activity, for: .Normal)
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)

@@ -8,7 +8,7 @@
 
 import Foundation
 import TGUIKit
-
+import CalendarUtils
 
 
 private final class DateSelectorView : View {
@@ -28,7 +28,7 @@ private final class DateSelectorView : View {
         containerView.addSubview(atView)
         addSubview(containerView)
         
-        let atLayout = TextViewLayout(.initialize(string: L10n.scheduleControllerAt, color: GroupCallTheme.customTheme.textColor, font: .normal(.title)), alwaysStaticItems: true)
+        let atLayout = TextViewLayout(.initialize(string: strings().scheduleControllerAt, color: GroupCallTheme.customTheme.textColor, font: .normal(.title)), alwaysStaticItems: true)
         atLayout.measure(width: .greatestFiniteMagnitude)
         atView.update(atLayout)
         

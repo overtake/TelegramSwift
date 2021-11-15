@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
+
 private final class InstantViewArguments {
     let context: AccountContext
     let share:()->Void

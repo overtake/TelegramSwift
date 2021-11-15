@@ -54,7 +54,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         
         let attributedString = NSMutableAttributedString()
         
-        _ = attributedString.append(string: L10n.chatListFilterHeader, color: theme.colors.listGrayText, font: .normal(.text))
+        _ = attributedString.append(string: strings().chatListFilterHeader, color: theme.colors.listGrayText, font: .normal(.text))
         
         return ChatListFiltersHeaderItem(initialSize, context: arguments.context, stableId: stableId, sticker: LocalAnimatedSticker.folder, text: attributedString)
     }))
@@ -62,7 +62,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterListHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterListHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
     for (filter, count) in filtersWithCounts {
@@ -77,7 +77,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
             arguments.openPreset(filter, false)
         }, menuItems: {
-            return [ContextMenuItem(L10n.chatListFilterListRemove, handler: {
+            return [ContextMenuItem(strings().chatListFilterListRemove, handler: {
                 arguments.removePreset(filter)
             })]
         })))
@@ -85,12 +85,12 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     }
     
     if filtersWithCounts.count < 10 {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: L10n.chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: filtersWithCounts.isEmpty ? .singleItem : .lastItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: strings().chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: filtersWithCounts.isEmpty ? .singleItem : .lastItem, action: {
             arguments.openPreset(ChatListFilter.new(excludeIds: filtersWithCounts.map { $0.0.id }), true)
         })))
         index += 1
     }
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterListDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterListDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
     
    
@@ -107,7 +107,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterRecommendedHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterRecommendedHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
             index += 1
             
             var suggeted_index:Int32 = 0
@@ -131,7 +131,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     
     if !filtersWithCounts.isEmpty {
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterTabBarHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterTabBarHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("sidebar"), equatable: InputDataEquatable(sidebar), comparable: nil, item: { initialSize, stableId in
@@ -141,7 +141,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterTabBarDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterTabBarDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -157,7 +157,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     let arguments = ChatListPresetArguments(context: context, openPreset: { filter, isNew in
         context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter, isNew: isNew))
     }, removePreset: { filter in
-        confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
+        confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
             _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                 var filters = filters
                 filters.removeAll(where: { $0.id == filter.id })
@@ -220,7 +220,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     }
     
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.chatListFilterListTitle, removeAfterDisappear: false, hasDone: false, identifier: "filters")
+    let controller = InputDataController(dataSignal: dataSignal, title: strings().chatListFilterListTitle, removeAfterDisappear: false, hasDone: false, identifier: "filters")
     
     
     controller.updateDatas = { data in

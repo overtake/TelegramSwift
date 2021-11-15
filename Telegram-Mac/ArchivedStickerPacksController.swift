@@ -110,7 +110,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case .loading(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: L10n.archivedStickersEmpty)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().archivedStickersEmpty)
         }
     }
 }
@@ -165,7 +165,7 @@ private func archivedStickerPacksControllerEntries(state: ArchivedStickerPacksCo
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
             
-            entries.append(.info(sectionId: sectionId, L10n.archivedStickersDescription, .textTopItem))
+            entries.append(.info(sectionId: sectionId, strings().archivedStickersDescription, .textTopItem))
                         
             var installedIds = Set<ItemCollectionId>()
             if let view = installedView.views[.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionIdsView, let ids = view.idsByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
@@ -251,7 +251,7 @@ class ArchivedStickerPacksController: TableViewController {
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
         }, removePack: { info in
-            confirm(for: context.window, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
+            confirm(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
                 var remove = false
                 updateState { state in
                     var removingPackIds = state.removingPackIds

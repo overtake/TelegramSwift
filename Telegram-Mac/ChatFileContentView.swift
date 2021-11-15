@@ -85,7 +85,7 @@ class ChatFileContentView: ChatMediaContentView {
                 showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters, type: media.isVideoFile ? .alone : .history)
             } else {
                 if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
-                    confirm(for: context.window, information: L10n.chatFileQuickLookSvg, successHandler: { _ in
+                    confirm(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
                         QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                     })
                 } else {
@@ -122,12 +122,12 @@ class ChatFileContentView: ChatMediaContentView {
                 switch status {
                 case .Fetching:
                     if parent != nil {
-                        _ = attr.append(string: progress == 0 ? L10n.messageStatusArchivePreparing : L10n.messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
+                        _ = attr.append(string: progress == 0 ? strings().messageStatusArchivePreparing : strings().messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
                         let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                         layout.measure()
                         return layout
                     } else {
-                        _ = attr.append(string: L10n.messageStatusArchived, color: presentation.grayText, font: .normal(.text))
+                        _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
                         let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                         layout.measure()
                         return layout
@@ -137,13 +137,13 @@ class ChatFileContentView: ChatMediaContentView {
                     break
                 }
             case .none, .waiting:
-                _ = attr.append(string: L10n.messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
+                _ = attr.append(string: strings().messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
                 let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                 layout.measure()
                 return layout
             case .done:
                 if parent == nil {
-                    _ = attr.append(string: L10n.messageStatusArchived, color: presentation.grayText, font: .normal(.text))
+                    _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
                     let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                     layout.measure()
                     return layout
@@ -153,9 +153,9 @@ class ChatFileContentView: ChatMediaContentView {
                     let errorText: String
                     switch error {
                     case .sizeLimit:
-                        errorText = L10n.messageStatusArchiveFailedSizeLimit
+                        errorText = strings().messageStatusArchiveFailedSizeLimit
                     default:
-                        errorText = L10n.messageStatusArchiveFailed
+                        errorText = strings().messageStatusArchiveFailed
                     }
                     _ = attr.append(string: errorText, color: theme.colors.redUI, font: .normal(.text))
                     let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
@@ -168,7 +168,7 @@ class ChatFileContentView: ChatMediaContentView {
         switch status {
         case let .Fetching(_, progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                let _ = attr.append(string: tr(L10n.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: presentation.grayText, font: .normal(.text))
+                let _ = attr.append(string: strings().messagesFileStateFetchingOut1(Int(progress * 100.0)), color: presentation.grayText, font: .normal(.text))
             } else {
                 let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress), removeToken: false)
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
@@ -180,7 +180,7 @@ class ChatFileContentView: ChatMediaContentView {
             
         case .Local:
             if let _ = archiveStatus {
-                let size = L10n.messageStatusArchived
+                let size = strings().messageStatusArchived
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
                 let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                 layout.measure()

@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import TGModernGrowingTextView
 
 protocol InputDataRowDataValue {
     var value: InputDataValue { get }

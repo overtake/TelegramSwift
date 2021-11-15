@@ -10,9 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import Localization
 import Postbox
-
+import TGModernGrowingTextView
 
 
 fileprivate class ShareButton : Control {
@@ -23,7 +23,7 @@ fileprivate class ShareButton : Control {
         super.init(frame: frameRect)
         addSubview(badgeView)
         addSubview(shareText)
-        let layout = TextViewLayout(.initialize(string: tr(L10n.modalShare).uppercased(), color: .white, font: .normal(.header)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: strings().modalShare.uppercased(), color: .white, font: .normal(.header)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         shareText.update(layout)
         setFrameSize(NSMakeSize(22 + shareText.frame.width + 47, 41))
@@ -144,7 +144,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         textView.max_height = 120
         
         textView.setFrameSize(NSMakeSize(0, 34))
-        textView.setPlaceholderAttributedString(.initialize(string:  tr(L10n.previewSenderCommentPlaceholder), color: theme.colors.grayText, font: .normal(.text)), update: false)
+        textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
 
         
         textContainerView.addSubview(textView)
@@ -304,7 +304,7 @@ class ShareObject {
         return true
     }
     var interactionOk: String {
-        return L10n.modalOK
+        return strings().modalOK
     }
     
     var searchPlaceholderKey: String {
@@ -551,7 +551,7 @@ final class ForwardMessagesObject : ShareObject {
                 if let peer = peer, peer.isChannel {
                     for message in messages {
                         if message.isPublicPoll {
-                            return .fail(L10n.pollForwardError)
+                            return .fail(strings().pollForwardError)
                         }
                     }
                 }
@@ -704,11 +704,11 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         switch entry {
         case let .plain(peer, _, presence, drawSeparator):
             let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
-            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: peer.id == account.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? (multipleSelection ? nil : L10n.forwardToSavedMessages) : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
+            return  ShortPeerRowItem(initialSize, peer: peer, account:account, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: peer.id == account.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == account.peerId ? (multipleSelection ? nil : strings().forwardToSavedMessages) : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
                selectInteraction.action(peer.id)
             })
         case let .secretChat(peer, peerId, _, _, drawSeparator):
-            return  ShortPeerRowItem(initialSize, peer: peer, account :account, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: L10n.composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
+            return  ShortPeerRowItem(initialSize, peer: peer, account :account, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == account.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multipleSelection ? .selectable(selectInteraction) : .plain, action: {
                 selectInteraction.action(peerId)
             })
         case let .separator(text, _):
@@ -771,7 +771,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             }
             
             let tokens:[SearchToken] = added.map { item in
-                let title = item == share.context.account.peerId ? L10n.peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? L10n.peerDeletedUser
+                let title = item == share.context.account.peerId ? strings().peerSavedMessages : value.peers[item]?.compactDisplayTitle ?? strings().peerDeletedUser
                 return SearchToken(name: title, uniqueId: item.toInt64())
             }
             genericView.tokenizedView.addTokens(tokens: tokens, animated: animated)
@@ -1103,10 +1103,10 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }
         
         genericView.share.set(handler: { [weak self] control in
-            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(L10n.modalCopyLink, {
+            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(strings().modalCopyLink, {
                 if share.hasLink {
                     share.shareLink()
-                    self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied), for: 2.0, animated: true)
+                    self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied), for: 2.0, animated: true)
                 }
             })]), edge: .maxY, inset: NSMakePoint(-100,  -40))
         }, for: .Click)
@@ -1185,7 +1185,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         contains[user.id] = user.id
                         
                         if !top.isEmpty {
-                            entries.insert(.separator(L10n.searchSeparatorPopular.uppercased(), chatListIndex()), at: 0)
+                            entries.insert(.separator(strings().searchSeparatorPopular.uppercased(), chatListIndex()), at: 0)
                             
                             var count: Int32 = 0
                             for peer in top {
@@ -1204,7 +1204,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         if !recent.isEmpty {
                             
-                            entries.insert(.separator(L10n.searchSeparatorRecent.uppercased(), chatListIndex()), at: 0)
+                            entries.insert(.separator(strings().searchSeparatorRecent.uppercased(), chatListIndex()), at: 0)
                             
                             for rendered in recent {
                                 if let peer = rendered.peer.chatMainPeer {
@@ -1356,7 +1356,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var entries:[SelectablePeersEntry] = []
                         var contains:[PeerId:PeerId] = [:]
                         var i:Int32 = Int32.max
-                        if L10n.peerSavedMessages.lowercased().hasPrefix(query.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.request.lowercased()) || values.0.contains(where: {$0.peerId == context.peerId}), !share.excludePeerIds.contains(values.2.id) {
+                        if strings().peerSavedMessages.lowercased().hasPrefix(query.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.request.lowercased()) || values.0.contains(where: {$0.peerId == context.peerId}), !share.excludePeerIds.contains(values.2.id) {
                             let index = MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: i), timestamp: i)
                             entries.append(.plain(values.2, ChatListIndex(pinningIndex: 0, messageIndex: index), nil, true))
                             i -= 1
@@ -1527,10 +1527,10 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                                 }
                             }
                             if !comment.isEmpty {
-                                failed.append(ShareFailedReason(peerId: peer.id, reason: L10n.slowModeForwardCommentError, target: .comment))
+                                failed.append(ShareFailedReason(peerId: peer.id, reason: strings().slowModeForwardCommentError, target: .comment))
                             }
                             if unsentIds.contains(peer.id) {
-                                failed.append(ShareFailedReason(peerId: peer.id, reason: L10n.slowModeMultipleError, target: .token))
+                                failed.append(ShareFailedReason(peerId: peer.id, reason: strings().slowModeMultipleError, target: .token))
                             }
                         }
                         

@@ -165,7 +165,7 @@ final class ChatInteraction : InterfaceObserver  {
 
     var runEmojiScreenEffect:(String, MessageId, Bool, Bool)->Void = { _, _, _, _ in }
     
-    
+    var toggleSendAs: (PeerId)->Void = { _ in }
     var getCachedData:()->CachedPeerData? = { return nil }
     
     var showDeleterSetup:(Control)->Void = { _ in }
@@ -210,6 +210,10 @@ final class ChatInteraction : InterfaceObserver  {
         }
 
         return false
+    }
+    
+    var peerIsAccountPeer: Bool {
+        return self.presentation.currentSendAsPeerId == nil || self.presentation.currentSendAsPeerId == self.context.peerId
     }
 
     /*
@@ -364,7 +368,7 @@ final class ChatInteraction : InterfaceObserver  {
                     return
                 default:
                     if oldState.inputState.attributedString != editState.inputState.attributedString, !editState.inputState.attributedString.string.isEmpty {
-                        confirm(for: context.window, information: L10n.chatEditCancelText, okTitle: L10n.alertDiscard, cancelTitle: L10n.alertNO, successHandler: { [weak self] _ in
+                        confirm(for: context.window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
                             self?.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
                         })
                     } else {
@@ -487,7 +491,7 @@ final class ChatInteraction : InterfaceObserver  {
                     if let data = data {
                         joinCall(data)
                     } else {
-                        alert(for: context.window, info: L10n.chatVoiceChatJoinLinkUnavailable)
+                        alert(for: context.window, info: strings().chatVoiceChatJoinLinkUnavailable)
                     }
                 })
             }

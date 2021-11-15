@@ -578,9 +578,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if let rawRank = rawRank {
             switch rawRank {
             case .admin:
-                rank = L10n.chatAdminBadge
+                rank = strings().chatAdminBadge
             case .owner:
-                rank = L10n.chatOwnerBadge
+                rank = strings().chatOwnerBadge
             case let .custom(string):
                 rank = string
             }

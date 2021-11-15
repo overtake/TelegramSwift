@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import DateUtils
 import SwiftSignalKit
 
 
@@ -374,7 +374,7 @@ class ChatListRowItem: TableRowItem {
         self.filter = filter
         self.hasFailed = hasFailed
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: L10n.chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
+        let _ = titleText.append(string: strings().chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         
@@ -551,7 +551,7 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: peer?.id == context.peerId ? L10n.peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
+        let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
 
         self.titleText = titleText
@@ -564,7 +564,7 @@ class ChatListRowItem: TableRowItem {
             case let .psa(type, _):
                 range = sponsored.append(string: localizedPsa("psa.chatlist", type: type), color: theme.colors.grayText, font: .normal(.short))
             case .proxy:
-                range = sponsored.append(string: L10n.chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
+                range = sponsored.append(string: strings().chatListSponsoredChannel, color: theme.colors.grayText, font: .normal(.short))
             }
             sponsored.setSelected(color: theme.colors.underSelectedColor, range: range)
             self.date = sponsored
@@ -596,7 +596,7 @@ class ChatListRowItem: TableRowItem {
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
                 if !(message.media.first is TelegramMediaAction) {
-                    let peerText: String = (author.id == context.account.peerId ? "\(L10n.chatListYou)" : author.displayTitle)
+                    let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
@@ -921,16 +921,16 @@ class ChatListRowItem: TableRowItem {
         } else {
             var options:[ModalOptionSet] = []
             
-            options.append(ModalOptionSet(title: L10n.chatListMute1Hour, selected: false, editable: true))
-            options.append(ModalOptionSet(title: L10n.chatListMute4Hours, selected: false, editable: true))
-            options.append(ModalOptionSet(title: L10n.chatListMute8Hours, selected: false, editable: true))
-            options.append(ModalOptionSet(title: L10n.chatListMute1Day, selected: false, editable: true))
-            options.append(ModalOptionSet(title: L10n.chatListMute3Days, selected: false, editable: true))
-            options.append(ModalOptionSet(title: L10n.chatListMuteForever, selected: true, editable: true))
+            options.append(ModalOptionSet(title: strings().chatListMute1Hour, selected: false, editable: true))
+            options.append(ModalOptionSet(title: strings().chatListMute4Hours, selected: false, editable: true))
+            options.append(ModalOptionSet(title: strings().chatListMute8Hours, selected: false, editable: true))
+            options.append(ModalOptionSet(title: strings().chatListMute1Day, selected: false, editable: true))
+            options.append(ModalOptionSet(title: strings().chatListMute3Days, selected: false, editable: true))
+            options.append(ModalOptionSet(title: strings().chatListMuteForever, selected: true, editable: true))
             
             let intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
             
-            showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (L10n.chatInputMute, theme.colors.accent), title: L10n.peerInfoNotifications, result: { result in
+            showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (strings().chatInputMute, theme.colors.accent), title: strings().peerInfoNotifications, result: { result in
                 
                 for (i, option) in result.enumerated() {
                     inner: switch option {
@@ -964,7 +964,7 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    confirm(for: context.window, information: L10n.chatListContextPinErrorNew2, okTitle: L10n.alertOK, cancelTitle: "", thridTitle: L10n.chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                    confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                         
                         switch result {
                         case .thrid:
@@ -1042,7 +1042,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             let leaveGroup = {
-                modernConfirm(for: context.window, account: context.account, peerId: peerId, information: L10n.confirmLeaveGroup, okTitle: L10n.peerInfoConfirmLeave, successHandler: { _ in
+                modernConfirm(for: context.window, account: context.account, peerId: peerId, information: strings().confirmLeaveGroup, okTitle: strings().peerInfoConfirmLeave, successHandler: { _ in
                     _ = leftGroup(account: context.account, peerId: peerId).start()
                 })
             }
@@ -1052,78 +1052,78 @@ class ChatListRowItem: TableRowItem {
             }
             
             if !isAd && groupId == .root {
-                items.append(ContextMenuItem(!isPinned ? tr(L10n.chatListContextPin) : tr(L10n.chatListContextUnpin), handler: togglePin))
+                items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin))
             }
             
             if groupId == .root, (canArchive || associatedGroupId != .root), filter == nil {
-                items.append(ContextMenuItem(associatedGroupId == .root ? L10n.chatListSwipingArchive : L10n.chatListSwipingUnarchive, handler: toggleArchive))
+                items.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive))
             }
             
             if context.peerId != peer.id, !isAd {
-                items.append(ContextMenuItem(isMuted ? tr(L10n.chatListContextUnmute) : tr(L10n.chatListContextMute), handler: toggleMute))
+                items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute))
             }
             
             if mainPeer is TelegramUser {
                 if mainPeer.canCall && mainPeer.id != context.peerId {
-                    items.append(ContextMenuItem(tr(L10n.chatListContextCall), handler: call))
+                    items.append(ContextMenuItem(strings().chatListContextCall, handler: call))
                 }
-                items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: {
+                items.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                     clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                 }))
-                items.append(ContextMenuItem(L10n.chatListContextDeleteChat, handler: deleteChat))
+                items.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat))
             }
             
             if !isSecret {
                 if markAsUnread {
-                    items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsUnread), handler: {
+                    items.append(ContextMenuItem(strings().chatListContextMaskAsUnread, handler: {
                         _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
                         
                     }))
                     
                 } else if badgeNode != nil || mentionsCount != nil || isUnreadMarked {
-                    items.append(ContextMenuItem(tr(L10n.chatListContextMaskAsRead), handler: {
+                    items.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
                         _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
                     }))
                 }
             }
             
             if isAd {
-                items.append(ContextMenuItem(tr(L10n.chatListContextHidePromo), handler: {
+                items.append(ContextMenuItem(strings().chatListContextHidePromo, handler: {
                     context.sharedContext.bindings.mainController().chatList.hidePromoItem(peerId)
                 }))
             }
            
 
             if let peer = peer as? TelegramGroup, !isAd {
-                items.append(ContextMenuItem(tr(L10n.chatListContextClearHistory), handler: {
+                items.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                     clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                 }))
                 switch peer.membership {
                 case .Member:
-                    items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: leaveGroup))
+                    items.append(ContextMenuItem(strings().chatListContextLeaveGroup, handler: leaveGroup))
                 case .Left:
-                    items.append(ContextMenuItem(L10n.chatListContextReturnGroup, handler: rGroup))
+                    items.append(ContextMenuItem(strings().chatListContextReturnGroup, handler: rGroup))
                 default:
                     break
                 }
-                items.append(ContextMenuItem(L10n.chatListContextDeleteAndExit, handler: deleteChat))
+                items.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat))
             } else if let peer = peer as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
                 
                 if case .broadcast = peer.info {
-                     items.append(ContextMenuItem(L10n.chatListContextLeaveChannel, handler: deleteChat))
+                     items.append(ContextMenuItem(strings().chatListContextLeaveChannel, handler: deleteChat))
                 } else if !isAd {
                     if peer.addressName == nil {
-                        items.append(ContextMenuItem(L10n.chatListContextClearHistory, handler: {
+                        items.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                             clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                         }))
                     }
-                    items.append(ContextMenuItem(L10n.chatListContextLeaveGroup, handler: deleteChat))
+                    items.append(ContextMenuItem(strings().chatListContextLeaveGroup, handler: deleteChat))
                 }
             }
             
         } else {
             if !isAd, groupId == .root {
-                items.append(ContextMenuItem(!isPinned ? L10n.chatListContextPin : L10n.chatListContextUnpin, handler: {
+                items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
                     ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
                 }))
             }
@@ -1132,11 +1132,11 @@ class ChatListRowItem: TableRowItem {
         if groupId != .root, context.sharedContext.layout != .minimisize, let archiveStatus = archiveStatus {
             switch archiveStatus {
             case .collapsed:
-                items.append(ContextMenuItem(L10n.chatListRevealActionExpand , handler: {
+                items.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
                     ChatListRowItem.collapseOrExpandArchive(context: context)
                 }))
             default:
-                items.append(ContextMenuItem(L10n.chatListRevealActionCollapse, handler: {
+                items.append(ContextMenuItem(strings().chatListRevealActionCollapse, handler: {
                     ChatListRowItem.collapseOrExpandArchive(context: context)
                 }))
             }
@@ -1177,7 +1177,7 @@ class ChatListRowItem: TableRowItem {
                                     return list
                                 }).start()
                             } else {
-                                alert(for: context.window, info: L10n.chatListFilterIncludeLimitReached)
+                                alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
                             }
                            
                         }, state: item.data.includePeers.peers.contains(peerId) ? NSControl.StateValue.on : nil)
@@ -1188,7 +1188,7 @@ class ChatListRowItem: TableRowItem {
                 
                 if !submenu.isEmpty {
                     items.append(ContextSeparatorItem())
-                    let item = ContextMenuItem(L10n.chatListFilterAddToFolder)
+                    let item = ContextMenuItem(strings().chatListFilterAddToFolder)
                     let menu = NSMenu()
                     for item in submenu {
                         menu.addItem(item)

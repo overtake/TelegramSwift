@@ -9,10 +9,10 @@
 import Cocoa
 import Postbox
 import TelegramCore
-
+import FastBlur
 import SwiftSignalKit
 import TGUIKit
-
+import FastBlur
 
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 

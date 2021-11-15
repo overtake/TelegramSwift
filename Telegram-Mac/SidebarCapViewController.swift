@@ -42,11 +42,11 @@ class SidebarCapView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         text.textColor = theme.colors.grayText
-        text.stringValue = restrictedByPeer ? L10n.sidebarPeerRestricted : L10n.sidebarAvalability
+        text.stringValue = restrictedByPeer ? strings().sidebarPeerRestricted : strings().sidebarAvalability
         text.setFrameSize(text.sizeThatFits(NSMakeSize(300, 100)))
         self.background = theme.colors.background.withAlphaComponent(0.97)
         close.set(color: theme.colors.accent, for: .Normal)
-        close.set(text: tr(L10n.sidebarHide), for: .Normal)
+        close.set(text: strings().sidebarHide, for: .Normal)
         _ = close.sizeToFit()
         needsLayout = true
     }

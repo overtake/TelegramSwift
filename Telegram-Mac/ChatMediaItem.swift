@@ -445,7 +445,7 @@ class ChatMediaItem: ChatRowItem {
             
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
-                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
             for textLayout in self.captionLayouts.map ({ $0.layout }) {
                 textLayout.interactions = interactions
@@ -519,7 +519,7 @@ class ChatMediaItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayouts.first(where: { $0.id == self?.lastMessage?.stableId }) {
                 let text = captionLayout.layout.attributedString.string
-                items.insert(ContextMenuItem(L10n.textCopyText, handler: {
+                items.insert(ContextMenuItem(strings().textCopyText, handler: {
                     copyToClipboard(text)
                 }), at: min(items.count, 1))
                 
@@ -535,13 +535,13 @@ class ChatMediaItem: ChatRowItem {
                             }
                             
                             for i in 0 ..< items.count {
-                                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
+                                if items[i].title == strings().messageContextCopyMessageLink1 {
                                     items.remove(at: i)
                                     break
                                 }
                             }
                             
-                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
+                            items.insert(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
                                 copyToClipboard(text)
                             }), at: 1)
                         }
@@ -550,7 +550,7 @@ class ChatMediaItem: ChatRowItem {
                 
             }
             if let media = self?.media as? TelegramMediaFile, media.isMusic, let name = media.fileName {
-                items.insert(ContextMenuItem(L10n.messageTextCopyMusicTitle, handler: {
+                items.insert(ContextMenuItem(strings().messageTextCopyMusicTitle, handler: {
                     copyToClipboard(name)
                 }), at: 1)
             }

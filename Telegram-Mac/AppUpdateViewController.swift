@@ -167,7 +167,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     
     switch state.loadingState {
     case let .failed(error):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: strings().appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.localizedDescription), data: InputDataGeneralTextData(color: theme.colors.redUI, detectBold: false, viewType: .textBottomItem)))
@@ -175,32 +175,32 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
         
     case let .hasUpdate(item):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_download_update, data: InputDataGeneralData(name: L10n.appUpdateDownloadUpdate, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_download_update, data: InputDataGeneralData(name: strings().appUpdateDownloadUpdate, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
     case .initializing:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_initializing, data: InputDataGeneralData(name: L10n.appUpdateRetrievingInfo, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_initializing, data: InputDataGeneralData(name: strings().appUpdateRetrievingInfo, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
     case let .loading(item, current, total):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_downloading, data: InputDataGeneralData(name: "\(L10n.appUpdateDownloading)  \(String.prettySized(with: current) + " / " + String.prettySized(with: total))", color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_downloading, data: InputDataGeneralData(name: "\(strings().appUpdateDownloading)  \(String.prettySized(with: current) + " / " + String.prettySized(with: total))", color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
     case .uptodate:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: L10n.appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_check_for_updates, data: InputDataGeneralData(name: strings().appUpdateCheckForUpdates, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appUpdateUptodate), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appUpdateUptodate), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
         index += 1
     case let .unarchiving(item):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unarchiving, data: InputDataGeneralData(name: L10n.appUpdateUnarchiving, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unarchiving, data: InputDataGeneralData(name: strings().appUpdateUnarchiving, color: theme.colors.grayText, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
     case let .readyToInstall(item):
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_install_update, data: InputDataGeneralData(name: L10n.updateUpdateTelegram, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_install_update, data: InputDataGeneralData(name: strings().updateUpdateTelegram, color: theme.colors.accent, icon: nil, type: .none, viewType: .singleItem, action: nil)))
         index += 1
         
         currentItem = item
@@ -211,7 +211,7 @@ private func appUpdateEntries(state: AppUpdateState) -> [InputDataEntry] {
     
     if let item = currentItem {
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appUpdateNewestAvailable), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appUpdateNewestAvailable), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -241,7 +241,7 @@ func AppUpdateViewController() -> InputDataController {
     } |> map { InputDataSignalValue(entries: $0) }
     
 
-    return InputDataController(dataSignal: signal, title: L10n.appUpdateTitle, validateData: { data in
+    return InputDataController(dataSignal: signal, title: strings().appUpdateTitle, validateData: { data in
         
         if let _ = data[_id_download_update] {
             driver?.downloadUpdate()
@@ -483,14 +483,14 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
     override func downloaderDidFailWithError(_ error: Error!) {
         super.downloaderDidFailWithError(error)
         updateState { state in
-            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
+            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
     }
     
     override func abortUpdateWithError(_ error: Error!) {
         super.abortUpdateWithError(error)
         updateState { state in
-            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
+            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
         trySwitchUpdaterBetweenSources()
     }
@@ -498,7 +498,7 @@ private class ExternalUpdateDriver : SUBasicUpdateDriver {
     override func installer(for host: SUHost!, failedWithError error: Error!) {
         super.installer(for: host, failedWithError: error)
         updateState { state in
-            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: L10n.unknownError, code: 0, userInfo: nil)))
+            return state.withUpdatedLoadingState(.failed(error as NSError? ?? NSError(domain: strings().unknownError, code: 0, userInfo: nil)))
         }
         trySwitchUpdaterBetweenSources()
     }

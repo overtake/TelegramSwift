@@ -130,17 +130,17 @@ private class SignupView : View, NSTextFieldDelegate {
         firstNameSeparator.backgroundColor = theme.colors.border
         lastNameSeparator.backgroundColor = theme.colors.border
         
-        lastName.placeholderAttributedString = .initialize(string: L10n.loginRegisterLastNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
-        firstName.placeholderAttributedString = .initialize(string: L10n.loginRegisterFirstNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
+        lastName.placeholderAttributedString = .initialize(string: strings().loginRegisterLastNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
+        firstName.placeholderAttributedString = .initialize(string: strings().loginRegisterFirstNamePlaceholder, color: theme.colors.grayText, font: .medium(14))
 
         lastName.textColor = theme.colors.text
         firstName.textColor = theme.colors.text
 
-        let descLayout = TextViewLayout(.initialize(string: L10n.loginRegisterDesc, color: theme.colors.grayText, font: .normal(.text)))
+        let descLayout = TextViewLayout(.initialize(string: strings().loginRegisterDesc, color: theme.colors.grayText, font: .normal(.text)))
         descLayout.measure(width: frame.width)
         descView.update(descLayout)
         
-        let addPhotoLayout = TextViewLayout(.initialize(string: L10n.loginRegisterAddPhotoPlaceholder, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        let addPhotoLayout = TextViewLayout(.initialize(string: strings().loginRegisterAddPhotoPlaceholder, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         addPhotoLayout.measure(width: 90)
         addPhotoView.update(addPhotoLayout)
         
@@ -230,7 +230,7 @@ private class InputPasswordContainerView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
+        _ = attr.append(string: strings().loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
         input.backgroundColor = theme.colors.background
         input.placeholderAttributedString = attr
         input.font = .normal(.text)
@@ -304,7 +304,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         
         editControl.set(font: .medium(.title), for: .Normal)
         editControl.set(color: theme.colors.accent, for: .Normal)
-        editControl.set(text: tr(L10n.navigationEdit), for: .Normal)
+        editControl.set(text: strings().navigationEdit, for: .Normal)
         _ = editControl.sizeToFit()
         
         editControl.set(handler: { [weak self] _ in
@@ -397,21 +397,21 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         delayView.backgroundColor = theme.colors.background
         textView.backgroundColor = theme.colors.background
 
-        yourPhoneLabel.attributedString = .initialize(string: L10n.loginYourPhoneLabel, color: theme.colors.grayText, font: .normal(.title))
+        yourPhoneLabel.attributedString = .initialize(string: strings().loginYourPhoneLabel, color: theme.colors.grayText, font: .normal(.title))
         yourPhoneLabel.sizeToFit()
         
-        codeLabel.attributedString = .initialize(string: L10n.loginYourCodeLabel, color: theme.colors.grayText, font: .normal(.title))
+        codeLabel.attributedString = .initialize(string: strings().loginYourCodeLabel, color: theme.colors.grayText, font: .normal(.title))
         codeLabel.sizeToFit()
         
-        numberText.placeholderAttributedString = .initialize(string: L10n.loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
-        codeText.placeholderAttributedString = .initialize(string: L10n.loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        numberText.placeholderAttributedString = .initialize(string: strings().loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        codeText.placeholderAttributedString = .initialize(string: strings().loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
         
         
         forgotPasswordView.set(color: theme.colors.accent, for: .Normal)
         resetAccountView.set(color: theme.colors.redUI, for: .Normal)
         
-        forgotPasswordView.set(text: L10n.loginPasswordForgot, for: .Normal)
-        resetAccountView.set(text: L10n.loginResetAccountText, for: .Normal)
+        forgotPasswordView.set(text: strings().loginPasswordForgot, for: .Normal)
+        resetAccountView.set(text: strings().loginResetAccountText, for: .Normal)
         
         
         _ = forgotPasswordView.sizeToFit()
@@ -507,14 +507,14 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         switch type {
         case let .otherSession(length: length):
             codeLength = Int(length)
-            basic = L10n.loginEnterCodeFromApp
-            nextText = L10n.loginSendSmsIfNotReceivedAppCode
+            basic = strings().loginEnterCodeFromApp
+            nextText = strings().loginSendSmsIfNotReceivedAppCode
         case let .sms(length: length):
             codeLength = Int(length)
-            basic = L10n.loginJustSentSms
+            basic = strings().loginJustSentSms
         case let .call(length: length):
             codeLength = Int(length)
-            basic = L10n.loginPhoneCalledCode
+            basic = strings().loginPhoneCalledCode
         default:
             break
         }
@@ -530,10 +530,10 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 if timeout > 0 {
                     switch nextType {
                     case .call:
-                        nextText = L10n.loginWillCall(minutes, secValue)
+                        nextText = strings().loginWillCall(minutes, secValue)
                         break
                     case .sms:
-                        nextText = L10n.loginWillSendSms(minutes, secValue)
+                        nextText = strings().loginWillSendSms(minutes, secValue)
                         break
                     default:
                         break
@@ -541,8 +541,8 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 } else {
                     switch nextType {
                     case .call:
-                        basic = L10n.loginPhoneCalledCode
-                        nextText = L10n.loginPhoneDialed
+                        basic = strings().loginPhoneCalledCode
+                        nextText = strings().loginPhoneDialed
                         break
                     default:
                         break
@@ -550,7 +550,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
                 }
                 
             } else {
-                nextText = tr(L10n.loginSendSmsIfNotReceivedAppCode)
+                nextText = strings().loginSendSmsIfNotReceivedAppCode
             }
         }
         
@@ -603,13 +603,13 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let textError:String
         switch error {
         case .limitExceeded:
-            textError = L10n.loginFloodWait
+            textError = strings().loginFloodWait
         case .invalidCode:
-            textError = L10n.phoneCodeInvalid
+            textError = strings().phoneCodeInvalid
         case .generic:
-            textError = L10n.phoneCodeExpired
+            textError = strings().phoneCodeExpired
         case .codeExpired:
-            textError = L10n.phoneCodeExpired
+            textError = strings().phoneCodeExpired
         }
         errorLabel.state.set(.single(.error(textError)))
         codeText.shake()
@@ -619,9 +619,9 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         let text:String
         switch error {
         case .invalidPassword:
-            text = L10n.passwordHashInvalid
+            text = strings().passwordHashInvalid
         case .limitExceeded:
-            text = L10n.loginFloodWait
+            text = strings().loginFloodWait
         case .generic:
             text = "undefined error"
         }
@@ -648,14 +648,14 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         if !hint.isEmpty {
             self.inputPassword.input.placeholderAttributedString = .initialize(string: hint, color: theme.colors.grayText, font: .normal(.title))
         } else {
-            self.inputPassword.input.placeholderAttributedString = .initialize(string: L10n.loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
+            self.inputPassword.input.placeholderAttributedString = .initialize(string: strings().loginPasswordPlaceholder, color: theme.colors.grayText, font: .normal(.title))
         }
         self.inputPassword.isHidden = false
         self.codeText.textColor = theme.colors.grayText
         self.codeText.isEditable = false
         self.codeText.isSelectable = false
         
-        let textLayout = TextViewLayout(.initialize(string: L10n.loginEnterPasswordDescription, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
+        let textLayout = TextViewLayout(.initialize(string: strings().loginEnterPasswordDescription, color: theme.colors.grayText, font: .normal(.title)), alignment: .center)
         textLayout.measure(width: 300)
         textView.update(textLayout)
         
@@ -797,13 +797,13 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         codeText.backgroundColor = theme.colors.background
         numberText.backgroundColor = theme.colors.background
         
-        countryLabel.attributedString = .initialize(string: L10n.loginCountryLabel, color: theme.colors.grayText, font: .normal(.title))
+        countryLabel.attributedString = .initialize(string: strings().loginCountryLabel, color: theme.colors.grayText, font: .normal(.title))
         countryLabel.sizeToFit()
         
-        numberLabel.attributedString = .initialize(string: L10n.loginYourPhoneLabel, color: theme.colors.grayText, font: .normal(.title))
+        numberLabel.attributedString = .initialize(string: strings().loginYourPhoneLabel, color: theme.colors.grayText, font: .normal(.title))
         numberLabel.sizeToFit()
         
-        numberText.placeholderAttributedString = .initialize(string: L10n.loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        numberText.placeholderAttributedString = .initialize(string: strings().loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
         
         needsLayout = true
         needsDisplay = true
@@ -813,9 +813,9 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         let text:String
         switch error {
         case .invalidPhoneNumber:
-            text = tr(L10n.phoneNumberInvalid)
+            text = strings().phoneNumberInvalid
         case .limitExceeded:
-            text = tr(L10n.loginFloodWait)
+            text = strings().loginFloodWait
         case .generic:
             text = "undefined error"
         case .phoneLimitExceeded:
@@ -988,7 +988,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
     func update(selectedItem:CountryItem?, update:Bool, updateCode:Bool = true) -> Void {
         self.selectedItem = selectedItem
         if update {
-            countrySelector.set(text: selectedItem?.shortName ?? tr(L10n.loginInvalidCountryCode), for: .Normal)
+            countrySelector.set(text: selectedItem?.shortName ?? strings().loginInvalidCountryCode, for: .Normal)
             countrySelector.sizeToFit()
             if updateCode {
                 codeText.stringValue = selectedItem != nil ? "+\(selectedItem!.code)" : "+"
@@ -1013,15 +1013,15 @@ private func timerValueString(days: Int32, hours: Int32, minutes: Int32) -> Stri
     
     var daysString = ""
     if days > 0 {
-        daysString = "**" + L10n.timerDaysCountable(Int(days)) + "** "
+        daysString = "**" + strings().timerDaysCountable(Int(days)) + "** "
     }
     
     var hoursString = ""
     if hours > 0 || days > 0 {
-        hoursString = "**" + L10n.timerHoursCountable(Int(hours)) + "** "
+        hoursString = "**" + strings().timerHoursCountable(Int(hours)) + "** "
     }
     
-    let minutesString = "**" + L10n.timerMinutesCountable(Int(minutes)) + "**"
+    let minutesString = "**" + strings().timerMinutesCountable(Int(minutes)) + "**"
     
     return daysString + hoursString + minutesString
 }
@@ -1068,7 +1068,7 @@ private final class AwaitingResetConfirmationView : View {
         super.updateLocalizationAndTheme(theme: theme)
         
         reset.set(color: theme.colors.redUI, for: .Normal)
-        reset.set(text: L10n.loginResetAccount, for: .Normal)
+        reset.set(text: strings().loginResetAccount, for: .Normal)
         _ = reset.sizeToFit()
         updateTimerValue()
     }
@@ -1096,7 +1096,7 @@ private final class AwaitingResetConfirmationView : View {
         let attr = NSMutableAttributedString()
         
         
-        _ = attr.append(string: L10n.twoStepAuthResetDescription(self.phoneNumber, timerValueString(days: days, hours: hours, minutes: minutes)), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().twoStepAuthResetDescription(self.phoneNumber, timerValueString(days: days, hours: hours, minutes: minutes)), color: theme.colors.grayText, font: .normal(.text))
         attr.detectBoldColorInString(with: .bold(.text))
         
         let layout = TextViewLayout(attr, alignment: .left, alwaysStaticItems: true)

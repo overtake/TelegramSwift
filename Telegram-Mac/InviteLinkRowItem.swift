@@ -264,22 +264,22 @@ private final class InviteLinkTokenView : Control {
 
             var text: String = ""
             if link.isRevoked, link.count == nil || link.count == 0 {
-                text = L10n.inviteLinkJoinedRevoked
+                text = strings().inviteLinkJoinedRevoked
             } else {
                 if let count = link.count {
-                    text = L10n.inviteLinkJoinedCountable(Int(count))
+                    text = strings().inviteLinkJoinedCountable(Int(count))
                     text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
                 } else if let usageLimit = link.usageLimit {
                     if link.isExpired {
-                        text = L10n.inviteLinkJoinedRevoked
+                        text = strings().inviteLinkJoinedRevoked
                     } else {
-                        text = L10n.inviteLinkCanJoinCountable(Int(usageLimit))
+                        text = strings().inviteLinkCanJoinCountable(Int(usageLimit))
                     }
                 } else {
-                    text = L10n.inviteLinkJoinedZero
+                    text = strings().inviteLinkJoinedZero
                 }
                 if link.requestApproval, let requestedCount = link.requestedCount {
-                    var textCount = L10n.inviteLinkRequestedCountable(Int(requestedCount))
+                    var textCount = strings().inviteLinkRequestedCountable(Int(requestedCount))
                     textCount = textCount.replacingOccurrences(of: "\(requestedCount)", with: Int(requestedCount).prettyNumber)
                     if text.isEmpty {
                         text += textCount
@@ -292,18 +292,18 @@ private final class InviteLinkTokenView : Control {
             var countText = text
 
             if link.isRevoked {
-                countText += " " + L10n.inviteLinkStickerRevoked
+                countText += " " + strings().inviteLinkStickerRevoked
             } else {
                 if let usageLink = link.usageLimit, let count = link.count {
                     if !link.isLimitReached {
-                        countText += " " + L10n.inviteLinkRemainingFew(Int(usageLink - count))
+                        countText += " " + strings().inviteLinkRemainingFew(Int(usageLink - count))
                     } else if link.isLimitReached {
-                        countText += " " + L10n.inviteLinkRemainingFew(Int(usageLink - count))
+                        countText += " " + strings().inviteLinkRemainingFew(Int(usageLink - count))
                     }
                 }
 
                 if link.isExpired {
-                    countText += " " + L10n.inviteLinkStickerExpired
+                    countText += " " + strings().inviteLinkStickerExpired
                 } else if let expireDate = link.expireDate {
                     let left = Int(expireDate) - Int(Date().timeIntervalSince1970)
                     if left <= Int(Int32.secondsInDay) {
@@ -311,9 +311,9 @@ private final class InviteLinkTokenView : Control {
                         let seconds = left % 60
                         let hours = left / 60 / 60
                         let string = String(format: "%@:%@:%@", hours < 10 ? "0\(hours)" : "\(hours)", minutes < 10 ? "0\(minutes)" : "\(minutes)", seconds < 10 ? "0\(seconds)" : "\(seconds)")
-                        countText += " • " + L10n.inviteLinkStickerTimeLeft(string)
+                        countText += " • " + strings().inviteLinkStickerTimeLeft(string)
                     } else {
-                        countText += " • " + L10n.inviteLinkStickerTimeLeft(autoremoveLocalized(left, roundToCeil: true))
+                        countText += " • " + strings().inviteLinkStickerTimeLeft(autoremoveLocalized(left, roundToCeil: true))
                     }
                 }
             }

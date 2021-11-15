@@ -95,7 +95,7 @@ private final class ChatListExpandView: View {
         updateLocalizationAndTheme(theme: theme)
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let titleLayout = TextViewLayout(.initialize(string: L10n.chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        let titleLayout = TextViewLayout(.initialize(string: strings().chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
         titleLayout.measure(width: .greatestFiniteMagnitude)
         titleView.update(titleLayout)
         needsLayout = true
@@ -973,7 +973,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
             let unread: LAnimationButton = LAnimationButton(animation: !item.markAsUnread ? "anim_read" : "anim_unread", size: NSMakeSize(frame.height, frame.height), keysToColor: !item.markAsUnread ? nil : ["Oval.Oval.Stroke 1"], color: unreadBackground, offset: NSMakeSize(0, 0), autoplaySide: .right)
             let unreadTitle = TextViewLabel()
-            unreadTitle.attributedString = .initialize(string: !item.markAsUnread ? L10n.chatListSwipingRead : L10n.chatListSwipingUnread, color: unreadForeground, font: .medium(12))
+            unreadTitle.attributedString = .initialize(string: !item.markAsUnread ? strings().chatListSwipingRead : strings().chatListSwipingUnread, color: unreadForeground, font: .medium(12))
             unreadTitle.sizeToFit()
             unread.addSubview(unreadTitle)
             unread.set(background: unreadBackground, for: .Normal)
@@ -985,7 +985,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let mute: LAnimationButton = LAnimationButton(animation: item.isMuted ? "anim_unmute" : "anim_mute", size: NSMakeSize(frame.height, frame.height), keysToColor: item.isMuted ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_neutral2_background, offset: NSMakeSize(0, 0), autoplaySide: .right)
             let muteTitle = TextViewLabel()
-            muteTitle.attributedString = .initialize(string: item.isMuted ? L10n.chatListSwipingUnmute : L10n.chatListSwipingMute, color: theme.colors.revealAction_neutral2_foreground, font: .medium(12))
+            muteTitle.attributedString = .initialize(string: item.isMuted ? strings().chatListSwipingUnmute : strings().chatListSwipingMute, color: theme.colors.revealAction_neutral2_foreground, font: .medium(12))
             muteTitle.sizeToFit()
             mute.addSubview(muteTitle)
             mute.set(background: theme.colors.revealAction_neutral2_background, for: .Normal)
@@ -998,7 +998,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let pin: LAnimationButton = LAnimationButton(animation: !item.isPinned ? "anim_pin" : "anim_unpin", size: NSMakeSize(frame.height, frame.height), keysToColor: !item.isPinned ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_constructive_background, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let pinTitle = TextViewLabel()
-            pinTitle.attributedString = .initialize(string: !item.isPinned ? L10n.chatListSwipingPin : L10n.chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
+            pinTitle.attributedString = .initialize(string: !item.isPinned ? strings().chatListSwipingPin : strings().chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
             pinTitle.sizeToFit()
             pin.addSubview(pinTitle)
             pin.set(background: theme.colors.revealAction_constructive_background, for: .Normal)
@@ -1026,7 +1026,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let archive: LAnimationButton = LAnimationButton(animation: item.associatedGroupId != .root ? "anim_unarchive" : "anim_archive", size: item.associatedGroupId != .root ? NSMakeSize(45, 45) : NSMakeSize(frame.height, frame.height), keysToColor: ["box2.box2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: NSMakeSize(0, item.associatedGroupId != .root ? 9.0 : 0.0), autoplaySide: .left)
             let archiveTitle = TextViewLabel()
-            archiveTitle.attributedString = .initialize(string: item.associatedGroupId != .root ? L10n.chatListSwipingUnarchive : L10n.chatListSwipingArchive, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+            archiveTitle.attributedString = .initialize(string: item.associatedGroupId != .root ? strings().chatListSwipingUnarchive : strings().chatListSwipingArchive, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
             archiveTitle.sizeToFit()
             archive.addSubview(archiveTitle)
             archive.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
@@ -1041,7 +1041,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let delete: LAnimationButton = LAnimationButton(animation: "anim_delete", size: NSMakeSize(frame.height, frame.height), keysToColor: nil, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let deleteTitle = TextViewLabel()
-            deleteTitle.attributedString = .initialize(string: L10n.chatListSwipingDelete, color: theme.colors.revealAction_destructive_foreground, font: .medium(12))
+            deleteTitle.attributedString = .initialize(string: strings().chatListSwipingDelete, color: theme.colors.revealAction_destructive_foreground, font: .medium(12))
             deleteTitle.sizeToFit()
             delete.addSubview(deleteTitle)
             delete.set(background: theme.colors.revealAction_destructive_background, for: .Normal)
@@ -1112,7 +1112,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let collapse: LAnimationButton = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let collapseTitle = TextViewLabel()
-            collapseTitle.attributedString = .initialize(string: L10n.chatListRevealActionCollapse, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+            collapseTitle.attributedString = .initialize(string: strings().chatListRevealActionCollapse, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
             collapseTitle.sizeToFit()
             collapse.addSubview(collapseTitle)
             collapse.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
@@ -1144,11 +1144,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 switch archiveStatus {
                 case .hidden:
                     hideOrPin = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_accent_background, offset: NSMakeSize(0, 0), autoplaySide: .left, rotated: true)
-                    hideOrPinTitle.attributedString = .initialize(string: L10n.chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
+                    hideOrPinTitle.attributedString = .initialize(string: strings().chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
                     hideOrPin.set(background: theme.colors.revealAction_accent_background, for: .Normal)
                 default:
                     hideOrPin = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: NSMakeSize(0, 0), autoplaySide: .left, rotated: false)
-                    hideOrPinTitle.attributedString = .initialize(string: L10n.chatListRevealActionHide, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+                    hideOrPinTitle.attributedString = .initialize(string: strings().chatListRevealActionHide, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
                     hideOrPin.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
                 }
                 

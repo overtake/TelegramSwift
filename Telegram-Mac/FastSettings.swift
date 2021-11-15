@@ -8,9 +8,10 @@
 
 import Cocoa
 import TelegramCore
-
+import Localization
 import SwiftSignalKit
 import Postbox
+import ObjcUtils
 
 enum SendingType :String {
     case enter = "enter"
@@ -55,17 +56,17 @@ enum AppTooltip {
     fileprivate var localizedString: String {
         switch self {
         case .voiceRecording:
-            return L10n.appTooltipVoiceRecord
+            return strings().appTooltipVoiceRecord
         case .videoRecording:
-            return L10n.appTooltipVideoRecord
+            return strings().appTooltipVideoRecord
         case .mediaPreview_archive:
-            return L10n.previewSenderArchiveTooltip
+            return strings().previewSenderArchiveTooltip
         case .mediaPreview_collage:
-            return L10n.previewSenderCollageTooltip
+            return strings().previewSenderCollageTooltip
         case .mediaPreview_media:
-            return L10n.previewSenderMediaTooltip
+            return strings().previewSenderMediaTooltip
         case .mediaPreview_file:
-            return L10n.previewSenderFileTooltip
+            return strings().previewSenderFileTooltip
         }
     }
     

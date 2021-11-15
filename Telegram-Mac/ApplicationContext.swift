@@ -3,7 +3,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import Localization
 
 import IOKit
 
@@ -340,8 +340,8 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 alert.informativeText = text.text
 
                 if text.isDropAuth {
-                    alert.addButton(withTitle: L10n.editAccountLogout)
-                    alert.addButton(withTitle: L10n.modalCancel)
+                    alert.addButton(withTitle: strings().editAccountLogout)
+                    alert.addButton(withTitle: strings().modalCancel)
 
                 }
 

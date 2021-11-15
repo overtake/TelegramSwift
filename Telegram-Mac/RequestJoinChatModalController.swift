@@ -50,7 +50,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.flags.isChannel ? L10n.requestJoinDescChannel : L10n.requestJoinDescGroup, font: .normal(.text), color: theme.colors.grayText)
+        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.flags.isChannel ? strings().requestJoinDescChannel : strings().requestJoinDescGroup, font: .normal(.text), color: theme.colors.grayText)
     }))
     index += 1
     
@@ -91,7 +91,7 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
             actionsDisposable.dispose()
         }
 
-        let modalInteractions = ModalInteractions(acceptTitle: L10n.requestJoinButton, accept: { [weak controller] in
+        let modalInteractions = ModalInteractions(acceptTitle: strings().requestJoinButton, accept: { [weak controller] in
             _ = controller?.returnKeyAction()
         }, drawBorder: true, height: 50, singleButton: true)
         
@@ -117,18 +117,18 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
                 let text: String
                 switch error {
                 case .generic:
-                    text = L10n.unknownError
+                    text = strings().unknownError
                 case .tooMuchJoined:
                     showInactiveChannels(context: context, source: .join)
                     return
                 case .tooMuchUsers:
-                    text = L10n.groupUsersTooMuchError
+                    text = strings().groupUsersTooMuchError
                 case .requestSent:
                     let navigation = context.sharedContext.bindings.rootNavigation()
-                    navigation.controller.show(toaster: .init(text: L10n.requestJoinSent))
+                    navigation.controller.show(toaster: .init(text: strings().requestJoinSent))
                     return
                 case .flood:
-                    text = L10n.joinLinkFloodError
+                    text = strings().joinLinkFloodError
                 }
                 alert(for: context.window, info: text)
             })

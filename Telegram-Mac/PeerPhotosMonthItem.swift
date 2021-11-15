@@ -189,16 +189,16 @@ class PeerPhotosMonthItem: GeneralRowItem {
         if let layoutItem = layoutItem {
             let message = layoutItem.message
             if canForwardMessage(message, chatInteraction: chatInteraction) {
-                items.append(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
+                items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
                     self?.chatInteraction.forwardMessages([message.id])
                 }))
             }
             if canDeleteMessage(message, account: context.account, mode: .history) {
-                items.append(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
+                items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
                    self?.chatInteraction.deleteMessages([message.id])
                 }))
             }
-            items.append(ContextMenuItem(L10n.messageContextGoto, handler: { [weak self] in
+            items.append(ContextMenuItem(strings().messageContextGoto, handler: { [weak self] in
                 self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
             }))
         }

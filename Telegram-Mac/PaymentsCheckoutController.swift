@@ -208,7 +208,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if let form = state.form {
         
-//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutPriceHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutPriceHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
 //        index += 1
         let insets = NSEdgeInsets(top: 7, left: 16, bottom: 7, right: 16)
         let first = NSEdgeInsets(top: 14, left: 16, bottom: 7, right: 16)
@@ -229,7 +229,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         if let _ = form.invoice.tip {
-            prices.append(BotPaymentPrice(label: L10n.paymentsTipLabel, amount: state.currentTip ?? 0))
+            prices.append(BotPaymentPrice(label: strings().paymentsTipLabel, amount: state.currentTip ?? 0))
         }
         
         for (i, price) in prices.enumerated() {
@@ -250,7 +250,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             let editableTip: PaymentsCheckoutPriceItem.EditableTip?
             
-            if price.label == L10n.paymentsTipLabel, let tip = form.invoice.tip {
+            if price.label == strings().paymentsTipLabel, let tip = form.invoice.tip {
                 editableTip = PaymentsCheckoutPriceItem.EditableTip(currency: form.invoice.currency, current: state.currentTip ?? 0, maxValue: tip.max)
             } else {
                 editableTip = nil
@@ -275,9 +275,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if !prices.isEmpty {
             let viewType = GeneralViewType.lastItem.withUpdatedInsets(last)
 
-            let tuple = Tuple(label: L10n.checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: form.invoice.currency), viewType: viewType, editableTip: nil)
+            let tuple = Tuple(label: strings().checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: form.invoice.currency), viewType: viewType, editableTip: nil)
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(L10n.checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(strings().checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .medium(.text), color: theme.colors.text, viewType: tuple.viewType)
             }))
             index += 1
@@ -293,7 +293,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
         var fields = form.invoice.requestedFields.intersection([.shippingAddress, .email, .name, .phone])
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_payment_method, data: .init(name: L10n.checkoutPaymentMethod, color: theme.colors.text, type: .nextContext(paymentMethodTitle), viewType: fields.isEmpty ? .singleItem : .firstItem, action: arguments.openPaymentMethod)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_payment_method, data: .init(name: strings().checkoutPaymentMethod, color: theme.colors.text, type: .nextContext(paymentMethodTitle), viewType: fields.isEmpty ? .singleItem : .firstItem, action: arguments.openPaymentMethod)))
         index += 1
         
         let savedInfo = state.savedInfo
@@ -319,21 +319,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }
                 }
             }
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_shipping_info, data: .init(name: L10n.checkoutShippingAddress, color: theme.colors.text, type: .nextContext(addressString), viewType: fields.isEmpty && state.validatedInfo?.shippingOptions == nil ? .lastItem : .innerItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_shipping_info, data: .init(name: strings().checkoutShippingAddress, color: theme.colors.text, type: .nextContext(addressString), viewType: fields.isEmpty && state.validatedInfo?.shippingOptions == nil ? .lastItem : .innerItem, action: {
                 arguments.openForm(.address)
             })))
             index += 1
         }
         
         if let _ = state.validatedInfo?.shippingOptions {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_flex_shipping, data: .init(name: L10n.checkoutShippingMethod, color: theme.colors.text, type: .nextContext(state.shippingOptionId?.title ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, action: arguments.openShippingMethod)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_flex_shipping, data: .init(name: strings().checkoutShippingMethod, color: theme.colors.text, type: .nextContext(state.shippingOptionId?.title ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, action: arguments.openShippingMethod)))
             index += 1
         }
         
         updated = fields.subtracting(.name)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_name, data: .init(name: L10n.checkoutName, color: theme.colors.text, type: .nextContext(savedInfo.name ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_name, data: .init(name: strings().checkoutName, color: theme.colors.text, type: .nextContext(savedInfo.name ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
                 arguments.openForm(.name)
             })))
             index += 1
@@ -342,7 +342,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         updated = fields.subtracting(.email)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_email, data: .init(name: L10n.checkoutEmail, color: theme.colors.text, type: .nextContext(savedInfo.email ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_email, data: .init(name: strings().checkoutEmail, color: theme.colors.text, type: .nextContext(savedInfo.email ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
                 arguments.openForm(.email)
             })))
             index += 1
@@ -351,7 +351,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         updated = fields.subtracting(.phone)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: L10n.checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(savedInfo.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: strings().checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(savedInfo.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
                 arguments.openForm(.phone)
             })))
             index += 1
@@ -439,7 +439,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                
                 let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
                 if canSave {
-                    confirm(for: context.window, information: L10n.checkoutInfoSaveInfoHelp, okTitle: L10n.modalYes, cancelTitle: L10n.modalNotNow, successHandler: { _ in
+                    confirm(for: context.window, information: strings().checkoutInfoSaveInfoHelp, okTitle: strings().modalYes, cancelTitle: strings().modalNotNow, successHandler: { _ in
                         updateState { current in
                             var current = current
                             current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
@@ -488,7 +488,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                             
                             let total = formatCurrencyAmount(totalValue, currency: form.invoice.currency)
                             
-                            showModalText(for: context.window, text: L10n.paymentsPaid(total, invoice.title))
+                            showModalText(for: context.window, text: strings().paymentsPaid(total, invoice.title))
                         }
                     }
                     switch result {
@@ -501,13 +501,13 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                     let text: String
                     switch error {
                     case .alreadyPaid:
-                        text = L10n.checkoutErrorInvoiceAlreadyPaid
+                        text = strings().checkoutErrorInvoiceAlreadyPaid
                     case .generic:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                     case .paymentFailed:
-                        text = L10n.checkoutErrorPaymentFailed
+                        text = strings().checkoutErrorPaymentFailed
                     case .precheckoutFailed:
-                        text = L10n.checkoutErrorPrecheckoutFailed
+                        text = strings().checkoutErrorPrecheckoutFailed
                     }
                     alert(for: context.window, info: text)
                     close?()
@@ -526,7 +526,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                     if value {
                         pay()
                     } else {
-                        confirm(for: context.window, header: L10n.paymentsWarninTitle, information: L10n.paymentsWarningText(botPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+                        confirm(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
                             pay()
                             _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId).start()
                         })
@@ -549,7 +549,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                         if let token = token, token.validUntilDate > timestamp - 1 * 60  {
                             pay(.saved(id: id, tempPassword: token.token))
                         } else {
-                            showModal(with: InputPasswordController(context: context, title: L10n.checkoutPasswordEntryTitle, desc: L10n.checkoutPasswordEntryText(title), checker: { password in
+                            showModal(with: InputPasswordController(context: context, title: strings().checkoutPasswordEntryTitle, desc: strings().checkoutPasswordEntryText(title), checker: { password in
                                 Signal { subscriber in
                                     let checker = context.engine.auth.requestTemporaryTwoStepPasswordToken(password: password, period: 1 * 60, requiresBiometrics: false) |> deliverOnMainQueue
                                     return checker.start(next: { token in
@@ -591,7 +591,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.checkoutTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().checkoutTitle)
     
     
     let themeParams: [String: Any] = [
@@ -651,7 +651,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         close?()
         switch error {
         case .generic:
-            alert(for: context.window, info: L10n.unknownError)
+            alert(for: context.window, info: strings().unknownError)
         }
     }))
     
@@ -687,7 +687,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         }))
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.checkoutPayNone, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().checkoutPayNone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     
@@ -708,9 +708,9 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             let text: String
             if let form = state.form {
                 let totalAmount = formatCurrencyAmount(currentTotalPrice(paymentForm: form, validatedFormInfo: state.validatedInfo, shippingOption: state.shippingOptionId, tip: state.currentTip), currency: form.invoice.currency)
-                text = L10n.checkoutPayPrice("\(totalAmount)")
+                text = strings().checkoutPayPrice("\(totalAmount)")
             } else {
-                text = L10n.checkoutPayNone
+                text = strings().checkoutPayNone
             }
             button.set(text: text, for: .Normal)
         }

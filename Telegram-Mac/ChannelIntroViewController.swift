@@ -36,7 +36,7 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         imageView.sizeToFit()
         
         
-        button.set(text: L10n.channelIntroCreateChannel, for: .Normal)
+        button.set(text: strings().channelIntroCreateChannel, for: .Normal)
 
         button.set(color: theme.colors.accent, for: .Normal)
         _ = button.sizeToFit()
@@ -45,9 +45,9 @@ class ChannelIntroView : NSScrollView, AppearanceViewProtocol {
         textView.background = theme.colors.background
         documentView?.background = theme.colors.background
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.channelIntroDescriptionHeader), color: theme.colors.text, font: .medium(.header))
+        _ = attr.append(string: strings().channelIntroDescriptionHeader, color: theme.colors.text, font: .medium(.header))
         _ = attr.append(string:"\n\n")
-        _ = attr.append(string: tr(L10n.channelIntroDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().channelIntroDescription, color: theme.colors.grayText, font: .normal(.text))
         textView.set(layout: TextViewLayout(attr, alignment:.center))
         
     }
@@ -78,7 +78,7 @@ class ChannelIntroViewController: EmptyComposeController<Void,Void,ChannelIntroV
 
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(L10n.channelCreate), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: strings().channelCreate, style: navigationButtonStyle, alignment:.Right)
     }
     
     override var removeAfterDisapper: Bool {

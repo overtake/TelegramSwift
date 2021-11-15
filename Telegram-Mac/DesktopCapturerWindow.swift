@@ -32,9 +32,9 @@ private final class UnavailableToStreamView : View {
     func update(isScreen: Bool) {
         let text: String
         if isScreen {
-            text = L10n.voiceChatScreenShareUnavailable
+            text = strings().voiceChatScreenShareUnavailable
         } else {
-            text = L10n.voiceChatVideoShareUnavailable
+            text = strings().voiceChatVideoShareUnavailable
         }
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.grayStatusColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: GroupCallTheme.grayStatusColor), link: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.accent), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
@@ -160,18 +160,18 @@ private final class DesktopCapturerView : View {
         
         addSubview(micro)
         
-        let titleLayout = TextViewLayout.init(.initialize(string: L10n.voiceChatVideoVideoSource, color: GroupCallTheme.titleColor, font: .medium(.title)))
+        let titleLayout = TextViewLayout.init(.initialize(string: strings().voiceChatVideoVideoSource, color: GroupCallTheme.titleColor, font: .medium(.title)))
         titleLayout.measure(width: frameRect.width)
         titleView.update(titleLayout)
         
-        cancel.set(text: L10n.voiceChatVideoVideoSourceCancel, for: .Normal)
+        cancel.set(text: strings().voiceChatVideoVideoSourceCancel, for: .Normal)
         cancel.set(color: .white, for: .Normal)
         cancel.set(background: GroupCallTheme.speakDisabledColor, for: .Normal)
         cancel.set(background: GroupCallTheme.speakDisabledColor.withAlphaComponent(0.8), for: .Highlight)
         cancel.sizeToFit(.zero, NSMakeSize(100, 30), thatFit: true)
         cancel.layer?.cornerRadius = .cornerRadius
         
-        share.set(text: L10n.voiceChatVideoVideoSourceShare, for: .Normal)
+        share.set(text: strings().voiceChatVideoVideoSourceShare, for: .Normal)
         share.set(color: .white, for: .Normal)
         share.set(background: GroupCallTheme.accent, for: .Normal)
         share.set(background: GroupCallTheme.accent.withAlphaComponent(0.8), for: .Highlight)

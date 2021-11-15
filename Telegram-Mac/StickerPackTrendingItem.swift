@@ -356,7 +356,7 @@ private final class StickerPackTrendingView : TableRowView {
         _ = self.close.sizeToFit()
         
         
-        let layout = TextViewLayout.init(.initialize(string: L10n.stickersTrending.uppercased(), color: theme.colors.grayText, font: .medium(.text)))
+        let layout = TextViewLayout.init(.initialize(string: strings().stickersTrending.uppercased(), color: theme.colors.grayText, font: .medium(.text)))
         layout.measure(width: frame.width - 30)
         textView.update(layout)
         

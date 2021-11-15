@@ -31,7 +31,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.channelStatsOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelStatsOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         var overviewItems:[ChannelOverviewItem] = []
@@ -39,11 +39,11 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         overviewItems.append(ChannelOverviewItem(title: "Views", value: .initialize(string: stats.views.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
        
         if let search = search, search.0.totalCount > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsMessagePublicForwardsTitle, value: .initialize(string: Int(search.0.totalCount).formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsMessagePublicForwardsTitle, value: .initialize(string: Int(search.0.totalCount).formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
         }
         
         if stats.forwards > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsMessagePrivateForwardsTitle, value: .initialize(string: "≈" + stats.forwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsMessagePrivateForwardsTitle, value: .initialize(string: "≈" + stats.forwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
         }
     
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
@@ -76,7 +76,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         }
         
         if !stats.interactionsGraph.isEmpty {
-            graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.statsMessageInteractionsTitle, identifier: InputDataIdentifier("interactionsGraph"), type: chartType, load: { identifier in
+            graphs.append(Graph(graph: stats.interactionsGraph, title: strings().statsMessageInteractionsTitle, identifier: InputDataIdentifier("interactionsGraph"), type: chartType, load: { identifier in
               //  context.loadDetailedGraph(<#T##graph: StatsGraph##StatsGraph#>, x: <#T##Int64#>)
                 updateIsLoading(identifier, true)
             }))
@@ -128,7 +128,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         sectionId += 1
         
         if let messages = search?.0, !messages.messages.isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
             for (i, message) in messages.messages.enumerated() {
@@ -145,7 +145,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         }
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
+            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: strings().channelStatsLoading)
         }))
     }
     
@@ -217,7 +217,7 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
     }
 
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.statsMessageTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().statsMessageTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.contextObject = statsContext
     controller.didLoaded = { controller, _ in

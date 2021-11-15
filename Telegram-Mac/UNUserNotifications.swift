@@ -253,7 +253,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
     }
     
     override func registerCategories() {
-        let replyAction = UNTextInputNotificationAction(identifier: "reply", title: L10n.notificationReply, options: [], textInputButtonTitle: L10n.notificationTitleReply, textInputPlaceholder: L10n.notificationInputReply)
+        let replyAction = UNTextInputNotificationAction(identifier: "reply", title: strings().notificationReply, options: [], textInputButtonTitle: strings().notificationTitleReply, textInputPlaceholder: strings().notificationInputReply)
         
         
         let replyCategory = UNNotificationCategory(identifier: "reply", actions: [replyAction], intentIdentifiers: [], options: [])

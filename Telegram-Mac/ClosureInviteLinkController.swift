@@ -61,10 +61,10 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.editInvitationTitlePlaceholder, filter: { $0 }, limit: 32))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().editInvitationTitlePlaceholder, filter: { $0 }, limit: 32))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationTitleDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationTitleDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
 
     
@@ -72,16 +72,16 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: L10n.editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_request_approval, data: .init(name: strings().editInvitationRequestApproval, color: theme.colors.text, type: .switchable(state.requestApproval), viewType: .singleItem, action: {
         arguments.toggleRequestApproval(state.requestApproval)
     })))
     index += 1
     
     let requestApprovalText: String
     if state.requestApproval {
-        requestApprovalText = L10n.editInvitationRequestApprovalChannelOn
+        requestApprovalText = strings().editInvitationRequestApprovalChannelOn
     } else {
-        requestApprovalText = L10n.editInvitationRequestApprovalChannelOff
+        requestApprovalText = strings().editInvitationRequestApprovalChannelOff
     }
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(requestApprovalText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -90,7 +90,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationLimitedByPeriod), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_period, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
@@ -135,9 +135,9 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
         let dateFormatter = makeNewDateFormatter()
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .short
-        let dateString = state.date == .max ? L10n.editInvitationNever : dateFormatter.string(from: Date(timeIntervalSinceNow: TimeInterval(state.date)))
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_period_precise, data: .init(name: L10n.editInvitationExpiryDate, color: theme.colors.text, type: .context(dateString), viewType: .lastItem, action: {
-            showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date == .max ? Int32.secondsInWeek : state.date)), mode: .date(title: L10n.editInvitationExpiryDate, doneTitle: L10n.editInvitationSave), selectedAt: { date in
+        let dateString = state.date == .max ? strings().editInvitationNever : dateFormatter.string(from: Date(timeIntervalSinceNow: TimeInterval(state.date)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_period_precise, data: .init(name: strings().editInvitationExpiryDate, color: theme.colors.text, type: .context(dateString), viewType: .lastItem, action: {
+            showModal(with: DateSelectorModalController(context: arguments.context, defaultDate: Date(timeIntervalSinceNow: TimeInterval(state.date == .max ? Int32.secondsInWeek : state.date)), mode: .date(title: strings().editInvitationExpiryDate, doneTitle: strings().editInvitationSave), selectedAt: { date in
                 arguments.limitDate(Int32(date.timeIntervalSinceNow))
                 arguments.tempDate(Int32(date.timeIntervalSinceNow))
                 
@@ -145,13 +145,13 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationExpiryDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationExpiryDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationLimitedByCount), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_count, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
@@ -190,9 +190,9 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
         }))
         index += 1
         
-        let value = state.count == .max ? L10n.editInvitationUnlimited : Int(state.count).prettyNumber
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_precise, data: .init(name: L10n.editInvitationNumberOfUsers, color: theme.colors.text, type: .context(value), viewType: .lastItem, action: {
-            showModal(with: NumberSelectorController(base: state.count == .max ? nil : Int(state.count), title: L10n.editInvitationNumberOfUsers, placeholder: L10n.editInvitationEnterNumber, okTitle: L10n.editInvitationSave, updated: { updated in
+        let value = state.count == .max ? strings().editInvitationUnlimited : Int(state.count).prettyNumber
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_precise, data: .init(name: strings().editInvitationNumberOfUsers, color: theme.colors.text, type: .context(value), viewType: .lastItem, action: {
+            showModal(with: NumberSelectorController(base: state.count == .max ? nil : Int(state.count), title: strings().editInvitationNumberOfUsers, placeholder: strings().editInvitationEnterNumber, okTitle: strings().editInvitationSave, updated: { updated in
                 if let updated = updated {
                     arguments.usageLimit(Int32(updated))
                 } else {
@@ -203,7 +203,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editInvitationLimitDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editInvitationLimitDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
     }
@@ -224,17 +224,17 @@ enum InviteLinkClosureMode {
     var title: String {
         switch self {
         case .new:
-            return L10n.editInvitationNewTitle
+            return strings().editInvitationNewTitle
         case .edit:
-            return L10n.editInvitationEditTitle
+            return strings().editInvitationEditTitle
         }
     }
     var done: String {
         switch self {
         case .new:
-            return L10n.editInvitationOKCreate
+            return strings().editInvitationOKCreate
         case .edit:
-            return L10n.editInvitationOKSave
+            return strings().editInvitationOKSave
         }
     }
     var doneColor: NSColor {

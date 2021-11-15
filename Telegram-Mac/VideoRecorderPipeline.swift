@@ -10,9 +10,9 @@ import Cocoa
 import SwiftSignalKit
 import Accelerate
 import TelegramCore
-
+import ObjcUtils
 import TGUIKit
-
+import TGVideoCameraMovie
 
 private let videoCameraRetainedBufferCount:Int = 16;
 

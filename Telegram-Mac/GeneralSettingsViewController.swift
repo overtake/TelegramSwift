@@ -127,71 +127,71 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0), viewType: .textTopItem)
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCallsTab(!enabled)
             })
         case let .enableRFTCopy(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsCopyRTF, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsCopyRTF, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleRTFEnabled(!enabled)
             })
         case let .acceptSecretChats(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsAcceptSecretChats, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsAcceptSecretChats, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.acceptSecretChats(!enabled)
             })
         case let .sidebar(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEnableSidebar, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsEnableSidebar, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleSidebar(!enabled)
             })
         case let .inAppSounds(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsInAppSounds, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsInAppSounds, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleInAppSounds(!enabled)
             })
         case let .shortcuts(_, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShortcuts, type: .nextContext("⌘ + ?"), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShortcuts, type: .nextContext("⌘ + ?"), viewType: viewType, action: {
                 arguments.openShortcuts()
             })
         case let .emojiReplacements(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEmojiReplacements, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsEmojiReplacements, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleEmojiReplacements(!enabled)
             })
         case let .predictEmoji(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEmojiPrediction, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsEmojiPrediction, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleEmojiPrediction(!enabled)
             })
         case let .bigEmoji(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsBigEmoji, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsBigEmoji, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleBigEmoji(!enabled)
             })
         case let .statusBar(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsStatusBarItem, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsStatusBarItem, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleStatusBar(!enabled)
             })
         case let .enterBehavior(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsSendByEnter, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsSendByEnter, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleInput(.enter)
             })
         case let .cmdEnterBehavior(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsSendByCmdEnter, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsSendByCmdEnter, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleInput(.cmdEnter)
             })
         case let .forceTouchEdit(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchEdit, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchEdit, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.edit)
             })
         case let .forceTouchReply(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchReply, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchReply, type: .selectable(enabled), viewType: viewType, action: {
                arguments.toggleForceTouchAction(.reply)
             })
         case let .forceTouchForward(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchForward, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchForward, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.forward)
             })
         case let .forceTouchPreviewMedia(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.previewMedia)
             })
         case let .callSettings(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
                 arguments.callSettings()
             })
         }
@@ -252,7 +252,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsEmojiAndStickers))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEmojiAndStickers))
     headerUnique -= 1
     
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled, viewType: .firstItem))
@@ -266,7 +266,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsInterfaceHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsInterfaceHeader))
     headerUnique -= 1
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab, viewType: .firstItem))
     entries.append(.statusBar(sectionId: sectionId, enabled: baseSettings.statusBar, viewType: .innerItem))
@@ -276,7 +276,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsShortcutsHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsShortcutsHeader))
     headerUnique -= 1
     entries.append(.shortcuts(sectionId: sectionId, viewType: .singleItem))
 
@@ -285,7 +285,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsAdvancedHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsAdvancedHeader))
     headerUnique -= 1
     entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .firstItem))
     entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
@@ -293,7 +293,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsForceTouchHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsForceTouchHeader))
     headerUnique -= 1
     
     entries.append(.forceTouchReply(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .reply, viewType: .firstItem))
@@ -303,7 +303,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsInputSettings))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsInputSettings))
     headerUnique -= 1
     entries.append(.enterBehavior(sectionId: sectionId, enabled: FastSettings.sendingType == .enter, viewType: .firstItem))
     entries.append(.cmdEnterBehavior(sectionId: sectionId, enabled: FastSettings.sendingType == .cmdEnter, viewType: .lastItem))
@@ -312,7 +312,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     sectionId += 1
 
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsCallSettingsHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsCallSettingsHeader))
     headerUnique -= 1
     
     entries.append(.callSettings(sectionId: sectionId, enabled: true, viewType: .singleItem))

@@ -30,7 +30,8 @@ private final class ChannelVisibilityControllerArguments {
     let share:(String)->Void
     let manageLinks:()->Void
     let open:(ExportedInvitation)->Void
-    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, copy: @escaping(String)->Void, revokeLink: @escaping()->Void, share: @escaping(String)->Void, manageLinks:@escaping()->Void, open:@escaping(ExportedInvitation)->Void) {
+    let toggleForwarding:(Bool)->Void
+    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, copy: @escaping(String)->Void, revokeLink: @escaping()->Void, share: @escaping(String)->Void, manageLinks:@escaping()->Void, open:@escaping(ExportedInvitation)->Void, toggleForwarding:@escaping(Bool)->Void) {
         self.context = context
         self.updateCurrentType = updateCurrentType
         self.updatePublicLinkText = updatePublicLinkText
@@ -41,6 +42,7 @@ private final class ChannelVisibilityControllerArguments {
         self.share = share
         self.manageLinks = manageLinks
         self.open = open
+        self.toggleForwarding = toggleForwarding
     }
 }
 
@@ -68,7 +70,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
     case manageLinksDesc(sectionId:Int32, GeneralViewType)
 
     case existingLinksInfo(sectionId:Int32, String, GeneralViewType)
-    case existingLinkPeerItem(sectionId:Int32, Int32, Peer, ShortPeerDeleting?, Bool, GeneralViewType)
+    case existingLinkPeerItem(sectionId:Int32, Int32, FoundPeer, ShortPeerDeleting?, Bool, GeneralViewType)
+    
+    case forwardHeader(sectionId:Int32, String, GeneralViewType)
+    case allowForward(sectionId:Int32, Bool, GeneralViewType)
+    case restrictForward(sectionId:Int32, Bool, GeneralViewType)
+    case forwardInfo(sectionId:Int32, String, GeneralViewType)
     
     case section(sectionId:Int32)
     
@@ -102,113 +109,18 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return .index(12)
         case .manageLinksDesc:
             return .index(13)
+        case .forwardHeader:
+            return .index(14)
+        case .allowForward:
+            return .index(15)
+        case .restrictForward:
+            return .index(16)
+        case .forwardInfo:
+            return .index(17)
         case let .existingLinkPeerItem(_,_, peer, _, _, _):
-            return .peer(peer.id)
+            return .peer(peer.peer.id)
         case let .section(sectionId: sectionId):
             return .index((sectionId + 1) * 1000 - sectionId)
-        }
-    }
-    static func ==(lhs: ChannelVisibilityEntry, rhs: ChannelVisibilityEntry) -> Bool {
-        switch lhs {
-        case let .typeHeader(sectionId, title, viewType):
-            if case .typeHeader(sectionId, title, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .typePublic(sectionId, selected, viewType):
-            if case .typePublic(sectionId, selected, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .typePrivate(sectionId, selected, viewType):
-            if case .typePrivate(sectionId, selected, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .typeInfo(sectionId, text, viewType):
-            if case .typeInfo(sectionId, text, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .publicLinkAvailability(sectionId, value, viewType):
-            if case .publicLinkAvailability(sectionId, value, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .privateLinkHeader(sectionId, title, viewType):
-            if case .privateLinkHeader(sectionId, title, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .privateLink(sectionId, link, importers, isNew, viewType):
-            if case .privateLink(sectionId, link, importers, isNew, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .editablePublicLink(sectionId, currenttext, text, status, viewType):
-            if case .editablePublicLink(sectionId, currenttext, text, status, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .privateLinkInfo(sectionId, text, viewType):
-            if case .privateLinkInfo(sectionId, text, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .publicLinkInfo(sectionId, text, viewType):
-            if case .publicLinkInfo(sectionId, text, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .publicLinkStatus(sectionId, addressName, status, viewType):
-            if case .publicLinkStatus(sectionId, addressName, status, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .existingLinksInfo(sectionId, text, viewType):
-            if case .existingLinksInfo(sectionId, text, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .existingLinkPeerItem(sectionId, index, lhsPeer, editing, enabled, viewType):
-            if case .existingLinkPeerItem(sectionId, index, let rhsPeer, editing, enabled, viewType) = rhs {
-                if !lhsPeer.isEqual(rhsPeer) {
-                    return false
-                }
-                return true
-            } else {
-                return false
-            }
-        case let .manageLinks(sectionId, viewType):
-            if case .manageLinks(sectionId, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .manageLinksDesc(sectionId, viewType):
-            if case .manageLinksDesc(sectionId, viewType) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs {
-                return true
-            } else {
-                return false
-            }
         }
     }
     
@@ -242,6 +154,14 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + 12
         case let .manageLinksDesc(sectionId: sectionId, _):
             return (sectionId * 1000) + 13
+        case let .forwardHeader(sectionId, _ , _):
+            return (sectionId * 1000) + 14
+        case let .allowForward(sectionId, _ , _):
+            return (sectionId * 1000) + 15
+        case let .restrictForward(sectionId, _ , _):
+            return (sectionId * 1000) + 16
+        case let .forwardInfo(sectionId, _ , _):
+            return (sectionId * 1000) + 17
         case let .existingLinkPeerItem(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + index + 20
         case let .section(sectionId: sectionId):
@@ -258,11 +178,11 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .typeHeader(_, title, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: title, viewType: viewType)
         case let .typePublic(_, selected, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelPublic, type: .selectable(selected), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelPublic, type: .selectable(selected), viewType: viewType, action: {
                 arguments.updateCurrentType(.publicChannel)
             })
         case let .typePrivate(_, selected, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelPrivate, type: .selectable(selected), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelPrivate, type: .selectable(selected), viewType: viewType, action: {
                 arguments.updateCurrentType(.privateChannel)
             })
         case let .typeInfo(_, text, viewType):
@@ -271,10 +191,10 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             let color: NSColor
             let text: String
             if value {
-                text = L10n.channelVisibilityChecking
+                text = strings().channelVisibilityChecking
                 color = theme.colors.grayText
             } else {
-                text = L10n.channelPublicNamesLimitError
+                text = strings().channelPublicNamesLimitError
                 color = theme.colors.redUI
             }
             return GeneralTextRowItem(initialSize, stableId: stableId, text: .initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
@@ -289,10 +209,10 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 
                 var items:[ContextMenuItem] = []
                 if let link = link {
-                    items.append(ContextMenuItem(L10n.channelVisibiltiyContextCopy, handler: {
+                    items.append(ContextMenuItem(strings().channelVisibiltiyContextCopy, handler: {
                         arguments.copy(link.link)
                     }))
-                    items.append(ContextMenuItem(L10n.channelVisibiltiyContextRevoke, handler: {
+                    items.append(ContextMenuItem(strings().channelVisibiltiyContextRevoke, handler: {
                         arguments.revokeLink()
                     }))
                 }
@@ -342,13 +262,25 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .existingLinksInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .existingLinkPeerItem(_, _, peer, _, _, viewType):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, status: "t.me/\(peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelVisibiltiyManageLinks, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.manageLinks)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelVisibiltiyManageLinks, icon: theme.icons.group_invite_via_link, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.manageLinks)
         case let .manageLinksDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.manageLinksEmptyDesc, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().manageLinksEmptyDesc, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)
+        case let .forwardHeader(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)
+        case let .allowForward(_, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelVisibilityForwardingEnabled, type: .selectable(selected), viewType: viewType, action: {
+                arguments.toggleForwarding(true)
+            })
+        case let .restrictForward(_, selected, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelVisibilityForwardingDisabled, type: .selectable(selected), viewType: viewType, action: {
+                arguments.toggleForwarding(false)
+            })
+        case let .forwardInfo(_, text, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -441,15 +373,15 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             }
         }
         
-        entries.append(.typeHeader(sectionId: sectionId, isGroup ? L10n.channelTypeHeaderGroup : L10n.channelTypeHeaderChannel, .textTopItem))
+        entries.append(.typeHeader(sectionId: sectionId, isGroup ? strings().channelTypeHeaderGroup : strings().channelTypeHeaderChannel, .textTopItem))
         entries.append(.typePublic(sectionId: sectionId, selectedType == .publicChannel, .firstItem))
         entries.append(.typePrivate(sectionId: sectionId, selectedType == .privateChannel, .lastItem))
         
         switch selectedType {
         case .publicChannel:
-            entries.append(.typeInfo(sectionId: sectionId, isGroup ? L10n.channelPublicAboutGroup : L10n.channelPublicAboutChannel, .textBottomItem))
+            entries.append(.typeInfo(sectionId: sectionId, isGroup ? strings().channelPublicAboutGroup : strings().channelPublicAboutChannel, .textBottomItem))
         case .privateChannel:
-            entries.append(.typeInfo(sectionId: sectionId, isGroup ? L10n.channelPrivateAboutGroup : L10n.channelPrivateAboutChannel, .textBottomItem))
+            entries.append(.typeInfo(sectionId: sectionId, isGroup ? strings().channelPrivateAboutGroup : strings().channelPrivateAboutChannel, .textBottomItem))
         }
         
         entries.append(.section(sectionId: sectionId))
@@ -479,7 +411,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                     })
                     
                     for (i, peer) in sorted.enumerated() {
-                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, peer, nil, state.revokingPeerId == nil, bestGeneralViewType(sorted, for: i)))
+                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, FoundPeer(peer: peer, subscribers: nil), nil, state.revokingPeerId == nil, bestGeneralViewType(sorted, for: i)))
                         index += 1
                     }
                 } else {
@@ -495,7 +427,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                         break
                     }
                 }
-                entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelUsernameAboutGroup : L10n.channelUsernameAboutChannel, .textBottomItem))
+                entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? strings().channelUsernameAboutGroup : strings().channelUsernameAboutChannel, .textBottomItem))
             }
 
 
@@ -506,9 +438,9 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             }
 
         case .privateChannel:
-            entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
+            entries.append(.privateLinkHeader(sectionId: sectionId, strings().channelVisibiltiyPermanentLink, .textTopItem))
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedChannelData)?.exportedInvitation, importers, isNew, .singleItem))
-            entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? L10n.channelExportLinkAboutGroup : L10n.channelExportLinkAboutChannel, .textBottomItem))
+            entries.append(.publicLinkInfo(sectionId: sectionId, isGroup ? strings().channelExportLinkAboutGroup : strings().channelExportLinkAboutChannel, .textBottomItem))
 
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
@@ -516,6 +448,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             entries.append(.manageLinksDesc(sectionId: sectionId, .textBottomItem))
 
         }
+                
     } else if let peer = view.peers[view.peerId] as? TelegramGroup {
 
         let selectedType: CurrentChannelType
@@ -540,16 +473,16 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             }
         }
         
-        entries.append(.typeHeader(sectionId: sectionId, L10n.channelTypeHeaderGroup, .textTopItem))
+        entries.append(.typeHeader(sectionId: sectionId, strings().channelTypeHeaderGroup, .textTopItem))
         entries.append(.typePublic(sectionId: sectionId, selectedType == .publicChannel, .firstItem))
         entries.append(.typePrivate(sectionId: sectionId, selectedType == .privateChannel, .lastItem))
         
         switch selectedType {
         case .publicChannel:
-            entries.append(.typeInfo(sectionId: sectionId, L10n.channelPublicAboutGroup, .textBottomItem))
+            entries.append(.typeInfo(sectionId: sectionId, strings().channelPublicAboutGroup, .textBottomItem))
 
         case .privateChannel:
-            entries.append(.typeInfo(sectionId: sectionId, L10n.channelPrivateAboutGroup, .textBottomItem))
+            entries.append(.typeInfo(sectionId: sectionId, strings().channelPrivateAboutGroup, .textBottomItem))
         }
         
         entries.append(.section(sectionId: sectionId))
@@ -579,7 +512,7 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                         }
                         return lhsDate > rhsDate
                     }) {
-                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, peer, nil, state.revokingPeerId == nil, .singleItem))
+                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, FoundPeer(peer: peer, subscribers: nil), nil, state.revokingPeerId == nil, .singleItem))
                         index += 1
                     }
                 } else {
@@ -595,13 +528,13 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                         break
                     }
                 }
-                entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelUsernameAboutGroup, .textBottomItem))
+                entries.append(.publicLinkInfo(sectionId: sectionId, strings().channelUsernameAboutGroup, .textBottomItem))
             }
             
         case .privateChannel:
-            entries.append(.privateLinkHeader(sectionId: sectionId, L10n.channelVisibiltiyPermanentLink, .textTopItem))
+            entries.append(.privateLinkHeader(sectionId: sectionId, strings().channelVisibiltiyPermanentLink, .textTopItem))
             entries.append(.privateLink(sectionId: sectionId, (view.cachedData as? CachedGroupData)?.exportedInvitation, importers, isNew, .singleItem))
-            entries.append(.publicLinkInfo(sectionId: sectionId, L10n.channelExportLinkAboutGroup, .textBottomItem))
+            entries.append(.publicLinkInfo(sectionId: sectionId, strings().channelExportLinkAboutGroup, .textBottomItem))
             
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
@@ -609,6 +542,33 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
            
         }
     }
+    
+    if let peer = view.peers[view.peerId]  {
+        entries.append(.section(sectionId: sectionId))
+        sectionId += 1
+        
+        let allowed: Bool
+        if let peer = peer as? TelegramGroup {
+            allowed = !peer.flags.contains(.copyProtectionEnabled)
+        } else if let peer = peer as? TelegramChannel {
+            allowed = !peer.flags.contains(.copyProtectionEnabled)
+        } else {
+            allowed = false
+        }
+        
+        entries.append(.forwardHeader(sectionId: sectionId, peer.isChannel ? strings().channelVisibilityForwardingChannelTitle : strings().channelVisibilityForwardingGroupTitle, .textTopItem))
+        entries.append(.allowForward(sectionId: sectionId, allowed, .firstItem))
+        entries.append(.restrictForward(sectionId: sectionId, !allowed, .lastItem))
+        
+        let desc: String
+        if peer.isChannel {
+            desc = strings().channelVisibilityForwardingChannelInfo
+        } else {
+            desc = strings().channelVisibilityForwardingGroupInfo
+        }
+        entries.append(.forwardInfo(sectionId: sectionId, desc, .textBottomItem))
+    }
+    
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
 
@@ -689,11 +649,12 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     
     let peersDisablingAddressNameAssignment = Promise<[Peer]?>()
   
-    let checkAddressNameDisposable = MetaDisposable()
-    let updateAddressNameDisposable = MetaDisposable()
-    let revokeAddressNameDisposable = MetaDisposable()
-    let disposable = MetaDisposable()
-    let exportedLinkDisposable = MetaDisposable()
+    private let checkAddressNameDisposable = MetaDisposable()
+    private let updateAddressNameDisposable = MetaDisposable()
+    private let revokeAddressNameDisposable = MetaDisposable()
+    private let toggleForwardDisposable = MetaDisposable()
+    private let disposable = MetaDisposable()
+    private let exportedLinkDisposable = MetaDisposable()
     let peerId:PeerId
     let onlyUsername:Bool
     let isChannel: Bool
@@ -711,9 +672,9 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     
     override var defaultBarTitle: String {
         if isChannel {
-            return L10n.telegramChannelVisibilityControllerChannel
+            return strings().telegramChannelVisibilityControllerChannel
         } else {
-            return L10n.telegramChannelVisibilityControllerGroup
+            return strings().telegramChannelVisibilityControllerGroup
         }
     }
     
@@ -796,14 +757,14 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 }))
             }
         }, displayPrivateLinkMenu: { [weak self] text in
-            self?.show(toaster: ControllerToaster(text: tr(L10n.shareLinkCopied)))
+            self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             copyToClipboard(text)
         }, revokePeerId: { [weak self] peerId in
             updateState { state in
                 return state.withUpdatedRevokingPeerId(peerId)
             }
             
-            self?.revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: L10n.channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+            self?.revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
                 if !result {
                     return .fail(.generic)
                 } else {
@@ -822,10 +783,10 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 self?.peersDisablingAddressNameAssignment.set(.single([]))
             }))
         }, copy: { [weak self] link in
-            self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+            self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             copyToClipboard(link)
         }, revokeLink: {
-            confirm(for: context.window, header: L10n.channelRevokeLinkConfirmHeader, information: L10n.channelRevokeLinkConfirmText, okTitle: L10n.channelRevokeLinkConfirmOK, cancelTitle: L10n.modalCancel, successHandler: { _ in
+            confirm(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId), for: context.window).start()
             })
         }, share: { link in
@@ -836,6 +797,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             if let manager = self?.linksManager {
                 showModal(with: ExportedInvitationController(invitation: invitation, peerId: peerId, accountContext: context, manager: manager, context: manager.importer(for: invitation)), for: context.window)
             }
+        }, toggleForwarding: { [weak self] value in
+            self?.toggleForwardDisposable.set(context.engine.peers.toggleMessageCopyProtection(peerId: peerId, enabled: value).start())
         })
         
         let peerView = context.account.viewTracker.peerView(peerId)
@@ -928,9 +891,9 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                             if updatedAddressNameValue.isEmpty && peer.addressName != updatedAddressNameValue, let address = peer.addressName {
                                 let text: String
                                 if peer.isChannel {
-                                    text = L10n.channelVisibilityConfirmMakePrivateChannel(address)
+                                    text = strings().channelVisibilityConfirmMakePrivateChannel(address)
                                 } else {
-                                    text = L10n.channelVisibilityConfirmMakePrivateGroup(address)
+                                    text = strings().channelVisibilityConfirmMakePrivateGroup(address)
                                 }
                                 csignal = confirmSignal(for: context.window, information: text) |> filter { $0 } |> take(1) |> map { _ in
                                     updateState { state in
@@ -951,7 +914,6 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                     |> mapToSignal { upgradedPeerId -> Signal<PeerId?, ConvertGroupToSupergroupError> in
                                         return csignal
                                             |> mapToSignal {
-                                                
                                                 showModalProgress(signal: context.engine.peers.updateAddressName(domain: .peer(upgradedPeerId), name: updatedAddressNameValue.isEmpty ? nil : updatedAddressNameValue), for: context.window)
                                             }
                                         |> mapError {_ in return ConvertGroupToSupergroupError.generic}
@@ -981,7 +943,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                 case .tooManyChannels:
                                     showInactiveChannels(context: context, source: .upgrade)
                                 case .generic:
-                                    alert(for: context.window, info: L10n.unknownError)
+                                    alert(for: context.window, info: strings().unknownError)
                                 }
                                 updateState { state in
                                     return state.withUpdatedUpdatingAddressName(false)
@@ -1010,7 +972,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(L10n.navigationDone))
+        let button = TextButtonBarView(controller: self, text: strings().navigationDone)
         
         return button
     }
@@ -1021,6 +983,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
         revokeAddressNameDisposable.dispose()
         disposable.dispose()
         exportedLinkDisposable.dispose()
+        toggleForwardDisposable.dispose()
     }
     
 }

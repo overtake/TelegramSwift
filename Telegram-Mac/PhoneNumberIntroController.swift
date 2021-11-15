@@ -35,7 +35,7 @@ class ChaneNumberIntroView : NSScrollView, AppearanceViewProtocol {
         textView.background = theme.colors.background
         documentView?.background = theme.colors.background
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.changePhoneNumberIntroDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().changePhoneNumberIntroDescription, color: theme.colors.grayText, font: .normal(.text))
         attr.detectBoldColorInString(with: .bold(.text))
         textView.set(layout: TextViewLayout(attr, alignment:.center))
         
@@ -86,11 +86,11 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: L10n.composeNext, style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: strings().composeNext, style: navigationButtonStyle, alignment:.Right)
     }
     
     func executeNext() {
-        confirm(for: mainWindow, information: L10n.changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
+        confirm(for: mainWindow, information: strings().changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
             if let context = self?.context {
                 self?.navigationController?.push(PhoneNumberConfirmController(context))
             }

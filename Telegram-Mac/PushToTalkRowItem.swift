@@ -164,7 +164,7 @@ final class PushToTalkRowView: GeneralContainableRowView {
         if let settings = item.settings {
             attr = .initialize(string: settings.string, color: .white, font: .medium(.header))
         } else {
-            attr = .initialize(string: L10n.voiceChatSettingsPushToTalkUndefined, color: GroupCallTheme.grayStatusColor, font: .medium(.header))
+            attr = .initialize(string: strings().voiceChatSettingsPushToTalkUndefined, color: GroupCallTheme.grayStatusColor, font: .medium(.header))
         }
         let layout = TextViewLayout(attr)
         layout.measure(width: .greatestFiniteMagnitude)
@@ -205,9 +205,9 @@ final class PushToTalkRowView: GeneralContainableRowView {
         let textLayout: TextViewLayout
         switch self.mode {
         case .normal:
-            textLayout = TextViewLayout(.initialize(string: L10n.voiceChatSettingsPushToTalkEditKeybind, color: GroupCallTheme.speakInactiveColor, font: .medium(.text)))
+            textLayout = TextViewLayout(.initialize(string: strings().voiceChatSettingsPushToTalkEditKeybind, color: GroupCallTheme.speakInactiveColor, font: .medium(.text)))
         case .editing:
-            textLayout = TextViewLayout(.initialize(string: L10n.voiceChatSettingsPushToTalkStopRecording, color: GroupCallTheme.speakLockedColor, font: .medium(.text)))
+            textLayout = TextViewLayout(.initialize(string: strings().voiceChatSettingsPushToTalkStopRecording, color: GroupCallTheme.speakLockedColor, font: .medium(.text)))
         }
         textLayout.measure(width: .greatestFiniteMagnitude)
         return textLayout

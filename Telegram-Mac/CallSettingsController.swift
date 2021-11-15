@@ -62,9 +62,9 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
         activeCameraDevice = cameraDevice
     }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsCameraTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsCameraTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: L10n.callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? L10n.callSettingsDeviceDefault, [SPopoverItem(L10n.callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
         arguments.toggleInputVideoDevice(nil)
     })] + devices.camera.map { value in
         return SPopoverItem(value.localizedName, {
@@ -99,9 +99,9 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     }
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.callSettingsInputTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsInputTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: L10n.callSettingsInputText, color: theme.colors.text, type: .contextSelector(microDevice?.localizedName ?? L10n.callSettingsDeviceDefault, [SPopoverItem(L10n.callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
         arguments.toggleInputAudioDevice(nil)
     })] + devices.audioInput.map { value in
         return SPopoverItem(value.localizedName, {
@@ -151,7 +151,7 @@ func CallSettingsController(sharedContext: SharedAccountContext) -> InputDataCon
         return InputDataSignalValue(entries: callSettingsEntries(settings: settings, devices: devices, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.callSettingsTitle, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().callSettingsTitle, hasDone: false)
     
     
     controller.contextObject = combineLatest(requestCameraPermission(), requestMicrophonePermission()).start()

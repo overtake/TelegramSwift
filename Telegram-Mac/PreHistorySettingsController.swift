@@ -126,17 +126,17 @@ fileprivate func preHistoryEntries(cachedData: CachedChannelData?, isGrpup: Bool
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.text(sectionId: sectionId, index: index, text: L10n.preHistorySettingsHeader, viewType: .textTopItem))
+    entries.append(.text(sectionId: sectionId, index: index, text: strings().preHistorySettingsHeader, viewType: .textTopItem))
     index += 1
     
     let enabled =  state.enabled ?? cachedData?.flags.contains(.preHistoryEnabled) ?? false
     
-    entries.append(.type(sectionId: sectionId, index: index, text: L10n.peerInfoPreHistoryVisible, enabled: enabled, selected: true, viewType: .firstItem))
+    entries.append(.type(sectionId: sectionId, index: index, text: strings().peerInfoPreHistoryVisible, enabled: enabled, selected: true, viewType: .firstItem))
     index += 1
-    entries.append(.type(sectionId: sectionId, index: index, text: L10n.peerInfoPreHistoryHidden, enabled: !enabled, selected: false, viewType: .lastItem))
+    entries.append(.type(sectionId: sectionId, index: index, text: strings().peerInfoPreHistoryHidden, enabled: !enabled, selected: false, viewType: .lastItem))
     index += 1
     
-    entries.append(.text(sectionId: sectionId, index: index, text: enabled ? L10n.preHistorySettingsDescriptionVisible : isGrpup ? L10n.preHistorySettingsDescriptionGroupHidden : L10n.preHistorySettingsDescriptionHidden, viewType: .textBottomItem))
+    entries.append(.text(sectionId: sectionId, index: index, text: enabled ? strings().preHistorySettingsDescriptionVisible : isGrpup ? strings().preHistorySettingsDescriptionGroupHidden : strings().preHistorySettingsDescriptionHidden, viewType: .textBottomItem))
     index += 1
     
     return entries
@@ -227,7 +227,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                             case .tooManyChannels:
                                 showInactiveChannels(context: context, source: .upgrade)
                             case .generic:
-                                alert(for: context.window, info: L10n.unknownError)
+                                alert(for: context.window, info: strings().unknownError)
                             }
                         })
                         
@@ -235,9 +235,9 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                         let signal: Signal<PeerId?, NoError> = context.engine.peers.updateChannelHistoryAvailabilitySettingsInteractively(peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
                         
                         if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId, let peer = peer as? TelegramChannel {
-                            confirm(for: context.window, information: L10n.preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
+                            confirm(for: context.window, information: strings().preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
                                 if peer.adminRights == nil || !peer.hasPermission(.pinMessages) {
-                                    alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
+                                    alert(for: context.window, info: strings().channelErrorDontHavePermissions)
                                 } else {
                                     let signal =  context.engine.peers.updateGroupDiscussionForChannel(channelId: linkedDiscussionPeerId, groupId: nil)
                                         |> `catch` { _ in return .complete() }
@@ -266,7 +266,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: L10n.navigationDone)
+        let button = TextButtonBarView(controller: self, text: strings().navigationDone)
         
         return button
     }

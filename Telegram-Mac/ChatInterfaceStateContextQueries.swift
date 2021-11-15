@@ -10,7 +10,7 @@ import Cocoa
 
 import SwiftSignalKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import Postbox
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
@@ -468,7 +468,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                         return false
                     }
                 }
-                if peer.displayTitle == L10n.peerDeletedUser {
+                if peer.displayTitle == strings().peerDeletedUser {
                     return false
                 }
                 if peer.indexName.matchesByTokens(normalizedQuery) {
@@ -658,7 +658,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             }
                             
                             if canLoad {
-                               confirm(for: context.window, header: L10n.chatSecretChatPreviewHeader, information: L10n.chatSecretChatPreviewText, okTitle: L10n.chatSecretChatPreviewOK, cancelTitle: L10n.chatSecretChatPreviewNO, successHandler: { result in
+                               confirm(for: context.window, header: strings().chatSecretChatPreviewHeader, information: strings().chatSecretChatPreviewText, okTitle: strings().chatSecretChatPreviewOK, cancelTitle: strings().chatSecretChatPreviewNO, successHandler: { result in
                                     FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: true)
                                     invoke(link)
                                }, cancelHandler: {

@@ -41,9 +41,9 @@ private func newThemeEntries(state: NewThemeState) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.newThemePlaceholder, filter: { $0 }, limit: 100))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().newThemePlaceholder, filter: { $0 }, limit: 100))
     index += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newThemeDesc), data: InputDataGeneralTextData()))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newThemeDesc), data: InputDataGeneralTextData()))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -138,18 +138,18 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
                 }))
                 
             }, error: { _ in
-                alert(for: context.window, info: L10n.unknownError)
+                alert(for: context.window, info: strings().unknownError)
             }))
         }))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.newThemeTitle, validateData: { data in
+    let controller = InputDataController(dataSignal: signal, title: strings().newThemeTitle, validateData: { data in
         
         let name = stateValue.with { $0.name }
         
         if name.isEmpty {
             updateState { current in
-                return current.withUpdatedError(.init(description: L10n.newThemeEmptyTextError, target: .data))
+                return current.withUpdatedError(.init(description: strings().newThemeEmptyTextError, target: .data))
             }
             return .fail(.fields([_id_input_name: .shake]))
         } else {
@@ -167,7 +167,7 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
         theme.colors.background
     })
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.newThemeCreate, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().newThemeCreate, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

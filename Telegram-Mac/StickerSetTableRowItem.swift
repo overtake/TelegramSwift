@@ -50,7 +50,7 @@ class StickerSetTableRowItem: GeneralRowItem {
         self.addPack = addPack
         self.removePack = removePack
         nameLayout = TextViewLayout(.initialize(string: info.title, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
-        countLayout = TextViewLayout(.initialize(string: L10n.stickersSetCount1Countable(Int(itemCount)), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        countLayout = TextViewLayout(.initialize(string: strings().stickersSetCount1Countable(Int(itemCount)), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: viewType, action: action, inset: NSEdgeInsets(left: 30, right: 30), enabled: enabled)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }

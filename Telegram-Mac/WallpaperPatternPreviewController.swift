@@ -48,7 +48,7 @@ final class WallpaperPatternPreviewView: View {
             self.updateIntensity?(value)
         }
         
-        let layout = TextViewLayout(.initialize(string: L10n.chatWPIntensity, color: theme.colors.grayText, font: .normal(.text)))
+        let layout = TextViewLayout(.initialize(string: strings().chatWPIntensity, color: theme.colors.grayText, font: .normal(.text)))
         layout.measure(width: .greatestFiniteMagnitude)
         intensityTextView.update(layout)
         

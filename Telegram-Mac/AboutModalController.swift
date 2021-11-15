@@ -48,7 +48,7 @@ fileprivate class AboutModalView : Control {
         
         _ = attr.append(string: " (", color: theme.colors.grayText, font: .medium(.text))
 
-        let range = attr.append(string: L10n.x3vGGIWUTitle.lowercased(), color: theme.colors.accent, font: .medium(.text))
+        let range = attr.append(string: strings().x3vGGIWUTitle.lowercased(), color: theme.colors.accent, font: .medium(.text))
         attr.addAttribute(.link, value: "copy", range: range)
         _ = attr.append(string: ")", color: theme.colors.grayText, font: .medium(.text))
 
@@ -56,7 +56,7 @@ fileprivate class AboutModalView : Control {
         
         
 
-        _ = attr.append(string: L10n.aboutDescription, color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: strings().aboutDescription, color: theme.colors.text, font: .normal(.text))
         
         let descLayout = TextViewLayout(attr, alignment: .center)
         descLayout.measure(width:frameRect.width - 40)
@@ -121,7 +121,7 @@ class AboutModalController: ModalViewController {
                 execute(inapp: url)
             } else if let url = url as? String, url == "copy" {
                 copyToClipboard(APP_VERSION_STRING)
-                self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
                 return
             }
             self?.close()

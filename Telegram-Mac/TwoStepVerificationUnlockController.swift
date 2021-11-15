@@ -235,34 +235,34 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
             case let .notSet(pendingEmail):
                 if let pendingEmail = pendingEmail {
                     
-                    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.emailCode), error: state.errors[_id_input_enter_email_code], identifier: _id_input_enter_email_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: pendingEmail.email.codeLength ?? 255))
+                    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.emailCode), error: state.errors[_id_input_enter_email_code], identifier: _id_input_enter_email_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: pendingEmail.email.codeLength ?? 255))
                     index += 1
                     
-                    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthConfirmationTextNew + "\n\n\(pendingEmail.email.pattern)\n\n[" + L10n.twoStepAuthConfirmationAbort + "]()", linkHandler: { url in
+                    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthConfirmationTextNew + "\n\n\(pendingEmail.email.pattern)\n\n[" + strings().twoStepAuthConfirmationAbort + "]()", linkHandler: { url in
                         abort()
                     }), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
                     index += 1
 
         
                 } else {
-                    entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_set_password, data: InputDataGeneralData(name: L10n.twoStepAuthSetPassword, color: theme.colors.text, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+                    entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_set_password, data: InputDataGeneralData(name: strings().twoStepAuthSetPassword, color: theme.colors.text, icon: nil, type: .none, viewType: .singleItem, action: nil)))
                     index += 1
-                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetPasswordHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthSetPasswordHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     index += 1
                 }
             case let .set(hint, hasRecoveryEmail, _, pendingResetTimestamp):
-                entries.append(.input(sectionId: sectionId, index: index, value: .string(state.passwordText), error: state.errors[_id_input_enter_pwd], identifier: _id_input_enter_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
+                entries.append(.input(sectionId: sectionId, index: index, value: .string(state.passwordText), error: state.errors[_id_input_enter_pwd], identifier: _id_input_enter_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
                 index += 1
                 if let timestamp = pendingResetTimestamp {
                     
                     if timestamp.isFuture {
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n" + L10n.twoStepAuthResetPending(autoremoveLocalized(Int(timestamp - Int32(Date().timeIntervalSince1970)))) + "\n[" + L10n.twoStepAuthCancelReset + "](reset)", linkHandler: { link in
-                            confirm(for: mainWindow, header: L10n.twoStepAuthCancelResetConfirm, information: L10n.twoStepAuthCancelResetText, okTitle: L10n.alertYes, cancelTitle: L10n.alertNO, successHandler: { _ in
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthEnterPasswordHelp + "\n\n" + strings().twoStepAuthResetPending(autoremoveLocalized(Int(timestamp - Int32(Date().timeIntervalSince1970)))) + "\n[" + strings().twoStepAuthCancelReset + "](reset)", linkHandler: { link in
+                            confirm(for: mainWindow, header: strings().twoStepAuthCancelResetConfirm, information: strings().twoStepAuthCancelResetText, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
                                 cancelReset()
                             })
                         }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     } else {
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n" + "[" + L10n.twoStepAuthReset + "](reset)", linkHandler: { link in
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthEnterPasswordHelp + "\n\n" + "[" + strings().twoStepAuthReset + "](reset)", linkHandler: { link in
                             forgotPassword()
                         }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     }
@@ -272,7 +272,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     
                     let forgot:()->Void = {
                         if !hasRecoveryEmail {
-                            confirm(for: mainWindow, header: L10n.twoStepAuthErrorHaventEmailResetHeader, information: L10n.twoStepAuthErrorHaventEmail, okTitle: L10n.twoStepAuthErrorHaventEmailReset, successHandler: { _ in
+                            confirm(for: mainWindow, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmail, okTitle: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
                                 forgotPassword()
                             })
                         } else {
@@ -281,11 +281,11 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     }
                     
                     if hint.isEmpty {
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthEnterPasswordHelp + "\n\n[" + strings().twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
                             forgot()
                         }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     } else {
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(L10n.twoStepAuthEnterPasswordHint(hint) + "\n\n" + L10n.twoStepAuthEnterPasswordHelp + "\n\n[" + L10n.twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthEnterPasswordHint(hint) + "\n\n" + strings().twoStepAuthEnterPasswordHelp + "\n\n[" + strings().twoStepAuthEnterPasswordForgot + "](forgot)", linkHandler: { link in
                             forgot()
                         }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                     }
@@ -298,11 +298,11 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
         }
     case let .manage(_, emailSet, pendingEmail, _):
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_change_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthChangePassword, color: theme.colors.text, icon: nil, type: .none, viewType: .firstItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_change_pwd, data: InputDataGeneralData(name: strings().twoStepAuthChangePassword, color: theme.colors.text, icon: nil, type: .none, viewType: .firstItem, action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_remove_pwd, data: InputDataGeneralData(name: L10n.twoStepAuthRemovePassword, color: theme.colors.text, icon: nil, type: .none, viewType: .innerItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_remove_pwd, data: InputDataGeneralData(name: strings().twoStepAuthRemovePassword, color: theme.colors.text, icon: nil, type: .none, viewType: .innerItem, action: nil)))
         index += 1
-        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_setup_email, data: InputDataGeneralData(name: emailSet ? L10n.twoStepAuthChangeEmail : L10n.twoStepAuthSetupEmail, color: theme.colors.text, icon: nil, type: .none, viewType: .lastItem, action: nil)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_setup_email, data: InputDataGeneralData(name: emailSet ? strings().twoStepAuthChangeEmail : strings().twoStepAuthSetupEmail, color: theme.colors.text, icon: nil, type: .none, viewType: .lastItem, action: nil)))
         index += 1
         
         
@@ -310,13 +310,13 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, data: InputDataGeneralData(name: L10n.twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none, viewType: .singleItem, action: nil)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_enter_email_code, data: InputDataGeneralData(name: strings().twoStepAuthEnterEmailCode, color: theme.colors.text, icon: nil, type: .none, viewType: .singleItem, action: nil)))
             index += 1
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthEmailSent), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthEmailSent), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
 
         } else {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthGenericHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthGenericHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
         }
 
@@ -384,10 +384,10 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                 break
             case let .manage(password, _, _, hasSecureValues):
                 
-                var text: String = L10n.twoStepAuthConfirmDisablePassword
+                var text: String = strings().twoStepAuthConfirmDisablePassword
                 if hasSecureValues {
                     text += "\n\n"
-                    text += L10n.secureIdWarningDataLost
+                    text += strings().secureIdWarningDataLost
                 }
                 
                 confirm(for: context.window, information: text, successHandler: { result in
@@ -413,7 +413,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                             presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                         }, error: { error in
-                            alert(for: context.window, info: L10n.unknownError)
+                            alert(for: context.window, info: strings().unknownError)
                         }))
                     }
                 })
@@ -461,15 +461,15 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                             let text: String
                             switch error {
                             case .invalidEmail:
-                                text = L10n.twoStepAuthEmailInvalid
+                                text = strings().twoStepAuthEmailInvalid
                             case .invalidCode:
-                                text = L10n.twoStepAuthEmailCodeInvalid
+                                text = strings().twoStepAuthEmailCodeInvalid
                             case .expired:
-                                text = L10n.twoStepAuthEmailCodeExpired
+                                text = strings().twoStepAuthEmailCodeExpired
                             case .flood:
-                                text = L10n.twoStepAuthFloodError
+                                text = strings().twoStepAuthFloodError
                             case .generic:
-                                text = L10n.unknownError
+                                text = strings().unknownError
                             }
                             updateState {
                                 $0.withUpdatedError(InputDataValueError(description: text, target: .data), for: _id_input_enter_email_code)
@@ -538,11 +538,11 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                         let text: String
                         switch error {
                         case .limitExceeded:
-                            text = L10n.twoStepAuthErrorLimitExceeded
+                            text = strings().twoStepAuthErrorLimitExceeded
                         case .invalidPassword:
-                            text = L10n.twoStepAuthInvalidPasswordError
+                            text = strings().twoStepAuthInvalidPasswordError
                         case .generic:
-                            text = L10n.twoStepAuthErrorGeneric
+                            text = strings().twoStepAuthErrorGeneric
                         }
                         updateState {
                             $0.withUpdatedChecking(false).withUpdatedError(InputDataValueError(description: text, target: .data), for: _id_input_enter_pwd)
@@ -698,7 +698,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                 updateState { state in
                                     return state.withUpdatedChecking(false)
                                 }
-                                alert(for: context.window, info: L10n.twoStepAuthAnError)
+                                alert(for: context.window, info: strings().twoStepAuthAnError)
                             }))
                     } else {
                         
@@ -709,7 +709,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                     updateState {
                                         $0.withUpdatedControllerData(.access(configuration: .notSet(pendingEmail: nil)))
                                     }
-                                    confirm(for: context.window, header: L10n.twoStepAuthResetSuccessHeader, information: L10n.twoStepAuthResetSuccess, okTitle: L10n.alertYes, cancelTitle: L10n.alertNO, successHandler: { _ in
+                                    confirm(for: context.window, header: strings().twoStepAuthResetSuccessHeader, information: strings().twoStepAuthResetSuccess, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
                                         let controller = twoStepVerificationPasswordEntryController(context: context, mode: .setup, initialStage: nil, result: proccessEntryResult, presentController: presentController)
                                         presentController((controller: controller, root: true, animated: true))
                                     })
@@ -721,12 +721,12 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                             formatter.dateStyle = .medium
                                             formatter.timeStyle = .medium
                                             formatter.timeZone = NSTimeZone.local
-                                            alert(for: context.window, info: L10n.twoStepAuthUnableToReset(formatter.string(from: Date.init(timeIntervalSince1970: TimeInterval(retryin)))))
+                                            alert(for: context.window, info: strings().twoStepAuthUnableToReset(formatter.string(from: Date.init(timeIntervalSince1970: TimeInterval(retryin)))))
                                         } else {
-                                            alert(for: context.window, info: L10n.errorAnError)
+                                            alert(for: context.window, info: strings().errorAnError)
                                         }
                                     default:
-                                        alert(for: context.window, info: L10n.errorAnError)
+                                        alert(for: context.window, info: strings().errorAnError)
                                     }
                                 case .declined:
                                     break
@@ -761,7 +761,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
             updateState { $0.withUpdatedChecking(false) }
             presentController((controller: twoStepVerificationUnlockController(context: context, mode: .access(.notSet(pendingEmail: nil)), presentController: presentController), root: true, animated: true))
         }, error: { error in
-            alert(for: context.window, info: L10n.unknownError)
+            alert(for: context.window, info: strings().unknownError)
         }))
     }
     
@@ -773,7 +773,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
     }
     
     
-    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.privacySettingsTwoStepVerification, validateData: { validateData -> InputDataValidation in
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: strings().privacySettingsTwoStepVerification, validateData: { validateData -> InputDataValidation in
         
         let data = stateValue.with {$0.data}
         let loading = stateValue.with {$0.checking}
@@ -849,7 +849,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                     codeEmpty = state.emailCode.isEmpty
                                     return state
                                 }
-                            return f(checking ? .loading : codeEmpty ? .disabled(L10n.navigationDone) : .enabled(L10n.navigationDone))
+                            return f(checking ? .loading : codeEmpty ? .disabled(strings().navigationDone) : .enabled(strings().navigationDone))
                             } else {
                                 
                             }
@@ -861,7 +861,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                 pwdEmpty = state.passwordText.isEmpty
                                 return state
                             }
-                            return f(checking ? .loading : pwdEmpty ? .disabled(L10n.navigationDone) : .enabled(L10n.navigationDone))
+                            return f(checking ? .loading : pwdEmpty ? .disabled(strings().navigationDone) : .enabled(strings().navigationDone))
                         }
                     } else {
                         return f(.invisible)
@@ -931,10 +931,10 @@ private func twoStepVerificationResetPasswordEntries( state: TwoStepVerification
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.errors[_id_input_recovery_code], identifier: _id_input_recovery_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.errors[_id_input_recovery_code], identifier: _id_input_recovery_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 255))
     index += 1
     
-    let info = L10n.twoStepAuthRecoveryCodeHelp + "\n\n\(L10n.twoStepAuthRecoveryEmailUnavailableNew(state.emailPattern))"
+    let info = strings().twoStepAuthRecoveryCodeHelp + "\n\n\(strings().twoStepAuthRecoveryEmailUnavailableNew(state.emailPattern))"
 
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(info, linkHandler: { _ in
         unavailable()
@@ -964,7 +964,7 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
     
     let signal: Signal<[InputDataEntry], NoError> = statePromise.get() |> map { state in
         return twoStepVerificationResetPasswordEntries(state: state, unavailable: {
-             alert(for: context.window, info: L10n.twoStepAuthRecoveryFailed)
+             alert(for: context.window, info: strings().twoStepAuthRecoveryFailed)
         })
     }
     
@@ -981,13 +981,13 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
                 let errorText: String
                 switch error {
                 case .generic:
-                    errorText = L10n.twoStepAuthGenericError
+                    errorText = strings().twoStepAuthGenericError
                 case .invalidCode:
-                    errorText = L10n.twoStepAuthRecoveryCodeInvalid
+                    errorText = strings().twoStepAuthRecoveryCodeInvalid
                 case .expired:
-                    errorText = L10n.twoStepAuthRecoveryCodeExpired
+                    errorText = strings().twoStepAuthRecoveryCodeExpired
                 case .limitExceeded:
-                    errorText = L10n.twoStepAuthFloodError
+                    errorText = strings().twoStepAuthFloodError
                 }
                 
                 updateState {
@@ -1005,7 +1005,7 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
         })
     }
     
-    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: L10n.twoStepAuthRecoveryTitle, validateData: { data in
+    return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0) }, title: strings().twoStepAuthRecoveryTitle, validateData: { data in
         
         let code = stateValue.with {$0.code}
         let loading = stateValue.with {$0.checking}
@@ -1027,7 +1027,7 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
         return { f in
             let code = stateValue.with {$0.code}
             let loading = stateValue.with {$0.checking}
-            f(loading ? .loading : code.isEmpty ? .disabled(L10n.navigationDone) : .enabled(L10n.navigationDone))
+            f(loading ? .loading : code.isEmpty ? .disabled(strings().navigationDone) : .enabled(strings().navigationDone))
         }
     }, removeAfterDisappear: true, hasDone: true, identifier: "tsv-reset")
 }
@@ -1058,9 +1058,9 @@ private func twoStepVerificationPasswordEntryControllerEntries(state: TwoStepVer
         let placeholder:String
         switch mode {
         case .change:
-            placeholder = L10n.twoStepAuthEnterPasswordPassword
+            placeholder = strings().twoStepAuthEnterPasswordPassword
         default:
-            placeholder = L10n.twoStepAuthEnterPasswordPassword
+            placeholder = strings().twoStepAuthEnterPasswordPassword
         }
         
         entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_pwd], identifier: _id_input_entry_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: placeholder, filter: { $0 }, limit: 255))
@@ -1068,36 +1068,36 @@ private func twoStepVerificationPasswordEntryControllerEntries(state: TwoStepVer
         
         switch mode {
         case .setup:
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupPasswordDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthSetupPasswordDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
         case .change:
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthChangePasswordDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthChangePasswordDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
         default:
             break
         }
         
     case let .reentry(_, text):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_reentry_pwd], identifier: _id_input_reentry_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_reentry_pwd], identifier: _id_input_reentry_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthEnterPasswordPassword, filter: { $0 }, limit: 255))
         index += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupPasswordConfirmPassword), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthSetupPasswordConfirmPassword), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
     case let .hint(_, text):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_hint], identifier: _id_input_entry_hint, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthSetupHintPlaceholder, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_hint], identifier: _id_input_entry_hint, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthSetupHintPlaceholder, filter: { $0 }, limit: 255))
         index += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthSetupHintDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthSetupHintDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
     case let .email(_, _, text, change):
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_email], identifier: _id_input_entry_email, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthEmail, filter: { $0 }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_email], identifier: _id_input_entry_email, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthEmail, filter: { $0 }, limit: 255))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(change ? L10n.twoStepAuthEmailHelpChange : L10n.twoStepAuthEmailHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(change ? strings().twoStepAuthEmailHelpChange : strings().twoStepAuthEmailHelp), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     case let .code(text, codeLength, pattern):
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_code], identifier: _id_input_entry_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: codeLength ?? 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(text), error: state.errors[_id_input_entry_code], identifier: _id_input_entry_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: codeLength ?? 255))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.twoStepAuthConfirmEmailCodeDesc(pattern)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().twoStepAuthConfirmEmailCodeDesc(pattern)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -1207,10 +1207,10 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                         }
                         switch error {
                         case .generic:
-                            alert(for: context.window, info: L10n.twoStepAuthErrorGeneric)
+                            alert(for: context.window, info: strings().twoStepAuthErrorGeneric)
                         case .invalidEmail:
                             updateState {
-                                $0.withUpdatedError(InputDataValueError(description: L10n.twoStepAuthErrorInvalidEmail, target: .data), for: _id_input_entry_email)
+                                $0.withUpdatedError(InputDataValueError(description: strings().twoStepAuthErrorInvalidEmail, target: .data), for: _id_input_entry_email)
                             }
                             f(.fail(.fields([_id_input_entry_email: .shake])))
                         }
@@ -1238,9 +1238,9 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                         let errorText: String
                         switch error {
                         case .generic:
-                            errorText = L10n.twoStepAuthErrorGeneric
+                            errorText = strings().twoStepAuthErrorGeneric
                         case .invalidEmail:
-                            errorText = L10n.twoStepAuthErrorInvalidEmail
+                            errorText = strings().twoStepAuthErrorInvalidEmail
                         }
                         updateState {
                             $0.withUpdatedError(InputDataValueError(description: errorText, target: .data), for: _id_input_entry_email)
@@ -1261,15 +1261,15 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                     let errorText: String
                     switch error {
                     case .generic:
-                        errorText = L10n.twoStepAuthGenericError
+                        errorText = strings().twoStepAuthGenericError
                     case .invalidCode:
-                        errorText = L10n.twoStepAuthRecoveryCodeInvalid
+                        errorText = strings().twoStepAuthRecoveryCodeInvalid
                     case .expired:
-                        errorText = L10n.twoStepAuthRecoveryCodeExpired
+                        errorText = strings().twoStepAuthRecoveryCodeExpired
                     case .flood:
-                        errorText = L10n.twoStepAuthFloodError
+                        errorText = strings().twoStepAuthFloodError
                     case .invalidEmail:
-                        errorText = L10n.twoStepAuthErrorInvalidEmail
+                        errorText = strings().twoStepAuthErrorInvalidEmail
                     }
                     updateState {
                         $0.withUpdatedError(InputDataValueError(description: errorText, target: .data), for: _id_input_entry_code)
@@ -1315,7 +1315,7 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                             if text.isEmpty {
                                 
                             } else if text != first {
-                                state = state.withUpdatedError(InputDataValueError(description: L10n.twoStepAuthSetupPasswordConfirmFailed, target: .data), for: _id_input_reentry_pwd)
+                                state = state.withUpdatedError(InputDataValueError(description: strings().twoStepAuthSetupPasswordConfirmFailed, target: .data), for: _id_input_reentry_pwd)
                                 f(.fail(.fields([_id_input_reentry_pwd : .shake])))
                             } else {
                                 stage = .hint(password: text, text: "")
@@ -1348,7 +1348,7 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                         presentController((controller: twoStepVerificationPasswordEntryController(context: context, mode: mode, initialStage: stage, result: result, presentController: presentController), root: false, animated: true))
                     } else {
                         if skipEmail {
-                            confirm(for: context.window, information: L10n.twoStepAuthEmailSkipAlert, okTitle: L10n.twoStepAuthEmailSkip, successHandler: { _ in
+                            confirm(for: context.window, information: strings().twoStepAuthEmailSkipAlert, okTitle: strings().twoStepAuthEmailSkip, successHandler: { _ in
                                 f(checkAndSaveState(context: context))
                             })
                         } else {
@@ -1408,34 +1408,34 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                     switch state.stage {
                     case let .entry(text):
                         if text.isEmpty {
-                            f(.disabled(L10n.navigationNext))
+                            f(.disabled(strings().navigationNext))
                         } else {
-                            f(.enabled(L10n.navigationNext))
+                            f(.enabled(strings().navigationNext))
                         }
                     case let .reentry(_, text):
                         if text.isEmpty {
-                            f(.disabled(L10n.navigationNext))
+                            f(.disabled(strings().navigationNext))
                         } else {
-                            f(.enabled(L10n.navigationNext))
+                            f(.enabled(strings().navigationNext))
                         }
                     case let .hint(_, text):
                         if text.isEmpty {
-                            f(.enabled(L10n.twoStepAuthEmailSkip))
+                            f(.enabled(strings().twoStepAuthEmailSkip))
                         } else {
-                            f(.enabled(L10n.navigationNext))
+                            f(.enabled(strings().navigationNext))
                         }
                     case let .email(_, _, text, _):
                         switch mode {
                         case .setupEmail:
-                            f(text.isEmpty ? .disabled(L10n.navigationNext) : .enabled(L10n.navigationNext))
+                            f(text.isEmpty ? .disabled(strings().navigationNext) : .enabled(strings().navigationNext))
                         default:
-                            f(text.isEmpty ? .enabled(L10n.twoStepAuthEmailSkip) : .enabled(L10n.navigationNext))
+                            f(text.isEmpty ? .enabled(strings().twoStepAuthEmailSkip) : .enabled(strings().navigationNext))
                         }
                     case let .code(text, codeLength, _):
                         if let codeLength = codeLength {
-                            f(text.length < codeLength ? .disabled(L10n.navigationNext) : .enabled(L10n.navigationNext))
+                            f(text.length < codeLength ? .disabled(strings().navigationNext) : .enabled(strings().navigationNext))
                         } else {
-                            f(text.isEmpty ? .disabled(L10n.navigationNext) : .enabled(L10n.navigationNext))
+                            f(text.isEmpty ? .disabled(strings().navigationNext) : .enabled(strings().navigationNext))
                         }
                     }
                 }
@@ -1455,11 +1455,11 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
             case .entry:
                 switch mode {
                 case .change:
-                    title = L10n.twoStepAuthChangePassword
+                    title = strings().twoStepAuthChangePassword
                 case .setup:
-                    title = L10n.twoStepAuthSetupPasswordTitle
+                    title = strings().twoStepAuthSetupPasswordTitle
                 case .setupEmail:
-                    title = L10n.twoStepAuthSetupPasswordTitle
+                    title = strings().twoStepAuthSetupPasswordTitle
                 case .enterCode:
                     preconditionFailure()
                 }
@@ -1467,20 +1467,20 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
             case .reentry:
                 switch mode {
                 case .change:
-                    title = L10n.twoStepAuthChangePassword
+                    title = strings().twoStepAuthChangePassword
                 case .setup:
-                    title = L10n.twoStepAuthSetupPasswordTitle
+                    title = strings().twoStepAuthSetupPasswordTitle
                 case .setupEmail:
-                    title = L10n.twoStepAuthSetupPasswordTitle
+                    title = strings().twoStepAuthSetupPasswordTitle
                 case .enterCode:
                     preconditionFailure()
                 }
             case .hint:
-                title = L10n.twoStepAuthSetupHintTitle
+                title = strings().twoStepAuthSetupHintTitle
             case .email:
-                title = L10n.twoStepAuthSetupEmailTitle
+                title = strings().twoStepAuthSetupEmailTitle
             case .code:
-                title = L10n.twoStepAuthSetupEmailTitle
+                title = strings().twoStepAuthSetupEmailTitle
             }
             controller.setCenterTitle(title)
         }

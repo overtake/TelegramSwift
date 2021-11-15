@@ -10,7 +10,7 @@ import Cocoa
 import Foundation
 import TGUIKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
 import MtProtoKit
@@ -216,21 +216,21 @@ var globalLinkExecutor:TextViewInteractions {
 func copyContextText(from type: LinkType) -> String {
     switch type {
     case .username:
-        return L10n.textContextCopyUsername
+        return strings().textContextCopyUsername
     case .command:
-        return L10n.textContextCopyCommand
+        return strings().textContextCopyCommand
     case .hashtag:
-        return L10n.textContextCopyHashtag
+        return strings().textContextCopyHashtag
     case .email:
-        return L10n.textContextCopyEmail
+        return strings().textContextCopyEmail
     case .plain:
-        return L10n.textContextCopyLink
+        return strings().textContextCopyLink
     case .inviteLink:
-        return L10n.textContextCopyInviteLink
+        return strings().textContextCopyInviteLink
     case .stickerPack:
-        return L10n.textContextCopyStickerPack
+        return strings().textContextCopyStickerPack
     case .code:
-        return L10n.textContextCopyCode
+        return strings().textContextCopyCode
     }
 }
 
@@ -309,7 +309,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     NSWorkspace.shared.open(url)
                 }
                 if needConfirm {
-                    confirm(for: mainWindow, header: L10n.inAppLinksConfirmOpenExternalHeader, information: L10n.inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), okTitle: L10n.inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
+                    confirm(for: mainWindow, header: strings().inAppLinksConfirmOpenExternalHeader, information: strings().inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), okTitle: strings().inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
                 } else {
                     success()
                 }
@@ -410,9 +410,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .doesntExists:
-                alert(for: context.window, info: L10n.alertUserDoesntExists)
+                alert(for: context.window, info: strings().alertUserDoesntExists)
             case .privateAccess:
-                 alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
+                 alert(for: context.window, info: strings().alertPrivateChannelAccessError)
             case .generic:
                 break
             }
@@ -445,17 +445,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                         if let peer = peer as? TelegramChannel {
                             if peer.participationStatus == .kicked {
-                                alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
+                                alert(for: context.window, info: strings().alertPrivateChannelAccessError)
                                 return
                             }
                         }
                         callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                     } else {
-                        alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
+                        alert(for: context.window, info: strings().alertPrivateChannelAccessError)
                     }
                 })
             } else {
-                alert(for: context.window, info: L10n.alertPrivateChannelAccessError)
+                alert(for: context.window, info: strings().alertPrivateChannelAccessError)
             }
         } else {
             let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
@@ -473,7 +473,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     }
                     callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                 } else {
-                    alert(for: context.window, info: tr(L10n.alertUserDoesntExists))
+                    alert(for: context.window, info: strings().alertUserDoesntExists)
                 }
                     
             })
@@ -482,10 +482,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .inviteBotToGroup(_, username, context, action, callback):
         let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
             
-            let selectedPeer = selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let selectedPeer = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 if let peerId = peerIds.first {
                     return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
-                        return confirmSignal(for: context.window, information: L10n.confirmAddBotToGroup(peer.displayTitle))
+                        return confirmSignal(for: context.window, information: strings().confirmAddBotToGroup(peer.displayTitle))
                     }
                 }
                 return .single(false)
@@ -560,7 +560,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             case let .peek(peerId, peek):
                  interaction(peerId, true, nil, .closeAfter(peek))
             case .invalidHash:
-                alert(for: context.window, info: L10n.linkExpired)
+                alert(for: context.window, info: strings().linkExpired)
             }
         })
         afterComplete(true)
@@ -592,7 +592,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }, error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: L10n.wallpaperPreviewDoesntExists)
+                    alert(for: context.window, info: strings().wallpaperPreviewDoesntExists)
                 }
             })
         }
@@ -606,9 +606,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .limitExceeded:
-                alert(for: context.window, info: L10n.loginFloodWait)
+                alert(for: context.window, info: strings().loginFloodWait)
             case .generic:
-                alert(for: context.window, info: L10n.unknownError)
+                alert(for: context.window, info: strings().unknownError)
             }
         })
         afterComplete(true)
@@ -636,16 +636,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             case .generic:
                 alert(for: context.window, info: "An error occured")
             case .versionOutdated:
-                updateAppAsYouWish(text: L10n.secureIdAppVersionOutdated, updateApp: true)
+                updateAppAsYouWish(text: strings().secureIdAppVersionOutdated, updateApp: true)
             }
         })
         afterComplete(true)
     case let .applyLocalization(_, context, value):
         _ = showModalProgress(signal: context.engine.localization.requestLocalizationPreview(identifier: value) |> deliverOnMainQueue, for: context.window).start(next: { info in
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
-                alert(for: context.window, info: L10n.applyLanguageChangeLanguageAlreadyActive(info.title))
+                alert(for: context.window, info: strings().applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {
-                confirm(for: context.window, header: L10n.applyLanguageUnsufficientDataTitle, information: L10n.applyLanguageUnsufficientDataText(info.title), cancelTitle: "", thridTitle: L10n.applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
+                confirm(for: context.window, header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancelTitle: "", thridTitle: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
                     switch result {
                     case .basic:
                         break
@@ -660,7 +660,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .generic:
-                alert(for: context.window, info: L10n.localizationPreviewErrorGeneric)
+                alert(for: context.window, info: strings().localizationPreviewErrorGeneric)
             }
         })
         afterComplete(true)
@@ -676,11 +676,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .generic:
-                alert(for: context.window, info: L10n.themeGetThemeError)
+                alert(for: context.window, info: strings().themeGetThemeError)
             case .unsupported:
-                alert(for: context.window, info: L10n.themeGetThemeError)
+                alert(for: context.window, info: strings().themeGetThemeError)
             case .slugInvalid:
-                alert(for: context.window, info: L10n.themeGetThemeError)
+                alert(for: context.window, info: strings().themeGetThemeError)
             }
         })
         afterComplete(true)
@@ -695,6 +695,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         if #available(OSX 10.12, *) {
 
         }
+        afterComplete(true)
     case .instantView:
         afterComplete(true)
     case let .settings(_, context, section):
@@ -718,7 +719,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 case let .success(callContext), let .samePeer(callContext):
                     applyGroupCallResult(context.sharedContext, callContext)
                 default:
-                    alert(for: context.window, info: L10n.errorAnError)
+                    alert(for: context.window, info: strings().errorAnError)
                 }
             })
         })
@@ -730,7 +731,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
 
 private func updateAppAsYouWish(text: String, updateApp: Bool) {
     //
-    confirm(for: mainWindow, header: appName, information: text, okTitle: updateApp ? L10n.alertButtonOKUpdateApp : L10n.modalOK, cancelTitle: updateApp ? L10n.modalCancel : "", thridTitle: nil, successHandler: { _ in
+    confirm(for: mainWindow, header: appName, information: text, okTitle: updateApp ? strings().alertButtonOKUpdateApp : strings().modalOK, cancelTitle: updateApp ? strings().modalCancel : "", thridTitle: nil, successHandler: { _ in
         if updateApp {
             #if APP_STORE
             execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
@@ -1400,7 +1401,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
         }
        
     } else if url.hasPrefix(ton_scheme), let context = context {
-        return .external(link: urlString, false)
+        return .nothing
 //        let action = url.substring(from: ton_scheme.length)
 //        if action.hasPrefix("transfer/") {
 //            let (vars, emptyVars) = urlVars(with: url as String)

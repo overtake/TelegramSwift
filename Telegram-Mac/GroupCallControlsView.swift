@@ -184,7 +184,7 @@ final class GroupCallControlsView : View {
             let hasText: Bool = mode != .fullscreen
             switch callMode {
             case .voice:
-                leftButton1Text = L10n.voiceChatSettings
+                leftButton1Text = strings().voiceChatSettings
                 leftBg = .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon)
                 if let view = leftButton2 {
                     self.leftButton2 = nil
@@ -207,7 +207,7 @@ final class GroupCallControlsView : View {
                     }
                 }
             case .video:
-                leftButton1Text = L10n.voiceChatVideoStreamVideo
+                leftButton1Text = strings().voiceChatVideoStreamVideo
                 leftBg = .animated(!hasVideo ? .cameraoff : .cameraon, GroupCallTheme.settingsColor)
                 
                 let leftButton2: CallControl
@@ -235,12 +235,12 @@ final class GroupCallControlsView : View {
                         leftButton2.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
-                leftButton2.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamScreencast : nil, mode: .animated(!hasScreencast ? .screenoff : .screenon, GroupCallTheme.settingsColor), iconSize: NSMakeSize(48, 48)), animated: animated)
+                leftButton2.updateWithData(CallControlData(text: hasText ? strings().voiceChatVideoStreamScreencast : nil, mode: .animated(!hasScreencast ? .screenoff : .screenon, GroupCallTheme.settingsColor), iconSize: NSMakeSize(48, 48)), animated: animated)
                 
-                rightButton1.updateWithData(CallControlData(text: hasText ? L10n.voiceChatVideoStreamMore : nil, mode: .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
+                rightButton1.updateWithData(CallControlData(text: hasText ? strings().voiceChatVideoStreamMore : nil, mode: .normal(GroupCallTheme.settingsColor, GroupCallTheme.settingsIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             }
             
-            end.updateWithData(CallControlData(text: hasText ? L10n.voiceChatLeave : nil, mode: .normal(GroupCallTheme.declineColor, GroupCallTheme.declineIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
+            end.updateWithData(CallControlData(text: hasText ? strings().voiceChatLeave : nil, mode: .normal(GroupCallTheme.declineColor, GroupCallTheme.declineIcon), iconSize: NSMakeSize(48, 48)), animated: animated)
             leftButton1.updateWithData(CallControlData(text: hasText ? leftButton1Text : nil, mode: leftBg, iconSize: NSMakeSize(48, 48)), animated: animated)
 
             if callMode != previousCallMode {
@@ -434,49 +434,49 @@ final class GroupCallControlsView : View {
                 if callState.isMuted {
                     if let muteState = state.muteState {
                         if muteState.canUnmute {
-                            statusText = L10n.voiceChatClickToUnmute
+                            statusText = strings().voiceChatClickToUnmute
                             switch voiceSettings.mode {
                             case .always:
                                 if let pushToTalk = voiceSettings.pushToTalk, !pushToTalk.isSpace {
-                                    secondary = L10n.voiceChatClickToUnmuteSecondaryPress(pushToTalk.string)
+                                    secondary = strings().voiceChatClickToUnmuteSecondaryPress(pushToTalk.string)
                                 } else {
-                                    secondary = L10n.voiceChatClickToUnmuteSecondaryPressDefault
+                                    secondary = strings().voiceChatClickToUnmuteSecondaryPressDefault
                                 }
                             case .pushToTalk:
                                 if let pushToTalk = voiceSettings.pushToTalk, !pushToTalk.isSpace {
-                                    secondary = L10n.voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
+                                    secondary = strings().voiceChatClickToUnmuteSecondaryHold(pushToTalk.string)
                                 } else {
-                                    secondary = L10n.voiceChatClickToUnmuteSecondaryHoldDefault
+                                    secondary = strings().voiceChatClickToUnmuteSecondaryHoldDefault
                                 }
                             case .none:
                                 secondary = nil
                             }
                         } else {
                             if !state.raisedHand {
-                                statusText = L10n.voiceChatMutedByAdmin
-                                secondary = L10n.voiceChatClickToRaiseHand
+                                statusText = strings().voiceChatMutedByAdmin
+                                secondary = strings().voiceChatClickToRaiseHand
                             } else {
-                                statusText = L10n.voiceChatRaisedHandTitle
-                                secondary = L10n.voiceChatRaisedHandText
+                                statusText = strings().voiceChatRaisedHandTitle
+                                secondary = strings().voiceChatRaisedHandText
                             }
                            
                         }
                     } else {
-                        statusText = L10n.voiceChatYouLive
+                        statusText = strings().voiceChatYouLive
                     }
                 } else {
-                    statusText = L10n.voiceChatYouLive
+                    statusText = strings().voiceChatYouLive
                 }
             case .connecting:
-                statusText = L10n.voiceChatConnecting
+                statusText = strings().voiceChatConnecting
             }
         } else if let _ = state.scheduleTimestamp {
             if state.canManageCall {
-                statusText = L10n.voiceChatStartNow
+                statusText = strings().voiceChatStartNow
             } else if state.subscribedToScheduled {
-                statusText = L10n.voiceChatRemoveReminder
+                statusText = strings().voiceChatRemoveReminder
             } else {
-                statusText = L10n.voiceChatSetReminder
+                statusText = strings().voiceChatSetReminder
             }
         } else {
             statusText = ""

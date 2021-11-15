@@ -48,7 +48,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
     sectionId += 1
 
     if state.peer.peer.canClearHistory, !onlyDelete {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: L10n.chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: strings().chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
         index += 1
 
     } else {
@@ -66,24 +66,24 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
         sectionId += 1
 
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoremoveMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state), comparable: nil, item: { [weak arguments] initialSize, stableId in
             let values:[Int32] = [0, .secondsInDay, .secondsInWeek, .secondsInMonth]
 
 
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [L10n.autoremoveMessagesNever, L10n.autoremoveMessagesDay1, L10n.autoremoveMessagesWeek1, L10n.autoremoveMessagesMonth1], viewType: .singleItem, selectAction: { index in
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.timeout, sizes: values, hasMarkers: false, titles: [strings().autoremoveMessagesNever, strings().autoremoveMessagesDay1, strings().autoremoveMessagesWeek1, strings().autoremoveMessagesMonth1], viewType: .singleItem, selectAction: { index in
                 arguments?.setTimeout(values[index])
             })
         }))
         index += 1
 
         if let _ = state.autoremoveTimeout?.timeout?.peerValue {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
         } else {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoremoveMessagesDesc), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
         }
 
@@ -128,9 +128,9 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
             }
         }
         if canRemoveGlobally {
-            thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
         }
-        modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup, okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+        modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup, okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
             context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
             close?()
         })
@@ -141,7 +141,7 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
         return InputDataSignalValue(entries: entries(state, arguments: arguments, onlyDelete: onlyDelete))
     }
 
-    let controller = InputDataController(dataSignal: signal, title: onlyDelete ? L10n.autoremoveMessagesTitleDeleteOnly : L10n.autoremoveMessagesTitle, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: onlyDelete ? strings().autoremoveMessagesTitleDeleteOnly : strings().autoremoveMessagesTitle, hasDone: false)
 
 
     controller.onDeinit = {
@@ -183,14 +183,14 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
 //            if state.timeout != 0 {
 //                switch state.timeout {
 //                case .secondsInDay:
-//                    text = L10n.tipAutoDeleteTimerSetForDay
+//                    text = strings().tipAutoDeleteTimerSetForDay
 //                case .secondsInWeek:
-//                    text = L10n.tipAutoDeleteTimerSetForWeek
+//                    text = strings().tipAutoDeleteTimerSetForWeek
 //                default:
 //                    break
 //                }
 //            } else {
-//                text = L10n.tipAutoDeleteTimerSetOff
+//                text = strings().tipAutoDeleteTimerSetOff
 //            }
             
             _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: state.timeout == 0 ? nil : state.timeout), for: context.window).start(completed: {
@@ -204,7 +204,7 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
         }))
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalDone, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
 

@@ -222,7 +222,7 @@ private final class LimitView : View {
         
         let config = GroupCallsConfig(context.appConfiguration)
         
-        let layout = TextViewLayout(.initialize(string: L10n.voiceChatTooltipErrorVideoUnavailable(config.videoLimit), color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+        let layout = TextViewLayout(.initialize(string: strings().voiceChatTooltipErrorVideoUnavailable(config.videoLimit), color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
         layout.measure(width: size.width - 40)
         textView.update(layout)
         

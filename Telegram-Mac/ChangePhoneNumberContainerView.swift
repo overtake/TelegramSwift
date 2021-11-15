@@ -99,13 +99,13 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
-        countryLabel.attributedString = .initialize(string: tr(L10n.loginCountryLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
+        countryLabel.attributedString = .initialize(string: strings().loginCountryLabel, color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
         countryLabel.sizeToFit()
         
-        numberLabel.attributedString = .initialize(string: tr(L10n.loginYourPhoneLabel), color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
+        numberLabel.attributedString = .initialize(string: strings().loginYourPhoneLabel, color: theme.colors.grayText, font: NSFont.normal(FontSize.title))
         numberLabel.sizeToFit()
         
-        numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.loginPhoneFieldPlaceholder), color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
+        numberText.placeholderAttributedString = NSAttributedString.initialize(string: strings().loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
         
         needsLayout = true
     }
@@ -114,9 +114,9 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
         let text:String
         switch error {
         case .invalidPhoneNumber:
-            text = tr(L10n.phoneNumberInvalid)
+            text = strings().phoneNumberInvalid
         case .limitExceeded:
-            text = tr(L10n.loginFloodWait)
+            text = strings().loginFloodWait
         case .generic:
             text = "undefined error"
         case .phoneLimitExceeded:
@@ -289,7 +289,7 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
     func update(selectedItem:CountryItem?, update:Bool, updateCode:Bool = true) -> Void {
         self.selectedItem = selectedItem
         if update {
-            countrySelector.set(text: selectedItem?.shortName ?? tr(L10n.loginInvalidCountryCode), for: .Normal)
+            countrySelector.set(text: selectedItem?.shortName ?? strings().loginInvalidCountryCode, for: .Normal)
             _ = countrySelector.sizeToFit()
             if updateCode {
                 codeText.stringValue = selectedItem != nil ? "+\(selectedItem!.code)" : "+"

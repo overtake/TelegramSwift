@@ -61,7 +61,7 @@ private final class ChatCalendarHeaderRowView: TableStickView {
         headerView.userInteractionEnabled = false
         headerView.isSelectable = false
         
-        let days:[String] = [L10n.calendarWeekDaysMonday, L10n.calendarWeekDaysTuesday, L10n.calendarWeekDaysWednesday, L10n.calendarWeekDaysThrusday, L10n.calendarWeekDaysFriday, L10n.calendarWeekDaysSaturday, L10n.calendarWeekDaysSunday]
+        let days:[String] = [strings().calendarWeekDaysMonday, strings().calendarWeekDaysTuesday, strings().calendarWeekDaysWednesday, strings().calendarWeekDaysThrusday, strings().calendarWeekDaysFriday, strings().calendarWeekDaysSaturday, strings().calendarWeekDaysSunday]
         for day in days {
             let view = TextView()
             view.userInteractionEnabled = false

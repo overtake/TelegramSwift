@@ -78,7 +78,7 @@ private final class PopularPeerItem : TableRowItem {
         var items:[ContextMenuItem] = []
         switch type {
         case let .peer(peer, _, _):
-            items.append(ContextMenuItem(L10n.searchPopularDelete, handler: { [weak self] in
+            items.append(ContextMenuItem(strings().searchPopularDelete, handler: { [weak self] in
                 guard let `self` = self else {return}
                // self.table?.remove(at: self.index, redraw: true, animation: .effectFade)
                 _ = self.context.engine.peers.removeRecentPeer(peerId: peer.id).start()
@@ -139,11 +139,11 @@ private final class PopularPeerItemView : HorizontalRowView {
         case .savedMessages:
             let icon = theme.icons.searchSaved
             imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            text = L10n.searchPopularSavedMessages
+            text = strings().searchPopularSavedMessages
         case let .articles(unreadCount):
             let icon = theme.icons.searchArticle
             imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(4), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            text = L10n.searchPopularArticles
+            text = strings().searchPopularArticles
             if unreadCount > 0 {
                 let node = BadgeNode(NSAttributedString.initialize(string: "\(unreadCount)", color: .white, font: .medium(11)), theme.chatList.badgeBackgroundColor)
                 node.view = badgeView

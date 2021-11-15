@@ -1,0 +1,6 @@
+framework module Mozjpeg {
+  umbrella header "Mozjpeg.h"
+
+  export *
+  module * { export * }
+}

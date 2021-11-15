@@ -116,21 +116,21 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
         case let .turnOn(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeTurnOn), nameStyle: actionStyle, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().passcodeTurnOn, nameStyle: actionStyle, type: .none, viewType: viewType, action: {
                 arguments.turnOn()
             })
         case let .turnOff(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeTurnOff), nameStyle: actionStyle, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().passcodeTurnOff, nameStyle: actionStyle, type: .none, viewType: viewType, action: {
                 arguments.turnOff()
             })
         case let .change(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeChange), nameStyle: actionStyle, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().passcodeChange, nameStyle: actionStyle, type: .none, viewType: viewType, action: {
                 arguments.change()
             })
         case let .turnOnDescription(_, viewType), let .turnOffDescription(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: L10n.passcodeControllerText, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: strings().passcodeControllerText, viewType: viewType)
         case let .turnTouchId(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: tr(L10n.passcodeUseTouchId), type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().passcodeUseTouchId, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleTouchId(!enabled)
             })
         case let .autoLock(sectionId: _, time, viewType):
@@ -138,19 +138,19 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
             var text:String
             if let time = time {
                 if time < 60 {
-                    text = tr(L10n.timerSecondsCountable(Int(time)))
+                    text = strings().timerSecondsCountable(Int(time))
                 } else if time < 60 * 60  {
-                    text = tr(L10n.timerMinutesCountable(Int(time / 60)))
+                    text = strings().timerMinutesCountable(Int(time / 60))
                 } else if time < 60 * 60 * 24  {
-                    text = tr(L10n.timerHoursCountable(Int(time / 60) / 60))
+                    text = strings().timerHoursCountable(Int(time / 60) / 60)
                 } else {
-                    text = tr(L10n.timerDaysCountable(Int(time / 60) / 60 / 24))
+                    text = strings().timerDaysCountable(Int(time / 60) / 60 / 24)
                 }
-                text = tr(L10n.passcodeAutoLockIfAway(text))
+                text = strings().passcodeAutoLockIfAway(text)
             } else {
-                text = tr(L10n.passcodeAutoLockDisabled)
+                text = strings().passcodeAutoLockDisabled
             }
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.passcodeAutolock, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().passcodeAutolock, type: .context(text), viewType: viewType, action: {
                 arguments.ifAway()
             })
         }
@@ -199,22 +199,22 @@ class PasscodeSettingsViewController: TableViewController {
             
             var items:[SPopoverItem] = []
             
-            items.append(SPopoverItem(tr(L10n.passcodeAutoLockDisabled), { [weak self] in
+            items.append(SPopoverItem(strings().passcodeAutoLockDisabled, { [weak self] in
                 self?.updateAwayTimeout(nil)
             }))
             
             
             
-            items.append(SPopoverItem(tr(L10n.passcodeAutoLockIfAway(tr(L10n.timerMinutesCountable(1)))), { [weak self] in
+            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerMinutesCountable(1)), { [weak self] in
                 self?.updateAwayTimeout(60)
             }))
-            items.append(SPopoverItem(tr(L10n.passcodeAutoLockIfAway(tr(L10n.timerMinutesCountable(5)))), { [weak self] in
+            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerMinutesCountable(5)), { [weak self] in
                 self?.updateAwayTimeout(60 * 5)
             }))
-            items.append(SPopoverItem(tr(L10n.passcodeAutoLockIfAway(tr(L10n.timerHoursCountable(1)))), { [weak self] in
+            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerHoursCountable(1)), { [weak self] in
                 self?.updateAwayTimeout(60 * 60)
             }))
-            items.append(SPopoverItem(tr(L10n.passcodeAutoLockIfAway(tr(L10n.timerHoursCountable(5)))), { [weak self] in
+            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerHoursCountable(5)), { [weak self] in
                 self?.updateAwayTimeout(60 * 60 * 5)
             }))
             

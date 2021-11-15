@@ -12,6 +12,7 @@ import TelegramCore
 
 import Postbox
 import SwiftSignalKit
+import Localization
 
 enum SelectPeerEntryStableId : Hashable {
     case search
@@ -194,10 +195,10 @@ struct SelectPeerValue : Equatable {
         }
         
         var color:NSColor = customTheme?.grayTextColor ?? theme.colors.grayText
-        var string:String = L10n.peerStatusLongTimeAgo
+        var string:String = strings().peerStatusLongTimeAgo
         
         if let count = subscribers, peer.isGroup || peer.isSupergroup {
-            let countValue = L10n.privacySettingsGroupMembersCountCountable(count)
+            let countValue = strings().privacySettingsGroupMembersCountCountable(count)
             string = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
         } else if peer.isGroup || peer.isSupergroup {
             return (nil, color)
@@ -211,7 +212,7 @@ struct SelectPeerValue : Equatable {
             }
         }
         if peer.isBot {
-            string = L10n.presenceBot.lowercased()
+            string = strings().presenceBot.lowercased()
         }
         if ignoreStatus {
             return (nil, customTheme?.grayTextColor ?? theme.colors.grayText)
@@ -225,7 +226,7 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
     
     if let linkInvation = linkInvation {
         let icon = NSImage(named: "Icon_InviteViaLink")!.precomposed(theme.colors.accent, flipVertical: true)
-        entries.append(SelectPeerEntry.inviteLink(L10n.peerSelectInviteViaLink, icon, 0, GeneralRowItem.Theme(), linkInvation))
+        entries.append(SelectPeerEntry.inviteLink(strings().peerSelectInviteViaLink, icon, 0, GeneralRowItem.Theme(), linkInvation))
     }
         
     var index:Int32 = 0
@@ -310,7 +311,7 @@ private func searchEntriesForPeers(_ peers:[SelectPeerValue], _ global: [SelectP
         }
         
         if !global.isEmpty {
-            entries.append(.separator(index, GeneralRowItem.Theme(), L10n.searchSeparatorGlobalPeers))
+            entries.append(.separator(index, GeneralRowItem.Theme(), strings().searchSeparatorGlobalPeers))
             index += 1
             
         }
@@ -737,7 +738,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     
     var index:Int32 = 0
     if !participants.isEmpty {
-        //entries.append(.separator(index, tr(L10n.channelSelectPeersMembers)))
+        //entries.append(.separator(index, strings().channelSelectPeersMembers))
         index += 1
         for participant in participants {
             if account.peerId != participant.peer.id {
@@ -748,7 +749,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
         }
     }
     if let users = users, !users.isEmpty {
-        entries.append(.separator(index, GeneralRowItem.Theme(), tr(L10n.channelSelectPeersContacts)))
+        entries.append(.separator(index, GeneralRowItem.Theme(), strings().channelSelectPeersContacts))
         index += 1
         for peer in users {
             if account.peerId != peer.peer.id {
@@ -760,7 +761,7 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
     }
     
     if !remote.isEmpty {
-        entries.append(.separator(index, GeneralRowItem.Theme(), tr(L10n.channelSelectPeersGlobal)))
+        entries.append(.separator(index, GeneralRowItem.Theme(), strings().channelSelectPeersGlobal))
         index += 1
         for peer in remote {
             if account.peerId != peer.peer.id {
@@ -1229,11 +1230,11 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
             let removed = oldValue.selected.subtracting(value.selected)
             
             if added.count == 0 && value.isLimitReached {
-                alert(for: mainWindow, info: L10n.composeCreateGroupLimitError)
+                alert(for: mainWindow, info: strings().composeCreateGroupLimitError)
             }
             
             let tokens = added.map {
-                return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? L10n.peerDeletedUser, uniqueId: $0.toInt64())
+                return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? strings().peerDeletedUser, uniqueId: $0.toInt64())
             }
             genericView.tokenView.addTokens(tokens: tokens, animated: animated)
             
@@ -1248,7 +1249,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
             
             if let limits = limitsConfiguration {
                 let attributed = NSMutableAttributedString()
-                _ = attributed.append(string: L10n.telegramSelectPeersController, color: theme.colors.text, font: .medium(.title))
+                _ = attributed.append(string: strings().telegramSelectPeersController, color: theme.colors.text, font: .medium(.title))
                 _ = attributed.append(string: "   ")
                 _ = attributed.append(string: "\(interactions.presentation.selected.count.formattedWithSeparator)/\(limits.maxSupergroupMemberCount.formattedWithSeparator)", color: theme.colors.grayText, font: .normal(.title))
                 self.centerBarView.text = attributed
@@ -1467,7 +1468,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 let removed = oldValue.selected.subtracting(value.selected)
                 
                 let tokens = added.map {
-                    return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? L10n.peerDeletedUser, uniqueId: $0.toInt64())
+                    return SearchToken(name: value.peers[$0]?.compactDisplayTitle ?? strings().peerDeletedUser, uniqueId: $0.toInt64())
                 }
                 genericView.tokenView.addTokens(tokens: tokens, animated: animated)
                 
@@ -1642,7 +1643,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         if behavior.limit == 1 {
             return nil
         } else {
-            return ModalInteractions(acceptTitle: behavior.okTitle ?? L10n.modalOK, accept: { [weak self] in
+            return ModalInteractions(acceptTitle: behavior.okTitle ?? strings().modalOK, accept: { [weak self] in
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }

@@ -30,12 +30,12 @@ private func localizedInactiveDate(_ timestamp: Int32) -> String {
     if timeinfoNow.tm_year == timeinfo.tm_year && timeinfoNow.tm_mon == timeinfo.tm_mon {
         //weeks
         let dif = Int(roundf(Float(timeinfoNow.tm_mday - timeinfo.tm_mday) / 7))
-        string = L10n.inactiveChannelsInactiveWeekCountable(dif)
+        string = strings().inactiveChannelsInactiveWeekCountable(dif)
 
     } else if timeinfoNow.tm_year == timeinfo.tm_year  {
         //month
         let dif = Int(timeinfoNow.tm_mon - timeinfo.tm_mon)
-        string = L10n.inactiveChannelsInactiveMonthCountable(dif)
+        string = strings().inactiveChannelsInactiveMonthCountable(dif)
     } else {
         //year
         var dif = Int(timeinfoNow.tm_year - timeinfo.tm_year)
@@ -43,7 +43,7 @@ private func localizedInactiveDate(_ timestamp: Int32) -> String {
         if Int(timeinfoNow.tm_mon - timeinfo.tm_mon) > 6 {
             dif += 1
         }
-        string = L10n.inactiveChannelsInactiveYearCountable(dif)
+        string = strings().inactiveChannelsInactiveYearCountable(dif)
     }
     return string
 }
@@ -90,7 +90,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
 //
     if let channels = state.channels {
         if !channels.isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
             index += 1
         }
         for channel in channels {
@@ -112,7 +112,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         }
         
     } else {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return LoadingTableItem(initialSize, height: 42, stableId: stableId, viewType: .singleItem)
@@ -147,11 +147,11 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
         return InputDataSignalValue(entries: inactiveEntries(state: state, arguments: arguments, source: source))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.inactiveChannelsTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().inactiveChannelsTitle)
     
     var close: (()->Void)? = nil
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.inactiveChannelsOK, accept: {
+    let modalInteractions = ModalInteractions(acceptTitle: strings().inactiveChannelsOK, accept: {
         close?()
         
         if !arguments.select.presentation.selected.isEmpty {
@@ -182,7 +182,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
             let state = stateValue.with { $0 }
             if let channels = state.channels {
                 button.isEnabled = channels.isEmpty || !arguments.select.presentation.selected.isEmpty
-                button.set(text: channels.isEmpty ? L10n.modalOK : L10n.inactiveChannelsOK, for: .Normal)
+                button.set(text: channels.isEmpty ? strings().modalOK : strings().inactiveChannelsOK, for: .Normal)
             } else {
                 button.isEnabled = false
             }
@@ -219,17 +219,17 @@ enum InactiveSource {
     var localizedString: String {
         switch self {
         case .join:
-            return L10n.joinChannelsTooMuch
+            return strings().joinChannelsTooMuch
         case .create:
-            return L10n.createChannelsTooMuch
+            return strings().createChannelsTooMuch
         case .upgrade:
-            return L10n.upgradeChannelsTooMuch
+            return strings().upgradeChannelsTooMuch
         case .invite:
-            return L10n.inviteChannelsTooMuch
+            return strings().inviteChannelsTooMuch
         }
     }
     var header: String {
-        return L10n.inactiveChannelsBlockHeader
+        return strings().inactiveChannelsBlockHeader
     }
 }
 

@@ -53,7 +53,7 @@ class ColdStartPasslockController: ModalViewController {
         genericView.logoutImpl = { [weak self] in
             guard let window = self?.window else { return }
             
-            confirm(for: window, information: L10n.accountConfirmLogoutText, successHandler: { [weak self] _ in
+            confirm(for: window, information: strings().accountConfirmLogoutText, successHandler: { [weak self] _ in
                 guard let `self` = self else { return }
                 
                 _ = showModalProgress(signal: self.logoutImpl(), for: window).start(completed: { [weak self] in

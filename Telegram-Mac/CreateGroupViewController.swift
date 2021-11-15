@@ -99,11 +99,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
             
             switch entry.entry {
             case let .info(_, photo, currentText, viewType):
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: L10n.createGroupNameHolder, photo: photo, viewType: viewType, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
+                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: strings().createGroupNameHolder, photo: photo, viewType: viewType, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
             case let .peer(_, peer, _, presence, viewType):
                 
                 var color:NSColor = theme.colors.grayText
-                var string:String = L10n.peerStatusRecently
+                var string:String = strings().peerStatusRecently
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))

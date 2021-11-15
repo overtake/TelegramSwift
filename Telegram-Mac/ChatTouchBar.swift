@@ -326,13 +326,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         
         var entries: [TouchBarStickerEntry] = []
         if !stickers.favorite.isEmpty {
-            let layout = TextViewLayout(.initialize(string: L10n.touchBarFavorite, color: .grayText, font: .normal(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().touchBarFavorite, color: .grayText, font: .normal(.header)))
             layout.measure(width: .greatestFiniteMagnitude)
             entries.append(.header(layout))
             entries.append(contentsOf: stickers.favorite.map {.sticker($0)})
         }
         if !stickers.recent.isEmpty {
-            let layout = TextViewLayout(.initialize(string: L10n.touchBarRecent, color: .grayText, font: .normal(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().touchBarRecent, color: .grayText, font: .normal(.header)))
             layout.measure(width: .greatestFiniteMagnitude)
             entries.append(.header(layout))
             entries.append(contentsOf: stickers.recent.map {.sticker($0)})
@@ -446,7 +446,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             let item = NSCustomTouchBarItem(identifier: identifier)
             let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction(_:)))
             button.addWidthConstraint(size: 200)
-            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.accent
+            button.bezelColor = actionKey == strings().chatInputMute || actionKey == strings().chatInputUnmute ? nil : theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -499,7 +499,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.trackingMode = .momentary
             item.visibilityPriority = .high
             item.collapsedRepresentation = segment
-            item.customizationLabel = L10n.touchBarLabelEmojiAndStickers;
+            item.customizationLabel = strings().touchBarLabelEmojiAndStickers;
             return item
             
 //            let item = NSPopoverTouchBarItem(identifier: identifier)
@@ -525,7 +525,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.target = self
             segment.action = #selector(infoAndAttach(_:))
             item.collapsedRepresentation = segment
-            item.customizationLabel = L10n.touchBarLabelChatActions;
+            item.customizationLabel = strings().touchBarLabelChatActions;
             return item
         case .markdown:
             let item = NSPopoverTouchBarItem(identifier: identifier)
@@ -547,7 +547,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             return item
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(saveEditingMessage))
+            let button = NSButton(title: strings().navigationDone, target: self, action: #selector(saveEditingMessage))
             button.bezelColor = theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
@@ -555,7 +555,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .chatEditMessageUpdateMedia:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_AttachPhotoOrVideo"))!
-            let button = NSButton(title: L10n.touchBarEditMessageReplaceWithMedia, image: icon, target: self, action: #selector(replaceWithMedia))
+            let button = NSButton(title: strings().touchBarEditMessageReplaceWithMedia, image: icon, target: self, action: #selector(replaceWithMedia))
             button.imageHugsTitle = true
             item.view = button
             item.customizationLabel = button.title
@@ -563,21 +563,21 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .chatEditMessageUpdateFile:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_AttachFile"))!
-            let button = NSButton(title: L10n.touchBarEditMessageReplaceWithFile, image: icon, target: self, action: #selector(replaceWithFile))
+            let button = NSButton(title: strings().touchBarEditMessageReplaceWithFile, image: icon, target: self, action: #selector(replaceWithFile))
             button.imageHugsTitle = true
             item.view = button
             item.customizationLabel = button.title
             return item
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(attachFile))
+            let button = NSButton(title: strings().navigationDone, target: self, action: #selector(attachFile))
             button.bezelColor = theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
         case .chatEditMessageCancel:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.navigationCancel, target: self, action: #selector(cancelMessageEditing))
+            let button = NSButton(title: strings().navigationCancel, target: self, action: #selector(cancelMessageEditing))
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -585,13 +585,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 //            let item = NSCustomTouchBarItem(identifier: identifier)
 //            let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction))
 //            button.addWidthConstraint(size: 200)
-//            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.accent
+//            button.bezelColor = actionKey == strings().chatInputMute || actionKey == strings().chatInputUnmute ? nil : theme.colors.accent
 //            item.view = button
 //            item.customizationLabel = button.title
 //            return item
         case .chatForwardMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.messageActionsPanelForward, target: self, action: #selector(forwardMessages))
+            let button = NSButton(title: strings().messageActionsPanelForward, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true
@@ -601,7 +601,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             return item
         case .chatDeleteMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.messageActionsPanelDelete, target: self, action: #selector(deleteMessages))
+            let button = NSButton(title: strings().messageActionsPanelDelete, target: self, action: #selector(deleteMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.redUI
             button.imageHugsTitle = true

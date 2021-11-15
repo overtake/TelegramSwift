@@ -70,9 +70,9 @@ private enum SelectivePrivacySettingsSection: Int32 {
 
 private func stringForUserCount(_ count: Int) -> String {
     if count == 0 {
-        return tr(L10n.privacySettingsControllerAddUsers)
+        return strings().privacySettingsControllerAddUsers
     } else {
-        return tr(L10n.privacySettingsControllerUserCountCountable(count))
+        return strings().privacySettingsControllerUserCountCountable(count)
     }
 }
 
@@ -162,30 +162,30 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case let .settingHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .everybody(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerEverbody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.everybody)
             })
 
         case let .contacts(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerMyContacts, type: .selectable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerMyContacts, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.contacts)
             })
         case let .nobody(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerNobody, type: .selectable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerNobody, type: .selectable(value), viewType: viewType, action: {
                 arguments.updateType(.nobody)
             })
         case let .p2pHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .p2pAlways(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pAlways, type: .selectable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerP2pAlways, type: .selectable(value), viewType: viewType, action: {
                 arguments.p2pMode(.everybody)
             })
         case let .p2pContacts(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pContacts, type: .selectable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerP2pContacts, type: .selectable(value), viewType: viewType, action: {
                 arguments.p2pMode(.contacts)
             })
         case let .p2pNever(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsControllerP2pNever, type: .selectable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsControllerP2pNever, type: .selectable(value), viewType: viewType, action: {
                 arguments.p2pMode(.nobody)
             })
         case let .p2pDesc(_, text, viewType):
@@ -201,7 +201,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
                 arguments.openEnableFor(.main)
             })
         case let .peersInfo(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsControllerPeerInfo, viewType: viewType)
         case let .p2pDisableFor(_, title, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: title, type: .context(stringForUserCount(count)), viewType: viewType, action: {
                 arguments.openDisableFor(.callP2P)
@@ -211,7 +211,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
                 arguments.openEnableFor(.callP2P)
             })
         case let .p2pPeersInfo(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsControllerPeerInfo, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsControllerPeerInfo, viewType: viewType)
         case let .phoneDiscoveryHeader(_, title, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: title, viewType: viewType)
         case let .phoneDiscoveryEverybody(_, title, selected, viewType):
@@ -301,39 +301,39 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
     let enableForText: String
     switch kind {
     case .presence:
-        settingTitle = L10n.privacySettingsControllerLastSeenHeader
-        settingInfoText = L10n.privacySettingsControllerLastSeenDescription
-        disableForText = L10n.privacySettingsControllerNeverShareWith
-        enableForText = L10n.privacySettingsControllerAlwaysShareWith
+        settingTitle = strings().privacySettingsControllerLastSeenHeader
+        settingInfoText = strings().privacySettingsControllerLastSeenDescription
+        disableForText = strings().privacySettingsControllerNeverShareWith
+        enableForText = strings().privacySettingsControllerAlwaysShareWith
     case .groupInvitations:
-        settingTitle = L10n.privacySettingsControllerGroupHeader
-        settingInfoText = L10n.privacySettingsControllerGroupDescription
-        disableForText = L10n.privacySettingsControllerNeverAllow
-        enableForText = L10n.privacySettingsControllerAlwaysAllow
+        settingTitle = strings().privacySettingsControllerGroupHeader
+        settingInfoText = strings().privacySettingsControllerGroupDescription
+        disableForText = strings().privacySettingsControllerNeverAllow
+        enableForText = strings().privacySettingsControllerAlwaysAllow
     case .voiceCalls:
-        settingTitle = L10n.privacySettingsControllerPhoneCallHeader
-        settingInfoText = L10n.privacySettingsControllerPhoneCallDescription
-        disableForText = L10n.privacySettingsControllerNeverAllow
-        enableForText = L10n.privacySettingsControllerAlwaysAllow
+        settingTitle = strings().privacySettingsControllerPhoneCallHeader
+        settingInfoText = strings().privacySettingsControllerPhoneCallDescription
+        disableForText = strings().privacySettingsControllerNeverAllow
+        enableForText = strings().privacySettingsControllerAlwaysAllow
     case .profilePhoto:
-        settingTitle = L10n.privacySettingsControllerProfilePhotoWhoCanSeeMyPhoto
-        settingInfoText = L10n.privacySettingsControllerProfilePhotoCustomHelp
-        disableForText = L10n.privacySettingsControllerNeverShareWith
-        enableForText = L10n.privacySettingsControllerAlwaysShareWith
+        settingTitle = strings().privacySettingsControllerProfilePhotoWhoCanSeeMyPhoto
+        settingInfoText = strings().privacySettingsControllerProfilePhotoCustomHelp
+        disableForText = strings().privacySettingsControllerNeverShareWith
+        enableForText = strings().privacySettingsControllerAlwaysShareWith
     case .forwards:
-        settingTitle = L10n.privacySettingsControllerForwardsWhoCanForward
-        settingInfoText = L10n.privacySettingsControllerForwardsCustomHelp
-        disableForText = L10n.privacySettingsControllerNeverAllow
-        enableForText = L10n.privacySettingsControllerAlwaysAllow
+        settingTitle = strings().privacySettingsControllerForwardsWhoCanForward
+        settingInfoText = strings().privacySettingsControllerForwardsCustomHelp
+        disableForText = strings().privacySettingsControllerNeverAllow
+        enableForText = strings().privacySettingsControllerAlwaysAllow
     case .phoneNumber:
         if state.setting == .nobody {
             settingInfoText = nil
         } else {
-            settingInfoText = L10n.privacySettingsControllerPhoneNumberCustomHelp
+            settingInfoText = strings().privacySettingsControllerPhoneNumberCustomHelp
         }
-        settingTitle = L10n.privacySettingsControllerPhoneNumberWhoCanSeePhoneNumber
-        disableForText = L10n.privacySettingsControllerNeverShareWith
-        enableForText = L10n.privacySettingsControllerAlwaysShareWith
+        settingTitle = strings().privacySettingsControllerPhoneNumberWhoCanSeePhoneNumber
+        disableForText = strings().privacySettingsControllerNeverShareWith
+        enableForText = strings().privacySettingsControllerAlwaysShareWith
 
     }
 
@@ -357,10 +357,10 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
     sectionId += 1
     
     if case .phoneNumber = kind, state.setting == .nobody {
-        entries.append(.phoneDiscoveryHeader(sectionId, L10n.privacyPhoneNumberSettingsDiscoveryHeader, .textTopItem))
-        entries.append(.phoneDiscoveryEverybody(sectionId, L10n.privacySettingsControllerEverbody, state.phoneDiscoveryEnabled != false, .firstItem))
-        entries.append(.phoneDiscoveryMyContacts(sectionId, L10n.privacySettingsControllerMyContacts, state.phoneDiscoveryEnabled == false, .lastItem))
-        entries.append(.phoneDiscoveryInfo(sectionId, L10n.privacyPhoneNumberSettingsCustomDisabledHelp, .textBottomItem))
+        entries.append(.phoneDiscoveryHeader(sectionId, strings().privacyPhoneNumberSettingsDiscoveryHeader, .textTopItem))
+        entries.append(.phoneDiscoveryEverybody(sectionId, strings().privacySettingsControllerEverbody, state.phoneDiscoveryEnabled != false, .firstItem))
+        entries.append(.phoneDiscoveryMyContacts(sectionId, strings().privacySettingsControllerMyContacts, state.phoneDiscoveryEnabled == false, .lastItem))
+        entries.append(.phoneDiscoveryInfo(sectionId, strings().privacyPhoneNumberSettingsCustomDisabledHelp, .textBottomItem))
         
         entries.append(.section(sectionId))
         sectionId += 1
@@ -384,11 +384,11 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         case .voiceCalls:
             entries.append(.section(sectionId))
             sectionId += 1
-            entries.append(.p2pHeader(sectionId, L10n.privacySettingsControllerP2pHeader, .textTopItem))
+            entries.append(.p2pHeader(sectionId, strings().privacySettingsControllerP2pHeader, .textTopItem))
             entries.append(.p2pAlways(sectionId, callSettings == .everybody, .firstItem))
             entries.append(.p2pContacts(sectionId, callSettings == .contacts, .innerItem))
             entries.append(.p2pNever(sectionId, callSettings == .nobody, .lastItem))
-            entries.append(.p2pDesc(sectionId, L10n.privacySettingsControllerP2pDesc, .textBottomItem))
+            entries.append(.p2pDesc(sectionId, strings().privacySettingsControllerP2pDesc, .textBottomItem))
 
             entries.append(.section(sectionId))
             sectionId += 1
@@ -508,17 +508,17 @@ class SelectivePrivacySettingsController: TableViewController {
             let title: String
             switch kind {
             case .presence:
-                title = L10n.privacySettingsControllerAlwaysShare
+                title = strings().privacySettingsControllerAlwaysShare
             case .groupInvitations:
-                title = L10n.privacySettingsControllerAlwaysAllow
+                title = strings().privacySettingsControllerAlwaysAllow
             case .voiceCalls:
-                title = L10n.privacySettingsControllerAlwaysAllow
+                title = strings().privacySettingsControllerAlwaysAllow
             case .profilePhoto:
-                title = L10n.privacySettingsControllerAlwaysShare
+                title = strings().privacySettingsControllerAlwaysShare
             case .forwards:
-                title = L10n.privacySettingsControllerAlwaysAllow
+                title = strings().privacySettingsControllerAlwaysAllow
             case .phoneNumber:
-                title = L10n.privacySettingsControllerAlwaysShareWith
+                title = strings().privacySettingsControllerAlwaysShareWith
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
@@ -548,17 +548,17 @@ class SelectivePrivacySettingsController: TableViewController {
             let title: String
             switch kind {
             case .presence:
-                title = L10n.privacySettingsControllerNeverShareWith
+                title = strings().privacySettingsControllerNeverShareWith
             case .groupInvitations:
-                title = L10n.privacySettingsControllerNeverAllow
+                title = strings().privacySettingsControllerNeverAllow
             case .voiceCalls:
-                title = L10n.privacySettingsControllerNeverAllow
+                title = strings().privacySettingsControllerNeverAllow
             case .profilePhoto:
-                title = L10n.privacySettingsControllerNeverShareWith
+                title = strings().privacySettingsControllerNeverShareWith
             case .forwards:
-                title = L10n.privacySettingsControllerNeverAllow
+                title = strings().privacySettingsControllerNeverAllow
             case .phoneNumber:
-                title = L10n.privacySettingsControllerNeverShareWith
+                title = strings().privacySettingsControllerNeverShareWith
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
@@ -667,17 +667,17 @@ class SelectivePrivacySettingsController: TableViewController {
                 let title: String
                 switch kind {
                 case .presence:
-                    title = L10n.privacySettingsLastSeen
+                    title = strings().privacySettingsLastSeen
                 case .groupInvitations:
-                    title = L10n.privacySettingsGroups
+                    title = strings().privacySettingsGroups
                 case .voiceCalls:
-                    title = L10n.privacySettingsVoiceCalls
+                    title = strings().privacySettingsVoiceCalls
                 case .profilePhoto:
-                    title = L10n.privacySettingsProfilePhoto
+                    title = strings().privacySettingsProfilePhoto
                 case .forwards:
-                    title = L10n.privacySettingsForwards
+                    title = strings().privacySettingsForwards
                 case .phoneNumber:
-                    title = L10n.privacySettingsPhoneNumber
+                    title = strings().privacySettingsPhoneNumber
                 }
 
                 self?.setCenterTitle(title)

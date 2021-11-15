@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ObjcUtils
 import SwiftSignalKit
 
 private enum ChatRecordingOverlayState {
@@ -210,7 +210,7 @@ class ChatRecorderOverlayWindowController : NSObject {
             self.chatInteraction.update({$0.withoutRecordingState()})
         }
         if state == .fixed {
-            confirm(for: parent, information: L10n.chatRecordingCancel, okTitle: L10n.alertDiscard, cancelTitle: L10n.alertNO, successHandler: { _ in
+            confirm(for: parent, information: strings().chatRecordingCancel, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { _ in
                 proccess()
             })
         } else {

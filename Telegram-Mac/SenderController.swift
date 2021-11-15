@@ -8,13 +8,15 @@
 
 import Cocoa
 import TelegramCore
-
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
 import AVFoundation
 import QuickLook
 import TGUIKit
 import libwebp
+import TGGifConverter
+
 let diceSymbol: String = "🎲"
 let dartSymbol: String = "🎯"
 
@@ -162,7 +164,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         
@@ -216,6 +218,9 @@ class Sender: NSObject {
             }
             if FastSettings.isChannelMessagesMuted(peerId) || silent {
                 attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+            }
+            if let sendAsPeerId = sendAsPeerId {
+                attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
             }
             if !subState.inputText.isEmpty || mediaReference != nil {
                 return .message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
@@ -445,7 +450,7 @@ class Sender: NSObject {
         return attrs
     }
     
-    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil) -> Signal<[MessageId?], NoError> {
+    public static func forwardMessages(messageIds:[MessageId], context: AccountContext, peerId:PeerId, hideNames: Bool = false, hideCaptions: Bool = false, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError> {
         
         var fwdMessages:[EnqueueMessage] = []
         
@@ -462,6 +467,9 @@ class Sender: NSObject {
         if let date = atDate {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
         }
+        if let sendAsPeerId = sendAsPeerId {
+            attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
+        }
         
         for msgId in sorted {
             fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: messageIds.count > 1 ? .auto : .none, attributes: attributes, correlationId: nil))
@@ -469,17 +477,20 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: fwdMessages.reversed())
     }
     
-    public static func shareContact(context: AccountContext, peerId:PeerId, contact:TelegramUser) -> Signal<[MessageId?], NoError>  {
+    public static func shareContact(context: AccountContext, peerId:PeerId, contact:TelegramUser, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError>  {
         
         var attributes:[MessageAttribute] = []
         if FastSettings.isChannelMessagesMuted(peerId) {
             attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
         }
+        if let sendAsPeerId = sendAsPeerId {
+            attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
+        }
         
         return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate:Date? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
@@ -489,6 +500,9 @@ class Sender: NSObject {
         }
         if let date = atDate {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+        }
+        if let sendAsPeerId = sendAsPeerId {
+            attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
@@ -520,7 +534,7 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, chatInteraction: chatInteraction, silent: silent, atDate: atDate, query: query)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, query: String? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil) ->Signal<[MessageId?],NoError> {
         
         
         let parsingUrlType: ParsingType
@@ -537,6 +551,9 @@ class Sender: NSObject {
         }
         if let date = atDate {
             attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+        }
+        if let sendAsPeerId = sendAsPeerId {
+            attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
@@ -565,6 +582,9 @@ class Sender: NSObject {
                 }
                 if let date = atDate {
                     attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+                }
+                if let sendAsPeerId = sendAsPeerId {
+                    attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
                 }
                 
                 return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)

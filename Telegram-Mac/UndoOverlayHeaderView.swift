@@ -170,7 +170,7 @@ class UndoOverlayHeaderView: NavigationHeaderView {
         
         self.borderColor = theme.colors.border
         
-        undoButton.set(text: L10n.chatUndoManagerUndo, for: .Normal)
+        undoButton.set(text: strings().chatUndoManagerUndo, for: .Normal)
         undoButton.set(image: theme.icons.chatUndoAction, for: .Normal)
         undoButton.set(color: theme.colors.accent, for: .Normal)
         

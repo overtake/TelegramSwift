@@ -27,9 +27,9 @@ class ProxyListRowItem: GeneralRowItem {
         let title: String
         switch proxy.connection {
         case .socks5:
-            title = L10n.proxySettingsSocks5
+            title = strings().proxySettingsSocks5
         case .mtp:
-             title = L10n.proxySettingsMTP
+             title = strings().proxySettingsMTP
         }
         _ = attr.append(string: "\(proxy.host)", color: theme.colors.text, font: .medium(.text))
         _ = attr.append(string: ":\(proxy.port)", color: theme.colors.grayText, font: .normal(.text))
@@ -41,17 +41,17 @@ class ProxyListRowItem: GeneralRowItem {
         if let connectionStatus = connectionStatus {
             switch connectionStatus {
             case .connecting:
-                statusText = L10n.connectingStatusConnecting
+                statusText = strings().connectingStatusConnecting
                 self.status = (isConnecting: true, isCurrent: true)
             case .waitingForNetwork:
-                statusText = L10n.connectingStatusConnecting
+                statusText = strings().connectingStatusConnecting
                 self.status = (isConnecting: true, isCurrent: true)
             case .online, .updating:
-                statusText = L10n.proxySettingsItemConnected
+                statusText = strings().proxySettingsItemConnected
                 if let status = status {
                     switch status {
                     case let .available(ping):
-                        statusText = L10n.proxySettingsItemConnectedPing("\(Int(ping * 1000))")
+                        statusText = strings().proxySettingsItemConnectedPing("\(Int(ping * 1000))")
                     default:
                         break
                     }
@@ -60,15 +60,15 @@ class ProxyListRowItem: GeneralRowItem {
                 self.status = (isConnecting: false, isCurrent: true)
             }
         } else {
-            statusText = L10n.proxySettingsItemNeverConnected
+            statusText = strings().proxySettingsItemNeverConnected
             if let status = status {
                 switch status {
                 case .notAvailable:
                     color = theme.colors.redUI
                 case let .available(ping):
-                    statusText = L10n.proxySettingsItemAvailable("\(Int(ping * 1000))") //"available (ping: \(ping * 1000)ms)"
+                    statusText = strings().proxySettingsItemAvailable("\(Int(ping * 1000))") //"available (ping: \(ping * 1000)ms)"
                 case .checking:
-                    statusText = L10n.proxySettingsItemChecking
+                    statusText = strings().proxySettingsItemChecking
                 }
             }
             

@@ -27,9 +27,9 @@ class LocationSendCurrentItem: GeneralRowItem {
                 formatter.unitStyle = .full
                 formatter.locale = Locale(identifier: appAppearance.language.languageCode)
                 let formatted = formatter.string(fromDistance: location.horizontalAccuracy)
-                text = L10n.locationSendAccurateTo("\(formatted)")
+                text = strings().locationSendAccurateTo("\(formatted)")
             } else {
-                text = L10n.locationSendLocating
+                text = strings().locationSendLocating
             }
             
         case let .selected(location):
@@ -87,9 +87,9 @@ private final class LocationSendCurrentView : TableRowView {
         let text: String
         switch item.state {
         case .accurate:
-            text = L10n.locationSendMyLocation
+            text = strings().locationSendMyLocation
         case .selected:
-            text = L10n.locationSendThisLocation
+            text = strings().locationSendThisLocation
         }
         button.set(text: text, for: .Normal)
         _ = button.sizeToFit()

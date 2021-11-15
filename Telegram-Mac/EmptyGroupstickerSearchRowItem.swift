@@ -77,8 +77,8 @@ private class EmptyGroupstickerSearchRowView : TableRowView {
             case let .modern(_, insets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
                 
-                let headerLayout = TextViewLayout(.initialize(string: L10n.groupStickersEmptyHeader, color: theme.colors.redUI, font: .medium(.text)), maximumNumberOfLines: 1)
-                let descLayout = TextViewLayout(.initialize(string: L10n.groupStickersEmptyDesc, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+                let headerLayout = TextViewLayout(.initialize(string: strings().groupStickersEmptyHeader, color: theme.colors.redUI, font: .medium(.text)), maximumNumberOfLines: 1)
+                let descLayout = TextViewLayout(.initialize(string: strings().groupStickersEmptyDesc, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
                 headerLayout.measure(width: item.blockWidth - insets.left - insets.right - 40)
                 descLayout.measure(width: item.blockWidth - insets.left - insets.right - 40)
                 descView.update(descLayout)

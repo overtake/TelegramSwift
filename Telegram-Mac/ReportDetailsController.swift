@@ -33,7 +33,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .police, text: .initialize(string: L10n.reportAdditionText, color: theme.colors.text, font: .normal(.text)))
+        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .police, text: .initialize(string: strings().reportAdditionText, color: theme.colors.text, font: .normal(.text)))
     }))
     index += 1
     // entries
@@ -41,7 +41,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.reportAdditionTextPlaceholder, filter: { $0 }, limit: 128))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().reportAdditionTextPlaceholder, filter: { $0 }, limit: 128))
     index += 1
 
 
@@ -72,7 +72,7 @@ func ReportDetailsController(context: AccountContext, reason: ReportReasonValue,
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.reportAdditionTextButton)
+    let controller = InputDataController(dataSignal: signal, title: strings().reportAdditionTextButton)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -92,7 +92,7 @@ func ReportDetailsController(context: AccountContext, reason: ReportReasonValue,
     }
     
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.reportAdditionTextButton, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().reportAdditionTextButton, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

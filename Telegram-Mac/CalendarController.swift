@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import CalendarUtils
 
 class CalendarControllerView : View {
     

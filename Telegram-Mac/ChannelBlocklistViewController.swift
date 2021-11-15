@@ -113,18 +113,18 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            var string:String = L10n.peerStatusRecently
+            var string:String = strings().peerStatusRecently
             
             if case let .member(_, _, _, banInfo, _) = participant.participant {
                 if let banInfo = banInfo, let peer = participant.peers[banInfo.restrictedBy] {
                     if banInfo.rights.flags.contains(.banReadMessages) {
-                        string = L10n.channelBlacklistBlockedBy(peer.displayTitle)
+                        string = strings().channelBlacklistBlockedBy(peer.displayTitle)
                     } else {
-                        string = L10n.channelBlacklistRestrictedBy(peer.displayTitle)
+                        string = strings().channelBlacklistRestrictedBy(peer.displayTitle)
                     }
                 } else {
                     if let peer = participant.peer as? TelegramUser, let botInfo = peer.botInfo {
-                        string = botInfo.flags.contains(.hasAccessToChatHistory) ? L10n.peerInfoBotStatusHasAccess : L10n.peerInfoBotStatusHasNoAccess
+                        string = botInfo.flags.contains(.hasAccessToChatHistory) ? strings().peerInfoBotStatusHasAccess : strings().peerInfoBotStatusHasNoAccess
                     } else if let presence = participant.presences[participant.peer.id] as? TelegramUserPresence {
                         let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                         (string,_, _) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
@@ -138,11 +138,11 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 }
             }, contextMenuItems: {
                 var items:[ContextMenuItem] = []
-                items.append(ContextMenuItem(L10n.channelBlacklistContextRemove, handler: {
+                items.append(ContextMenuItem(strings().channelBlacklistContextRemove, handler: {
                     arguments.removePeer(participant.peer.id)
                 }))
                 if !isChannel {
-                    items.append(ContextMenuItem(L10n.channelBlacklistContextAddToGroup, handler: {
+                    items.append(ContextMenuItem(strings().channelBlacklistContextAddToGroup, handler: {
                         arguments.returnToGroup(participant.peer.id)
                     }))
                 }
@@ -150,11 +150,11 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 return .single(items)
             })
         case let .empty(progress):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: L10n.channelBlacklistEmptyDescrpition)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: strings().channelBlacklistEmptyDescrpition)
         case let .header(_, _, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .addMember(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelBlacklistRemoveUser, nameStyle: blueActionButton, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelBlacklistRemoveUser, nameStyle: blueActionButton, viewType: viewType, action: {
                 arguments.addMember()
             })
         case .section:
@@ -206,7 +206,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
        
         if peer.hasPermission(.banMembers), !inSearch {
             entries.append(.addMember(sectionId, 0, .singleItem))
-            entries.append(.header(sectionId, 1, peer.isGroup || peer.isSupergroup ? L10n.channelBlacklistDescGroup : L10n.channelBlacklistDescChannel, .textBottomItem))
+            entries.append(.header(sectionId, 1, peer.isGroup || peer.isSupergroup ? strings().channelBlacklistDescGroup : strings().channelBlacklistDescChannel, .textBottomItem))
         }
         if let participants = participants {
             if !participants.isEmpty, peer.hasPermission(.banMembers) || inSearch {
@@ -216,7 +216,7 @@ private func channelBlacklistControllerEntries(view: PeerView, state: ChannelBla
             
             if !participants.isEmpty {
                 
-                entries.append(.header(sectionId, index, L10n.channelBlacklistBlocked, .textTopItem))
+                entries.append(.header(sectionId, index, strings().channelBlacklistBlocked, .textTopItem))
                 index += 1
                 for (i, participant) in participants.sorted(by: <).enumerated() {
                     var editable = true
@@ -331,7 +331,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
         }, addMember: {
             let behavior = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1)
             
-            _ = (selectModalPeers(window: context.window, context: context, title: L10n.channelBlacklistSelectNewUserTitle, limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(window: context.window, context: context, title: strings().channelBlacklistSelectNewUserTitle, limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let peerId = peerIds.first {
                     var adminError:Bool = false
                     if let participant = behavior.participants[peerId] {
@@ -346,7 +346,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                         }
                     }
                     if adminError {
-                        alert(for: mainWindow, info: L10n.channelBlacklistDemoteAdminError)
+                        alert(for: mainWindow, info: strings().channelBlacklistDemoteAdminError)
                         return .single(false)
                     }
                 }
@@ -486,7 +486,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
     }
     
     override var defaultBarTitle: String {
-        return L10n.peerInfoRemovedUsers
+        return strings().peerInfoRemovedUsers
     }
     
     override func getCenterBarViewOnce() -> TitledBarView {

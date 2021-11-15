@@ -28,8 +28,8 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
         let file = media as! TelegramMediaFile
         
         
-        self.uploadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingOut1(100), font: .normal(.text)), alwaysStaticItems: true)
-        self.downloadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingIn1(100), font: .normal(.text)), alwaysStaticItems: true)
+        self.uploadingLayout = TextViewLayout(.initialize(string: strings().messagesFileStateFetchingOut1(100), font: .normal(.text)), alwaysStaticItems: true)
+        self.downloadingLayout = TextViewLayout(.initialize(string: strings().messagesFileStateFetchingIn1(100), font: .normal(.text)), alwaysStaticItems: true)
         
         
         var attr:NSMutableAttributedString = NSMutableAttributedString()
@@ -37,7 +37,7 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
         if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
             
-            let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
+            let range = attr.append(string: strings().messagesFileStateLocal, color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
             attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/finder", range: range)
         }
         finderLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -47,7 +47,7 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
         let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
         if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-            let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
+            let range = attr.append(string: strings().messagesFileStateRemote, color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
             attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/download", range: range)
         }
         downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)

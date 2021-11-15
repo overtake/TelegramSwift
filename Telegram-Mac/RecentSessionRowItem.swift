@@ -9,6 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
+import DateUtils
 
 class RecentSessionRowItem: GeneralRowItem {
     
@@ -37,7 +38,7 @@ class RecentSessionRowItem: GeneralRowItem {
         
         descLayout = TextViewLayout(attr, maximumNumberOfLines: 2, lineSpacing: 2)
     
-        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(L10n.peerStatusOnline) : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
+        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? strings().peerStatusOnline : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
@@ -80,7 +81,7 @@ class RecentSessionRowView : GeneralContainableRowView {
                         
         reset.set(handler: { [weak self] _ in
             if let item = self?.item as? RecentSessionRowItem {
-                confirm(for: mainWindow, information: tr(L10n.recentSessionsConfirmRevoke), successHandler: { _ in
+                confirm(for: mainWindow, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
                     item.revoke()
                 })
             }
@@ -106,7 +107,7 @@ class RecentSessionRowView : GeneralContainableRowView {
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
  
-        reset.set(text: tr(L10n.recentSessionsRevoke), for: .Normal)
+        reset.set(text: strings().recentSessionsRevoke, for: .Normal)
         reset.set(color: theme.colors.accent, for: .Normal)
         reset.set(background: theme.colors.background, for: .Normal)
         _ = reset.sizeToFit()

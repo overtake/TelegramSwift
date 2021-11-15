@@ -8,6 +8,8 @@
 
 import Cocoa
 import TGUIKit
+import CalendarUtils
+import TGModernGrowingTextView
 
 class InputDataDateRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let placeholderLayout: TextViewLayout
@@ -33,9 +35,9 @@ class InputDataDateRowItem: GeneralRowItem, InputDataRowDataValue {
         self.updated = updated
         placeholderLayout = TextViewLayout(.initialize(string: placeholder, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
-        dayHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateDayPlaceholder1, color: theme.colors.text, font: .normal(.text)))
-        monthHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateMonthPlaceholder1, color: theme.colors.text, font: .normal(.text)))
-        yearHolderLayout = TextViewLayout(.initialize(string: L10n.inputDataDateYearPlaceholder1, color: theme.colors.text, font: .normal(.text)))
+        dayHolderLayout = TextViewLayout(.initialize(string: strings().inputDataDateDayPlaceholder1, color: theme.colors.text, font: .normal(.text)))
+        monthHolderLayout = TextViewLayout(.initialize(string: strings().inputDataDateMonthPlaceholder1, color: theme.colors.text, font: .normal(.text)))
+        yearHolderLayout = TextViewLayout(.initialize(string: strings().inputDataDateYearPlaceholder1, color: theme.colors.text, font: .normal(.text)))
 
         dayHolderLayout.measure(width: .greatestFiniteMagnitude)
         monthHolderLayout.measure(width: .greatestFiniteMagnitude)
@@ -352,13 +354,13 @@ final class InputDataDateRowView : GeneralRowView, TGModernGrowingDelegate {
         placeholderTextView.update(item.placeholderLayout)
         
         
-        let dayLayout = TextViewLayout(.initialize(string: L10n.inputDataDateDayPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
+        let dayLayout = TextViewLayout(.initialize(string: strings().inputDataDateDayPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
         dayLayout.measure(width: .greatestFiniteMagnitude)
         
-        let monthLayout = TextViewLayout(.initialize(string: L10n.inputDataDateMonthPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
+        let monthLayout = TextViewLayout(.initialize(string: strings().inputDataDateMonthPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
         monthLayout.measure(width: .greatestFiniteMagnitude)
         
-        let yearLayout = TextViewLayout(.initialize(string: L10n.inputDataDateYearPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
+        let yearLayout = TextViewLayout(.initialize(string: strings().inputDataDateYearPlaceholder1, color: theme.colors.grayText, font: .normal(.text)))
         yearLayout.measure(width: .greatestFiniteMagnitude)
         
 

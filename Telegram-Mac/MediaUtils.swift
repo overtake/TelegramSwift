@@ -9,11 +9,13 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-
+import FastBlur
 import Postbox
 import TGUIKit
 import AVFoundation
 import Accelerate
+import GZIP
+import Svg
 
 public final class ImageDataTransformation {
     let data: ImageRenderData

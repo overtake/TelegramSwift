@@ -32,9 +32,9 @@ class ChatCommentsHeaderItem : TableStickItem {
         switch entry {
         case let .commentsHeader(empty, _, _):
             if empty {
-                text = L10n.chatCommentsHeaderEmpty
+                text = strings().chatCommentsHeaderEmpty
             } else {
-                text = L10n.chatCommentsHeaderFull
+                text = strings().chatCommentsHeaderFull
             }
         default:
             text = ""

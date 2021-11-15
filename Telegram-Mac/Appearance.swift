@@ -12,8 +12,9 @@ import TelegramCore
 
 import SwiftSignalKit
 import Postbox
-
-
+import TelegramIconsTheme
+import GZIP
+import Svg
 
 func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: NSColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: NSColor? = nil) -> CGImage {
     return generateImage(CGSize(width: diameter, height: diameter), contextGenerator: { size, context in
@@ -507,7 +508,7 @@ private func generateHitActiveIcon(activeColor: NSColor, backgroundColor: NSColo
     })!
 }
 
-func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = L10n.markScam, isReversed: Bool = false) -> CGImage {
+func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: String = strings().markScam, isReversed: Bool = false) -> CGImage {
     let textNode = TextNode.layoutText(.initialize(string: text, color: foregroundColor, font: .medium(9)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     
     let draw: (CGSize, CGContext) -> Void = { size, ctx in
@@ -536,10 +537,10 @@ func generateScamIconReversed(foregroundColor: NSColor, backgroundColor: NSColor
 }
 
 func generateFakeIcon(foregroundColor: NSColor, backgroundColor: NSColor, isReversed: Bool = false) -> CGImage {
-    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: isReversed)
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: strings().markFake, isReversed: isReversed)
 }
 func generateFakeIconReversed(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
-    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: L10n.markFake, isReversed: true)
+    return generateScamIcon(foregroundColor: foregroundColor, backgroundColor: backgroundColor, text: strings().markFake, isReversed: true)
 }
 
 private func generateVideoMessageChatCap(backgroundColor: NSColor) -> CGImage {
@@ -2672,7 +2673,7 @@ func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: B
                                          badgeMutedBackgroundColor: palette.badgeMuted)
     
     let tabBar = TelegramTabBarTheme(color: palette.grayIcon, selectedColor: palette.accentIcon, badgeTextColor: .white, badgeColor: palette.redUI)
-    return TelegramPresentationTheme(colors: palette, cloudTheme: cloudTheme, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { L10n.searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, generated: true)
+    return TelegramPresentationTheme(colors: palette, cloudTheme: cloudTheme, search: SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { strings().searchFieldSearch }, palette.text, palette.grayText), chatList: chatList, tabBar: tabBar, icons: generateIcons(from: palette, bubbled: bubbled), bubbled: bubbled, fontSize: fontSize, wallpaper: wallpaper, generated: true)
 }
 
 

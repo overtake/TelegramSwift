@@ -381,16 +381,16 @@ class ChatGroupedItem: ChatRowItem {
         var items: [ContextMenuItem] = []
         
         if canReplyMessage(message, peerId: chatInteraction.peerId, mode: chatInteraction.mode)  {
-            items.append(ContextMenuItem(L10n.messageContextReply1, handler: { [weak chatInteraction] in
+            items.append(ContextMenuItem(strings().messageContextReply1, handler: { [weak chatInteraction] in
                 chatInteraction?.setupReplyMessage(message.id)
             }))
         }
         
         if chatInteraction.mode == .scheduled, let peer = chatInteraction.peer {
-            items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
+            items.append(ContextMenuItem(strings().chatContextScheduledSendNow, handler: {
                 _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: message.id).start()
             }))
-            items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
+            items.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
                 showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
                     _ = context.engine.messages.requestEditMessage(messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)).start()
                 }), for: context.window)
@@ -399,7 +399,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         
         
-        items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: { [weak self] in
+        items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak self] in
             guard let `self` = self else {return}
             let messageIds = self.layout.messages.map{$0.id}
             self.chatInteraction.withToggledSelectedMessage({ current in
@@ -434,9 +434,9 @@ class ChatGroupedItem: ChatRowItem {
         
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)), chatInteraction.mode == .history {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                items.append(ContextMenuItem(tr(L10n.messageContextPin), handler: {
+                items.append(ContextMenuItem(strings().messageContextPin, handler: {
                     if peer.isSupergroup {
-                        modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                        modernConfirm(for: mainWindow, account: account, peerId: nil, header: strings().messageContextConfirmPin1, information: nil, thridTitle: strings().messageContextConfirmNotifyPin, successHandler: { result in
                             chatInteraction.updatePinned(message.id, false, result != .thrid, false)
                         })
                     } else {
@@ -445,12 +445,12 @@ class ChatGroupedItem: ChatRowItem {
                 }))
             }
         } else if message.id.peerId == account.peerId, chatInteraction.mode == .history {
-            items.append(ContextMenuItem(L10n.messageContextPin, handler: {
+            items.append(ContextMenuItem(strings().messageContextPin, handler: {
                 chatInteraction.updatePinned(message.id, false, true, false)
             }))
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, chatInteraction.mode == .history {
-            items.append(ContextMenuItem(L10n.messageContextPin, handler: {
-                modernConfirm(for: mainWindow, account: account, peerId: nil, header: L10n.messageContextConfirmPin1, information: nil, thridTitle: L10n.messageContextConfirmNotifyPin, successHandler: { result in
+            items.append(ContextMenuItem(strings().messageContextPin, handler: {
+                modernConfirm(for: mainWindow, account: account, peerId: nil, header: strings().messageContextConfirmPin1, information: nil, thridTitle: strings().messageContextConfirmNotifyPin, successHandler: { result in
                     chatInteraction.updatePinned(message.id, false, result == .thrid, false)
                 })
             }))
@@ -458,21 +458,21 @@ class ChatGroupedItem: ChatRowItem {
 
         
         if canDelete {
-            items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [weak self] in
+            items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
                 guard let `self` = self else {return}
                 self.chatInteraction.deleteMessages(self.layout.messages.map{$0.id})
             }))
         }
         
         if let message = layout.messages.first, let peer = peer, canReplyMessage(message, peerId: peer.id, mode: chatInteraction.mode) {
-            items.append(ContextMenuItem(L10n.messageContextReply1, handler: { [weak self] in
+            items.append(ContextMenuItem(strings().messageContextReply1, handler: { [weak self] in
                 self?.chatInteraction.setupReplyMessage(message.id)
             }))
         }
         
         if let message = layout.messages.last, !message.flags.contains(.Failed), !message.flags.contains(.Unsent), chatInteraction.mode == .history {
             if let peer = message.peers[message.id.peerId] as? TelegramChannel {
-                items.append(ContextMenuItem(L10n.messageContextCopyMessageLink1, handler: {
+                items.append(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
                     _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
                         if let link = link {
                             copyToClipboard(link)
@@ -494,7 +494,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         if let editMessage = editMessage {
             if canEditMessage(editMessage, chatInteraction: chatInteraction, context: context) {
-                items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [weak self] in
+                items.append(ContextMenuItem(strings().messageContextEdit, handler: { [weak self] in
                     self?.chatInteraction.beginEditingMessage(editMessage)
                 }))
             }
@@ -508,7 +508,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         
         if canForward {
-            items.append(ContextMenuItem(tr(L10n.messageContextForward), handler: { [weak self] in
+            items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
                 guard let `self` = self else {return}
                 self.chatInteraction.forwardMessages(self.layout.messages.map {$0.id})
             }))
@@ -518,7 +518,7 @@ class ChatGroupedItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayouts.first(where: { $0.id == _message?.stableId}) {
                 let text = captionLayout.layout.attributedString.string
-                items.insert(ContextMenuItem(tr(L10n.textCopy), handler: {
+                items.insert(ContextMenuItem(strings().textCopy, handler: {
                     copyToClipboard(text)
                 }), at: 1)
                 
@@ -534,13 +534,13 @@ class ChatGroupedItem: ChatRowItem {
 //                            }
 //                            
 //                            for i in 0 ..< items.count {
-//                                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
+//                                if items[i].title == strings().messageContextCopyMessageLink1 {
 //                                    items.remove(at: i)
 //                                    break
 //                                }
 //                            }
 //                            
-//                            items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
+//                            items.insert(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
 //                                copyToClipboard(text)
 //                            }), at: 1)
 //                        }

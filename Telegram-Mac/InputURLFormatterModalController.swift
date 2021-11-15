@@ -34,7 +34,7 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
     index += 1
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -47,10 +47,10 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.inputFormatterURLHeader, filter: { $0 }, limit: 10000))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterURLHeader, filter: { $0 }, limit: 10000))
     index += 1
 
     
@@ -77,7 +77,7 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
     
     var close: (() -> Void)? = nil
     
-    let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.inputFormatterURLHeader, validateData: { data in
+    let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().inputFormatterURLHeader, validateData: { data in
         
         if let string = data[_id_input_url]?.stringValue {
             
@@ -125,7 +125,7 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
     })
     
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
     }, drawBorder: true, singleButton: true)
     

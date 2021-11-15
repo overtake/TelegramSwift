@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import Localization
 import Postbox
 import SwiftSignalKit
 
@@ -257,24 +257,24 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
                 arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
             }, contextMenuItems: {
-                return .single([ContextMenuItem(L10n.accountSettingsDeleteAccount, handler: {
-                    confirm(for: arguments.context.window, information: L10n.accountConfirmLogoutText, successHandler: { _ in
+                return .single([ContextMenuItem(strings().accountSettingsDeleteAccount, handler: {
+                    confirm(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
                         _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
                 })])
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }, sync: true), compactText: true)
         case let .addAccount(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: {
                 let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
                 arguments.context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
                 
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .general(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
                 let controller = proxyListController(accountManager: arguments.context.sharedContext.accountManager, network: arguments.context.account.network, share: { servers in
                     var message: String = ""
                     for server in servers {
@@ -290,46 +290,46 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stickers(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(InstalledStickerPacksController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .notifications(_, viewType, status):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: status == .denied ? .image(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed()) : .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsNotifications, icon: theme.icons.settingsNotifications, activeIcon: theme.icons.settingsNotificationsActive, type: status == .denied ? .image(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed()) : .next, viewType: viewType, action: {
                 arguments.presentController(NotificationPreferencesController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .language(_, viewType, current):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), viewType: viewType, action: {
                 arguments.presentController(LanguageViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .appearance(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(AppAppearanceViewController(context: arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .privacy(_, viewType,  privacySettings, _):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPrivacyAndSecurity, icon: theme.icons.settingsSecurity, activeIcon: theme.icons.settingsSecurityActive, type: .next, viewType: viewType, action: {
                  arguments.presentController(PrivacyAndSecurityViewController(arguments.context, initialSettings: privacySettings), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .dataAndStorage(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsDataAndStorage, icon: theme.icons.settingsStorage, activeIcon: theme.icons.settingsStorageActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(DataAndStorageViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .activeSessions(_, viewType, count):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsActiveSessions, icon: theme.icons.settingsSessions, activeIcon: theme.icons.settingsSessionsActive, type: .nextContext("\(count)"), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsActiveSessions, icon: theme.icons.settingsSessions, activeIcon: theme.icons.settingsSessionsActive, type: .nextContext("\(count)"), viewType: viewType, action: {
                 arguments.presentController(RecentSessionsController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .about(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAbout, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAbout, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: {
                 showModal(with: AboutModalController(), for: mainWindow)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .passport(_, viewType, peer):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(PassportController(arguments.context, peer.peer, request: nil, nil), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .faq(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .ask(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, viewType: viewType, action: {
-                confirm(for: mainWindow, information: L10n.accountConfirmAskQuestion, thridTitle: L10n.accountConfirmGoToFaq, successHandler: {  result in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, viewType: viewType, action: {
+                confirm(for: mainWindow, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
                         _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: mainWindow).start(next: {  peerId in
@@ -344,7 +344,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .filters(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountSettingsFilters, icon: theme.icons.settingsFilters, activeIcon: theme.icons.settingsFiltersActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFilters, icon: theme.icons.settingsFilters, activeIcon: theme.icons.settingsFiltersActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(ChatListFiltersListController(context: arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .update(_, viewType, state):
@@ -358,16 +358,16 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 case let .readyToInstall(item), let .unarchiving(item):
                     text = "\(item.displayVersionString!).\(item.versionString!)"
                 case .uptodate:
-                    text = "" //L10n.accountViewControllerDescUpdated
+                    text = "" //strings().accountViewControllerDescUpdated
                 case .failed:
-                    text = L10n.accountViewControllerDescFailed
+                    text = strings().accountViewControllerDescFailed
                 default:
                     text = ""
                 }
             }
             #endif
            
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.accountViewControllerUpdate, icon: theme.icons.settingsUpdate, activeIcon: theme.icons.settingsUpdateActive, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountViewControllerUpdate, icon: theme.icons.settingsUpdate, activeIcon: theme.icons.settingsUpdateActive, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openUpdateApp()
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .whiteSpace(_, height):
@@ -410,9 +410,9 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         let status: String
         switch proxySettings.1 {
         case .online:
-            status = proxySettings.0.enabled ? L10n.accountSettingsProxyConnected : L10n.accountSettingsProxyDisabled
+            status = proxySettings.0.enabled ? strings().accountSettingsProxyConnected : strings().accountSettingsProxyDisabled
         default:
-            status = proxySettings.0.enabled ? L10n.accountSettingsProxyConnecting : L10n.accountSettingsProxyDisabled
+            status = proxySettings.0.enabled ? strings().accountSettingsProxyConnecting : strings().accountSettingsProxyDisabled
         }
         entries.append(.proxy(index: index, viewType: .singleItem, status: status))
         index += 1
@@ -569,7 +569,7 @@ class LayoutAccountController : TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: L10n.navigationEdit, style: navigationButtonStyle, alignment:.Right)
+        let button = TextButtonBarView(controller: self, text: strings().navigationEdit, style: navigationButtonStyle, alignment:.Right)
         let context = self.context
         button.set(handler: { [weak self] _ in
             guard let `self` = self else {return}
@@ -583,7 +583,7 @@ class LayoutAccountController : TableViewController {
     
     override func requestUpdateRightBar() {
         super.requestUpdateRightBar()
-        (rightBarView as? TextButtonBarView)?.set(text: L10n.navigationEdit, for: .Normal)
+        (rightBarView as? TextButtonBarView)?.set(text: strings().navigationEdit, for: .Normal)
         (rightBarView as? TextButtonBarView)?.set(color: theme.colors.accent, for: .Normal)
         (rightBarView as? TextButtonBarView)?.needsLayout = true
     }

@@ -213,21 +213,21 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
     func item(_ arguments: RecentSessionsControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .currentSessionHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsCurrentSessionHeader, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().sessionsCurrentSessionHeader, viewType: viewType)
         case let .currentSession(_, session, viewType):
             return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), revoke: {})
         case let .terminateOtherSessions(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.sessionsTerminateOthers, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().sessionsTerminateOthers, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.terminateOthers()
             })
         case let .currentSessionInfo(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsTerminateDescription, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().sessionsTerminateDescription, viewType: viewType)
         case let .incompleteHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.recentSessionsIncompleteAttemptHeader, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().recentSessionsIncompleteAttemptHeader, viewType: viewType)
         case let .incompleteDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.recentSessionsIncompleteAttemptDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().recentSessionsIncompleteAttemptDesc, viewType: viewType)
         case let .otherSessionsHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.sessionsActiveSessionsHeader, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().sessionsActiveSessionsHeader, viewType: viewType)
         case let .session(_, _, session, _, _, viewType):
             return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), revoke: {
                 arguments.removeSession(session.hash)
@@ -398,7 +398,7 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            confirm(for: context.window, information: L10n.recentSessionsConfirmTerminateOthers, successHandler: { _ in
+            confirm(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
                 _ = showModalProgress(signal: context.activeSessionsContext.removeOther(), for: context.window).start(error: { error in
                     
                 })

@@ -45,7 +45,7 @@ class PeerInfoArguments {
     
     func copy(_ string: String) {
         copyToClipboard(string)
-        pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+        pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
     }
 
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
@@ -68,7 +68,7 @@ class PeerInfoArguments {
         
         toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId).start())
         
-        pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? L10n.toastUnmuted : L10n.toastMuted))
+        pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
     
     func delete() {

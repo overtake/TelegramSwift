@@ -80,7 +80,7 @@ private class SearchContainerView : View {
         addSubview(searchView)
         addSubview(separator)
         cancelButton.set(font: .medium(.text), for: .Normal)
-        cancelButton.set(text: tr(L10n.chatCancel), for: .Normal)
+        cancelButton.set(text: strings().chatCancel, for: .Normal)
         _ = cancelButton.sizeToFit()
         
         cancelButton.set(handler: { [weak self] _ in
@@ -141,10 +141,10 @@ class ChannelEventLogView : View {
         emptyTextView.isSelectable = false
         separator.backgroundColor = .border
         whatButton.set(font: .medium(.title), for: .Normal)
-        whatButton.set(text: tr(L10n.channelEventLogWhat), for: .Normal)
+        whatButton.set(text: strings().channelEventLogWhat, for: .Normal)
         
         whatButton.set(handler: { _ in
-            alert(for: mainWindow, header: tr(L10n.channelEventLogAlertHeader), info: tr(L10n.channelEventLogAlertInfo))
+            alert(for: mainWindow, header: strings().channelEventLogAlertHeader, info: strings().channelEventLogAlertInfo)
         }, for: .Click)
         setFrameSize(frameRect.size)
         updateLocalizationAndTheme(theme: theme)
@@ -481,7 +481,7 @@ class ChannelEventLogController: TelegramGenericViewController<ChannelEventLogVi
                 self?.genericView.updateState(.loading)
             case .load, .generic:
                 if items.isEmpty {
-                    self?.genericView.updateState(.empty(!isGroup ? L10n.channelEventLogEmptyText : L10n.groupEventLogEmptyText))
+                    self?.genericView.updateState(.empty(!isGroup ? strings().channelEventLogEmptyText : strings().groupEventLogEmptyText))
                 } else {
                     self?.genericView.updateState(.history)
                 }

@@ -126,18 +126,18 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                         if let mediaId = file.id {
                             let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap { $0.contents.get(RecentMediaItem.self) }
                             if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
-                                items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                                items.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
                                     let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
                                 }))
                             } else {
-                                items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                                items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                                     let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
                                 }))
                             }
-                            items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: {
+                            items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: {
                                 arguments?.sendAppFile(file, view, true, false)
                             }))
-                            items.append(ContextMenuItem(L10n.chatSendScheduledMessage, handler: {
+                            items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: {
                                 arguments?.sendAppFile(file, view, false, true)
                             }))
                         }

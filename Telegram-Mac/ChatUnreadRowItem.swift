@@ -26,7 +26,7 @@ class ChatUnreadRowItem: ChatRowItem {
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         let titleAttr:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleAttr.append(string:tr(L10n.messagesUnreadMark), color: theme.colors.grayText, font: .normal(.text))
+        let _ = titleAttr.append(string: strings().messagesUnreadMark, color: theme.colors.grayText, font: .normal(.text))
         text = titleAttr.copy() as! NSAttributedString
 
         

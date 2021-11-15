@@ -91,7 +91,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     
                     
                     
-                    let text: String = L10n.requestJoinListDescription
+                    let text: String = strings().requestJoinListDescription
                     
                     let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.accent), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in
@@ -130,10 +130,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("empty_header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                         
                         
-                        let text: String = L10n.requestJoinListSearchEmpty(request)
+                        let text: String = strings().requestJoinListSearchEmpty(request)
                         
                         let attr = NSMutableAttributedString()
-                        _ = attr.append(string: L10n.requestJoinListSearchEmptyHeader, color: theme.colors.text, font: .medium(.header))
+                        _ = attr.append(string: strings().requestJoinListSearchEmptyHeader, color: theme.colors.text, font: .medium(.header))
                         _ = attr.append(string: "\n", color: theme.colors.grayText, font: .normal(.title))
                         _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.title))
                         attr.detectBoldColorInString(with: .medium(.title))
@@ -148,7 +148,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     index += 1
 //
 //                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_empty"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-//                        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.requestJoinListSearchEmpty(request), font: .normal(.text), color: theme.colors.text, header: .init(text: L10n.requestJoinListSearchEmptyHeader, icon: nil))
+//                        return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: strings().requestJoinListSearchEmpty(request), font: .normal(.text), color: theme.colors.text, header: .init(text: strings().requestJoinListSearchEmptyHeader, icon: nil))
 //                    }))
 //                    index += 1
                 }
@@ -168,7 +168,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     if state.searchResult == nil {
                         entries.append(.sectionId(sectionId, type: .normal))
                         sectionId += 1
-                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+                        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().requestJoinListListHeaderCountable(importers.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
                         index += 1
                     }
                     for (i, importer) in importers.enumerated() {
@@ -196,9 +196,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("center"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                 
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: L10n.requestJoinListEmpty1, color: theme.colors.text, font: .medium(.header))
+                _ = attr.append(string: strings().requestJoinListEmpty1, color: theme.colors.text, font: .medium(.header))
                 _ = attr.append(string: "\n", color: theme.colors.text, font: .medium(.header))
-                _ = attr.append(string: peer.isChannel ? L10n.requestJoinListEmpty2Channel : L10n.requestJoinListEmpty2Group, color: theme.colors.listGrayText, font: .normal(.text))
+                _ = attr.append(string: peer.isChannel ? strings().requestJoinListEmpty2Channel : strings().requestJoinListEmpty2Group, color: theme.colors.listGrayText, font: .normal(.text))
 
                 
                 return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.thumbsup, text: attr)
@@ -269,9 +269,9 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
         let isChannel = stateValue.with { $0.peer?.peer.isChannel == true }
         let peer = stateValue.with { $0.state?.importers.first(where: { $0.peer.peerId == userId })}
         if isChannel {
-            text = L10n.requestJoinListTooltipApprovedChannel(peer?.peer.peer?.displayTitle ?? "")
+            text = strings().requestJoinListTooltipApprovedChannel(peer?.peer.peer?.displayTitle ?? "")
         } else {
-            text = L10n.requestJoinListTooltipApprovedGroup(peer?.peer.peer?.displayTitle ?? "")
+            text = strings().requestJoinListTooltipApprovedGroup(peer?.peer.peer?.displayTitle ?? "")
         }
         
         _ = attr.append(string: text, color: theme.colors.text, font: .normal(.text))
@@ -389,7 +389,7 @@ func RequestJoinMemberListController(context: AccountContext, peerId: PeerId, ma
     var updateBarIsHidden:((Bool)->Void)? = nil
 
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.requestJoinListTitle, removeAfterDisappear: false, customRightButton: { controller in
+    let controller = InputDataController(dataSignal: signal, title: strings().requestJoinListTitle, removeAfterDisappear: false, customRightButton: { controller in
         let bar = ImageBarView(controller: controller, theme.icons.chatSearch)
         bar.button.set(handler: { _ in
             updateSearchValue { current in

@@ -12,6 +12,7 @@ import Accelerate
 import Postbox
 import SwiftSignalKit
 import TGUIKit
+import ApiCredentials
 
 private enum WriteResult {
     case success

@@ -220,8 +220,6 @@ private func ongoingDataSavingForType(_ type: VoiceCallDataSaving) -> OngoingCal
         return .cellular
     case .always:
         return .always
-    default:
-        return .never
     }
 }
 
@@ -233,13 +231,11 @@ private func ongoingDataSavingForTypeWebrtc(_ type: VoiceCallDataSaving) -> Ongo
         return .cellular
     case .always:
         return .always
-    default:
-        return .never
     }
 }
 
 
-private protocol OngoingCallThreadLocalContextProtocol: class {
+private protocol OngoingCallThreadLocalContextProtocol: AnyObject {
     func nativeSetNetworkType(_ type: NetworkType)
     func nativeSetIsMuted(_ value: Bool)
     func nativeSetIsLowBatteryLevel(_ value: Bool)

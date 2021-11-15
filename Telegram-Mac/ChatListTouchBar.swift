@@ -8,7 +8,7 @@
 
 import TGUIKit
 import TelegramCore
-
+import HackUtils
 import SwiftSignalKit
 import Postbox
 
@@ -284,23 +284,23 @@ final class ComposePopoverTouchBar : NSTouchBar, NSTouchBarDelegate {
         case .composeNewGroup:
             let item: NSCustomTouchBarItem = NSCustomTouchBarItem(identifier: identifier)
             let image = NSImage(named: NSImage.Name("Icon_TouchBar_ComposeGroup"))!
-            let button = NSButton(title: L10n.composePopoverNewGroup, image: image, target: self, action: #selector(newGroupAction))
+            let button = NSButton(title: strings().composePopoverNewGroup, image: image, target: self, action: #selector(newGroupAction))
             item.view = button
-            item.customizationLabel = L10n.composePopoverNewGroup
+            item.customizationLabel = strings().composePopoverNewGroup
             return item
         case .composeNewChannel:
             let item: NSCustomTouchBarItem = NSCustomTouchBarItem(identifier: identifier)
             let image = NSImage(named: NSImage.Name("Icon_TouchBar_ComposeChannel"))!
-            let button = NSButton(title: L10n.composePopoverNewChannel, image: image, target: self, action: #selector(newChannelAction))
+            let button = NSButton(title: strings().composePopoverNewChannel, image: image, target: self, action: #selector(newChannelAction))
             item.view = button
-            item.customizationLabel = L10n.composePopoverNewChannel
+            item.customizationLabel = strings().composePopoverNewChannel
             return item
         case .composeNewSecretChat:
             let item: NSCustomTouchBarItem = NSCustomTouchBarItem(identifier: identifier)
             let image = NSImage(named: NSImage.Name("Icon_TouchBar_ComposeSecretChat"))!
-            let button = NSButton(title: L10n.composePopoverNewSecretChat, image: image, target: self, action: #selector(newSecretChatAction))
+            let button = NSButton(title: strings().composePopoverNewSecretChat, image: image, target: self, action: #selector(newSecretChatAction))
             item.view = button
-            item.customizationLabel = L10n.composePopoverNewSecretChat
+            item.customizationLabel = strings().composePopoverNewSecretChat
             return item
         default:
             break
@@ -426,12 +426,12 @@ class ChatListTouchBar: NSTouchBar, NSTouchBarDelegate {
             
             item.popoverTouchBar = ComposePopoverTouchBar(newGroup: self.newGroup, newSecretChat: self.newSecretChat, newChannel: self.newChannel)
             item.collapsedRepresentation = button
-            item.customizationLabel = L10n.touchBarLabelNewChat
+            item.customizationLabel = strings().touchBarLabelNewChat
             return item
         case .chatListSearch:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let image = NSImage(named: NSImage.Name("Icon_TouchBar_Search"))!
-            let button = NSButton(title: L10n.touchBarSearchUsersOrMessages, image: image, target: self, action: #selector(searchAction))
+            let button = NSButton(title: strings().touchBarSearchUsersOrMessages, image: image, target: self, action: #selector(searchAction))
             button.imagePosition = .imageLeft
             button.imageHugsTitle = true
             button.addWidthConstraint(relation: .equal, size: 350)

@@ -46,7 +46,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("features"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: L10n.broadcastGroupsIntroText, font: .normal(.text))
+        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().broadcastGroupsIntroText, font: .normal(.text))
     }))
     index += 1
 
@@ -78,21 +78,21 @@ func GigagroupLandingController(context: AccountContext, peerId: PeerId) -> Inpu
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
 
-    let controller = InputDataController(dataSignal: signal, title: L10n.broadcastGroupsIntroTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().broadcastGroupsIntroTitle)
 
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
     controller.validateData = { _ in
-        confirm(for: context.window, header: L10n.broadcastGroupsConfirmationAlertTitle, information: L10n.broadcastGroupsConfirmationAlertText, okTitle: L10n.broadcastGroupsConfirmationAlertConvert, successHandler: { _ in
+        confirm(for: context.window, header: strings().broadcastGroupsConfirmationAlertTitle, information: strings().broadcastGroupsConfirmationAlertText, okTitle: strings().broadcastGroupsConfirmationAlertConvert, successHandler: { _ in
             _ = showModalProgress(signal: convertGroupToGigagroup(account: context.account, peerId: peerId), for: context.window).start(error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
             }, completed: {
-                showModalText(for: context.window, text: L10n.broadcastGroupsSuccess)
+                showModalText(for: context.window, text: strings().broadcastGroupsSuccess)
                 close?()
             })
 
@@ -102,7 +102,7 @@ func GigagroupLandingController(context: AccountContext, peerId: PeerId) -> Inpu
         return .none
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.broadcastGroupsConvert, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().broadcastGroupsConvert, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
 

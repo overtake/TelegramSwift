@@ -56,9 +56,9 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
     override var defaultBarTitle: String {
         switch intent {
         case .addPaymentMethod:
-            return L10n.checkoutNewCardTitle
+            return strings().checkoutNewCardTitle
         case .externalVerification:
-            return L10n.checkoutWebConfirmationTitle
+            return strings().checkoutWebConfirmationTitle
         }
     }
     

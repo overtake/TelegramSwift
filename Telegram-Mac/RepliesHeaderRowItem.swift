@@ -12,7 +12,7 @@ import TGUIKit
 class RepliesHeaderRowItem: GeneralRowItem {
     fileprivate var textLayout: TextViewLayout
     init(_ initialSize: NSSize, entry: ChatHistoryEntry) {
-        self.textLayout = TextViewLayout(.initialize(string: L10n.chatRepliesDesc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        self.textLayout = TextViewLayout(.initialize(string: strings().chatRepliesDesc, color: theme.colors.text, font: .normal(.text)), alignment: .center)
         super.init(initialSize, stableId: entry.stableId, viewType: .singleItem, inset: NSEdgeInsetsMake(20, 30, 10, 30))
     }
     

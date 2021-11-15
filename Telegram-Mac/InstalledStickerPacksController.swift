@@ -202,19 +202,19 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     func item(_ arguments: InstalledStickerPacksControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case let .suggestOptions(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.stickersSuggestStickers, type: .context(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().stickersSuggestStickers, type: .context(value), viewType: viewType, action: {
                 arguments.openSuggestionOptions()
             })
         case let .trending(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.installedStickersTranding, type: .context(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersTranding, type: .context(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
                 arguments.openFeatured()
             })
         case let .archived(_, archived, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.installedStickersArchived, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersArchived, type: .next, viewType: viewType, action: {
                 arguments.openArchived(archived.archived)
             })
         case let .loopAnimated(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.installedStickersLoopAnimated, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersLoopAnimated, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleLoopAnimated(!value)
             })
         case let .packsTitle(_, text, viewType):
@@ -277,11 +277,11 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
     let suggestString: String
     switch stickerSettings.emojiStickerSuggestionMode {
     case .none:
-        suggestString = L10n.stickersSuggestNone
+        suggestString = strings().stickersSuggestNone
     case .all:
-        suggestString = L10n.stickersSuggestAll
+        suggestString = strings().stickersSuggestAll
     case .installed:
-        suggestString = L10n.stickersSuggestAdded
+        suggestString = strings().stickersSuggestAdded
     }
     entries.append(.suggestOptions(sectionId: sectionId, suggestString, .firstItem))
     
@@ -300,7 +300,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.packsTitle(sectionId: sectionId, L10n.installedStickersPacksTitle, .textTopItem))
+    entries.append(.packsTitle(sectionId: sectionId, strings().installedStickersPacksTitle, .textTopItem))
     
     if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
         if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
@@ -315,7 +315,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
             }
         }
     }
-    entries.append(.packsInfo(sectionId: sectionId, L10n.installedStickersDescrpiption, .textBottomItem))
+    entries.append(.packsInfo(sectionId: sectionId, strings().installedStickersDescrpiption, .textBottomItem))
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     return entries
@@ -340,11 +340,11 @@ class InstalledStickerPacksController: TableViewController {
     private func openSuggestionOptions() {
         let postbox: Postbox = context.account.postbox
         if let view = (genericView.item(stableId: InstalledStickerPacksEntryId.index(0))?.view as? GeneralInteractedRowView)?.textView {
-            showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(L10n.stickersSuggestAll, {
+            showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(strings().stickersSuggestAll, {
                 _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.all)}).start()
-            }), SPopoverItem(L10n.stickersSuggestAdded, {
+            }), SPopoverItem(strings().stickersSuggestAdded, {
                  _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.installed)}).start()
-            }), SPopoverItem(L10n.stickersSuggestNone, {
+            }), SPopoverItem(strings().stickersSuggestNone, {
                  _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.none)}).start()
             })]), edge: .minX, inset: NSMakePoint(0,-30))
         }
@@ -378,7 +378,7 @@ class InstalledStickerPacksController: TableViewController {
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
         }, removePack: { id in
             
-            confirm(for: context.window, information: tr(L10n.installedStickersRemoveDescription), okTitle: tr(L10n.installedStickersRemoveDelete), successHandler: { result in
+            confirm(for: context.window, information: strings().installedStickersRemoveDescription, okTitle: strings().installedStickersRemoveDelete, successHandler: { result in
                 switch result {
                 case .basic:
                     _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: .archive).start()

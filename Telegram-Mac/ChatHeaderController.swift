@@ -357,7 +357,7 @@ private class ChatSponsoredModel: ChatAccessoryModel {
     }
     
     func update(title: String, text: String) {
-        //L10n.chatProxySponsoredCapTitle
+        //strings().chatProxySponsoredCapTitle
         self.headerAttr = .initialize(string: title, color: theme.colors.link, font: .medium(.text))
         self.messageAttr = .initialize(string: text, color: theme.colors.text, font: .normal(.text))
         nodeReady.set(.single(true))
@@ -369,15 +369,15 @@ private extension PromoChatListItem.Kind {
     var title: String {
         switch self {
         case .proxy:
-            return L10n.chatProxySponsoredCapTitle
+            return strings().chatProxySponsoredCapTitle
         case .psa:
-            return L10n.psaChatTitle
+            return strings().psaChatTitle
         }
     }
     var text: String {
         switch self {
         case .proxy:
-            return L10n.chatProxySponsoredCapDesc
+            return strings().chatProxySponsoredCapDesc
         case let .psa(type, _):
             return localizedPsa("psa.chat.text", type: type)
         }
@@ -415,7 +415,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
             }
             switch kind {
             case .proxy:
-                confirm(for: chatInteraction.context.window, header: L10n.chatProxySponsoredAlertHeader, information: L10n.chatProxySponsoredAlertText, cancelTitle: "", thridTitle: L10n.chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
+                confirm(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancelTitle: "", thridTitle: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
                     switch result {
                     case .thrid:
                         chatInteraction?.openProxySettings()
@@ -579,7 +579,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
             
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? L10n.chatHeaderPinnedPrevious : L10n.chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
+            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
             
             newNode.view = newContainer
             
@@ -681,7 +681,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
         
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
-        report.set(text: L10n.chatHeaderReportSpam, for: .Normal)
+        report.set(text: strings().chatHeaderReportSpam, for: .Normal)
         _ = report.sizeToFit()
         
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
@@ -712,11 +712,11 @@ class ChatReportView : Control, ChatHeaderProtocol {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
-        report.set(text: tr(L10n.chatHeaderReportSpam), for: .Normal)
+        report.set(text: strings().chatHeaderReportSpam, for: .Normal)
         report.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         _ = report.sizeToFit()
         
-        unarchiveButton.set(text: L10n.peerInfoUnarchive, for: .Normal)
+        unarchiveButton.set(text: strings().peerInfoUnarchive, for: .Normal)
         
         unarchiveButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         
@@ -819,7 +819,7 @@ class ShareInfoView : Control, ChatHeaderProtocol {
         dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         share.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         
-        share.set(text: L10n.peerInfoShareMyInfo, for: .Normal)
+        share.set(text: strings().peerInfoShareMyInfo, for: .Normal)
 
         self.backgroundColor = theme.colors.background
         needsLayout = true
@@ -894,12 +894,12 @@ class AddContactView : Control, ChatHeaderProtocol {
         blockButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.redUI, backgroundColor: theme.colors.background, highlightColor: theme.colors.redUI)
         
         if blockButton.superview == nil, let peer = chatInteraction.peer {
-            add.set(text: L10n.peerInfoAddUserToContact(peer.compactDisplayTitle), for: .Normal)
+            add.set(text: strings().peerInfoAddUserToContact(peer.compactDisplayTitle), for: .Normal)
         } else {
-            add.set(text: L10n.peerInfoAddContact, for: .Normal)
+            add.set(text: strings().peerInfoAddContact, for: .Normal)
         }
-        blockButton.set(text: L10n.peerInfoBlockUser, for: .Normal)
-        unarchiveButton.set(text: L10n.peerInfoUnarchive, for: .Normal)
+        blockButton.set(text: strings().peerInfoBlockUser, for: .Normal)
+        unarchiveButton.set(text: strings().peerInfoUnarchive, for: .Normal)
         
         unarchiveButton.style = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background, highlightColor: theme.colors.accentSelect)
         
@@ -1336,7 +1336,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             self.updateSearchState()
             switch self.searchView.tokenState {
             case .none:
-                if state.request == L10n.chatSearchFrom, let peer = self.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
+                if state.request == strings().chatSearchFrom, let peer = self.chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup  {
                     self.query.set(SearchStateQuery("", nil))
                     self.parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
                     self.searchView.initToken()
@@ -1877,7 +1877,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         var text: String
         let pretty: String
         if let scheduledDate = data.activeCall.scheduleTimestamp, participantsCount == 0 {
-            text = L10n.chatGroupCallScheduledStatus(stringForMediumDate(timestamp: scheduledDate))
+            text = strings().chatGroupCallScheduledStatus(stringForMediumDate(timestamp: scheduledDate))
             pretty = ""
             var presented = false
             let current: TimerButtonView
@@ -1909,7 +1909,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             })
             joinButton.isHidden = true
         } else {
-            text = L10n.chatGroupCallMembersCountable(participantsCount)
+            text = strings().chatGroupCallMembersCountable(participantsCount)
             pretty = "\(Int(participantsCount).formattedWithSeparator)"
             text = text.replacingOccurrences(of: "\(participantsCount)", with: pretty)
             joinButton.isHidden = false
@@ -1927,12 +1927,12 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         self.data = data
         
         
-        var title: String = data.activeCall.scheduleTimestamp != nil ? L10n.chatGroupCallScheduledTitle : L10n.chatGroupCallTitle
+        var title: String = data.activeCall.scheduleTimestamp != nil ? strings().chatGroupCallScheduledTitle : strings().chatGroupCallTitle
         
         
         if data.activeCall.scheduleTimestamp == nil, let peer = self.chatInteraction.presentation.peer as? TelegramChannel {
             if peer.flags.contains(.isGigagroup) || peer.isChannel {
-                title = L10n.chatGroupCallLiveTitle
+                title = strings().chatGroupCallLiveTitle
             }
         }
         
@@ -1967,7 +1967,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         border = [.Bottom]
         borderColor = theme.colors.border
         joinButton.set(font: .medium(.text), for: .Normal)
-        joinButton.set(text: L10n.chatGroupCallJoin, for: .Normal)
+        joinButton.set(text: strings().chatGroupCallJoin, for: .Normal)
         joinButton.sizeToFit(NSMakeSize(14, 8), .zero, thatFit: false)
         joinButton.layer?.cornerRadius = joinButton.frame.height / 2
         joinButton.set(color: theme.colors.underSelectedColor, for: .Normal)
@@ -2087,7 +2087,7 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
         
         switch state {
         case let .pendingRequests(_, count, peers):
-            let text = L10n.chatHeaderRequestToJoinCountable(count)
+            let text = strings().chatHeaderRequestToJoinCountable(count)
             let layout = TextViewLayout(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
             layout.measure(width: frame.width - 60)
             textView.update(layout)

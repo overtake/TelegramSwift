@@ -4,7 +4,7 @@ import RLottie
 import TGUIKit
 import Metal
 import TelegramCore
-
+import GZIP
 import libwebp
 
 

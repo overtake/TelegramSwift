@@ -114,7 +114,7 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         
-        numberText.placeholderAttributedString = NSAttributedString.initialize(string: tr(L10n.loginPhoneFieldPlaceholder), color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
+        numberText.placeholderAttributedString = NSAttributedString.initialize(string: strings().loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
         codeText.textView?.insertionPointColor = theme.colors.indicatorColor
         numberText.textView?.insertionPointColor = theme.colors.indicatorColor
 
@@ -125,9 +125,9 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         let text:String
         switch error {
         case .invalidPhoneNumber:
-            text = tr(L10n.phoneNumberInvalid)
+            text = strings().phoneNumberInvalid
         case .limitExceeded:
-            text = tr(L10n.loginFloodWait)
+            text = strings().loginFloodWait
         case .generic:
             text = "undefined error"
         case .phoneLimitExceeded:
@@ -314,7 +314,7 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
     func update(selectedItem:CountryItem?, update:Bool, updateCode:Bool = true) -> Void {
         self.selectedItem = selectedItem
         if update {
-            countrySelector.set(text: selectedItem?.shortName ?? tr(L10n.loginInvalidCountryCode), for: .Normal)
+            countrySelector.set(text: selectedItem?.shortName ?? strings().loginInvalidCountryCode, for: .Normal)
             _ = countrySelector.sizeToFit()
             if updateCode {
                 codeText.stringValue = selectedItem != nil ? "+\(selectedItem!.code)" : "+"

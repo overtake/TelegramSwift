@@ -37,9 +37,9 @@ class ChatListFilterVisibilityItem: GeneralRowItem {
         
         self.sidebar = sidebar
         self.toggle = toggle
-        topViewLayout = TextViewLayout.init(.initialize(string: L10n.chatListFilterTabBarOnTheTop, color: sidebar ? theme.colors.grayText : theme.colors.accent, font: .normal(.text)))
+        topViewLayout = TextViewLayout.init(.initialize(string: strings().chatListFilterTabBarOnTheTop, color: sidebar ? theme.colors.grayText : theme.colors.accent, font: .normal(.text)))
         
-        leftViewLayout = TextViewLayout.init(.initialize(string: L10n.chatListFilterTabBarOnTheLeft, color: sidebar ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
+        leftViewLayout = TextViewLayout.init(.initialize(string: strings().chatListFilterTabBarOnTheLeft, color: sidebar ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
 
         topThumb = generateThumb(NSImage(named: "tabsselect_top_gray")!.precomposed(theme.colors.grayIcon.withAlphaComponent(0.8)), active: NSImage(named: "tabsselect_top_systemcol")!.precomposed(theme.colors.accent))
         

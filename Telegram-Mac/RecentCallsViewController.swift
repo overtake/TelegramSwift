@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import DateUtils
 import Postbox
 import SwiftSignalKit
 
@@ -155,9 +155,9 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             
             let statusText:String
             if failed {
-                statusText = tr(L10n.callRecentMissed)
+                statusText = strings().callRecentMissed
             } else {
-                let text = outgoing ? tr(L10n.callRecentOutgoing) : tr(L10n.callRecentIncoming)
+                let text = outgoing ? strings().callRecentOutgoing : strings().callRecentIncoming
                 if messages.count == 1 {
                     if let action = messages[0].media.first as? TelegramMediaAction, case .phoneCall(_, _, let duration, _) = action.action, let value = duration, value > 0 {
                         statusText = text + " (\(String.stringForShortCallDurationSeconds(for: value)))"
@@ -182,12 +182,12 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                     arguments.call(peer.id)
                 }
             }, contextMenuItems: {
-                return .single([ContextMenuItem(L10n.recentCallsDelete, handler: {
+                return .single([ContextMenuItem(strings().recentCallsDelete, handler: {
                     arguments.removeCalls(messages.map{ $0.id }, peer)
                 })])
             })
         case .empty(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: tr(L10n.recentCallsEmpty), border: [.Right])
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right])
         }
     }
 }
@@ -417,7 +417,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 applyUIPCallResult(context.sharedContext, result)
             }))
         }, removeCalls: { [weak self] messageIds, peer in
-            modernConfirm(for: context.window, account: context.account, peerId: nil, header: L10n.recentCallsDeleteHeader, information: L10n.recentCallsDeleteCalls, okTitle: L10n.recentCallsDelete, cancelTitle: L10n.modalCancel, thridTitle: L10n.recentCallsDeleteForMeAnd(peer.compactDisplayTitle), thridAutoOn: true, successHandler: { [weak self] result in
+            modernConfirm(for: context.window, account: context.account, peerId: nil, header: strings().recentCallsDeleteHeader, information: strings().recentCallsDeleteCalls, okTitle: strings().recentCallsDelete, cancelTitle: strings().modalCancel, thridTitle: strings().recentCallsDeleteForMeAnd(peer.compactDisplayTitle), thridAutoOn: true, successHandler: { [weak self] result in
                 
                 let type: InteractiveMessagesDeletionType
                 switch result {

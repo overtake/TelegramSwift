@@ -27,15 +27,15 @@ enum EmojiSegment : Int64, Comparable  {
     
     var localizedString: String {
         switch self {
-        case .Recent: return L10n.emojiRecent
-        case .People: return L10n.emojiSmilesAndPeople
-        case .AnimalsAndNature: return L10n.emojiAnimalsAndNature
-        case .FoodAndDrink: return L10n.emojiFoodAndDrink
-        case .ActivityAndSport: return L10n.emojiActivityAndSport
-        case .TravelAndPlaces: return L10n.emojiTravelAndPlaces
-        case .Objects: return L10n.emojiObjects
-        case .Symbols: return L10n.emojiSymbols
-        case .Flags: return L10n.emojiFlags
+        case .Recent: return strings().emojiRecent
+        case .People: return strings().emojiSmilesAndPeople
+        case .AnimalsAndNature: return strings().emojiAnimalsAndNature
+        case .FoodAndDrink: return strings().emojiFoodAndDrink
+        case .ActivityAndSport: return strings().emojiActivityAndSport
+        case .TravelAndPlaces: return strings().emojiTravelAndPlaces
+        case .Objects: return strings().emojiObjects
+        case .Symbols: return strings().emojiSymbols
+        case .Flags: return strings().emojiFlags
         }
     }
     

@@ -62,25 +62,25 @@ import SwiftSignalKit
 //        
 //        switch key {
 //        case "_$!<HomePage>!$_":
-//            return L10n.contactInfoURLLabelHomepage
+//            return strings().contactInfoURLLabelHomepage
 //        case "_$!<Home>!$_":
-//            return L10n.contactInfoPhoneLabelHome
+//            return strings().contactInfoPhoneLabelHome
 //        case "_$!<Work>!$_":
-//            return L10n.contactInfoPhoneLabelWork
+//            return strings().contactInfoPhoneLabelWork
 //        case "_$!<Mobile>!$_":
-//            return L10n.contactInfoPhoneLabelMobile
+//            return strings().contactInfoPhoneLabelMobile
 //        case "_$!<Main>!$_":
-//            return L10n.contactInfoPhoneLabelMain
+//            return strings().contactInfoPhoneLabelMain
 //        case "_$!<HomeFax>!$_":
-//            return L10n.contactInfoPhoneLabelHomeFax
+//            return strings().contactInfoPhoneLabelHomeFax
 //        case "_$!<WorkFax>!$_":
-//            return L10n.contactInfoPhoneLabelWorkFax
+//            return strings().contactInfoPhoneLabelWorkFax
 //        case "_$!<Pager>!$_":
-//            return L10n.contactInfoPhoneLabelPager
+//            return strings().contactInfoPhoneLabelPager
 //        case "_$!<Other>!$_":
-//            return L10n.contactInfoPhoneLabelOther
+//            return strings().contactInfoPhoneLabelOther
 //        default:
-//            return L10n.contactInfoPhoneLabelOther
+//            return strings().contactInfoPhoneLabelOther
 //        }
 //    }
 //    
@@ -133,7 +133,7 @@ import SwiftSignalKit
 //        dateFormatter.dateStyle = .long
 //        
 //        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("birthday"), equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
-//            return TextAndLabelItem(initialSize, stableId: stableId, label: L10n.contactInfoBirthdayLabel, text: dateFormatter.string(from: date), account: arguments.account)
+//            return TextAndLabelItem(initialSize, stableId: stableId, label: strings().contactInfoBirthdayLabel, text: dateFormatter.string(from: date), account: arguments.account)
 //        }))
 //        index += 1
 //    }
@@ -200,7 +200,7 @@ import SwiftSignalKit
 //    }
 //    
 //    override var modalInteractions: ModalInteractions? {
-//        return ModalInteractions(acceptTitle: L10n.modalOK)
+//        return ModalInteractions(acceptTitle: strings().modalOK)
 //    }
 //    
 //    override func measure(size: NSSize) {
@@ -233,7 +233,7 @@ import SwiftSignalKit
 //        self.account = account
 //        self.vCard = vCard
 //        self.contact = contact
-//        input = InputDataController(dataSignal: values.get() |> map {($0, true)}, title: L10n.contactInfoContactInfo, hasDone: false)
+//        input = InputDataController(dataSignal: values.get() |> map {($0, true)}, title: strings().contactInfoContactInfo, hasDone: false)
 //        super.init(input)
 //        self._frameRect = NSMakeRect(0, 0, 380, 500)
 //    }

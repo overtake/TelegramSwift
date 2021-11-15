@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import ObjcUtils
 import SwiftSignalKit
 
 class SecretChatKeyView : View {
@@ -64,7 +64,7 @@ class SecretChatKeyView : View {
         textView.update(layout)
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.encryptionKeyDescription(participant.compactDisplayTitle, participant.compactDisplayTitle)), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().encryptionKeyDescription(participant.compactDisplayTitle, participant.compactDisplayTitle), color: theme.colors.grayText, font: .normal(.text))
     
         attr.detectBoldColorInString(with: .medium(.text))
         

@@ -29,7 +29,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
         label.isEventLess = true
         label.userInteractionEnabled = false
         label.isSelectable = false
-        let layout = TextViewLayout(.initialize(string: L10n.chatWallpaperEmpty, color: theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: strings().chatWallpaperEmpty, color: theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         label.update(layout)
         label.backgroundColor = theme.chatBackground
@@ -45,7 +45,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
         if let wallpaper = self.wallpaper {
             switch wallpaper {
             case .file:
-                menu.addItem(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
+                menu.addItem(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
                     self?.delete?()
                 }))
             default:

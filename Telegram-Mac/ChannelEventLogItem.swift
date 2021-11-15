@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import DateUtils
 
 private var banHelp:[TelegramChatBannedRightsFlags] {
     var order:[TelegramChatBannedRightsFlags] = []
@@ -315,38 +315,38 @@ class ServiceEventLogItem: TableRowItem {
             
             switch entry.event.action {
             case let .changeTitle(prev, new):
-                changedInfo = ChangedInfo(prev: prev, new: new, panelText: !prev.isEmpty ? L10n.eventLogServicePreviousTitle : nil)
-                serviceInfo = ServiceTextInfo(text: !isGroup ? L10n.channelEventLogServiceTitleUpdated(peer.displayTitle) : L10n.groupEventLogServiceTitleUpdated(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                changedInfo = ChangedInfo(prev: prev, new: new, panelText: !prev.isEmpty ? strings().eventLogServicePreviousTitle : nil)
+                serviceInfo = ServiceTextInfo(text: !isGroup ? strings().channelEventLogServiceTitleUpdated(peer.displayTitle) : strings().groupEventLogServiceTitleUpdated(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                 
             case let .changeAbout(prev, new):
                 
                 let text:String
                 if !new.isEmpty {
-                    text = !isGroup ? L10n.channelEventLogServiceAboutUpdated(peer.displayTitle) : L10n.groupEventLogServiceAboutUpdated(peer.displayTitle)
+                    text = !isGroup ? strings().channelEventLogServiceAboutUpdated(peer.displayTitle) : strings().groupEventLogServiceAboutUpdated(peer.displayTitle)
                 } else {
-                    text = !isGroup ? L10n.channelEventLogServiceAboutRemoved(peer.displayTitle) : L10n.groupEventLogServiceAboutRemoved(peer.displayTitle)
+                    text = !isGroup ? strings().channelEventLogServiceAboutRemoved(peer.displayTitle) : strings().groupEventLogServiceAboutRemoved(peer.displayTitle)
                 }
                 
-                changedInfo = ChangedInfo(prev: prev, new: new, panelText: !prev.isEmpty ? L10n.eventLogServicePreviousDesc : nil)
+                changedInfo = ChangedInfo(prev: prev, new: new, panelText: !prev.isEmpty ? strings().eventLogServicePreviousDesc : nil)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
 
             case let .changeUsername(prev, new):
                 
                 let text:String
                 if !new.isEmpty {
-                    text = !isGroup ? L10n.channelEventLogServiceLinkUpdated(peer.displayTitle) : L10n.groupEventLogServiceLinkUpdated(peer.displayTitle)
+                    text = !isGroup ? strings().channelEventLogServiceLinkUpdated(peer.displayTitle) : strings().groupEventLogServiceLinkUpdated(peer.displayTitle)
                 } else {
-                    text = !isGroup ? L10n.channelEventLogServiceLinkRemoved(peer.displayTitle) : L10n.groupEventLogServiceLinkRemoved(peer.displayTitle)
+                    text = !isGroup ? strings().channelEventLogServiceLinkRemoved(peer.displayTitle) : strings().groupEventLogServiceLinkRemoved(peer.displayTitle)
                 }
                 
-                changedInfo = ChangedInfo(prev: "https://t.me/\(prev)", new: new.isEmpty ? "" : "https://t.me/\(new)", panelText: !prev.isEmpty ? L10n.eventLogServicePreviousLink : nil)
+                changedInfo = ChangedInfo(prev: "https://t.me/\(prev)", new: new.isEmpty ? "" : "https://t.me/\(new)", panelText: !prev.isEmpty ? strings().eventLogServicePreviousLink : nil)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .changeStickerPack(_, new):
                 let text:String
                 if let _ = new {
-                    text = L10n.eventLogServiceChangedStickerSet(peer.displayTitle)
+                    text = strings().eventLogServiceChangedStickerSet(peer.displayTitle)
                 } else {
-                    text = L10n.eventLogServiceRemovedStickerSet(peer.displayTitle)
+                    text = strings().eventLogServiceRemovedStickerSet(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .linkedPeerUpdated(previous, updated):
@@ -354,19 +354,19 @@ class ServiceEventLogItem: TableRowItem {
                 var secondaryLink:(range: String, link: inAppLink)?
                 if let updated = updated {
                     if isGroup {
-                        text = L10n.channelEventLogMessageChangedLinkedChannel(peer.displayTitle, updated.displayTitle)
+                        text = strings().channelEventLogMessageChangedLinkedChannel(peer.displayTitle, updated.displayTitle)
                         secondaryLink = (range: updated.displayTitle, link: inAppLink.peerInfo(link: "", peerId: updated.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
                     } else {
-                        text = L10n.channelEventLogMessageChangedLinkedGroup(peer.displayTitle, updated.displayTitle)
+                        text = strings().channelEventLogMessageChangedLinkedGroup(peer.displayTitle, updated.displayTitle)
                         secondaryLink = (range: updated.displayTitle, link: inAppLink.peerInfo(link: "", peerId: updated.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
                     }
                 } else if let previous = previous {
                     if isGroup {
-                        text = L10n.channelEventLogMessageChangedUnlinkedChannel(peer.displayTitle, previous.displayTitle)
+                        text = strings().channelEventLogMessageChangedUnlinkedChannel(peer.displayTitle, previous.displayTitle)
                         secondaryLink = (range: previous.displayTitle, link: inAppLink.peerInfo(link: "", peerId: previous.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
 
                     } else {
-                        text = L10n.channelEventLogMessageChangedUnlinkedGroup(peer.displayTitle)
+                        text = strings().channelEventLogMessageChangedUnlinkedGroup(peer.displayTitle)
                     }
                 } else {
                     text = ""
@@ -390,14 +390,14 @@ class ServiceEventLogItem: TableRowItem {
                             var justRankUpdated: Bool = false
                             
                             if prevRank != newRank {
-                                let rank = newRank ?? L10n.chatAdminBadge
+                                let rank = newRank ?? strings().chatAdminBadge
                                 if removedRights.isEmpty && addedRights.isEmpty {
-                                    _ = message.append(string: L10n.channelEventLogMessageRankName(memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", rank), color: theme.colors.text)
+                                    _ = message.append(string: strings().channelEventLogMessageRankName(memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", rank), color: theme.colors.text)
                                     justRankUpdated = true
                                 }
                             }
                             if !justRankUpdated {
-                                _ = message.append(string: prevAdminInfo != nil ? L10n.eventLogServicePromotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : L10n.eventLogServicePromoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
+                                _ = message.append(string: prevAdminInfo != nil ? strings().eventLogServicePromotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : strings().eventLogServicePromoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
                                 
                                 
                                 for right in rightsHelp(isGroup).order {
@@ -415,9 +415,9 @@ class ServiceEventLogItem: TableRowItem {
                                 
                                 if prevRank != newRank {
                                     if let rank = newRank, !rank.isEmpty {
-                                        _ = message.append(string: "\n" + L10n.channelEventLogServicePlusTitle(rank), color: theme.colors.text)
+                                        _ = message.append(string: "\n" + strings().channelEventLogServicePlusTitle(rank), color: theme.colors.text)
                                     } else {
-                                        _ = message.append(string: "\n" + L10n.channelEventLogServiceMinusTitle, color: theme.colors.text)
+                                        _ = message.append(string: "\n" + strings().channelEventLogServiceMinusTitle, color: theme.colors.text)
                                     }
                                 }
                             }
@@ -435,7 +435,7 @@ class ServiceEventLogItem: TableRowItem {
                             let message = NSMutableAttributedString()
                             
                             
-                            _ = message.append(string: L10n.channelEventLogMessageTransferedName1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
+                            _ = message.append(string: strings().channelEventLogMessageTransferedName1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
                             
                             
                             
@@ -463,14 +463,14 @@ class ServiceEventLogItem: TableRowItem {
                             var justRankUpdated: Bool = false
                             
                             if prevRank != newRank {
-                                let rank = newRank ?? L10n.chatAdminBadge
+                                let rank = newRank ?? strings().chatAdminBadge
                                 if removedRights.isEmpty && addedRights.isEmpty {
-                                    _ = message.append(string: L10n.channelEventLogMessageRankName(memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", rank), color: theme.colors.text)
+                                    _ = message.append(string: strings().channelEventLogMessageRankName(memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", rank), color: theme.colors.text)
                                     justRankUpdated = true
                                 }
                             }
                             if !justRankUpdated {
-                                _ = message.append(string: prevAdminInfo != nil ? L10n.eventLogServicePromotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : L10n.eventLogServicePromoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
+                                _ = message.append(string: prevAdminInfo != nil ? strings().eventLogServicePromotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : strings().eventLogServicePromoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
                                 
                                 
                                 for right in rightsHelp(isGroup).order {
@@ -488,9 +488,9 @@ class ServiceEventLogItem: TableRowItem {
                                 
                                 if prevRank != newRank {
                                     if let rank = newRank, !rank.isEmpty {
-                                        _ = message.append(string: "\n" + L10n.channelEventLogServicePlusTitle(rank), color: theme.colors.text)
+                                        _ = message.append(string: "\n" + strings().channelEventLogServicePlusTitle(rank), color: theme.colors.text)
                                     } else {
-                                        _ = message.append(string: "\n" + L10n.channelEventLogServiceMinusTitle, color: theme.colors.text)
+                                        _ = message.append(string: "\n" + strings().channelEventLogServiceMinusTitle, color: theme.colors.text)
                                     }
                                 }
                             }
@@ -508,13 +508,13 @@ class ServiceEventLogItem: TableRowItem {
                     }
                 }
             case .deleteMessage:
-                serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                serviceInfo = ServiceTextInfo(text: strings().eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
             case let .editMessage(prev, new):
                 if new.media.first is TelegramMediaImage || new.media.first is TelegramMediaFile {
                     if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
-                        serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                        serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     } else {
-                        serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                        serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     }
                 } else if let media = new.media.first as? TelegramMediaAction {
                     switch media.action {
@@ -522,17 +522,17 @@ class ServiceEventLogItem: TableRowItem {
                         if let duration = duration {
                             let text: String
                             if new.author?.id == chatInteraction.context.peerId {
-                                text = L10n.chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
+                                text = strings().chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                             } else {
-                                text = L10n.chatServiceVoiceChatFinished(peer.displayTitle, autoremoveLocalized(Int(duration)))
+                                text = strings().chatServiceVoiceChatFinished(peer.displayTitle, autoremoveLocalized(Int(duration)))
                             }
                             serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                         }
                     default:
-                        serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                        serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     }
                 } else {
-                    serviceInfo = ServiceTextInfo(text: L10n.eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                    serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                 }
             case let .participantToggleBan(prev, new):
                 switch prev.participant {
@@ -555,19 +555,19 @@ class ServiceEventLogItem: TableRowItem {
                                 
                                 if let _ = prevBanInfo {
                                     if let newBanInfo = newBanInfo {
-                                        text = newBanInfo.rights.untilDate != .max && newBanInfo.rights.untilDate != 0 ? L10n.eventLogServiceDemotedChangedUntil1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", newBanInfo.rights.formattedUntilDate) : L10n.eventLogServiceDemotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
+                                        text = newBanInfo.rights.untilDate != .max && newBanInfo.rights.untilDate != 0 ? strings().eventLogServiceDemotedChangedUntil1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", newBanInfo.rights.formattedUntilDate) : strings().eventLogServiceDemotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                                     } else {
-                                        text = L10n.eventLogServiceDemotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
+                                        text = strings().eventLogServiceDemotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                                     }
                                 } else {
                                     if let newBanInfo = newBanInfo {
-                                        text = newBanInfo.rights.untilDate != .max && newBanInfo.rights.untilDate != 0 ? L10n.eventLogServiceDemotedUntil1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", newBanInfo.rights.formattedUntilDate) : L10n.eventLogServiceDemoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
+                                        text = newBanInfo.rights.untilDate != .max && newBanInfo.rights.untilDate != 0 ? strings().eventLogServiceDemotedUntil1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "", newBanInfo.rights.formattedUntilDate) : strings().eventLogServiceDemoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                                     } else {
-                                        text = L10n.eventLogServiceDemotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
+                                        text = strings().eventLogServiceDemotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                                     }
                                 }
                             } else {
-                                text = L10n.eventLogServiceBanned1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
+                                text = strings().eventLogServiceBanned1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "")
                             }
                             
                             _ = message.append(string: text, color: theme.colors.text)
@@ -601,29 +601,29 @@ class ServiceEventLogItem: TableRowItem {
                     break
                 }
             case .updatePinned(let message):
-                serviceInfo = ServiceTextInfo(text: message != nil ? L10n.eventLogServiceUpdatePinned(peer.displayTitle) : L10n.eventLogServiceRemovePinned(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                serviceInfo = ServiceTextInfo(text: message != nil ? strings().eventLogServiceUpdatePinned(peer.displayTitle) : strings().eventLogServiceRemovePinned(peer.displayTitle), firstLink: peerLink, secondLink: nil)
             case let .toggleInvites(value):
                 let text:String
                 if value {
-                    text = L10n.groupEventLogServiceEnableInvites(peer.displayTitle)
+                    text = strings().groupEventLogServiceEnableInvites(peer.displayTitle)
                 } else {
-                    text = L10n.groupEventLogServiceDisableInvites(peer.displayTitle)
+                    text = strings().groupEventLogServiceDisableInvites(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .toggleSignatures(value):
                 let text:String
                 if value {
-                    text = L10n.channelEventLogServiceEnableSignatures(peer.displayTitle)
+                    text = strings().channelEventLogServiceEnableSignatures(peer.displayTitle)
                 } else {
-                    text = L10n.channelEventLogServiceDisableSignatures(peer.displayTitle)
+                    text = strings().channelEventLogServiceDisableSignatures(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .changePhoto(_, new):
                 let text:String
                 if new.0.isEmpty {
-                    text = isGroup ? tr(L10n.groupEventLogServicePhotoRemoved(peer.displayTitle)) : tr(L10n.channelEventLogServicePhotoRemoved(peer.displayTitle))
+                    text = isGroup ? strings().groupEventLogServicePhotoRemoved(peer.displayTitle) : strings().channelEventLogServicePhotoRemoved(peer.displayTitle)
                 } else {
-                    text = isGroup ? tr(L10n.groupEventLogServicePhotoUpdated(peer.displayTitle)) : tr(L10n.channelEventLogServicePhotoUpdated(peer.displayTitle))
+                    text = isGroup ? strings().groupEventLogServicePhotoUpdated(peer.displayTitle) : strings().channelEventLogServicePhotoUpdated(peer.displayTitle)
                     
                     let size = NSMakeSize(70, 70)
                     imageArguments = TransformImageArguments(corners: ImageCorners(radius: size.width / 2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
@@ -631,17 +631,17 @@ class ServiceEventLogItem: TableRowItem {
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case .participantLeave:
-                let text:String = isGroup ? tr(L10n.groupEventLogServiceUpdateLeft(peer.displayTitle)) : tr(L10n.channelEventLogServiceUpdateLeft(peer.displayTitle))
+                let text:String = isGroup ? strings().groupEventLogServiceUpdateLeft(peer.displayTitle) : strings().channelEventLogServiceUpdateLeft(peer.displayTitle)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case .participantJoin:
-                let text:String = isGroup ? L10n.groupEventLogServiceUpdateJoin(peer.displayTitle) : L10n.channelEventLogServiceUpdateJoin(peer.displayTitle)
+                let text:String = isGroup ? strings().groupEventLogServiceUpdateJoin(peer.displayTitle) : strings().channelEventLogServiceUpdateJoin(peer.displayTitle)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .updateSlowmode(_, newValue):
-                let text:String = newValue == nil || newValue == 0 ? L10n.channelEventLogServiceDisabledSlowMode(peer.displayTitle) : L10n.channelEventLogServiceSetSlowMode1(peer.displayTitle, autoremoveLocalized(Int(newValue!)))
+                let text:String = newValue == nil || newValue == 0 ? strings().channelEventLogServiceDisabledSlowMode(peer.displayTitle) : strings().channelEventLogServiceSetSlowMode1(peer.displayTitle, autoremoveLocalized(Int(newValue!)))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .updateDefaultBannedRights(prev, new):
                 let message = NSMutableAttributedString()
-                _ = message.append(string: L10n.eventLogServiceChangedDefaultsRights, color: theme.colors.text)
+                _ = message.append(string: strings().eventLogServiceChangedDefaultsRights, color: theme.colors.text)
                 var addedRights = new.flags
                 var removedRights:TelegramChatBannedRightsFlags = []
                 addedRights = addedRights.subtracting(prev.flags)
@@ -663,55 +663,55 @@ class ServiceEventLogItem: TableRowItem {
                 message.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: message.range)
                 self.contentMessageItem = ServiceEventLogMessageContentItem(peer: peer, chatInteraction: chatInteraction, name: TextViewLayout(contentName, maximumNumberOfLines: 1), date: TextViewLayout(date), content: TextViewLayout(message))
             case .startGroupCall:
-                let text = L10n.channelAdminLogStartedVoiceChat(peer.displayTitle)
+                let text = strings().channelAdminLogStartedVoiceChat(peer.displayTitle)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case .endGroupCall:
-                let text = L10n.channelAdminLogEndedVoiceChat(peer.displayTitle)
+                let text = strings().channelAdminLogEndedVoiceChat(peer.displayTitle)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .groupCallUpdateParticipantMuteStatus(peerId, isMuted):
                 if let secondary = entry.peers[peerId] {
                     let secondaryLink = (range: secondary.displayTitle, link: inAppLink.peerInfo(link: "", peerId: secondary.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
                     let text: String
                     if isMuted {
-                        text = L10n.channelAdminLogMutedParticipant(peer.displayTitle, secondary.displayTitle)
+                        text = strings().channelAdminLogMutedParticipant(peer.displayTitle, secondary.displayTitle)
                     } else {
-                        text = L10n.channelAdminLogUnmutedMutedParticipant(peer.displayTitle, secondary.displayTitle)
+                        text = strings().channelAdminLogUnmutedMutedParticipant(peer.displayTitle, secondary.displayTitle)
                     }
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
                 }
             case let .updateGroupCallSettings(joinMuted):
                 let text: String
                 if joinMuted {
-                    text = L10n.channelAdminLogMutedNewMembers(peer.displayTitle)
+                    text = strings().channelAdminLogMutedNewMembers(peer.displayTitle)
                 } else {
-                    text = L10n.channelAdminLogAllowedNewMembersToSpeak(peer.displayTitle)
+                    text = strings().channelAdminLogAllowedNewMembersToSpeak(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .deleteExportedInvitation(invite):
-                let text = L10n.channelAdminLogDeletedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                let text = strings().channelAdminLogDeletedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .editExportedInvitation(_, invite):
-                let text = L10n.channelAdminLogEditedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                let text = strings().channelAdminLogEditedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .revokeExportedInvitation(invite):
-                let text = L10n.channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                let text = strings().channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .participantJoinedViaInvite(invite):
-                let text = L10n.channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                let text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let  .participantJoinByRequest(invite, peerId):
                 
                 if let secondary = entry.peers[peerId] {
                     let secondaryLink = (range: secondary.displayTitle, link: inAppLink.peerInfo(link: "", peerId: secondary.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
-                    let text = L10n.channelAdminLogJoinedViaRequest(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""), secondary.displayTitle)
+                    let text = strings().channelAdminLogJoinedViaRequest(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""), secondary.displayTitle)
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)
                 }
             case let .changeHistoryTTL(_, updatedValue):
                 let text: String
                 if let updatedValue = updatedValue, updatedValue > 0 {
-                    text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutSet(peer.displayTitle, timeIntervalString(Int(updatedValue)))
+                    text = strings().channelAdminLogMessageChangedAutoremoveTimeoutSet(peer.displayTitle, timeIntervalString(Int(updatedValue)))
                 } else {
-                    text = L10n.channelAdminLogMessageChangedAutoremoveTimeoutRemove(peer.displayTitle)
+                    text = strings().channelAdminLogMessageChangedAutoremoveTimeoutRemove(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
@@ -866,9 +866,9 @@ class ChannelEventLogEditedPanelItem : TableRowItem {
     init(_ initialSize: NSSize, previous:Message, item:ChatRowItem) {
         self.previous = previous
         self.associatedItem = item
-        let header = TextViewLayout(.initialize(string: tr(L10n.channelEventLogOriginalMessage), color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
+        let header = TextViewLayout(.initialize(string: strings().channelEventLogOriginalMessage, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
         
-        let text = TextViewLayout(.initialize(string: previous.text.isEmpty ? tr(L10n.channelEventLogEmpty) : previous.text, color: theme.colors.text, font: .italic(.text)))
+        let text = TextViewLayout(.initialize(string: previous.text.isEmpty ? strings().channelEventLogEmpty : previous.text, color: theme.colors.text, font: .italic(.text)))
        
         panel = ServiceEventLogMessagePanel(header: header, content: text)
         super.init(initialSize)

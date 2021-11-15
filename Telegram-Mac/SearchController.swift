@@ -92,19 +92,19 @@ struct ExternalSearchMessages {
     var title: String? {
         let text: String?
         if tags == .photoOrVideo {
-            text = L10n.peerMediaTitleSearchMediaCountable(Int(count))
+            text = strings().peerMediaTitleSearchMediaCountable(Int(count))
         } else if tags == .photo {
-            text = L10n.peerMediaTitleSearchPhotosCountable(Int(count))
+            text = strings().peerMediaTitleSearchPhotosCountable(Int(count))
         } else if tags == .video {
-            text = L10n.peerMediaTitleSearchVideosCountable(Int(count))
+            text = strings().peerMediaTitleSearchVideosCountable(Int(count))
         } else if tags == .gif {
-            text = L10n.peerMediaTitleSearchGIFsCountable(Int(count))
+            text = strings().peerMediaTitleSearchGIFsCountable(Int(count))
         } else if tags == .file {
-            text = L10n.peerMediaTitleSearchFilesCountable(Int(count))
+            text = strings().peerMediaTitleSearchFilesCountable(Int(count))
         } else if tags == .webPage {
-            text = L10n.peerMediaTitleSearchLinksCountable(Int(count))
+            text = strings().peerMediaTitleSearchLinksCountable(Int(count))
         } else if tags == .music {
-            text = L10n.peerMediaTitleSearchMusicCountable(Int(count))
+            text = strings().peerMediaTitleSearchMusicCountable(Int(count))
         } else {
             text = nil
         }
@@ -336,7 +336,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
         _ = updatePeer.start(next: { result in
             switch result {
             case .limitExceeded:
-                confirm(for: arguments.context.window, information: L10n.chatListContextPinErrorNew2, okTitle: L10n.alertOK, cancelTitle: "", thridTitle: L10n.chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                confirm(for: arguments.context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                     switch result {
                     case .thrid:
                         arguments.context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
@@ -361,7 +361,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
         }
     }
     
-    items.append(ContextMenuItem(isPinned ? L10n.chatListContextUnpin : L10n.chatListContextPin, handler: {
+    items.append(ContextMenuItem(isPinned ? strings().chatListContextUnpin : strings().chatListContextPin, handler: {
         togglePin(peer)
     }))
     
@@ -398,7 +398,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
             
             if !submenu.isEmpty {
                 items.append(ContextSeparatorItem())
-                let item = ContextMenuItem(L10n.chatListFilterAddToFolder)
+                let item = ContextMenuItem(strings().chatListFilterAddToFolder)
                 let menu = NSMenu()
                 for item in submenu {
                     menu.addItem(item)
@@ -432,9 +432,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             }
             if let subscribers = foundPeer.subscribers, let username = status {
                 if foundPeer.peer.isChannel {
-                    status = tr(L10n.searchGlobalChannel1Countable(username, Int(subscribers)))
+                    status = strings().searchGlobalChannel1Countable(username, Int(subscribers))
                 } else if foundPeer.peer.isSupergroup || foundPeer.peer.isGroup {
-                    status = tr(L10n.searchGlobalGroup1Countable(username, Int(subscribers)))
+                    status = strings().searchGlobalGroup1Countable(username, Int(subscribers))
                 }
             }
             return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.context.account, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right], contextMenuItems: {
@@ -464,11 +464,11 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             let right:String?
             switch state {
             case .short:
-                right = tr(L10n.separatorShowMore)
+                right = strings().separatorShowMore
             case .all:
-                right = tr(L10n.separatorShowLess)
+                right = strings().separatorShowLess
             case .clear:
-                right = tr(L10n.separatorClear)
+                right = strings().separatorClear
                 
             default:
                 right = nil
@@ -661,7 +661,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries: [ChatListSearchEntry] = []
                         
                         
-                        if L10n.peerSavedMessages.lowercased().hasPrefix(query.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.lowercased()) {
+                        if strings().peerSavedMessages.lowercased().hasPrefix(query.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.lowercased()) {
                             entries.append(.savedMessages(accountPeer))
                             ids[accountPeer.id] = accountPeer.id
                         }
@@ -815,7 +815,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             
                             let peers = (localPeers + remotePeers.0)
 
-                            entries.append(.separator(text: L10n.searchSeparatorChatsAndContacts, index: 0, state: .none))
+                            entries.append(.separator(text: strings().searchSeparatorChatsAndContacts, index: 0, state: .none))
                             if !remoteMessages.0.isEmpty {
                                 entries += peers
                             } else {
@@ -835,7 +835,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 state = .none
                             }
 
-                            entries.append(.separator(text: L10n.searchSeparatorGlobalPeers, index: 10000, state: state))
+                            entries.append(.separator(text: strings().searchSeparatorGlobalPeers, index: 10000, state: state))
                             
                             if !isRevealed {
                                 entries += remotePeers.1.prefix(5)
@@ -844,7 +844,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             }
                         }
                         if !remoteMessages.0.isEmpty {
-                            entries.append(.separator(text: L10n.searchSeparatorMessages, index: 20000, state: .none))
+                            entries.append(.separator(text: strings().searchSeparatorMessages, index: 20000, state: .none))
                             entries += remoteMessages.0
                         }
                         if entries.isEmpty && !remotePeers.2 && !remoteMessages.1 {
@@ -927,7 +927,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     entries.append(ChatListSearchEntry.topPeers(i, articlesEnabled: false, unreadArticles: 0, selfPeer: user, peers: top.0, unread: top.1, online: top.2))
                     
                     if recent.0.count > 0 {
-                        entries.append(.separator(text: L10n.searchSeparatorRecent, index: i, state: .clear))
+                        entries.append(.separator(text: strings().searchSeparatorRecent, index: i, state: .clear))
                         i += 1
                         for peerView in recent.0 {
                             if ids[peerView.peerId] == nil {
@@ -1145,7 +1145,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self.arguments = SearchControllerArguments(context: context, removeRecentPeerId: { peerId in
             _ = context.engine.peers.removeRecentlySearchedPeer(peerId: peerId).start()
         }, clearRecent: {
-            confirm(for: context.window, information: L10n.searchConfirmClearHistory, successHandler: { _ in
+            confirm(for: context.window, information: strings().searchConfirmClearHistory, successHandler: { _ in
                 _ = (context.engine.peers.recentlySearchedPeers() |> take(1) |> mapToSignal {
                     return combineLatest($0.map {context.engine.peers.removeRecentlySearchedPeer(peerId: $0.peer.peerId)})
                 }).start()

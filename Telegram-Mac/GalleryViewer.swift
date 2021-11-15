@@ -769,7 +769,7 @@ class GalleryViewer: NSResponder {
         
         if pager.selectedItem?.entry.message?.containsSecretMedia == true {
         } else {
-            items.append(SPopoverItem(L10n.galleryContextSaveAs, {[weak self] in
+            items.append(SPopoverItem(strings().galleryContextSaveAs, {[weak self] in
                 self?.saveAs()
             }))
         }
@@ -786,7 +786,7 @@ class GalleryViewer: NSResponder {
             let file = item.media
             if file.isAnimated && file.isVideo {
                 let reference = item.entry.fileReference(file)
-                items.append(SPopoverItem(L10n.gallerySaveGif, {
+                items.append(SPopoverItem(strings().gallerySaveGif, {
                     let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
                 }))
             }
@@ -797,17 +797,17 @@ class GalleryViewer: NSResponder {
         if let _ = self.contentInteractions {
             if let message = pager.selectedItem?.entry.message {
                 if self.type == .history {
-                    items.append(SPopoverItem(L10n.galleryContextShowMessage, { [weak self] in
+                    items.append(SPopoverItem(strings().galleryContextShowMessage, { [weak self] in
                         self?.showMessage()
                     }))
                 }
                 if chatMode == .history && message.id.peerId != repliesPeerId && self.type == .history {
-                    items.append(SPopoverItem(L10n.galleryContextShowGallery, { [weak self] in
+                    items.append(SPopoverItem(strings().galleryContextShowGallery, { [weak self] in
                         self?.showSharedMedia()
                     }))
                 }
                 if canDeleteMessage(message, account: context.account, mode: .history) {
-                    items.append(SPopoverItem(L10n.galleryContextDeletePhoto, { [weak self] in
+                    items.append(SPopoverItem(strings().galleryContextDeletePhoto, { [weak self] in
                         self?.deleteMessage(control)
                     }))
                 }
@@ -816,7 +816,7 @@ class GalleryViewer: NSResponder {
         
         if pager.selectedItem?.entry.message?.containsSecretMedia == true {
         } else {
-            items.append(SPopoverItem(L10n.galleryContextCopyToClipboard, {[weak self] in
+            items.append(SPopoverItem(strings().galleryContextCopyToClipboard, {[weak self] in
                 self?.copy(nil)
             }))
         }
@@ -825,11 +825,11 @@ class GalleryViewer: NSResponder {
         switch type {
         case .profile(let peerId):
             if peerId == context.peerId {
-                items.append(SPopoverItem(L10n.galleryContextDeletePhoto, {[weak self] in
+                items.append(SPopoverItem(strings().galleryContextDeletePhoto, {[weak self] in
                     self?.deletePhoto()
                 }))
                 if pager.currentIndex != 0 {
-                    items.append(SPopoverItem(L10n.galleryContextMainPhoto, { [weak self] in
+                    items.append(SPopoverItem(strings().galleryContextMainPhoto, { [weak self] in
                         self?.updateMainPhoto()
                     }))
                 }
@@ -838,7 +838,7 @@ class GalleryViewer: NSResponder {
             break
         }
         
-        items.append(SPopoverItem(L10n.navigationClose, { [weak self] in
+        items.append(SPopoverItem(strings().navigationClose, { [weak self] in
             if let event = NSApp.currentEvent {
                 _ = self?.interactions.dismiss(event)
             }
@@ -900,11 +900,11 @@ class GalleryViewer: NSResponder {
                 }
                 
                 if canDelete {
-                    let thrid:String? = (canDeleteForEveryone ? peer.isUser ? L10n.chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : L10n.chatConfirmDeleteMessagesForEveryone : nil)
+                    let thrid:String? = (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
                     
                     
                     if let thrid = thrid {
-                        modernConfirm(for: self.window, account: self.context.account, peerId: nil, header: L10n.chatConfirmDeleteMessages1Countable(messages.count), information: nil, okTitle: L10n.confirmDelete, thridTitle: thrid, successHandler: { [weak self] result in
+                        modernConfirm(for: self.window, account: self.context.account, peerId: nil, header: strings().chatConfirmDeleteMessages1Countable(messages.count), information: nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak self] result in
                             guard let `self` = self else {return}
                             
                             let type:InteractiveMessagesDeletionType
@@ -934,9 +934,9 @@ class GalleryViewer: NSResponder {
                 
                 let thisTitle: String
                 if message.media.first is TelegramMediaImage {
-                    thisTitle = L10n.galleryContextShareThisPhoto
+                    thisTitle = strings().galleryContextShareThisPhoto
                 } else {
-                    thisTitle = L10n.galleryContextShareThisVideo
+                    thisTitle = strings().galleryContextShareThisVideo
                 }
                 items.append(SPopoverItem(thisTitle, { [weak self] in
                     self?.deleteMessages([message])
@@ -945,11 +945,11 @@ class GalleryViewer: NSResponder {
                 
                 let allTitle: String
                 if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
-                    allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
                 } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
-                    allTitle = L10n.galleryContextShareAllVideosCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
                 } else {
-                    allTitle = L10n.galleryContextShareAllItemsCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
                 }
                 
                 items.append(SPopoverItem(allTitle, { [weak self] in
@@ -1002,17 +1002,17 @@ class GalleryViewer: NSResponder {
         
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {
-                menu.addItem(ContextMenuItem(tr(L10n.galleryContextSaveAs), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
                     self?.saveAs()
                 }))
             }
             
             if let _ = self.contentInteractions {
-                menu.addItem(ContextMenuItem(tr(L10n.galleryContextShowMessage), handler: { [weak self] in
+                menu.addItem(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
                     self?.showMessage()
                 }))
             }
-            menu.addItem(ContextMenuItem(tr(L10n.galleryContextCopyToClipboard), handler: { [weak self] in
+            menu.addItem(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
                 self?.copy(nil)
             }))
         }
@@ -1036,11 +1036,11 @@ class GalleryViewer: NSResponder {
                                    
                                     let text: String
                                     if item is MGalleryVideoItem {
-                                         text = L10n.galleryViewFastSaveVideo1
+                                         text = strings().galleryViewFastSaveVideo1
                                     } else if item is MGalleryGIFItem {
-                                        text = L10n.galleryViewFastSaveGif1
+                                        text = strings().galleryViewFastSaveGif1
                                     } else {
-                                        text = L10n.galleryViewFastSaveImage1
+                                        text = strings().galleryViewFastSaveImage1
                                     }
                                     
                                     let dateFormatter = makeNewDateFormatter()
@@ -1086,7 +1086,7 @@ class GalleryViewer: NSResponder {
                             }
                         }))
                     default:
-                        alert(for: self.window, info: isPhoto ? L10n.galleryWaitDownloadPhoto : L10n.galleryWaitDownloadVideo)
+                        alert(for: self.window, info: isPhoto ? strings().galleryWaitDownloadPhoto : strings().galleryWaitDownloadVideo)
                     }
                     
                 }))
@@ -1123,13 +1123,13 @@ class GalleryViewer: NSResponder {
                 
                 let thisTitle: String
                 if message.media.first is TelegramMediaImage {
-                    thisTitle = L10n.galleryContextShareThisPhoto
+                    thisTitle = strings().galleryContextShareThisPhoto
                 } else if message.media.first!.isVideoFile {
-                    thisTitle = L10n.galleryContextShareThisVideo
+                    thisTitle = strings().galleryContextShareThisVideo
                 } else if message.media.first!.isGraphicFile {
-                    thisTitle = L10n.galleryContextShareThisPhoto
+                    thisTitle = strings().galleryContextShareThisPhoto
                 } else {
-                    thisTitle = L10n.galleryContextShareThisFile
+                    thisTitle = strings().galleryContextShareThisFile
                 }
                 
                 items.append(SPopoverItem(thisTitle, { [weak self] in
@@ -1140,13 +1140,13 @@ class GalleryViewer: NSResponder {
                 
                 let allTitle: String
                 if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
-                    allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
                 } else if messages.filter({ $0.media.first!.isVideoFile }).count == messages.count {
-                    allTitle = L10n.galleryContextShareAllVideosCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
                 } else if messages.filter({ $0.media.first!.isGraphicFile }).count == messages.count {
-                    allTitle = L10n.galleryContextShareAllPhotosCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
                 } else {
-                    allTitle = L10n.galleryContextShareAllItemsCountable(messages.count)
+                    allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
                 }
                 
                 items.append(SPopoverItem(allTitle, { [weak self] in

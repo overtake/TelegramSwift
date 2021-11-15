@@ -160,10 +160,10 @@ func alert(for window:Window, header:String = appName, info:String?, runModal: B
     alert.alertStyle = .informational
     alert.messageText = header
     alert.informativeText = info ?? ""
-    alert.addButton(withTitle: L10n.alertOK)
+    alert.addButton(withTitle: strings().alertOK)
     
     
-//    alert.addButton(withTitle: L10n.alertCancel)
+//    alert.addButton(withTitle: strings().alertCancel)
 //    alert.buttons.last?.wantsLayer = true
 //    alert.buttons.last?.layer?.opacity = 0
 //    alert.buttons.last?.keyEquivalent = "\u{1b}"
@@ -189,7 +189,7 @@ enum ConfirmResult {
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil, appearance: NSAppearance? = nil) {
+func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil, appearance: NSAppearance? = nil) {
 
     
     let alert:NSAlert = NSAlert()
@@ -197,7 +197,7 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     alert.alertStyle = .informational
     alert.messageText = header ?? appName
     alert.informativeText = information ?? ""
-    alert.addButton(withTitle: okTitle ?? L10n.alertOK)
+    alert.addButton(withTitle: okTitle ?? strings().alertOK)
     if !cancelTitle.isEmpty {
         alert.addButton(withTitle: cancelTitle)
         alert.buttons.last?.keyEquivalent = "\u{1b}"
@@ -229,7 +229,7 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
     })
 }
 
-func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? = nil, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
+func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? = nil, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
     //
     
     let alert:NSAlert = NSAlert()
@@ -290,7 +290,7 @@ func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? =
     
     _ = signal.start(next: { peer in
         if let peer = peer, let account = account {
-            alert.messageText = header.isEmpty || header == appName ? (account.peerId == peer.id ? L10n.peerSavedMessages : peer.displayTitle) : header
+            alert.messageText = header.isEmpty || header == appName ? (account.peerId == peer.id ? strings().peerSavedMessages : peer.displayTitle) : header
             alert.icon = nil
             if peerId == account.peerId {
                 let icon = theme.icons.searchSaved
@@ -338,7 +338,7 @@ func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? =
     
 }
 
-func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = L10n.alertOK, cancelTitle:String = L10n.alertCancel, thridTitle: String? = nil, thridAutoOn: Bool = true) -> Signal<ConfirmResult, NoError> {
+func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle: String? = nil, thridAutoOn: Bool = true) -> Signal<ConfirmResult, NoError> {
     let value:ValuePromise<ConfirmResult> = ValuePromise(ignoreRepeated: true)
     
     Queue.mainQueue().async {
@@ -354,7 +354,7 @@ func confirmSignal(for window:Window, header: String? = nil, information:String?
 //    let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
 //
 //    Queue.mainQueue().async {
-//        let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? tr(L10n.alertCancel), swapColors: swapColors)
+//        let alert = AlertController(window, header: header ?? appName, text: information ?? "", okTitle: okTitle, cancelTitle: cancelTitle ?? strings().alertCancel, swapColors: swapColors)
 //        alert.show(completionHandler: { response in
 //            value.set(response == .OK)
 //        })
@@ -369,8 +369,8 @@ func confirmSignal(for window:Window, header: String? = nil, information:String?
         alert.messageText = header ?? appName
         alert.window.appearance = appearance ?? theme.appearance
         alert.informativeText = information ?? ""
-        alert.addButton(withTitle: okTitle ?? tr(L10n.alertOK))
-        alert.addButton(withTitle: cancelTitle ?? tr(L10n.alertCancel))
+        alert.addButton(withTitle: okTitle ?? strings().alertOK)
+        alert.addButton(withTitle: cancelTitle ?? strings().alertCancel)
         
         alert.beginSheetModal(for: window, completionHandler: { response in
             value.set(response.rawValue == 1000)

@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import Postbox
 import TelegramCore
+import DateUtils
 
 final class PeerRequestJoinRowItem: GeneralRowItem {
     fileprivate let context: AccountContext
@@ -171,7 +172,7 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         
         avatar.setPeer(account: item.context.account, peer: item.data.peer.peer)
         
-        self.addButton.set(text: item.isChannel ? L10n.requestJoinListApproveChannel : L10n.requestJoinListApproveGroup, for: .Normal)
+        self.addButton.set(text: item.isChannel ? strings().requestJoinListApproveChannel : strings().requestJoinListApproveGroup, for: .Normal)
         self.addButton.set(font: .medium(.text), for: .Normal)
         self.addButton.set(color: theme.colors.underSelectedColor, for: .Normal)
         self.addButton.set(background: theme.colors.accent, for: .Normal)
@@ -180,7 +181,7 @@ private final class PeerRequestJoinRowView: GeneralContainableRowView {
         self.addButton.layer?.cornerRadius = self.addButton.frame.height / 2
         
         
-        self.dismissButton.set(text: L10n.requestJoinListApproveDismiss, for: .Normal)
+        self.dismissButton.set(text: strings().requestJoinListApproveDismiss, for: .Normal)
         self.dismissButton.set(font: .medium(.text), for: .Normal)
         self.dismissButton.set(color: theme.colors.accent, for: .Normal)
         self.dismissButton.set(color: theme.colors.accent.lighter(), for: .Highlight)

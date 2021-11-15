@@ -64,15 +64,15 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
                 let text: String
                 switch error {
                 case .limitExceeded:
-                    text = tr(L10n.changeNumberSendDataErrorLimitExceeded)
+                    text = strings().changeNumberSendDataErrorLimitExceeded
                 case .invalidPhoneNumber:
-                    text = tr(L10n.changeNumberSendDataErrorInvalidPhoneNumber)
+                    text = strings().changeNumberSendDataErrorInvalidPhoneNumber
                 case .phoneNumberOccupied:
-                    text = tr(L10n.changeNumberSendDataErrorPhoneNumberOccupied(phoneNumber))
+                    text = strings().changeNumberSendDataErrorPhoneNumberOccupied(phoneNumber)
                 case .generic:
-                    text = tr(L10n.changeNumberSendDataErrorGeneric)
+                    text = strings().changeNumberSendDataErrorGeneric
                 case .phoneBanned:
-                    text = tr(L10n.changeNumberSendDataErrorGeneric)
+                    text = strings().changeNumberSendDataErrorGeneric
                 }
 
                 alert(for: mainWindow, info: text)
@@ -112,7 +112,7 @@ class PhoneNumberConfirmController: TelegramGenericViewController<ChangePhoneNum
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: tr(L10n.composeNext), style: navigationButtonStyle, alignment:.Right)
+        return TextButtonBarView(controller: self, text: strings().composeNext, style: navigationButtonStyle, alignment:.Right)
     }
     
 }

@@ -12,7 +12,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-
+import TGModernGrowingTextView
 
 struct ChatTextFontAttributes: OptionSet {
     var rawValue: Int32 = 0

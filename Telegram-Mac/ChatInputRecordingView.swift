@@ -103,7 +103,7 @@ class ChatInputRecordingView: View {
         timerLayout.measure(width: .greatestFiniteMagnitude)
         timerView.update(timerLayout)
         
-        let descLayout = TextViewLayout(.initialize(string: hold ? L10n.audioRecordHelpFixed : L10n.audioRecordHelpPlain, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
+        let descLayout = TextViewLayout(.initialize(string: hold ? strings().audioRecordHelpFixed : strings().audioRecordHelpPlain, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
         descLayout.measure(width: frame.width - 50 - 100 - 60)
         descView.update(descLayout)
         

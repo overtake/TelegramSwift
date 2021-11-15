@@ -70,7 +70,7 @@ private class StickersModalView : View {
         add.set(background: theme.colors.accent, for: .Normal)
         add.set(background: theme.colors.accent, for: .Hover)
         add.set(background: theme.colors.accent, for: .Highlight)
-        add.set(text: L10n.stickerPackAdd1Countable(0), for: .Normal)
+        add.set(text: strings().stickerPackAdd1Countable(0), for: .Normal)
 
         addSubview(add)
         headerTitle.backgroundColor = theme.colors.background
@@ -110,7 +110,7 @@ private class StickersModalView : View {
             }
             dismiss.isHidden = !installed
             shareView.isHidden = false
-            add.set(text: tr(L10n.stickerPackAdd1Countable(collectionItems .count)).uppercased(), for: .Normal)
+            add.set(text: strings().stickerPackAdd1Countable(collectionItems.count).uppercased(), for: .Normal)
             _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
             add.isHidden = installed
             shadowView.isHidden = installed
@@ -275,7 +275,7 @@ class StickerPackPreviewModalController: ModalViewController {
             guard let `self` = self else {return}
             switch result {
             case .none:
-                alert(for: mainWindow, info: L10n.stickerSetDontExist)
+                alert(for: mainWindow, info: strings().stickerSetDontExist)
                 self.close()
             default:
                 self.genericView.layout(with: result, arguments: self.arguments)

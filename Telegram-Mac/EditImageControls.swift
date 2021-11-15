@@ -212,8 +212,8 @@ final class EditImageControlsView : View {
         success.set(color: nightAccentPalette.accent, for: .Normal)
         cancel.set(color: .white, for: .Normal)
         
-        cancel.set(text: L10n.modalCancel, for: .Normal)
-        success.set(text: L10n.navigationDone, for: .Normal)
+        cancel.set(text: strings().modalCancel, for: .Normal)
+        success.set(text: strings().navigationDone, for: .Normal)
         
         _ = cancel.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
         _ = success.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)

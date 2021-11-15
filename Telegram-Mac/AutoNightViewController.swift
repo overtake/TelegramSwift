@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import EDSunriseSet
 import Postbox
 import SwiftSignalKit
 
@@ -62,24 +62,24 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
     
  
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_disabled, data: InputDataGeneralData(name: L10n.autoNightSettingsDisabled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule == nil && !settings.systemBased), viewType: .firstItem, action: arguments.disable)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_disabled, data: InputDataGeneralData(name: strings().autoNightSettingsDisabled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule == nil && !settings.systemBased), viewType: .firstItem, action: arguments.disable)))
     index += 1
     
   
     
     if #available(OSX 10.14, *) {
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .innerItem, action: arguments.scheduled)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: strings().autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .innerItem, action: arguments.scheduled)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_system_based, data: InputDataGeneralData(name: L10n.autoNightSettingsSystemBased, color: theme.colors.text, icon: nil, type: .selectable(settings.systemBased), viewType: .lastItem, action: arguments.systemBased)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_system_based, data: InputDataGeneralData(name: strings().autoNightSettingsSystemBased, color: theme.colors.text, icon: nil, type: .selectable(settings.systemBased), viewType: .lastItem, action: arguments.systemBased)))
         index += 1
         if settings.systemBased {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsSystemBasedDesc), data: InputDataGeneralTextData(viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoNightSettingsSystemBasedDesc), data: InputDataGeneralTextData(viewType: .textTopItem)))
             index += 1
         }
     } else {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: L10n.autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .lastItem, action: arguments.scheduled)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_scheduled, data: InputDataGeneralData(name: strings().autoNightSettingsScheduled, color: theme.colors.text, icon: nil, type: .selectable(settings.schedule != nil), viewType: .lastItem, action: arguments.scheduled)))
         index += 1
     }
     
@@ -99,7 +99,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
             sunriseEnabled = false
         }
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sunrise, data: InputDataGeneralData(name: L10n.autoNightSettingsSunsetAndSunrise, color: theme.colors.text, icon: nil, type: .switchable(sunriseEnabled), viewType: .firstItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sunrise, data: InputDataGeneralData(name: strings().autoNightSettingsSunsetAndSunrise, color: theme.colors.text, icon: nil, type: .switchable(sunriseEnabled), viewType: .firstItem, action: {
             arguments.sunrise(!sunriseEnabled)
         })))
         index += 1
@@ -107,7 +107,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
         switch schedule {
         case let .sunrise(latitude, longitude, localizedGeo):
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_update, data: InputDataGeneralData(name: L10n.autoNightSettingsUpdateLocation, color: theme.colors.accent, icon: nil, type: .context(localizedGeo ?? ""), viewType: .lastItem, action: arguments.updateLocation)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_update, data: InputDataGeneralData(name: strings().autoNightSettingsUpdateLocation, color: theme.colors.accent, icon: nil, type: .context(localizedGeo ?? ""), viewType: .lastItem, action: arguments.updateLocation)))
             index += 1
             
             let sunriseSet = EDSunriseSet(date: Date(), timezone: NSTimeZone.local, latitude: latitude, longitude: longitude)
@@ -116,10 +116,10 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
                 formatter.timeStyle = .short
                 formatter.timeZone = NSTimeZone.local
                 formatter.dateStyle = .none
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsSunriseDesc(latitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunset), longitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunrise))), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoNightSettingsSunriseDesc(latitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunset), longitude == 0 ? "N/A" : formatter.string(from: sunriseSet.sunrise))), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                 index += 1
             } else {
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsSunriseDescNA), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoNightSettingsSunriseDescNA), data: InputDataGeneralTextData(viewType: .textBottomItem)))
                 index += 1
             }
             
@@ -139,9 +139,9 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
                 return items
             }
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_from, data: InputDataGeneralData(name: L10n.autoNightSettingsFrom, color: theme.colors.text, icon: nil, type: .contextSelector(from < 10 ? "0\(from):00" : "\(from):00", items(from: 0, to: 24, isTo: false)), viewType: .innerItem, action: nil)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_from, data: InputDataGeneralData(name: strings().autoNightSettingsFrom, color: theme.colors.text, icon: nil, type: .contextSelector(from < 10 ? "0\(from):00" : "\(from):00", items(from: 0, to: 24, isTo: false)), viewType: .innerItem, action: nil)))
             index += 1
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_to, data: InputDataGeneralData(name: L10n.autoNightSettingsTo, color: theme.colors.text, icon: nil, type: .contextSelector(to < 10 ? "0\(to):00" : "\(to):00", items(from: 0, to: 24, isTo: true)), viewType: .lastItem, action: nil)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_to, data: InputDataGeneralData(name: strings().autoNightSettingsTo, color: theme.colors.text, icon: nil, type: .contextSelector(to < 10 ? "0\(to):00" : "\(to):00", items(from: 0, to: 24, isTo: true)), viewType: .lastItem, action: nil)))
             index += 1
         }
     }
@@ -150,7 +150,7 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.autoNightSettingsPreferredTheme), data: InputDataGeneralTextData(viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().autoNightSettingsPreferredTheme), data: InputDataGeneralTextData(viewType: .textTopItem)))
         index += 1
         
         var cloudThemes = Array(cloudThemes.filter { cloud in
@@ -235,7 +235,7 @@ func AutoNightSettingsController(context: AccountContext) -> InputDataController
             }).start())
         }, error: { error in
             if !inBackground {
-                alert(for: context.window, info: L10n.autoNightSettingsUpdateLocationError)
+                alert(for: context.window, info: strings().autoNightSettingsUpdateLocationError)
             }
         }))
     }
@@ -319,7 +319,7 @@ func AutoNightSettingsController(context: AccountContext) -> InputDataController
     }
     
     return InputDataController(dataSignal: signal |> map { InputDataSignalValue(entries: $0, animated: false) },
-        title: L10n.autoNightSettingsTitle,
+        title: strings().autoNightSettingsTitle,
         afterDisappear: {
             updateDisposable.dispose()
             updateLocationDisposable.dispose()

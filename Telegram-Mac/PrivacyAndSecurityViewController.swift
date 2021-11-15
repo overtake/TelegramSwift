@@ -331,46 +331,46 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     func item(_ arguments: PrivacyAndSecurityControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .privacyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsPrivacyHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsPrivacyHeader, viewType: .textTopItem)
         case let .blockedPeers(_, count, viewType):
             let text: String
             if let count = count, count > 0 {
-                text = L10n.privacyAndSecurityBlockedUsers("\(count)")
+                text = strings().privacyAndSecurityBlockedUsers("\(count)")
             } else {
                 text = ""
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsBlockedUsers, icon: theme.icons.privacySettings_blocked, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsBlockedUsers, icon: theme.icons.privacySettings_blocked, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openBlockedUsers()
             })
         case let .phoneNumberPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPhoneNumber, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPhoneNumber, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openPhoneNumberPrivacy()
             })
         case let .lastSeenPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsLastSeen, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsLastSeen, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openLastSeenPrivacy()
             })
         case let .groupPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsGroups, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsGroups, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openGroupsPrivacy()
             })
         case let .profilePhotoPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsProfilePhoto, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsProfilePhoto, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openProfilePhotoPrivacy()
             })
         case let .forwardPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsForwards, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsForwards, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openForwardPrivacy()
             })
         case let .voiceCallPrivacy(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsVoiceCalls, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsVoiceCalls, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openVoiceCallPrivacy()
             })
         case .securityHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsSecurityHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsSecurityHeader, viewType: .textTopItem)
         case let .passcode(_, enabled, viewType):
-            let desc = enabled ? L10n.privacyAndSecurityItemOn : L10n.privacyAndSecurityItemOff
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPasscode, icon: theme.icons.privacySettings_passcode, type: .nextContext(desc), viewType: viewType, action: {
+            let desc = enabled ? strings().privacyAndSecurityItemOn : strings().privacyAndSecurityItemOff
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPasscode, icon: theme.icons.privacySettings_passcode, type: .nextContext(desc), viewType: viewType, action: {
                 arguments.openPasscode()
             })
         case let .twoStepVerification(_, configuration, viewType):
@@ -378,44 +378,44 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
             if let configuration = configuration {
                 switch configuration {
                 case .set:
-                    desc = L10n.privacyAndSecurityItemOn
+                    desc = strings().privacyAndSecurityItemOn
                 case .notSet:
-                    desc = L10n.privacyAndSecurityItemOff
+                    desc = strings().privacyAndSecurityItemOff
                 }
             } else {
                 desc = ""
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsTwoStepVerification, icon: theme.icons.privacySettings_twoStep, type: .nextContext(desc), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsTwoStepVerification, icon: theme.icons.privacySettings_twoStep, type: .nextContext(desc), viewType: viewType, action: {
                 arguments.openTwoStepVerification(configuration)
             })
         case let .activeSessions(_, sessions, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsActiveSessions, icon: theme.icons.privacySettings_activeSessions, type: .nextContext(sessions != nil ? "\(sessions!.count)" : ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsActiveSessions, icon: theme.icons.privacySettings_activeSessions, type: .nextContext(sessions != nil ? "\(sessions!.count)" : ""), viewType: viewType, action: {
                 arguments.openActiveSessions(sessions)
             })
         case .webAuthorizationsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityWebAuthorizationHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityWebAuthorizationHeader, viewType: .textTopItem)
         case let .webAuthorizations(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.telegramWebSessionsController, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().telegramWebSessionsController, viewType: viewType, action: {
                 arguments.openWebAuthorizations()
             })
         case .accountHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsDeleteAccountHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsDeleteAccountHeader, viewType: .textTopItem)
         case let .accountTimeout(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsDeleteAccount, type: .context(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsDeleteAccount, type: .context(text), viewType: viewType, action: {
                 arguments.setupAccountAutoremove()
             })
         case .accountInfo:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsDeleteAccountDescription, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsDeleteAccountDescription, viewType: .textBottomItem)
         case .proxyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsProxyHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsProxyHeader, viewType: .textTopItem)
         case let .proxySettings(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openProxySettings()
             })
         case let .togglePeerSuggestions(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.suggestFrequentContacts, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().suggestFrequentContacts, type: .switchable(enabled), viewType: viewType, action: {
                 if enabled {
-                    confirm(for: mainWindow, information: L10n.suggestFrequentContactsAlert, successHandler: { _ in
+                    confirm(for: mainWindow, information: strings().suggestFrequentContactsAlert, successHandler: { _ in
                         arguments.togglePeerSuggestions(!enabled)
                     })
                 } else {
@@ -423,17 +423,17 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 }
             }, autoswitch: false)
         case .togglePeerSuggestionsDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.suggestFrequentContactsDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().suggestFrequentContactsDesc, viewType: .textBottomItem)
         case .clearCloudDraftsHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityClearCloudDraftsHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityClearCloudDraftsHeader, viewType: .textTopItem)
         case let .clearCloudDrafts(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecurityClearCloudDrafts, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecurityClearCloudDrafts, type: .none, viewType: viewType, action: {
                 arguments.clearCloudDrafts()
             })
         case .autoArchiveHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityAutoArchiveHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityAutoArchiveHeader, viewType: .textTopItem)
         case let .autoArchiveToggle(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecurityAutoArchiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecurityAutoArchiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
                 if let enabled = enabled {
                     arguments.toggleAutoArchive(!enabled)
                 } else {
@@ -441,27 +441,27 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
                 }
             }, autoswitch: true)
         case .autoArchiveDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecurityAutoArchiveDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecurityAutoArchiveDesc, viewType: .textBottomItem)
         case .sensitiveContentHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySensitiveHeader, viewType: .textTopItem)
         case let .sensitiveContentToggle(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySensitiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecuritySensitiveText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
                 if let enabled = enabled {
                     arguments.toggleSensitiveContent(!enabled)
                 }
             }, autoswitch: true)
         case .sensitiveContentDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySensitiveDesc, viewType: .textBottomItem)
         case .secretChatWebPreviewHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySecretChatWebPreviewHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySecretChatWebPreviewHeader, viewType: .textTopItem)
         case let .secretChatWebPreviewToggle(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacyAndSecuritySecretChatWebPreviewText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacyAndSecuritySecretChatWebPreviewText, type: enabled != nil ? .switchable(enabled!) : .loading, viewType: viewType, action: {
                 if let enabled = enabled {
                     arguments.toggleSecretChatWebPreview(!enabled)
                 }
             }, autoswitch: true)
         case .secretChatWebPreviewDesc:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacyAndSecuritySecretChatWebPreviewDesc, viewType: .textBottomItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacyAndSecuritySecretChatWebPreviewDesc, viewType: .textBottomItem)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -481,25 +481,25 @@ private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> S
     switch settings {
     case let .disableEveryone(enableFor):
         if enableFor.isEmpty {
-            return L10n.privacySettingsControllerNobody
+            return strings().privacySettingsControllerNobody
         } else {
-            return L10n.privacySettingsLastSeenNobodyPlus("\(countForSelectivePeers(enableFor))")
+            return strings().privacySettingsLastSeenNobodyPlus("\(countForSelectivePeers(enableFor))")
         }
     case let .enableEveryone(disableFor):
         if disableFor.isEmpty {
-            return L10n.privacySettingsControllerEverbody
+            return strings().privacySettingsControllerEverbody
         } else {
-            return L10n.privacySettingsLastSeenEverybodyMinus("\(countForSelectivePeers(disableFor))")
+            return strings().privacySettingsLastSeenEverybodyMinus("\(countForSelectivePeers(disableFor))")
         }
     case let .enableContacts(enableFor, disableFor):
         if !enableFor.isEmpty && !disableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsMinusPlus("\(countForSelectivePeers(disableFor))", "\(countForSelectivePeers(enableFor))")
+            return strings().privacySettingsLastSeenContactsMinusPlus("\(countForSelectivePeers(disableFor))", "\(countForSelectivePeers(enableFor))")
         } else if !enableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsPlus("\(countForSelectivePeers(enableFor))")
+            return strings().privacySettingsLastSeenContactsPlus("\(countForSelectivePeers(enableFor))")
         } else if !disableFor.isEmpty {
-            return L10n.privacySettingsLastSeenContactsMinus("\(countForSelectivePeers(disableFor))")
+            return strings().privacySettingsLastSeenContactsMinus("\(countForSelectivePeers(disableFor))")
         } else {
-            return L10n.privacySettingsControllerMyContacts
+            return strings().privacySettingsControllerMyContacts
         }
     }
 }
@@ -920,16 +920,16 @@ class PrivacyAndSecurityViewController: TableViewController {
                         ]
                         var items: [SPopoverItem] = []
 
-                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(1)), {
+                        items.append(SPopoverItem(strings().timerMonthsCountable(1), {
                             timeoutAction(timeoutValues[0])
                         }))
-                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(3)), {
+                        items.append(SPopoverItem(strings().timerMonthsCountable(3), {
                             timeoutAction(timeoutValues[1])
                         }))
-                        items.append(SPopoverItem(tr(L10n.timerMonthsCountable(6)), {
+                        items.append(SPopoverItem(strings().timerMonthsCountable(6), {
                             timeoutAction(timeoutValues[2])
                         }))
-                        items.append(SPopoverItem(tr(L10n.timerYearsCountable(1)), {
+                        items.append(SPopoverItem(strings().timerYearsCountable(1), {
                             timeoutAction(timeoutValues[3])
                         }))
 
@@ -963,7 +963,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         }, togglePeerSuggestions: { enabled in
             _ = (context.engine.peers.updateRecentPeersEnabled(enabled: enabled) |> then(enabled ? context.engine.peers.managedUpdatedRecentPeers() : Signal<Void, NoError>.complete())).start()
         }, clearCloudDrafts: {
-            confirm(for: context.window, information: L10n.privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
+            confirm(for: context.window, information: strings().privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.messages.clearCloudDraftsInteractively(), for: context.window).start()
             })
         }, toggleSensitiveContent: { value in

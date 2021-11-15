@@ -74,13 +74,13 @@ func PaymentsShippingMethodController(context: AccountContext, shippingOptions: 
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.checkoutShippingMethod)
+    let controller = InputDataController(dataSignal: signal, title: strings().checkoutShippingMethod)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalCancel, accept: {
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalCancel, accept: {
         close?()
     }, drawBorder: true, height: 50, singleButton: true)
 
