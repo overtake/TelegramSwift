@@ -15,6 +15,7 @@ final class ChatInputMenuView : View {
     private let button = Control()
     private let animationView: LottiePlayerView = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
     weak var chatInteraction: ChatInteraction?
+    private var botMenu: ChatPresentationInterfaceState.BotMenu?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -42,7 +43,6 @@ final class ChatInputMenuView : View {
         
     }
     
-    private var botMenu: ChatPresentationInterfaceState.BotMenu?
     
     func update(_ botMenu: ChatPresentationInterfaceState.BotMenu, animated: Bool) {
         

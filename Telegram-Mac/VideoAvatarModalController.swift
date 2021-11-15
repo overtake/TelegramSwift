@@ -111,11 +111,11 @@ private final class VideoAvatarModalView : View {
 
         
         cancel.set(color: .white, for: .Normal)
-        cancel.set(text: L10n.videoAvatarButtonCancel, for: .Normal)
+        cancel.set(text: strings().videoAvatarButtonCancel, for: .Normal)
 
         
         ok.set(color: .white, for: .Normal)
-        ok.set(text: L10n.videoAvatarButtonSet, for: .Normal)
+        ok.set(text: strings().videoAvatarButtonSet, for: .Normal)
 
         _ = cancel.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)
         _ = ok.sizeToFit(.zero, NSMakeSize(80, 20), thatFit: true)

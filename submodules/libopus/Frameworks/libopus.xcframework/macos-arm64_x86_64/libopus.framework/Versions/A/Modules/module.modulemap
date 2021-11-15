@@ -1,0 +1,6 @@
+framework module libopus {
+  umbrella header "libopus.h"
+
+  export *
+  module * { export * }
+}

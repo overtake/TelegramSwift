@@ -41,36 +41,36 @@ class ChatInputAttachView: ImageButton, Notifable {
                 var items:[SPopoverItem] = []
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     if editState.message.groupingKey == nil {
-                        items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
                             self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
                         }, theme.icons.chatAttachPhoto))
                         
-                        items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                        items.append(SPopoverItem(strings().inputAttachPopoverFile, { [weak self] in
                             self?.chatInteraction.updateEditingMessageMedia(nil, false)
                         }, theme.icons.chatAttachFile))
                         
                         if media is TelegramMediaImage {
-                            items.append(SPopoverItem(L10n.editMessageEditCurrentPhoto, { [weak self] in
+                            items.append(SPopoverItem(strings().editMessageEditCurrentPhoto, { [weak self] in
                                 self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
                             }, theme.icons.editMessageCurrentPhoto))
                         }
                     } else {
                         if let _ = editState.message.media.first as? TelegramMediaImage {
-                            items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                            items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
                                 self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
                             }, theme.icons.chatAttachPhoto))
                         } else if let file = editState.message.media.first as? TelegramMediaFile {
                             if file.isVideoFile {
-                                items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                                items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
                                 }, theme.icons.chatAttachPhoto))
                             }
                             if file.isMusic {
-                                items.append(SPopoverItem(L10n.inputAttachPopoverMusic, { [weak self] in
+                                items.append(SPopoverItem(strings().inputAttachPopoverMusic, { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(audioExts, false)
                                 }, theme.icons.chatAttachFile))
                             } else {
-                                items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                                items.append(SPopoverItem(strings().inputAttachPopoverFile, { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(nil, false)
                                 }, theme.icons.chatAttachFile))
                             }
@@ -87,7 +87,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         return
                     }
                     
-                    items.append(SPopoverItem(L10n.inputAttachPopoverPhotoOrVideo, { [weak self] in
+                    items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
                             alert(for: mainWindow, info: permissionText)
                             return
@@ -95,7 +95,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, theme.icons.chatAttachPhoto))
                     
-                    items.append(SPopoverItem(L10n.inputAttachPopoverPicture, { [weak self] in
+                    items.append(SPopoverItem(strings().inputAttachPopoverPicture, { [weak self] in
                         guard let `self` = self else {return}
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
                             alert(for: self.chatInteraction.context.window, info: permissionText)
@@ -122,7 +122,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                    
                     if canAttachPoll {
-                        items.append(SPopoverItem(L10n.inputAttachPopoverPoll, { [weak self] in
+                        items.append(SPopoverItem(strings().inputAttachPopoverPoll, { [weak self] in
                             guard let `self` = self else {return}
                             if let permissionText = permissionText(from: peer, for: .banSendPolls) {
                                 alert(for: mainWindow, info: permissionText)
@@ -132,7 +132,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, theme.icons.chatAttachPoll))
                     }
                     
-                    items.append(SPopoverItem(L10n.inputAttachPopoverFile, { [weak self] in
+                    items.append(SPopoverItem(strings().inputAttachPopoverFile, { [weak self] in
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
                             alert(for: mainWindow, info: permissionText)
                             return
@@ -141,7 +141,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }, theme.icons.chatAttachFile))
                     
                     #if !APP_STORE
-                    items.append(SPopoverItem(L10n.inputAttachPopoverLocation, { [weak self] in
+                    items.append(SPopoverItem(strings().inputAttachPopoverLocation, { [weak self] in
                         self?.chatInteraction.attachLocation()
                     }, theme.icons.chatAttachLocation))
                     #endif

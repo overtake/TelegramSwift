@@ -163,11 +163,11 @@ final class WidgetAppearanceView : View {
             } else {
                 source = .local(theme.colors, nil)
             }
-            minimalist.update(L10n.emptyChatAppearanceMin, source: source, bubbled: false, context: context, isSelected: !theme.bubbled)
-            colorful.update(L10n.emptyChatAppearanceColorful, source: source, bubbled: true, context: context, isSelected: theme.bubbled)
+            minimalist.update(strings().emptyChatAppearanceMin, source: source, bubbled: false, context: context, isSelected: !theme.bubbled)
+            colorful.update(strings().emptyChatAppearanceColorful, source: source, bubbled: true, context: context, isSelected: theme.bubbled)
         }
         
-        let titleLayout = TextViewLayout.init(.initialize(string: L10n.emptyChatAppearanceChatMode, color: theme.colors.text, font: .medium(.text)))
+        let titleLayout = TextViewLayout.init(.initialize(string: strings().emptyChatAppearanceChatMode, color: theme.colors.text, font: .medium(.text)))
         titleLayout.measure(width: frame.width - 20)
         modeTitle.update(titleLayout)
 
@@ -315,7 +315,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
             
             var buttons:[WidgetData.Button] = []
             
-            buttons.append(.init(text: { L10n.emptyChatAppearanceSystem }, selected: {
+            buttons.append(.init(text: { strings().emptyChatAppearanceSystem }, selected: {
                 return isSystemBased
             }, image: {
                 return night.systemBased ? theme.icons.empty_chat_system_active : theme.icons.empty_chat_system
@@ -329,7 +329,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
             let lightSelected = !theme.colors.isDark && !isSystemBased
 
             
-            buttons.append(.init(text: { L10n.emptyChatAppearanceDark }, selected: {
+            buttons.append(.init(text: { strings().emptyChatAppearanceDark }, selected: {
                 return darkSelected
             }, image: {
                 return darkSelected ? theme.icons.empty_chat_dark_active : theme.icons.empty_chat_dark
@@ -339,7 +339,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
                 }
             }))
             
-            buttons.append(.init(text: { L10n.emptyChatAppearanceLight }, selected: {
+            buttons.append(.init(text: { strings().emptyChatAppearanceLight }, selected: {
                 return lightSelected
             }, image: {
                 return lightSelected ? theme.icons.empty_chat_light_active : theme.icons.empty_chat_light
@@ -349,7 +349,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
                 }
             }))
             
-            self?.genericView.update(.init(title: { L10n.emptyChatAppearance }, desc: { L10n.emptyChatAppearanceDesc }, descClick: {
+            self?.genericView.update(.init(title: { strings().emptyChatAppearance }, desc: { strings().emptyChatAppearanceDesc }, descClick: {
                 context.sharedContext.bindings.rootNavigation().push(AppAppearanceViewController(context: context))
             }, buttons: buttons))
             

@@ -51,7 +51,7 @@ private func generateDiscussIcon() -> CGImage {
         
         let palette = theme.colors
         
-        let attributeString: NSAttributedString = .initialize(string: L10n.discussionControllerIconText, color: palette.accentIcon, font: .normal(12))
+        let attributeString: NSAttributedString = .initialize(string: strings().discussionControllerIconText, color: palette.accentIcon, font: .normal(12))
         
         let node = TextNode.layoutText(maybeNode: nil, attributeString, palette.background, 1, .end, NSMakeSize(size.width - 10, size.height), nil, false, .center)
 
@@ -166,7 +166,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
         
         for (i, peer) in peers.enumerated() {
             
-            let status = peer.addressName != nil ? "@\(peer.addressName!)" : (peer.isSupergroup || peer.isGroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
+            let status = peer.addressName != nil ? "@\(peer.addressName!)" : (peer.isSupergroup || peer.isGroup ? strings().discussionControllerPrivateGroup : strings().discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.id), equatable: InputDataEquatable(PeerEquatable(peer: peer)), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: i == 0 ? .innerItem : bestGeneralViewType(peers, for: i), action: {
                     arguments.setup(peer)
@@ -179,7 +179,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
     switch state.type {
     case .channel:
         if let associatedPeer = state.associatedPeer {
-            let text = L10n.discussionControllerChannelSetHeader1(associatedPeer.displayTitle)
+            let text = strings().discussionControllerChannelSetHeader1(associatedPeer.displayTitle)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_channel_header, equatable: InputDataEquatable(text), comparable: nil, item: { initialSize, stableId in
                 
                 let attributedString = NSMutableAttributedString()
@@ -193,7 +193,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
+            let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? strings().discussionControllerPrivateGroup : strings().discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem, action: {
                     arguments.openInfo(associatedPeer.id)
@@ -201,21 +201,21 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             }))
             index += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelSetDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().discussionControllerChannelSetDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
             
             if state.unlinkAbility {
                 entries.append(.sectionId(sectionId, type: .normal))
                 sectionId += 1
                 
-                entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unlink_group, data: InputDataGeneralData(name: L10n.discussionControllerChannelSetUnlinkGroup, color: theme.colors.redUI, viewType: .singleItem, action: {
+                entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unlink_group, data: InputDataGeneralData(name: strings().discussionControllerChannelSetUnlinkGroup, color: theme.colors.redUI, viewType: .singleItem, action: {
                     arguments.unlinkGroup(associatedPeer)
                 })))
                 index += 1
             }
             
         } else {
-            let text = L10n.discussionControllerChannelEmptyHeader1
+            let text = strings().discussionControllerChannelEmptyHeader1
 
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_channel_header, equatable: InputDataEquatable(text), comparable: nil, item: { initialSize, stableId in
                 
@@ -233,14 +233,14 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 let viewType: GeneralViewType = state.filteredPeers.isEmpty ? .singleItem : .firstItem
                 
                 entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_create_group, equatable: InputDataEquatable(viewType), comparable: nil, item: { initialSize, stableId in
-                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.discussionControllerChannelEmptyCreateGroup, nameStyle: blueActionButton, viewType: viewType, action: arguments.createGroup, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().discussionControllerChannelEmptyCreateGroup, nameStyle: blueActionButton, viewType: viewType, action: arguments.createGroup, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
                 }))
                 index += 1
             }
            
             applyList()
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerChannelEmptyDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().discussionControllerChannelEmptyDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
             
         }
@@ -249,7 +249,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_channel_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
                 
                 let attributedString = NSMutableAttributedString()
-                _ = attributedString.append(string: L10n.discussionControllerGroupSetHeader(associatedPeer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
+                _ = attributedString.append(string: strings().discussionControllerGroupSetHeader(associatedPeer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
                 attributedString.detectBoldColorInString(with: .medium(.text))
                 
                 return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
@@ -260,7 +260,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? L10n.discussionControllerPrivateGroup : L10n.discussionControllerPrivateChannel)
+            let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? strings().discussionControllerPrivateGroup : strings().discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), comparable: nil, item: { initialSize, stableId in
                 return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem, action: {
                     arguments.openInfo(associatedPeer.id)
@@ -268,13 +268,13 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             }))
             index += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.discussionControllerGroupSetDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().discussionControllerGroupSetDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
             index += 1
             
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unlink_group, data: InputDataGeneralData(name: L10n.discussionControllerGroupSetUnlinkChannel, color: theme.colors.redUI, viewType: .singleItem, action: {
+            entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_unlink_group, data: InputDataGeneralData(name: strings().discussionControllerGroupSetUnlinkChannel, color: theme.colors.redUI, viewType: .singleItem, action: {
                 arguments.unlinkGroup(associatedPeer)
             })))
             index += 1
@@ -282,7 +282,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_group_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
                 
                 let attributedString = NSMutableAttributedString()
-                _ = attributedString.append(string: L10n.discussionControllerGroupUnsetDescription, color: theme.colors.grayText, font: .normal(.text))
+                _ = attributedString.append(string: strings().discussionControllerGroupUnsetDescription, color: theme.colors.grayText, font: .normal(.text))
                 return GeneralTextRowItem(initialSize, stableId: stableId, text: attributedString, alignment: .center, centerViewAlignment: true, viewType: .textBottomItem)
             }))
             
@@ -383,18 +383,18 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
                 case .tooManyChannels:
                     showInactiveChannels(context: context, source: .upgrade)
                 case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
             } else if let error = discussError {
                 switch error {
                 case .groupHistoryIsCurrentlyPrivate:
-                    confirm(for: context.window, information: L10n.discussionControllerErrorPreHistory, okTitle: L10n.discussionControllerErrorOK, successHandler: { _ in
+                    confirm(for: context.window, information: strings().discussionControllerErrorPreHistory, okTitle: strings().discussionControllerErrorOK, successHandler: { _ in
                         setup(channelId, groupId, updatePreHistory: true)
                     })
                 case .hasNotPermissions:
-                    alert(for: context.window, info: L10n.channelErrorDontHavePermissions)
+                    alert(for: context.window, info: strings().channelErrorDontHavePermissions)
                 default:
-                    alert(for: context.window, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
             }
             
@@ -422,11 +422,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     }, unlinkGroup: { associated in
         if associated.isChannel {
-            confirm(for: context.window, information: L10n.discussionControllerConfrimUnlinkChannel, successHandler: { _ in
+            confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkChannel, successHandler: { _ in
                 setup(associated.id, nil)
             })
         } else {
-            confirm(for: context.window, information: L10n.discussionControllerConfrimUnlinkGroup, successHandler: { _ in
+            confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkGroup, successHandler: { _ in
                 setup(peer.id, nil)
             })
         }
@@ -474,7 +474,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     
     
     
-    return InputDataController(dataSignal: combineLatest(dataSignal, searchPromise.get()) |> map { InputDataSignalValue(entries: $0, searchState: $1) }, title: peer.isChannel ? L10n.discussionControllerChannelTitle : L10n.discussionControllerGroupTitle, afterDisappear: {
+    return InputDataController(dataSignal: combineLatest(dataSignal, searchPromise.get()) |> map { InputDataSignalValue(entries: $0, searchState: $1) }, title: peer.isChannel ? strings().discussionControllerChannelTitle : strings().discussionControllerGroupTitle, afterDisappear: {
         actionsDisposable.dispose()
     }, removeAfterDisappear: false, hasDone: false, customRightButton: { controller in
         let bar = ImageBarView(controller: controller, theme.icons.chatSearch)

@@ -43,7 +43,7 @@ private final class PinView : Control {
                 isNew = true
             }
             
-            let textLayout = TextViewLayout(.initialize(string: L10n.voiceChatVideoShortUnpin, color: GroupCallTheme.customTheme.textColor, font: .medium(.title)))
+            let textLayout = TextViewLayout(.initialize(string: strings().voiceChatVideoShortUnpin, color: GroupCallTheme.customTheme.textColor, font: .medium(.title)))
             textLayout.measure(width: .greatestFiniteMagnitude)
             current.update(textLayout)
             
@@ -109,7 +109,7 @@ private final class BackView : Control {
         scaleOnClick = true
         set(background: GroupCallTheme.windowBackground.withAlphaComponent(0.7), for: .Highlight)
         
-        let textLayout = TextViewLayout(.initialize(string: L10n.navigationBack, color: GroupCallTheme.customTheme.textColor, font: .medium(.title)))
+        let textLayout = TextViewLayout(.initialize(string: strings().navigationBack, color: GroupCallTheme.customTheme.textColor, font: .medium(.title)))
         textLayout.measure(width: .greatestFiniteMagnitude)
         textView.update(textLayout)
         
@@ -168,11 +168,11 @@ private final class SelfPresentationPlaceholder : View {
         
     func update(stop: @escaping()->Void) {
         
-        let textLayout = TextViewLayout(.initialize(string: L10n.voiceChatSharingPlaceholder, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)), alignment: .center)
+        let textLayout = TextViewLayout(.initialize(string: strings().voiceChatSharingPlaceholder, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)), alignment: .center)
         textLayout.measure(width: frame.width - 40)
         textView.update(textLayout)
         
-        button.set(text: L10n.voiceChatSharingStop, for: .Normal)
+        button.set(text: strings().voiceChatSharingStop, for: .Normal)
         button.set(font: .medium(.text), for: .Normal)
         button.set(color: GroupCallTheme.customTheme.textColor, for: .Normal)
         button.sizeToFit(NSMakeSize(50, 10), .zero, thatFit: false)
@@ -475,7 +475,7 @@ final class GroupCallMainVideoContainerView: Control {
         if participant != self.participant, let participant = participant {
             let text: String
             if participant.peer.id == participant.accountPeerId {
-                text = L10n.voiceChatStatusYou
+                text = strings().voiceChatStatusYou
             } else {
                 text = participant.peer.displayTitle
             }
@@ -554,7 +554,7 @@ final class GroupCallMainVideoContainerView: Control {
                         self.pausedImageView = ImageView()
                         self.pausedImageView?.image = GroupCallTheme.video_paused
                         self.pausedImageView?.sizeToFit()
-                        let layout = TextViewLayout(.initialize(string: peer.mode == .video ? L10n.voiceChatVideoPaused : L10n.voiceChatScreencastPaused, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
+                        let layout = TextViewLayout(.initialize(string: peer.mode == .video ? strings().voiceChatVideoPaused : strings().voiceChatScreencastPaused, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)))
                         layout.measure(width: .greatestFiniteMagnitude)
                         self.pausedTextView?.update(layout)
                         addSubview(self.pausedTextView!)

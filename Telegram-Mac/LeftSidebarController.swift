@@ -15,11 +15,11 @@ import TelegramCore
 func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) -> [ContextMenuItem] {
     var items:[ContextMenuItem] = []
     if var filter = filter {
-        items.append(.init(L10n.chatListFilterEdit, handler: {
+        items.append(.init(strings().chatListFilterEdit, handler: {
             context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
         }))
-        items.append(.init(L10n.chatListFilterAddChats, handler: {
-            showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
+        items.append(.init(strings().chatListFilterAddChats, handler: {
+            showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: strings().chatListFilterIncludeLimitReached, callback: { peerIds in
                 return context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
                     filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(100)))
@@ -31,8 +31,8 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
                 
             })), for: context.window)
         }))
-        items.append(.init(L10n.chatListFilterDelete, handler: {
-            confirm(for: context.window, header: L10n.chatListFilterConfirmRemoveHeader, information: L10n.chatListFilterConfirmRemoveText, okTitle: L10n.chatListFilterConfirmRemoveOK, successHandler: { _ in
+        items.append(.init(strings().chatListFilterDelete, handler: {
+            confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                 _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
                     filters.removeAll(where: { $0.id == filter.id })
@@ -42,7 +42,7 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
             
         }))
     } else {
-        items.append(.init(L10n.chatListFilterEditFilters, handler: {
+        items.append(.init(strings().chatListFilterEditFilters, handler: {
             context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
         }))
     }

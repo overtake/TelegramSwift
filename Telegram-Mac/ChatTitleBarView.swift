@@ -26,7 +26,7 @@ private final class SelectMessagesPlaceholderView: View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         background = theme.colors.background
-        let layout = TextViewLayout(.initialize(string: L10n.chatTitleReportMessages, color: theme.colors.text, font: .medium(.header)))
+        let layout = TextViewLayout(.initialize(string: strings().chatTitleReportMessages, color: theme.colors.text, font: .medium(.header)))
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
     }
@@ -66,7 +66,7 @@ private class ConnectionStatusView : View {
                     }
                     disableProxyButton?.set(color: theme.colors.grayText, for: .Normal)
                     disableProxyButton?.set(font: .medium(.text), for: .Normal)
-                    disableProxyButton?.set(text: tr(L10n.connectingStatusDisableProxy), for: .Normal)
+                    disableProxyButton?.set(text: strings().connectingStatusDisableProxy, for: .Normal)
                     _ = disableProxyButton?.sizeToFit()
                     addSubview(disableProxyButton!)
                     
@@ -84,11 +84,11 @@ private class ConnectionStatusView : View {
             
             switch status {
             case let .connecting(proxy, _):
-                attr = .initialize(string: proxy != nil ? L10n.chatConnectingStatusConnectingToProxy : L10n.chatConnectingStatusConnecting, color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: proxy != nil ? strings().chatConnectingStatusConnectingToProxy : strings().chatConnectingStatusConnecting, color: theme.colors.text, font: .medium(.header))
             case .updating:
-                attr = .initialize(string: L10n.chatConnectingStatusUpdating, color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: strings().chatConnectingStatusUpdating, color: theme.colors.text, font: .medium(.header))
             case .waitingForNetwork:
-                attr = .initialize(string: L10n.chatConnectingStatusWaitingNetwork, color: theme.colors.text, font: .medium(.header))
+                attr = .initialize(string: strings().chatConnectingStatusWaitingNetwork, color: theme.colors.text, font: .medium(.header))
             case .online:
                 attr = NSAttributedString()
             }
@@ -841,25 +841,25 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.onlineMemberCount)
             
             if chatInteraction.mode == .pinned {
-                result = result.withUpdatedTitle(L10n.chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0))
+                result = result.withUpdatedTitle(strings().chatTitlePinnedMessagesCountable(presentation.pinnedMessageId?.totalCount ?? 0))
                 status = nil
             } else if chatInteraction.context.peerId == peerView.peerId  {
                 if chatInteraction.mode == .scheduled {
-                    result = result.withUpdatedTitle(L10n.chatTitleReminder)
+                    result = result.withUpdatedTitle(strings().chatTitleReminder)
                 } else {
-                    result = result.withUpdatedTitle(L10n.peerSavedMessages)
+                    result = result.withUpdatedTitle(strings().peerSavedMessages)
                 }
             } else if chatInteraction.mode == .scheduled {
-                result = result.withUpdatedTitle(L10n.chatTitleScheduledMessages)
+                result = result.withUpdatedTitle(strings().chatTitleScheduledMessages)
             } else if case .replyThread(_, let mode) = chatInteraction.mode {
                 switch mode {
                 case .comments:
-                    result = result.withUpdatedTitle(L10n.chatTitleCommentsCountable(self.rootRepliesCount))
+                    result = result.withUpdatedTitle(strings().chatTitleCommentsCountable(self.rootRepliesCount))
                 case .replies:
-                    result = result.withUpdatedTitle(L10n.chatTitleRepliesCountable(self.rootRepliesCount))
+                    result = result.withUpdatedTitle(strings().chatTitleRepliesCountable(self.rootRepliesCount))
                 }
                 status = .initialize(string: result.title.string, color: theme.colors.grayText, font: .normal(12))
-                result = result.withUpdatedTitle(L10n.chatTitleDiscussion)
+                result = result.withUpdatedTitle(strings().chatTitleDiscussion)
             }
             
             if chatInteraction.context.peerId == peerView.peerId {
@@ -870,11 +870,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
             switch connectionStatus {
             case let .connecting(proxy, _):
-                status = .initialize(string: (proxy != nil ? L10n.chatConnectingStatusConnectingToProxy : L10n.chatConnectingStatusConnecting).lowercased(), color: theme.colors.grayText, font: .normal(.short))
+                status = .initialize(string: (proxy != nil ? strings().chatConnectingStatusConnectingToProxy : strings().chatConnectingStatusConnecting).lowercased(), color: theme.colors.grayText, font: .normal(.short))
             case .updating:
-                status = .initialize(string: L10n.chatConnectingStatusUpdating.lowercased(), color: theme.colors.grayText, font: .normal(.short))
+                status = .initialize(string: strings().chatConnectingStatusUpdating.lowercased(), color: theme.colors.grayText, font: .normal(.short))
             case .waitingForNetwork:
-                status = .initialize(string: L10n.chatConnectingStatusWaitingNetwork.lowercased(), color: theme.colors.grayText, font: .normal(.short))
+                status = .initialize(string: strings().chatConnectingStatusWaitingNetwork.lowercased(), color: theme.colors.grayText, font: .normal(.short))
             case .online:
                 break
             }

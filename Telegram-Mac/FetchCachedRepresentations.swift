@@ -8,12 +8,14 @@
 
 import Cocoa
 import TelegramCore
-
+import ApiCredentials
 import Postbox
 import SwiftSignalKit
 import TGUIKit
 import RLottie
 import libwebp
+import GZIP
+import Svg
 
 private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 

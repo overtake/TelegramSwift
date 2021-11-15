@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import InAppVideoServices
 import SwiftSignalKit
 
 
@@ -469,7 +469,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(L10n.chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
+                countAccessoryView?.updateText(strings().chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil

@@ -625,7 +625,7 @@ class CallHeaderBasicView : NavigationHeaderView {
             }
             statusText = durationString
         case let .startsIn(time):
-            statusText = L10n.chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
+            statusText = strings().chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
         }
         let layout = TextViewLayout.init(.initialize(string: statusText, color: .white, font: .normal(13)))
         layout.measure(width: .greatestFiniteMagnitude)
@@ -731,7 +731,7 @@ class CallHeaderBasicView : NavigationHeaderView {
     }
 
     func getEndText() -> String {
-        return L10n.callHeaderEndCall
+        return strings().callHeaderEndCall
     }
     
     override func layout() {

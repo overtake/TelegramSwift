@@ -39,7 +39,7 @@ private class JoinLinkPreviewView : View {
         _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .normal(.title))
         _ = attr.append(string: "\n")
         
-        _ = attr.append(string: L10n.peerStatusMemberCountable(peer.participantCount).replacingOccurrences(of: "\(peer.participantCount)", with: peer.participantCount.formattedWithSeparator), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().peerStatusMemberCountable(peer.participantCount).replacingOccurrences(of: "\(peer.participantCount)", with: peer.participantCount.formattedWithSeparator), color: theme.colors.grayText, font: .normal(.text))
         let titleLayout = TextViewLayout(attr, alignment: .center)
         titleLayout.measure(width: frame.width - 40)
         titleView.update(titleLayout)
@@ -166,7 +166,7 @@ class JoinLinkPreviewModalController: ModalViewController {
     
     override var modalInteractions: ModalInteractions? {
         let context = self.context
-        return ModalInteractions(acceptTitle: L10n.joinLinkJoin, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
                 _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: strongSelf.joinhash), for: window).start(next: { [weak strongSelf] peerId in
                     strongSelf?.interaction(peerId)
@@ -175,21 +175,21 @@ class JoinLinkPreviewModalController: ModalViewController {
                     let text: String
                     switch error {
                     case .generic:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                     case .tooMuchJoined:
                         showInactiveChannels(context: context, source: .join)
                         return
                     case .tooMuchUsers:
-                        text = L10n.groupUsersTooMuchError
+                        text = strings().groupUsersTooMuchError
                     case .requestSent:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                     case .flood:
-                        text = L10n.joinLinkFloodError
+                        text = strings().joinLinkFloodError
                     }
                     alert(for: context.window, info: text)
                 })
             }
-        }, cancelTitle: tr(L10n.modalCancel))
+        }, cancelTitle: strings().modalCancel)
         
     }
     

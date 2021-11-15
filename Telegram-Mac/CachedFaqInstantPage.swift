@@ -112,7 +112,7 @@ func faqSearchableItems(context: AccountContext) -> Signal<[SettingsSearchableIt
                                             } else {
                                                 nextIndex += 1
                                             }
-                                            let item = SettingsSearchableItem(id: .faq(index), title: text.plainText, alternate: [], icon: .faq, breadcrumbs: [L10n.accountSettingsFAQ, currentSection], present: { context, _, present in
+                                            let item = SettingsSearchableItem(id: .faq(index), title: text.plainText, alternate: [], icon: .faq, breadcrumbs: [strings().accountSettingsFAQ, currentSection], present: { context, _, present in
                                                 showInstantPage(InstantPageViewController(context, webPage: webPage, message: nil, anchor: anchor))
                                             })
                                             if index == 1 {

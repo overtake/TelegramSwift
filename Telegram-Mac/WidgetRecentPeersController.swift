@@ -197,7 +197,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             
 
             if !state.favorite.isEmpty {
-                buttons.append(.init(text: { L10n.widgetRecentPopular }, selected: {
+                buttons.append(.init(text: { strings().widgetRecentPopular }, selected: {
                     return state.section == .favorite
                 }, image: {
                     return state.section == .favorite ? theme.icons.widget_peers_favorite_active: theme.icons.widget_peers_favorite
@@ -211,7 +211,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
            
             if !state.recent.isEmpty {
-                buttons.append(.init(text: { L10n.widgetRecentRecent }, selected: {
+                buttons.append(.init(text: { strings().widgetRecentRecent }, selected: {
                     return state.section == .recent
                 }, image: {
                     return state.section == .recent ? theme.icons.widget_peers_recent_active: theme.icons.widget_peers_recent
@@ -225,7 +225,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
           
             if !state.recent.isEmpty && !state.favorite.isEmpty {
-                buttons.append(.init(text: { L10n.widgetRecentMixed }, selected: {
+                buttons.append(.init(text: { strings().widgetRecentMixed }, selected: {
                     return state.section == .both
                 }, image: {
                     return state.section == .both ? theme.icons.widget_peers_both_active: theme.icons.widget_peers_both
@@ -239,7 +239,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
             
             
-            let data: WidgetData = .init(title: { L10n.widgetRecentTitle }, desc: { L10n.widgetRecentDesc }, descClick: {
+            let data: WidgetData = .init(title: { strings().widgetRecentTitle }, desc: { strings().widgetRecentDesc }, descClick: {
                 showModal(with: QuickSwitcherModalController(context), for: context.window)
             }, buttons: buttons, contentHeight: 180)
             

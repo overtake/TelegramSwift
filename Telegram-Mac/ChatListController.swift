@@ -997,12 +997,12 @@ class ChatListController : PeersListController {
             |> map { [weak self] filters, isEnabled -> [SPopoverItem] in
                 var items:[SPopoverItem] = []
                 if isEnabled {
-                    items.append(SPopoverItem(filters.list.isEmpty ? L10n.chatListFilterSetupEmpty : L10n.chatListFilterSetup, {
+                    items.append(SPopoverItem(filters.list.isEmpty ? strings().chatListFilterSetupEmpty : strings().chatListFilterSetup, {
                         context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
                     }, filters.list.isEmpty ? theme.icons.chat_filter_add : theme.icons.chat_filter_edit))
                     
                     if self?.filterValue?.filter != nil {
-                        items.append(SPopoverItem(L10n.chatListFilterAll, {
+                        items.append(SPopoverItem(strings().chatListFilterAll, {
                             self?.updateFilter {
                                 $0.withUpdatedFilter(nil)
                             }
@@ -1091,7 +1091,7 @@ class ChatListController : PeersListController {
             
                 _ = dismissServerProvidedSuggestion(account: strongSelf.context.account, suggestion: .autoarchivePopular).start()
                 
-                confirm(for: context.window, header: L10n.alertHideNewChatsHeader, information: L10n.alertHideNewChatsText, okTitle: L10n.alertHideNewChatsOK, cancelTitle: L10n.alertHideNewChatsCancel, successHandler: { _ in
+                confirm(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, okTitle: strings().alertHideNewChatsOK, cancelTitle: strings().alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
                 })
                 
@@ -1393,7 +1393,7 @@ class ChatListController : PeersListController {
         case .plain:
             return super.defaultBarTitle
         case .folder:
-            return L10n.chatListArchivedChats
+            return strings().chatListArchivedChats
         case .filter:
             return _filterValue.with { $0.filter?.title ?? "Filter" }
         }

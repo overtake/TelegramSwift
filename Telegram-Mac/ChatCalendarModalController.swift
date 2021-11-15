@@ -11,6 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
+import CalendarUtils
 
 private final class ControllerArguments {
     let context: AccountContext
@@ -95,7 +96,7 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                     let fg = View(frame: view.bounds)
                     fg.backgroundColor = .blackTransparent
                     view.addSubview(fg)
-                    fg.toolTip = L10n.peerMediaCalendarMediaCountable(entry.count)
+                    fg.toolTip = strings().peerMediaCalendarMediaCountable(entry.count)
                     var updateSignal: Signal<ImageDataTransformation, NoError>?
                     var fetchSignal: Signal<Void, NoError>?
                     var dimensions: NSSize = view.frame.size
@@ -220,7 +221,7 @@ func ChatCalendarModalController(context: AccountContext, sparseCalendar: Sparse
         }
     }))
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.peerMediaCalendarTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().peerMediaCalendarTitle)
     
     controller.contextObject = sparseCalendar
     

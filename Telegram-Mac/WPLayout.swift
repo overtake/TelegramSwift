@@ -97,9 +97,9 @@ class WPLayout: Equatable {
             let siteName: String
             switch content.type {
             case "telegram_background":
-                siteName = L10n.chatWPBackgroundTitle
+                siteName = strings().chatWPBackgroundTitle
             case "telegram_voicechat":
-                siteName = L10n.chatWPVoiceChatTitle
+                siteName = strings().chatWPVoiceChatTitle
             default:
                 siteName = websiteName
             }

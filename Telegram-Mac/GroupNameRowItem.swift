@@ -99,9 +99,9 @@ class GroupNameRowView : InputDataRowView {
                 if item.photo == nil {
                     item.pickPicture?(true)
                 } else {
-                    ContextMenu.show(items: [ContextMenuItem(L10n.peerCreatePeerContextUpdatePhoto, handler: {
+                    ContextMenu.show(items: [ContextMenuItem(strings().peerCreatePeerContextUpdatePhoto, handler: {
                         item.pickPicture?(true)
-                    }), ContextMenuItem(L10n.peerCreatePeerContextRemovePhoto, handler: {
+                    }), ContextMenuItem(strings().peerCreatePeerContextRemovePhoto, handler: {
                         item.pickPicture?(false)
                     })], view: photoView, event: event)
                 }

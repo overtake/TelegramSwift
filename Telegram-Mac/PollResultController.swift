@@ -149,7 +149,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                     collapse = nil
                 }
                 
-                return PollResultStickItem(initialSize, stableId: stableId, left: text, additionText: additionText, right: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(option.votesCount) : L10n.chatPollTotalVotes1Countable(option.votesCount), collapse: collapse, viewType: .textTopItem)
+                return PollResultStickItem(initialSize, stableId: stableId, left: text, additionText: additionText, right: poll.isQuiz ? strings().chatQuizTotalVotesCountable(option.votesCount) : strings().chatPollTotalVotes1Countable(option.votesCount), collapse: collapse, viewType: .textTopItem)
                 
             }))
             index += 1
@@ -217,7 +217,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                         index += 1
                     } else {
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
-                            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                                 expandOption(option.option.opaqueIdentifier)
                             }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
                         }))
@@ -261,7 +261,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 }
                 if let remainingCount = remainingCount {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUpDisabled, textInset: 52, thumbInset: 4), enabled: false)
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUpDisabled, textInset: 52, thumbInset: 4), enabled: false)
                     }))
                     index += 1
                 }
@@ -322,7 +322,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         InputDataSignalValue(entries: $0, animated: true)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: !poll.isQuiz ? L10n.pollResultsTitlePoll : L10n.pollResultsTitleQuiz)
+    let controller = InputDataController(dataSignal: signal, title: !poll.isQuiz ? strings().pollResultsTitlePoll : strings().pollResultsTitleQuiz)
     
     controller.getBackgroundColor = {
         theme.colors.background
@@ -336,7 +336,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         modalController?.close()
     })
     
-    controller.centerModalHeader = ModalHeaderData(title: controller.defaultBarTitle, subtitle: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(poll.results.totalVoters ?? 0)) : L10n.chatPollTotalVotes1Countable(Int(poll.results.totalVoters ?? 0)))
+    controller.centerModalHeader = ModalHeaderData(title: controller.defaultBarTitle, subtitle: poll.isQuiz ? strings().chatQuizTotalVotesCountable(Int(poll.results.totalVoters ?? 0)) : strings().chatPollTotalVotes1Countable(Int(poll.results.totalVoters ?? 0)))
     
     controller.getBackgroundColor = {
         theme.colors.listBackground

@@ -893,7 +893,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     static func makePhotoView(_ item: ChatRowItem) -> NSView {
         let avatar = AvatarControl(font: .avatar(.text))
         avatar.setFrameSize(36,36)
-        
+        if let peer = item.peer {
+            avatar.setPeer(account: item.context.account, peer: peer, message: item.message)
+        }
         return avatar
     }
     
@@ -943,7 +945,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillScamButton(_ item: ChatRowItem) -> Void {
         if item.isScam || item.isFake, item.canFillAuthorName {
             if scamButton == nil {
-                let text: String = !item.isScam ? L10n.peerInfoFakeWarning : L10n.peerInfoScamWarning
+                let text: String = !item.isScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
                 scamButton = ImageButton()
                 scamButton?.autohighlight = false
                 scamButton?.setFrameSize(item.badIcon.backingSize)
@@ -963,7 +965,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillScamForwardButton(_ item: ChatRowItem) -> Void {
         if item.isForwardScam || item.isForwardFake {
             if scamForwardButton == nil {
-                let text: String = !item.isForwardScam ? L10n.peerInfoFakeWarning : L10n.peerInfoScamWarning
+                let text: String = !item.isForwardScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
                 scamForwardButton = ImageButton()
                 scamForwardButton?.autohighlight = false
                 scamForwardButton?.setFrameSize(item.forwardBadIcon.backingSize)

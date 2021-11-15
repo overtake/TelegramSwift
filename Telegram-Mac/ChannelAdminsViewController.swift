@@ -159,12 +159,12 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.adminsHeader(sectionId: sectionId, isGroup ? L10n.adminsGroupAdmins : L10n.adminsChannelAdmins, .textTopItem))
+        entries.append(.adminsHeader(sectionId: sectionId, isGroup ? strings().adminsGroupAdmins : strings().adminsChannelAdmins, .textTopItem))
         
         
         if peer.hasPermission(.addAdmins)  {
             entries.append(.addAdmin(sectionId: sectionId, .singleItem))
-            entries.append(.adminsInfo(sectionId: sectionId, isGroup ? L10n.adminsGroupDescription : L10n.adminsChannelDescription, .textBottomItem))
+            entries.append(.adminsInfo(sectionId: sectionId, isGroup ? strings().adminsGroupDescription : strings().adminsChannelDescription, .textBottomItem))
             
             entries.append(.section(sectionId))
             sectionId += 1
@@ -209,12 +209,12 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
         }
     } else  if let peer = view.peers[view.peerId] as? TelegramGroup {
         
-        entries.append(.adminsHeader(sectionId: sectionId, L10n.adminsGroupAdmins, .textTopItem))
+        entries.append(.adminsHeader(sectionId: sectionId, strings().adminsGroupAdmins, .textTopItem))
         
         
         if case .creator = peer.role {
             entries.append(.addAdmin(sectionId: sectionId, .singleItem))
-            entries.append(.adminsInfo(sectionId: sectionId, L10n.adminsGroupDescription, .textBottomItem))
+            entries.append(.adminsInfo(sectionId: sectionId, strings().adminsGroupDescription, .textBottomItem))
             
             entries.append(.section(sectionId))
             sectionId += 1
@@ -286,12 +286,12 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             let peerText: String
             switch participant.participant {
             case .creator:
-                peerText = L10n.adminsOwner
+                peerText = strings().adminsOwner
             case let .member(_, _, adminInfo, _, _):
                 if let adminInfo = adminInfo, let peer = participant.peers[adminInfo.promotedBy] {
-                    peerText =  L10n.channelAdminsPromotedBy(peer.displayTitle)
+                    peerText =  strings().channelAdminsPromotedBy(peer.displayTitle)
                 } else {
-                    peerText = L10n.adminsAdmin
+                    peerText = strings().adminsAdmin
                 }
             }
             
@@ -312,9 +312,9 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
             })
 
         case let .addAdmin(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.adminsAddAdmin,  nameStyle: blueActionButton, type: .next, viewType: viewType, action: arguments.addAdmin)
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().adminsAddAdmin,  nameStyle: blueActionButton, type: .next, viewType: viewType, action: arguments.addAdmin)
         case let .eventLogs(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: L10n.channelAdminsRecentActions, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().channelAdminsRecentActions, type: .next, viewType: viewType, action: {
                 arguments.eventLogs()
             })
         case .section:
@@ -383,7 +383,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         let arguments = ChannelAdminsControllerArguments(context: context, addAdmin: {
             let behavior = peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1)
             
-            _ = (selectModalPeers(window: context.window, context: context, title: L10n.adminsAddAdmin, limit: 1, behavior: behavior, confirmation: { peerIds in
+            _ = (selectModalPeers(window: context.window, context: context, title: strings().adminsAddAdmin, limit: 1, behavior: behavior, confirmation: { peerIds in
                 if let _ = behavior.participants[peerId] {
                      return .single(true)
                 } else {

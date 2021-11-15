@@ -82,9 +82,9 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
             let text:String
             switch id {
             case .recently:
-                text = tr(L10n.quickSwitcherRecently)
+                text = strings().quickSwitcherRecently
             case .popular:
-                text = tr(L10n.quickSwitcherPopular)
+                text = strings().quickSwitcherPopular
             }
             return SeparatorRowItem(initialSize, stableId, string: text.uppercased())
         case .empty:
@@ -148,7 +148,7 @@ private class QuickSwitcherView : View {
         separator.backgroundColor = theme.colors.border
         self.backgroundColor = theme.colors.background
         let attributed = NSMutableAttributedString()
-        _ = attributed.append(string: L10n.quickSwitcherDescription, color: theme.colors.grayText, font: .normal(.text))
+        _ = attributed.append(string: strings().quickSwitcherDescription, color: theme.colors.grayText, font: .normal(.text))
         attributed.detectBoldColorInString(with: .medium(.text))
         let descLayout = TextViewLayout(attributed, alignment: .center)
         descLayout.measure(width: frameRect.width - 20)
@@ -299,7 +299,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 
                 return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values -> ([Peer], Bool) in
                     var peers = values.0
-                    if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
+                    if strings().peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
                         peers.insert(values.1, at: 0)
                     }
                     

@@ -59,28 +59,28 @@ final class TelegramFilterCategory : Peer {
     
     var displayTitle: String? {
         if category == .contacts {
-            return L10n.chatListFilterContacts
+            return strings().chatListFilterContacts
         }
         if category == .nonContacts {
-            return L10n.chatListFilterNonContacts
+            return strings().chatListFilterNonContacts
         }
         if category == .groups {
-            return L10n.chatListFilterGroups
+            return strings().chatListFilterGroups
         }
         if category == .channels {
-            return L10n.chatListFilterChannels
+            return strings().chatListFilterChannels
         }
         if category == .bots {
-            return L10n.chatListFilterBots
+            return strings().chatListFilterBots
         }
         if category == .excludeRead {
-            return L10n.chatListFilterReadChats
+            return strings().chatListFilterReadChats
         }
         if category == .excludeMuted {
-            return L10n.chatListFilterMutedChats
+            return strings().chatListFilterMutedChats
         }
         if category == .excludeArchived {
-            return L10n.chatListFilterArchive
+            return strings().chatListFilterArchive
         }
         return nil
     }
@@ -203,7 +203,7 @@ extension Peer {
         switch self {
         case let user as TelegramUser:
             if user.firstName == nil && user.lastName == nil {
-                return L10n.peerDeletedUser
+                return strings().peerDeletedUser
             } else {
                 var name: String = ""
                 if let firstName = user.firstName {
@@ -264,7 +264,7 @@ extension Peer {
             } else if let lastName = user.lastName {
                 return lastName.replacingOccurrences(of: "􀇻", with: "")
             } else {
-                return tr(L10n.peerDeletedUser)
+                return strings().peerDeletedUser
             }
         case let group as TelegramGroup:
             return group.title.replacingOccurrences(of: "􀇻", with: "")
@@ -287,7 +287,7 @@ extension Peer {
             } else if let lastName = user.lastName, !lastName.isEmpty {
                 return [lastName[lastName.startIndex ..< lastName.index(after: lastName.startIndex)].uppercased()]
             } else {
-                let name = L10n.peerDeletedUser
+                let name = strings().peerDeletedUser
                 if !name.isEmpty {
                     return [name[name.startIndex ..< name.index(after: name.startIndex)].uppercased()]
                 }

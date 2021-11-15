@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
 
@@ -154,8 +154,8 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         firstNameTextView.animates = false
         lastNameTextView.animates = false
         
-        firstNameTextView.placeholderAttributedString = .initialize(string: L10n.peerInfoFirstNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
-        lastNameTextView.placeholderAttributedString = .initialize(string: L10n.peerInfoLastNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
+        firstNameTextView.placeholderAttributedString = .initialize(string: strings().peerInfoFirstNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
+        lastNameTextView.placeholderAttributedString = .initialize(string: strings().peerInfoLastNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
         
         firstNameTextView.setString(item.state.firstName)
         lastNameTextView.setString(item.state.lastName)

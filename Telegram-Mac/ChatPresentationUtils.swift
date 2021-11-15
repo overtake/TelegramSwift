@@ -12,6 +12,7 @@ import TelegramCore
 
 import SwiftSignalKit
 import Postbox
+import TelegramIconsTheme
 
 final class ChatMediaPresentation : Equatable {
     

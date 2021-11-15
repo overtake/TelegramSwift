@@ -131,11 +131,11 @@ class ChatInputAccessory: Node {
 
             let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
             
-            items.append(SPopoverItem(L10n.chatAlertForwardActionShow1Countable(authors), {
+            items.append(SPopoverItem(strings().chatAlertForwardActionShow1Countable(authors), {
                 setHideAction(false)
             }, !hideSendersName ? theme.icons.chat_action_menu_selected : nil))
             
-            items.append(SPopoverItem(L10n.chatAlertForwardActionHide1Countable(authors), {
+            items.append(SPopoverItem(strings().chatAlertForwardActionHide1Countable(authors), {
                 setHideAction(true)
             }, hideSendersName ? theme.icons.chat_action_menu_selected : nil))
         
@@ -147,11 +147,11 @@ class ChatInputAccessory: Node {
             
             if messagesWithCaption > 0 {
                 
-                items.append(SPopoverItem(L10n.chatAlertForwardActionShowCaptionCountable(messagesWithCaption), {
+                items.append(SPopoverItem(strings().chatAlertForwardActionShowCaptionCountable(messagesWithCaption), {
                     setHideCaption(false)
                 }, !state.interfaceState.hideCaptions ? theme.icons.chat_action_menu_selected : nil))
                 
-                items.append(SPopoverItem(L10n.chatAlertForwardActionHideCaptionCountable(messagesWithCaption), {
+                items.append(SPopoverItem(strings().chatAlertForwardActionHideCaptionCountable(messagesWithCaption), {
                     setHideCaption(true)
                 }, state.interfaceState.hideCaptions ? theme.icons.chat_action_menu_selected : nil))
                 
@@ -159,7 +159,7 @@ class ChatInputAccessory: Node {
 
             }
             
-            items.append(SPopoverItem(L10n.chatAlertForwardActionAnother, anotherAction, theme.icons.chat_action_menu_update_chat))
+            items.append(SPopoverItem(strings().chatAlertForwardActionAnother, anotherAction, theme.icons.chat_action_menu_update_chat))
 
         
             container.set(handler: { control in

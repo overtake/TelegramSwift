@@ -16,8 +16,8 @@ import TGUIKit
 
 func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()) {
     
-    let select = { SelectPeersController(titles: ComposeTitles(L10n.composeSelectUsers, L10n.composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true, selectedPeers: selectedPeers) }
-    let chooseName = { CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context) }
+    let select = { SelectPeersController(titles: ComposeTitles(strings().composeSelectUsers, strings().composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true, selectedPeers: selectedPeers) }
+    let chooseName = { CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context) }
     let signal = execute(context: context, select, chooseName) |> mapError { _ in return CreateGroupError.generic } |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), CreateGroupError> in
         let signal = showModalProgress(signal: context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: mainWindow, disposeAfterComplete: false)
         return signal
@@ -49,17 +49,17 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
         let text: String
         switch error {
         case .privacy:
-            text = L10n.privacyGroupsAndChannelsInviteToChannelMultipleError
+            text = strings().privacyGroupsAndChannelsInviteToChannelMultipleError
         case .generic:
-            text = L10n.unknownError
+            text = strings().unknownError
         case .restricted:
-            text = L10n.unknownError
+            text = strings().unknownError
         case .tooMuchLocationBasedGroups:
-            text = L10n.unknownError
+            text = strings().unknownError
         case let .serverProvided(error):
             text = error
         case .tooMuchJoined:
-            text = L10n.channelErrorAddTooMuch
+            text = strings().channelErrorAddTooMuch
         }
         alert(for: context.window, info: text)
     })
@@ -67,7 +67,7 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
 
 
 func createSupergroup(with context: AccountContext, defaultText: String = "") -> Signal<PeerId?, NoError> {
-    let chooseName = CreateGroupViewController(titles: ComposeTitles(L10n.groupNewGroup, L10n.composeCreate), context: context, defaultText: defaultText)
+    let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context, defaultText: defaultText)
     context.sharedContext.bindings.rootNavigation().push(chooseName)
     chooseName.restart(with: ComposeState([]))
     let signal = chooseName.onComplete.get() |> mapToSignal { result -> Signal<(PeerId?, Bool), NoError> in
@@ -113,7 +113,7 @@ func createChannel(with context: AccountContext) {
     let introCompletion: Signal<Void, NoError> = FastSettings.needShowChannelIntro ? intro.onComplete.get() : Signal<Void, NoError>.single(Void())
     
     let create = introCompletion |> mapToSignal { () -> Signal<PeerId?, NoError> in
-        let create = CreateChannelViewController(titles: ComposeTitles(L10n.channelNewChannel, L10n.composeNext), context: context)
+        let create = CreateChannelViewController(titles: ComposeTitles(strings().channelNewChannel, strings().composeNext), context: context)
         context.sharedContext.bindings.rootNavigation().push(create)
         return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, NoError> in
             if let peerId = peerId {

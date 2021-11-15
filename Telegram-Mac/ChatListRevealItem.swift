@@ -190,7 +190,7 @@ final class ChatListRevealView : TableStickView {
         let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
-        var items:[ScrollableSegmentItem] = [.init(title: L10n.chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(L10n.chatListFilterAllChats))]
+        var items:[ScrollableSegmentItem] = [.init(title: strings().chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(strings().chatListFilterAllChats))]
         index += 1
         for tab in item.tabs {
             let unreadCount = item.counters.count(for: tab)

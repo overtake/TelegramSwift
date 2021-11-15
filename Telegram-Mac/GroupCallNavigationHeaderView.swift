@@ -149,7 +149,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
                 self.status = .startsIn(Int(scheduleTimestamp))
                 isConnected = true
             } else {
-                self.status = .text(L10n.voiceChatStatusConnecting, nil)
+                self.status = .text(strings().voiceChatStatusConnecting, nil)
                 isConnected = false
             }
         case .connected:
@@ -157,7 +157,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             if let first = data.topParticipants.first(where: { members?.speakingParticipants.contains($0.peer.id) ?? false }) {
                 self.status = .text(first.peer.compactDisplayTitle.prefixWithDots(12), nil)
             } else {
-                self.status = .text(L10n.voiceChatStatusMembersCountable(data.participantCount), nil)
+                self.status = .text(strings().voiceChatStatusMembersCountable(data.participantCount), nil)
             }
             isConnected = true
         }
@@ -181,7 +181,7 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
     }
 
     override func getEndText() -> String {
-        return L10n.voiceChatTitleEnd
+        return strings().voiceChatTitleEnd
     }
     
     override init(_ header: NavigationHeader) {

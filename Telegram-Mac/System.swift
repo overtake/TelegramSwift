@@ -13,6 +13,7 @@ import TelegramCore
 import TGUIKit
 import Postbox
 import CoreMediaIO
+import Localization
 
 private let _dQueue = Queue.init(name: "chatListQueue")
 private let _sQueue = Queue.init(name: "ChatQueue")
@@ -185,4 +186,10 @@ func shouldBeMirrored(_ device: AVCaptureDevice) -> Bool {
         }
     }
     return true
+}
+
+
+
+func strings() -> L10n.Type {
+    return L10n.self
 }

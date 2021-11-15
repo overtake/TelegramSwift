@@ -135,7 +135,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     private var singleWrapper:APSingleWrapper? {
         if let media = media as? TelegramMediaFile {
-            return APSingleWrapper(resource: media.resource, mimeType: media.mimeType, name: L10n.audioControllerVideoMessage, performer: parent?.author?.displayTitle, duration: media.duration, id: media.fileId)
+            return APSingleWrapper(resource: media.resource, mimeType: media.mimeType, name: strings().audioControllerVideoMessage, performer: parent?.author?.displayTitle, duration: media.duration, id: media.fileId)
         }
         return nil
     }

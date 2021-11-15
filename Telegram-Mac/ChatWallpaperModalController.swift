@@ -111,7 +111,7 @@ class ChatWallpaperModalController: ModalViewController {
     
     override var modalInteractions: ModalInteractions? {
         let context = self.context
-        let interactions = ModalInteractions(acceptTitle: L10n.chatWPSelectFromFile, accept: {
+        let interactions = ModalInteractions(acceptTitle: strings().chatWPSelectFromFile, accept: {
             filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
                 if let path = paths?.first {
                     let size = fs(path)
@@ -139,7 +139,7 @@ class ChatWallpaperModalController: ModalViewController {
                         showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: .none), for: context.window)
                         
                     } else {
-                        alert(for: context.window, header: appName, info: L10n.appearanceCustomBackgroundFileError)
+                        alert(for: context.window, header: appName, info: strings().appearanceCustomBackgroundFileError)
                     }
                 }
             })
@@ -154,7 +154,7 @@ class ChatWallpaperModalController: ModalViewController {
     public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
         return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }), center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
+        }), center: ModalHeaderData(title: strings().chatWPBackgroundTitle), right: nil)
     }
     
     override func measure(size: NSSize) {

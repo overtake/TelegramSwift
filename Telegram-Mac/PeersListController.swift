@@ -31,7 +31,7 @@ final class RevealAllChatsView : Control {
         textView.isSelectable = false
         addSubview(textView)
         
-        let layout = TextViewLayout(.initialize(string: L10n.chatListCloseFilter, color: .white, font: .medium(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().chatListCloseFilter, color: .white, font: .medium(.title)))
         layout.measure(width: max(280, frame.width))
         textView.update(layout)
         
@@ -177,14 +177,14 @@ class PeerListContainerView : View {
         var currentPeerTag: Peer?
         
 
-        let tags:[(MessageTags?, String, CGImage)] = [(nil, L10n.searchFilterClearFilter, theme.icons.search_filter),
-                                            (.photo, L10n.searchFilterPhotos, theme.icons.search_filter_media),
-                                            (.video, L10n.searchFilterVideos, theme.icons.search_filter_media),
-                                            (.webPage, L10n.searchFilterLinks, theme.icons.search_filter_links),
-                                            (.music, L10n.searchFilterMusic, theme.icons.search_filter_music),
-                                            (.voiceOrInstantVideo, L10n.searchFilterVoice, theme.icons.search_filter_music),
-                                            (.gif, L10n.searchFilterGIFs, theme.icons.search_filter_media),
-                                            (.file, L10n.searchFilterFiles, theme.icons.search_filter_files)]
+        let tags:[(MessageTags?, String, CGImage)] = [(nil, strings().searchFilterClearFilter, theme.icons.search_filter),
+                                            (.photo, strings().searchFilterPhotos, theme.icons.search_filter_media),
+                                            (.video, strings().searchFilterVideos, theme.icons.search_filter_media),
+                                            (.webPage, strings().searchFilterLinks, theme.icons.search_filter_links),
+                                            (.music, strings().searchFilterMusic, theme.icons.search_filter_music),
+                                            (.voiceOrInstantVideo, strings().searchFilterVoice, theme.icons.search_filter_music),
+                                            (.gif, strings().searchFilterGIFs, theme.icons.search_filter_media),
+                                            (.file, strings().searchFilterFiles, theme.icons.search_filter_files)]
         
         let collectTags: ()-> ([String], CGImage) = {
             var values: [String] = []
@@ -475,11 +475,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         if self.navigationController?.modalAction is FWDNavigationAction {
-            self.setCenterTitle(L10n.chatForwardActionHeader)
+            self.setCenterTitle(strings().chatForwardActionHeader)
         }
         
         if self.navigationController?.modalAction is ShareInlineResultNavigationAction {
-            self.setCenterTitle(L10n.chatShareInlineResultActionHeader)
+            self.setCenterTitle(strings().chatShareInlineResultActionHeader)
         }
         
         genericView.tableView.delegate = self
@@ -530,13 +530,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.compose.set(handler: { [weak self] control in
             if let strongSelf = self, !control.isSelected {
                 
-                let items = [SPopoverItem(tr(L10n.composePopoverNewGroup), { [weak strongSelf] in
+                let items = [SPopoverItem(strings().composePopoverNewGroup, { [weak strongSelf] in
                     guard let strongSelf = strongSelf else {return}
                     strongSelf.context.composeCreateGroup()
-                }, theme.icons.composeNewGroup),SPopoverItem(tr(L10n.composePopoverNewSecretChat), { [weak strongSelf] in
+                }, theme.icons.composeNewGroup),SPopoverItem(strings().composePopoverNewSecretChat, { [weak strongSelf] in
                     guard let strongSelf = strongSelf else {return}
                     strongSelf.context.composeCreateSecretChat()
-                }, theme.icons.composeNewSecretChat),SPopoverItem(tr(L10n.composePopoverNewChannel), { [weak strongSelf] in
+                }, theme.icons.composeNewSecretChat),SPopoverItem(strings().composePopoverNewChannel, { [weak strongSelf] in
                     guard let strongSelf = strongSelf else {return}
                     strongSelf.context.composeCreateChannel()
                 }, theme.icons.composeNewChannel)];

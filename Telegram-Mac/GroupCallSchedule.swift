@@ -107,7 +107,7 @@ private final class GroupCallScheduleTimerView : View {
             mask.layer?.removeAnimation(forKey: "opacity")
         }
         
-        let headerText = time >= 0 ? L10n.voiceChatScheduledHeader : L10n.voiceChatScheduledHeaderLate
+        let headerText = time >= 0 ? strings().voiceChatScheduledHeader : strings().voiceChatScheduledHeaderLate
         
         let headerLayout = TextViewLayout.init(.initialize(string: headerText, color: GroupCallTheme.customTheme.textColor, font: .avatar(26)))
         headerLayout.measure(width: frame.width - 60)

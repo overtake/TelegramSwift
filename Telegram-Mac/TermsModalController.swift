@@ -23,7 +23,7 @@ private final class TermsView : View {
         addSubview(tableView)
         headerView.addSubview(titleView)
         headerView.border = [.Bottom]
-        let title: TextViewLayout = TextViewLayout.init(NSAttributedString.initialize(string: L10n.termsOfServiceTitle, color: theme.colors.text, font: .medium(.title)))
+        let title: TextViewLayout = TextViewLayout.init(NSAttributedString.initialize(string: strings().termsOfServiceTitle, color: theme.colors.text, font: .medium(.title)))
         title.measure(width: frameRect.width - 20)
         titleView.update(title)
     }
@@ -102,17 +102,17 @@ class TermsModalController: ModalViewController {
                 })
             }
         }
-        return ModalInteractions(acceptTitle: L10n.termsOfServiceAccept, accept: {
+        return ModalInteractions(acceptTitle: strings().termsOfServiceAccept, accept: {
             if let age = terms.ageConfirmation {
-                confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceConfirmAge("\(age)"), okTitle: L10n.termsOfServiceAcceptConfirmAge, successHandler: { _ in
+                confirm(for: mainWindow, header: strings().termsOfServiceTitle, information: strings().termsOfServiceConfirmAge("\(age)"), okTitle: strings().termsOfServiceAcceptConfirmAge, successHandler: { _ in
                    accept()
                 })
             } else {
                 accept()
             }
-        }, cancelTitle: L10n.termsOfServiceDisagree, cancel: {
-            confirm(for: context.window, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeText, okTitle: L10n.termsOfServiceDisagreeOK, successHandler: { _ in
-                confirm(for: context.window, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeTextLast, okTitle: L10n.termsOfServiceDisagreeTextLastOK, successHandler: { _ in
+        }, cancelTitle: strings().termsOfServiceDisagree, cancel: {
+            confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeText, okTitle: strings().termsOfServiceDisagreeOK, successHandler: { _ in
+                confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeTextLast, okTitle: strings().termsOfServiceDisagreeTextLastOK, successHandler: { _ in
                     context.engine.accountData.resetAccountDueTermsOfService().start()
                 })
             })
@@ -183,7 +183,7 @@ class TermsModalController: ModalViewController {
         genericView.updateText(attributedString, openBot: { [weak self] botname in
             guard let `self` = self else {return}
             self.proceedBotAfterAgree = botname
-            self.show(toaster: ControllerToaster(text: L10n.termsOfServiceProceedBot(botname)))
+            self.show(toaster: ControllerToaster(text: strings().termsOfServiceProceedBot(botname)))
         })
         
         

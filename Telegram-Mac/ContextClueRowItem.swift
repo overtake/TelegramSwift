@@ -157,7 +157,7 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
     private func disablePrediction() {
         guard let window = self.window as? Window, let item = item as? ContextClueRowItem else { return }
         let sharedContext = item.context.sharedContext
-        confirm(for: window, information: L10n.generalSettingsEmojiPredictionDisableText, okTitle: L10n.generalSettingsEmojiPredictionDisable, successHandler: { _ in
+        confirm(for: window, information: strings().generalSettingsEmojiPredictionDisableText, okTitle: strings().generalSettingsEmojiPredictionDisable, successHandler: { _ in
             _ = updateBaseAppSettingsInteractively(accountManager: sharedContext.accountManager, { current in
                 return current.withUpdatedPredictEmoji(false)
             }).start()

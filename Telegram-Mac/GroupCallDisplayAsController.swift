@@ -18,7 +18,7 @@ import Postbox
 private final class DisplayMeAsHeaderItem : GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     init(_ initialSize: NSSize, stableId: AnyHashable, isAlone: Bool, isGroup: Bool) {
-        textLayout = .init(.initialize(string: isAlone ? L10n.displayMeAsAlone : isGroup ? L10n.displayMeAsTextGroup : L10n.displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
+        textLayout = .init(.initialize(string: isAlone ? strings().displayMeAsAlone : isGroup ? strings().displayMeAsTextGroup : strings().displayMeAsText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize, stableId: stableId)
     }
     override var height: CGFloat {
@@ -131,7 +131,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let peer = state.peer {
         
                 
-        let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || !isEmpty ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: L10n.displayMeAsPersonalAccount)
+        let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || !isEmpty ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: strings().displayMeAsPersonalAccount)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                 arguments.select(tuple.peer.peer.id)
@@ -139,7 +139,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         
         if isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.displayMeAsAloneDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().displayMeAsAloneDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         }
         index += 1
     }
@@ -153,12 +153,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 var status: String?
                 if let subscribers = peer.subscribers {
                     if peer.peer.isChannel {
-                        status = L10n.voiceChatJoinAsChannelCountable(Int(subscribers))
+                        status = strings().voiceChatJoinAsChannelCountable(Int(subscribers))
                     } else if peer.peer.isSupergroup || peer.peer.isGroup {
-                        status = L10n.voiceChatJoinAsGroupCountable(Int(subscribers))
+                        status = strings().voiceChatJoinAsGroupCountable(Int(subscribers))
                     }
                 } else {
-                    status = L10n.chatChannelBadge
+                    status = strings().chatChannelBadge
                 }
                 
                 var viewType = bestGeneralViewType(list, for: peer)
@@ -196,14 +196,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     if arguments.canBeScheduled {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_schedule, data: .init(name: L10n.displayMeAsScheduled, color: theme.colors.text, type: .switchable(state.schedule), viewType: state.schedule ? .firstItem : .singleItem, action: arguments.toggleSchedule)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_schedule, data: .init(name: strings().displayMeAsScheduled, color: theme.colors.text, type: .switchable(state.schedule), viewType: state.schedule ? .firstItem : .singleItem, action: arguments.toggleSchedule)))
         index += 1
         if state.schedule, let scheduleDate = state.scheduleDate {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_schedule_time, equatable: nil, comparable: nil, item: { initialSize, stableId in
                 return DatePickerRowItem(initialSize, stableId: stableId, viewType: .lastItem, initialDate: scheduleDate, update: arguments.updateScheduleDate)
             }))
             index += 1
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.displayMeAsScheduledDesc(timerText(Int(scheduleDate.timeIntervalSince1970) - Int(Date().timeIntervalSince1970)))), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().displayMeAsScheduledDesc(timerText(Int(scheduleDate.timeIntervalSince1970) - Int(Date().timeIntervalSince1970)))), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         }
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -284,7 +284,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
     
     timer.start()
     
-    let controller = InputDataController(dataSignal: signal, title: canBeScheduled ? L10n.displayMeAsNewTitle : L10n.displayMeAsTitle)
+    let controller = InputDataController(dataSignal: signal, title: canBeScheduled ? strings().displayMeAsNewTitle : strings().displayMeAsTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -321,12 +321,12 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
             let state = stateValue.with { $0 }
             if canBeScheduled {
                 if state.schedule {
-                    button.set(text: L10n.displayMeAsNewScheduleAs(title), for: .Normal)
+                    button.set(text: strings().displayMeAsNewScheduleAs(title), for: .Normal)
                 } else {
-                    button.set(text: L10n.displayMeAsNewStartAs(title), for: .Normal)
+                    button.set(text: strings().displayMeAsNewStartAs(title), for: .Normal)
                 }
             } else {
-                button.set(text: L10n.displayMeAsContinueAs(title), for: .Normal)
+                button.set(text: strings().displayMeAsContinueAs(title), for: .Normal)
             }
             
         }

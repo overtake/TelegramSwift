@@ -32,9 +32,9 @@ final class RequestJoinChatRowItem : GeneralRowItem {
         
         let countText: String
         if isChannelOrMegagroup {
-            countText = L10n.peerStatusSubscribersCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
+            countText = strings().peerStatusSubscribersCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
         } else {
-            countText = L10n.peerStatusMemberCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
+            countText = strings().peerStatusMemberCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
         }
         
         self.statusLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)

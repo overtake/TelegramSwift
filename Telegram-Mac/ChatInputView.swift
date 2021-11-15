@@ -9,7 +9,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import Postbox
 
 
@@ -76,7 +76,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private let rtfAttachmentsDisposable = MetaDisposable()
     
     private var botMenuView: ChatInputMenuView?
-    
+    private var sendAsView: ChatInputSendAsView?
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
         super.init(frame: frameRect)
@@ -154,9 +154,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if case let .replyThread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
-                return L10n.messagesPlaceholderComment
+                return strings().messagesPlaceholderComment
             case .replies:
-                return L10n.messagesPlaceholderReply
+                return strings().messagesPlaceholderReply
             }
         }
         if let replyMarkup = chatInteraction.presentation.keyboardButtonsMessage?.replyMarkup {
@@ -167,14 +167,17 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if let peer = chatInteraction.presentation.peer {
             if let peer = peer as? TelegramChannel {
                 if peer.hasPermission(.canBeAnonymous) {
-                    return L10n.messagesPlaceholderAnonymous
+                    return strings().messagesPlaceholderAnonymous
                 }
             }
             if peer.isChannel {
-                return FastSettings.isChannelMessagesMuted(peer.id) ? L10n.messagesPlaceholderSilentBroadcast : L10n.messagesPlaceholderBroadcast
+                return FastSettings.isChannelMessagesMuted(peer.id) ? strings().messagesPlaceholderSilentBroadcast : strings().messagesPlaceholderBroadcast
             }
         }
-        return L10n.messagesPlaceholderSentMessage
+        if !chatInteraction.peerIsAccountPeer {
+            return strings().messagesPlaceholderAnonymous
+        }
+        return strings().messagesPlaceholderSentMessage
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -451,13 +454,24 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         } else {
             if let view = self.botMenuView {
                 self.botMenuView = nil
-                if animated {
-                    view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                        view?.removeFromSuperview()
-                    })
-                } else {
-                    view.removeFromSuperview()
-                }
+                performSubviewRemoval(view, animated: animated)
+            }
+        }
+        
+        if let sendAsPeers = inputState.sendAsPeers, !sendAsPeers.isEmpty {
+            let current: ChatInputSendAsView
+            if let view = self.sendAsView {
+                current = view
+            } else {
+                current = ChatInputSendAsView(frame: NSMakeRect(0, 0, 50, 50))
+                self.sendAsView = current
+                contentView.addSubview(current)
+            }
+            current.update(sendAsPeers, currentPeerId: inputState.currentSendAsPeerId ?? self.chatInteraction.context.peerId, chatInteraction: self.chatInteraction, animated: animated)
+        } else {
+            if let view = self.sendAsView {
+                self.sendAsView = nil
+               performSubviewRemoval(view, animated: animated)
             }
         }
     }
@@ -514,6 +528,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if let botMenuView = botMenuView {
             botMenuView.setFrameOrigin(.zero)
             leftInset += botMenuView.frame.width
+        }
+        if let sendAsView = sendAsView {
+            sendAsView.setFrameOrigin(.zero)
+            leftInset += sendAsView.frame.width
         }
         
         attachView.setFrameOrigin(NSMakePoint(leftInset, 0))
@@ -591,13 +609,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if FastSettings.checkSendingAbility(for: event) {
             let text = textView.string().trimmed
             if text.length > chatInteraction.presentation.maxInputCharacters {
-                alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.presentation.maxInputCharacters)))
+                alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.presentation.maxInputCharacters)))
                 return true
             }
             if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
                 chatInteraction.sendMessage(false, nil)
-                
-                chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.activitySpace, activity: .typingText, isPresent: false)
+                if self.chatInteraction.peerIsAccountPeer {
+                    chatInteraction.context.account.updateLocalInputActivity(peerId: chatInteraction.activitySpace, activity: .typingText, isPresent: false)
+                }
                 markNextTextChangeToFalseActivity = true
             } else if text.isEmpty {
                 chatInteraction.scrollToLatest(true)
@@ -607,6 +626,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         }
         return false
     }
+    
     
     var currentActionView: NSView {
         return self.actionsView.currentActionView
@@ -685,7 +705,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             sendActivityDisposable.set((Signal<Bool, NoError>.single(!state.inputText.isEmpty) |> then(Signal<Bool, NoError>.single(false) |> delay(4.0, queue: Queue.mainQueue()))).start(next: { [weak self] isPresent in
                 if let chatInteraction = self?.chatInteraction, let peer = chatInteraction.presentation.peer, !peer.isChannel && chatInteraction.presentation.state != .editing {
-                    chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: isPresent)
+                    if self?.chatInteraction.peerIsAccountPeer == true {
+                        chatInteraction.context.account.updateLocalInputActivity(peerId: .init(peerId: peer.id, category: chatInteraction.mode.activityCategory), activity: .typingText, isPresent: isPresent)
+                    }
                 }
             }))
         }
@@ -705,6 +727,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         var leftInset: CGFloat = attachView.frame.width
         if let botMenu = self.botMenuView {
             leftInset += botMenu.frame.width
+        }
+        if let sendAsView = self.sendAsView {
+            leftInset += sendAsView.frame.width
         }
         return NSMakeSize(contentView.frame.width - actionsView.frame.width - leftInset, textView.frame.height)
     }

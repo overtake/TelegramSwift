@@ -209,19 +209,19 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.groupAccess.canMakeVoiceChat {
                             if peer.isSupergroup, isUnmutedForAll {
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                             } else {
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                entries.append(.inviteLink(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
+                                entries.append(.inviteLink(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                             }
                         } else {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                         }
                     }
                 }
                 
                 if !members.0.isEmpty  {
-                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteGroupMembers))
+                    entries.append(.separator(index, customTheme(), strings().voiceChatInviteGroupMembers))
                     index += 1
                 }
                 
@@ -232,7 +232,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 }
                 
                 if !members.1.isEmpty {
-                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteContacts))
+                    entries.append(.separator(index, customTheme(), strings().voiceChatInviteContacts))
                     index += 1
                 }
                 
@@ -242,7 +242,7 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                 }
                 
                 if !members.2.isEmpty {
-                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteGlobalSearch))
+                    entries.append(.separator(index, customTheme(), strings().voiceChatInviteGlobalSearch))
                     index += 1
                 }
                 
@@ -282,7 +282,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
     }
     
     override var okTitle: String? {
-        return L10n.voiceChatInviteInvite
+        return strings().voiceChatInviteInvite
     }
     
     private let cachedContacts:Atomic<[PeerId]> = Atomic(value: [])
@@ -398,22 +398,22 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                         if peer.addressName != nil {
                             if peer.groupAccess.canMakeVoiceChat {
                                 if peer.isSupergroup, isUnmutedForAll {
-                                    entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                    entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                                 } else {
-                                    entries.append(.inviteLink(L10n.voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                    entries.append(.inviteLink(L10n.voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                    entries.append(.inviteLink(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
+                                    entries.append(.inviteLink(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                                 }
                             } else {
-                                entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                             }
                         } else {
-                            entries.append(.inviteLink(L10n.voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                         }
                     }
                 }
                 
                 if !members.0.isEmpty {
-                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteChats))
+                    entries.append(.separator(index, customTheme(), strings().voiceChatInviteChats))
                     index += 1
                 }
                 
@@ -423,7 +423,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                 }
                 
                 if !members.1.isEmpty {
-                    entries.append(.separator(index, customTheme(), L10n.voiceChatInviteGlobalSearch))
+                    entries.append(.separator(index, customTheme(), strings().voiceChatInviteGlobalSearch))
                     index += 1
                 }
                 
@@ -450,10 +450,10 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
     let behaviour: SelectPeersBehavior
     let title: String
     if let peer = data.call.peer, peer.isChannel {
-        title = L10n.voiceChatInviteChannelsTitle
+        title = strings().voiceChatInviteChannelsTitle
         behaviour = GroupCallInviteMembersBehaviour(data: data, window: window)
     } else {
-        title = L10n.voiceChatInviteTitle
+        title = strings().voiceChatInviteTitle
         behaviour = GroupCallAddMembersBehaviour(data: data, window: window)
     }
     let account = data.call.account
@@ -475,7 +475,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                     return (user: $0.getPeer(peerId), chat: $0.getPeer(callPeerId))
                 } |> mapToSignal { [weak window] values in
                     if let window = window {
-                        return confirmSignal(for: window, information: L10n.voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: L10n.voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
+                        return confirmSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: strings().voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
                             |> take(1)
                         |> mapToSignal { _ in
                             if peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -521,14 +521,14 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                             if peer.isSupergroup && isUnmutedForAll {
                                 third = nil
                             } else {
-                                third = L10n.voiceChatInviteConfirmThird
+                                third = strings().voiceChatInviteConfirmThird
                             }
                         } else {
                             third = nil
                         }
                         
                         if let third = third {
-                            modernConfirm(for: window, header: L10n.voiceChatInviteConfirmHeader, information: L10n.voiceChatInviteConfirmText, okTitle: L10n.voiceChatInviteConfirmOK, cancelTitle: L10n.modalCancel, thridTitle: third, successHandler: { result in
+                            modernConfirm(for: window, header: strings().voiceChatInviteConfirmHeader, information: strings().voiceChatInviteConfirmText, okTitle: strings().voiceChatInviteConfirmOK, cancelTitle: strings().modalCancel, thridTitle: third, successHandler: { result in
                                 
                                 let link: String
                                 switch result {
@@ -577,14 +577,14 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                             } else if let speakerLink = links.speakerLink  {
                                 copyToClipboard(speakerLink)
                             }
-                            showModalText(for: window, text: L10n.shareLinkCopied)
+                            showModalText(for: window, text: strings().shareLinkCopied)
                         }
                     })
                 } else {
                     _ = showModalProgress(signal: permanentExportedInvitation(context: context, peerId: callPeerId), for: window).start(next: { [weak window] link in
                         if let link = link, let window = window {
                             copyToClipboard(link.link)
-                            showModalText(for: window, text: L10n.shareLinkCopied)
+                            showModalText(for: window, text: strings().shareLinkCopied)
                         }
                     })
                 }

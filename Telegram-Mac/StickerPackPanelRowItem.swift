@@ -50,7 +50,7 @@ class StickerPackPanelRowItem: TableRowItem {
                 self.packReference = nil
             }
         case .recent:
-            title = L10n.stickersRecent
+            title = strings().stickersRecent
             self.packReference = nil
         case .saved:
             title = nil
@@ -72,7 +72,7 @@ class StickerPackPanelRowItem: TableRowItem {
             if packInfo.featured {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.text, font: .medium(14))
                 _ = attributed.append(string: "\n")
-                _ = attributed.append(string: L10n.stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
+                _ = attributed.append(string: strings().stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
             } else {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
             }
@@ -128,7 +128,7 @@ class StickerPackPanelRowItem: TableRowItem {
                 inner: switch packInfo {
                 case .saved, .recent:
                     if let reference = file.stickerReference {
-                        items.append(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
+                        items.append(ContextMenuItem(strings().contextViewStickerSet, handler: { [weak self] in
                             self?.arguments.showPack(reference)
                         }))
                     }
@@ -138,18 +138,18 @@ class StickerPackPanelRowItem: TableRowItem {
                 inner: switch packInfo {
                 case .saved:
                     if let mediaId = file.id {
-                        items.append(ContextMenuItem(L10n.contextRemoveFaveSticker, handler: {
+                        items.append(ContextMenuItem(strings().contextRemoveFaveSticker, handler: {
                             _ = removeSavedSticker(postbox: context.account.postbox, mediaId: mediaId).start()
                         }))
                     }
                 default:
                     if packInfo.installed {
-                        items.append(ContextMenuItem(L10n.chatContextAddFavoriteSticker, handler: {
+                        items.append(ContextMenuItem(strings().chatContextAddFavoriteSticker, handler: {
                             _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
                         }))
                     }
                 }
-                items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak self] in
+                items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
                     guard let `self` = self else {
                         return
                     }
@@ -162,7 +162,7 @@ class StickerPackPanelRowItem: TableRowItem {
                     }
                 }))
                 
-                items.append(ContextMenuItem(L10n.chatSendScheduledMessage, handler: { [weak self] in
+                items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
                     guard let `self` = self else {
                         return
                     }
@@ -469,7 +469,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.addButton!.set(background: theme.colors.accentSelect.withAlphaComponent(0.8), for: .Highlight)
                 self.addButton!.set(font: .medium(.text), for: .Normal)
                 self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
-                self.addButton!.set(text: L10n.stickersSearchAdd, for: .Normal)
+                self.addButton!.set(text: strings().stickersSearchAdd, for: .Normal)
                 _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
                 self.addButton!.layer?.cornerRadius = .cornerRadius
                 self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)
@@ -483,7 +483,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.addButton!.set(background: theme.colors.grayForeground.withAlphaComponent(0.8), for: .Highlight)
                 self.addButton!.set(font: .medium(.text), for: .Normal)
                 self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
-                self.addButton!.set(text: L10n.stickersSearchAdded, for: .Normal)
+                self.addButton!.set(text: strings().stickersSearchAdded, for: .Normal)
                 _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
                 self.addButton!.layer?.cornerRadius = .cornerRadius
                 self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)

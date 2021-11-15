@@ -12,7 +12,6 @@ import SwiftSignalKit
 
 import TelegramCore
 import Postbox
-import TelegramApi
 
 
 
@@ -365,7 +364,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
     if !state.isAdmin {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            let text:String = state.peer?.peer.isChannel == true ? L10n.manageLinksHeaderChannelDesc :  L10n.manageLinksHeaderGroupDesc
+            let text:String = state.peer?.peer.isChannel == true ? strings().manageLinksHeaderChannelDesc :  strings().manageLinksHeaderGroupDesc
             return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
         }))
         index += 1
@@ -375,7 +374,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     }
 
    // if !state.isAdmin || state.peer?.peer.addressName == nil {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().manageLinksInviteLink), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
         var peers = state.permanentImporterState?.importers.map { $0.peer } ?? []
@@ -386,19 +385,19 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
 
                 var items:[ContextMenuItem] = []
                 if let permanent = state.permanent {
-                    items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                    items.append(ContextMenuItem(strings().manageLinksContextCopy, handler: {
                         arguments.copyLink(permanent.link)
                     }))
                     if state.adminPeer?.peer.isBot == true {
                         
                     } else {
-                        items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                        items.append(ContextMenuItem(strings().manageLinksContextRevoke, handler: {
                             arguments.revokeLink(permanent)
                         }))
                     }
                     
                 } else if let addressName = state.peer?.peer.addressName {
-                    items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                    items.append(ContextMenuItem(strings().manageLinksContextCopy, handler: {
                         arguments.copyLink(addressName)
                     }))
                 }
@@ -408,7 +407,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         }))
 
         if state.isAdmin, let peer = state.peer, let adminPeer = state.adminPeer {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdminPermanentDesc(adminPeer.peer.displayTitle, peer.peer.displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().manageLinksAdminPermanentDesc(adminPeer.peer.displayTitle, peer.peer.displayTitle)), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
             index += 1
         }
 
@@ -419,7 +418,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     
 
     if !state.isAdmin || (state.list != nil && !state.list!.isEmpty) {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().manageLinksAdditionLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
     }
 
@@ -432,12 +431,12 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     if !state.isAdmin {
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_link, equatable: InputDataEquatable(viewType), comparable: nil, item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.manageLinksCreateNew, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.newLink, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 43, thumbInset: 0))
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().manageLinksCreateNew, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.newLink, drawCustomSeparator: true, thumb: GeneralThumbAdditional(thumb: theme.icons.proxyAddProxy, textInset: 43, thumbInset: 0))
         }))
         index += 1
 
         
-//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: L10n.manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink)))
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_link, data: .init(name: strings().manageLinksCreateNew, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, type: .none, viewType: viewType, enabled: true, action: arguments.newLink)))
 //        index += 1
     }
     if let list = state.list {
@@ -458,17 +457,17 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                     return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
 
                         var items:[ContextMenuItem] = []
-                        items.append(ContextMenuItem(L10n.manageLinksContextCopy, handler: {
+                        items.append(ContextMenuItem(strings().manageLinksContextCopy, handler: {
                             arguments.copyLink(link.link)
                         }))
                         if !link.isRevoked {
                             if !link.isExpired {
-                                items.append(ContextMenuItem(L10n.manageLinksContextShare, handler: {
+                                items.append(ContextMenuItem(strings().manageLinksContextShare, handler: {
                                     arguments.shareLink(link.link)
                                 }))
                             }
                             if !link.isPermanent {
-                                items.append(ContextMenuItem(L10n.manageLinksContextEdit, handler: {
+                                items.append(ContextMenuItem(strings().manageLinksContextEdit, handler: {
                                     arguments.editLink(link)
                                 }))
                             }
@@ -476,7 +475,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                             if state.adminPeer?.peer.isBot == true {
                                 
                             } else {
-                                items.append(ContextMenuItem(L10n.manageLinksContextRevoke, handler: {
+                                items.append(ContextMenuItem(strings().manageLinksContextRevoke, handler: {
                                     arguments.revokeLink(link)
                                 }))
                             }
@@ -489,7 +488,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             }
         } else {
             if !state.isAdmin {
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksEmptyDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().manageLinksEmptyDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
                 index += 1
             }
         }
@@ -502,11 +501,11 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                 sectionId += 1
             }
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().manageLinksRevokedLinks), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
           // if !state.isAdmin {
-                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: L10n.manageLinksDeleteAll, color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll)))
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_delete_all, data: .init(name: strings().manageLinksDeleteAll, color: theme.colors.redUI, icon: nil, type: .none, viewType: .firstItem, enabled: true, action: arguments.deleteAll)))
                 index += 1
          //   }
 
@@ -527,7 +526,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_links_revoked([link]), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                     return InviteLinkRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, link: tuple.link, action: arguments.open, menuItems: { link in
                         var items:[ContextMenuItem] = []
-                        items.append(ContextMenuItem(L10n.manageLinksDelete, handler: {
+                        items.append(ContextMenuItem(strings().manageLinksDelete, handler: {
                             arguments.deleteLink(link)
                         }))
                         return .single(items)
@@ -552,7 +551,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
         sectionId += 1
 
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.manageLinksOtherAdmins), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().manageLinksOtherAdmins), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
         let creators = creators.filter { $0.peer.peer != nil }
@@ -561,7 +560,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             let viewType = bestGeneralViewType(creators, for: i)
 
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: L10n.manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openAdminLinks(creator)
                 })
             }))
@@ -590,10 +589,10 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
     let arguments = InviteLinksArguments(context: context, shareLink: { link in
         showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
     }, copyLink: { link in
-        getController?()?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+        getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
         copyToClipboard(link)
     }, revokeLink: { [weak manager] link in
-        confirm(for: context.window, header: L10n.channelRevokeLinkConfirmHeader, information: L10n.channelRevokeLinkConfirmText, okTitle: L10n.channelRevokeLinkConfirmOK, cancelTitle: L10n.modalCancel, successHandler: { _ in
+        confirm(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: context.window).start(completed:{
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
@@ -625,7 +624,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             })
         }
     }, deleteAll: { [weak manager] in
-        confirm(for: context.window, header: L10n.manageLinksDeleteAll, information: L10n.manageLinksDeleteAllConfirm, okTitle: L10n.manageLinksDeleteAll, cancelTitle: L10n.modalCancel, successHandler: { [weak manager] _ in
+        confirm(for: context.window, header: strings().manageLinksDeleteAll, information: strings().manageLinksDeleteAllConfirm, okTitle: strings().manageLinksDeleteAll, cancelTitle: strings().modalCancel, successHandler: { [weak manager] _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.deleteAllRevokedPeerExportedInvitations(), for: context.window).start(completed:{
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
@@ -693,7 +692,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         return InputDataSignalValue(entries: entries($0, arguments: arguments), animated: true)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.manageLinksTitleNew, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().manageLinksTitleNew, removeAfterDisappear: false, hasDone: false)
         
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -705,13 +704,13 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         if let peer = peer {
             return peer.displayTitle
         } else {
-            return L10n.manageLinksTitleNew
+            return strings().manageLinksTitleNew
         }
     }
     controller.getStatus = {
         let isAdmin = stateValue.with { $0.isAdmin }
         if isAdmin {
-            return L10n.manageLinksTitleCountCountable(stateValue.with { $0.totalCount })
+            return strings().manageLinksTitleCountCountable(stateValue.with { $0.totalCount })
         } else {
             return nil
         }

@@ -685,10 +685,10 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         
         var items:[SectionControllerItem] = []
         if mode == .common {
-            items.append(SectionControllerItem(title:{L10n.entertainmentEmoji.uppercased()}, controller: emoji))
+            items.append(SectionControllerItem(title:{strings().entertainmentEmoji.uppercased()}, controller: emoji))
         }
-        items.append(SectionControllerItem(title: {L10n.entertainmentStickers.uppercased()}, controller: stickers))
-        items.append(SectionControllerItem(title: {L10n.entertainmentGIF.uppercased()}, controller: gifs))
+        items.append(SectionControllerItem(title: {strings().entertainmentStickers.uppercased()}, controller: stickers))
+        items.append(SectionControllerItem(title: {strings().entertainmentGIF.uppercased()}, controller: gifs))
         
         let index: Int
         if mode == .selectAvatar {

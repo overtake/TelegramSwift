@@ -113,19 +113,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     
     if let address = state.address {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutInfoShippingInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoShippingInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address1), error: nil, identifier: _id_checkout_info_address1, mode: .plain, data: .init(viewType: .firstItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoAddress1), inputPlaceholder: L10n.checkoutInfoShippingInfoAddress1Placeholder, filter: { $0 }, limit: 64))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address1), error: nil, identifier: _id_checkout_info_address1, mode: .plain, data: .init(viewType: .firstItem), placeholder: InputDataInputPlaceholder(strings().checkoutInfoShippingInfoAddress1), inputPlaceholder: strings().checkoutInfoShippingInfoAddress1Placeholder, filter: { $0 }, limit: 64))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address2), error: nil, identifier: _id_checkout_info_address2, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoAddress2), inputPlaceholder: L10n.checkoutInfoShippingInfoAddress2Placeholder, filter: { $0 }, limit: 64))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.address2), error: nil, identifier: _id_checkout_info_address2, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(strings().checkoutInfoShippingInfoAddress2), inputPlaceholder: strings().checkoutInfoShippingInfoAddress2Placeholder, filter: { $0 }, limit: 64))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.city), error: nil, identifier: _id_checkout_info_city, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoCity), inputPlaceholder: L10n.checkoutInfoShippingInfoCityPlaceholder, filter: { $0 }, limit: 64))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.city), error: nil, identifier: _id_checkout_info_city, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(strings().checkoutInfoShippingInfoCity), inputPlaceholder: strings().checkoutInfoShippingInfoCityPlaceholder, filter: { $0 }, limit: 64))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.state), error: nil, identifier: _id_checkout_info_state, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoState), inputPlaceholder: L10n.checkoutInfoShippingInfoStatePlaceholder, filter: { $0 }, limit: 64))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.state), error: nil, identifier: _id_checkout_info_state, mode: .plain, data: .init(viewType: .innerItem), placeholder: InputDataInputPlaceholder(strings().checkoutInfoShippingInfoState), inputPlaceholder: strings().checkoutInfoShippingInfoStatePlaceholder, filter: { $0 }, limit: 64))
         index += 1
         
         
@@ -140,12 +140,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: .string(state.address?.country), error: nil, identifier: _id_checkout_info_country, placeholder: L10n.checkoutInfoShippingInfoCountry, viewType: .innerItem, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: .string(state.address?.country), error: nil, identifier: _id_checkout_info_country, placeholder: strings().checkoutInfoShippingInfoCountry, viewType: .innerItem, values: countries))
         index += 1
 
 
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.postcode), error: nil, identifier: _id_checkout_info_postcode, mode: .plain, data: .init(viewType: .lastItem), placeholder: InputDataInputPlaceholder(L10n.checkoutInfoShippingInfoPostcode), inputPlaceholder: L10n.checkoutInfoShippingInfoPostcodePlaceholder, filter: { $0 }, limit: 12))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(address.postcode), error: nil, identifier: _id_checkout_info_postcode, mode: .plain, data: .init(viewType: .lastItem), placeholder: InputDataInputPlaceholder(strings().checkoutInfoShippingInfoPostcode), inputPlaceholder: strings().checkoutInfoShippingInfoPostcodePlaceholder, filter: { $0 }, limit: 12))
         index += 1
 
     }
@@ -155,7 +155,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
         }
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutInfoReceiverInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoReceiverInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
         
@@ -170,13 +170,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         var items:[Tuple] = []
         
         if let name = state.name {
-            items.append(Tuple(id: _id_checkout_info_name, name: L10n.checkoutInfoReceiverInfoName, placeholder: L10n.checkoutInfoReceiverInfoNamePlaceholder, value: .string(name), error: state.errors[_id_checkout_info_name]))
+            items.append(Tuple(id: _id_checkout_info_name, name: strings().checkoutInfoReceiverInfoName, placeholder: strings().checkoutInfoReceiverInfoNamePlaceholder, value: .string(name), error: state.errors[_id_checkout_info_name]))
         }
         if let email = state.email {
-            items.append(Tuple(id: _id_checkout_info_email, name: L10n.checkoutInfoReceiverInfoEmail, placeholder: L10n.checkoutInfoReceiverInfoEmailPlaceholder, value: .string(email), error: state.errors[_id_checkout_info_email]))
+            items.append(Tuple(id: _id_checkout_info_email, name: strings().checkoutInfoReceiverInfoEmail, placeholder: strings().checkoutInfoReceiverInfoEmailPlaceholder, value: .string(email), error: state.errors[_id_checkout_info_email]))
         }
         if let phone = state.phone {
-            items.append(Tuple(id: _id_checkout_info_phone, name: L10n.checkoutInfoReceiverInfoPhone, placeholder: L10n.checkoutInfoReceiverInfoPhone, value: .string(phone), error: state.errors[_id_checkout_info_phone]))
+            items.append(Tuple(id: _id_checkout_info_phone, name: strings().checkoutInfoReceiverInfoPhone, placeholder: strings().checkoutInfoReceiverInfoPhone, value: .string(phone), error: state.errors[_id_checkout_info_phone]))
         }
         
         for item in items {
@@ -188,9 +188,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_info_save_info, data: .init(name: L10n.checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, action: arguments.toggleSaveInfo)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_info_save_info, data: .init(name: strings().checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, action: arguments.toggleSaveInfo)))
     index += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutInfoSaveInfoHelp), data: InputDataGeneralTextData.init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoSaveInfoHelp), data: InputDataGeneralTextData.init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -231,7 +231,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.checkoutInfoTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().checkoutInfoTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -276,27 +276,27 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
                 var id: InputDataIdentifier? = nil
                 switch error {
                     case .shippingNotAvailable:
-                        text = L10n.checkoutInfoErrorShippingNotAvailable
+                        text = strings().checkoutInfoErrorShippingNotAvailable
                     case .addressStateInvalid:
-                        text = L10n.checkoutInfoErrorStateInvalid
+                        text = strings().checkoutInfoErrorStateInvalid
                         id = _id_checkout_info_state
                     case .addressPostcodeInvalid:
-                        text = L10n.checkoutInfoErrorPostcodeInvalid
+                        text = strings().checkoutInfoErrorPostcodeInvalid
                         id = _id_checkout_info_postcode
                     case .addressCityInvalid:
-                        text = L10n.checkoutInfoErrorCityInvalid
+                        text = strings().checkoutInfoErrorCityInvalid
                         id = _id_checkout_info_city
                     case .nameInvalid:
-                        text = L10n.checkoutInfoErrorNameInvalid
+                        text = strings().checkoutInfoErrorNameInvalid
                         id = _id_checkout_info_name
                     case .emailInvalid:
-                        text = L10n.checkoutInfoErrorEmailInvalid
+                        text = strings().checkoutInfoErrorEmailInvalid
                         id = _id_checkout_info_email
                     case .phoneInvalid:
-                        text = L10n.checkoutInfoErrorPhoneInvalid
+                        text = strings().checkoutInfoErrorPhoneInvalid
                         id = _id_checkout_info_phone
                     case .generic:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                 }
                 alert(for: context.window, info: text)
                 if let id = id {
@@ -336,7 +336,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
     
    
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalDone, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

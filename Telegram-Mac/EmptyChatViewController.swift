@@ -97,7 +97,7 @@ class EmptyChatView : View {
             label.backgroundColor = theme.chatBackground
         }
 
-        label.update(TextViewLayout(.initialize(string: L10n.emptyPeerDescription, color: imageView.isHidden ? theme.chatServiceItemTextColor : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
+        label.update(TextViewLayout(.initialize(string: strings().emptyPeerDescription, color: imageView.isHidden ? theme.chatServiceItemTextColor : theme.colors.grayText, font: .medium(imageView.isHidden ? .text : .header)), maximumNumberOfLines: 1, alignment: .center))
         needsLayout = true
     }
     

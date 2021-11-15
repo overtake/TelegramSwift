@@ -126,15 +126,15 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                 }
             })
         case let .addMembers(_, isChannel, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? L10n.channelMembersAddSubscribers : L10n.channelMembersAddMembers, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? strings().channelMembersAddSubscribers : strings().channelMembersAddMembers, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addMembers()
             })
         case let .inviteLink(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelMembersInviteLink, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelMembersInviteLink, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.inviteLink()
             })
         case let .membersDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelMembersMembersListDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersMembersListDesc, viewType: viewType)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
@@ -260,7 +260,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     override var defaultBarTitle: String {
-        return L10n.peerInfoSubscribers
+        return strings().peerInfoSubscribers
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -308,7 +308,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 
             }))
         }, addMembers: {
-            let signal = selectModalPeers(window: context.window, context: context, title: L10n.channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
+            let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
                 return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: mainWindow)
             } |> deliverOnMainQueue
             
@@ -316,37 +316,37 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 let text: String
                 switch error {
                 case .notMutualContact:
-                    text = L10n.channelInfoAddUserLeftError
+                    text = strings().channelInfoAddUserLeftError
                 case .limitExceeded:
-                    text = L10n.channelErrorAddTooMuch
+                    text = strings().channelErrorAddTooMuch
                 case .botDoesntSupportGroups:
-                    text = L10n.channelBotDoesntSupportGroups
+                    text = strings().channelBotDoesntSupportGroups
                 case .tooMuchBots:
-                    text = L10n.channelTooMuchBots
+                    text = strings().channelTooMuchBots
                 case .tooMuchJoined:
-                    text = L10n.inviteChannelsTooMuch
+                    text = strings().inviteChannelsTooMuch
                 case .generic:
-                    text = L10n.unknownError
+                    text = strings().unknownError
                 case let .bot(memberId):
                     let _ = (context.account.postbox.transaction { transaction in
                         return transaction.getPeer(peerId)
                         }
                         |> deliverOnMainQueue).start(next: { peer in
                             guard let peer = peer as? TelegramChannel else {
-                                alert(for: context.window, info: L10n.unknownError)
+                                alert(for: context.window, info: strings().unknownError)
                                 return
                             }
                             if peer.hasPermission(.addAdmins) {
-                                confirm(for: context.window, information: L10n.channelAddBotErrorHaveRights, okTitle: L10n.channelAddBotAsAdmin, successHandler: { _ in
+                                confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
                                     showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
                                 })
                             } else {
-                                alert(for: context.window, info: L10n.channelAddBotErrorHaveRights)
+                                alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
                             }
                         })
                     return
                 case .restricted:
-                    text = L10n.channelErrorAddBlocked
+                    text = strings().channelErrorAddBlocked
                 }
                 alert(for: mainWindow, info: text)
             }, completed: {
@@ -414,7 +414,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     private func searchChannelUsers() {
-        _ = (selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 self?.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
             }

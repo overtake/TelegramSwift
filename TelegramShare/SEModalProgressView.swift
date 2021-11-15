@@ -25,7 +25,7 @@ class SEModalProgressView: View {
         addSubview(containerView)
         self.backgroundColor = theme.colors.blackTransparent
         self.containerView.backgroundColor = theme.colors.grayBackground
-        let layout = TextViewLayout(.initialize(string: tr(L10n.shareExtensionShare), color: theme.colors.text, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: L10n.shareExtensionShare, color: theme.colors.text, font: .normal(.title)))
         layout.measure(width: .greatestFiniteMagnitude)
         
         header.update(layout)
@@ -38,7 +38,7 @@ class SEModalProgressView: View {
         
         cancel.set(font: .medium(.title), for: .Normal)
         cancel.set(color: theme.colors.accent, for: .Normal)
-        cancel.set(text: tr(L10n.shareExtensionCancel), for: .Normal)
+        cancel.set(text: L10n.shareExtensionCancel, for: .Normal)
         _ = cancel.sizeToFit()
         
         cancel.set(handler: { [weak self] _ in

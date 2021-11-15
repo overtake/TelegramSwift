@@ -48,14 +48,14 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_phone_number, equatable: InputDataEquatable(state.phone), comparable: nil, item: { initialSize, stableId in
-        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.newContactPhone, description: state.phone == nil ? L10n.newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.accent, type: .none, viewType: .singleItem, action: {
+        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().newContactPhone, description: state.phone == nil ? strings().newContactPhoneHidden : formatPhoneNumber(state.phone!), descTextColor: theme.colors.accent, type: .none, viewType: .singleItem, action: {
             
         })
     }))
     index += 1
 
     if state.phone == nil {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactPhoneHiddenText(state.firstName)), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newContactPhoneHiddenText(state.firstName)), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
     }
     
@@ -65,12 +65,12 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_exception, data: InputDataGeneralData(name: L10n.newContactExceptionShareMyPhoneNumber, color: theme.colors.text, type: .switchable(state.addToException), viewType: .singleItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_exception, data: InputDataGeneralData(name: strings().newContactExceptionShareMyPhoneNumber, color: theme.colors.text, type: .switchable(state.addToException), viewType: .singleItem, action: {
             arguments.toggleAddToException(!state.addToException)
         })))
         index += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newContactExceptionShareMyPhoneNumberDesc(state.firstName)), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newContactExceptionShareMyPhoneNumberDesc(state.firstName)), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
 
     }
@@ -130,7 +130,7 @@ func NewContactController(context: AccountContext, peerId: PeerId) -> InputDataM
         dismiss?()
     }
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.newContactTitle, validateData: { data in
+    let controller = InputDataController(dataSignal: dataSignal, title: strings().newContactTitle, validateData: { data in
         
         let firstName = stateValue.with { $0.firstName }
         if firstName.isEmpty {
@@ -143,7 +143,7 @@ func NewContactController(context: AccountContext, peerId: PeerId) -> InputDataM
         actionsDisposable.dispose()
     })
     
-    let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: L10n.navigationDone, accept: { [weak controller] in
+    let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         controller?.validateInputValues()
     }, drawBorder: true, height: 50, singleButton: true)
     

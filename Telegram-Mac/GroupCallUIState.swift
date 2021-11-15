@@ -207,7 +207,7 @@ final class GroupCallUIState : Equatable {
     
     var title: String {
         if state.scheduleTimestamp != nil {
-            return L10n.voiceChatTitleScheduled
+            return strings().voiceChatTitleScheduled
         } else if let custom = state.title, !custom.isEmpty {
             return custom
         } else {
@@ -312,9 +312,9 @@ extension GroupCallUIState.ControlsTooltip {
     var text: String {
         switch self.type {
         case .camera:
-            return L10n.voiceChatTooltipEnableCamera
+            return strings().voiceChatTooltipEnableCamera
         case .micro:
-            return L10n.voiceChatTooltipEnableMicro
+            return strings().voiceChatTooltipEnableMicro
         }
     }
 }

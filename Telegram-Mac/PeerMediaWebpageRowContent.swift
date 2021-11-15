@@ -141,7 +141,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                     var items = items
                     if let layout = self.textLayout, layout.selectedRange.hasSelectText {
                         let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
-                        items.insert(ContextMenuItem(L10n.textCopy, handler: {
+                        items.insert(ContextMenuItem(strings().textCopy, handler: {
                             copyToClipboard(text.string)
                         }), at: 0)
                         items.insert(ContextSeparatorItem(), at: 1)
@@ -165,7 +165,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 copyToClipboard(linkLayout.attributedString.string)
                 return false
             }, localizeLinkCopy: { link in
-                return L10n.textContextCopyLink
+                return strings().textContextCopyLink
             })
         }
         

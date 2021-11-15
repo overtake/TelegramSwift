@@ -46,7 +46,7 @@ class WallpaperPatternView : Control {
         self.pattern = pattern
         
 
-        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: colors.first!.brightnessAdjustedColor, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().chatWPPatternNone, color: colors.first!.brightnessAdjustedColor, font: .normal(.title)))
         layout.measure(width: 80)
         emptyTextView.update(layout)
         

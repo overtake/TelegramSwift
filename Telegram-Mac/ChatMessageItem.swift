@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppVideoServices
 import Postbox
 import SwiftSignalKit
 
@@ -97,11 +97,11 @@ class ChatMessageItem: ChatRowItem {
     var actionButtonText: String? {
         if let _ = message?.adAttribute, let author = message?.author {
             if author.isBot {
-                return L10n.chatMessageViewBot
+                return strings().chatMessageViewBot
             } else if author.isGroup || author.isSupergroup {
-                return L10n.chatMessageViewGroup
+                return strings().chatMessageViewGroup
             } else {
-                return L10n.chatMessageViewChannel
+                return strings().chatMessageViewChannel
             }
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
@@ -112,30 +112,30 @@ class ChatMessageItem: ChatRowItem {
                     inner: switch action {
                     case let .joinVoiceChat(hash):
                         if hash != nil {
-                            return L10n.chatMessageJoinVoiceChatAsSpeaker
+                            return strings().chatMessageJoinVoiceChatAsSpeaker
                         } else {
-                            return L10n.chatMessageJoinVoiceChatAsListener
+                            return strings().chatMessageJoinVoiceChatAsListener
                         }
                     default:
                         break inner
                     }
                 }
                 if let postId = postId, postId > 0 {
-                    return L10n.chatMessageActionShowMessage
+                    return strings().chatMessageActionShowMessage
                 }
             default:
                 break
             }
             if webpage.wallpaper != nil {
-                return L10n.chatViewBackground
+                return strings().chatViewBackground
             }
             if webpage.isTheme {
-                return L10n.chatActionViewTheme
+                return strings().chatActionViewTheme
             }
         }
         
         if unsupported {
-            return L10n.chatUnsupportedUpdatedApp
+            return strings().chatUnsupportedUpdatedApp
         }
         
         return nil
@@ -180,7 +180,7 @@ class ChatMessageItem: ChatRowItem {
             let messageAttr:NSMutableAttributedString
             if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: L10n.chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
+                _ = attr.append(string: strings().chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
                 
@@ -274,7 +274,7 @@ class ChatMessageItem: ChatRowItem {
                 
 //                if message.isScam {
 //                    _ = messageAttr.append(string: "\n\n")
-//                    _ = messageAttr.append(string: L10n.chatScamWarning, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .normal(theme.fontSize))
+//                    _ = messageAttr.append(string: strings().chatScamWarning, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .normal(theme.fontSize))
 //                }
             }
             
@@ -472,7 +472,7 @@ class ChatMessageItem: ChatRowItem {
             }
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
-                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
             interactions.menuItems = { [weak self] type in
                 var items:[ContextMenuItem] = []
@@ -502,7 +502,7 @@ class ChatMessageItem: ChatRowItem {
                         
                     }
                     
-                    items.append(ContextMenuItem(layout.selectedRange.hasSelectText ? L10n.chatCopySelectedText : L10n.textCopy, handler: {
+                    items.append(ContextMenuItem(layout.selectedRange.hasSelectText ? strings().chatCopySelectedText : strings().textCopy, handler: {
                         let result = self?.textLayout.interactions.copy?()
                         if let result = result, let strongSelf = self, !result {
                             if strongSelf.textLayout.selectedRange.hasSelectText {
@@ -531,7 +531,7 @@ class ChatMessageItem: ChatRowItem {
                         var effectiveRange: NSRange = NSMakeRange(NSNotFound, 0)
                         if let _ = strongSelf.textLayout.attributedString.attribute(.preformattedPre, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange) {
                             let blockText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange).string
-                            items.append(ContextMenuItem(tr(L10n.chatContextCopyBlock), handler: {
+                            items.append(ContextMenuItem(strings().chatContextCopyBlock, handler: {
                                 copyToClipboard(blockText)
                             }))
                         }
@@ -733,7 +733,7 @@ class ChatMessageItem: ChatRowItem {
                 var items = items
                 return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
                     if data.complete {
-                        items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
+                        items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                             saveAs(file, account: context.account)
                         }))
                     }
@@ -741,7 +741,7 @@ class ChatMessageItem: ChatRowItem {
                     if file.isStaticSticker, let fileId = file.id {
                         return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
                             let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
-                            items.append(ContextMenuItem( !saved ? L10n.chatContextAddFavoriteSticker : L10n.chatContextRemoveFavoriteSticker, handler: {
+                            items.append(ContextMenuItem( !saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
                                 
                                 if !saved {
                                     _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
@@ -753,7 +753,7 @@ class ChatMessageItem: ChatRowItem {
                             return items
                         }
                     } else if file.isVideo && file.isAnimated {
-                        items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                        items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                             let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
                         }))
                     }
@@ -766,14 +766,14 @@ class ChatMessageItem: ChatRowItem {
                 if let resource = image.representations.last?.resource {
                     return context.account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
                         if data.complete {
-                            items.append(ContextMenuItem(L10n.galleryContextCopyToClipboard, handler: {
+                            items.append(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: {
                                 if let path = link(path: data.path, ext: "jpg") {
                                     let pb = NSPasteboard.general
                                     pb.clearContents()
                                     pb.writeObjects([NSURL(fileURLWithPath: path)])
                                 }
                             }))
-                            items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
+                            items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                                 savePanel(file: data.path, ext: "jpg", for: mainWindow)
                             }))
                         }
@@ -791,14 +791,14 @@ class ChatMessageItem: ChatRowItem {
             
             var index: Int? = nil
             for i in 0 ..< items.count {
-                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
+                if items[i].title == strings().messageContextCopyMessageLink1 {
                     index = i
                 }
             }
             
             if index == nil {
                 for i in 0 ..< items.count {
-                    if items[i].title == L10n.messageContextReply1 {
+                    if items[i].title == strings().messageContextReply1 {
                         index = i + 1
                         if items.count > index!, items[index!] is ContextSeparatorItem {
                             index = index! + 1
@@ -808,7 +808,7 @@ class ChatMessageItem: ChatRowItem {
             }
             
             let insert = min(index ?? 0, items.count)
-            items.insert(ContextMenuItem(L10n.textCopyText, handler: { [weak self] in
+            items.insert(ContextMenuItem(strings().textCopyText, handler: { [weak self] in
                 if let string = self?.textLayout.attributedString {
                     if !globalLinkExecutor.copyAttributedString(string) {
                         copyToClipboard(string.string)
@@ -830,13 +830,13 @@ class ChatMessageItem: ChatRowItem {
                         }
                         
                         for i in 0 ..< items.count {
-                            if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
+                            if items[i].title == strings().messageContextCopyMessageLink1 {
                                 items.remove(at: i)
                                 break
                             }
                         }
                         
-                        items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
+                        items.insert(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
                             copyToClipboard(text)
                         }), at: min(1, items.count))
                         
@@ -845,7 +845,7 @@ class ChatMessageItem: ChatRowItem {
                 }
             }
             if let content = self?.webpageLayout?.content, content.type == "proxy" {
-                items.insert(ContextMenuItem(L10n.chatCopyProxyConfiguration, handler: {
+                items.insert(ContextMenuItem(strings().chatCopyProxyConfiguration, handler: {
                     copyToClipboard(content.url)
                 }), at: items.isEmpty ? 0 : 1)
             }
@@ -942,7 +942,7 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
                     copyToClipboard(link)
-                    context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
+                    context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
                 }), range: range)
             case  .Pre:
                 string.addAttribute(.preformattedCode, value: 4.0, range: range)

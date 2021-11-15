@@ -9,10 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TGPassportMRZ
 import Postbox
 import SwiftSignalKit
-
+import OCR
 
 
 
@@ -303,7 +303,7 @@ private enum PassportEntry : TableItemListNodeEntry {
         case .createPassword(_, _, let peer):
             return PassportTwoStepVerificationIntroItem(initialSize, stableId: stableId, peer: peer, action: arguments.createPassword)
         case let .inputEmailCode(_, _, text, limit, error):
-            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: error, currentText: text, placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, updated: { _ in
+            return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: error, currentText: text, placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, updated: { _ in
                 arguments.updateEmailCode()
             }, limit: limit ?? 255)
         case let .description(_, _, text, detectBold):
@@ -318,7 +318,7 @@ private enum PassportEntry : TableItemListNodeEntry {
                 }
             }), detectBold: detectBold, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom:2))
         case .deletePassport:
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.secureIdDeletePassport, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().secureIdDeletePassport, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, action: {
                 arguments.deletePassport()
             })
         case .settingsHeader:
@@ -435,14 +435,14 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
             let pdKeys:[SecureIdValueKey] = [.personalDetails, .idCard, .passport, .driversLicense, .internalPassport]
             let pdValues:[SecureIdValue] = state.values.map{$0.value}.filter{pdKeys.contains($0.key)}
             let pdDesc = pdValues.map({$0.key.requestFieldType.rawValue}).joined(separator: ", ")
-            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .personalDetails, relative: pdKeys, relativeValues: pdValues, title: L10n.secureIdIdentityDocument, description: pdDesc.isEmpty ? L10n.secureIdRequestPermissionIdentityEmpty : pdDesc))
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .personalDetails, relative: pdKeys, relativeValues: pdValues, title: strings().secureIdIdentityDocument, description: pdDesc.isEmpty ? strings().secureIdRequestPermissionIdentityEmpty : pdDesc))
             index += 1
             
             let aKeys:[SecureIdValueKey] = [.address, .rentalAgreement, .utilityBill, .bankStatement, .passportRegistration, .temporaryRegistration]
             //
             let aValues:[SecureIdValue] = state.values.map{$0.value}.filter{aKeys.contains($0.key)}
             let aDesc = aValues.map({$0.key.requestFieldType.rawValue}).joined(separator: ", ")
-            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .address, relative: aKeys, relativeValues: aValues, title: L10n.secureIdResidentialAddress, description:  aDesc.isEmpty ? L10n.secureIdRequestPermissionAddressEmpty : aDesc))
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .address, relative: aKeys, relativeValues: aValues, title: strings().secureIdResidentialAddress, description:  aDesc.isEmpty ? strings().secureIdRequestPermissionAddressEmpty : aDesc))
             index += 1
             
             var pValue: String? = nil
@@ -465,11 +465,11 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                 }
             }
             
-            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .phone, relative: [], relativeValues: state.values.filter{$0.value.key == .phone}.map {$0.value}, title: L10n.secureIdPhoneNumber, description: pValue ?? L10n.secureIdRequestPermissionPhoneEmpty))
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .phone, relative: [], relativeValues: state.values.filter{$0.value.key == .phone}.map {$0.value}, title: strings().secureIdPhoneNumber, description: pValue ?? strings().secureIdRequestPermissionPhoneEmpty))
             index += 1
             
             
-            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .email, relative: [], relativeValues: state.values.filter{$0.value.key == .email}.map {$0.value}, title: L10n.secureIdEmail, description: eValue ?? L10n.secureIdRequestPermissionEmailEmpty))
+            entries.append(.savedField(sectionId: sectionId, index: index, valueType: .email, relative: [], relativeValues: state.values.filter{$0.value.key == .email}.map {$0.value}, title: strings().secureIdEmail, description: eValue ?? strings().secureIdRequestPermissionEmailEmpty))
             index += 1
             
             entries.append(.sectionId(sectionId))
@@ -492,7 +492,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                         entries.append(.inputEmailCode(sectionId: sectionId, index: index, text: state.emailCode, limit: pendingEmail.codeLength, error: state.emailCodeError))
                         
                         
-                        let emailText = L10n.twoStepAuthConfirmationTextNew + "\n\n\(pendingEmail.pattern)\n\n[" + L10n.twoStepAuthConfirmationAbort + "](abortVerification)"
+                        let emailText = strings().twoStepAuthConfirmationTextNew + "\n\n\(pendingEmail.pattern)\n\n[" + strings().twoStepAuthConfirmationAbort + "](abortVerification)"
                         entries.append(.description(sectionId: sectionId, index: index, text: emailText, detectBold: false))
                         index += 1
                     } else {
@@ -560,7 +560,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
             entries.append(.sectionId(sectionId))
             sectionId += 1
             
-            entries.append(.description(sectionId: sectionId, index: index, text: L10n.secureIdRequestedInformationHeader, detectBold: true))
+            entries.append(.description(sectionId: sectionId, index: index, text: strings().secureIdRequestedInformationHeader, detectBold: true))
             index += 1
             
             var filledCount: Int32 = 0
@@ -653,12 +653,12 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                                 }
                                 isFilled = true
 
-                                entries.append(.filledField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), relative: [], title: L10n.secureIdRequestPermissionResidentialAddress, description: desc, value: value, relativeValue: nil))
+                                entries.append(.filledField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), relative: [], title: strings().secureIdRequestPermissionResidentialAddress, description: desc, value: value, relativeValue: nil))
                                 filledCount += 1
                                 
                             }
                             if !isFilled {
-                                entries.append(.emptyField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), value: nil, relativeValue: nil, relative: [], title: L10n.secureIdRequestPermissionResidentialAddress, desc: field.emptyDescription, isError: state.emptyErrors))
+                                entries.append(.emptyField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), value: nil, relativeValue: nil, relative: [], title: strings().secureIdRequestPermissionResidentialAddress, desc: field.emptyDescription, isError: state.emptyErrors))
                             }
                             index += 1
                         }
@@ -678,12 +678,12 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                                 }
                                 
                                 isFilled = true
-                                entries.append(.filledField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), relative: [], title: L10n.secureIdRequestPermissionPersonalDetails, description: desc, value: value, relativeValue: nil))
+                                entries.append(.filledField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), relative: [], title: strings().secureIdRequestPermissionPersonalDetails, description: desc, value: value, relativeValue: nil))
                                 filledCount += 1
                                 
                             }
                             if !isFilled {
-                                entries.append(.emptyField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), value: nil, relativeValue: nil, relative: [], title: L10n.secureIdRequestPermissionPersonalDetails, desc: field.emptyDescription, isError: state.emptyErrors))
+                                entries.append(.emptyField(sectionId: sectionId, index: index, fieldType: FieldRequest(field), value: nil, relativeValue: nil, relative: [], title: strings().secureIdRequestPermissionPersonalDetails, desc: field.emptyDescription, isError: state.emptyErrors))
                             }
                             index += 1
                         }
@@ -713,7 +713,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                    
                     var descText: String
                     if fields.count == 1 {
-                        descText = L10n.secureIdUploadScanSingle(fields[0].rawValue.lowercased())
+                        descText = strings().secureIdUploadScanSingle(fields[0].rawValue.lowercased())
                     } else {
                         let all = fields.prefix(fields.count - 1).reduce("", { current, value in
                             if current.isEmpty {
@@ -721,7 +721,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                             }
                             return current + ", " + value.rawValue.lowercased()
                         })
-                        descText = L10n.secureIdUploadScanMulti(all, fields[fields.count - 1].rawValue.lowercased())
+                        descText = strings().secureIdUploadScanMulti(all, fields[fields.count - 1].rawValue.lowercased())
                     }
                     
                     switch fields[0] {
@@ -735,13 +735,13 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                         case 1:
                             title = fields[0].rawValue
                         case 2:
-                            title = L10n.secureIdRequestTwoDocumentsTitle(fields[0].rawValue, fields[1].rawValue)
+                            title = strings().secureIdRequestTwoDocumentsTitle(fields[0].rawValue, fields[1].rawValue)
                         default:
-                            title = L10n.secureIdRequestPermissionResidentialAddress
+                            title = strings().secureIdRequestPermissionResidentialAddress
                         }
                         
                         if let secondary = secondary?.verificationDocuments {
-                             descText = L10n.secureIdAddressScansCountable(secondary.count)
+                             descText = strings().secureIdAddressScansCountable(secondary.count)
                         }
                         
                         if let value = address, case let .address(address) = value, !isAddressIndepend {
@@ -750,7 +750,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                         
                         
                         if let secondary = secondary?.verificationDocuments, address == nil {
-                            descText = L10n.secureIdAddressScansCountable(secondary.count)
+                            descText = strings().secureIdAddressScansCountable(secondary.count)
                         } else if let value = address, case let .address(address) = value, hasAddress && !isAddressIndepend {
                             descText = [address.street1, address.city, address.state, cManager.item(bySmallCountryName: address.countryCode)?.shortName ?? address.countryCode].compactMap {$0}.filter {!$0.isEmpty}.joined(separator: ", ")
                         }
@@ -765,7 +765,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                             if let result = fields.filter({secondary.requestFieldType.valueKey == $0.valueKey}).first {
                                 if result.hasTranslation && (secondary.translations == nil || secondary.translations!.isEmpty) {
                                     isUnfilled = true
-                                    descText = L10n.secureIdRequestUploadTranslation
+                                    descText = strings().secureIdRequestUploadTranslation
                                 }
                             }
                         }
@@ -821,9 +821,9 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                         case 1:
                             title = fields[0].rawValue
                         case 2:
-                            title = L10n.secureIdRequestTwoDocumentsTitle(fields[0].rawValue, fields[1].rawValue)
+                            title = strings().secureIdRequestTwoDocumentsTitle(fields[0].rawValue, fields[1].rawValue)
                         default:
-                            title = L10n.secureIdRequestPermissionIdentityDocument
+                            title = strings().secureIdRequestPermissionIdentityDocument
                         }
                         
                         
@@ -846,11 +846,11 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                             if let result = fields.filter({secondary.requestFieldType.valueKey == $0.valueKey}).first {
                                 if result.hasSelfie && secondary.selfieVerificationDocument == nil {
                                     isUnfilled = true
-                                    descText = L10n.secureIdRequestUploadSelfie
+                                    descText = strings().secureIdRequestUploadSelfie
                                 }
                                 if result.hasTranslation && (secondary.translations == nil || secondary.translations!.isEmpty) {
                                     isUnfilled = true
-                                    descText = L10n.secureIdRequestUploadTranslation
+                                    descText = strings().secureIdRequestUploadTranslation
                                 }
                             }
                         }
@@ -903,7 +903,7 @@ private func passportEntries(encryptedForm: EncryptedSecureIdForm?, form: Secure
                 }
           
             }
-            let policyText = encryptedForm?.termsUrl != nil ? L10n.secureIdAcceptPolicy("@\(peer.addressName ?? "")") : L10n.secureIdAcceptHelp("@\(peer.addressName ?? "")", "@\(peer.addressName ?? "")")
+            let policyText = encryptedForm?.termsUrl != nil ? strings().secureIdAcceptPolicy("@\(peer.addressName ?? "")") : strings().secureIdAcceptHelp("@\(peer.addressName ?? "")", "@\(peer.addressName ?? "")")
             entries.append(.description(sectionId: sectionId, index: index, text: policyText, detectBold: true))
             index += 1
             
@@ -1721,40 +1721,40 @@ private func createPasswordEntries( _ state: PassportState) -> [InputDataEntry] 
         return value
     }
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHeader), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdCreatePasswordHeader), data: InputDataGeneralTextData()))
     index += 1
     
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_password, mode: .secure, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordPasswordPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordPasswordInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_password, mode: .secure, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdCreatePasswordPasswordPlaceholder), inputPlaceholder: strings().secureIdCreatePasswordPasswordInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value:  .string(""), error: nil, identifier: _id_c_repassword, mode: .secure, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(""), inputPlaceholder: L10n.secureIdCreatePasswordRePasswordInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value:  .string(""), error: nil, identifier: _id_c_repassword, mode: .secure, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(""), inputPlaceholder: strings().secureIdCreatePasswordRePasswordInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
 
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordDescription), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdCreatePasswordDescription), data: InputDataGeneralTextData()))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordHintHeader), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdCreatePasswordHintHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_hint, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordHintPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordHintInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_hint, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdCreatePasswordHintPlaceholder), inputPlaceholder: strings().secureIdCreatePasswordHintInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailHeader), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdCreatePasswordEmailHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_email, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdCreatePasswordEmailPlaceholder), inputPlaceholder: L10n.secureIdCreatePasswordEmailInputPlaceholder, filter: nonFilter, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_c_email, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdCreatePasswordEmailPlaceholder), inputPlaceholder: strings().secureIdCreatePasswordEmailInputPlaceholder, filter: nonFilter, limit: 255))
     index += 1
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdCreatePasswordEmailDescription), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdCreatePasswordEmailDescription), data: InputDataGeneralTextData()))
     index += 1
     
     return entries
@@ -1779,10 +1779,10 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
         if placeholder == email {
             placeholder = ""
         }
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: Int32(email.length)))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdEmailActivateCodePlaceholder), inputPlaceholder: strings().secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: Int32(email.length)))
         index += 1
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdEmailActivateDescription(email)), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdEmailActivateDescription(email)), data: InputDataGeneralTextData()))
         index += 1
         
         return entries
@@ -1793,16 +1793,16 @@ private func emailEntries( _ state: PassportState, updateState: @escaping ((Pass
             placeholder = ""
         }
         
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(email), error: nil, identifier: _id_email_def, data: InputDataGeneralData(name: L10n.secureIdEmailUseSame(email), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(email), error: nil, identifier: _id_email_def, data: InputDataGeneralData(name: strings().secureIdEmailUseSame(email), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
         entries.append(.sectionId(sectionId, type: .legacy))
         sectionId += 1
     }
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(placeholder), error: nil, identifier: _id_email_new, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdEmailEmailPlaceholder), inputPlaceholder: L10n.secureIdEmailEmailInputPlaceholder, filter: {$0}, limit: 254))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(placeholder), error: nil, identifier: _id_email_new, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdEmailEmailPlaceholder), inputPlaceholder: strings().secureIdEmailEmailInputPlaceholder, filter: {$0}, limit: 254))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdEmailUseSameDesc), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdEmailUseSameDesc), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -1820,15 +1820,15 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     sectionId += 1
     //
     if let phone = (state.peer as? TelegramUser)?.phone, !phone.isEmpty {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(phone), error: nil, identifier: _id_phone_def, data: InputDataGeneralData(name: L10n.secureIdPhoneNumberUseSame(formatPhoneNumber(phone)), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(phone), error: nil, identifier: _id_phone_def, data: InputDataGeneralData(name: strings().secureIdPhoneNumberUseSame(formatPhoneNumber(phone)), color: theme.colors.accent, icon: nil, type: .next, action: nil)))
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberUseSameDesc), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdPhoneNumberUseSameDesc), data: InputDataGeneralTextData()))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .legacy))
         sectionId += 1
     }
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
     index += 1
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .string(""), identifier: _id_phone_new, equatable: nil, comparable: nil, item: { initialSize, stableId -> TableRowItem in
@@ -1838,7 +1838,7 @@ private func phoneNumberEntries( _ state: PassportState, updateState: @escaping 
     }))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberNote), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdPhoneNumberNote), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -1854,14 +1854,14 @@ private func confirmPhoneNumberEntries( _ state: PassportState, phoneNumber: Str
     entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
 
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdPhoneNumberHeader), data: InputDataGeneralTextData()))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_phone_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdPhoneNumberConfirmCodePlaceholder), inputPlaceholder: L10n.secureIdPhoneNumberConfirmCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_phone_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdPhoneNumberConfirmCodePlaceholder), inputPlaceholder: strings().secureIdPhoneNumberConfirmCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdPhoneNumberConfirmCodeDesc(formatPhoneNumber(phoneNumber))), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdPhoneNumberConfirmCodeDesc(formatPhoneNumber(phoneNumber))), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -1888,17 +1888,17 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
 
     
     if hasMainField {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdAddressHeader), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdAddressHeader), data: InputDataGeneralTextData()))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street1 ?? .string(address?.street1), error: aErrors?[_id_street1], identifier: _id_street1, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressStreetPlaceholder), inputPlaceholder: L10n.secureIdAddressStreetInputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street1 ?? .string(address?.street1), error: aErrors?[_id_street1], identifier: _id_street1, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdAddressStreetPlaceholder), inputPlaceholder: strings().secureIdAddressStreetInputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street2 ?? .string(address?.street2), error: aErrors?[_id_street2], identifier: _id_street2, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(""), inputPlaceholder: L10n.secureIdAddressStreet1InputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.street2 ?? .string(address?.street2), error: aErrors?[_id_street2], identifier: _id_street2, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(""), inputPlaceholder: strings().secureIdAddressStreet1InputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.city ?? .string(address?.city), error: aErrors?[_id_city], identifier: _id_city, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressCityPlaceholder), inputPlaceholder: L10n.secureIdAddressCityInputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.city ?? .string(address?.city), error: aErrors?[_id_city], identifier: _id_city, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdAddressCityPlaceholder), inputPlaceholder: strings().secureIdAddressCityInputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.state ?? .string(address?.state), error: aErrors?[_id_state], identifier: _id_state, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressRegionPlaceholder), inputPlaceholder: L10n.secureIdAddressRegionInputPlaceholder, filter: nonFilter, limit: 255))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.state ?? .string(address?.state), error: aErrors?[_id_state], identifier: _id_state, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdAddressRegionPlaceholder), inputPlaceholder: strings().secureIdAddressRegionInputPlaceholder, filter: nonFilter, limit: 255))
         index += 1
         
         let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
@@ -1912,10 +1912,10 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdAddressCountryPlaceholder, viewType: .legacy, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.addressIntermediateState?.countryCode ?? .string(address?.countryCode), error: aErrors?[_id_country], identifier: _id_country, placeholder: strings().secureIdAddressCountryPlaceholder, viewType: .legacy, values: countries))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdAddressPostcodePlaceholder), inputPlaceholder: L10n.secureIdAddressPostcodeInputPlaceholder, filter: { text in
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.addressIntermediateState?.postcode ?? .string(address?.postcode), error: aErrors?[_id_postcode], identifier: _id_postcode, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdAddressPostcodePlaceholder), inputPlaceholder: strings().secureIdAddressPostcodeInputPlaceholder, filter: { text in
             return latinFilter(text, .address, _id_postcode, true, updateState)
         }, limit: 10))
         index += 1
@@ -1930,7 +1930,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
     if let relative = relative {
         let rErrors = state.errors[relative.valueKey]
 
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdScansHeader), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdScansHeader), data: InputDataGeneralTextData()))
         index += 1
         
         if let scanError = rErrors?[_id_scan] {
@@ -1944,7 +1944,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         
         if let accessContext = state.accessContext {
             for file in files {
-                let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
+                let header = strings().secureIdScanNumber(Int(fileIndex + 1))
                 entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier:  InputDataIdentifier("_file_\(fileIndex)"), equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[file.errorIdentifier], header: header, removeAction: { value in
                         updateState { current in
@@ -1958,14 +1958,14 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         }
         
         if files.count < scansLimit {
-            entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_scan, placeholder: files.count > 0 ? L10n.secureIdUploadAdditionalScan : L10n.secureIdUploadScan, description: nil, icon: nil, action: {
+            entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_scan, placeholder: files.count > 0 ? strings().secureIdUploadAdditionalScan : strings().secureIdUploadScan, description: nil, icon: nil, action: {
                 filePanel(with: photoExts, allowMultiple: true, for: mainWindow, completion: { files in
                     if let files = files {
                         let localFiles:[SecureIdVerificationDocument] = files.map({.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                         
                         updateState { current in
                             if localFiles.count + (current.files[relative.valueKey] ?? []).count > scansLimit {
-                                alert(for: mainWindow, info: L10n.secureIdErrorScansLimit)
+                                alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
                             }
                             return current.withAppendFiles(localFiles, for: relative.valueKey).withRemovedError(for: relative.valueKey, field: _id_scan)
                         }
@@ -1976,7 +1976,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         }
        
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityScanDescription), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdIdentityScanDescription), data: InputDataGeneralTextData()))
         index += 1
         
         
@@ -1985,7 +1985,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             entries.append(.sectionId(sectionId, type: .legacy))
             sectionId += 1
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), data: InputDataGeneralTextData()))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdTranslationHeader), data: InputDataGeneralTextData()))
             index += 1
             
             if let translationError = rErrors?[_id_translation] {
@@ -1999,7 +1999,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             
             if let accessContext = state.accessContext {
                 for translation in translations {
-                    let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
+                    let header = strings().secureIdScanNumber(Int(fileIndex + 1))
                     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: translation, context: accessContext, stableId: stableId), error: rErrors?[translation.errorIdentifier], header: header, removeAction: { value in
                             updateState { current in
@@ -2013,14 +2013,14 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             }
             
             if translations.count < scansLimit {
-                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_translation, placeholder: translations.count > 0 ? L10n.secureIdUploadAdditionalScan : L10n.secureIdUploadScan, description: nil, icon: nil, action: {
+                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_translation, placeholder: translations.count > 0 ? strings().secureIdUploadAdditionalScan : strings().secureIdUploadScan, description: nil, icon: nil, action: {
                     filePanel(with: photoExts, allowMultiple: true, for: mainWindow, completion: { files in
                         if let files = files {
                             let localFiles:[SecureIdVerificationDocument] = files.map({.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                             
                             updateState { current in
                                 if localFiles.count + (current.translations[relative.valueKey] ?? []).count > scansLimit {
-                                    alert(for: mainWindow, info: L10n.secureIdErrorScansLimit)
+                                    alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
                                 }
                                 return current.withAppendTranslations(localFiles, for: relative.valueKey).withRemovedError(for: relative.valueKey, field: _id_translation)
                             }
@@ -2031,7 +2031,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             }
             
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationDesc), data: InputDataGeneralTextData()))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdTranslationDesc), data: InputDataGeneralTextData()))
             index += 1
         }
         
@@ -2041,7 +2041,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
     sectionId += 1
     
     if address != nil || relativeValue != nil {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, data: InputDataGeneralData(name: relativeValue != nil ? L10n.secureIdDeleteIdentity : L10n.secureIdDeleteAddress, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, data: InputDataGeneralData(name: relativeValue != nil ? strings().secureIdDeleteIdentity : strings().secureIdDeleteAddress, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
         entries.append(.sectionId(sectionId, type: .legacy))
         sectionId += 1
     }
@@ -2049,7 +2049,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
     return entries
     
 }
- fileprivate  let latinError = InputDataValueError(description: L10n.secureIdInputErrorLatinOnly, target: .data)
+ fileprivate  let latinError = InputDataValueError(description: strings().secureIdInputErrorLatinOnly, target: .data)
  
  private func latinFilter(_ text: String, _ valueKey: SecureIdValueKey, _ identifier: InputDataIdentifier, _ includeNumbers: Bool, _ updateState: @escaping((PassportState)->PassportState)->Void) -> String {
 
@@ -2092,7 +2092,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     let pdErrors = state.errors[.personalDetails]
 
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityDocumentDetailsHeader), data: InputDataGeneralTextData()))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdIdentityDocumentDetailsHeader), data: InputDataGeneralTextData()))
     index += 1
     
     
@@ -2106,17 +2106,17 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             var subtitle: String = ""
             switch relative {
             case .passport:
-                title = L10n.secureIdIdentityPassportPlaceholder
-                subtitle = L10n.secureIdIdentityPassportInputPlaceholder
+                title = strings().secureIdIdentityPassportPlaceholder
+                subtitle = strings().secureIdIdentityPassportInputPlaceholder
             case .internalPassport:
-                title = L10n.secureIdIdentityPassportPlaceholder
-                subtitle = L10n.secureIdIdentityPassportInputPlaceholder
+                title = strings().secureIdIdentityPassportPlaceholder
+                subtitle = strings().secureIdIdentityPassportInputPlaceholder
             case .idCard:
-                title = L10n.secureIdIdentityCardIdPlaceholder
-                subtitle = L10n.secureIdIdentityCardIdInputPlaceholder
+                title = strings().secureIdIdentityCardIdPlaceholder
+                subtitle = strings().secureIdIdentityCardIdInputPlaceholder
             case .driversLicense:
-                title = L10n.secureIdIdentityLicensePlaceholder
-                subtitle = L10n.secureIdIdentityLicenseInputPlaceholder
+                title = strings().secureIdIdentityLicensePlaceholder
+                subtitle = strings().secureIdIdentityLicenseInputPlaceholder
             default:
                 break
             }
@@ -2127,34 +2127,34 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }, limit: 20))
             index += 1
             
-            entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.expiryDate ?? relativeValue?.expiryDate?.inputDataValue ?? .date(nil, nil, nil), error: rErrors?[_id_expire_date], identifier: _id_expire_date, placeholder: L10n.secureIdIdentityPlaceholderExpiryDate))
+            entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.expiryDate ?? relativeValue?.expiryDate?.inputDataValue ?? .date(nil, nil, nil), error: rErrors?[_id_expire_date], identifier: _id_expire_date, placeholder: strings().secureIdIdentityPlaceholderExpiryDate))
             index += 1
         }
     }
     
     if let primary = primary {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdIdentityNameInLatine), data: InputDataGeneralTextData()))
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.latinName.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderFirstName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: { text in
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdIdentityNameInLatine), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstName ?? .string(personalDetails?.latinName.firstName ?? ""), error: pdErrors?[_id_first_name], identifier: _id_first_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdIdentityPlaceholderFirstName), inputPlaceholder: strings().secureIdIdentityInputPlaceholderFirstName, filter: { text in
             return latinFilter(text, primary.valueKey, _id_first_name, false, updateState)
         }, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleName ?? .string(personalDetails?.latinName.middleName ?? ""), error: pdErrors?[_id_middle_name], identifier: _id_middle_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderMiddleName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderMiddleName, filter: { text in
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleName ?? .string(personalDetails?.latinName.middleName ?? ""), error: pdErrors?[_id_middle_name], identifier: _id_middle_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdIdentityPlaceholderMiddleName), inputPlaceholder: strings().secureIdIdentityInputPlaceholderMiddleName, filter: { text in
             return latinFilter(text, primary.valueKey, _id_middle_name, false, updateState)
         }, limit: 255))
         index += 1
         
-        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.latinName.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderLastName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: { text in
+        entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastName ?? .string(personalDetails?.latinName.lastName ?? ""), error: pdErrors?[_id_last_name], identifier: _id_last_name, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdIdentityPlaceholderLastName), inputPlaceholder: strings().secureIdIdentityInputPlaceholderLastName, filter: { text in
             return latinFilter(text, primary.valueKey, _id_last_name, false, updateState)
         }, limit: 255))
         index += 1
         
-        let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: L10n.secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: L10n.secureIdGenderFemale, value: .gender(.female))]
+        let genders:[ValuesSelectorValue<InputDataValue>] = [ValuesSelectorValue(localized: strings().secureIdGenderMale, value: .gender(.male)), ValuesSelectorValue(localized: strings().secureIdGenderFemale, value: .gender(.female))]
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: L10n.secureIdIdentityPlaceholderGender, viewType: .legacy, values: genders))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.gender ?? .gender(personalDetails?.gender), error: pdErrors?[_id_gender], identifier: _id_gender, placeholder: strings().secureIdIdentityPlaceholderGender, viewType: .legacy, values: genders))
         index += 1
         
-        entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.birthday ?? personalDetails?.birthdate.inputDataValue ?? .date(nil, nil, nil), error: pdErrors?[_id_birthday], identifier: _id_birthday, placeholder: L10n.secureIdIdentityPlaceholderBirthday))
+        entries.append(InputDataEntry.dateSelector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.birthday ?? personalDetails?.birthdate.inputDataValue ?? .date(nil, nil, nil), error: pdErrors?[_id_birthday], identifier: _id_birthday, placeholder: strings().secureIdIdentityPlaceholderBirthday))
         index += 1
         
         let filedata = try! String(contentsOfFile: Bundle.main.path(forResource: "countries", ofType: nil)!)
@@ -2168,12 +2168,12 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
         }.sorted(by: { $0.localized < $1.localized})
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: L10n.secureIdIdentityPlaceholderCitizenship, viewType: .legacy, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.citizenship ?? .string(personalDetails?.countryCode), error: pdErrors?[_id_country], identifier: _id_country, placeholder: strings().secureIdIdentityPlaceholderCitizenship, viewType: .legacy, values: countries))
         index += 1
         
         let residence = state.detailsIntermediateState?.residence ?? .string(personalDetails?.residenceCountryCode)
         
-        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: residence, error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: L10n.secureIdIdentityPlaceholderResidence, viewType: .legacy, values: countries))
+        entries.append(InputDataEntry.selector(sectionId: sectionId, index: index, value: residence, error: pdErrors?[_id_residence], identifier: _id_residence, placeholder: strings().secureIdIdentityPlaceholderResidence, viewType: .legacy, values: countries))
         index += 1
         
         if let _ = relative {
@@ -2190,30 +2190,30 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                     let country = countries.filter({$0.value.stringValue == residence}).first?.localized ?? residence
                     
                     var localizedDesc: String = ""
-                    var localizedTitle: String = L10n.secureIdNameNativeHeaderEmpty
+                    var localizedTitle: String = strings().secureIdNameNativeHeaderEmpty
                     if let language = state.configuration?.nativeLanguageByCountry[residence] {
                         let key = "Passport.Language.\(language)"
                         let localizedKey = localizedString(key)
                         if localizedKey == key {
-                            localizedDesc = L10n.secureIdNameNativeDescLanguage(country)
+                            localizedDesc = strings().secureIdNameNativeDescLanguage(country)
                         } else {
-                            localizedTitle = L10n.secureIdNameNativeHeader(localizedKey.uppercased())
-                            localizedDesc = L10n.secureIdNameNativeDescEmpty
+                            localizedTitle = strings().secureIdNameNativeHeader(localizedKey.uppercased())
+                            localizedDesc = strings().secureIdNameNativeDescEmpty
                         }
                     }  else {
-                        localizedDesc =  L10n.secureIdNameNativeDescLanguage(country)
+                        localizedDesc =  strings().secureIdNameNativeDescLanguage(country)
                     }
                     
                     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(localizedTitle), data: InputDataGeneralTextData()))
                     index += 1
                     
-                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstNameNative ?? .string(personalDetails?.nativeName?.firstName ?? ""), error: pdErrors?[_id_first_name_native], identifier: _id_first_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderFirstName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderFirstName, filter: {$0}, limit: 255))
+                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.firstNameNative ?? .string(personalDetails?.nativeName?.firstName ?? ""), error: pdErrors?[_id_first_name_native], identifier: _id_first_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdIdentityPlaceholderFirstName), inputPlaceholder: strings().secureIdIdentityInputPlaceholderFirstName, filter: {$0}, limit: 255))
                     index += 1
                     
-                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleNameNative ?? .string(personalDetails?.nativeName?.middleName ?? ""), error: pdErrors?[_id_middle_name_native], identifier: _id_middle_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderMiddleName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderMiddleName, filter: {$0}, limit: 255))
+                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.middleNameNative ?? .string(personalDetails?.nativeName?.middleName ?? ""), error: pdErrors?[_id_middle_name_native], identifier: _id_middle_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdIdentityPlaceholderMiddleName), inputPlaceholder: strings().secureIdIdentityInputPlaceholderMiddleName, filter: {$0}, limit: 255))
                     index += 1
                     
-                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastNameNative ?? .string(personalDetails?.nativeName?.lastName ?? ""), error: pdErrors?[_id_last_name_native], identifier: _id_last_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdIdentityPlaceholderLastName), inputPlaceholder: L10n.secureIdIdentityInputPlaceholderLastName, filter: {$0}, limit: 255))
+                    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: state.detailsIntermediateState?.lastNameNative ?? .string(personalDetails?.nativeName?.lastName ?? ""), error: pdErrors?[_id_last_name_native], identifier: _id_last_name_native, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdIdentityPlaceholderLastName), inputPlaceholder: strings().secureIdIdentityInputPlaceholderLastName, filter: {$0}, limit: 255))
                     index += 1
                     
                     
@@ -2245,7 +2245,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
         sectionId += 1
         
         let rErrors = state.errors[relative.valueKey]
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdScansHeader), data: InputDataGeneralTextData()))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdScansHeader), data: InputDataGeneralTextData()))
         index += 1
         
         if let scanError = rErrors?[_id_scan] {
@@ -2256,8 +2256,8 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             let isMainNotFront: Bool = !relative.hasBacksideDocument
             if let file = state.frontSideFile[relative.valueKey] {
                 entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_frontside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-                    return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_frontside], header: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleFrontSide, removeAction: { value in
-                        modernConfirm(for: mainWindow, account: state.context.account, peerId: nil, information: L10n.secureIdConfirmDeleteDocument, successHandler: { _ in
+                    return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_frontside], header: isMainNotFront ? strings().secureIdUploadTitleMainPage : strings().secureIdUploadTitleFrontSide, removeAction: { value in
+                        modernConfirm(for: mainWindow, account: state.context.account, peerId: nil, information: strings().secureIdConfirmDeleteDocument, successHandler: { _ in
                             updateState { current in
                                 return current.withUpdatedFrontSide(nil, for: relative.valueKey)
                             }
@@ -2266,7 +2266,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                 }))
                 index += 1
             } else {
-                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_frontside, placeholder: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleFrontSide, description: relative.uploadFrontTitleText, icon: isMainNotFront ? theme.icons.passportPassport : (relative.valueKey == .driversLicense ? theme.icons.passportDriverLicense : theme.icons.passportIdCard), action: {
+                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_frontside, placeholder: isMainNotFront ? strings().secureIdUploadTitleMainPage : strings().secureIdUploadTitleFrontSide, description: relative.uploadFrontTitleText, icon: isMainNotFront ? theme.icons.passportPassport : (relative.valueKey == .driversLicense ? theme.icons.passportDriverLicense : theme.icons.passportIdCard), action: {
                     filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
                         if let file = files?.first {
                             updateFrontMrz(file: file, relative: relative, updateState: updateState)
@@ -2279,7 +2279,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             if relative.hasBacksideDocument {
                 if let file = state.backSideFile[relative.valueKey] {
                     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_backside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-                        return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_backside], header: L10n.secureIdUploadTitleReverseSide, removeAction: { value in
+                        return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_backside], header: strings().secureIdUploadTitleReverseSide, removeAction: { value in
                             updateState { current in
                                 return current.withUpdatedBackSide(nil, for: relative.valueKey)
                             }
@@ -2287,7 +2287,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                     }))
                     index += 1
                 } else {
-                    entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_backside, placeholder: isMainNotFront ? L10n.secureIdUploadTitleMainPage : L10n.secureIdUploadTitleReverseSide, description: relative.uploadBackTitleText, icon: theme.icons.passportIdCardReverse, action: {
+                    entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_backside, placeholder: isMainNotFront ? strings().secureIdUploadTitleMainPage : strings().secureIdUploadTitleReverseSide, description: relative.uploadBackTitleText, icon: theme.icons.passportIdCardReverse, action: {
                         filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
                             if let file = files?.first {
                                 if let image = NSImage(contentsOfFile: file) {
@@ -2321,7 +2321,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             let rErrors = state.errors[relative.valueKey]
             if let selfie = state.selfies[relative.valueKey] {
                 entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(selfie), identifier: _id_selfie, equatable: InputDataEquatable(selfie), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-                    return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: selfie, context: accessContext, stableId: stableId), error: rErrors?[_id_selfie], header: L10n.secureIdIdentitySelfie, removeAction: { value in
+                    return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: selfie, context: accessContext, stableId: stableId), error: rErrors?[_id_selfie], header: strings().secureIdIdentitySelfie, removeAction: { value in
                         updateState { current in
                             return current.withUpdatedSelfie(nil, for: relative.valueKey)
                         }
@@ -2330,7 +2330,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                 index += 1
                 
             } else {
-                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_selfie_scan, placeholder: L10n.secureIdIdentitySelfie, description: L10n.secureIdUploadSelfie, icon: theme.icons.passportSelfie, action: {
+                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_selfie_scan, placeholder: strings().secureIdIdentitySelfie, description: strings().secureIdUploadSelfie, icon: theme.icons.passportSelfie, action: {
                     filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
                         if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                             _ = putToTemp(image: image).start(next: { path in
@@ -2352,7 +2352,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             entries.append(.sectionId(sectionId, type: .legacy))
             sectionId += 1
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationHeader), data: InputDataGeneralTextData()))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdTranslationHeader), data: InputDataGeneralTextData()))
             index += 1
             
             if let translationError = rErrors?[_id_translation] {
@@ -2366,7 +2366,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             
             if let accessContext = state.accessContext {
                 for translation in translations {
-                    let header = L10n.secureIdScanNumber(Int(fileIndex + 1))
+                    let header = strings().secureIdScanNumber(Int(fileIndex + 1))
                     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(translation), identifier:  InputDataIdentifier("_translation_\(fileIndex)"), equatable: InputDataEquatable(translation), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                         return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: translation, context: accessContext, stableId: stableId), error: rErrors?[translation.errorIdentifier], header: header, removeAction: { value in
                             updateState { current in
@@ -2380,14 +2380,14 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
             
             if translations.count < scansLimit {
-                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_translation, placeholder: translations.count > 0 ? L10n.secureIdUploadAdditionalScan : L10n.secureIdUploadScan, description: nil, icon: nil, action: {
+                entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_translation, placeholder: translations.count > 0 ? strings().secureIdUploadAdditionalScan : strings().secureIdUploadScan, description: nil, icon: nil, action: {
                     filePanel(with: photoExts, allowMultiple: true, for: mainWindow, completion: { files in
                         if let files = files {
                             let localFiles:[SecureIdVerificationDocument] = files.map({.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                             
                             updateState { current in
                                 if localFiles.count + (current.translations[relative.valueKey] ?? []).count > scansLimit {
-                                    alert(for: mainWindow, info: L10n.secureIdErrorScansLimit)
+                                    alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
                                 }
                                 return current.withAppendTranslations(localFiles, for: relative.valueKey).withRemovedError(for: relative.valueKey, field: _id_translation)
                             }
@@ -2398,12 +2398,12 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             }
             
             
-            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.secureIdTranslationDesc), data: InputDataGeneralTextData()))
+            entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().secureIdTranslationDesc), data: InputDataGeneralTextData()))
             index += 1
         }
         
         
-//        entries.append(.desc(sectionId: sectionId, index: index, text: L10n.secureIdIdentityScanDescription, data: InputDataGeneralTextData()))
+//        entries.append(.desc(sectionId: sectionId, index: index, text: strings().secureIdIdentityScanDescription, data: InputDataGeneralTextData()))
 //        index += 1
         
     }
@@ -2414,7 +2414,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     sectionId += 1
     
     if personalDetails != nil || relativeValue != nil {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, data: InputDataGeneralData(name: relativeValue != nil ? L10n.secureIdDeleteIdentity : L10n.secureIdDeletePersonalDetails, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_delete, data: InputDataGeneralData(name: relativeValue != nil ? strings().secureIdDeleteIdentity : strings().secureIdDeletePersonalDetails, color: theme.colors.redUI, icon: nil, type: .none, action: nil)))
         entries.append(.sectionId(sectionId, type: .legacy))
         sectionId += 1
     }
@@ -2432,11 +2432,11 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
     entries.append(.sectionId(sectionId, type: .legacy))
     sectionId += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(L10n.secureIdEmailActivateCodePlaceholder), inputPlaceholder: L10n.secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_email_code, mode: .plain, data: InputDataRowData(), placeholder: InputDataInputPlaceholder(strings().secureIdEmailActivateCodePlaceholder), inputPlaceholder: strings().secureIdEmailActivateCodeInputPlaceholder, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     index += 1
     
     
-    let info = L10n.twoStepAuthRecoveryCodeHelp + "\n\n\(L10n.twoStepAuthRecoveryEmailUnavailableNew(emailPattern))"
+    let info = strings().twoStepAuthRecoveryCodeHelp + "\n\n\(strings().twoStepAuthRecoveryEmailUnavailableNew(emailPattern))"
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(info, linkHandler: { _ in
         unavailable()
@@ -2505,7 +2505,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
     }
     
     override func backSettings() -> (String, CGImage?) {
-        return (form == nil ? L10n.navigationBack : "", form == nil ? #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(theme.colors.accentIcon) : theme.icons.dismissPinned)
+        return (form == nil ? strings().navigationBack : "", form == nil ? #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(theme.colors.accentIcon) : theme.icons.dismissPinned)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -2635,15 +2635,15 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                 let text: String
                                 switch error {
                                 case .invalidEmail:
-                                    text = L10n.twoStepAuthEmailInvalid
+                                    text = strings().twoStepAuthEmailInvalid
                                 case .invalidCode:
-                                    text = L10n.twoStepAuthEmailCodeInvalid
+                                    text = strings().twoStepAuthEmailCodeInvalid
                                 case .expired:
-                                    text = L10n.twoStepAuthEmailCodeExpired
+                                    text = strings().twoStepAuthEmailCodeExpired
                                 case .flood:
-                                    text = L10n.twoStepAuthFloodError
+                                    text = strings().twoStepAuthFloodError
                                 case .generic:
-                                    text = L10n.unknownError
+                                    text = strings().unknownError
                                 }
                                 updateState { $0.withUpdatedEmailCodeError(InputDataValueError(description: text, target: .data)) }
                                 
@@ -2808,7 +2808,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }, error: { error in
                         switch error {
                         case .secretPasswordMismatch:
-                            confirm(for: mainWindow, header: L10n.telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
+                            confirm(for: mainWindow, header: strings().telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
                                 switch result {
                                 case .basic:
                                     break
@@ -2827,11 +2827,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                             updateState { current in
                                 switch error {
                                 case .invalidPassword:
-                                    return current.withUpdatedPasswordError(L10n.secureIdPasswordErrorInvalid)
+                                    return current.withUpdatedPasswordError(strings().secureIdPasswordErrorInvalid)
                                 case .limitExceeded:
-                                    return current.withUpdatedPasswordError(L10n.secureIdPasswordErrorLimit)
+                                    return current.withUpdatedPasswordError(strings().secureIdPasswordErrorLimit)
                                 default:
-                                    return current.withUpdatedPasswordError(L10n.secureIdPasswordErrorInvalid)
+                                    return current.withUpdatedPasswordError(strings().secureIdPasswordErrorInvalid)
                                 }
                             }
                             shake()
@@ -2867,7 +2867,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 }, error: { error in
                     switch error {
                     case .secretPasswordMismatch:
-                        confirm(for: mainWindow, header: L10n.telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
+                        confirm(for: mainWindow, header: strings().telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
                             switch result {
                             case .basic:
                                 break
@@ -2949,7 +2949,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
-                                modernConfirm(for: mainWindow, account: context.account, peerId: nil, header: L10n.telegramPassportController, information: relative == nil ? L10n.secureIdConfirmDeleteAddress : L10n.secureIdConfirmDeleteDocument, thridTitle: hasMainField ? L10n.secureIdConfirmDeleteAddress : nil, successHandler: { result in
+                                modernConfirm(for: mainWindow, account: context.account, peerId: nil, header: strings().telegramPassportController, information: relative == nil ? strings().secureIdConfirmDeleteAddress : strings().secureIdConfirmDeleteDocument, thridTitle: hasMainField ? strings().secureIdConfirmDeleteAddress : nil, successHandler: { result in
                                     var keys: [SecureIdValueKey] = []
                                     if let relative = relative {
                                         keys.append(relative.valueKey)
@@ -3128,7 +3128,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         loadedData = AddressIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if AddressIntermediateState(data) != loadedData {
-                            confirm(for: mainWindow, header: L10n.secureIdDiscardChangesHeader, information: L10n.secureIdDiscardChangesText, okTitle: L10n.alertConfirmDiscard, successHandler: { _ in
+                            confirm(for: mainWindow, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, okTitle: strings().alertConfirmDiscard, successHandler: { _ in
                                  f(true)
                             })
                         } else {
@@ -3143,19 +3143,19 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     for relative in relative {
                         values.append(ValuesSelectorValue<SecureIdRequestedFormFieldValue>(localized: editSettings.hasValue(relative) ? relative.descEdit : relative.descAdd, value: relative))
                     }
-                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdIdentityDocument, onComplete: { selected in
+                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdIdentityDocument, onComplete: { selected in
                         push(selected.value, selected.value == .address ? nil : selected.value, selected.value == .address)
                     }), for: mainWindow)
                 } else if relative.count > 1 {
                     let values:[ValuesSelectorValue<SecureIdRequestedFormFieldValue>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
-                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdResidentialAddress, onComplete: { selected in
+                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdResidentialAddress, onComplete: { selected in
                         filePanel(with: photoExts,for: mainWindow, completion: { files in
                             if let files = files {
                                 push(request.primary, selected.value, request.fillPrimary)
                                 let localFiles:[SecureIdVerificationDocument] = files.map({SecureIdVerificationDocument.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                                 updateState { current in
                                     if localFiles.count + (current.files[selected.value.valueKey] ?? []).count > scansLimit {
-                                        alert(for: mainWindow, info: L10n.secureIdErrorScansLimit)
+                                        alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
                                     }
                                     return current.withAppendFiles(localFiles, for: selected.value.valueKey)
                                 }
@@ -3179,7 +3179,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
-                                modernConfirm(for: mainWindow, account: context.account, peerId: nil, header: L10n.telegramPassportController, information: primary != nil && relative != nil ? L10n.secureIdConfirmDeleteDocument : primary != nil ? L10n.secureIdDeleteConfirmPersonalDetails : L10n.secureIdConfirmDeleteDocument, thridTitle: primary != nil && relative != nil ? L10n.secureIdDeletePersonalDetails : nil, successHandler: { result in
+                                modernConfirm(for: mainWindow, account: context.account, peerId: nil, header: strings().telegramPassportController, information: primary != nil && relative != nil ? strings().secureIdConfirmDeleteDocument : primary != nil ? strings().secureIdDeleteConfirmPersonalDetails : strings().secureIdConfirmDeleteDocument, thridTitle: primary != nil && relative != nil ? strings().secureIdDeletePersonalDetails : nil, successHandler: { result in
                                     var keys: [SecureIdValueKey] = []
                                     if let relative = relative {
                                         keys.append(relative.valueKey)
@@ -3461,7 +3461,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         loadedData = DetailsIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if DetailsIntermediateState(data) != loadedData {
-                            confirm(for: mainWindow, header: L10n.secureIdDiscardChangesHeader, information: L10n.secureIdDiscardChangesText, okTitle: L10n.alertConfirmDiscard, successHandler: { _ in
+                            confirm(for: mainWindow, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, okTitle: strings().alertConfirmDiscard, successHandler: { _ in
                                 f(true)
                             })
                         } else {
@@ -3476,12 +3476,12 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     for relative in relative {
                         values.append(ValuesSelectorValue<SecureIdRequestedFormFieldValue>(localized: editSettings.hasValue(relative) ? relative.descEdit : relative.descAdd, value: relative))
                     }
-                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdIdentityDocument, onComplete: { selected in
+                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdIdentityDocument, onComplete: { selected in
                         push(selected.value, selected.value.valueKey == .personalDetails ? nil : selected.value, selected.value.valueKey == .personalDetails ? .personalDetails(nativeName: true) : nil)
                     }), for: mainWindow)
                 } else if relative.count > 1 {
                     let values:[ValuesSelectorValue<SecureIdRequestedFormFieldValue>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
-                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: L10n.secureIdIdentityDocument, onComplete: { selected in
+                    showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdIdentityDocument, onComplete: { selected in
                         if let relativeValue = relativeValue, relativeValue.frontSideVerificationDocument != nil {
                             push(request.primary, selected.value, request.fillPrimary ? request.primary : nil)
                         } else {
@@ -3512,11 +3512,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
             case .email:
                 if let valueKey = valueKey {
-                    confirm(for: mainWindow, information: L10n.secureIdRemoveEmail, successHandler: { _ in
+                    confirm(for: mainWindow, information: strings().secureIdRemoveEmail, successHandler: { _ in
                         _ = removeValue(valueKey)
                     })
                 } else {
-                    let title = L10n.secureIdInstallEmailTitle
+                    let title = strings().secureIdInstallEmailTitle
                     var _payload: SecureIdPrepareEmailVerificationPayload? = nil
                     var _activateEmail: String? = nil
                     let validate: ([InputDataIdentifier : InputDataValue]) -> InputDataValidation = { data in
@@ -3576,11 +3576,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             case .phone:
 
                 if let valueKey = valueKey {
-                    confirm(for: mainWindow, information: L10n.secureIdRemovePhoneNumber, successHandler: { _ in
+                    confirm(for: mainWindow, information: strings().secureIdRemovePhoneNumber, successHandler: { _ in
                         _ = removeValue(valueKey)
                     })
                 } else {
-                    let title = L10n.secureIdInstallPhoneTitle
+                    let title = strings().secureIdInstallPhoneTitle
                     var _payload: SecureIdPreparePhoneVerificationPayload?
                     let validate: ([InputDataIdentifier : InputDataValue]) -> InputDataValidation = { data in
                         let phone = data[_id_phone_def]?.stringValue ?? data[_id_phone_new]?.stringValue
@@ -3672,7 +3672,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             promise.set(combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
                 return createPasswordEntries(state)
             })
-            let controller = InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: L10n.secureIdCreatePasswordTitle, validateData: { data in
+            let controller = InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: strings().secureIdCreatePasswordTitle, validateData: { data in
 
                 let password = data[_id_c_password]!.stringValue!
                 let repassword = data[_id_c_repassword]!.stringValue!
@@ -3736,7 +3736,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                         if email.isEmpty {
                             return .fail(.doSomething(next: { f in
-                                confirm(for: mainWindow, information: L10n.twoStepAuthEmailSkipAlert, okTitle: L10n.twoStepAuthEmailSkip, successHandler: { result in
+                                confirm(for: mainWindow, information: strings().twoStepAuthEmailSkipAlert, okTitle: strings().twoStepAuthEmailSkip, successHandler: { result in
                                     updatePassword(password, nil)
                                     f(.success(.navigationBackWithPushAnimation))
                                 })
@@ -3751,7 +3751,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 return .fail(.none)
             }, updateDoneValue: { data in
                 return { f in
-                    f(.enabled(L10n.navigationNext))
+                    f(.enabled(strings().navigationNext))
                 }
             }, identifier: "passport", getBackgroundColor: { theme.colors.background })
 
@@ -3857,13 +3857,13 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 execute(inapp: .external(link: url, false))
             }
         }, forgotPassword: {
-            confirm(for: mainWindow, header: L10n.passportResetPasswordConfirmHeader, information: L10n.passportResetPasswordConfirmText, okTitle: L10n.passportResetPasswordConfirmOK, successHandler: { _ in
+            confirm(for: mainWindow, header: strings().passportResetPasswordConfirmHeader, information: strings().passportResetPasswordConfirmText, okTitle: strings().passportResetPasswordConfirmOK, successHandler: { _ in
                 recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: mainWindow).start(next: { emailPattern in
                     let promise:Promise<[InputDataEntry]> = Promise()
                     promise.set(combineLatest(Signal<[InputDataEntry], NoError>.single(recoverEmailEntries(emailPattern: emailPattern, unavailable: {
-                        alert(for: mainWindow, info: L10n.twoStepAuthRecoveryFailed)
+                        alert(for: mainWindow, info: strings().twoStepAuthRecoveryFailed)
                     })) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {$0.0})
-                    presentController(InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: L10n.secureIdRecoverPassword, validateData: { data -> InputDataValidation in
+                    presentController(InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: strings().secureIdRecoverPassword, validateData: { data -> InputDataValidation in
                         
                         let code = data[_id_email_code]?.stringValue ?? ""
                         if code.isEmpty {
@@ -3871,7 +3871,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                         
                         return .fail(.doSomething { f in
-                            confirm(for: mainWindow, information: L10n.secureIdWarningDataLost, successHandler: { _ in
+                            confirm(for: mainWindow, information: strings().secureIdWarningDataLost, successHandler: { _ in
                                 recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
                                     f(.fail(.fields([_id_email_code : .shake])))
                                 }, completed: {
@@ -3891,7 +3891,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             
        //
         }, deletePassport: {
-            confirm(for: mainWindow, header: L10n.secureIdInfoTitle, information: L10n.secureIdInfoDeletePassport, successHandler: { _ in
+            confirm(for: mainWindow, header: strings().secureIdInfoTitle, information: strings().secureIdInfoDeletePassport, successHandler: { _ in
                 updateState { current in
                     let signal = deleteSecureIdValues(network: context.account.network, keys: Set(current.values.map{$0.value.key}))
                     
@@ -3996,13 +3996,13 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
         rightView?.removeAllHandlers()
         if hasPendingEmail {
             rightView?.removeImage(for: .Normal)
-            rightView?.set(text: L10n.navigationDone, for: .Normal)
+            rightView?.set(text: strings().navigationDone, for: .Normal)
             rightView?.set(handler: { [weak self] _ in
                 _ = self?.pendingEmailConfirm()
             }, for: .Click)
         } else {
             rightView?.set(handler: { _ in
-                confirm(for: mainWindow, header: L10n.secureIdInfoTitle, information: L10n.secureIdInfo, cancelTitle: "", thridTitle: L10n.secureIdInfoMore, successHandler: { result in
+                confirm(for: mainWindow, header: strings().secureIdInfoTitle, information: strings().secureIdInfo, cancelTitle: "", thridTitle: strings().secureIdInfoMore, successHandler: { result in
                     if result == .thrid {
                         openFaq(context: context)
                     }
@@ -4033,7 +4033,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             return true
         }
         if !dismissed {
-            confirm(for: mainWindow, information: L10n.secureIdConfirmCancel, okTitle: L10n.alertConfirmStop, successHandler: { [weak self] _ in
+            confirm(for: mainWindow, information: strings().secureIdConfirmCancel, okTitle: strings().alertConfirmStop, successHandler: { [weak self] _ in
                 guard let `self` = self else {return}
                 self.dismissed = true
                 self.executeCallback(false)

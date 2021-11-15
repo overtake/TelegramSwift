@@ -111,7 +111,7 @@ class CallStatusView: View {
             }
             self.receptionView.isHidden = reception == nil
         case let .startsIn(time):
-            statusText = L10n.chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
+            statusText = strings().chatHeaderVoiceChatStartsIn(timerText(time - Int(Date().timeIntervalSince1970)))
             self.receptionView.isHidden = true
         }
         let layout = TextViewLayout.init(.initialize(string: statusText, color: .white, font: .normal(18)), alignment: .center)

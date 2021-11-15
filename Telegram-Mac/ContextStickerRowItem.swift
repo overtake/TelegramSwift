@@ -72,18 +72,18 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
             
             if let reference = reference?.0.fileReference?.media.stickerReference {
-                menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
+                menu.addItem(ContextMenuItem(strings().contextViewStickerSet, handler: {
                     showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
                 }))
             }
             if let file = reference?.0.fileReference?.media {
-                menu.addItem(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak item] in
+                menu.addItem(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak item] in
                     item?.chatInteraction.sendAppFile(file, true, nil, false)
                     item?.chatInteraction.clearInput()
                 }))
             }
             if let file = reference?.0.fileReference?.media {
-                menu.addItem(ContextMenuItem(L10n.chatSendScheduledMessage, handler: { [weak item] in
+                menu.addItem(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak item] in
                     item?.chatInteraction.sendAppFile(file, false, nil, true)
                     item?.chatInteraction.clearInput()
                 }))

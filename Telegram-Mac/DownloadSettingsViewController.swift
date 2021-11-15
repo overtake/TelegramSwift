@@ -58,19 +58,19 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
     func item(_ arguments: DownloadSettingsArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .contacts(_, enabled, category, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsPrivateChats, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageCategorySettingsPrivateChats, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCategory(category.withUpdatedPrivateChats(!enabled))
             })
         case let .groupChats(_, enabled, category, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsGroupChats, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageCategorySettingsGroupChats, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCategory(category.withUpdatedGroupChats(!enabled))
             })
         case let .channels(_, enabled, category, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategorySettingsChannels, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageCategorySettingsChannels, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCategory(category.withUpdatedChannels(!enabled))
             })
         case let .fileSizeLimitHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, text: L10n.dataAndStorageCateroryFileSizeLimitHeader, viewType: viewType)
+            return GeneralTextRowItem(initialSize, text: strings().dataAndStorageCateroryFileSizeLimitHeader, viewType: viewType)
         case let .fileSizeLimit(_, limit, category, viewType):
             let list:[Int32] = [Int32(1 * 1024 * 1024), Int32(5 * 1024 * 1024), Int32(10 * 1024 * 1024), Int32(50 * 1024 * 1024), Int32(100 * 1024 * 1024), Int32(300 * 1024 * 1024), Int32(500 * 1024 * 1024), Int32(2000 * 1024 * 1024)]
             
@@ -81,11 +81,11 @@ private enum DownloadSettingsEntry : TableItemListNodeEntry {
                 arguments.toggleCategory(category.withUpdatedSizeLimit(list[select]))
             })
         case let .preloadLargeVideos(_, enabled, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageCategoryPreloadLargeVideos, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageCategoryPreloadLargeVideos, type: .switchable(value), viewType: viewType, action: {
                 arguments.togglePreloadLargeVideos(!value)
             }, enabled: enabled)
         case let .preloadLargeVideosDesc(_, limit, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageCategoryPreloadLargeVideosDesc(limit), viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageCategoryPreloadLargeVideosDesc(limit), viewType: viewType)
         case .sectionId:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -172,7 +172,7 @@ class DownloadSettingsViewController: TableViewController {
     init(_ context: AccountContext, _ state: AutomaticMediaDownloadCategoryPeers, _ title: String, updateCategory:@escaping(AutomaticMediaDownloadCategoryPeers) -> Void) {
         self.stateValue = ValuePromise(state, ignoreRepeated: true)
         self.title = title
-        self.isVideo = L10n.dataAndStorageAutomaticDownloadVideo == title
+        self.isVideo = strings().dataAndStorageAutomaticDownloadVideo == title
         self.updateCategory = updateCategory
         super.init(context)
     }

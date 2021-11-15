@@ -62,7 +62,7 @@ private final class EditImageView : View {
         
         reset.set(font: .medium(.title), for: .Normal)
         reset.set(color: .white, for: .Normal)
-        reset.set(text: L10n.editImageControlReset, for: .Normal)
+        reset.set(text: strings().editImageControlReset, for: .Normal)
         _ = reset.sizeToFit()
         
     }
@@ -119,7 +119,7 @@ private final class EditImageView : View {
             if let data = self.currentData, selectionRectView.isWholeSelected && data.hasntData  {
                 (controls as? EditImageControlsView)?.cancel.send(event: .Click)
             } else {
-                confirm(for: mainWindow, information: L10n.editImageControlConfirmDiscard, successHandler: { [weak self] _ in
+                confirm(for: mainWindow, information: strings().editImageControlConfirmDiscard, successHandler: { [weak self] _ in
                      (self?.controls as? EditImageControlsView)?.cancel.send(event: .Click)
                 })
             }

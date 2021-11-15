@@ -9,7 +9,7 @@
 import TGUIKit
 import TelegramCore
 import SwiftSignalKit
-
+import CalendarUtils
 import Postbox
 
 
@@ -48,10 +48,10 @@ final class DateSelectorModalView : View {
 
         self.sendWhenOnline.set(font: .normal(.text), for: .Normal)
         self.sendWhenOnline.set(color: theme.colors.accent, for: .Normal)
-        self.sendWhenOnline.set(text: L10n.scheduleSendWhenOnline, for: .Normal)
+        self.sendWhenOnline.set(text: strings().scheduleSendWhenOnline, for: .Normal)
         _ = self.sendWhenOnline.sizeToFit()
         
-        let atLayout = TextViewLayout(.initialize(string: L10n.scheduleControllerAt, color: theme.colors.text, font: .normal(.title)), alwaysStaticItems: true)
+        let atLayout = TextViewLayout(.initialize(string: strings().scheduleControllerAt, color: theme.colors.text, font: .normal(.title)), alwaysStaticItems: true)
         atLayout.measure(width: .greatestFiniteMagnitude)
         atView.update(atLayout)
         
@@ -159,7 +159,7 @@ class DateSelectorModalController: ModalViewController {
         let title: String
         switch mode {
         case .schedule:
-            title = L10n.scheduleControllerTitle
+            title = strings().scheduleControllerTitle
         case let .date(value, _):
             title = value
         }
@@ -231,9 +231,9 @@ class DateSelectorModalController: ModalViewController {
         genericView.timePicker.selected = TimePickerOption(hours: timeinfo.tm_hour, minutes: timeinfo.tm_min, seconds: timeinfo.tm_sec)
 
         if CalendarUtils.isSameDate(Date(), date: date, checkDay: true) {
-            genericView.sendOn.set(text: L10n.scheduleSendToday(DateSelectorUtil.formatTime(date)), for: .Normal)
+            genericView.sendOn.set(text: strings().scheduleSendToday(DateSelectorUtil.formatTime(date)), for: .Normal)
         } else {
-            genericView.sendOn.set(text: L10n.scheduleSendDate(DateSelectorUtil.formatDay(date), DateSelectorUtil.formatTime(date)), for: .Normal)
+            genericView.sendOn.set(text: strings().scheduleSendDate(DateSelectorUtil.formatDay(date), DateSelectorUtil.formatTime(date)), for: .Normal)
         }
     }
     

@@ -45,7 +45,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0, formatting: DataSizeStringFormatting.current)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end)
         
         let localAction = NSMutableAttributedString()
-        let range = localAction.append(string: tr(L10n.contextShowInFinder), color: theme.colors.link, font: .normal(.text))
+        let range = localAction.append(string: strings().contextShowInFinder, color: theme.colors.link, font: .normal(.text))
         localAction.add(link: inAppLink.callback("finder", { _ in
             showInFinder(file, account: interface.context.account)
         }), for: range)
@@ -83,10 +83,10 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
                 var items = items
                 return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> map {data in
                     if data.complete {
-                        items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
+                        items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                             saveAs(file, account: context.account)
                         }))
-                        items.append(ContextMenuItem(L10n.contextShowInFinder, handler: {
+                        items.append(ContextMenuItem(strings().contextShowInFinder, handler: {
                             showInFinder(file, account: context.account)
                         }))
                     }

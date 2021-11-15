@@ -175,7 +175,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case let .info(_, peer, presence, viewType):
-            var string:String = peer.isBot ? L10n.presenceBot : L10n.peerStatusRecently
+            var string:String = peer.isBot ? strings().presenceBot : strings().peerStatusRecently
             var color:NSColor = theme.colors.grayText
             if let presence = presence, !peer.isBot {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
@@ -195,7 +195,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
         case let .dismiss(_, _, text, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: redActionButton, type: .next, viewType: viewType, action: arguments.dismissAdmin)
         case let .roleHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelAdminRoleHeader, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelAdminRoleHeader, viewType: viewType)
         case let .role(_, text, placeholder, viewType):
             return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: placeholder, filter: { text in
                 let filtered = text.filter { character -> Bool in
@@ -245,34 +245,34 @@ private struct ChannelAdminControllerState: Equatable {
 
 private func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, defaultBannedRights: TelegramChatBannedRights?) -> String {
     if right.contains(.canChangeInfo) {
-        return isGroup ? L10n.groupEditAdminPermissionChangeInfo : L10n.channelEditAdminPermissionChangeInfo
+        return isGroup ? strings().groupEditAdminPermissionChangeInfo : strings().channelEditAdminPermissionChangeInfo
     } else if right.contains(.canPostMessages) {
-        return L10n.channelEditAdminPermissionPostMessages
+        return strings().channelEditAdminPermissionPostMessages
     } else if right.contains(.canEditMessages) {
-        return L10n.channelEditAdminPermissionEditMessages
+        return strings().channelEditAdminPermissionEditMessages
     } else if right.contains(.canDeleteMessages) {
-        return L10n.channelEditAdminPermissionDeleteMessages
+        return strings().channelEditAdminPermissionDeleteMessages
     } else if right.contains(.canBanUsers) {
-        return L10n.channelEditAdminPermissionBanUsers
+        return strings().channelEditAdminPermissionBanUsers
     } else if right.contains(.canInviteUsers) {
         if isGroup {
             if let defaultBannedRights = defaultBannedRights, defaultBannedRights.flags.contains(.banAddMembers) {
-                return L10n.channelEditAdminPermissionInviteMembers
+                return strings().channelEditAdminPermissionInviteMembers
             } else {
-                return L10n.channelEditAdminPermissionInviteViaLink
+                return strings().channelEditAdminPermissionInviteViaLink
             }
         } else {
-            return L10n.channelEditAdminPermissionInviteSubscribers
+            return strings().channelEditAdminPermissionInviteSubscribers
         }
 
     } else if right.contains(.canPinMessages) {
-        return L10n.channelEditAdminPermissionPinMessages
+        return strings().channelEditAdminPermissionPinMessages
     } else if right.contains(.canAddAdmins) {
-        return L10n.channelEditAdminPermissionAddNewAdmins
+        return strings().channelEditAdminPermissionAddNewAdmins
     } else if right.contains(.canBeAnonymous) {
-        return L10n.channelEditAdminPermissionAnonymous
+        return strings().channelEditAdminPermissionAnonymous
     } else if right.contains(.canManageCalls) {
-        return L10n.channelEditAdminManageCalls
+        return strings().channelEditAdminManageCalls
     } else {
         return ""
     }
@@ -386,10 +386,10 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             if channel.isSupergroup {
                 entries.append(.section(sectionId))
                 sectionId += 1
-                let placeholder = isCreator ? L10n.channelAdminRolePlaceholderOwner : L10n.channelAdminRolePlaceholderAdmin
+                let placeholder = isCreator ? strings().channelAdminRolePlaceholderOwner : strings().channelAdminRolePlaceholderAdmin
                 entries.append(.roleHeader(sectionId, .textTopItem))
                 entries.append(.role(sectionId, state.rank ?? "", placeholder, .singleItem))
-                entries.append(.description(sectionId, descId, isCreator ? L10n.channelAdminRoleOwnerDesc : L10n.channelAdminRoleAdminDesc, .textBottomItem))
+                entries.append(.description(sectionId, descId, isCreator ? strings().channelAdminRoleOwnerDesc : strings().channelAdminRoleAdminDesc, .textBottomItem))
                 descId += 1
             }
             entries.append(.section(sectionId))
@@ -398,7 +398,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
            
             if (channel.isSupergroup) || channel.isChannel {
                 if !isCreator || channel.isChannel {
-                    entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo, .textTopItem))
+                    entries.append(.description(sectionId, descId, strings().channelAdminWhatCanAdminDo, .textTopItem))
                     descId += 1
                 }
                
@@ -446,14 +446,14 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     index += 1
                 }
                 if !isCreator || channel.isChannel {
-                    entries.append(.description(sectionId, descId, addAdminsEnabled ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
+                    entries.append(.description(sectionId, descId, addAdminsEnabled ? strings().channelAdminAdminAccess : strings().channelAdminAdminRestricted, .textBottomItem))
                     descId += 1
                 }
                 if channel.flags.contains(.isCreator), !admin.isBot && currentRightsFlags.contains(TelegramChatAdminRightsFlags.all)  {
                     if admin.id != accountPeerId {
                         entries.append(.section(sectionId))
                         sectionId += 1
-                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? L10n.channelAdminTransferOwnershipChannel : L10n.channelAdminTransferOwnershipGroup, .singleItem))
+                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? strings().channelAdminTransferOwnershipChannel : strings().channelAdminTransferOwnershipGroup, .singleItem))
                     }
                 }
             }
@@ -479,7 +479,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, adminInfo.rights.rights, adminInfo.rights.rights.contains(right), false, bestGeneralViewType(rightsOrder, for: i)))
                 index += 1
             }
-            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights, .textBottomItem))
+            entries.append(.description(sectionId, descId, strings().channelAdminCantEditRights, .textBottomItem))
             descId += 1
         } else if let initialParticipant = initialParticipant, case .creator = initialParticipant {
             
@@ -501,7 +501,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 entries.append(.rightItem(sectionId, index, stringForRight(right: right, isGroup: isGroup, defaultBannedRights: channel.defaultBannedRights), right, TelegramChatAdminRightsFlags(rightsOrder), true, false, bestGeneralViewType(rightsOrder, for: right)))
                 index += 1
             }
-            entries.append(.description(sectionId, descId, L10n.channelAdminCantEditRights, .textBottomItem))
+            entries.append(.description(sectionId, descId, strings().channelAdminCantEditRights, .textBottomItem))
             descId += 1
         }
         
@@ -515,7 +515,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             isCreator = true
         }
         
-        let placeholder = isCreator ? L10n.channelAdminRolePlaceholderOwner : L10n.channelAdminRolePlaceholderAdmin
+        let placeholder = isCreator ? strings().channelAdminRolePlaceholderOwner : strings().channelAdminRolePlaceholderAdmin
         
         
         entries.append(.section(sectionId))
@@ -523,14 +523,14 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         
         entries.append(.roleHeader(sectionId, .textTopItem))
         entries.append(.role(sectionId, state.rank ?? "", placeholder, .singleItem))
-        entries.append(.description(sectionId, descId, isCreator ? L10n.channelAdminRoleOwnerDesc : L10n.channelAdminRoleAdminDesc, .textBottomItem))
+        entries.append(.description(sectionId, descId, isCreator ? strings().channelAdminRoleOwnerDesc : strings().channelAdminRoleAdminDesc, .textBottomItem))
         descId += 1
         
         entries.append(.section(sectionId))
         sectionId += 1
         
         if !isCreator {
-            entries.append(.description(sectionId, descId, L10n.channelAdminWhatCanAdminDo, .textTopItem))
+            entries.append(.description(sectionId, descId, strings().channelAdminWhatCanAdminDo, .textTopItem))
             descId += 1
             
             let isGroup = true
@@ -569,7 +569,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             }
             
             if accountUserRightsFlags.contains(.canAddAdmins) {
-                entries.append(.description(sectionId, descId, currentRightsFlags.contains(.canAddAdmins) ? L10n.channelAdminAdminAccess : L10n.channelAdminAdminRestricted, .textBottomItem))
+                entries.append(.description(sectionId, descId, currentRightsFlags.contains(.canAddAdmins) ? strings().channelAdminAdminAccess : strings().channelAdminAdminRestricted, .textBottomItem))
                 descId += 1
             }
             
@@ -578,7 +578,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     if admin.id != accountPeerId {
                         entries.append(.section(sectionId))
                         sectionId += 1
-                        entries.append(.changeOwnership(sectionId, descId, L10n.channelAdminTransferOwnershipGroup, .singleItem))
+                        entries.append(.changeOwnership(sectionId, descId, strings().channelAdminTransferOwnershipGroup, .singleItem))
                     }
                 }
             }
@@ -610,7 +610,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.dismiss(sectionId, descId, L10n.channelAdminDismiss, .singleItem))
+        entries.append(.dismiss(sectionId, descId, strings().channelAdminDismiss, .singleItem))
         descId += 1
     }
     
@@ -717,22 +717,22 @@ class ChannelAdminController: TableModalViewController {
                 }))
             }
         }, cantEditError: { [weak self] in
-            self?.show(toaster: ControllerToaster(text: L10n.channelAdminCantEdit))
+            self?.show(toaster: ControllerToaster(text: strings().channelAdminCantEdit))
         }, transferOwnership: {
             _ = (combineLatest(queue: .mainQueue(), context.account.postbox.loadedPeerWithId(peerId), context.account.postbox.loadedPeerWithId(adminId))).start(next: { peer, admin in
                 
                 let header: String
                 let text: String
                 if peer.isChannel {
-                    header = L10n.channelAdminTransferOwnershipConfirmChannelTitle
-                    text = L10n.channelAdminTransferOwnershipConfirmChannelText(peer.displayTitle, admin.displayTitle)
+                    header = strings().channelAdminTransferOwnershipConfirmChannelTitle
+                    text = strings().channelAdminTransferOwnershipConfirmChannelText(peer.displayTitle, admin.displayTitle)
                 } else {
-                    header = L10n.channelAdminTransferOwnershipConfirmGroupTitle
-                    text = L10n.channelAdminTransferOwnershipConfirmGroupText(peer.displayTitle, admin.displayTitle)
+                    header = strings().channelAdminTransferOwnershipConfirmGroupTitle
+                    text = strings().channelAdminTransferOwnershipConfirmGroupText(peer.displayTitle, admin.displayTitle)
                 }
                 
                 let checkPassword:(PeerId)->Void = { peerId in
-                    showModal(with: InputPasswordController(context: context, title: L10n.channelAdminTransferOwnershipPasswordTitle, desc: L10n.channelAdminTransferOwnershipPasswordDesc, checker: { pwd in
+                    showModal(with: InputPasswordController(context: context, title: strings().channelAdminTransferOwnershipPasswordTitle, desc: strings().channelAdminTransferOwnershipPasswordDesc, checker: { pwd in
                         return context.peerChannelMemberCategoriesContextsManager.transferOwnership(peerId: peerId, memberId: admin.id, password: pwd)
                             |> deliverOnMainQueue
                             |> ignoreValues
@@ -758,34 +758,34 @@ class ChannelAdminController: TableModalViewController {
                         var install2Fa = false
                         switch error {
                         case .generic:
-                            errorText = L10n.unknownError
+                            errorText = strings().unknownError
                         case .tooMuchJoined:
-                            errorText = L10n.inviteChannelsTooMuch
+                            errorText = strings().inviteChannelsTooMuch
                         case .authSessionTooFresh:
-                            errorText = L10n.channelTransferOwnerErrorText
+                            errorText = strings().channelTransferOwnerErrorText
                         case .twoStepAuthMissing:
-                            errorText = L10n.channelTransferOwnerErrorText
+                            errorText = strings().channelTransferOwnerErrorText
                             install2Fa = true
                         case .twoStepAuthTooFresh:
-                            errorText = L10n.channelTransferOwnerErrorText
+                            errorText = strings().channelTransferOwnerErrorText
                         case .invalidPassword:
                             preconditionFailure()
                         case .requestPassword:
                             errorText = nil
                         case .restricted, .userBlocked:
-                            errorText = isGroup ? L10n.groupTransferOwnerErrorPrivacyRestricted : L10n.channelTransferOwnerErrorPrivacyRestricted
+                            errorText = isGroup ? strings().groupTransferOwnerErrorPrivacyRestricted : strings().channelTransferOwnerErrorPrivacyRestricted
                         case .adminsTooMuch:
-                             errorText = isGroup ? L10n.groupTransferOwnerErrorAdminsTooMuch : L10n.channelTransferOwnerErrorAdminsTooMuch
+                             errorText = isGroup ? strings().groupTransferOwnerErrorAdminsTooMuch : strings().channelTransferOwnerErrorAdminsTooMuch
                         case .userPublicChannelsTooMuch:
-                            errorText = L10n.channelTransferOwnerErrorPublicChannelsTooMuch
+                            errorText = strings().channelTransferOwnerErrorPublicChannelsTooMuch
                         case .limitExceeded:
-                            errorText = L10n.loginFloodWait
+                            errorText = strings().loginFloodWait
                         case .userLocatedGroupsTooMuch:
-                            errorText = L10n.groupOwnershipTransferErrorLocatedGroupsTooMuch
+                            errorText = strings().groupOwnershipTransferErrorLocatedGroupsTooMuch
                         }
                         
                         if let errorText = errorText {
-                            confirm(for: context.window, header: L10n.channelTransferOwnerErrorTitle, information: errorText, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel, thridTitle: install2Fa ? L10n.channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
+                            confirm(for: context.window, header: strings().channelTransferOwnerErrorTitle, information: errorText, okTitle: strings().modalOK, cancelTitle: strings().modalCancel, thridTitle: install2Fa ? strings().channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
                                 switch result {
                                 case .basic:
                                     break
@@ -818,7 +818,7 @@ class ChannelAdminController: TableModalViewController {
                                     case .tooManyChannels:
                                         showInactiveChannels(context: context, source: .upgrade)
                                     case .generic:
-                                        alert(for: context.window, info: L10n.unknownError)
+                                        alert(for: context.window, info: strings().unknownError)
                                     }
                                 }))
                             } else {
@@ -828,7 +828,7 @@ class ChannelAdminController: TableModalViewController {
                     }))
                 }
                 
-                confirm(for: context.window, header: header, information: text, okTitle: L10n.channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
+                confirm(for: context.window, header: header, information: text, okTitle: strings().channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
                     transfer(peerId, peer.isSupergroup || peer.isGroup, peer.isGroup)
                 })
             })
@@ -894,7 +894,7 @@ class ChannelAdminController: TableModalViewController {
             self?.modal?.interactions?.updateDone { button in
                 
                 button.isEnabled = values.canEdit
-                button.set(text: L10n.navigationDone, for: .Normal)
+                button.set(text: strings().navigationDone, for: .Normal)
             }
             
             self?.okClick = {
@@ -1024,7 +1024,7 @@ class ChannelAdminController: TableModalViewController {
                                     case .tooManyChannels:
                                         showInactiveChannels(context: context, source: .upgrade)
                                     case .generic:
-                                        alert(for: context.window, info: L10n.unknownError)
+                                        alert(for: context.window, info: strings().unknownError)
                                     }
                                     updateState { current in
                                         return current.withUpdatedUpdating(false)
@@ -1104,11 +1104,11 @@ class ChannelAdminController: TableModalViewController {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: L10n.adminsAdmin), right: nil)
+        return (left: nil, center: ModalHeaderData(title: strings().adminsAdmin), right: nil)
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak self] in
              self?.okClick?()
         }, drawBorder: true, height: 50, singleButton: true)
     }

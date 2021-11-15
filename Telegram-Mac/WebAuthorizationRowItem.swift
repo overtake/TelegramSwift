@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import DateUtils
 import Postbox
 
 class WebAuthorizationRowItem: GeneralRowItem {
@@ -170,7 +170,7 @@ private class WebAuthorizationRowView : TableRowView, ViewDisplayDelegate {
         
         logoutButton.set(color: theme.colors.accent, for: .Normal)
         logoutButton.set(font: .medium(.text), for: .Normal)
-        logoutButton.set(text: L10n.webAuthorizationsLogout, for: .Normal)
+        logoutButton.set(text: strings().webAuthorizationsLogout, for: .Normal)
         _ = logoutButton.sizeToFit()
         
         needsLayout = true

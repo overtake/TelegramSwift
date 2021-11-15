@@ -73,7 +73,7 @@ final class UpdateTabView : Control {
         progressView.progressColor = .white
         isInstalling = false
         
-        let layout = TextViewLayout(.initialize(string: L10n.updateUpdateTelegram, color: theme.colors.underSelectedColor, font: .medium(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().updateUpdateTelegram, color: theme.colors.underSelectedColor, font: .medium(.title)))
         layout.measure(width: max(280, frame.width))
         textView.update(layout)
         
@@ -363,7 +363,7 @@ class MainViewController: TelegramViewController {
     }
     
     private func showFilterTooltip() {
-        tabController.showTooltip(text: L10n.chatListFilterTooltip, for: showCallTabs ? 2 : 1)
+        tabController.showTooltip(text: strings().chatListFilterTooltip, for: showCallTabs ? 2 : 1)
     }
     
     private var showCallTabs: Bool = true
@@ -392,8 +392,8 @@ class MainViewController: TelegramViewController {
         let context = self.context
         
         if unreadCount > 0 {
-            items.append(SPopoverItem(L10n.chatListPopoverReadAll, {
-                confirm(for: context.window, information: L10n.chatListPopoverConfirm, successHandler: { _ in
+            items.append(SPopoverItem(strings().chatListPopoverReadAll, {
+                confirm(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
                     _ = context.account.postbox.transaction ({ transaction -> Void in
                         markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root, filterPredicate: nil)
                         markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive, filterPredicate: nil)
@@ -484,24 +484,24 @@ class MainViewController: TelegramViewController {
         
         switch passcodeData {
         case .none:
-            items.append(SPopoverItem(tr(L10n.fastSettingsSetPasscode), { [weak self] in
+            items.append(SPopoverItem(strings().fastSettingsSetPasscode, { [weak self] in
                 guard let `self` = self else {return}
                 self.tabController.select(index: self.tabController.count - 1)
                 self.context.sharedContext.bindings.rootNavigation().push(PasscodeSettingsViewController(self.context))
             }, theme.icons.fastSettingsLock))
         default:
-            items.append(SPopoverItem(tr(L10n.fastSettingsLockTelegram), {
+            items.append(SPopoverItem(strings().fastSettingsLockTelegram, {
                 context.window.sendKeyEvent(KeyboardKey.L, modifierFlags: [.command])
             }, theme.icons.fastSettingsLock))
         }
-        items.append(SPopoverItem(theme.colors.isDark ? L10n.fastSettingsDisableDarkMode : L10n.fastSettingsEnableDarkMode, {
+        items.append(SPopoverItem(theme.colors.isDark ? strings().fastSettingsDisableDarkMode : strings().fastSettingsEnableDarkMode, {
             toggleDarkMode(context: context)
         }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
        
         
         let time = Int32(Date().timeIntervalSince1970)
         let unmuted = notifications.muteUntil < time
-        items.append(SPopoverItem(unmuted ? tr(L10n.fastSettingsMute2Hours) : tr(L10n.fastSettingsUnmute), { [weak self] in
+        items.append(SPopoverItem(unmuted ? strings().fastSettingsMute2Hours : strings().fastSettingsUnmute, { [weak self] in
             if let context = self?.context {
                 let time = Int32(Date().timeIntervalSince1970 + 2 * 60 * 60)
                 _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedMuteUntil(unmuted ? time : 0)}).start()

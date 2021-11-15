@@ -245,10 +245,10 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? L10n.newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : L10n.newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? strings().newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : strings().newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
         
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.newPollQuestionPlaceholder, filter: { text in
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_input_title, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().newPollQuestionPlaceholder, filter: { text in
         
         var text = text
         while text.contains("\n\n\n") {
@@ -270,7 +270,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollOptionsHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newPollOptionsHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
     index += 1
     
     let sorted = state.options
@@ -305,13 +305,13 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         
         entries.append(.input(sectionId: sectionId, index: index, value: .string(option.text), error: nil, identifier: option.identifier, mode: .plain, data: InputDataRowData(viewType: viewType, rightItem: .action(theme.icons.recentDismiss, .custom({ _, _ in 
             deleteOption(option.identifier)
-        }))), placeholder: placeholder, inputPlaceholder: L10n.newPollOptionsPlaceholder, filter: { text in
+        }))), placeholder: placeholder, inputPlaceholder: strings().newPollOptionsPlaceholder, filter: { text in
             return text.trimmingCharacters(in: CharacterSet.newlines)
         }, limit: maxOptionLength))
         index += 1
     }
     if state.options.count < optionsLimit {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: L10n.newPollOptionsAddOption, color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, viewType: state.options.isEmpty ? .singleItem : .lastItem, action: nil)))
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_input_add_option, data: InputDataGeneralData(name: strings().newPollOptionsAddOption, color: theme.colors.accent, icon: theme.icons.pollAddOption, type: .none, viewType: state.options.isEmpty ? .singleItem : .lastItem, action: nil)))
         index += 1
     }
 
@@ -319,7 +319,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     index = 50
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? L10n.newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? L10n.newPollOptionsDescriptionLimitReached : L10n.newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.options.count < 2 ? strings().newPollOptionsDescriptionMinimumCountable(2) : optionsLimit == state.options.count ? strings().newPollOptionsDescriptionLimitReached : strings().newPollOptionsDescriptionCountable(optionsLimit - state.options.count)), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
     
@@ -336,7 +336,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     }
     
     if canBePublic {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: L10n.newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: hideQuiz && hideMultiple ? .singleItem : .firstItem, justUpdate: arc4random64(), action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_anonymous, data: InputDataGeneralData(name: strings().newPollAnonymous, color: theme.colors.text, type: .switchable(state.mode.isAnonymous), viewType: hideQuiz && hideMultiple ? .singleItem : .firstItem, justUpdate: arc4random64(), action: {
             updateMode(state.mode.withUpdatedIsAnonymous(!state.mode.isAnonymous))
         })))
         index += 1
@@ -345,14 +345,14 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     
     
     if !hideMultiple {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: L10n.newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: canBePublic ? hideQuiz ? .lastItem : .innerItem : hideQuiz ? .lastItem : .firstItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_multiple_choice, data: InputDataGeneralData(name: strings().newPollMultipleChoice, color: theme.colors.text, type: .switchable(state.mode.isMultiple), viewType: canBePublic ? hideQuiz ? .lastItem : .innerItem : hideQuiz ? .lastItem : .firstItem, enabled: !state.mode.isQuiz, justUpdate: arc4random64(), action: {
             if state.mode.isMultiple {
                 updateMode(.normal(anonymous: state.mode.isAnonymous))
             } else {
                 updateMode(.multiple(anonymous: state.mode.isAnonymous))
             }
         }, disabledAction: {
-            alert(for: context.window, info: L10n.newPollQuizMultipleError)
+            alert(for: context.window, info: strings().newPollQuizMultipleError)
         })))
         index += 1
     }
@@ -360,7 +360,7 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
    
     
     if !hideQuiz {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: L10n.newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .string(nil), error: nil, identifier: _id_quiz, data: InputDataGeneralData(name: strings().newPollQuiz, color: theme.colors.text, type: .switchable(state.mode.isQuiz), viewType: .lastItem, enabled: !state.mode.isMultiple, justUpdate: arc4random64(), action: {
             if state.mode.isQuiz {
                 updateMode(.normal(anonymous: state.mode.isAnonymous))
             } else {
@@ -370,13 +370,13 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         index += 1
         
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
         
         
     } else if state.isQuiz == true {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().newPollQuizDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
     }
     
@@ -386,16 +386,16 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
         sectionId += 1
         
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollExplanationHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().newPollExplanationHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .attributedString(state.quizExplanation), error: nil, identifier: _id_explanation, mode: .plain, data: InputDataRowData(viewType: .singleItem, canMakeTransformations: true), placeholder: nil, inputPlaceholder: L10n.newPollExplanationPlaceholder, filter: { text in
+        entries.append(.input(sectionId: sectionId, index: index, value: .attributedString(state.quizExplanation), error: nil, identifier: _id_explanation, mode: .plain, data: InputDataRowData(viewType: .singleItem, canMakeTransformations: true), placeholder: nil, inputPlaceholder: strings().newPollExplanationPlaceholder, filter: { text in
                 return text.trimmingCharacters(in: CharacterSet.newlines)
         }, limit: 200))
         index += 1
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.newPollExplanationDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().newPollExplanationDesc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
     default:
         break
@@ -494,7 +494,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
     }
     
     
-    let interactions = ModalInteractions(acceptTitle: L10n.modalSend, accept: {
+    let interactions = ModalInteractions(acceptTitle: strings().modalSend, accept: {
        checkAndSend()
     }, drawBorder: true, height: 50, singleButton: true)
     
@@ -513,7 +513,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
     }
     
     
-    let controller = InputDataController(dataSignal: signal, title: isQuiz == true ? L10n.newPollTitleQuiz : L10n.newPollTitle, validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: signal, title: isQuiz == true ? strings().newPollTitleQuiz : strings().newPollTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_input_add_option] {
             return addOption(true)
@@ -576,7 +576,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         
     }, updateDoneValue: { data in
         return { f in
-            f(.disabled(L10n.navigationDone))
+            f(.disabled(strings().navigationDone))
         }
     }, removeAfterDisappear: true, hasDone: true, identifier: "new-poll", afterTransaction: { controller in
         
@@ -731,7 +731,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         let state = stateValue.with { $0 }
         
         if !state.title.isEmpty || !state.options.filter({!$0.text.isEmpty}).isEmpty {
-            confirm(for: mainWindow, header: L10n.newPollDisacardConfirmHeader, information: L10n.newPollDisacardConfirm, okTitle: L10n.newPollDisacardConfirmYes, cancelTitle: L10n.newPollDisacardConfirmNo, successHandler: { _ in
+            confirm(for: mainWindow, header: strings().newPollDisacardConfirmHeader, information: strings().newPollDisacardConfirm, okTitle: strings().newPollDisacardConfirmYes, cancelTitle: strings().newPollDisacardConfirmNo, successHandler: { _ in
                 f()
             })
         } else {
@@ -749,7 +749,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
             let view = controller?.tableView.item(stableId: InputDataEntryId.input(option.identifier))?.view as? InputDataRowView
             if view?.visibleRect.height == view?.frame.height {
                 delay(0.2, closure: { [weak view] in
-                    view?.showPlaceholderActionTooltip(L10n.newPollQuizTooltip)
+                    view?.showPlaceholderActionTooltip(strings().newPollQuizTooltip)
                 })
                 break
             }

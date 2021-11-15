@@ -143,13 +143,13 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
             switch entry {
             case let .peer(peer, presence, _):
                 var color:NSColor = theme.colors.grayText
-                var string:String = L10n.peerStatusRecently
+                var string:String = strings().peerStatusRecently
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
                 item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], contextMenuItems: {
-                    return .single([ContextMenuItem(L10n.chatListContextPreview, handler: {
+                    return .single([ContextMenuItem(strings().chatListContextPreview, handler: {
                         showModal(with: ChatModalPreviewController(location: .peer(peer.id), context: context), for: context.window)
                     })])
                 })

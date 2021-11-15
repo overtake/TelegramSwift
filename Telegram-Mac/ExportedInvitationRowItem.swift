@@ -74,25 +74,25 @@ class ExportedInvitationRowItem: GeneralRowItem {
             text = exportedLink.link.replacingOccurrences(of: "https://", with: "")
             color = theme.colors.text
             if let count = exportedLink.count {
-                usageText = L10n.inviteLinkJoinedCountable(Int(count))
+                usageText = strings().inviteLinkJoinedCountable(Int(count))
                 if count > 0 {
                     usageColor = theme.colors.link
                 } else {
                     usageColor = theme.colors.grayText
                 }
             } else {
-                usageText = L10n.inviteLinkJoinedZero
+                usageText = strings().inviteLinkJoinedZero
                 usageColor = theme.colors.grayText
             }
         } else if let publicAddress = publicAddress {
             text = "t.me/\(publicAddress)"
             color = theme.colors.text
-            usageText = L10n.inviteLinkJoinedZero
+            usageText = strings().inviteLinkJoinedZero
             usageColor = theme.colors.grayText
         } else {
-            text = L10n.channelVisibilityLoading
+            text = strings().channelVisibilityLoading
             color = theme.colors.grayText
-            usageText = L10n.inviteLinkJoinedZero
+            usageText = strings().inviteLinkJoinedZero
             usageColor = theme.colors.grayText
         }
         
@@ -402,13 +402,13 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
        
                 
         share.set(font: .medium(.text), for: .Normal)
-        share.set(text: L10n.manageLinksContextShare, for: .Normal)
+        share.set(text: strings().manageLinksContextShare, for: .Normal)
         share.userInteractionEnabled = item.copyItem != nil
 
 
 
         copy.set(font: .medium(.text), for: .Normal)
-        copy.set(text: L10n.manageLinksContextCopy, for: .Normal)
+        copy.set(text: strings().manageLinksContextCopy, for: .Normal)
         copy.userInteractionEnabled = item.copyItem != nil
 
         linkView.update(item.linkTextLayout)

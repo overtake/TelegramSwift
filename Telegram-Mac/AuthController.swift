@@ -2,9 +2,10 @@ import Foundation
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-
+import Localization
 import Postbox
 import TGUIKit
+import ApiCredentials
 
 private let manager = CountryManager()
 
@@ -104,17 +105,17 @@ private final class ExportTokenView : View {
         super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = theme.colors.background
         
-        let titleLayout = TextViewLayout(.initialize(string: L10n.loginQRTitle, color: theme.colors.text, font: .normal(.header)), maximumNumberOfLines: 2, alignment: .center)
+        let titleLayout = TextViewLayout(.initialize(string: strings().loginQRTitle, color: theme.colors.text, font: .normal(.header)), maximumNumberOfLines: 2, alignment: .center)
         titleLayout.measure(width: frame.width)
         titleView.update(titleLayout)
         
-        firstHelp.update(title: L10n.loginQRHelp1, number: "1")
-        secondHelp.update(title: L10n.loginQRHelp2, number: "2")
-        thridHelp.update(title: L10n.loginQRHelp3, number: "3")
+        firstHelp.update(title: strings().loginQRHelp1, number: "1")
+        secondHelp.update(title: strings().loginQRHelp2, number: "2")
+        thridHelp.update(title: strings().loginQRHelp3, number: "3")
         
         cancelButton.set(font: .medium(.text), for: .Normal)
         cancelButton.set(color: theme.colors.accent, for: .Normal)
-        cancelButton.set(text: L10n.loginQRCancel, for: .Normal)
+        cancelButton.set(text: strings().loginQRCancel, for: .Normal)
         _ = cancelButton.sizeToFit()
         logoView.image = theme.icons.login_qr_cap
         logoView.sizeToFit()
@@ -220,7 +221,7 @@ class AuthHeaderView : View {
         
         nextButton.autohighlight = false
         nextButton.style = ControlStyle(font: NSFont.medium(16.0), foregroundColor: .white, backgroundColor: NSColor(0x32A3E2), highlightColor: .white)
-        nextButton.set(text: L10n.loginNext, for: .Normal)
+        nextButton.set(text: strings().loginNext, for: .Normal)
         _ = nextButton.sizeToFit(thatFit: true)
         nextButton.setFrameSize(76, 36)
         nextButton.layer?.cornerRadius = 18
@@ -361,17 +362,17 @@ class AuthHeaderView : View {
         desc.backgroundColor = theme.colors.background
         textHeaderView.backgroundColor = theme.colors.background
         
-        let descLayout = TextViewLayout(.initialize(string: tr(L10n.loginWelcomeDescription), color: theme.colors.grayText, font: .normal(16.0)), maximumNumberOfLines: 2, alignment: .center)
+        let descLayout = TextViewLayout(.initialize(string: strings().loginWelcomeDescription, color: theme.colors.grayText, font: .normal(16.0)), maximumNumberOfLines: 2, alignment: .center)
         descLayout.measure(width: 300)
         desc.update(descLayout)
         
         
         if let isQrEnabled = self.isQrEnabled, isQrEnabled {
-            nextButton.set(text: L10n.loginQRLogin, for: .Normal)
+            nextButton.set(text: strings().loginQRLogin, for: .Normal)
             _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
             nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: theme.colors.accent, backgroundColor: .clear)
         } else {
-            nextButton.set(text: L10n.loginNext, for: .Normal)
+            nextButton.set(text: strings().loginNext, for: .Normal)
             _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
             nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: theme.colors.underSelectedColor, backgroundColor: theme.colors.accent)
         }
@@ -383,12 +384,12 @@ class AuthHeaderView : View {
         backButton.set(font: .medium(.header), for: .Normal)
         backButton.set(color: theme.colors.accent, for: .Normal)
         backButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
-        backButton.set(text: L10n.navigationBack, for: .Normal)
+        backButton.set(text: strings().navigationBack, for: .Normal)
         _ = backButton.sizeToFit()
         
         cancelButton.set(font: .medium(.header), for: .Normal)
         cancelButton.set(color: theme.colors.accent, for: .Normal)
-        cancelButton.set(text: L10n.navigationCancel, for: .Normal)
+        cancelButton.set(text: strings().navigationCancel, for: .Normal)
         _ = cancelButton.sizeToFit()
         
         progressView?.progressColor = theme.colors.text
@@ -547,7 +548,7 @@ class AuthHeaderView : View {
             switchLanguage.isHidden = !needShowSuggestedButton
         case .confirmationCodeEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderCode, color: theme.colors.text, font: .normal(25)))
+            let headerLayout = TextViewLayout(.initialize(string: strings().loginHeaderCode, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
@@ -559,7 +560,7 @@ class AuthHeaderView : View {
             switchLanguage.isHidden = true
         case .passwordEntry:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderPassword, color: theme.colors.text, font: .normal(25)))
+            let headerLayout = TextViewLayout(.initialize(string: strings().loginHeaderPassword, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX(y: 30)
@@ -570,7 +571,7 @@ class AuthHeaderView : View {
             switchLanguage.isHidden = true
         case .signUp:
             nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginHeaderSignUp, color: theme.colors.text, font: .normal(25)))
+            let headerLayout = TextViewLayout(.initialize(string: strings().loginHeaderSignUp, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             textHeaderView.update(headerLayout)
             textHeaderView.centerX()
@@ -585,7 +586,7 @@ class AuthHeaderView : View {
         case .passwordRecovery:
             break
         case .awaitingAccountReset:
-            let headerLayout = TextViewLayout(.initialize(string: L10n.loginResetAccountText, color: theme.colors.text, font: .normal(25)))
+            let headerLayout = TextViewLayout(.initialize(string: strings().loginResetAccountText, color: theme.colors.text, font: .normal(25)))
             headerLayout.measure(width: .greatestFiniteMagnitude)
             intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
             intro.change(opacity: 0, animated: animated)
@@ -867,7 +868,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                     let logInNumber = formatPhoneNumber(phoneNumber)
                     for (number, accountId, isTestingEnvironment) in strongSelf.otherAccountPhoneNumbers.1 {
                         if isTestingEnvironment == strongSelf.account.testingEnvironment && formatPhoneNumber(number) == logInNumber {
-                            confirm(for: mainWindow, information: L10n.loginPhoneNumberAlreadyAuthorized, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
+                            confirm(for: mainWindow, information: strings().loginPhoneNumberAlreadyAuthorized, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
                                 switch result {
                                 case .thrid:
                                     _ = (sharedContext.accountManager.transaction({ transaction in
@@ -895,7 +896,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
                                 if let error = error {
                                     self?.genericView.loginView.updatePhoneError(error)
                                 } else {
-                                    confirm(for: mainWindow, header: L10n.loginConnectionErrorHeader, information: L10n.loginConnectionErrorInfo, okTitle: L10n.loginConnectionErrorTryAgain, thridTitle: L10n.loginConnectionErrorUseProxy, successHandler: { result in
+                                    confirm(for: mainWindow, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, okTitle: strings().loginConnectionErrorTryAgain, thridTitle: strings().loginConnectionErrorUseProxy, successHandler: { result in
                                         switch result {
                                         case .basic:
                                             again(phoneNumber)
@@ -910,7 +911,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             }
         },resendCode: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                confirm(for: window, information: strings().loginSmsAppErr, cancelTitle: strings().loginSmsAppErrGotoSite, successHandler: { _ in
                     
                 }, cancelHandler:{
                     execute(inapp: .external(link: "https://telegram.org", false))
@@ -962,13 +963,13 @@ class AuthController : GenericViewController<AuthHeaderView> {
                 f(pattern)
                 showModal(with: ForgotUnauthorizedPasswordController(accountManager: sharedContext.accountManager, engine: self.engine, emailPattern: pattern), for: mainWindow)
             }, error: { error in
-                alert(for: mainWindow, info: L10n.unknownError)
+                alert(for: mainWindow, info: strings().unknownError)
             })
         }, resetAccount: { [weak self] in
             guard let `self` = self else {return}
-            confirm(for: mainWindow, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in
+            confirm(for: mainWindow, information: strings().loginResetAccountDescription, okTitle: strings().loginResetAccount, successHandler: { _ in
                 _ = showModalProgress(signal: performAccountReset(account: self.account) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-                    alert(for: mainWindow, info: L10n.unknownError)
+                    alert(for: mainWindow, info: strings().unknownError)
                 })
             })
         }, signUp: { [weak self] firstName, lastName, photo in
@@ -977,15 +978,15 @@ class AuthController : GenericViewController<AuthHeaderView> {
                 let text: String
                 switch error {
                 case .limitExceeded:
-                    text = L10n.loginFloodWait
+                    text = strings().loginFloodWait
                 case .codeExpired:
-                    text = L10n.phoneCodeExpired
+                    text = strings().phoneCodeExpired
                 case .invalidFirstName:
-                    text = L10n.loginInvalidFirstNameError
+                    text = strings().loginInvalidFirstNameError
                 case .invalidLastName:
-                    text = L10n.loginInvalidLastNameError
+                    text = strings().loginInvalidLastNameError
                 case .generic:
-                    text = L10n.unknownError
+                    text = strings().unknownError
                 }
                 alert(for: mainWindow, info: text)
             })

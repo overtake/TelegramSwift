@@ -201,11 +201,11 @@ final class WidgetListView: View {
         let theme = theme as! TelegramPresentationTheme
         
         if let prev = prev {
-            prev.setup(L10n.emptyChatNavigationPrev, image: theme.emptyChatNavigationPrev, direction: .left)
+            prev.setup(strings().emptyChatNavigationPrev, image: theme.emptyChatNavigationPrev, direction: .left)
             prev.setFrameSize(prev.size())
         }
         if let next = next {
-            next.setup(L10n.emptyChatNavigationNext, image: theme.emptyChatNavigationNext, direction: .right)
+            next.setup(strings().emptyChatNavigationNext, image: theme.emptyChatNavigationNext, direction: .right)
             next.setFrameSize(next.size())
         }
         needsLayout = true

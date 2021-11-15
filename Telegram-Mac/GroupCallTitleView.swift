@@ -387,13 +387,13 @@ final class GroupCallTitleView : Control {
             let status: String
             let count: Int
             if state.state.scheduleTimestamp != nil {
-                status = L10n.voiceChatTitleScheduledSoon
+                status = strings().voiceChatTitleScheduledSoon
                 count = 0
             }  else if let summaryState = state.summaryState {
-                status = L10n.voiceChatStatusMembersCountable(summaryState.participantCount)
+                status = strings().voiceChatStatusMembersCountable(summaryState.participantCount)
                 count = summaryState.participantCount
             } else {
-                status = L10n.voiceChatStatusLoading
+                status = strings().voiceChatStatusLoading
                 count = 0
             }
 
@@ -424,7 +424,7 @@ final class GroupCallTitleView : Control {
             control.window?.level = (windowIsPinned ? NSWindow.Level.normal : NSWindow.Level.popUpMenu)
             (control as? ImageButton)?.set(image: windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
             
-            showModalText(for: window, text: !windowIsPinned ? L10n.voiceChatTooltipPinWindow : L10n.voiceChatTooltipUnpinWindow)
+            showModalText(for: window, text: !windowIsPinned ? strings().voiceChatTooltipPinWindow : strings().voiceChatTooltipUnpinWindow)
             
         }, for: .Click)
 

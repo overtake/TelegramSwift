@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import ApiCredentials
 import SwiftSignalKit
 
 import OpenSSLEncryption

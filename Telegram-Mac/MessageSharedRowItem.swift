@@ -26,7 +26,7 @@ class MessageSharedRowItem: GeneralRowItem {
         
         let views = Int(message.channelViewsCount ?? 0)
         
-        let viewsString = L10n.channelStatsViewsCountCountable(views).replacingOccurrences(of: "\(views)", with: views.formattedWithSeparator)
+        let viewsString = strings().channelStatsViewsCountCountable(views).replacingOccurrences(of: "\(views)", with: views.formattedWithSeparator)
         
         viewsCountLayout = TextViewLayout(.initialize(string: viewsString, color: theme.colors.grayText, font: .normal(.short)),maximumNumberOfLines: 1)
         

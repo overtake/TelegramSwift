@@ -163,9 +163,9 @@ class APSongItem : APItem {
                     songName = ""
                 }
                 if file.isVoice {
-                    performerName = L10n.audioControllerVoiceMessage
+                    performerName = strings().audioControllerVoiceMessage
                 } else {
-                    performerName = L10n.audioControllerVideoMessage
+                    performerName = strings().audioControllerVideoMessage
                 }
             }  else {
                 var t:String?
@@ -181,12 +181,12 @@ class APSongItem : APItem {
                 if let t = t {
                     songName = t
                 } else {
-                    songName = p != nil ? L10n.audioUntitledSong : ""
+                    songName = p != nil ? strings().audioUntitledSong : ""
                 }
                 if let p = p {
                     performerName = p
                 } else {
-                    performerName = file.fileName ?? L10n.audioUnknownArtist
+                    performerName = file.fileName ?? strings().audioUnknownArtist
                 }
             }
 

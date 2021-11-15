@@ -35,7 +35,7 @@ final class GroupCallSpeakingTooltipView: Control {
                 
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.voiceChatTooltipIsSpeaking(data.peer.compactDisplayTitle.prefix(25)), color: GroupCallTheme.customTheme.textColor, font: .normal(.text))
+        _ = attr.append(string: strings().voiceChatTooltipIsSpeaking(data.peer.compactDisplayTitle.prefix(25)), color: GroupCallTheme.customTheme.textColor, font: .normal(.text))
         attr.detectBoldColorInString(with: .medium(.text))
         let layout = TextViewLayout(attr, maximumNumberOfLines: 1)
         layout.measure(width: 200)

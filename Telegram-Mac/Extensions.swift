@@ -10,9 +10,15 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import Localization
 import Postbox
 import LocalAuthentication
+import EmojiSuggestions
+import FastBlur
+import CalendarUtils
+import ObjcUtils
+import TGModernGrowingTextView
+
 extension Message {
     
     var chatStableId:ChatHistoryEntryId {
@@ -148,11 +154,11 @@ public extension String {
     
     static func stringForShortCallDurationSeconds(for seconds: Int32) -> String {
         if seconds < 60 {
-            return tr(L10n.callShortSecondsCountable(Int(seconds)))
+            return Telegram.strings().callShortSecondsCountable(Int(seconds))
         }
         else {
             let number = Int(seconds) / 60
-            return tr(L10n.callShortMinutesCountable(number))
+            return Telegram.strings().callShortMinutesCountable(number)
         }
     }
     
@@ -2491,12 +2497,12 @@ func systemSizeGigabytes() -> UInt64? {
 
 func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: AccountContext) {
     let alert: NSAlert = NSAlert()
-    alert.addButton(withTitle: L10n.systemMemoryWarningOK)
-    alert.addButton(withTitle: L10n.systemMemoryWarningDataAndStorage)
-   // alert.addButton(withTitle: L10n.systemMemoryWarningManageSystemStorage)
+    alert.addButton(withTitle: strings().systemMemoryWarningOK)
+    alert.addButton(withTitle: strings().systemMemoryWarningDataAndStorage)
+   // alert.addButton(withTitle: strings().systemMemoryWarningManageSystemStorage)
     
-    alert.messageText = L10n.systemMemoryWarningHeader
-    alert.informativeText = L10n.systemMemoryWarningText(freeSpace == 0 ? L10n.systemMemoryWarningLessThen1GB : L10n.systemMemoryWarningFreeSpace(Int(freeSpace)))
+    alert.messageText = strings().systemMemoryWarningHeader
+    alert.informativeText = strings().systemMemoryWarningText(freeSpace == 0 ? strings().systemMemoryWarningLessThen1GB : strings().systemMemoryWarningFreeSpace(Int(freeSpace)))
     alert.alertStyle = .critical
     
     alert.beginSheetModal(for: window, completionHandler: { response in
@@ -2637,13 +2643,13 @@ public extension DataSizeStringFormatting {
     
     static var current: DataSizeStringFormatting {
         return DataSizeStringFormatting.init(decimalSeparator: NumberFormatter().decimalSeparator, byte: { value in
-            return (L10n.fileSizeB(value), [])
+            return (strings().fileSizeB(value), [])
         }, kilobyte: { value in
-            return (L10n.fileSizeKB(value), [])
+            return (strings().fileSizeKB(value), [])
         }, megabyte: { value in
-            return (L10n.fileSizeMB(value), [])
+            return (strings().fileSizeMB(value), [])
         }, gigabyte: { value in
-            return (L10n.fileSizeGB(value), [])
+            return (strings().fileSizeGB(value), [])
         })
     }
 }

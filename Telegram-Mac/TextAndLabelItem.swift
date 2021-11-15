@@ -77,7 +77,7 @@ class TextAndLabelItem: GeneralRowItem {
         
         var showFull:(()->Void)? = nil
         
-        let moreAttr = parseMarkdownIntoAttributedString(L10n.peerInfoShowMoreText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { contents in
+        let moreAttr = parseMarkdownIntoAttributedString(strings().peerInfoShowMoreText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in
                 showFull?()
             }))

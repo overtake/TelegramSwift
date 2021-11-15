@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import CalendarUtils
 import Postbox
 
 
@@ -70,9 +70,9 @@ class ChatDateStickItem : TableStickItem {
             
             switch interaction.mode {
             case .scheduled:
-                text = L10n.chatDateScheduledForToday
+                text = strings().chatDateScheduledForToday
             default:
-                text = L10n.dateToday
+                text = strings().dateToday
             }
             
         } else {
@@ -91,9 +91,9 @@ class ChatDateStickItem : TableStickItem {
             switch interaction.mode {
             case .scheduled:
                 if timestamp == 2147457600 {
-                    text = L10n.chatDateScheduledUntilOnline
+                    text = strings().chatDateScheduledUntilOnline
                 } else {
-                    text = L10n.chatDateScheduledFor(dateString)
+                    text = strings().chatDateScheduledFor(dateString)
                 }
             default:
                 text = dateString

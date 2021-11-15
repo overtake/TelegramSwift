@@ -187,7 +187,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appearanceSettingsColorThemeHeader), data: .init(viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appearanceSettingsColorThemeHeader), data: .init(viewType: .textTopItem)))
     index += 1
 
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_preview, equatable: InputDataEquatable(appearance), comparable: nil, item: { initialSize, stableId in
@@ -278,14 +278,14 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
 
             if let cloud = cloud {
                 if cloud.isCreator {
-                    items.append(ContextMenuItem(L10n.appearanceThemeEdit, handler: {
+                    items.append(ContextMenuItem(strings().appearanceThemeEdit, handler: {
                         arguments.editTheme(cloud)
                     }))
                 }
-                items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                items.append(ContextMenuItem(strings().appearanceThemeShare, handler: {
                     arguments.shareTheme(cloud)
                 }))
-                items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                items.append(ContextMenuItem(strings().appearanceThemeRemove, handler: {
                     arguments.removeTheme(cloud)
                 }))
             }
@@ -310,10 +310,10 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
             return AccentColorRowItem(initialSize, stableId: stableId, context: arguments.context, list: accentList, isNative: true, theme: appearance.presentation, viewType: .lastItem, selectAccentColor: arguments.selectAccentColor, menuItems: { accent in
                 var items:[ContextMenuItem] = []
                 if let cloud = accent.cloudTheme {
-                    items.append(ContextMenuItem(L10n.appearanceThemeShare, handler: {
+                    items.append(ContextMenuItem(strings().appearanceThemeShare, handler: {
                         arguments.shareTheme(cloud)
                     }))
-                    items.append(ContextMenuItem(L10n.appearanceThemeRemove, handler: {
+                    items.append(ContextMenuItem(strings().appearanceThemeRemove, handler: {
                         arguments.removeTheme(cloud)
                     }))
                 }
@@ -328,7 +328,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
 //
 //        }
         
-//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_cloud_themes, data: .init(name: !state.revealed ? L10n.appearanceSettingsShowMore : L10n.appearanceSettingsShowLess, color: appearance.presentation.colors.accent, type: .none, viewType: .lastItem, action: arguments.toggleRevealThemes)))
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_cloud_themes, data: .init(name: !state.revealed ? strings().appearanceSettingsShowMore : strings().appearanceSettingsShowLess, color: appearance.presentation.colors.accent, type: .none, viewType: .lastItem, action: arguments.toggleRevealThemes)))
 //        index += 1
         
     }
@@ -337,27 +337,27 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
     sectionId += 1
     
   
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_night_mode, data: InputDataGeneralData(name: L10n.appearanceSettingsDarkMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.dark), viewType: .firstItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_night_mode, data: InputDataGeneralData(name: strings().appearanceSettingsDarkMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.dark), viewType: .firstItem, action: {
         arguments.toggleDarkMode(!appearance.presentation.dark)
     })))
     index += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_chat_mode, data: InputDataGeneralData(name: L10n.appearanceSettingsBubblesMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.bubbled), viewType: appearance.presentation.bubbled ? .innerItem : .lastItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_chat_mode, data: InputDataGeneralData(name: strings().appearanceSettingsBubblesMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.bubbled), viewType: appearance.presentation.bubbled ? .innerItem : .lastItem, action: {
         arguments.toggleBubbles(!appearance.presentation.bubbled)
     })))
     index += 1
     
    
     if appearance.presentation.bubbled {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_wallpaper1, data: InputDataGeneralData(name: L10n.generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .lastItem, action: arguments.selectChatBackground)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_wallpaper1, data: InputDataGeneralData(name: strings().generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .lastItem, action: arguments.selectChatBackground)))
         index += 1
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appearanceSettingsTextSizeHeader), data: .init(viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appearanceSettingsTextSizeHeader), data: .init(viewType: .textTopItem)))
     index += 1
 
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_text_size, equatable: InputDataEquatable(appearance), comparable: nil, item: { initialSize, stableId in
@@ -371,23 +371,23 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.appearanceSettingsAutoNightHeader), data: .init(viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appearanceSettingsAutoNightHeader), data: .init(viewType: .textTopItem)))
     index += 1
 
     let autoNightText: String
     if autoNightSettings.systemBased {
-        autoNightText = L10n.autoNightSettingsSystemBased
+        autoNightText = strings().autoNightSettingsSystemBased
     } else if let _ = autoNightSettings.schedule {
-        autoNightText = L10n.autoNightSettingsScheduled
+        autoNightText = strings().autoNightSettingsScheduled
     } else {
-        autoNightText = L10n.autoNightSettingsDisabled
+        autoNightText = strings().autoNightSettingsDisabled
     }
     
     sectionId += 1
 
     
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_auto_night, data: InputDataGeneralData(name: L10n.appearanceSettingsAutoNight, color: appearance.presentation.colors.text, type: .nextContext(autoNightText), viewType: .singleItem, action: arguments.openAutoNightSettings)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_auto_night, data: InputDataGeneralData(name: strings().appearanceSettingsAutoNight, color: appearance.presentation.colors.text, type: .nextContext(autoNightText), viewType: .singleItem, action: arguments.openAutoNightSettings)))
     index += 1
 
     
@@ -469,7 +469,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         
         _ = nightSettings.start(next: { settings in
             if settings.systemBased || settings.schedule != nil {
-                confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
+                confirm(for: context.window, header: strings().darkModeConfirmNightModeHeader, information: strings().darkModeConfirmNightModeText, okTitle: strings().darkModeConfirmNightModeOK, successHandler: { _ in
                     let disableNightMode = context.sharedContext.accountManager.transaction { transaction -> Void in
                         transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
                             let settings: AutoNightThemePreferences = entry?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings
@@ -531,7 +531,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, openAutoNightSettings: {
         context.sharedContext.bindings.rootNavigation().push(AutoNightSettingsController(context: context))
     }, removeTheme: { cloudTheme in
-        confirm(for: context.window, header: L10n.appearanceConfirmRemoveTitle, information: L10n.appearanceConfirmRemoveText, okTitle: L10n.appearanceConfirmRemoveOK, successHandler: { _ in
+        confirm(for: context.window, header: strings().appearanceConfirmRemoveTitle, information: strings().appearanceConfirmRemoveText, okTitle: strings().appearanceConfirmRemoveOK, successHandler: { _ in
             var signals:[Signal<Void, NoError>] = []
             if theme.cloudTheme?.id == cloudTheme.id {
                 signals.append(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
@@ -594,27 +594,27 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     } |> deliverOnMainQueue
     
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.telegramAppearanceViewController, removeAfterDisappear:false, identifier: "app_appearance", customRightButton: { controller in
+    let controller = InputDataController(dataSignal: signal, title: strings().telegramAppearanceViewController, removeAfterDisappear:false, identifier: "app_appearance", customRightButton: { controller in
         
         let view = ImageBarView(controller: controller, theme.icons.chatActions)
         
         view.button.set(handler: { control in
             var items:[SPopoverItem] = []
             if theme.colors.parent != .system {
-                items.append(SPopoverItem(L10n.appearanceNewTheme, {
+                items.append(SPopoverItem(strings().appearanceNewTheme, {
                     showModal(with: NewThemeController(context: context, palette: theme.colors.withUpdatedWallpaper(theme.wallpaper.paletteWallpaper)), for: context.window)
                 }))
-                items.append(SPopoverItem(L10n.appearanceExportTheme, {
+                items.append(SPopoverItem(strings().appearanceExportTheme, {
                     exportPalette(palette: theme.colors.withUpdatedName(theme.cloudTheme?.title ?? theme.colors.name).withUpdatedWallpaper(theme.wallpaper.paletteWallpaper))
                 }))
                 if let cloudTheme = theme.cloudTheme {
-                    items.append(SPopoverItem(L10n.appearanceThemeShare, {
+                    items.append(SPopoverItem(strings().appearanceThemeShare, {
                         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(cloudTheme.slug)")), for: context.window)
                     }))
                 }
                 
                 if theme.cloudTheme != nil || theme.colors.accent != theme.colors.basicAccent {
-                    items.append(SPopoverItem(L10n.appearanceReset, {
+                    items.append(SPopoverItem(strings().appearanceReset, {
                          _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                             var settings = settings
                             if settings.defaultIsDark {
@@ -664,7 +664,7 @@ func toggleDarkMode(context: AccountContext) {
     
     _ = nightSettings.start(next: { settings in
         if settings.systemBased || settings.schedule != nil {
-            confirm(for: context.window, header: L10n.darkModeConfirmNightModeHeader, information: L10n.darkModeConfirmNightModeText, okTitle: L10n.darkModeConfirmNightModeOK, successHandler: { _ in
+            confirm(for: context.window, header: strings().darkModeConfirmNightModeHeader, information: strings().darkModeConfirmNightModeText, okTitle: strings().darkModeConfirmNightModeOK, successHandler: { _ in
                 
                 _ = context.sharedContext.accountManager.transaction { transaction -> Void in
                     transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in

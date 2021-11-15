@@ -97,7 +97,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             let count = peer.participantCount
             if let count = count {
                 let count = Int(count)
-                let countValue = L10n.privacySettingsGroupMembersCountCountable(count)
+                let countValue = strings().privacySettingsGroupMembersCountCountable(count)
                 status = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
             }
 
@@ -105,13 +105,13 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openInfo(peer.peer)
             }, contextMenuItems: {
-                return .single([ContextMenuItem(L10n.confirmDelete, handler: {
+                return .single([ContextMenuItem(strings().confirmDelete, handler: {
                     arguments.removePeer(peer.peer.id)
                 })])
             })
 
         case let .addItem(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addPeer()
             })
         case .section:

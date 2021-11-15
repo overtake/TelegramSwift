@@ -10,8 +10,9 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import BuildConfig
 import TGUIKit
+import ObjcUtils
 
 func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -> MessageId? {
     if let msgId = userInfo["\(prefix).message.id"] as? Int32, let msgNamespace = userInfo["\(prefix).message.namespace"] as? Int32, let namespace = userInfo["\(prefix).peer.namespace"] as? Int32, let id = userInfo["\(prefix).peer.id"] as? Int64 {
@@ -351,7 +352,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             if message.wasScheduled {
                                 if message.id.peerId == account.peerId {
-                                    title = L10n.notificationReminder
+                                    title = strings().notificationReminder
                                 } else {
                                     title = "📆 \(title)"
                                 }
@@ -363,7 +364,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             
                             if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
-                                text = L10n.notificationLockedPreview.nsstring
+                                text = strings().notificationLockedPreview.nsstring
                                 subText = nil
                             }
                             
@@ -406,7 +407,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             notification.hasReplyButton = hasReplyButton
                             
                             notification.hasActionButton = !message.wasScheduled
-                            notification.otherButtonTitle = L10n.notificationMarkAsRead
+                            notification.otherButtonTitle = strings().notificationMarkAsRead
                             
                             var dict: [String : Any] = [:]
                             

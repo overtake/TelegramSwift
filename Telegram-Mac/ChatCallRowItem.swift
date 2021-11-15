@@ -46,7 +46,7 @@ class ChatCallRowItem: ChatRowItem {
         }
         self.isVideo = video
         
-        headerLayout = TextViewLayout(.initialize(string: outgoing ? (video ? L10n.chatVideoCallOutgoing : L10n.chatCallOutgoing) : (video ? L10n.chatVideoCallIncoming : L10n.chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
+        headerLayout = TextViewLayout(.initialize(string: outgoing ? (video ? strings().chatVideoCallOutgoing : strings().chatCallOutgoing) : (video ? strings().chatVideoCallIncoming : strings().chatCallIncoming), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text)), maximumNumberOfLines: 1)
         switch action.action {
         case let .phoneCall(_, reason, duration, _):
             let attr = NSMutableAttributedString()
@@ -59,13 +59,13 @@ class ChatCallRowItem: ChatRowItem {
             } else if let reason = reason {
                 switch reason {
                 case .busy:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? strings().chatServiceCallCancelled : strings().chatServiceCallMissed, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .disconnect:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? strings().chatServiceCallCancelled : strings().chatServiceCallMissed, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .hangup:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? strings().chatServiceCallCancelled : strings().chatServiceCallMissed, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 case .missed:
-                    _ = attr.append(string: outgoing ? tr(L10n.chatServiceCallCancelled) : tr(L10n.chatServiceCallMissed), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
+                    _ = attr.append(string: outgoing ? strings().chatServiceCallCancelled : strings().chatServiceCallMissed, color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text))
                 }
                 failed = true
             } else {
@@ -140,11 +140,11 @@ class ChatCallRowItem: ChatRowItem {
             if let callId = callId, let foundLog = logPath {
                 items.append(ContextSeparatorItem())
 
-                items.append(.init(L10n.callContextRate, handler: {
+                items.append(.init(strings().callContextRate, handler: {
                     showModal(with: CallRatingModalViewController(context, callId: callId, userInitiated: true, isVideo: isVideo), for: context.window)
                 }))
                 if FileManager.default.fileExists(atPath: foundLog), let size = fs(foundLog), size > 0 {
-                    items.append(.init(L10n.shareCallLogs, handler: {
+                    items.append(.init(strings().shareCallLogs, handler: {
                         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: foundLog)])
                     }))
                 }

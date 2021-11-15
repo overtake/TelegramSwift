@@ -220,14 +220,14 @@ private final class MessageViewsMenuItemView : Control {
             let text: String
             if let media = message.media.first as? TelegramMediaFile {
                 if media.isInstantVideo {
-                    text = L10n.chatMessageReadStatsEmptyWatches
+                    text = strings().chatMessageReadStatsEmptyWatches
                 } else if media.isVoice {
-                    text = L10n.chatMessageReadStatsEmptyListens
+                    text = strings().chatMessageReadStatsEmptyListens
                 } else {
-                    text = L10n.chatMessageReadStatsEmptyViews
+                    text = strings().chatMessageReadStatsEmptyViews
                 }
             } else {
-                text = L10n.chatMessageReadStatsEmptyViews
+                text = strings().chatMessageReadStatsEmptyViews
             }
             textLayot = TextViewLayout(.initialize(string: text, color: textColor, font: .normal(.text)))
             contentView = nil
@@ -248,14 +248,14 @@ private final class MessageViewsMenuItemView : Control {
                 let text: String
                 if let media = message.media.first as? TelegramMediaFile {
                     if media.isInstantVideo {
-                        text = L10n.chatMessageReadStatsWatchedCountable(peers.count)
+                        text = strings().chatMessageReadStatsWatchedCountable(peers.count)
                     } else if media.isVoice {
-                        text = L10n.chatMessageReadStatsListenedCountable(peers.count)
+                        text = strings().chatMessageReadStatsListenedCountable(peers.count)
                     } else {
-                        text = L10n.chatMessageReadStatsSeenCountable(peers.count)
+                        text = strings().chatMessageReadStatsSeenCountable(peers.count)
                     }
                 } else {
-                    text = L10n.chatMessageReadStatsSeenCountable(peers.count)
+                    text = strings().chatMessageReadStatsSeenCountable(peers.count)
                 }
                 textLayot = TextViewLayout(.initialize(string: text, color: textColor, font: .normal(.text)))
                 loadingView = nil

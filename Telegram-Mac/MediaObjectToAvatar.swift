@@ -13,6 +13,7 @@ import TGUIKit
 import RLottie
 import CoreMedia
 import libwebp
+import GZIP
 
 private func buffer(from image: CGImage, bg: Bool = false) -> CVPixelBuffer? {
     let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary

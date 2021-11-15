@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import Localization
 import SwiftSignalKit
 
 
@@ -86,7 +86,7 @@ enum LanguageTableEntry : TableItemListNodeEntry {
                 arguments.change(value)
             }, menuItems: {
                 if deletable {
-                    return [ContextMenuItem(L10n.messageContextDelete, handler: {
+                    return [ContextMenuItem(strings().messageContextDelete, handler: {
                         arguments.delete(value)
                     })]
                 }
@@ -383,7 +383,7 @@ class LanguageViewController: TableViewController {
                 self?.applyDisposable.set(showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: value.languageCode), for: context.window).start())
             }
         }, delete: { info in
-            confirm(for: context.window, information: L10n.languageRemovePack, successHandler: { _ in
+            confirm(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
                 let _ = (context.account.postbox.transaction { transaction in
                     removeSavedLocalization(transaction: transaction, languageCode: info.languageCode)
                 }).start()

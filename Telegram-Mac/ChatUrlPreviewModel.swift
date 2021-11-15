@@ -34,7 +34,7 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
         var isEmptyText: Bool = false
         switch self.webpage.content {
         case .Pending:
-            authorName = L10n.chatInlineRequestLoading
+            authorName = strings().chatInlineRequestLoading
             text = self.url
         case let .Loaded(content):
             if let title = content.websiteName {
@@ -47,7 +47,7 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
             if content.text == nil && content.title == nil {
                 isEmptyText = true
             }
-            text = content.text ?? content.title ?? L10n.chatEmptyLinkPreview
+            text = content.text ?? content.title ?? strings().chatEmptyLinkPreview
         }
         
         self.headerAttr = .initialize(string: authorName, color: theme.colors.accent, font: .medium(.text))

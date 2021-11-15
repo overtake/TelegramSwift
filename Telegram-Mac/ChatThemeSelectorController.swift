@@ -96,12 +96,12 @@ final class ChatThemeSelectorView : View {
         accept.set(color: theme.colors.underSelectedColor, for: .Normal)
         accept.set(background: theme.colors.accent, for: .Normal)
         accept.set(font: .medium(.text), for: .Normal)
-        accept.set(text: L10n.chatChatThemeApplyTheme, for: .Normal)
+        accept.set(text: strings().chatChatThemeApplyTheme, for: .Normal)
         
         cancel.set(color: theme.colors.text, for: .Normal)
         cancel.set(font: .medium(.text), for: .Normal)
         cancel.set(background: theme.colors.background, for: .Normal)
-        cancel.set(text: L10n.chatChatThemeCancel, for: .Normal)
+        cancel.set(text: strings().chatChatThemeCancel, for: .Normal)
         cancel.layer?.borderColor = theme.colors.border.cgColor
         
         accept.sizeToFit(NSMakeSize(20, 15), .zero, thatFit: false)

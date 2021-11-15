@@ -19,7 +19,7 @@ struct ReportReasonValue : Equatable {
 }
 
 
-func reportReasonSelector(context: AccountContext, buttonText: String = L10n.reportReasonReport) -> Signal<ReportReasonValue, NoError> {
+func reportReasonSelector(context: AccountContext, buttonText: String = strings().reportReasonReport) -> Signal<ReportReasonValue, NoError> {
     let promise: ValuePromise<ReportReasonValue> = ValuePromise()
     let controller = ReportReasonController(callback: { reason in
         promise.set(reason)
@@ -83,19 +83,19 @@ private extension ReportReason {
     var title: String {
         switch self {
         case .spam:
-            return L10n.reportReasonSpam
+            return strings().reportReasonSpam
         case .violence:
-            return L10n.reportReasonViolence
+            return strings().reportReasonViolence
         case .porno:
-            return L10n.reportReasonPorno
+            return strings().reportReasonPorno
         case .childAbuse:
-            return L10n.reportReasonChildAbuse
+            return strings().reportReasonChildAbuse
         case .copyright:
-            return L10n.reportReasonCopyright
+            return strings().reportReasonCopyright
         case .custom:
-            return L10n.reportReasonOther
+            return strings().reportReasonOther
         case .fake:
-            return L10n.reportReasonFake
+            return strings().reportReasonFake
         default:
             fatalError("unsupported")
         }
@@ -159,7 +159,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
+//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
 //    index += 1
 //
 //    entries.append(.sectionId(sectionId, type: .normal))
@@ -168,7 +168,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     return entries
 }
 
-func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, buttonText: String = L10n.reportReasonReport) -> InputDataModalController {
+func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, buttonText: String = strings().reportReasonReport) -> InputDataModalController {
     let initialState = ReportReasonState(value: .init(reason: .spam, comment: ""))
     let state: ValuePromise<ReportReasonState> = ValuePromise(initialState)
     let stateValue: Atomic<ReportReasonState> = Atomic(value: initialState)
@@ -192,7 +192,7 @@ func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, button
     
 
     
-    let controller = InputDataController(dataSignal: dataSignal, title: L10n.peerInfoReport)
+    let controller = InputDataController(dataSignal: dataSignal, title: strings().peerInfoReport)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         getModalController?()?.close()

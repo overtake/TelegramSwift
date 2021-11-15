@@ -8,9 +8,10 @@
 
 import Cocoa
 import TelegramCore
-
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
+import InAppVideoServices
 
 let sharedVideoLoader:ExternalVideoLoader = {
     let shared = ExternalVideoLoader()

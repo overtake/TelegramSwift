@@ -3,15 +3,21 @@ import FFMpegBinding
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import DateUtils
 import TGUIKit
 import Quartz
 import MtProtoKit
 import CoreServices
 import LocalAuthentication
-//import WalletCore
 import OpenSSLEncryption
 import CoreSpotlight
+import BuildConfig
+import Localization
+import ApiCredentials
+import EDSunriseSet
+import ObjcUtils
+import HackUtils
+import TGModernGrowingTextView
 
 #if !APP_STORE
 import AppCenter
@@ -195,10 +201,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         if crashed {
             let alert: NSAlert = NSAlert()
-            alert.addButton(withTitle: L10n.crashOnLaunchOK)
-            alert.addButton(withTitle: L10n.crashOnLaunchCancel)
-            alert.messageText = L10n.crashOnLaunchMessage
-            alert.informativeText = L10n.crashOnLaunchInformation
+            alert.addButton(withTitle: strings().crashOnLaunchOK)
+            alert.addButton(withTitle: strings().crashOnLaunchCancel)
+            alert.messageText = strings().crashOnLaunchMessage
+            alert.informativeText = strings().crashOnLaunchInformation
             alert.alertStyle = .critical
             if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
                 try? FileManager.default.removeItem(atPath: self.containerUrl)
@@ -322,7 +328,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             localizationSemaphore.wait()
             
             if let localization = localization {
-                applyUILocalization(localization)
+                applyUILocalization(localization, window: self.window)
+                UNUserNotifications.current?.registerCategories()
             }
             
             telegramUpdateTheme(updateTheme(with: themeSettings), window: window, animated: false)
@@ -430,7 +437,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             localizationSemaphore.wait()
             
             if let localization = localization {
-                applyUILocalization(localization)
+                applyUILocalization(localization, window: self.window)
+                UNUserNotifications.current?.registerCategories()
             }
                         
             telegramUpdateTheme(updateTheme(with: themeSettings), window: window, animated: false)
@@ -547,7 +555,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             _ = (accountManager.sharedData(keys: [SharedDataKeys.localizationSettings]) |> deliverOnMainQueue).start(next: { view in
                 if let settings = view.entries[SharedDataKeys.localizationSettings]?.get(LocalizationSettings.self) {
                     if basicLocalization.swap(settings) != settings {
-                        applyUILocalization(settings)
+                        applyUILocalization(settings, window: self.window)
+                        UNUserNotifications.current?.registerCategories()
                     }
                 }
             })
@@ -1071,7 +1080,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
                 
                 if url.range(of: legacyPassportUsername) != nil || url.range(of: "tg://passport") != nil {
-                    alert(for: mainWindow, info: L10n.secureIdLoginText)
+                    alert(for: mainWindow, info: strings().secureIdLoginText)
                     self.executeUrlAfterLogin = url
                 }
             }
@@ -1264,7 +1273,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func showSavedPathSuccess(_ path: String) {
         if let context = contextValue?.context {
             
-            let text: String = L10n.savedAsModalOk
+            let text: String = strings().savedAsModalOk
             
             let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .bold(15), textColor: .white), bold: MarkdownAttributeSet(font: .bold(15), textColor: .white), link: MarkdownAttributeSet(font: .bold(15), textColor: .link), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { _ in }))

@@ -151,11 +151,11 @@ class ChatDiceContentView: ChatMediaContentView {
                 
                 switch media.emoji {
                 case diceSymbol:
-                    text = L10n.chatEmojiDiceResultNew
+                    text = strings().chatEmojiDiceResultNew
                 case dartSymbol:
-                    text = L10n.chatEmojiDartResultNew
+                    text = strings().chatEmojiDartResultNew
                 default:
-                    text = L10n.chatEmojiDefResultNew(media.emoji)
+                    text = strings().chatEmojiDefResultNew(media.emoji)
                 }
                 let view: NSView
                 if !thumbView.isHidden {
@@ -163,12 +163,12 @@ class ChatDiceContentView: ChatMediaContentView {
                 } else {
                     view = playerView
                 }
-                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak item] in
+                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (strings().chatEmojiSend, { [weak item] in
                     item?.chatInteraction.sendPlainText(media.emoji)
                 }), offset: NSMakePoint(0, -30))
             }
         }
-       // alert(for: window, info: L10n.chatDiceResult)
+       // alert(for: window, info: strings().chatDiceResult)
     }
     
     var chatLoopAnimated: Bool {

@@ -527,14 +527,14 @@ class ChatInputActionsView: View, Notifable {
                 var items:[SPopoverItem] = []
                 
                 if peer.id != chatInteraction.context.account.peerId {
-                    items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak chatInteraction] in
+                    items.append(SPopoverItem(strings().chatSendWithoutSound, { [weak chatInteraction] in
                         chatInteraction?.sendMessage(true, nil)
                     }))
                 }
                 switch chatInteraction.mode {
                 case .history:
                     if !peer.isSecretChat {
-                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
                                 chatInteraction?.sendMessage(false, date)
                             }), for: context.window)
@@ -593,31 +593,31 @@ class ChatInputActionsView: View, Notifable {
         
         if chatInteraction.hasSetDestructiveTimer {
             if chatInteraction.presentation.messageSecretTimeout != nil {
-                items.append(SPopoverItem(L10n.secretTimerOff, { [weak self] in
+                items.append(SPopoverItem(strings().secretTimerOff, { [weak self] in
                     self?.chatInteraction.setChatMessageAutoremoveTimeout(nil)
                 }))
             }
         }
         if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
             for i in 0 ..< 30 {
-                items.append(SPopoverItem(L10n.timerSecondsCountable(i + 1), { [weak self] in
+                items.append(SPopoverItem(strings().timerSecondsCountable(i + 1), { [weak self] in
                     self?.chatInteraction.setChatMessageAutoremoveTimeout(Int32(i + 1))
                 }))
             }
 
-            items.append(SPopoverItem(L10n.timerMinutesCountable(1), { [weak self] in
+            items.append(SPopoverItem(strings().timerMinutesCountable(1), { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60)
             }))
 
-            items.append(SPopoverItem(L10n.timerHoursCountable(1), { [weak self] in
+            items.append(SPopoverItem(strings().timerHoursCountable(1), { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60)
             }))
 
-            items.append(SPopoverItem(L10n.timerDaysCountable(1), { [weak self] in
+            items.append(SPopoverItem(strings().timerDaysCountable(1), { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24)
             }))
 
-            items.append(SPopoverItem(L10n.timerWeeksCountable(1), { [weak self] in
+            items.append(SPopoverItem(strings().timerWeeksCountable(1), { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24 * 7)
             }))
         }

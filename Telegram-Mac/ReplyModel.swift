@@ -247,12 +247,12 @@ class ReplyModel: ChatAccessoryModel {
             if let header = customHeader {
                 self.headerAttr = .initialize(string: header, color: presentation.title, font: .medium(.text))
             } else {
-                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
+                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
             }
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
         } else {
             self.headerAttr = nil
-            self.messageAttr = .initialize(string: isLoading ? tr(L10n.messagesReplyLoadingLoading) : tr(L10n.messagesDeletedMessage), color: presentation.disabledText, font: .normal(.text))
+            self.messageAttr = .initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text))
             display = true
         }
         

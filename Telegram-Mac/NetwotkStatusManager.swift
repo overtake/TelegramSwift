@@ -11,6 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import ObjcUtils
 
 private enum Status : Equatable {
     case core(ConnectionStatus)
@@ -20,17 +21,17 @@ private enum Status : Equatable {
     var text: String {
         switch self {
         case .connected:
-            return L10n.connectionStatusConnected
+            return strings().connectionStatusConnected
         case .updated:
-            return L10n.connectionStatusUpdated
+            return strings().connectionStatusUpdated
         case let .core(status):
             switch status {
             case let .connecting(proxyAddress, _):
-                return proxyAddress != nil ? L10n.connectionStatusConnectingToProxy : L10n.connectionStatusConnecting
+                return proxyAddress != nil ? strings().connectionStatusConnectingToProxy : strings().connectionStatusConnecting
             case .waitingForNetwork:
-                return L10n.connectionStatusWaitingForNetwork
+                return strings().connectionStatusWaitingForNetwork
             case .updating:
-                return L10n.connectionStatusUpdating
+                return strings().connectionStatusUpdating
             case .online:
                 return ""
             }

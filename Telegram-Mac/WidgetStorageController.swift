@@ -234,21 +234,21 @@ final class WidgetStorageContainer : View {
 
         let theme = theme as! TelegramPresentationTheme
         
-        clearButton.update(false, icon: theme.icons.empty_chat_storage_clear, text: L10n.emptyChatStorageUsageClear)
+        clearButton.update(false, icon: theme.icons.empty_chat_storage_clear, text: strings().emptyChatStorageUsageClear)
         clearButton.setFrameSize(clearButton.size())
         
-        let titleLayout = TextViewLayout.init(.initialize(string: L10n.emptyChatStorageUsage, color: theme.colors.text, font: .medium(.text)))
+        let titleLayout = TextViewLayout.init(.initialize(string: strings().emptyChatStorageUsage, color: theme.colors.text, font: .medium(.text)))
         titleLayout.measure(width: frame.width - 20)
         storageTitle.update(titleLayout)
         
         let descAttr = NSMutableAttributedString()
         if let _ = state?.ccTask {
-            descAttr.append(.initialize(string: L10n.emptyChatStorageUsageClearing, color: theme.colors.grayText, font: .normal(.text)))
+            descAttr.append(.initialize(string: strings().emptyChatStorageUsageClearing, color: theme.colors.grayText, font: .normal(.text)))
         } else if let totalBytes = state?.diskSpace.app {
-            let text = totalBytes == 0 ? L10n.emptyChatStorageUsageCacheDescEmpty : L10n.emptyChatStorageUsageCacheDesc(String.prettySized(with: Int(totalBytes)))
+            let text = totalBytes == 0 ? strings().emptyChatStorageUsageCacheDescEmpty : strings().emptyChatStorageUsageCacheDesc(String.prettySized(with: Int(totalBytes)))
             descAttr.append(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)))
         } else {
-            descAttr.append(.initialize(string: L10n.emptyChatStorageUsageLoading, color: theme.colors.grayText, font: .normal(.text)))
+            descAttr.append(.initialize(string: strings().emptyChatStorageUsageLoading, color: theme.colors.grayText, font: .normal(.text)))
         }
         descAttr.detectBoldColorInString(with: .medium(.text))
         let descLayout = TextViewLayout(descAttr)
@@ -307,7 +307,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
                 let systemText = String.prettySized(with: Int(systemUsedBytes - appUsageBytes))
                 let appText = String.prettySized(with: Int(appUsageBytes))
 
-                let tooltips:[Int: String] = [0 : L10n.emptyChatStorageUsageTooltipSystem(systemText), 1: L10n.emptyChatStorageUsageTooltipApp(appText)]
+                let tooltips:[Int: String] = [0 : strings().emptyChatStorageUsageTooltipSystem(systemText), 1: strings().emptyChatStorageUsageTooltipApp(appText)]
                 
                 return (values: values, tooltips: tooltips)
             } else {
@@ -415,7 +415,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
         
         
         genericView.dataView?.clearAll = {
-            confirm(for: context.window, information: L10n.storageClearAllConfirmDescription, okTitle: L10n.storageClearAll, successHandler: { _ in
+            confirm(for: context.window, information: strings().storageClearAllConfirmDescription, okTitle: strings().storageClearAll, successHandler: { _ in
                 context.cacheCleaner.run()
             })
         }
@@ -430,7 +430,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
             let normalIsSelected = state.settings.defaultCacheStorageLimitGigabytes == 32
             let highIsSelected = state.settings.defaultCacheStorageLimitGigabytes == .max
 
-            buttons.append(.init(text: { L10n.emptyChatStorageUsageLow }, selected: {
+            buttons.append(.init(text: { strings().emptyChatStorageUsageLow }, selected: {
                 return lowIsSelected
             }, image: {
                 return lowIsSelected ? theme.icons.empty_chat_storage_low_active : theme.icons.empty_chat_storage_low
@@ -440,7 +440,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
                 }).start()
             }))
             
-            buttons.append(.init(text: { L10n.emptyChatStorageUsageMedium }, selected: {
+            buttons.append(.init(text: { strings().emptyChatStorageUsageMedium }, selected: {
                 return normalIsSelected
             }, image: {
                 return normalIsSelected ?  theme.icons.empty_chat_storage_medium_active : theme.icons.empty_chat_storage_medium
@@ -450,7 +450,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
                 }).start()
             }))
             
-            buttons.append(.init(text: { L10n.emptyChatStorageUsageNoLimit }, selected: {
+            buttons.append(.init(text: { strings().emptyChatStorageUsageNoLimit }, selected: {
                 return highIsSelected
             }, image: {
                 return highIsSelected ? theme.icons.empty_chat_storage_high_active : theme.icons.empty_chat_storage_high
@@ -460,7 +460,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
                 }).start()
             }))
             
-            let data: WidgetData = .init(title: { L10n.emptyChatStorageUsageData }, desc: { L10n.emptyChatStorageUsageDesc }, descClick: {
+            let data: WidgetData = .init(title: { strings().emptyChatStorageUsageData }, desc: { strings().emptyChatStorageUsageDesc }, descClick: {
                 context.sharedContext.bindings.rootNavigation().push(DataAndStorageViewController(context))
             }, buttons: buttons)
             

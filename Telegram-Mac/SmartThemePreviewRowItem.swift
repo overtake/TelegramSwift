@@ -190,7 +190,7 @@ private final class ChatThemeRowView: HorizontalRowView {
                 self.noThemeTextView?.userInteractionEnabled = false
                 self.noThemeTextView?.isSelectable = false
                 self.addSubview(self.noThemeTextView!)
-                let noTheme = TextViewLayout(.initialize(string: L10n.chatChatThemeNoTheme, color: theme.colors.text, font: .medium(.text)), alignment: .center)
+                let noTheme = TextViewLayout(.initialize(string: strings().chatChatThemeNoTheme, color: theme.colors.text, font: .medium(.text)), alignment: .center)
                 noTheme.measure(width: 80)
                 self.noThemeTextView?.update(noTheme)
                 self.progressIndicator?.removeFromSuperview()

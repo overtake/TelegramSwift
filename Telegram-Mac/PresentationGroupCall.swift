@@ -1232,9 +1232,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     }
                     
                     if case .anonymousNotAllowed = error {
-                        alert(for: strongSelf.accountContext.window, info: L10n.voiceChatAnonymousDisabledAlertText)
+                        alert(for: strongSelf.accountContext.window, info: strings().voiceChatAnonymousDisabledAlertText)
                     } else if case .tooManyParticipants = error {
-                        alert(for: strongSelf.accountContext.window, info: L10n.voiceChatJoinErrorTooMany)
+                        alert(for: strongSelf.accountContext.window, info: strings().voiceChatJoinErrorTooMany)
                     }
                     strongSelf.markAsCanBeRemoved()
                 }))
@@ -2793,13 +2793,13 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
         case let .success(callContext), let .samePeer(callContext):
             applyGroupCallResult(context.sharedContext, callContext)
         default:
-            alert(for: context.window, info: L10n.errorAnError)
+            alert(for: context.window, info: strings().errorAnError)
         }
     }, error: { error in
         if case .anonymousNotAllowed = error {
-            alert(for: context.window, info: L10n.voiceChatAnonymousDisabledAlertText)
+            alert(for: context.window, info: strings().voiceChatAnonymousDisabledAlertText)
         } else {
-            alert(for: context.window, info: L10n.errorAnError)
+            alert(for: context.window, info: strings().errorAnError)
         }
     })
 }

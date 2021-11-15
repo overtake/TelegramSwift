@@ -147,7 +147,7 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
          
             instantPageButton?.set(font: .medium(.title), for: .Normal)
             instantPageButton?.set(background: .clear, for: .Normal)
-            instantPageButton?.set(text: layout.isProxyConfig ? L10n.chatApplyProxy : L10n.chatInstantView, for: .Normal)
+            instantPageButton?.set(text: layout.isProxyConfig ? strings().chatApplyProxy : strings().chatInstantView, for: .Normal)
             _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
             
             instantPageButton?.removeAllHandlers()

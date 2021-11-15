@@ -93,7 +93,7 @@ private enum WebSessionEntry : TableItemListNodeEntry {
         case let .description(_, _, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .logout(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.webAuthorizationsLogoutAll, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().webAuthorizationsLogoutAll, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, viewType: viewType, action: {
                 arguments.logoutAll()
             })
         case .loading:
@@ -215,7 +215,7 @@ private func webAuthorizationEntries(webSessions: WebSessionsContextState, state
     entries.append(.logout(sectionId: sectionId, index: index, viewType: .singleItem))
     index += 1
     
-    entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLogoutAllDescription, viewType: .textBottomItem))
+    entries.append(.description(sectionId: sectionId, index: index, text: strings().webAuthorizationsLogoutAllDescription, viewType: .textBottomItem))
     index += 1
     
     entries.append(.sectionId(sectionId))
@@ -225,7 +225,7 @@ private func webAuthorizationEntries(webSessions: WebSessionsContextState, state
     let authorizations = webSessions.sessions.filter {!state.removedSessions.contains($0.hash)}
     
     if authorizations.count > 0 {
-        entries.append(.description(sectionId: sectionId, index: index, text: L10n.webAuthorizationsLoggedInDescrpiption, viewType: .textTopItem))
+        entries.append(.description(sectionId: sectionId, index: index, text: strings().webAuthorizationsLoggedInDescrpiption, viewType: .textTopItem))
         index += 1
     }
     
@@ -263,7 +263,7 @@ class WebSessionsController: TableViewController {
         }
                 
         let arguments = WebSessionArguments(context: context, logoutSession: { session in
-            confirm(for: context.window, information: L10n.webAuthorizationsConfirmRevoke, successHandler: { result in
+            confirm(for: context.window, information: strings().webAuthorizationsConfirmRevoke, successHandler: { result in
                 updateState { state in
                     return state.withUpdatedRemovingSessionId(session.hash)
                 }
@@ -276,7 +276,7 @@ class WebSessionsController: TableViewController {
             })
             
         }, logoutAll: { [weak self] in
-            confirm(for: context.window, information: L10n.webAuthorizationsConfirmRevokeAll, successHandler: { result in
+            confirm(for: context.window, information: strings().webAuthorizationsConfirmRevokeAll, successHandler: { result in
                 self?.navigationController?.back()
                 _ = showModalProgress(signal: context.webSessions.removeAll(), for: context.window).start()
             })

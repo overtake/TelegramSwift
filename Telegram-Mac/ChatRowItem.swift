@@ -9,10 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
-
+import DateUtils
 
 struct ChatFloatingPhoto {
     var point: NSPoint
@@ -1185,9 +1185,9 @@ class ChatRowItem: TableRowItem {
                     
                     var title: [(String, ChannelCommentsRenderData.Text.Animation, Int)] = []
                     if count == 0 {
-                        title = [(L10n.channelCommentsLeaveComment, .crossFade, 0)]
+                        title = [(strings().channelCommentsLeaveComment, .crossFade, 0)]
                     } else {
-                        var text = L10n.channelCommentsCountCountable(Int(count))
+                        var text = strings().channelCommentsCountCountable(Int(count))
                         let pretty = "\(Int(count).formattedWithSeparator)"
                         text = text.replacingOccurrences(of: "\(count)", with: pretty)
                         
@@ -1251,9 +1251,9 @@ class ChatRowItem: TableRowItem {
                     }
                     var title: [(String, ChannelCommentsRenderData.Text.Animation, Int)] = []
                     if count == 0 {
-                        title = [(L10n.channelCommentsShortLeaveComment, .crossFade, 0)]
+                        title = [(strings().channelCommentsShortLeaveComment, .crossFade, 0)]
                     } else {
-                        var text = L10n.channelCommentsShortCountCountable(Int(count))
+                        var text = strings().channelCommentsShortCountCountable(Int(count))
                         let pretty = "\(Int(count).prettyRounded)"
                         text = text.replacingOccurrences(of: "\(count)", with: pretty)
                         
@@ -1631,7 +1631,7 @@ class ChatRowItem: TableRowItem {
                             if let signature = message.forwardInfo?.authorSignature, message.isAnonymousMessage {
                                 fullName += " (\(signature))"
                             }
-                            text = L10n.chatBubblesForwardedFrom(fullName)
+                            text = strings().chatBubblesForwardedFrom(fullName)
                         }
                         
                         let newAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: forwardNameColor), link: MarkdownAttributeSet(font: hasBubble && info.author != nil ? .medium(.short) : .normal(.short), textColor: forwardNameColor), linkAttribute: { [weak attr] contents in
@@ -1708,7 +1708,7 @@ class ChatRowItem: TableRowItem {
                         if peer.id.id._internalGetInt64Value() != 0 {
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId:peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo), range: range)
                         } else {
-                            nameHide = L10n.chatTooltipHiddenForwardName
+                            nameHide = strings().chatTooltipHiddenForwardName
                         }
                     }
                     
@@ -1718,7 +1718,7 @@ class ChatRowItem: TableRowItem {
                             if attr.length > 0 {
                                 _ = attr.append(string: " ")
                             }
-                            _ = attr.append(string: "\(L10n.chatMessageVia) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                            _ = attr.append(string: "\(strings().chatMessageVia) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
                             let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, hasBubble && isBubbled), font:.medium(.text))
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback("@" + address, { (parameter) in
                                 chatInteraction.updateInput(with: parameter + " ")
@@ -1732,7 +1732,7 @@ class ChatRowItem: TableRowItem {
                             
                         }
                         else if ChatRowItem.authorIsChannel(message: message, account: context.account) {
-                            badge = .initialize(string: " " + L10n.chatChannelBadge, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
+                            badge = .initialize(string: " " + strings().chatChannelBadge, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                         }
                         if let badge = badge {
                             adminBadge = TextViewLayout(badge, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
@@ -1760,7 +1760,7 @@ class ChatRowItem: TableRowItem {
                 
                 date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
             } else if message.adAttribute != nil {
-                date = TextNode.layoutText(maybeNode: nil, .initialize(string: L10n.chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                date = TextNode.layoutText(maybeNode: nil, .initialize(string: strings().chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
             }
 
         } else {
@@ -1774,7 +1774,7 @@ class ChatRowItem: TableRowItem {
         
         hiddenFwdTooltip = { [weak self] in
             guard let view = self?.view as? ChatRowView, let forwardName = view.forwardName else { return }
-            tooltip(for: forwardName, text: L10n.chatTooltipHiddenForwardName, autoCorner: false)
+            tooltip(for: forwardName, text: strings().chatTooltipHiddenForwardName, autoCorner: false)
         }
         
         let editedAttribute = messages.compactMap({
@@ -1808,7 +1808,7 @@ class ChatRowItem: TableRowItem {
             
             if let attribute = editedAttribute {
                 if isEditMarkVisible {
-                    editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: L10n.chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                    editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: strings().chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 }
                 
                 let formatterEdited = DateFormatter()
@@ -1824,13 +1824,13 @@ class ChatRowItem: TableRowItem {
                 formatter.doesRelativeDateFormatting = true
                 let text: String
                 if forwardInfo.date == message.timestamp {
-                    text = L10n.chatMessageImportedShort
+                    text = strings().chatMessageImportedShort
                 } else {
-                   text  = L10n.chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                   text  = strings().chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
                 }
                 editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
                 
-                fullDate = L10n.chatMessageImportedText + "\n\n" + fullDate
+                fullDate = strings().chatMessageImportedText + "\n\n" + fullDate
             } else if let forwardInfo = message.forwardInfo {
                 let formatterEdited = DateFormatter()
                 formatterEdited.dateStyle = .medium
@@ -1865,7 +1865,7 @@ class ChatRowItem: TableRowItem {
                     
                     
                     if attribute.count >= 1000 {
-                        fullDate = "\(author)\(attribute.count.separatedNumber) \(tr(L10n.chatMessageTooltipViews)), \(fullDate)"
+                        fullDate = "\(author)\(attribute.count.separatedNumber) \(strings().chatMessageTooltipViews), \(fullDate)"
                     } else {
                         fullDate = "\(author)\(fullDate)"
                     }
@@ -1889,7 +1889,7 @@ class ChatRowItem: TableRowItem {
                 self.updateCountDownTimer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
                     let left = Int(begin + attr.timeout - context.timestamp)
                     if left >= 0 {
-                        let leftText = "\n\n" + L10n.chatContextMenuAutoDelete(smartTimeleftText(left))
+                        let leftText = "\n\n" + strings().chatContextMenuAutoDelete(smartTimeleftText(left))
                         self?.fullDate = fullDate + leftText
                         self?.updateTooltip?(fullDate + leftText)
                     } else {
@@ -2092,7 +2092,7 @@ class ChatRowItem: TableRowItem {
                 text = localizedPsa("psa.title", type: psaType)
             } else {
                 color = !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble)
-                text = L10n.messagesForwardHeader
+                text = strings().messagesForwardHeader
             }
             
             forwardHeader = TextNode.layoutText(maybeNode: forwardHeaderNode, .initialize(string: text, color: color, font: .normal(.text)), nil, 1, .end, NSMakeSize(width - self.contentOffset.x - 44, 20), nil,false, .left)
@@ -2391,21 +2391,21 @@ class ChatRowItem: TableRowItem {
                 let alert:NSAlert = NSAlert()
                 alert.window.appearance = theme.appearance
                 alert.alertStyle = .informational
-                alert.messageText = L10n.alertSendErrorHeader
-                alert.informativeText = L10n.alertSendErrorText
+                alert.messageText = strings().alertSendErrorHeader
+                alert.informativeText = strings().alertSendErrorText
                 
                 
-                alert.addButton(withTitle: L10n.alertSendErrorResend)
+                alert.addButton(withTitle: strings().alertSendErrorResend)
                 
                 if ids.count > 1 {
-                    alert.addButton(withTitle: L10n.alertSendErrorResendItemsCountable(ids.count))
+                    alert.addButton(withTitle: strings().alertSendErrorResendItemsCountable(ids.count))
                 }
                 
-                alert.addButton(withTitle: L10n.alertSendErrorDelete)
+                alert.addButton(withTitle: strings().alertSendErrorDelete)
                 
                
                 
-                alert.addButton(withTitle: L10n.alertSendErrorIgnore)
+                alert.addButton(withTitle: strings().alertSendErrorIgnore)
                 
                 
                 alert.beginSheetModal(for: context.window, completionHandler: { response in
@@ -2522,9 +2522,9 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     
     if let _ = message.adAttribute {
         let context = chatInteraction.context
-        return .single([ContextMenuItem(L10n.chatMessageSponsoredWhat, handler: {
+        return .single([ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
             let link = "https://promote.telegram.org"
-            confirm(for: context.window, information: L10n.chatMessageAdText(link), cancelTitle: "", thridTitle: L10n.chatMessageAdReadMore, successHandler: { result in
+            confirm(for: context.window, information: strings().chatMessageAdText(link), cancelTitle: "", thridTitle: strings().chatMessageAdReadMore, successHandler: { result in
                 switch result {
                 case .thrid:
                  let link = inAppLink.external(link: link, false)
@@ -2560,15 +2560,15 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     
     if message.id.peerId == repliesPeerId, let author = message.chatPeer(context.peerId), author.id != context.peerId {
         
-        let text = author.isUser ? L10n.chatContextBlockUser : L10n.chatContextBlockGroup
+        let text = author.isUser ? strings().chatContextBlockUser : strings().chatContextBlockGroup
         
         items.append(ContextMenuItem(text, handler: {
 
-            let header = author.isUser ? L10n.chatContextBlockUserHeader : L10n.chatContextBlockGroupHeader
-            let info = author.isUser ? L10n.chatContextBlockUserInfo(author.displayTitle) : L10n.chatContextBlockGroupInfo(author.displayTitle)
-            let third = author.isUser ? L10n.chatContextBlockUserThird : L10n.chatContextBlockGroupThird
-            let ok = author.isUser ? L10n.chatContextBlockUserOK : L10n.chatContextBlockGroupOK
-            let cancel = author.isUser ? L10n.chatContextBlockUserCancel : L10n.chatContextBlockGroupCancel
+            let header = author.isUser ? strings().chatContextBlockUserHeader : strings().chatContextBlockGroupHeader
+            let info = author.isUser ? strings().chatContextBlockUserInfo(author.displayTitle) : strings().chatContextBlockGroupInfo(author.displayTitle)
+            let third = author.isUser ? strings().chatContextBlockUserThird : strings().chatContextBlockGroupThird
+            let ok = author.isUser ? strings().chatContextBlockUserOK : strings().chatContextBlockGroupOK
+            let cancel = author.isUser ? strings().chatContextBlockUserCancel : strings().chatContextBlockGroupCancel
 
             modernConfirm(for: context.window, account: account, peerId: author.id, header: header, information: info, okTitle: ok, cancelTitle: cancel, thridTitle: third, thridAutoOn: true, successHandler: { result in
                 switch result {
@@ -2587,10 +2587,10 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
 
     
     if message.isScheduledMessage, let peer = peer {
-        items.append(ContextMenuItem(L10n.chatContextScheduledSendNow, handler: {
+        items.append(ContextMenuItem(strings().chatContextScheduledSendNow, handler: {
             _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: message.id).start()
         }))
-        items.append(ContextMenuItem(L10n.chatContextScheduledReschedule, handler: {
+        items.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
             showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
                 _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: message.id, text: message.text, media: .keep, entities: message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start(next: { result in
                     
@@ -2603,7 +2603,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     }
     
     if canReplyMessage(message, peerId: chatInteraction.peerId, mode: chatInteraction.mode)  {
-        items.append(ContextMenuItem(tr(L10n.messageContextReply1) + (FastSettings.tooltipAbility(for: .edit) ? " (\(L10n.messageContextReplyHelp))" : ""), handler: { [unowned chatInteraction] in
+        items.append(ContextMenuItem(strings().messageContextReply1 + (FastSettings.tooltipAbility(for: .edit) ? " (\(strings().messageContextReplyHelp))" : ""), handler: { [unowned chatInteraction] in
             chatInteraction.setupReplyMessage(message.id)
         }))
     }
@@ -2624,7 +2624,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 }
             }
             
-            items.append(ContextMenuItem(modeIsReplies ? L10n.messageContextViewRepliesCountable(Int(attr.count)) : L10n.messageContextViewCommentsCountable(Int(attr.count)), handler: { [unowned chatInteraction] in
+            items.append(ContextMenuItem(modeIsReplies ? strings().messageContextViewRepliesCountable(Int(attr.count)) : strings().messageContextViewCommentsCountable(Int(attr.count)), handler: { [unowned chatInteraction] in
                 chatInteraction.openReplyThread(messageId, !modeIsReplies, true, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
             }))
         }
@@ -2632,7 +2632,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
 //            switch chatInteraction.presentation.discussionGroupId {
 //            case let .known(peerId):
 //                if peerId != nil {
-//                    items.append(ContextMenuItem(L10n.messageContextViewThread, handler: {
+//                    items.append(ContextMenuItem(strings().messageContextViewThread, handler: {
 //                        chatInteraction.openReplyThread(threadId, true, true, .replies(origin: message.id))
 //                    }))
 //                }
@@ -2643,7 +2643,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     }
     
     if let file = message.media.first as? TelegramMediaFile, file.isEmojiAnimatedSticker {
-        items.append(ContextMenuItem(L10n.textCopyText, handler: {
+        items.append(ContextMenuItem(strings().textCopyText, handler: {
             copyToClipboard(message.text)
         }))
     }
@@ -2651,7 +2651,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     
     if let peer = message.peers[message.id.peerId] as? TelegramChannel {
         if !message.flags.contains(.Failed), !message.flags.contains(.Unsent), !message.isScheduledMessage {
-            items.append(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: { [unowned chatInteraction] in
+            items.append(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: { [unowned chatInteraction] in
                 _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: message.id, isThread: chatInteraction.mode.threadId != nil), for: context.window).start(next: { link in
                     if let link = link {
                         copyToClipboard(link)
@@ -2664,7 +2664,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     
     
     if canEditMessage(message, chatInteraction: chatInteraction, context: context), chatInteraction.mode != .pinned {
-        items.append(ContextMenuItem(tr(L10n.messageContextEdit), handler: { [unowned chatInteraction] in
+        items.append(ContextMenuItem(strings().messageContextEdit, handler: { [unowned chatInteraction] in
             chatInteraction.beginEditingMessage(message)
         }))
     }
@@ -2678,14 +2678,14 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         } else {
             pinAndOld = false
         }
-        let pinText = message.tags.contains(.pinned) ? L10n.messageContextUnpin : L10n.messageContextPin
+        let pinText = message.tags.contains(.pinned) ? strings().messageContextUnpin : strings().messageContextPin
 
         if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
             if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
                 if !chatInteraction.mode.isThreadMode, (needUnpin || chatInteraction.mode != .pinned) {
                     items.append(ContextMenuItem(pinText, handler: {
                         if peer.isSupergroup, !needUnpin {
-                            modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle:  L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { [unowned chatInteraction] result in
+                            modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle:  strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { [unowned chatInteraction] result in
                                 chatInteraction.updatePinned(message.id, chatInteraction.presentation.pinnedMessageId?.others.contains(message.id) == true, result != .thrid, false)
                             })
                         } else {
@@ -2701,7 +2701,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: { [unowned chatInteraction] in
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle: L10n.messageContextPin, thridTitle: pinAndOld ? nil : L10n.messageContextConfirmNotifyPin, successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, result == .thrid, false)
                     })
                 } else {
@@ -2711,7 +2711,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         } else if chatInteraction.presentation.canPinMessage, let peer = chatInteraction.peer, (needUnpin || chatInteraction.mode != .pinned) {
             items.append(ContextMenuItem(pinText, handler: {
                 if !needUnpin {
-                    modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? L10n.chatConfirmPinOld : L10n.messageContextConfirmPin1, okTitle: L10n.messageContextPin, thridTitle: L10n.chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
+                    modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: strings().chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
                         chatInteraction.updatePinned(message.id, needUnpin, false, result != .thrid)
                     })
                 } else {
@@ -2723,7 +2723,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
    
     
     if canForwardMessage(message, chatInteraction: chatInteraction) {
-        let forwardItem = ContextMenuItem(L10n.messageContextForward, handler: { [unowned chatInteraction] in
+        let forwardItem = ContextMenuItem(strings().messageContextForward, handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
         })
         let forwardMenu = NSMenu()
@@ -2785,7 +2785,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             var items:[ContextMenuItem] = []
             
             func makeItem(_ peer: Peer) -> ContextMenuItem {
-                let title = peer.id == context.peerId ? L10n.peerSavedMessages : peer.displayTitle.prefixWithDots(25)
+                let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(25)
                 let item = ContextMenuItem(title, handler: {
                     _ = forwardObject.perform(to: [peer.id]).start()
                 })
@@ -2826,7 +2826,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             }
             if !items.isEmpty {
                 items.append(ContextSeparatorItem())
-                let more = ContextMenuItem(L10n.chatContextForwardMore, handler: { [unowned chatInteraction] in
+                let more = ContextMenuItem(strings().chatContextForwardMore, handler: { [unowned chatInteraction] in
                     chatInteraction.forwardMessages([message.id])
                 })
                 items.append(more)
@@ -2838,19 +2838,19 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         forwardItem.submenu = forwardMenu
         items.append(forwardItem)
     } else if message.id.peerId.namespace == Namespaces.Peer.SecretChat, !message.containsSecretMedia {
-        items.append(ContextMenuItem(L10n.messageContextShare, handler: { [unowned chatInteraction] in
+        items.append(ContextMenuItem(strings().messageContextShare, handler: { [unowned chatInteraction] in
             chatInteraction.forwardMessages([message.id])
         }))
     }
     
     if canDeleteMessage(message, account: account, mode: chatInteraction.mode) {
-        items.append(ContextMenuItem(tr(L10n.messageContextDelete), handler: { [unowned chatInteraction] in
+        items.append(ContextMenuItem(strings().messageContextDelete, handler: { [unowned chatInteraction] in
             chatInteraction.deleteMessages([message.id])
         }))
     }
     
     if chatInteraction.mode.threadId != message.id {
-        items.append(ContextMenuItem(tr(L10n.messageContextSelect), handler: { [unowned chatInteraction] in
+        items.append(ContextMenuItem(strings().messageContextSelect, handler: { [unowned chatInteraction] in
             chatInteraction.withToggledSelectedMessage({$0.withToggledSelectedMessage(message.id)})
         }))
     }
@@ -2859,7 +2859,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
 
     
     if canForwardMessage(message, chatInteraction: chatInteraction), chatInteraction.peerId != account.peerId, chatInteraction.mode == .history {
-        items.append(ContextMenuItem(tr(L10n.messageContextForwardToCloud), handler: { [unowned chatInteraction] in
+        items.append(ContextMenuItem(strings().messageContextForwardToCloud, handler: { [unowned chatInteraction] in
             _ = Sender.forwardMessages(messageIds: [message.id], context: chatInteraction.context, peerId: account.peerId).start()
         }))
         items.append(ContextSeparatorItem())
@@ -2881,11 +2881,11 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 if file.isAnimated && file.isVideo {
                     let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap { $0.contents.get(RecentMediaItem.self) }
                     if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
-                        items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                        items.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
                             let _ = removeSavedGif(postbox: account.postbox, mediaId: mediaId).start()
                         }))
                     } else {
-                        items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                        items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                             let _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
                         }))
                     }
@@ -2896,7 +2896,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 
                 return combineLatest(queue: .mainQueue(), account.postbox.mediaBox.resourceData(file.resource), fileFinderPath(file, context.account.postbox)) |> mapToSignal { data, downloadPath in
                     if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isStaticSticker && !file.isGraphicFile && !file.isAnimatedSticker {
-                        let quickLook = ContextMenuItem(L10n.contextOpenInQuickLook, handler: {
+                        let quickLook = ContextMenuItem(strings().contextOpenInQuickLook, handler: {
                             FastSettings.toggleOpenInQuickLook(fileExtenstion(file))
                         })
                         quickLook.state = FastSettings.openInQuickLook(fileExtenstion(file)) ? .on : .off
@@ -2904,7 +2904,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                     }
                    
                     if data.complete, !message.containsSecretMedia {
-                        items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
+                        items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                             saveAs(file, account: account)
                         }))
                         
@@ -2934,7 +2934,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                                 }
                                 let result = ObjcUtils.apps(forFileUrl: path)
                                 if let result = result, !result.isEmpty {
-                                    let item = ContextMenuItem(L10n.messageContextOpenWith, handler: {})
+                                    let item = ContextMenuItem(strings().messageContextOpenWith, handler: {})
                                     let menu = NSMenu()
                                     item.submenu = menu
                                     for item in result {
@@ -2952,7 +2952,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                     if file.isStaticSticker, let fileId = file.id {
                         return account.postbox.transaction { transaction -> [ContextMenuItem] in
                             let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
-                            items.append(ContextMenuItem( !saved ? tr(L10n.chatContextAddFavoriteSticker) : tr(L10n.chatContextRemoveFavoriteSticker), handler: {
+                            items.append(ContextMenuItem( !saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
                                 
                                 if !saved {
                                     _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
@@ -2977,14 +2977,14 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             if let resource = image.representations.last?.resource {
                 return account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
                     if data.complete {
-                        items.append(ContextMenuItem(tr(L10n.galleryContextCopyToClipboard), handler: {
+                        items.append(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: {
                             if let path = link(path: data.path, ext: "jpg") {
                                 let pb = NSPasteboard.general
                                 pb.clearContents()
                                 pb.writeObjects([NSURL(fileURLWithPath: path)])
                             }
                         }))
-                        items.append(ContextMenuItem(tr(L10n.contextCopyMedia), handler: {
+                        items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                             savePanel(file: data.path, ext: "jpg", for: mainWindow)
                         }))
                     }
@@ -3001,7 +3001,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         if let peer = chatInteraction.peer as? TelegramChannel, peer.isSupergroup, chatInteraction.mode == .history {
             if peer.hasPermission(.banMembers), let author = message.author, author.id != account.peerId, message.isIncoming(account, theme.bubbled) {
                 var items = items
-                items.append(ContextMenuItem(L10n.chatContextRestrict, handler: {
+                items.append(ContextMenuItem(strings().chatContextRestrict, handler: {
                     _ = showModalProgress(signal: context.engine.peers.fetchChannelParticipant(peerId: chatInteraction.peerId, participantId: author.id), for: mainWindow).start(next: { participant in
                         if let participant = participant {
                             switch participant {
@@ -3025,10 +3025,10 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     signal = signal |> map { [unowned chatInteraction] items in
         var items = items
         if canReportMessage(message, account), chatInteraction.mode != .pinned {
-            items.append(ContextMenuItem(L10n.messageContextReport, handler: {
+            items.append(ContextMenuItem(strings().messageContextReport, handler: {
                 _ = reportReasonSelector(context: context).start(next: { value in
                     _ = showModalProgress(signal: context.engine.peers.reportPeerMessages(messageIds: [message.id], reason: value.reason, message: value.comment), for: context.window).start(completed: {
-                        alert(for: context.window, info: L10n.messageContextReportAlertOK)
+                        alert(for: context.window, info: strings().messageContextReportAlertOK)
                     })
                 })
             }))
@@ -3040,7 +3040,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         var items = items
         if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, chatInteraction.mode == .history {
             items.append(ContextSeparatorItem())
-            items.append(ContextMenuItem(L10n.chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
+            items.append(ContextMenuItem(strings().chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
                 chatInteraction.searchPeerMessages(author)
             }))
         }
@@ -3054,7 +3054,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
             if editing {
                 var items = items
                 items.append(ContextSeparatorItem())
-                items.append(ContextMenuItem(L10n.chatContextCancelEditing, handler: {
+                items.append(ContextMenuItem(strings().chatContextCancelEditing, handler: {
                     account.pendingUpdateMessageManager.cancel(messageId: messageId)
                 }))
                 return items

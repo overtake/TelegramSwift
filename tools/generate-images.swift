@@ -719,16 +719,17 @@ func generateClass() -> String {
     
     var lines:[String] = []
     lines.append("import SwiftSignalKit")
+    lines.append("import AppKit")
     lines.append("")
 
-    lines.append("final class TelegramIconsTheme {")
+    lines.append("public final class TelegramIconsTheme {")
     
     lines.append("  private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])")
     lines.append("  private var cachedWithInset:Atomic<[String: (CGImage, NSEdgeInsets)]> = Atomic(value: [:])")
     lines.append("")
     for item in items {
         if item.hasSuffix("_withInset") {
-            lines.append("  var \(item): (CGImage, NSEdgeInsets) {")
+            lines.append("  public var \(item): (CGImage, NSEdgeInsets) {")
             lines.append("      if let image = cachedWithInset.with({ $0[\"\(item)\"] }) {")
             lines.append("          return image")
             lines.append("      } else {")
@@ -744,7 +745,7 @@ func generateClass() -> String {
             lines.append("      }")
             lines.append("  }")
         } else {
-            lines.append("  var \(item): CGImage {")
+            lines.append("  public var \(item): CGImage {")
             lines.append("      if let image = cached.with({ $0[\"\(item)\"] }) {")
             lines.append("          return image")
             lines.append("      } else {")
@@ -774,7 +775,7 @@ func generateClass() -> String {
     
     lines.append("")
     
-    lines.append("  init(")
+    lines.append("  public init(")
     for item in items {
         if item != items.last {
             if item.hasSuffix("_withInset") {
@@ -809,4 +810,4 @@ func generateClass() -> String {
 }
 
 print(FileManager.default.currentDirectoryPath)
-try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)
+try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/packages/TelegramIconsTheme/Sources/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)

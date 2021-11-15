@@ -201,7 +201,7 @@ class InputPasteboardParser: NSObject {
             let afterSizeCheck = files.count
             
             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                alert(for: mainWindow, info: L10n.appMaxFileSize1)
+                alert(for: mainWindow, info: strings().appMaxFileSize1)
                 return false
             }
             if let peer = chatInteraction.presentation.peer, let permissionText = permissionText(from: peer, for: .banSendMedia) {

@@ -55,14 +55,14 @@ func authorizationNextOptionText(currentType: SentAuthorizationCodeType, nextTyp
     switch currentType {
     case let .otherSession(length: length):
         codeLength = Int(length)
-        basic = L10n.loginEnterCodeFromApp
-        nextText = L10n.loginSendSmsIfNotReceivedAppCode
+        basic = strings().loginEnterCodeFromApp
+        nextText = strings().loginSendSmsIfNotReceivedAppCode
     case let .sms(length: length):
         codeLength = Int(length)
-        basic = L10n.loginJustSentSms
+        basic = strings().loginJustSentSms
     case let .call(length: length):
         codeLength = Int(length)
-        basic = L10n.loginPhoneCalledCode
+        basic = strings().loginPhoneCalledCode
     default:
         break
     }
@@ -77,10 +77,10 @@ func authorizationNextOptionText(currentType: SentAuthorizationCodeType, nextTyp
             if timeout > 0 {
                 switch nextType {
                 case .call:
-                    nextText = L10n.loginWillCall(minutes, secValue)
+                    nextText = strings().loginWillCall(minutes, secValue)
                     break
                 case .sms:
-                    nextText = L10n.loginWillSendSms(minutes, secValue)
+                    nextText = strings().loginWillSendSms(minutes, secValue)
                     break
                 default:
                     break
@@ -88,8 +88,8 @@ func authorizationNextOptionText(currentType: SentAuthorizationCodeType, nextTyp
             } else {
                 switch nextType {
                 case .call:
-                    basic = L10n.loginPhoneCalledCode
-                    nextText = L10n.loginPhoneDialed
+                    basic = strings().loginPhoneCalledCode
+                    nextText = strings().loginPhoneDialed
                     break
                 default:
                     break
@@ -97,7 +97,7 @@ func authorizationNextOptionText(currentType: SentAuthorizationCodeType, nextTyp
             }
             
         } else {
-            nextText = L10n.loginSendSmsIfNotReceivedAppCode
+            nextText = strings().loginSendSmsIfNotReceivedAppCode
         }
     }
     
@@ -138,7 +138,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     sectionId += 1
     
 //
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: state.limit))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: state.limit))
     index += 1
     
     var nextOptionText = ""
@@ -149,7 +149,7 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     let phoneNumber = phone.hasPrefix("+") ? phone : "+\(phone)"
     
     let formattedNumber = formatPhoneNumber(phoneNumber)
-    var result = L10n.cancelResetAccountTextSMS(formattedNumber)
+    var result = strings().cancelResetAccountTextSMS(formattedNumber)
     
     if !nextOptionText.isEmpty {
         result += "\n\n" + nextOptionText
@@ -229,13 +229,13 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
                         let errorText: String
                         switch error {
                         case .generic:
-                            errorText = L10n.twoStepAuthGenericError
+                            errorText = strings().twoStepAuthGenericError
                         case .invalidCode:
-                            errorText = L10n.twoStepAuthRecoveryCodeInvalid
+                            errorText = strings().twoStepAuthRecoveryCodeInvalid
                         case .codeExpired:
-                            errorText = L10n.twoStepAuthRecoveryCodeExpired
+                            errorText = strings().twoStepAuthRecoveryCodeExpired
                         case .limitExceeded:
-                            errorText = L10n.twoStepAuthFloodError
+                            errorText = strings().twoStepAuthFloodError
                         }
                         
                         updateState {
@@ -249,7 +249,7 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
                             return $0.withUpdatedChecking(false)
                         }
                         close?()
-                        alert(for: mainWindow, info: L10n.cancelResetAccountSuccess(formatPhoneNumber(phone.hasPrefix("+") ? phone : "+\(phone)")))
+                        alert(for: mainWindow, info: strings().cancelResetAccountSuccess(formatPhoneNumber(phone.hasPrefix("+") ? phone : "+\(phone)")))
                     }))
             }
         })
@@ -284,7 +284,7 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
     }
     nextTypeDisposable.set(resendCode.start())
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.cancelResetAccountTitle, validateData: { data in
+    let controller = InputDataController(dataSignal: signal, title: strings().cancelResetAccountTitle, validateData: { data in
         
         return checkCode(stateValue.with { $0.code })
     }, updateDatas: { data in
@@ -312,7 +312,7 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
         theme.colors.background
     }
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSend, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalSend, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

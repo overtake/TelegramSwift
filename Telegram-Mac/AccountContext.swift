@@ -656,12 +656,12 @@ final class AccountContext {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: window, information: L10n.composeConfirmStartSecretChat(peer.displayTitle))
+                    return confirmSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle))
                 }
             }
-            return confirmSignal(for: window, information: L10n.peerInfoConfirmAddMembers1Countable(peerIds.count))
+            return confirmSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count))
         }
-        let select = selectModalPeers(window: window, context: self, title: L10n.composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
+        let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
         let create = select |> map { $0.first! } |> mapToSignal { peerId in
             return engine.peers.createSecretChat(peerId: peerId) |> `catch` {_ in .complete()}

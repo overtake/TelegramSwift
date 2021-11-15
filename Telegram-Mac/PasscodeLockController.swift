@@ -13,7 +13,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import LocalAuthentication
-
+import BuildConfig
 
 private class TouchIdContainerView : View {
     fileprivate let button: TitleButton = TitleButton()
@@ -28,7 +28,7 @@ private class TouchIdContainerView : View {
         button.set(font: .medium(.title), for: .Normal)
         button.set(color: .white, for: .Normal)
 
-        button.set(text: L10n.passcodeUseTouchId, for: .Normal)
+        button.set(text: strings().passcodeUseTouchId, for: .Normal)
         button.set(image: theme.icons.passcodeTouchId, for: .Normal)
         button.layer?.cornerRadius = 18
     }
@@ -47,7 +47,7 @@ private class TouchIdContainerView : View {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
         
-        let (text, layout) = TextNode.layoutText(NSAttributedString.initialize(string: L10n.passcodeOr, color: theme.chatServiceItemTextColor, font: .normal(.title)), theme.colors.background, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+        let (text, layout) = TextNode.layoutText(NSAttributedString.initialize(string: strings().passcodeOr, color: theme.chatServiceItemTextColor, font: .normal(.title)), theme.colors.background, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
         
         let f = focus(text.size)
         layout.draw(NSMakeRect(f.minX, 0, f.width, f.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
@@ -137,7 +137,7 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
         inputContainer.addSubview(input)
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.passcodeEnterPasscodePlaceholder, color: theme.colors.grayText, font: .medium(17))
+        _ = attr.append(string: strings().passcodeEnterPasscodePlaceholder, color: theme.colors.grayText, font: .medium(17))
         //attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.cell?.usesSingleLineMode = true
@@ -205,7 +205,7 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
 
 
         let placeholder = NSMutableAttributedString()
-        _ = placeholder.append(string: L10n.passcodeEnterPasscodePlaceholder, color: theme.chatServiceItemTextColor, font: .normal(.title))
+        _ = placeholder.append(string: strings().passcodeEnterPasscodePlaceholder, color: theme.chatServiceItemTextColor, font: .normal(.title))
         input.placeholderAttributedString = placeholder
         
         if #available(macOS 10.14, *) {
@@ -214,7 +214,7 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
             visualEffect.material = theme.colors.isDark ? .ultraDark : .light
         }
         
-        let logoutAttr = parseMarkdownIntoAttributedString(L10n.passcodeLostDescription, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.chatServiceItemTextColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.chatServiceItemTextColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: secondaryColor == theme.chatServiceItemTextColor ? theme.chatServiceItemTextColor : theme.colors.link), linkAttribute: { contents in
+        let logoutAttr = parseMarkdownIntoAttributedString(strings().passcodeLostDescription, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.chatServiceItemTextColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.chatServiceItemTextColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: secondaryColor == theme.chatServiceItemTextColor ? theme.chatServiceItemTextColor : theme.colors.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
         }))
         
@@ -231,7 +231,7 @@ class PasscodeLockView : Control, NSTextFieldDelegate {
         }
         logoutTextView.set(layout: logoutLayout)
         
-        let layout = TextViewLayout(.initialize(string: L10n.passlockEnterYourPasscode, color: theme.chatServiceItemTextColor, font: .medium(17)), alignment: .center)
+        let layout = TextViewLayout(.initialize(string: strings().passlockEnterYourPasscode, color: theme.chatServiceItemTextColor, font: .medium(17)), alignment: .center)
         
         layout.measure(width: frame.width - 40)
         if theme.bubbled {
@@ -424,7 +424,7 @@ class PasscodeLockController: ModalViewController {
     
     func callTouchId() {
         if laContext.canUseBiometric {
-            laContext.evaluatePolicy(.applicationPolicy, localizedReason: tr(L10n.passcodeUnlockTouchIdReason)) { (success, evaluateError) in
+            laContext.evaluatePolicy(.applicationPolicy, localizedReason: strings().passcodeUnlockTouchIdReason) { (success, evaluateError) in
                 if (success) {
                     Queue.mainQueue().async {
                         self._doneValue.set(.single(true))
@@ -460,7 +460,7 @@ class PasscodeLockController: ModalViewController {
         genericView.logoutImpl = { [weak self] in
             guard let window = self?.window else { return }
             
-            confirm(for: window, information: L10n.accountConfirmLogoutText, successHandler: { [weak self] _ in
+            confirm(for: window, information: strings().accountConfirmLogoutText, successHandler: { [weak self] _ in
                 guard let `self` = self else { return }
                 _ = showModalProgress(signal: self.logoutImpl(), for: window).start(completed: { [weak self] in
                     delay(0.2, closure: { [weak self] in

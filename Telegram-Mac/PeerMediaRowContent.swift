@@ -48,7 +48,7 @@ class PeerMediaRowItem: GeneralRowItem {
 
         var items:[ContextMenuItem] = []
         if canForwardMessage(message, chatInteraction: interface) {
-            items.append(ContextMenuItem(L10n.messageContextForward, handler: { [weak self] in
+            items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.forwardMessages([strongSelf.message.id])
                 }
@@ -56,14 +56,14 @@ class PeerMediaRowItem: GeneralRowItem {
         }
         
         if canDeleteMessage(message, account: interface.context.account, mode: .history) {
-            items.append(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
+            items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
                 if let strongSelf = self {
                     strongSelf.interface.deleteMessages([strongSelf.message.id])
                 }
             }))
         }
         
-        items.append(ContextMenuItem(L10n.messageContextGoto, handler: { [weak self] in
+        items.append(ContextMenuItem(strings().messageContextGoto, handler: { [weak self] in
             if let strongSelf = self {
                 strongSelf.interface.focusMessageId(nil, strongSelf.message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
             }

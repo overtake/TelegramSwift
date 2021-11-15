@@ -12,9 +12,10 @@ import TelegramCore
 
 import Postbox
 import TGUIKit
-import TgVoipWebrtc
 import CoreGraphics
+
 import TelegramVoip
+import TgVoipWebrtc
 
 enum CallTone {
     case undefined
@@ -36,40 +37,40 @@ extension CallState.State {
         let statusValue: CallControllerStatusValue
         switch self {
         case .waiting, .connecting:
-            statusValue = .text(L10n.callStatusConnecting, nil)
+            statusValue = .text(strings().callStatusConnecting, nil)
         case let .requesting(ringing):
             if ringing {
-                statusValue = .text(L10n.callStatusRinging, nil)
+                statusValue = .text(strings().callStatusRinging, nil)
             } else {
-                statusValue = .text(L10n.callStatusRequesting, nil)
+                statusValue = .text(strings().callStatusRequesting, nil)
             }
         case .terminating:
-            statusValue = .text(L10n.callStatusEnded, nil)
+            statusValue = .text(strings().callStatusEnded, nil)
         case let .terminated(_, reason, _):
             if let reason = reason {
                 switch reason {
                 case let .ended(type):
                     switch type {
                     case .busy:
-                        statusValue = .text(L10n.callStatusBusy, nil)
+                        statusValue = .text(strings().callStatusBusy, nil)
                     case .hungUp, .missed:
-                        statusValue = .text(L10n.callStatusEnded, nil)
+                        statusValue = .text(strings().callStatusEnded, nil)
                     }
                 case .error:
-                    statusValue = .text(L10n.callStatusFailed, nil)
+                    statusValue = .text(strings().callStatusFailed, nil)
                 }
             } else {
-                statusValue = .text(L10n.callStatusEnded, nil)
+                statusValue = .text(strings().callStatusEnded, nil)
             }
         case .ringing:
             if let accountPeer = accountPeer {
-                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
+                statusValue = .text(strings().callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
             } else {
-                statusValue = .text(L10n.callStatusCalling, nil)
+                statusValue = .text(strings().callStatusCalling, nil)
             }
         case .active(let timestamp, let reception, _), .reconnecting(let timestamp, let reception, _):
             if case .reconnecting = self {
-                statusValue = .text(L10n.callStatusConnecting, reception)
+                statusValue = .text(strings().callStatusConnecting, reception)
             } else {
                 statusValue = .timer(timestamp, reception)
             }
@@ -534,7 +535,7 @@ class PCallSession {
             if access {
                 self?.acceptAfterAccess()
             } else {
-                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { [weak self] result in
+                confirm(for: mainWindow, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
                     switch result {
                     case .thrid:
                         openSystemSettings(.microphone)
@@ -1158,7 +1159,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         
         for account in activeAccounts.accounts {
             if account.1.peerId == peerId {
-                alert(for: mainWindow, info: L10n.callSameDeviceError)
+                alert(for: mainWindow, info: strings().callSameDeviceError)
                 return .complete()
             }
         }
@@ -1177,7 +1178,7 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
                 return .success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible))
             }
         } else {
-            confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+            confirm(for: mainWindow, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
@@ -1227,27 +1228,27 @@ func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountConte
             let text: String
             switch currentCallType {
             case .call:
-                header = L10n.callConfirmDiscardCallHeader
+                header = strings().callConfirmDiscardCallHeader
             case .voiceChat:
-                header = L10n.callConfirmDiscardVoiceHeader
+                header = strings().callConfirmDiscardVoiceHeader
             }
             switch newCallType {
             case .call:
                 switch currentCallType {
                 case .call:
-                    text = L10n.callConfirmDiscardCallToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardCallToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 case .voiceChat:
-                    text = L10n.callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             case .voiceChat:
                 switch currentCallType {
                 case .call:
-                    text = L10n.callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 case .voiceChat:
-                    text = L10n.callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             }
-            return confirmSignal(for: mainWindow, header: header, information: text, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel) |> filter { $0 }
+            return confirmSignal(for: mainWindow, header: header, information: text, okTitle: strings().modalYes, cancelTitle: strings().modalCancel) |> filter { $0 }
         }
     } else {
         return .single(true)

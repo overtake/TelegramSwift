@@ -18,11 +18,11 @@ class PassportTwoStepVerificationIntroItem: GeneralRowItem {
     fileprivate let descLayout:TextViewLayout
     init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer, action: @escaping()->Void) {
         let headerAttr = NSMutableAttributedString()
-        _ = headerAttr.append(string: L10n.secureIdCreatePasswordIntroHeader(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
+        _ = headerAttr.append(string: strings().secureIdCreatePasswordIntroHeader(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
         headerAttr.detectBoldColorInString(with: .medium(.text))
         headerLayout = TextViewLayout(headerAttr, alignment: .center)
         
-        descLayout = TextViewLayout(.initialize(string: L10n.secureIdCreatePasswordIntro, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        descLayout = TextViewLayout(.initialize(string: strings().secureIdCreatePasswordIntro, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         
         super.init(initialSize, stableId: stableId, action: action)
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -91,7 +91,7 @@ private final class PassportTwoStepVerificationIntroRowView : TableRowView {
         
         guard let item = item as? PassportTwoStepVerificationIntroItem else {return}
         
-        button.set(text: L10n.secureIdRequestCreatePassword, for: .Normal)
+        button.set(text: strings().secureIdRequestCreatePassword, for: .Normal)
         _ = button.sizeToFit()
         headerView.update(item.headerLayout)
         descView.update(item.descLayout)

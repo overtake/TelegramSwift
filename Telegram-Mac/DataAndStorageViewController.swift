@@ -88,42 +88,42 @@ private func stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers, cate
     
     if peers.privateChats && peers.groups && peers.channels {
         if let size = size {
-            return L10n.autoDownloadSettingsUpToForAll(size)
+            return strings().autoDownloadSettingsUpToForAll(size)
         } else {
-            return L10n.autoDownloadSettingsOnForAll
+            return strings().autoDownloadSettingsOnForAll
         }
     } else {
         var types: [String] = []
         if peers.privateChats {
-            types.append(L10n.autoDownloadSettingsTypePrivateChats)
+            types.append(strings().autoDownloadSettingsTypePrivateChats)
         }
         if peers.groups {
-            types.append(L10n.autoDownloadSettingsTypeGroupChats)
+            types.append(strings().autoDownloadSettingsTypeGroupChats)
         }
         if peers.channels {
-            types.append(L10n.autoDownloadSettingsTypeChannels)
+            types.append(strings().autoDownloadSettingsTypeChannels)
         }
         
         if types.isEmpty {
-            return L10n.autoDownloadSettingsOffForAll
+            return strings().autoDownloadSettingsOffForAll
         }
         
         var string: String = ""
         for i in 0 ..< types.count {
             if !string.isEmpty {
                 if i == types.count - 1 {
-                    string.append(L10n.autoDownloadSettingsLastDelimeter)
+                    string.append(strings().autoDownloadSettingsLastDelimeter)
                 } else {
-                    string.append(L10n.autoDownloadSettingsDelimeter)
+                    string.append(strings().autoDownloadSettingsDelimeter)
                 }
             }
             string.append(types[i])
         }
         
         if let size = size {
-            return L10n.autoDownloadSettingsUpToFor(size, string)
+            return strings().autoDownloadSettingsUpToFor(size, string)
         } else {
-            return L10n.autoDownloadSettingsOnFor(string)
+            return strings().autoDownloadSettingsOnFor(string)
         }
     }
 }
@@ -308,62 +308,62 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
         case let .automaticMediaDownloadHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .automaticDownloadMedia(_ , value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownload, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownload, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleAutomaticDownload(!value)
             })
         case let .photos(_, category, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadPhoto, description: stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers(category: category), category: .photo), type: .next, viewType: viewType, action: {
-               arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadPhoto)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadPhoto, description: stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers(category: category), category: .photo), type: .next, viewType: viewType, action: {
+               arguments.openCategorySettings(category, strings().dataAndStorageAutomaticDownloadPhoto)
             }, enabled: enabled)
         case let .videos(_, category, enabled, _, viewType):
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadVideo, description: stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers(category: category), category: .video), type: .next, viewType: viewType, action: {
-                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadVideo)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadVideo, description: stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers(category: category), category: .video), type: .next, viewType: viewType, action: {
+                arguments.openCategorySettings(category, strings().dataAndStorageAutomaticDownloadVideo)
             }, enabled: enabled)
         case let .files(_, category, enabled, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadFiles, description: stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers(category: category), category: .file), type: .next, viewType: viewType, action: {
-                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadFiles)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadFiles, description: stringForAutomaticDownloadPeers(peers: AutomaticDownloadPeers(category: category), category: .file), type: .next, viewType: viewType, action: {
+                arguments.openCategorySettings(category, strings().dataAndStorageAutomaticDownloadFiles)
             }, enabled: enabled)
         case let .voice(_, category, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadVoice, type: .next, viewType: viewType, action: {
-                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadVoice)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadVoice, type: .next, viewType: viewType, action: {
+                arguments.openCategorySettings(category, strings().dataAndStorageAutomaticDownloadVoice)
             }, enabled: enabled)
         case let .instantVideo(_, category, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadInstantVideo, type: .next, viewType: viewType, action: {
-                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadInstantVideo)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadInstantVideo, type: .next, viewType: viewType, action: {
+                arguments.openCategorySettings(category, strings().dataAndStorageAutomaticDownloadInstantVideo)
             }, enabled: enabled)
         case let .gifs(_, category, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadGIFs, type: .next, viewType: viewType, action: {
-                arguments.openCategorySettings(category, L10n.dataAndStorageAutomaticDownloadGIFs)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadGIFs, type: .next, viewType: viewType, action: {
+                arguments.openCategorySettings(category, strings().dataAndStorageAutomaticDownloadGIFs)
             }, enabled: enabled)
         case let .resetDownloadSettings(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutomaticDownloadReset, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutomaticDownloadReset, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), type: .none, viewType: viewType, action: {
                 arguments.resetDownloadSettings()
             }, enabled: enabled)
         case let .downloadFolder(_, path, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageDownloadFolder, type: .context(path), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageDownloadFolder, type: .context(path), viewType: viewType, action: {
                 arguments.selectDownloadFolder()
             })
         case let .autoplayHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageAutoplayHeader, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageAutoplayHeader, viewType: viewType)
         case let .autoplayGifs(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutoplayGIFs, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutoplayGIFs, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleAutoplayGifs(!value)
             })
         case let .autoplayVideos(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutoplayVideos, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutoplayVideos, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleAutoplayVideos(!value)
             })
         case let .soundOnHover(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.dataAndStorageAutoplaySoundOnHover, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageAutoplaySoundOnHover, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleAutoplaySoundOnHover(!value)
             })
         case let .soundOnHoverDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.dataAndStorageAutoplaySoundOnHoverDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().dataAndStorageAutoplaySoundOnHoverDesc, viewType: viewType)
         case .proxyHeader:
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.privacySettingsProxyHeader, viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().privacySettingsProxyHeader, viewType: .textTopItem)
         case let .proxySettings(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsUseProxy, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openProxySettings()
             })
         default:
@@ -400,14 +400,14 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.storageUsage(sectionId, L10n.dataAndStorageStorageUsage, viewType: .firstItem))
-    entries.append(.networkUsage(sectionId, L10n.dataAndStorageNetworkUsage, viewType: .lastItem))
+    entries.append(.storageUsage(sectionId, strings().dataAndStorageStorageUsage, viewType: .firstItem))
+    entries.append(.networkUsage(sectionId, strings().dataAndStorageNetworkUsage, viewType: .lastItem))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
 
 
-    entries.append(.automaticMediaDownloadHeader(sectionId, L10n.dataAndStorageAutomaticDownloadHeader, viewType: .textTopItem))
+    entries.append(.automaticMediaDownloadHeader(sectionId, strings().dataAndStorageAutomaticDownloadHeader, viewType: .textTopItem))
     entries.append(.automaticDownloadMedia(sectionId, data.automaticMediaDownloadSettings.automaticDownload, viewType: .firstItem))
     entries.append(.photos(sectionId, data.automaticMediaDownloadSettings.categories.photo, data.automaticMediaDownloadSettings.automaticDownload, viewType: .innerItem))
     entries.append(.videos(sectionId, data.automaticMediaDownloadSettings.categories.video, data.automaticMediaDownloadSettings.automaticDownload, data.automaticMediaDownloadSettings.categories.video.fileSize, viewType: .innerItem))
@@ -438,12 +438,12 @@ private func dataAndStorageControllerEntries(state: DataAndStorageControllerStat
     if let active = proxy.activeServer, proxy.enabled {
         switch active.connection {
         case .socks5:
-            text = L10n.proxySettingsSocks5
+            text = strings().proxySettingsSocks5
         case .mtp:
-            text = L10n.proxySettingsMTP
+            text = strings().proxySettingsMTP
         }
     } else {
-        text = L10n.proxySettingsDisabled
+        text = strings().proxySettingsDisabled
     }
     entries.append(.proxySettings(sectionId, text, viewType: .singleItem))
     
@@ -506,17 +506,17 @@ class DataAndStorageViewController: TableViewController {
             pushControllerImpl(DownloadSettingsViewController(context, category, title, updateCategory: { category in
                 _ = updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, { current -> AutomaticMediaDownloadSettings in
                     switch title {
-                    case L10n.dataAndStorageAutomaticDownloadPhoto:
+                    case strings().dataAndStorageAutomaticDownloadPhoto:
                         return current.withUpdatedCategories(current.categories.withUpdatedPhoto(category))
-                    case L10n.dataAndStorageAutomaticDownloadVideo:
+                    case strings().dataAndStorageAutomaticDownloadVideo:
                         return current.withUpdatedCategories(current.categories.withUpdatedVideo(category))
-                    case L10n.dataAndStorageAutomaticDownloadFiles:
+                    case strings().dataAndStorageAutomaticDownloadFiles:
                         return current.withUpdatedCategories(current.categories.withUpdatedFiles(category))
-                    case L10n.dataAndStorageAutomaticDownloadVoice:
+                    case strings().dataAndStorageAutomaticDownloadVoice:
                         return current.withUpdatedCategories(current.categories.withUpdatedVoice(category))
-                    case L10n.dataAndStorageAutomaticDownloadInstantVideo:
+                    case strings().dataAndStorageAutomaticDownloadInstantVideo:
                         return current.withUpdatedCategories(current.categories.withUpdatedInstantVideo(category))
-                    case L10n.dataAndStorageAutomaticDownloadGIFs:
+                    case strings().dataAndStorageAutomaticDownloadGIFs:
                         return current.withUpdatedCategories(current.categories.withUpdatedGif(category))
                     default:
                         return current
@@ -528,7 +528,7 @@ class DataAndStorageViewController: TableViewController {
                 return current.withUpdatedAutomaticDownload(enabled)
             }).start()
         }, resetDownloadSettings: {
-            _ = (confirmSignal(for: mainWindow, header: appName, information: L10n.dataAndStorageConfirmResetSettings, okTitle: L10n.modalOK, cancelTitle: L10n.modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, NoError> in
+            _ = (confirmSignal(for: mainWindow, header: appName, information: strings().dataAndStorageConfirmResetSettings, okTitle: strings().modalOK, cancelTitle: strings().modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, NoError> in
                 return updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, { _ -> AutomaticMediaDownloadSettings in
                     return AutomaticMediaDownloadSettings.defaultSettings
                 })

@@ -23,7 +23,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
     
     if state.stats == nil {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
+            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: strings().channelStatsLoading)
         }))
     } else if let stats = state.stats  {
         
@@ -32,22 +32,22 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsGroupOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
         index += 1
         
         var overviewItems:[ChannelOverviewItem] = []
         
         if stats.members.current > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsGroupMembers, value: stats.members.attributedString))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsGroupMembers, value: stats.members.attributedString))
         }
         if stats.messages.current != 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsGroupMessages, value: stats.messages.attributedString))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsGroupMessages, value: stats.messages.attributedString))
         }
         if stats.viewers.current > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsGroupViewers, value: stats.viewers.attributedString))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsGroupViewers, value: stats.viewers.attributedString))
         }
         if stats.posters.current > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsGroupPosters, value: stats.posters.attributedString))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsGroupPosters, value: stats.posters.attributedString))
         }
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
@@ -67,42 +67,42 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
         var graphs: [Graph] = []
         
         if !stats.growthGraph.isEmpty {
-            graphs.append(Graph(graph: stats.growthGraph, title: L10n.statsGroupGrowthTitle, identifier: InputDataIdentifier("growthGraph"), type: .lines, load: { identifier in
+            graphs.append(Graph(graph: stats.growthGraph, title: strings().statsGroupGrowthTitle, identifier: InputDataIdentifier("growthGraph"), type: .lines, load: { identifier in
                 context.loadGrowthGraph()
                 updateIsLoading(identifier, true)
             }))
         }
         
         if !stats.membersGraph.isEmpty {
-            graphs.append(Graph(graph: stats.membersGraph, title: L10n.statsGroupMembersTitle, identifier: InputDataIdentifier("membersGraph"), type: .lines, load: { identifier in
+            graphs.append(Graph(graph: stats.membersGraph, title: strings().statsGroupMembersTitle, identifier: InputDataIdentifier("membersGraph"), type: .lines, load: { identifier in
                 context.loadMembersGraph()
                 updateIsLoading(identifier, true)
             }))
         }
         
         if !stats.newMembersBySourceGraph.isEmpty {
-            graphs.append(Graph(graph: stats.newMembersBySourceGraph, title: L10n.statsGroupNewMembersBySourceTitle, identifier: InputDataIdentifier("newMembersBySourceGraph"), type: .bars, load: { identifier in
+            graphs.append(Graph(graph: stats.newMembersBySourceGraph, title: strings().statsGroupNewMembersBySourceTitle, identifier: InputDataIdentifier("newMembersBySourceGraph"), type: .bars, load: { identifier in
                 context.loadNewMembersBySourceGraph()
                 updateIsLoading(identifier, true)
             }))
         }
         
         if !stats.languagesGraph.isEmpty {
-            graphs.append(Graph(graph: stats.languagesGraph, title: L10n.statsGroupLanguagesTitle, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
+            graphs.append(Graph(graph: stats.languagesGraph, title: strings().statsGroupLanguagesTitle, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
                 context.loadLanguagesGraph()
                 updateIsLoading(identifier, true)
             }))
         }
         
         if !stats.messagesGraph.isEmpty {
-            graphs.append(Graph(graph: stats.messagesGraph, title: L10n.statsGroupMessagesTitle, identifier: InputDataIdentifier("messagesGraph"), type: .bars, load: { identifier in
+            graphs.append(Graph(graph: stats.messagesGraph, title: strings().statsGroupMessagesTitle, identifier: InputDataIdentifier("messagesGraph"), type: .bars, load: { identifier in
                 context.loadMessagesGraph()
                 updateIsLoading(identifier, true)
             }))
         }
         
         if !stats.actionsGraph.isEmpty {
-            graphs.append(Graph(graph: stats.actionsGraph, title: L10n.statsGroupActionsTitle, identifier: InputDataIdentifier("actionsGraph"), type: .lines, load: { identifier in
+            graphs.append(Graph(graph: stats.actionsGraph, title: strings().statsGroupActionsTitle, identifier: InputDataIdentifier("actionsGraph"), type: .lines, load: { identifier in
                 context.loadActionsGraph()
                 updateIsLoading(identifier, true)
             }))
@@ -110,14 +110,14 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
        
         
         if !stats.topHoursGraph.isEmpty {
-            graphs.append(Graph(graph: stats.topHoursGraph, title: L10n.statsGroupTopHoursTitle, identifier: InputDataIdentifier("topHoursGraph"), type: .hourlyStep, load: { identifier in
+            graphs.append(Graph(graph: stats.topHoursGraph, title: strings().statsGroupTopHoursTitle, identifier: InputDataIdentifier("topHoursGraph"), type: .hourlyStep, load: { identifier in
                 context.loadTopHoursGraph()
                 updateIsLoading(identifier, true)
             }))
         }
       
         if !stats.topWeekdaysGraph.isEmpty {
-            graphs.append(Graph(graph: stats.topWeekdaysGraph, title: L10n.statsGroupTopWeekdaysTitle, identifier: InputDataIdentifier("topWeekdaysGraph"), type: .area, load: { identifier in
+            graphs.append(Graph(graph: stats.topWeekdaysGraph, title: strings().statsGroupTopWeekdaysTitle, identifier: InputDataIdentifier("topWeekdaysGraph"), type: .area, load: { identifier in
                 context.loadTopWeekdaysGraph()
                 updateIsLoading(identifier, true)
             }))
@@ -181,7 +181,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
         if let peers = peers {
             var topPosters = stats.topPosters.filter { $0.messageCount > 0 && peers[$0.peerId] != nil && !peers[$0.peerId]!.rawDisplayTitle.isEmpty }
             if !topPosters.isEmpty {
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopPostersTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsGroupTopPostersTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
                 
                 let needReveal = !uiState.revealed.contains(.topPosters) && topPosters.count > 10
@@ -194,9 +194,9 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                     if let peer = peers[topPoster.peerId], topPoster.messageCount > 0 {
                         var textComponents: [String] = []
                         if topPoster.messageCount > 0 {
-                            textComponents.append(L10n.statsGroupTopPosterMessagesCountable(Int(topPoster.messageCount)))
+                            textComponents.append(strings().statsGroupTopPosterMessagesCountable(Int(topPoster.messageCount)))
                             if topPoster.averageChars > 0 {
-                                textComponents.append(L10n.statsGroupTopPosterCharsCountable(Int(topPoster.averageChars)))
+                                textComponents.append(strings().statsGroupTopPosterCharsCountable(Int(topPoster.averageChars)))
                             }
                         }
                         
@@ -217,7 +217,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 
                 if needReveal {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topPosters.id, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             
                             revealSection(UIStatsState.RevealSection.topPosters)
                             
@@ -238,7 +238,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                     entries.append(.sectionId(sectionId, type: .normal))
                     sectionId += 1
                 }
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopAdminsTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsGroupTopAdminsTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
                 
                 let needReveal = !uiState.revealed.contains(.topAdmins) && topAdmins.count > 10
@@ -252,13 +252,13 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         
                         var textComponents: [String] = []
                         if topAdmin.deletedCount > 0 {
-                            textComponents.append(L10n.statsGroupTopAdminDeletionsCountable(Int(topAdmin.deletedCount)))
+                            textComponents.append(strings().statsGroupTopAdminDeletionsCountable(Int(topAdmin.deletedCount)))
                         }
                         if topAdmin.kickedCount > 0 {
-                            textComponents.append(L10n.statsGroupTopAdminKicksCountable(Int(topAdmin.kickedCount)))
+                            textComponents.append(strings().statsGroupTopAdminKicksCountable(Int(topAdmin.kickedCount)))
                         }
                         if topAdmin.bannedCount > 0 {
-                            textComponents.append(L10n.statsGroupTopAdminBansCountable(Int(topAdmin.bannedCount)))
+                            textComponents.append(strings().statsGroupTopAdminBansCountable(Int(topAdmin.bannedCount)))
                         }
                         
                         var viewType = bestGeneralViewType(topPosters, for: i)
@@ -279,7 +279,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 
                 if needReveal {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topAdmins.id, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             
                             revealSection(UIStatsState.RevealSection.topAdmins)
                             
@@ -306,7 +306,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                     sectionId += 1
                 }
                 
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsGroupTopInvitersTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsGroupTopInvitersTitle), data: .init(color: theme.colors.listGrayText, detectBold: false, viewType: .textTopItem, rightItem: InputDataGeneralTextRightData(isLoading: false, text: .initialize(string: dates, color: theme.colors.listGrayText, font: .normal(12))))))
                 index += 1
                 
                 
@@ -321,7 +321,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                     if let peer = peers[topInviter.peerId] {
                         
                         var textComponents: [String] = []
-                        textComponents.append(L10n.statsGroupTopInviterInvitesCountable(Int(topInviter.inviteCount)))
+                        textComponents.append(strings().statsGroupTopInviterInvitesCountable(Int(topInviter.inviteCount)))
                         
                         var viewType = bestGeneralViewType(topPosters, for: i)
                         
@@ -341,7 +341,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                 
                 if needReveal {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: UIStatsState.RevealSection.topInviters.id, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().statsShowMoreCountable(toRevealCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                             
                             revealSection(UIStatsState.RevealSection.topInviters)
                             
@@ -431,7 +431,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
     }
     
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.groupStatsTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().groupStatsTitle, removeAfterDisappear: false, hasDone: false)
     
     controller.contextObject = statsContext
     controller.didLoaded = { controller, _ in

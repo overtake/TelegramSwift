@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import SwiftSignalKit
 import Postbox
 
@@ -124,13 +124,13 @@ fileprivate class PreviewSenderView : Control {
         if urlsCount > 1, let _ = slowMode  {
             self.fileButton.isEnabled = false
             self.photoButton.isEnabled = false
-            self.photoButton.appTooltip = L10n.slowModePreviewSenderFileTooltip
-            self.fileButton.appTooltip = L10n.slowModePreviewSenderFileTooltip
+            self.photoButton.appTooltip = strings().slowModePreviewSenderFileTooltip
+            self.fileButton.appTooltip = strings().slowModePreviewSenderFileTooltip
         } else {
             self.fileButton.isEnabled = true
             self.photoButton.isEnabled = true
-            self.photoButton.appTooltip = L10n.previewSenderMediaTooltip
-            self.fileButton.appTooltip = L10n.previewSenderFileTooltip
+            self.photoButton.appTooltip = strings().previewSenderMediaTooltip
+            self.fileButton.appTooltip = strings().previewSenderFileTooltip
         }
     }
     
@@ -148,10 +148,10 @@ fileprivate class PreviewSenderView : Control {
         _ = closeButton.sizeToFit()
         
         
-        photoButton.appTooltip = L10n.previewSenderMediaTooltip
-        fileButton.appTooltip = L10n.previewSenderFileTooltip
-        collageButton.appTooltip = L10n.previewSenderCollageTooltip
-        archiveButton.appTooltip = L10n.previewSenderArchiveTooltip
+        photoButton.appTooltip = strings().previewSenderMediaTooltip
+        fileButton.appTooltip = strings().previewSenderFileTooltip
+        collageButton.appTooltip = strings().previewSenderCollageTooltip
+        archiveButton.appTooltip = strings().previewSenderArchiveTooltip
 
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderPhoto), for: .Normal)
         _ = photoButton.sizeToFit()
@@ -252,14 +252,14 @@ fileprivate class PreviewSenderView : Control {
                 var items:[SPopoverItem] = []
                 
                 if peer.id != chatInteraction.context.account.peerId {
-                    items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak controller] in
+                    items.append(SPopoverItem(strings().chatSendWithoutSound, { [weak controller] in
                         controller?.send(true)
                     }))
                 }
                 switch chatInteraction.mode {
                 case .history:
                     if !peer.isSecretChat {
-                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
                                 controller?.send(false, atDate: date)
                             }), for: context.window)
@@ -816,7 +816,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         if let types = pasteboard.types, types.contains(.kFilenames) {
             let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
             if let list = list {
-                return [DragItem(title: L10n.previewDraggingAddItemsCountable(list.count), desc: "", handler: { [weak self] in
+                return [DragItem(title: strings().previewDraggingAddItemsCountable(list.count), desc: "", handler: { [weak self] in
                     self?.insertAdditionUrls?(list.map({URL(fileURLWithPath: $0)}))
                     
                 })]
@@ -840,7 +840,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let currentText = self.genericView.textView.string()
         let basicText = self.temporaryInputState?.inputText ?? ""
         if (self.temporaryInputState == nil && !currentText.isEmpty) || (basicText != currentText) {
-            confirm(for: context.window, header: L10n.mediaSenderDiscardChangesHeader, information: L10n.mediaSenderDiscardChangesText, okTitle: L10n.mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
+            confirm(for: context.window, header: strings().mediaSenderDiscardChangesHeader, information: strings().mediaSenderDiscardChangesText, okTitle: strings().mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
                 self?.closeModal()
             })
         } else {
@@ -856,7 +856,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let text = self.genericView.textView.string().trimmed
         if text.length > ChatPresentationInterfaceState.maxShortInput {
-            alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
+            alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
             return
         }
         
@@ -884,15 +884,15 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     private var inputPlaceholder: String {
-        var placeholder: String = L10n.previewSenderCommentPlaceholder
+        var placeholder: String = strings().previewSenderCommentPlaceholder
         if self.genericView.tableView.count == 1 {
             if let item = self.genericView.tableView.firstItem {
                 if let item = item as? MediaPreviewRowItem {
                     if item.media.canHaveCaption {
-                        placeholder = L10n.previewSenderCaptionPlaceholder
+                        placeholder = strings().previewSenderCaptionPlaceholder
                     }
                 } else if item is MediaGroupPreviewRowItem {
-                    placeholder = L10n.previewSenderCaptionPlaceholder
+                    placeholder = strings().previewSenderCaptionPlaceholder
                 }
             }
         }
@@ -1145,8 +1145,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
 
             if let slowMode = slowMode, slowMode.hasLocked {
                 self.genericView.textView.shake()
-            } else if self.inputPlaceholder != L10n.previewSenderCaptionPlaceholder && slowMode != nil && attributed.length > 0 {
-                tooltip(for: self.genericView.sendButton, text: L10n.slowModeMultipleError)
+            } else if self.inputPlaceholder != strings().previewSenderCaptionPlaceholder && slowMode != nil && attributed.length > 0 {
+                tooltip(for: self.genericView.sendButton, text: strings().slowModeMultipleError)
                 self.genericView.textView.setSelectedRange(NSMakeRange(0, attributed.length))
                 self.genericView.textView.shake()
             } else {
