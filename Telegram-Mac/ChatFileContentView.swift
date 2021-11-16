@@ -107,7 +107,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func draggingAbility(_ event:NSEvent) -> Bool {
-        return NSPointInRect(convert(event.locationInWindow, from: nil), progressView?.frame ?? NSZeroRect)
+        return NSPointInRect(convert(event.locationInWindow, from: nil), self.thumbView.frame)
     }
     
     deinit {

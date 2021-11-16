@@ -259,7 +259,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             inDragging = false
             dragpath = nil
             mouseDownPoint = convert(event.locationInWindow, from: nil)
-            acceptDragging = draggingAbility(event) && parent != nil && !parent!.containsSecretMedia
+            acceptDragging = draggingAbility(event) && parent != nil && !parent!.containsSecretMedia && !parent!.isCopyProtected()
             
             if let parent = parent, parent.id.peerId.namespace == Namespaces.Peer.SecretChat {
                 acceptDragging = false

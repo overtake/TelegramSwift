@@ -30,5 +30,5 @@ let package = Package(
                 .headerSearchPath("PublicHeaders/EmojiSuggestions")
             ]),
     ],
-    cxxLanguageStandard: .cxx14
+    cxxLanguageStandard: .cxx20
 )

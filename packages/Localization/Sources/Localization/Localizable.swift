@@ -3929,6 +3929,10 @@ public final class L10n {
   public static var convertToSuperGroupConfirm: String  { return L10n.tr("Localizable", "ConvertToSuperGroup.Confirm") }
   /// Something went wrong, sorry. Please try again later.
   public static var convertToSupergroupAlertError: String  { return L10n.tr("Localizable", "ConvertToSupergroup.Alert.Error") }
+  /// Sorry, copyng from this channel is disabled by admins.
+  public static var copyRestrictedChannel: String  { return L10n.tr("Localizable", "CopyRestricted.Channel") }
+  /// Sorry, copyng from this channel is disabled by admins.
+  public static var copyRestrictedGroup: String  { return L10n.tr("Localizable", "CopyRestricted.Group") }
   /// Cancel
   public static var crashOnLaunchCancel: String  { return L10n.tr("Localizable", "CrashOnLaunch.Cancel") }
   /// If Telegram keeps crashing immediately after you open it, click OK to log out of the app. This should solve this issue.

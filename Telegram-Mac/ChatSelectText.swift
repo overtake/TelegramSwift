@@ -87,6 +87,12 @@ class SelectManager : NSResponder {
     }
     
     @objc func copy(_ sender:Any) {
+        
+        if let window = self.chatInteraction?.context.window, let peer = self.chatInteraction?.peer, peer.isCopyProtected {
+            showProtectedCopyAlert(peer, for: window)
+            return
+        }
+        
         let selectedText = self.selectedText
         if !selectedText.string.isEmpty {
             if !globalLinkExecutor.copyAttributedString(selectedText) {
