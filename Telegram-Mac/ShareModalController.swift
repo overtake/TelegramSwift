@@ -491,21 +491,50 @@ class ShareMessageObject : ShareObject {
     }
 
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        
+        let context = self.context
+        let messageIds = self.messageIds
+        var signals: [Signal<[MessageId?], NoError>] = []
+        
         for peerId in peerIds {
-            if let comment = comment, !comment.inputText.isEmpty {
-                let parsingUrlType: ParsingType
-                if peerId.namespace != Namespaces.Peer.SecretChat {
-                    parsingUrlType = [.Hashtags]
+            let viewSignal: Signal<PeerId?, NoError> = context.account.postbox.peerView(id: peerId)
+            |> take(1)
+            |> map { peerView in
+                if let cachedData = peerView.cachedData as? CachedChannelData {
+                    return cachedData.sendAsPeerId
                 } else {
-                    parsingUrlType = [.Links, .Hashtags]
+                    return nil
                 }
-                let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId).start()
             }
-            
-            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId).start()
+            signals.append(viewSignal |> mapToSignal { sendAs in
+                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, sendAsPeerId: sendAs)
+                var caption: Signal<[MessageId?], NoError>?
+                if let comment = comment, !comment.inputText.isEmpty {
+                    let parsingUrlType: ParsingType
+                    if peerId.namespace != Namespaces.Peer.SecretChat {
+                        parsingUrlType = [.Hashtags]
+                    } else {
+                        parsingUrlType = [.Links, .Hashtags]
+                    }
+                                    
+                    var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
+                    
+                    if let sendAs = sendAs {
+                        attributes.append(SendAsMessageAttribute(peerId: sendAs))
+                    }
+                    
+                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId)
+                }
+                if let caption = caption {
+                    return caption |> then(forward)
+                } else {
+                    return forward
+                }
+            })
         }
-        return .complete()
+        return combineLatest(signals)
+        |> castError(String.self)
+        |> ignoreValues
     }
     
     override func possibilityPerformTo(_ peer:Peer) -> Bool {

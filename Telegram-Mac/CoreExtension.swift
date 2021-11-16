@@ -864,7 +864,16 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
         return false
     }
     
-    
+    if let peer = message.peers[message.id.peerId] as? TelegramGroup {
+        if peer.flags.contains(.copyProtectionEnabled) {
+            return false
+        }
+    }
+    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if peer.flags.contains(.copyProtectionEnabled) {
+            return false
+        }
+    }
     
     if let peer = message.peers[message.id.peerId] as? TelegramUser {
         if peer.isUser, let timer = message.autoremoveAttribute {
@@ -3353,4 +3362,38 @@ func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
 
 func coreMessageMainPeer(_ message: Message) -> Peer? {
     return messageMainPeer(.init(message))?._asPeer()
+}
+
+func showProtectedCopyAlert(_ message: Message, for window: Window) {
+    if let peer = message.peers[message.id.peerId] {
+        let text: String
+        if peer.isGroup || peer.isSupergroup {
+            text = strings().copyRestrictedGroup
+        } else {
+            text = strings().copyRestrictedChannel
+        }
+        showModalText(for: window, text: text)
+    }
+}
+
+func showProtectedCopyAlert(_ peer: Peer, for window: Window) {
+    let text: String
+    if peer.isGroup || peer.isSupergroup {
+        text = strings().copyRestrictedGroup
+    } else {
+        text = strings().copyRestrictedChannel
+    }
+    showModalText(for: window, text: text)
+}
+
+extension Peer {
+    var isCopyProtected: Bool {
+        if let peer = self as? TelegramGroup {
+            return peer.flags.contains(.copyProtectionEnabled)
+        } else if let peer = self as? TelegramChannel {
+            return peer.flags.contains(.copyProtectionEnabled)
+        } else {
+            return false
+        }
+    }
 }

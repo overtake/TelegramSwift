@@ -138,7 +138,7 @@ enum GalleryEntry : Comparable, Identifiable {
     }
     
     var canShare: Bool {
-        return message != nil && !message!.isScheduledMessage && !message!.containsSecretMedia
+        return message != nil && !message!.isScheduledMessage && !message!.containsSecretMedia && !message!.isCopyProtected()
     }
     
     var interfaceState:(PeerId, TimeInterval)? {

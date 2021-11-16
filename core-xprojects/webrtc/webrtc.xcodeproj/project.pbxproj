@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		27E77942273BB80A00C026A3 /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983C41256815B200467703 /* libmac_framework_objc_static.a */; };
+		279E8ECF27428E6D000E1BD5 /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983C41256815B200467703 /* libmac_framework_objc_static.a */; };
 		27E77944273BBAE300C026A3 /* RTCMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E77943273BBAE300C026A3 /* RTCMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27E77945273BBCA900C026A3 /* webrtc.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983BFE2566C86800467703 /* webrtc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
@@ -26,7 +26,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E77942273BB80A00C026A3 /* libmac_framework_objc_static.a in Frameworks */,
+				279E8ECF27428E6D000E1BD5 /* libmac_framework_objc_static.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,7 +160,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -d \"$PROJECT_DIR/build\" ]; then\nsh $PROJECT_DIR/webrtc/build.sh $PROJECT_DIR/../../submodules/tg_owt/  $PROJECT_DIR/../OpenSSLEncryption/build/openssl/include $PROJECT_DIR/../../submodules/telegram-ios/third-party/mozjpeg/mozjpeg $PROJECT_DIR/../libopus/build/libopus/include/opus $PROJECT_DIR/../ffmpeg/build/ffmpeg/include\nfi\n";
+			shellScript = "if [ ! -d \"$PROJECT_DIR/build\" ]; then\nsh $PROJECT_DIR/webrtc/build.sh $PROJECT_DIR/../../submodules/tg_owt/  $PROJECT_DIR/../openssl/build/openssl/include $PROJECT_DIR/../../submodules/telegram-ios/third-party/mozjpeg/mozjpeg $PROJECT_DIR/../libopus/build/libopus/include/opus $PROJECT_DIR/../ffmpeg/build/ffmpeg/include\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -299,6 +299,7 @@
 		D0983C042566C86800467703 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -332,6 +333,7 @@
 		D0983C052566C86800467703 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

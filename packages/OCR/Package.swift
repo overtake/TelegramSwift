@@ -27,5 +27,5 @@ let package = Package(
                 .headerSearchPath("PublicHeaders/ocr")
             ]),
     ],
-    cxxLanguageStandard: .cxx14
+    cxxLanguageStandard: .cxx20
 )

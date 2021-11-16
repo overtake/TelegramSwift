@@ -477,7 +477,9 @@ class ChatMessageItem: ChatRowItem {
             interactions.menuItems = { [weak self] type in
                 var items:[ContextMenuItem] = []
                 if let strongSelf = self, let layout = self?.textLayout {
-                    
+                    if let message = strongSelf.message, message.isCopyProtected() {
+                        return strongSelf.menuItems(in: NSZeroPoint)
+                    }
                     let text: String
                     if let type = type {
                         text = copyContextText(from: type)
@@ -808,15 +810,21 @@ class ChatMessageItem: ChatRowItem {
             }
             
             let insert = min(index ?? 0, items.count)
-            items.insert(ContextMenuItem(strings().textCopyText, handler: { [weak self] in
-                if let string = self?.textLayout.attributedString {
-                    if !globalLinkExecutor.copyAttributedString(string) {
-                        copyToClipboard(string.string)
+            if self?.message?.isCopyProtected() == true {
+                
+            } else {
+                items.insert(ContextMenuItem(strings().textCopyText, handler: { [weak self] in
+                    if let message = self?.message, message.isCopyProtected() == true {
+                        showProtectedCopyAlert(message, for: context.window)
+                    } else {
+                        if let string = self?.textLayout.attributedString {
+                            if !globalLinkExecutor.copyAttributedString(string) {
+                                copyToClipboard(string.string)
+                            }
+                        }
                     }
-                }
-            }), at: insert)
-
-            
+                }), at: insert)
+            }
             
             if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, index == nil {
                 let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)

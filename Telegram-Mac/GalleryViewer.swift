@@ -767,13 +767,13 @@ class GalleryViewer: NSResponder {
         
         var items:[SPopoverItem] = []
         
-        if pager.selectedItem?.entry.message?.containsSecretMedia == true {
-        } else {
+        let isProtected = pager.selectedItem?.entry.message?.containsSecretMedia == true || pager.selectedItem?.entry.message?.isCopyProtected() == true
+        
+        if !isProtected {
             items.append(SPopoverItem(strings().galleryContextSaveAs, {[weak self] in
                 self?.saveAs()
             }))
         }
-        
         
         let context = self.context
         
@@ -814,8 +814,7 @@ class GalleryViewer: NSResponder {
             }
         }
         
-        if pager.selectedItem?.entry.message?.containsSecretMedia == true {
-        } else {
+        if !isProtected {
             items.append(SPopoverItem(strings().galleryContextCopyToClipboard, {[weak self] in
                 self?.copy(nil)
             }))
@@ -1002,9 +1001,13 @@ class GalleryViewer: NSResponder {
         
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {
-                menu.addItem(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
-                    self?.saveAs()
-                }))
+                if item.entry.message?.isCopyProtected() == true {
+                    
+                } else {
+                    menu.addItem(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
+                        self?.saveAs()
+                    }))
+                }
             }
             
             if let _ = self.contentInteractions {
@@ -1012,9 +1015,14 @@ class GalleryViewer: NSResponder {
                     self?.showMessage()
                 }))
             }
-            menu.addItem(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
-                self?.copy(nil)
-            }))
+            if item.entry.message?.isCopyProtected() == true {
+                
+            } else {
+                menu.addItem(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
+                    self?.copy(nil)
+                }))
+            }
+            
         }
         
         
@@ -1163,8 +1171,12 @@ class GalleryViewer: NSResponder {
     }
     
     @objc func copy(_ sender:Any? = nil) -> Void {
+        
         if let item = self.pager.selectedItem {
-            if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {
+            
+            if let message = item.entry.message, message.isCopyProtected() {
+                showProtectedCopyAlert(message, for: self.window)
+            } else  if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {
                 operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { path in
                     let pb = NSPasteboard.general
                     pb.clearContents()

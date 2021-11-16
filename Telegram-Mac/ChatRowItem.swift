@@ -760,6 +760,10 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
+        if message.isCopyProtected() {
+            return false
+        }
+        
         if authorIsChannel {
             return false
         }
@@ -2895,7 +2899,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 var items = items
                 
                 return combineLatest(queue: .mainQueue(), account.postbox.mediaBox.resourceData(file.resource), fileFinderPath(file, context.account.postbox)) |> mapToSignal { data, downloadPath in
-                    if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isStaticSticker && !file.isGraphicFile && !file.isAnimatedSticker {
+                    if !file.isInteractiveMedia && !file.isVoice && !file.isMusic && !file.isStaticSticker && !file.isGraphicFile && !file.isAnimatedSticker && !message.isCopyProtected() {
                         let quickLook = ContextMenuItem(strings().contextOpenInQuickLook, handler: {
                             FastSettings.toggleOpenInQuickLook(fileExtenstion(file))
                         })
@@ -2903,7 +2907,7 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                         items.append(quickLook)
                     }
                    
-                    if data.complete, !message.containsSecretMedia {
+                    if data.complete, !message.containsSecretMedia && !message.isCopyProtected() {
                         items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                             saveAs(file, account: account)
                         }))
