@@ -11,6 +11,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import CoreMediaIO
+import InAppSettings
 
 struct IODevices {
     let camera: [AVCaptureDevice]

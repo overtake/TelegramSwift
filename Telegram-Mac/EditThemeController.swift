@@ -10,7 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
+import ThemeSettings
+import ColorPalette
 import Postbox
 
 private let _id_no_preview1 = InputDataIdentifier("_id_no_preview1")

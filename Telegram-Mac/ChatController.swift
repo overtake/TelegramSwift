@@ -12,6 +12,7 @@ import TelegramCore
 import CalendarUtils
 import Postbox
 import SwiftSignalKit
+import InAppSettings
 
 private var nextClientId: Int32 = 1
 
@@ -381,7 +382,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
         }
     }
-    
+        
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
         CATransaction.begin()
         var added:[NSView] = []
@@ -535,6 +536,8 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
     
+        
+        
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
@@ -3104,7 +3107,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.emojiEffects.addAnimation(emoji.fixed, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
+            if strongSelf.isOnScreen {
+                strongSelf.emojiEffects.addAnimation(emoji.fixed, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
+            }
         }
         
         chatInteraction.toggleSendAs = { updatedPeerId in
@@ -5565,6 +5570,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        
+        self.emojiEffects.removeAll()
 
         suggestionsDisposable.set(nil)
 

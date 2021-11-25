@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import InAppSettings
 
 enum InstalledStickerPacksEntryTag: ItemListItemTag {
     case suggestOptions

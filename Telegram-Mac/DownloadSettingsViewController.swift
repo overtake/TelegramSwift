@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import SwiftSignalKit
 import TGUIKit
 

@@ -544,23 +544,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         longDisposable.dispose()
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        let oldWidth: CGFloat = frame.width
-        let oldHeight: CGFloat = frame.height
-
-        if newSize.width > 0 || newSize.height > 0 {
-            super.setFrameSize(newSize)
-            
-            if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
-                if let table = table {
-                    table.layoutIfNeeded(with: table.visibleRows(), oldWidth: oldWidth)
-                }
-            } else if oldHeight != frame.height {
-                table?.reloadHeightItems()
-            }
-        }
-    }
-    
     
     
     var liveWidth:CGFloat = 0
@@ -823,6 +806,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func updateAfterInitialize(isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
 
+//        self.tableView.setFrameSize(NSMakeSize(frame.width, self.tableView.frame.height))
+        
         self.tableView.flip = isFlipped
       //  #if MAC_OS_X_VERSION_10_16
         if #available(OSX 11.0, *) {
@@ -850,8 +835,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.hasVerticalScroller = true;
 
         self.documentView = self.tableView;
-        self.autoresizesSubviews = true;
-        self.autoresizingMask = [.width, .height]
+//        self.tableView.autoresizingMask = [.height]
+//        self.autoresizingMask = [.width, .height]
         
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
@@ -859,12 +844,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.allowsColumnReordering = false
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
-        
+//        self.tableView.columnAutoresizingStyle = .noColumnAutoresizing
         let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
         tableColumn.width = frame.width
-        
-        self.tableView.addTableColumn(tableColumn)
 
+        self.tableView.addTableColumn(tableColumn)
+       
         
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
             self?.merge(with: transition)
@@ -895,6 +880,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     open override func layout() {
         super.layout()
+        
+
+        
         if let emptyView = emptyView, let superview = superview {
             emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
             emptyView.centerX(y: superview.frame.height - emptyView.frame.height)
@@ -924,7 +912,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for i in range.min ..< range.max {
             let item = self.item(at: i)
             let before = item.heightValue
-            let updated = item.makeSize(tableView.frame.width, oldWidth: oldWidth)
+            let updated = item.makeSize(frame.width, oldWidth: oldWidth)
             let after = item.heightValue
             if (before != after && updated) || item.instantlyResize || inLiveResize {
                 reloadData(row: i, animated: false)
@@ -1339,7 +1327,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         }
                     }
                     
-                    stickView?.setFrameSize(tableView.frame.width, someItem.heightValue)
+                    stickView?.setFrameSize(frame.width, someItem.heightValue)
                     let itemRect:NSRect = someItem.view?.visibleRect ?? NSZeroRect
 
                     if let item = stickItem, item.isKind(of: stickClass), let stickView = stickView {
@@ -3127,8 +3115,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     open override func setFrameSize(_ newSize: NSSize) {
         let visible = visibleItems()
         let oldWidth = frame.width
+        let oldHeight = frame.height
         super.setFrameSize(newSize)
-    
+        
+        self.tableView.setFrameSize(NSMakeSize(frame.width, self.tableView.frame.height))
+
+        if newSize.width > 0 || newSize.height > 0 {
+            if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
+                self.layoutIfNeeded(with: self.visibleRows(), oldWidth: oldWidth)
+            } else if oldHeight != frame.height {
+                self.reloadHeightItems()
+            }
+        }
         
         //updateStickAfterScroll(false)
         if oldWidth != newSize.width, !inLiveResize && newSize.width > 0 && newSize.height > 0 {

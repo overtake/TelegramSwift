@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import SwiftSignalKit
 
@@ -92,7 +92,7 @@ class ChatGroupedItem: ChatRowItem {
                 if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                     caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
                 }
-                let layout: ChatRowItem.RowCaption = .init(id: message.stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true))
+                let layout: ChatRowItem.RowCaption = .init(id: message.stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected()))
                 layout.layout.interactions = globalLinkExecutor
                 captionLayouts.append(layout)
             }
@@ -518,34 +518,12 @@ class ChatGroupedItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayouts.first(where: { $0.id == _message?.stableId}) {
                 let text = captionLayout.layout.attributedString.string
-                items.insert(ContextMenuItem(strings().textCopy, handler: {
-                    copyToClipboard(text)
-                }), at: 1)
-                
-//                if let view = self?.view as? ChatRowView, let textView = view.captionView, let window = textView.window {
-//                    let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-//                    if let layout = textView.layout {
-//                        if let (link, _, range, _) = layout.link(at: point) {
-//                            var text:String = layout.attributedString.string.nsstring.substring(with: range)
-//                            if let link = link as? inAppLink {
-//                                if case let .external(link, _) = link {
-//                                    text = link
-//                                }
-//                            }
-//                            
-//                            for i in 0 ..< items.count {
-//                                if items[i].title == strings().messageContextCopyMessageLink1 {
-//                                    items.remove(at: i)
-//                                    break
-//                                }
-//                            }
-//                            
-//                            items.insert(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
-//                                copyToClipboard(text)
-//                            }), at: 1)
-//                        }
-//                    }
-//                }
+                if _message?.isCopyProtected() == true {
+                } else {
+                    items.insert(ContextMenuItem(strings().textCopy, handler: {
+                        copyToClipboard(text)
+                    }), at: 1)
+                }
             }
             
             return items

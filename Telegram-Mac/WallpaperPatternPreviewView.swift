@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ThemeSettings
 import Postbox
 import SwiftSignalKit
 

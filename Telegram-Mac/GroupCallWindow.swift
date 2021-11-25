@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import SwiftSignalKit
+import ColorPalette
 
 private func generatePeerControl(_ icon: CGImage, background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(28, 28), contextGenerator: { size, ctx in

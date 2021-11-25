@@ -1,7 +1,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-
+import InAppSettings
 import SwiftSignalKit
 import AVFoundation
 import TelegramVoip

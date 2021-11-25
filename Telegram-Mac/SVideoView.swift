@@ -9,6 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import ColorPalette
 
 enum SVideoControlsStyle : Equatable {
     case regular(pip: Bool, fullScreen: Bool, hideRewind: Bool)

@@ -15,8 +15,6 @@ import TGUIKit
 
 class ChatFileContentView: ChatMediaContentView {
     
-
-
     private var actionsLayout:TextViewLayout?
     
     private var progressView:RadialProgressView?
@@ -38,7 +36,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func previewMediaIfPossible() -> Bool {
         guard let context = self.context, let window = self.kitWindow, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
-        _ = startModalPreviewHandle(table, window: window, context: context)
+        startModalPreviewHandle(table, window: window, context: context)
         return true
     }
     
@@ -58,7 +56,6 @@ class ChatFileContentView: ChatMediaContentView {
                 }
             }
         }
-        
     }
     
     override func mouseUp(with event: NSEvent) {

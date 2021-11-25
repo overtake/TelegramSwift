@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import InAppSettings
 
 let maximumNumberOfAccounts = 3
 

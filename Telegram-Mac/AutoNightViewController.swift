@@ -12,6 +12,8 @@ import TelegramCore
 import EDSunriseSet
 import Postbox
 import SwiftSignalKit
+import ThemeSettings
+import ColorPalette
 
 fileprivate let _id_disabled = InputDataIdentifier("disabled")
 fileprivate let _id_scheduled = InputDataIdentifier("enabled")

@@ -10,9 +10,10 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import HotKey
+import ColorPalette
 
 private final class Arguments {
     let sharedContext: SharedAccountContext

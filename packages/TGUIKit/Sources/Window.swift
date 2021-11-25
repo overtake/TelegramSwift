@@ -8,6 +8,7 @@
 
 import Cocoa
 import SwiftSignalKit
+import KeyboardKey
 
 public class ObervableView: NSView {
     private var listeners:[WeakReference<NSObject>] = []

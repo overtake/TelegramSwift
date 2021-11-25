@@ -10,9 +10,10 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import ColorPalette
+import ThemeSettings
 import Postbox
-
+import InAppSettings
 import CoreGraphics
 
 enum WallpaperPreviewMode : Equatable {

@@ -10,6 +10,8 @@ import Foundation
 import HotKey
 import SwiftSignalKit
 import TGUIKit
+import InAppSettings
+import KeyboardKey
 
 extension PushToTalkValue {
     func isEqual(_ value: KeyboardGlobalHandler.Result) -> Bool {

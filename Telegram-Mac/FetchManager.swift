@@ -332,7 +332,7 @@ final class FetchManager {
                         case .remote:
                             switch id.locationKey {
                             case let .messageId(messageId):
-                                _ = (strongSelf.postbox.messageAtId(messageId) |> map { $0?.media.first as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
+                                _ = (strongSelf.postbox.messageAtId(messageId) |> filter { $0?.isCopyProtected() == false } |> map { $0?.media.first as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
                                     if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo && !file.isAnimatedSticker && !file.isStaticSticker {
                                         return copyToDownloads(file, postbox: postbox) |> map { _ in }
                                     }

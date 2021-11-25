@@ -11,6 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
+import InAppSettings
 
 func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) -> [ContextMenuItem] {
     var items:[ContextMenuItem] = []

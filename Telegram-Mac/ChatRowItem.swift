@@ -13,6 +13,7 @@ import ObjcUtils
 import Postbox
 import SwiftSignalKit
 import DateUtils
+import InAppSettings
 
 struct ChatFloatingPhoto {
     var point: NSPoint

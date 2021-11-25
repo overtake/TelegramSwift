@@ -9,7 +9,7 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
-
+import InAppSettings
 
 private struct SettingsSearchRecentQueryItemId {
     public let rawValue: MemoryBuffer

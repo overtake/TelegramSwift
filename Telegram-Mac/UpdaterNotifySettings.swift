@@ -10,6 +10,7 @@ import Cocoa
 import TelegramCore
 import Postbox
 import SwiftSignalKit
+import InAppSettings
 
 enum LaunchNavigation : Equatable {
     case chat(PeerId, necessary: Bool)

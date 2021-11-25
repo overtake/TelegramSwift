@@ -13,7 +13,7 @@ import TelegramCore
 import Localization
 import Postbox
 import TGModernGrowingTextView
-
+import KeyboardKey
 
 fileprivate class ShareButton : Control {
     private var badge: BadgeNode?

@@ -14,6 +14,7 @@ import Postbox
 import SwiftSignalKit
 import TgVoipWebrtc
 import TelegramVoip
+import ColorPalette
 
 private let defaultWindowSize = NSMakeSize(720, 560)
 

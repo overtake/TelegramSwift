@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import SwiftSignalKit
 import TGUIKit
@@ -611,11 +611,11 @@ class SharedAccountContext {
     }
 
     func endCurrentCall() -> Signal<Bool, NoError> {
-//        if let groupCall = bindings.groupCall() {
-//            return groupCall.leaveSignal() |> filter { $0 }
-//        } else if let callSession = bindings.callSession() {
-//            return callSession.hangUpCurrentCall() |> filter { $0 }
-//        }
+        if let groupCall = bindings.groupCall() {
+            return groupCall.leaveSignal() |> filter { $0 }
+        } else if let callSession = bindings.callSession() {
+            return callSession.hangUpCurrentCall() |> filter { $0 }
+        }
         return .single(true)
     }
     
@@ -637,11 +637,11 @@ class SharedAccountContext {
     }
     
     func endGroupCall(terminate: Bool) -> Signal<Bool, NoError> {
-//        if let groupCall = bindings.groupCall() {
-//            return groupCall.call.leave(terminateIfPossible: terminate) |> filter { $0 } |> take(1)
-//        } else {
-//            return .single(true)
-//        }
+        if let groupCall = bindings.groupCall() {
+            return groupCall.call.leave(terminateIfPossible: terminate) |> filter { $0 } |> take(1)
+        } else {
+            return .single(true)
+        }
         return .single(true)
     }
     

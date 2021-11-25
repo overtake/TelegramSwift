@@ -9,8 +9,9 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
+
 class ChatUnreadRowItem: ChatRowItem {
 
     override var height: CGFloat {

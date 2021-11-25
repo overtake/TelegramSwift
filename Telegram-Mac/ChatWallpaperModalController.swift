@@ -8,11 +8,11 @@
 
 import Cocoa
 import TelegramCore
-
+import ThemeSettings
 import Postbox
 import TGUIKit
 import SwiftSignalKit
-
+import InAppSettings
 
 final class ThemeGridControllerInteraction {
     let openWallpaper: (Wallpaper, TelegramWallpaper?) -> Void

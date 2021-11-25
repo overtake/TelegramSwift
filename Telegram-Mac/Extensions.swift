@@ -18,6 +18,8 @@ import FastBlur
 import CalendarUtils
 import ObjcUtils
 import TGModernGrowingTextView
+import ThemeSettings
+import InAppSettings
 
 extension Message {
     

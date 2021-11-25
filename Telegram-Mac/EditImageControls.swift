@@ -9,6 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import ColorPalette
 
 struct EditedImageData : Equatable {
     let originalUrl: URL

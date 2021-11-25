@@ -9,7 +9,7 @@
 import Foundation
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 
 private let kOutputBus: UInt32 = 0

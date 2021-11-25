@@ -16,9 +16,7 @@ import QuickLook
 import TGUIKit
 import libwebp
 import TGGifConverter
-
-let diceSymbol: String = "🎲"
-let dartSymbol: String = "🎯"
+import InAppSettings
 
 
 class MediaSenderContainer : Equatable {

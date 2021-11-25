@@ -526,6 +526,10 @@ open class ViewController : NSObject {
         return true
     }
     
+    open var isOnScreen: Bool {
+        return self.navigationController?.controller == self
+    }
+    
     open func executeReturn() -> Void {
         self.navigationController?.back()
     }
@@ -1271,6 +1275,7 @@ open class ModalController : ModalViewController {
     open override func escapeKeyAction() -> KeyHandlerResult {
         return controller.controller.escapeKeyAction()
     }
+
     
     open override var haveNextResponder: Bool {
         return true

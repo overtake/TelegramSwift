@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-
+import InAppSettings
 
 class ChatListRevealItem: TableStickItem {
     fileprivate let action:((ChatListFilter?)->Void)?

@@ -37,7 +37,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .gigagroup, text: .init())
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .gigagroup, text: .init())
     }))
     index += 1
 

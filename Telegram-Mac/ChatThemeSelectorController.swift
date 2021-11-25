@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-
+import ThemeSettings
 
 final class ChatThemeSelectorView : View {
     

@@ -13,6 +13,7 @@ import TelegramCore
 import ApiCredentials
 import MtProtoKit
 import Postbox
+import ThemeSettings
 
 private final class DeveloperArguments {
     let importColors:()->Void

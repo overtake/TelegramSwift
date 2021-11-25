@@ -26,6 +26,10 @@ public struct SwitchViewAppearance : Equatable {
     }
 }
 
+public var switchViewAppearance: SwitchViewAppearance {
+    return SwitchViewAppearance(backgroundColor: presentation.colors.background, stateOnColor: presentation.colors.accent, stateOffColor: presentation.colors.grayForeground, disabledColor: presentation.colors.grayTransparent, borderColor: presentation.colors.border)
+}
+
 
 public class SwitchView: Control {
     private let disposable = MetaDisposable()

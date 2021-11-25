@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import TGUIKit
 import SwiftSignalKit
@@ -98,7 +98,7 @@ class ChatMediaLayoutParameters : Equatable {
     }
     
     
-    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false) -> ChatMediaLayoutParameters {
+    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false) -> ChatMediaLayoutParameters {
         if media.isInstantVideo && !isFile {
             var duration:Int = 0
             for attr in media.attributes {
@@ -162,7 +162,7 @@ class ChatMediaLayoutParameters : Equatable {
             if let name = media.fileName {
                 fileName = name
             }
-            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming, autoplayMedia: autoplayMedia, isChatRelated: isChatRelated)
+            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming, autoplayMedia: autoplayMedia, isChatRelated: isChatRelated, isCopyProtected: isCopyProtected)
         }
     }
     
@@ -438,7 +438,7 @@ class ChatMediaItem: ChatRowItem {
                 caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             if !(self is ChatVideoMessageItem) {
-                captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false))]
+                captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected()))]
             }
             
             let interactions = globalLinkExecutor
@@ -519,9 +519,13 @@ class ChatMediaItem: ChatRowItem {
             var items = items
             if let captionLayout = self?.captionLayouts.first(where: { $0.id == self?.lastMessage?.stableId }) {
                 let text = captionLayout.layout.attributedString.string
-                items.insert(ContextMenuItem(strings().textCopyText, handler: {
-                    copyToClipboard(text)
-                }), at: min(items.count, 1))
+                if self?.lastMessage?.isCopyProtected() == true {
+                    
+                } else {
+                    items.insert(ContextMenuItem(strings().textCopyText, handler: {
+                        copyToClipboard(text)
+                    }), at: min(items.count, 1))
+                }
                 
                 if let view = self?.view as? ChatRowView, let textView = view.captionViews.first(where: { $0.id == self?.lastMessage?.stableId})?.view, let window = textView.window {
                     let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
@@ -550,9 +554,13 @@ class ChatMediaItem: ChatRowItem {
                 
             }
             if let media = self?.media as? TelegramMediaFile, media.isMusic, let name = media.fileName {
-                items.insert(ContextMenuItem(strings().messageTextCopyMusicTitle, handler: {
-                    copyToClipboard(name)
-                }), at: 1)
+                if self?.lastMessage?.isCopyProtected() == true {
+                } else {
+                    items.insert(ContextMenuItem(strings().messageTextCopyMusicTitle, handler: {
+                        copyToClipboard(name)
+                    }), at: 1)
+                }
+                
             }
             return items
         }

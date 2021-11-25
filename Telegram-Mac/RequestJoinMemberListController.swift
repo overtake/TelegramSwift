@@ -99,7 +99,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         }))
                     }))
                     
-                    return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.request_join_link, text: attr)
+                    return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.request_join_link, text: attr)
                 }))
                 index += 1
             }
@@ -138,7 +138,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.title))
                         attr.detectBoldColorInString(with: .medium(.title))
                         
-                        return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.zoom, text: attr)
+                        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.zoom, text: attr)
                     }))
                     index += 1
                     
@@ -201,7 +201,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 _ = attr.append(string: peer.isChannel ? strings().requestJoinListEmpty2Channel : strings().requestJoinListEmpty2Group, color: theme.colors.listGrayText, font: .normal(.text))
 
                 
-                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.thumbsup, text: attr)
+                return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.thumbsup, text: attr)
             }))
             index += 1
             

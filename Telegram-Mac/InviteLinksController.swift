@@ -365,7 +365,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     if !state.isAdmin {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
             let text:String = state.peer?.peer.isChannel == true ? strings().manageLinksHeaderChannelDesc :  strings().manageLinksHeaderGroupDesc
-            return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
+            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.invitations, text: .initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)))
         }))
         index += 1
 

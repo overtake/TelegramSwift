@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-
+import InAppSettings
 class ContextClueRowItem: TableRowItem {
 
     private let _stableId:AnyHashable

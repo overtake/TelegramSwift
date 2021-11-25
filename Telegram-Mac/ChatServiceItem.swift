@@ -12,6 +12,7 @@ import TelegramCore
 import TGCurrencyFormatter
 import Postbox
 import SwiftSignalKit
+import InAppSettings
 
 class ChatServiceItem: ChatRowItem {
     

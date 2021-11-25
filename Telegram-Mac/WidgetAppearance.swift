@@ -9,9 +9,8 @@
 import Foundation
 import TGUIKit
 import TelegramCore
-
+import ThemeSettings
 import SwiftSignalKit
-
 
 
 private final class ThemePreview : Control {

@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import Localization
 import TGUIKit
 
 class SEModalProgressView: View {

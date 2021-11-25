@@ -25,7 +25,7 @@ class ReplyModel: ChatAccessoryModel {
     private let autodownload: Bool
     private let headerAsName: Bool
     private let customHeader: String?
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil) {
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil) {
         self.isPinned = isPinned
         self.context = context
         self.makesizeCallback = makesizeCallback
@@ -35,32 +35,25 @@ class ReplyModel: ChatAccessoryModel {
         self.customHeader = customHeader
         super.init(presentation: presentation, drawLine: drawLine)
         
-        let messageViewSignal = context.account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
-            if let message = view.message {
-                return .single(message)
-            }
-            return context.engine.messages.getMessagesLoadIfNecessary([view.messageId]) |> map {$0.first}
-        }
+      
+        let messageViewSignal: Signal<Message?, NoError> = context.account.postbox.messageView(replyMessageId)
+        |> map {
+            $0.message
+        } |> deliverOnMainQueue
         
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
-            if isPinned {
-                nodeReady.set(.single(true) |> then(messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
-                    self?.make(with: message, isLoading: false, display: true)
-                    return message != nil
-                }))
-            } else {
-                nodeReady.set(.single(true))
-            }
-            
         } else {
-            
             make(with: nil, display: false)
-            nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
-                 self?.make(with: message, isLoading: false, display: true)
-                 return message != nil
-             })
         }
+        nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
+            self?.make(with: message, isLoading: false, display: true)
+            if message == nil {
+                dismissReply?()
+            }
+            return message != nil
+         })
+
     }
     
     override var view: ChatAccessoryView? {

@@ -10,8 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
-import MtProtoKit
+import InAppSettings
 
 enum ChatHistoryEntryId : Hashable {
     case message(Message)

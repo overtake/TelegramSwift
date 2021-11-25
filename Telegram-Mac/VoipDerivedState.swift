@@ -10,6 +10,7 @@ import Foundation
 import Postbox
 import SwiftSignalKit
 import TelegramCore
+import InAppSettings
 
 struct VoipDerivedState: Equatable, Codable {
     var data: Data

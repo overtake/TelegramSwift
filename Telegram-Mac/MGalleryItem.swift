@@ -337,6 +337,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     let magnify:Promise<CGFloat> = Promise(1)
     let rotate: ValuePromise<ImageOrientation?> = ValuePromise(nil, ignoreRepeated: true)
     
+    private let appearSignal = ValuePromise(false, ignoreRepeated: true)
+    var appearValue:Signal<Bool, NoError> {
+        return appearSignal.get()
+    }
+    
     let disposable:MetaDisposable = MetaDisposable()
     let fetching:MetaDisposable = MetaDisposable()
     private let magnifyDisposable = MetaDisposable()
@@ -516,11 +521,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     func appear(for view:NSView?) {
-        
+        appearSignal.set(true)
     }
     
     func disappear(for view:NSView?) {
-        
+        appearSignal.set(false)
     }
     
     deinit {

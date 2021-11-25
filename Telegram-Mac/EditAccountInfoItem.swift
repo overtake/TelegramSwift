@@ -12,6 +12,7 @@ import TelegramCore
 import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
+import KeyboardKey
 
 class EditAccountInfoItem: GeneralRowItem {
 

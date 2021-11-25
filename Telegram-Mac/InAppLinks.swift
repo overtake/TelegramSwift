@@ -14,6 +14,7 @@ import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
 import MtProtoKit
+import ThemeSettings
 //import WalletCore
 
 private let inapp:String = "chat://"

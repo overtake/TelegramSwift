@@ -10,7 +10,8 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import KeyboardKey
+import InAppSettings
 
 @available(OSX 10.12.2, *)
 extension NSTouchBar.CustomizationIdentifier {

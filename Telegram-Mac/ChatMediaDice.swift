@@ -27,11 +27,15 @@ class ChatMediaDice: ChatMediaItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         return super.menuItems(in: location) |> map { [weak self] items in
             var items = items
-            items.insert(ContextMenuItem(strings().textCopyText, handler: {
-                if let media = self?.media as? TelegramMediaDice {
-                    copyToClipboard(media.emoji)
-                }
-            }), at: 0)
+            if self?.message?.isCopyProtected() == true {
+            } else {
+                items.insert(ContextMenuItem(strings().textCopyText, handler: {
+                    if let media = self?.media as? TelegramMediaDice {
+                        copyToClipboard(media.emoji)
+                    }
+                }), at: 0)
+            }
+           
             return items
         }
     }
