@@ -293,7 +293,7 @@ public final class TextViewLayout : Equatable {
     fileprivate var toolTipRects:[NSRect] = []
     private let disableTooltips: Bool
     fileprivate var isBigEmoji: Bool = false
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true) {
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true) {
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
@@ -304,6 +304,7 @@ public final class TextViewLayout : Equatable {
         self.alwaysStaticItems = alwaysStaticItems
         self.selectedRange = TextSelectedRange(color: selectText)
         self.strokeLinks = strokeLinks
+        self.mayItems = mayItems
         switch alignment {
         case .center:
             penFlush = 0.5

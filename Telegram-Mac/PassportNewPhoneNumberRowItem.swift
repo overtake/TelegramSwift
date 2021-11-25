@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import KeyboardKey
 import SwiftSignalKit
 
 private let manager = CountryManager()

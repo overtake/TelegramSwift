@@ -8,7 +8,7 @@
 
 import Foundation
 import TGUIKit
-
+import InAppSettings
 
 final class PushToTalkRowItem : GeneralRowItem {
     fileprivate var settings: PushToTalkValue?

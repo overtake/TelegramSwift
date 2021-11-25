@@ -7,13 +7,14 @@
 //
 
 import Cocoa
-
+import ThemeSettings
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ColorPalette
 import Postbox
 import SwiftSignalKit
+import InAppSettings
 
 private final class ThemePreviewView : BackgroundView {
     fileprivate let segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 290, 30))

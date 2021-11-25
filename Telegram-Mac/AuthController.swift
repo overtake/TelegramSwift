@@ -6,6 +6,7 @@ import Localization
 import Postbox
 import TGUIKit
 import ApiCredentials
+import InAppSettings
 
 private let manager = CountryManager()
 

@@ -18,6 +18,10 @@ import EDSunriseSet
 import ObjcUtils
 import HackUtils
 import TGModernGrowingTextView
+import CrashHandler
+import InAppSettings
+import ThemeSettings
+import ColorPalette
 
 #if !APP_STORE
 import AppCenter

@@ -8,7 +8,7 @@
 
 import TGUIKit
 import SwiftSignalKit
-
+import ColorPalette
 
 private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> CGImage {
     return generateImage(CGSize(width: 42.0, height: 42.0), scale: System.backingScale, rotatedContext: { size, context in

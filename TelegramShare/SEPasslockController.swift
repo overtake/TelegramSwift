@@ -8,19 +8,8 @@
 
 import Cocoa
 import TGUIKit
-
-//
-//  PasscodeLockController.swift
-//  TelegramMac
-//
-//  Created by keepcoder on 10/01/2017.
-//  Copyright © 2017 Telegram. All rights reserved.
-//
-
-import Cocoa
-import TGUIKit
 import TelegramCore
-
+import Localization
 import Postbox
 import SwiftSignalKit
 

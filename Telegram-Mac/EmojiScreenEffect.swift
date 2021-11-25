@@ -151,6 +151,13 @@ final class EmojiScreenEffect {
         enqueuedToEnjoy.removeAll(where: { $0.key == key })
     }
     
+    func removeAll() {
+        let animations = self.animations
+        for animation in animations {
+            deinitAnimation(key: animation.key, animated: false)
+        }
+    }
+    
     private func initAnimation(_ animation: LottieAnimation, emoji: String, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
         
         

@@ -534,6 +534,25 @@ class ServiceEventLogItem: TableRowItem {
                 } else {
                     serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                 }
+            case let .sendMessage(new):
+                if let media = new.media.first as? TelegramMediaAction {
+                    switch media.action {
+                    case let .groupPhoneCall(_, _, _, duration):
+                        if let duration = duration {
+                            let text: String
+                            if new.author?.id == chatInteraction.context.peerId {
+                                text = strings().chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
+                            } else {
+                                text = strings().chatServiceVoiceChatFinished(peer.displayTitle, autoremoveLocalized(Int(duration)))
+                            }
+                            serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                        }
+                    default:
+                        serviceInfo = ServiceTextInfo(text: strings().eventLogServicePostMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                    }
+                } else {
+                    serviceInfo = ServiceTextInfo(text: strings().eventLogServicePostMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
+                }
             case let .participantToggleBan(prev, new):
                 switch prev.participant {
                 case let .member(memberId, _, adminInfo: _, banInfo: prevBanInfo, rank: _):

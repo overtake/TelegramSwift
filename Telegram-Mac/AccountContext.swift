@@ -10,9 +10,10 @@ import Foundation
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import ColorPalette
 import TGUIKit
-
+import InAppSettings
+import ThemeSettings
 
 protocol ChatLocationContextHolder: class {
 }
@@ -563,6 +564,7 @@ final class AccountContext {
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
+        self.networkStatusManager.cleanup()
         self.diceCache.cleanup()
         _chatThemes.set(.single([]))
         _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))

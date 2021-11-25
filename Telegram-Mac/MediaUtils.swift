@@ -16,6 +16,8 @@ import AVFoundation
 import Accelerate
 import GZIP
 import Svg
+import ColorPalette
+import ThemeSettings
 
 public final class ImageDataTransformation {
     let data: ImageRenderData

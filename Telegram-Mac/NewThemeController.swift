@@ -10,8 +10,8 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
-
+import ColorPalette
+import ThemeSettings
 
 
 private let _id_input_name = InputDataIdentifier("_id_input_name")

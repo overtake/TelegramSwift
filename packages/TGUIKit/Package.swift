@@ -16,13 +16,18 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(name: "SSignalKit", path: "../../submodules/telegram-ios/submodules/SSignalKit"),
+        .package(name: "ColorPalette", path: "../ColorPalette"),
+        .package(name: "KeyboardKey", path: "../KeyboardKey"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "TGUIKit",
-            dependencies: [.product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil)],
+            dependencies: [.product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil),
+                           .product(name: "ColorPalette", package: "ColorPalette", condition: nil),
+                           .product(name: "KeyboardKey", package: "KeyboardKey", condition: nil),
+                          ],
             path: "Sources"),
     ]
 )

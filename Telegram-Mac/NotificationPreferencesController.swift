@@ -11,6 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
+import InAppSettings
 
 private let modernSoundsNamePaths: [String] = [
     strings().notificationsSoundNote,

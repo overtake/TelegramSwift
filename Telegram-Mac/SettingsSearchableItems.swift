@@ -11,7 +11,7 @@ import Postbox
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 
 enum SettingsSearchableItemIcon {
     case profile

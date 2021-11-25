@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import InAppSettings
 
 final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let map:TelegramMediaMap

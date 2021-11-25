@@ -12,9 +12,10 @@ import Postbox
 import TelegramCore
 import ApiCredentials
 import SwiftSignalKit
-
+import ThemeSettings
 import OpenSSLEncryption
-
+import BuildConfig
+import Localization
 class ShareViewController: NSViewController {
 
     override var nibName: NSNib.Name? {

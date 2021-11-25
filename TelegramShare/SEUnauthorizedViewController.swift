@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-
+import Localization
 
 class SEUnauthorizedView : View {
     fileprivate let imageView:ImageView = ImageView()

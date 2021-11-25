@@ -14,7 +14,7 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 
-private func iconForSession(_ session: RecentAccountSession) -> (CGImage?, String?) {
+func iconForSession(_ session: RecentAccountSession) -> (CGImage?, LocalAnimatedSticker?) {
     let platform = session.platform.lowercased()
     let device = session.deviceModel.lowercased()
     let systemVersion = session.systemVersion.lowercased()
@@ -22,7 +22,7 @@ private func iconForSession(_ session: RecentAccountSession) -> (CGImage?, Strin
         return (NSImage(named: "Icon_Device_Xbox")?.precomposed(), nil)
     }
     if device.contains("chrome") && !device.contains("chromebook") {
-        return (NSImage(named: "Icon_Device_Chrome")?.precomposed(), "device_chrome")
+        return (NSImage(named: "Icon_Device_Chrome")?.precomposed(), LocalAnimatedSticker.device_chrome)
     }
     if device.contains("brave") {
         return (NSImage(named: "Icon_Device_Brave")?.precomposed(), nil)
@@ -31,28 +31,34 @@ private func iconForSession(_ session: RecentAccountSession) -> (CGImage?, Strin
         return (NSImage(named: "Icon_Device_Vivaldi")?.precomposed(), nil)
     }
     if device.contains("safari") {
-        return (NSImage(named: "Icon_Device_Safari")?.precomposed(), "device_safari")
+        return (NSImage(named: "Icon_Device_Safari")?.precomposed(), LocalAnimatedSticker.device_safari)
     }
     if device.contains("firefox") {
-        return (NSImage(named: "Icon_Device_Firefox")?.precomposed(), nil)
+        return (NSImage(named: "Icon_Device_Firefox")?.precomposed(), LocalAnimatedSticker.device_firefox)
     }
     if device.contains("opera") {
         return (NSImage(named: "Icon_Device_Opera")?.precomposed(), nil)
     }
     if platform.contains("android") {
-        return (NSImage(named: "Icon_Device_Android")?.precomposed(), "device_android")
+        return (NSImage(named: "Icon_Device_Android")?.precomposed(), LocalAnimatedSticker.device_android)
     }
-    if platform.contains("ios") || platform.contains("macos") || systemVersion.contains("macos") {
-        return (NSImage(named: "Icon_Device_Apple")?.precomposed(), nil)
+    if systemVersion.contains("macos") {
+        return (NSImage(named: "Icon_Device_Apple")?.precomposed(), LocalAnimatedSticker.device_mac)
+    }
+    if  platform.contains("ipad") {
+        return (NSImage(named: "Icon_Device_Ipad")?.precomposed(), LocalAnimatedSticker.device_ipad)
+    }
+    if platform.contains("ios") {
+        return (NSImage(named: "Icon_Device_Iphone")?.precomposed(), LocalAnimatedSticker.device_iphone)
     }
     if platform.contains("ubuntu") || systemVersion.contains("ubuntu") {
-        return (NSImage(named: "Icon_Device_Ubuntu")?.precomposed(), nil)
+        return (NSImage(named: "Icon_Device_Ubuntu")?.precomposed(), LocalAnimatedSticker.device_ubuntu)
     }
     if platform.contains("linux") || systemVersion.contains("linux") {
-        return (NSImage(named: "Icon_Device_Linux")?.precomposed(), nil)
+        return (NSImage(named: "Icon_Device_Linux")?.precomposed(), LocalAnimatedSticker.device_linux)
     }
     if platform.contains("windows") || systemVersion.contains("windows") {
-        return (NSImage(named: "Icon_Device_Windows")?.precomposed(), nil)
+        return (NSImage(named: "Icon_Device_Windows")?.precomposed(), LocalAnimatedSticker.device_windows)
     }
     return (nil, nil)
 }
@@ -63,10 +69,14 @@ private final class RecentSessionsControllerArguments {
     
     let removeSession: (Int64) -> Void
     let terminateOthers:() -> Void
-    init(context: AccountContext, removeSession: @escaping (Int64) -> Void, terminateOthers: @escaping()->Void) {
+    let toggleTtl:(Int)->Void
+    let preview:(RecentAccountSession)->Void
+    init(context: AccountContext, removeSession: @escaping (Int64) -> Void, terminateOthers: @escaping()->Void, toggleTtl:@escaping(Int)->Void, preview:@escaping(RecentAccountSession)->Void) {
         self.context = context
         self.removeSession = removeSession
         self.terminateOthers = terminateOthers
+        self.toggleTtl = toggleTtl
+        self.preview = preview
     }
 }
 
@@ -101,10 +111,12 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
     case incompleteDesc(sectionId: Int, viewType: GeneralViewType)
     
     case session(sectionId:Int, index: Int32, session: RecentAccountSession, enabled: Bool, editing: Bool, viewType: GeneralViewType)
+    
+    case revokeOldHeader(sectionId:Int, viewType: GeneralViewType)
+    case revokeOld(sectionId:Int, Int32, viewType: GeneralViewType)
+
     case section(sectionId:Int)
 
-    
-    
     var stableId: RecentSessionsEntryStableId {
         switch self {
         case .loading:
@@ -123,6 +135,10 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return .index(6)
         case .otherSessionsHeader:
             return .index(7)
+        case .revokeOldHeader:
+            return .index(8)
+        case .revokeOld:
+            return .index(9)
         case let .session(_, _, session, _, _, _):
             return .session(session.hash)
         case let .section(sectionId):
@@ -148,6 +164,10 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return 6
         case .otherSessionsHeader:
             return 7
+        case .revokeOldHeader:
+            return 8
+        case .revokeOld:
+            return 9
         case .session:
             fatalError()
         case let .section(sectionId):
@@ -165,13 +185,17 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return sectionId
         case let .terminateOtherSessions(sectionId, _):
             return sectionId
-        case let .currentSessionInfo(sectionIdv):
+        case let .currentSessionInfo(sectionId, _):
             return sectionId
         case let .incompleteHeader(sectionId, _):
             return sectionId
         case let .incompleteDesc(sectionId, _):
             return sectionId
         case let .otherSessionsHeader(sectionId, _):
+            return sectionId
+        case let .revokeOldHeader(sectionId, _):
+            return sectionId
+        case let .revokeOld(sectionId, _, _):
             return sectionId
         case let .session(sectionId, _, _, _, _, _):
             return sectionId
@@ -198,6 +222,10 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return (sectionId * 1000) + stableIndex
         case let .otherSessionsHeader(sectionId, _):
             return (sectionId * 1000) + stableIndex
+        case let .revokeOldHeader(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .revokeOld(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
         case let .session(sectionId, index, _, _, _, _):
             return (sectionId * 1000) + Int(index) + 100
         case let .section(sectionId):
@@ -215,7 +243,7 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         case let .currentSessionHeader(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().sessionsCurrentSessionHeader, viewType: viewType)
         case let .currentSession(_, session, viewType):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), revoke: {})
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), handler: {})
         case let .terminateOtherSessions(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().sessionsTerminateOthers, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.terminateOthers()
@@ -229,9 +257,29 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         case let .otherSessionsHeader(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().sessionsActiveSessionsHeader, viewType: viewType)
         case let .session(_, _, session, _, _, viewType):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), revoke: {
-                arguments.removeSession(session.hash)
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), handler: {
+                arguments.preview(session)
             })
+        case let .revokeOldHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().recentSessionsTTLHeader, viewType: viewType)
+        case let .revokeOld(_, ttl, viewType):
+            
+            var items:[SPopoverItem] = []
+            items.append(.init(strings().timerWeeksCountable(1), {
+                arguments.toggleTtl(7)
+            }))
+            
+            items.append(.init(strings().timerMonthsCountable(1), {
+                arguments.toggleTtl(31)
+            }))
+            items.append(.init(strings().timerMonthsCountable(3), {
+                arguments.toggleTtl(31 * 3)
+            }))
+            items.append(.init(strings().timerMonthsCountable(6), {
+                arguments.toggleTtl(31 * 6)
+            }))
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().recentSessionsTTLText, type: .contextSelector(autoremoveLocalized(Int(ttl * 24 * 60 * 60)), items), viewType: viewType)
         case .section(sectionId: _):
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case .loading:
@@ -284,70 +332,72 @@ private struct RecentSessionsControllerState: Equatable {
     }
 }
 
-private func recentSessionsControllerEntries(state: RecentSessionsControllerState, sessions: [RecentAccountSession]?) -> [RecentSessionsEntry] {
+private func recentSessionsControllerEntries(state: RecentSessionsControllerState, sessions: ActiveSessionsContextState) -> [RecentSessionsEntry] {
     var entries: [RecentSessionsEntry] = []
     
-    if let sessions = sessions {
-        
-        var sectionId:Int = 1
+    
+    var sectionId:Int = 1
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    var existingSessionIds = Set<Int64>()
+    entries.append(.currentSessionHeader(sectionId: sectionId, viewType: .textTopItem))
+    if let index = sessions.sessions.firstIndex(where: { $0.hash == 0 }) {
+        existingSessionIds.insert(sessions.sessions[index].hash)
+        entries.append(.currentSession(sectionId: sectionId, sessions.sessions[index], viewType: .firstItem))
+    }
+    entries.append(.terminateOtherSessions(sectionId: sectionId, viewType: existingSessionIds.isEmpty ? .singleItem : .lastItem))
+    entries.append(.currentSessionInfo(sectionId: sectionId, viewType: .textBottomItem))
+    
+    if sessions.sessions.count > 1 {
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
         
-        var existingSessionIds = Set<Int64>()
-        entries.append(.currentSessionHeader(sectionId: sectionId, viewType: .textTopItem))
-        if let index = sessions.firstIndex(where: { $0.hash == 0 }) {
-            existingSessionIds.insert(sessions[index].hash)
-            entries.append(.currentSession(sectionId: sectionId, sessions[index], viewType: .firstItem))
-        }
-        entries.append(.terminateOtherSessions(sectionId: sectionId, viewType: existingSessionIds.isEmpty ? .singleItem : .lastItem))
-        entries.append(.currentSessionInfo(sectionId: sectionId, viewType: .textBottomItem))
+        let filteredSessions: [RecentAccountSession] = sessions.sessions.sorted(by: { lhs, rhs in
+            return lhs.activityDate > rhs.activityDate
+        })
         
-        if sessions.count > 1 {
-            entries.append(.section(sectionId: sectionId))
-            sectionId += 1
+        let nonApplied = filteredSessions.filter {$0.flags.contains(.passwordPending)}
+        let applied = filteredSessions.filter {!$0.flags.contains(.passwordPending)}
+        
+        var index: Int32 = 0
+        
+        if !nonApplied.isEmpty {
+            entries.append(.incompleteHeader(sectionId: sectionId, viewType: .textTopItem))
             
-            let filteredSessions: [RecentAccountSession] = sessions.sorted(by: { lhs, rhs in
-                return lhs.activityDate > rhs.activityDate
-            })
-            
-            let nonApplied = filteredSessions.filter {$0.flags.contains(.passwordPending)}
-            let applied = filteredSessions.filter {!$0.flags.contains(.passwordPending)}
-            
-            var index: Int32 = 0
-            
-            if !nonApplied.isEmpty {
-                entries.append(.incompleteHeader(sectionId: sectionId, viewType: .textTopItem))
-                
-                let nonApplied = nonApplied.filter({
-                    !existingSessionIds.contains($0.hash)
-                })
-                for session in nonApplied {
-                    existingSessionIds.insert(session.hash)
-                    let enabled = state.removingSessionId != session.hash
-                    entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing, viewType: bestGeneralViewType(nonApplied, for: session)))
-                    index += 1
-                }
-                entries.append(.incompleteDesc(sectionId: sectionId, viewType: .textBottomItem))
-                
-                entries.append(.section(sectionId: sectionId))
-                sectionId += 1
-            }
-            
-            entries.append(.otherSessionsHeader(sectionId: sectionId, viewType: .textTopItem))
-            let newApplied = applied.filter({
+            let nonApplied = nonApplied.filter({
                 !existingSessionIds.contains($0.hash)
             })
-            for session in newApplied {
+            for session in nonApplied {
                 existingSessionIds.insert(session.hash)
                 let enabled = state.removingSessionId != session.hash
-                entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing, viewType: bestGeneralViewType(newApplied, for: session)))
+                entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing, viewType: bestGeneralViewType(nonApplied, for: session)))
                 index += 1
             }
+            entries.append(.incompleteDesc(sectionId: sectionId, viewType: .textBottomItem))
+            
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
         }
-    } else {
-        entries.append(.loading(sectionId: 1))
+        
+        entries.append(.otherSessionsHeader(sectionId: sectionId, viewType: .textTopItem))
+        let newApplied = applied.filter({
+            !existingSessionIds.contains($0.hash)
+        })
+        for session in newApplied {
+            existingSessionIds.insert(session.hash)
+            let enabled = state.removingSessionId != session.hash
+            entries.append(.session(sectionId: sectionId, index: index, session: session, enabled: enabled, editing: state.editing, viewType: bestGeneralViewType(newApplied, for: session)))
+            index += 1
+        }
+        entries.append(.section(sectionId: sectionId))
+        sectionId += 1
+        
+        entries.append(.revokeOldHeader(sectionId: sectionId, viewType: .textTopItem))
+        entries.append(.revokeOld(sectionId: sectionId, sessions.ttlDays, viewType: .singleItem))
+        
+        entries.append(.section(sectionId: sectionId))
+        sectionId += 1
     }
     
     return entries
@@ -381,7 +431,7 @@ class RecentSessionsController : TableViewController {
         let removeSessionDisposable = MetaDisposable()
         actionsDisposable.add(removeSessionDisposable)
         
-        let sessionsPromise = Promise<[RecentAccountSession]?>()
+        let sessionsPromise = Promise<ActiveSessionsContextState>()
         
         let arguments = RecentSessionsControllerArguments(context: context, removeSession: { sessionId in
             updateState {
@@ -403,11 +453,13 @@ class RecentSessionsController : TableViewController {
                     
                 })
             })
+        }, toggleTtl: { ttl in
+            _ = context.activeSessionsContext.updateAuthorizationTTL(days: Int32(ttl)).start()
+        }, preview: { session in
+            showModal(with: SessionModalController(context: context, session: session), for: context.window)
         })
         
-        let sessionsSignal: Signal<[RecentAccountSession]?, NoError> = context.activeSessionsContext.state |> map {
-            $0.sessions
-        }
+        let sessionsSignal: Signal<ActiveSessionsContextState, NoError> = context.activeSessionsContext.state
         
         sessionsPromise.set(sessionsSignal)
         

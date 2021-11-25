@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import SwiftSignalKit
+import KeyboardKey
 
 #if !APP_STORE
 import Sparkle

@@ -10,11 +10,11 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import Postbox
-
+import ColorPalette
 import TelegramCore
 import HotKey
 import TgVoipWebrtc
-
+import InAppSettings
 
 final class GroupCallsConfig {
     let videoLimit: Int

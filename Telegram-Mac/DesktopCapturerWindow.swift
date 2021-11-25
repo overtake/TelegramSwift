@@ -78,7 +78,7 @@ private final class DesktopCapturerView : View {
     
     fileprivate class Micro : Control {
         
-        var isOn: Bool = true {
+        var isOn: Bool = false {
             didSet {
                 if isOn != oldValue {
                     toggle(animated: true)

@@ -8,6 +8,10 @@
 
 import Cocoa
 
+public var navigationButtonStyle: ControlStyle {
+    return ControlStyle(font: .medium(.title), foregroundColor: presentation.colors.accent, backgroundColor: presentation.colors.background, highlightColor: presentation.colors.accent)
+}
+
 public enum NavigationBarSwapAnimation {
     case none
     case crossfade

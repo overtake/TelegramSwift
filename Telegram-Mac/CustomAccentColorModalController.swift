@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ColorPalette
 import Postbox
 import SwiftSignalKit
+import InAppSettings
 
 private final class CustomAccentColorView : View {
     private let tableView: TableView = TableView(frame: NSZeroRect, isFlipped: false)

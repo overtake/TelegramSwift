@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import TGUIKit
 import SwiftSignalKit
 import Postbox

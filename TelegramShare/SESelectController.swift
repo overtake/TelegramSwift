@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import Localization
 import Postbox
 
 class SelectAccountView: Control {

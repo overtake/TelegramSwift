@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import SwiftSignalKit
 import Postbox
 
@@ -287,8 +287,8 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsAdvancedHeader))
     headerUnique -= 1
-    entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .firstItem))
-    entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
+    entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .singleItem))
+//    entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1

@@ -12,6 +12,7 @@ import TelegramCore
 import ObjcUtils
 import Postbox
 import SwiftSignalKit
+import InAppSettings
 
 private final class InstantViewArguments {
     let context: AccountContext

@@ -4349,6 +4349,10 @@ public final class L10n {
   public static func eventLogServiceEditedMessage(_ p1: String) -> String {
     return L10n.tr("Localizable", "EventLog.Service.EditedMessage", p1)
   }
+  /// %@ send message:
+  public static func eventLogServicePostMessage(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EventLog.Service.PostMessage", p1)
+  }
   /// Previous Description
   public static var eventLogServicePreviousDesc: String  { return L10n.tr("Localizable", "EventLog.Service.PreviousDesc") }
   /// Previous Link
@@ -7709,6 +7713,10 @@ public final class L10n {
   public static var recentSessionsConfirmTerminateOthers: String  { return L10n.tr("Localizable", "RecentSessions.Confirm.TerminateOthers") }
   /// For security reasons, you can't terminate older sessions from a device that you've just connected. Please use an earlier connection or wait for a few hours.
   public static var recentSessionsErrorFreshReset: String  { return L10n.tr("Localizable", "RecentSessions.Error.FreshReset") }
+  /// AUTOMATICALLY TERMINATE OLD SESSIONS
+  public static var recentSessionsTTLHeader: String  { return L10n.tr("Localizable", "RecentSessions.TTL.Header") }
+  /// If Inactive For
+  public static var recentSessionsTTLText: String  { return L10n.tr("Localizable", "RecentSessions.TTL.Text") }
   /// Please enter any additional details relevant for your report.
   public static var reportAdditionText: String  { return L10n.tr("Localizable", "Report.AdditionText") }
   /// Report
@@ -8411,6 +8419,24 @@ public final class L10n {
   public static func serviceMessageDesturctingVideoYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "ServiceMessage.DesturctingVideo.You", p1)
   }
+  /// ACCEPT ON THIS DEVICE
+  public static var sessionPreviewAcceptHeader: String  { return L10n.tr("Localizable", "SessionPreview.AcceptHeader") }
+  /// Application
+  public static var sessionPreviewApp: String  { return L10n.tr("Localizable", "SessionPreview.App") }
+  /// IP Address
+  public static var sessionPreviewIp: String  { return L10n.tr("Localizable", "SessionPreview.Ip") }
+  /// This location estimate is based on the IP address and may not always be accurate.
+  public static var sessionPreviewIpDesc: String  { return L10n.tr("Localizable", "SessionPreview.IpDesc") }
+  /// Location
+  public static var sessionPreviewLocation: String  { return L10n.tr("Localizable", "SessionPreview.Location") }
+  /// Terminate Session
+  public static var sessionPreviewTerminateSession: String  { return L10n.tr("Localizable", "SessionPreview.TerminateSession") }
+  /// Session
+  public static var sessionPreviewTitle: String  { return L10n.tr("Localizable", "SessionPreview.Title") }
+  /// Incoming Calls
+  public static var sessionPreviewAcceptCalls: String  { return L10n.tr("Localizable", "SessionPreview.Accept.Calls") }
+  /// Secret Chats
+  public static var sessionPreviewAcceptSecret: String  { return L10n.tr("Localizable", "SessionPreview.Accept.Secret") }
   /// ACTIVE SESSIONS
   public static var sessionsActiveSessionsHeader: String  { return L10n.tr("Localizable", "Sessions.ActiveSessionsHeader") }
   /// CURRENT SESSION

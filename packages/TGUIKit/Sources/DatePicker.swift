@@ -8,6 +8,7 @@
 
 import Cocoa
 import AppKit
+import KeyboardKey
 
 public final class DatePickerOption<T> : Equatable where T: Equatable {
     public let name: String

@@ -570,6 +570,8 @@ final class ChatInteraction : InterfaceObserver  {
                         })
                     case let .setupPoll(isQuiz):
                         showModal(with: NewPollController(chatInteraction: strongSelf, isQuiz: isQuiz), for: strongSelf.context.window)
+                    case let .openUserProfile(peerId: peerId):
+                        strongSelf.openInfo(peerId, false, nil, nil)
                     default:
                         break
                     }

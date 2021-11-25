@@ -381,6 +381,20 @@ class TextAndLabelModalController: ModalViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        
+    }
+    
+    override var handleEvents: Bool {
+        return true
+    }
+    
+    override var responderPriority: HandlerPriority {
+        return .modal
+    }
+    
+    override var redirectUserInterfaceCalls: Bool {
+        return true
     }
 
     override func viewWillDisappear(_ animated: Bool) {

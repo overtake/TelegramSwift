@@ -10,10 +10,10 @@ import Cocoa
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import SwiftSignalKit
-
+import ColorPalette
 
 
 

@@ -274,7 +274,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpenSSLEncryptionProvider/PublicHeaders",
-					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/EncryptionProvider/Sources/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/EncryptionProvider/PublicHeaders",
 				);
 				INFOPLIST_FILE = OpenSSLEncryption/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -362,7 +362,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/build/openssl/include",
 					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/OpenSSLEncryptionProvider/PublicHeaders",
-					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/EncryptionProvider/Sources/include",
+					"$(PROJECT_DIR)/../../submodules/telegram-ios/submodules/EncryptionProvider/PublicHeaders",
 				);
 				INFOPLIST_FILE = OpenSSLEncryption/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

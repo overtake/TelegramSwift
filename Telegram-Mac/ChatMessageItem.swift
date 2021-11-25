@@ -12,7 +12,7 @@ import TelegramCore
 import InAppVideoServices
 import Postbox
 import SwiftSignalKit
-
+import InAppSettings
 
 
 class ChatMessageItem: ChatRowItem {
@@ -321,7 +321,7 @@ class ChatMessageItem: ChatRowItem {
            
            
             
-            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false)
+            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())
             textLayout.mayBlocked = entry.renderType != .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
@@ -381,9 +381,9 @@ class ChatMessageItem: ChatRowItem {
                         forceArticle = true
                     }
                     if content.file == nil || forceArticle {
-                        webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme)
+                        webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
                     } else {
-                        webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme)
+                        webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
                     }
                 default:
                     break
@@ -714,6 +714,7 @@ class ChatMessageItem: ChatRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items = super.menuItems(in: location)
         
+        
         if message?.adAttribute != nil {
             return items
         }
@@ -734,7 +735,7 @@ class ChatMessageItem: ChatRowItem {
             items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
                 var items = items
                 return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
-                    if data.complete {
+                    if data.complete, !message.isCopyProtected() {
                         items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
                             saveAs(file, account: context.account)
                         }))

@@ -4,7 +4,7 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 import Localization
-
+import InAppSettings
 import IOKit
 
 private final class AuthModalController : ModalController {

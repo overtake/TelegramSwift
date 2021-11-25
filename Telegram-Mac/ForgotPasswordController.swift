@@ -85,13 +85,16 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
                 }
                 
                 if code.length == 6 {
-                    disposable.set(showModalProgress(signal: engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: { _ in 
+                    disposable.set(showModalProgress(signal: engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
                         
-                        updateState { state in
-                            return state.withUpdatedChecking(false)
-                        }
+                        let auth = loginWithRecoveredAccountData(accountManager: accountManager, account: engine.account, recoveredAccountData: data, syncContacts: true) |> deliverOnMainQueue
                         
-                        close?()
+                        disposable.set(auth.start(completed: {
+                            updateState { state in
+                                return state.withUpdatedChecking(false)
+                            }
+                            close?()
+                        }))
                         
                     }, error: { error in
                         

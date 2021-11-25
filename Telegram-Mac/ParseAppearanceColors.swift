@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-
+import ColorPalette
 
 private let colors: [UInt32: String] = [
     0x8e0000: "Berry",

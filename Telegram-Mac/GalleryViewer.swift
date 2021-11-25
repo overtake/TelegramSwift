@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import AVFoundation
 
@@ -1009,6 +1009,16 @@ class GalleryViewer: NSResponder {
                     }))
                 }
             }
+            if item.entry.message?.isCopyProtected() == true {
+                
+            } else {
+                if let text = self.pager.selectedText {
+                    menu.addItem(ContextMenuItem(strings().chatCopySelectedText, handler: {
+                        copyToClipboard(text)
+                    }))
+                }
+            }
+            
             
             if let _ = self.contentInteractions {
                 menu.addItem(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
@@ -1172,8 +1182,7 @@ class GalleryViewer: NSResponder {
     
     @objc func copy(_ sender:Any? = nil) -> Void {
         
-        if let item = self.pager.selectedItem {
-            
+        if let item = self.pager.selectedItem, !self.pager.copySelectedText() {
             if let message = item.entry.message, message.isCopyProtected() {
                 showProtectedCopyAlert(message, for: self.window)
             } else  if !(item is MGalleryExternalVideoItem), item.entry.message?.containsSecretMedia != true {

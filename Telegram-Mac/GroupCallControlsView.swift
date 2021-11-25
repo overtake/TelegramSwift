@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-
+import InAppSettings
 
 private final class GroupCallControlsTooltipView: Control {
     private let backgroundView = View()

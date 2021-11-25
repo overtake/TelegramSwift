@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import TextRecognizing
 import TGUIKit
 
 
@@ -330,6 +330,20 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     override func executeInteraction(_ isControl: Bool) {
+        
+        
+//        if let image = self.image.image {
+//            if #available(macOS 10.15, *) {
+//                let context = self.context!
+//                let signal = TextRecognizing.recognize(image) |> deliverOnMainQueue
+//                _ = signal.start(next: { result in
+//
+//                    showModal(with: visionPreview(context: context, result: result), for: context.window)
+//                })
+//            }
+//            return
+//        }
+//
         if let progressView = progressView {
             switch progressView.state {
             case .Fetching:

@@ -8,11 +8,12 @@
 
 import Cocoa
 import TelegramCore
-
+import ThemeSettings
+import ColorPalette
 import SwiftSignalKit
 import Postbox
 import TGUIKit
-
+import InAppSettings
 
 
 private extension TelegramBuiltinTheme {

@@ -12,7 +12,7 @@ import Postbox
 import TelegramCore
 import DateUtils
 import SwiftSignalKit
-
+import InAppSettings
 
 enum ChatListPinnedType {
     case some

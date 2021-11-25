@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import ColorPalette
 import SwiftSignalKit
 
 
@@ -186,7 +186,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 _ = attributedString.append(string: text, color: theme.colors.grayText, font: .normal(.text))
                 attributedString.detectBoldColorInString(with: .medium(.text))
                 
-                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
+                return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
             }))
             index += 1
             
@@ -221,7 +221,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 
                 let attributedString = NSMutableAttributedString()
                 _ = attributedString.append(string: text, color: theme.colors.grayText, font: .normal(.text))
-                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
+                return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
             }))
             index += 1
             
@@ -252,7 +252,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
                 _ = attributedString.append(string: strings().discussionControllerGroupSetHeader(associatedPeer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
                 attributedString.detectBoldColorInString(with: .medium(.text))
                 
-                return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
+                return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.discussion, text: attributedString)
             }))
             
             index += 1

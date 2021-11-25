@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 
 private final class WidgetStickerView : Control {

@@ -11,7 +11,7 @@ import Foundation
 import TelegramCore
 import ObjcUtils
 import Postbox
-
+import InAppSettings
 
 final class InputSources: NSObject {
     

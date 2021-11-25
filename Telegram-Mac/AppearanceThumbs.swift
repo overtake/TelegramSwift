@@ -8,10 +8,12 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
+import ColorPalette
 import TGUIKit
 import SwiftSignalKit
 import Postbox
+import ThemeSettings
 
 func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
     switch backgroundMode {

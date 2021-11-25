@@ -172,7 +172,7 @@ class ChatInputAccessory: Node {
             
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage)
+            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, dismissReply: dismissReply)
             iconView.image = theme.icons.chat_action_reply_message
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()

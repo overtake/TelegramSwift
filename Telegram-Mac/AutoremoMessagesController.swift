@@ -53,7 +53,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
 
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_sticker, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return AnimtedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .init())
+            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.destructor, text: .init())
         }))
         index += 1
 

@@ -13,6 +13,7 @@ import TelegramCore
 import BuildConfig
 import TGUIKit
 import ObjcUtils
+import InAppSettings
 
 func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -> MessageId? {
     if let msgId = userInfo["\(prefix).message.id"] as? Int32, let msgNamespace = userInfo["\(prefix).message.namespace"] as? Int32, let namespace = userInfo["\(prefix).peer.namespace"] as? Int32, let id = userInfo["\(prefix).peer.id"] as? Int64 {
