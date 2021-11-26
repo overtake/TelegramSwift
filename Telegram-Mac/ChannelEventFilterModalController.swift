@@ -228,6 +228,7 @@ private enum FilterEvents {
     case deletedMessages
     case editedMessages
     case voiceChats
+    case sendMessages
     case pinnedMessages
     case leavingMembers
     case invites
@@ -253,6 +254,8 @@ private enum FilterEvents {
             return [.calls]
         case .invites:
             return [.invites]
+        case .sendMessages:
+            return [.sendMessages]
         }
     }
     
@@ -278,15 +281,18 @@ private enum FilterEvents {
             return strings().channelEventFilterVoiceChats
         case .invites:
             return strings().channelEventFilterInvites
+        case .sendMessages:
+            return strings().channelEventFilterSendMessages
+
         }
     }
 }
 
 private func eventFilters(_ channel: Bool) -> [FilterEvents] {
     if channel {
-        return [.newMembers, .newAdmins, .groupInfo, .deletedMessages, .editedMessages, .leavingMembers]
+        return [.newMembers, .newAdmins, .groupInfo, .sendMessages, .deletedMessages, .editedMessages, .leavingMembers]
     } else {
-        return [.restrictions, .newMembers, .newAdmins, .groupInfo, .invites, .deletedMessages, .editedMessages, .voiceChats, .pinnedMessages, .leavingMembers]
+        return [.restrictions, .newMembers, .newAdmins, .groupInfo, .invites, .sendMessages, .deletedMessages, .editedMessages, .voiceChats, .pinnedMessages, .leavingMembers]
     }
 }
 

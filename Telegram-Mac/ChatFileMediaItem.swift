@@ -124,8 +124,19 @@ class ChatFileMediaItem: ChatMediaItem {
             return super.additionalLineForDateInBubbleState
         }
         
+        let caption = captionLayouts.first(where: { $0.id == messages.last?.stableId })?.layout
         
-        return file.previewRepresentations.isEmpty || !captionLayouts.isEmpty ? super.additionalLineForDateInBubbleState : nil
+        if let textLayout = caption {
+            if textLayout.lines.count == 1 {
+                if contentOffset.x + textLayout.layoutSize.width - (rightSize.width + insetBetweenContentAndDate) > width {
+                    return rightSize.height
+                }
+            } else if let line = textLayout.lines.last, max(realContentSize.width, maxTitleWidth) < line.frame.width + (rightSize.width + insetBetweenContentAndDate) {
+                return rightSize.height
+            }
+        }
+        
+        return nil
     }
     
     override var isFixedRightPosition: Bool {

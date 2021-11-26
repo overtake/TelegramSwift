@@ -260,7 +260,7 @@ private func eventLogItems(_ entries:[ChannelAdminEventLogEntry], isGroup: Bool,
                     items.append(item)
                 }
             }
-        case let .deleteMessage(message):
+        case let .deleteMessage(message), let .sendMessage(message):
             items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()).withUpdatedTimestamp(entry.event.date), MessageIndex(message), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme))
         case let .updatePinned(message):
             if let message = message?.withUpdatedStableId(arc4random()) {

@@ -424,14 +424,14 @@ class InstalledStickerPacksController: TableViewController {
                 
                 var stickerSettings = StickerSettings.defaultSettings
                 if let view = preferencesView.views[preferencesKey] as? PreferencesView {
-                    if let value = view.values[stickerSettingsKey] as? StickerSettings {
+                    if let value = view.values[stickerSettingsKey]?.get(StickerSettings.self) {
                         stickerSettings = value
                     }
                 }
                 
                 var autoplayMedia = AutoplayMediaPreferences.defaultSettings
                 if let view = preferencesView.views[preferencesKey] as? PreferencesView {
-                    if let value = view.values[autoplayKey] as? AutoplayMediaPreferences {
+                    if let value = view.values[autoplayKey]?.get(AutoplayMediaPreferences.self) {
                         autoplayMedia = value
                     }
                 }

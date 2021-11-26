@@ -122,6 +122,7 @@ final class ChatInteraction : InterfaceObserver  {
     var updatePinned:(MessageId, Bool, Bool, Bool)->Void = {_,_,_,_ in}
     var reportSpamAndClose:()->Void = {}
     var dismissPeerStatusOptions:()->Void = {}
+    var dismissRequestChat: ()->Void = {}
     var toggleSidebar:()->Void = {}
     var mentionPressed:()->Void = {}
     var jumpToDate:(Date)->Void = {_ in}

@@ -185,7 +185,7 @@ class FastSettings {
     }
     
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 1.7)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
     }
     
     static func setPlayingRate(_ rate: Double) {
@@ -443,6 +443,16 @@ class FastSettings {
         UserDefaults.standard.set(peers, forKey: "pendingRequests2_\(peerId)")
         UserDefaults.standard.synchronize()
     }
+    
+    static func dissmissRequestChat(_ peerId: PeerId) -> Void {
+        UserDefaults.standard.set(true, forKey: "dissmissRequestChat_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
+    static func dissmissedRequestChat(_ peerId: PeerId) -> Bool {
+        return UserDefaults.standard.bool(forKey: "dissmissRequestChat_\(peerId)")
+    }
+    
+    
     static func canBeShownPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) -> Bool {
         let peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
         

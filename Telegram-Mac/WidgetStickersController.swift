@@ -228,7 +228,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
 
         self.genericView.dataView = WidgetStickersContainer(frame: .zero)
         
-        self.genericView.dataView?.previewPack = { [weak self] item, f in
+        self.genericView.dataView?.previewPack = { item, f in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .id(id: item.info.id.id, accessHash: item.info.accessHash), onAdd: f), for: context.window)
         }
         
@@ -252,7 +252,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
         let stickerSettings: Signal<StickerSettings, NoError> = preferencesView |> map { preferencesView in
             var stickerSettings = StickerSettings.defaultSettings
             if let view = preferencesView.views[preferencesKey] as? PreferencesView {
-                if let value = view.values[stickerSettingsKey] as? StickerSettings {
+                if let value = view.values[stickerSettingsKey]?.get(StickerSettings.self) {
                     stickerSettings = value
                 }
             }

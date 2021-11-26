@@ -86,7 +86,8 @@ final class SVideoInteractions {
     let toggleFullScreen:() -> Void
     let togglePictureInPicture: ()->Void
     let closePictureInPicture: ()->Void
-    init(playOrPause: @escaping()->Void, rewind: @escaping(Double)->Void, scrobbling: @escaping(Double?)->Void, volume: @escaping(Float) -> Void, toggleFullScreen: @escaping()->Void, togglePictureInPicture: @escaping() -> Void, closePictureInPicture:@escaping()->Void) {
+    let setBaseRate:(Double)->Void
+    init(playOrPause: @escaping()->Void, rewind: @escaping(Double)->Void, scrobbling: @escaping(Double?)->Void, volume: @escaping(Float) -> Void, toggleFullScreen: @escaping()->Void, togglePictureInPicture: @escaping() -> Void, closePictureInPicture:@escaping()->Void, setBaseRate:@escaping(Double)->Void) {
         self.playOrPause = playOrPause
         self.rewind = rewind
         self.scrobbling = scrobbling
@@ -94,6 +95,7 @@ final class SVideoInteractions {
         self.toggleFullScreen = toggleFullScreen
         self.togglePictureInPicture = togglePictureInPicture
         self.closePictureInPicture = closePictureInPicture
+        self.setBaseRate = setBaseRate
     }
 }
 
@@ -121,6 +123,7 @@ private final class SVideoControlsView : Control {
             volumeContainer.isHidden = controlStyle.isCompact
             togglePip.set(image: controlStyle.isPip ? theme.icons.videoPlayerPIPOut : theme.icons.videoPlayerPIPIn, for: .Normal)
             toggleFullscreen.set(image: controlStyle.isPip ? theme.icons.videoPlayerClose : controlStyle.isFullScreen ? theme.icons.videoPlayerExitFullScreen : theme.icons.videoPlayerEnterFullScreen, for: .Normal)
+            menuItems.isHidden = controlStyle.isPip
             layout()
         }
     }
@@ -242,6 +245,7 @@ private final class SVideoControlsView : Control {
     let rewindForward: ImageButton = ImageButton()
     let rewindBackward: ImageButton = ImageButton()
     let toggleFullscreen: ImageButton = ImageButton()
+    let menuItems: ImageButton = ImageButton()
     let togglePip: ImageButton = ImageButton()
     
     var livePreview: ((Float?)->Void)?
@@ -266,6 +270,7 @@ private final class SVideoControlsView : Control {
         addSubview(rewindBackward)
         addSubview(toggleFullscreen)
         addSubview(togglePip)
+        addSubview(menuItems)
         addSubview(durationView)
         addSubview(currentTimeView)
         
@@ -318,7 +323,16 @@ private final class SVideoControlsView : Control {
         rewindBackward.autohighlight = false
         toggleFullscreen.autohighlight = false
         togglePip.autohighlight = false
+        menuItems.autohighlight = false
 
+        playOrPause.scaleOnClick = true
+        rewindForward.scaleOnClick = true
+        rewindBackward.scaleOnClick = true
+        toggleFullscreen.scaleOnClick = true
+        togglePip.scaleOnClick = true
+        menuItems.scaleOnClick = true
+        
+      
         
         rewindForward.set(image: theme.icons.videoPlayerRewind15Forward, for: .Normal)
         rewindBackward.set(image: theme.icons.videoPlayerRewind15Backward, for: .Normal)
@@ -334,7 +348,8 @@ private final class SVideoControlsView : Control {
         _ = playOrPause.sizeToFit()
         _ = toggleFullscreen.sizeToFit()
         _ = togglePip.sizeToFit()
-
+        _ = menuItems.sizeToFit()
+        
         progress.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
         progress.scrubberImage = generateImage(NSMakeSize(8, 8), contextGenerator: { size, ctx in
             let rect = CGRect(origin: .zero, size: size)
@@ -358,7 +373,7 @@ private final class SVideoControlsView : Control {
                 self.updateLivePreview()
             }
         }
-        
+                
         set(handler: { [weak self] control in
             guard let window = control.window, let superview = control.superview else {
                 return
@@ -391,6 +406,8 @@ private final class SVideoControlsView : Control {
             
 
         }, for: .MouseDragging)
+        
+        updateBaseRate()
     }
     
     override var isFlipped: Bool {
@@ -408,6 +425,22 @@ private final class SVideoControlsView : Control {
         }
     }
     
+    func updateBaseRate() {
+        if FastSettings.playingRate == 1.0 {
+            menuItems.set(image: NSImage(named: "PlaybackSpeed_1X")!.precomposed(), for: .Normal)
+        } else if FastSettings.playingRate <= 1.25 {
+            menuItems.set(image: NSImage(named: "PlaybackSpeed_125X")!.precomposed(), for: .Normal)
+        } else if FastSettings.playingRate <= 1.5 {
+            menuItems.set(image: NSImage(named: "PlaybackSpeed_15X")!.precomposed(), for: .Normal)
+        } else if FastSettings.playingRate <= 1.75 {
+            menuItems.set(image: NSImage(named: "PlaybackSpeed_175X")!.precomposed(), for: .Normal)
+        } else {
+            menuItems.set(image: NSImage(named: "PlaybackSpeed_2X")!.precomposed(), for: .Normal)
+        }
+        self.menuItems.sizeToFit()
+        needsLayout = true
+    }
+    
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
     }
@@ -421,14 +454,21 @@ private final class SVideoControlsView : Control {
         rewindBackward.setFrameOrigin(playOrPause.frame.minX - rewindBackward.frame.width - 36, 16)
         rewindForward.setFrameOrigin(playOrPause.frame.maxX + 36, 16)
         
-        toggleFullscreen.setFrameOrigin(frame.width - toggleFullscreen.frame.width - 16, 16)
+        menuItems.setFrameOrigin(NSMakePoint(frame.width - menuItems.frame.width - 16, 16))
+
+        if menuItems.isHidden {
+            toggleFullscreen.setFrameOrigin(frame.width - toggleFullscreen.frame.width - 16, 16)
+        } else {
+            toggleFullscreen.setFrameOrigin(menuItems.frame.minX - toggleFullscreen.frame.width - 10, 16)
+        }
         
         switch controlStyle {
         case .compact:
             togglePip.setFrameOrigin(16, 16)
         case .regular:
-            togglePip.setFrameOrigin(toggleFullscreen.frame.minX - togglePip.frame.width - 24, 16)
+            togglePip.setFrameOrigin(toggleFullscreen.frame.minX - togglePip.frame.width - 10, 16)
         }
+        
         
         volumeContainer.setFrameOrigin(16, 16)
         volumeToggle.centerY(x: 0)
@@ -711,6 +751,32 @@ class SVideoView: NSView {
         controls.togglePip.set(handler: { [weak self] _ in
             self?.interactions?.togglePictureInPicture()
         }, for: .Click)
+        
+        controls.menuItems.contextMenu = { [weak self] in
+            let menu = ContextMenu(title: "Speed")
+            menu.addItem(ContextMenuItem("1x", handler: {
+                self?.interactions?.setBaseRate(1.0)
+                self?.controls.updateBaseRate()
+            }))
+            menu.addItem(ContextMenuItem.init("1.25x", handler: {
+                self?.interactions?.setBaseRate(1.25)
+                self?.controls.updateBaseRate()
+            }))
+            menu.addItem(ContextMenuItem.init("1.5x", handler: {
+                self?.interactions?.setBaseRate(1.5)
+                self?.controls.updateBaseRate()
+            }))
+            menu.addItem(ContextMenuItem.init("1.75x", handler: {
+                self?.interactions?.setBaseRate(1.5)
+                self?.controls.updateBaseRate()
+            }))
+            menu.addItem(ContextMenuItem.init("2x", handler: {
+                self?.interactions?.setBaseRate(2.0)
+                self?.controls.updateBaseRate()
+            }))
+            menu.appearance = darkPalette.appearance
+            return menu
+        }
         
         
         bufferingIndicatorValueDisposable.set(bufferingIndicatorValue.get().start(next: { [weak self] isHidden in

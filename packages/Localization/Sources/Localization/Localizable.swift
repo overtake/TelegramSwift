@@ -1401,6 +1401,8 @@ public final class L10n {
   public static var channelEventFilterNewRestrictions: String  { return L10n.tr("Localizable", "ChannelEventFilter.NewRestrictions") }
   /// Pinned Messages
   public static var channelEventFilterPinnedMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.PinnedMessages") }
+  /// Send Messages
+  public static var channelEventFilterSendMessages: String  { return L10n.tr("Localizable", "ChannelEventFilter.SendMessages") }
   /// Voice Chats
   public static var channelEventFilterVoiceChats: String  { return L10n.tr("Localizable", "ChannelEventFilter.VoiceChats") }
   /// Sorry, if a person left a channel, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
@@ -1561,6 +1563,18 @@ public final class L10n {
   public static var chatForwardActionHeader: String  { return L10n.tr("Localizable", "Chat.ForwardActionHeader") }
   /// INSTANT VIEW
   public static var chatInstantView: String  { return L10n.tr("Localizable", "Chat.InstantView") }
+  /// **%1$@** is an admin of **%2$@**, a channel you requested to join.
+  public static func chatInviteRequestAdminChannel(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.InviteRequestAdminChannel", p1, p2)
+  }
+  /// **%1$@** is an admin of **%2$@**, a group you requested to join.
+  public static func chatInviteRequestAdminGroup(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.InviteRequestAdminGroup", p1, p2)
+  }
+  /// You received this message because you requested to join %1$@ on %2$@.
+  public static func chatInviteRequestInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.InviteRequestInfo", p1, p2)
+  }
   /// Live Location
   public static var chatLiveLocation: String  { return L10n.tr("Localizable", "Chat.LiveLocation") }
   /// owner

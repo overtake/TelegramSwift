@@ -900,7 +900,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillPhoto(_ item:ChatRowItem) -> Void {
-        if item.hasPhoto, let peer = item.peer, !item.presentation.bubbled {
+        if item.hasPhoto, let peer = item.peer, item.renderType != .bubble {
             
             if avatar == nil {
                 avatar = AvatarControl(font: .avatar(.text))
