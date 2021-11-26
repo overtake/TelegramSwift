@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import InAppSettings
 import Postbox
+import FoundationUtils
 
 final class StickerPanelArguments {
     let context: AccountContext
@@ -403,7 +404,8 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[0].items {
                     if let entry = item.contents.get(RecentMediaItem.self) {
-                        if let file = entry.media as? TelegramMediaFile, let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
+                        let file = entry.media
+                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
                             ids[id] = id
                             files.append(file)
                         }

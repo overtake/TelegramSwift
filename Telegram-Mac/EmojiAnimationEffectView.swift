@@ -15,8 +15,10 @@ final class EmojiAnimationEffectView : View {
     private let animation: LottieAnimation
     let animationSize: NSSize
     private var animationPoint: CGPoint
-    init(animation: LottieAnimation, animationSize: NSSize, animationPoint: CGPoint, frameRect: NSRect) {
+    private let mirror: Bool
+    init(animation: LottieAnimation, animationSize: NSSize, animationPoint: CGPoint, frameRect: NSRect, mirror: Bool) {
         self.animation = animation
+        self.mirror = mirror
         self.player = LottiePlayerView(frame: .init(origin: animationPoint, size: animationSize))
         self.animationSize = animationSize
         self.animationPoint = animationPoint
@@ -24,7 +26,6 @@ final class EmojiAnimationEffectView : View {
         addSubview(player)
         player.set(animation)
         isEventLess = true
-        
         updateLayout(size: frameRect.size, transition: .immediate)
     }
     
@@ -36,6 +37,17 @@ final class EmojiAnimationEffectView : View {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: self.player, frame: CGRect(origin: animationPoint, size: animationSize))
         self.player.update(size: animationSize, transition: transition)
+        
+        if mirror {
+            let size = animationSize
+            var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, animationPoint.x + size.width, 0, 0)
+            fr = CATransform3DScale(fr, -1, 1, 1)
+            fr = CATransform3DTranslate(fr, -(animationPoint.x + size.width / 2), 0, 0)
+            self.layer?.sublayerTransform = fr
+        } else {
+            self.layer?.sublayerTransform = CATransform3DIdentity
+        }
     }
     
     func updatePoint(_ point: NSPoint, transition: ContainedViewLayoutTransition) {

@@ -29,6 +29,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case none(ChatActiveGroupCallInfo?)
     case search(ChatActiveGroupCallInfo?, ChatSearchInteractions, Peer?, String?)
     case addContact(ChatActiveGroupCallInfo?, block: Bool, autoArchived: Bool)
+    case requestChat(ChatActiveGroupCallInfo?, String, String)
     case shareInfo(ChatActiveGroupCallInfo?)
     case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
     case report(ChatActiveGroupCallInfo?, autoArchived: Bool)
@@ -53,6 +54,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 6
         case .pendingRequests:
             return 7
+        case .requestChat:
+            return 8
         }
     }
 
@@ -74,6 +77,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return voiceChat
         case let .pendingRequests(voiceChat, _, _):
             return voiceChat
+        case let .requestChat(voiceChat, _, _):
+            return voiceChat
         }
     }
     
@@ -93,6 +98,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatSponsoredView.self
         case .pendingRequests:
             return ChatPendingRequests.self
+        case .requestChat:
+            return ChatRequestChat.self
         case .none:
             return nil
         }
@@ -127,6 +134,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             height += 44
         case .pendingRequests:
             height += 44
+        case .requestChat:
+            return 44
         }
         return height
     }
@@ -308,7 +317,8 @@ class ChatHeaderController {
                 primary = ChatSponsoredView(chatInteraction, state: _headerState, frame: primaryRect)
             case .pendingRequests:
                 primary = ChatPendingRequests(chatInteraction, state: _headerState, frame: primaryRect)
-
+            case .requestChat:
+                primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -2015,6 +2025,97 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
     }
 }
 
+
+private final class ChatRequestChat : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let dismiss:ImageButton = ImageButton()
+    private let textView = TextView()
+    
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+
+        dismiss.disableActions()
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+        _ = self.dismiss.sizeToFit()
+        
+        self.set(handler: { [weak self] control in
+            if let window = control.kitWindow, let state = self?._state {
+                switch state {
+                case let .requestChat(_, _, text):
+                    alert(for: window, info: text)
+                default:
+                    break
+                }
+            }
+            self?.chatInteraction.openPendingRequests()
+        }, for: .Click)
+        
+        dismiss.set(handler: { [weak self] _ in
+            guard let `self` = self else {
+                return
+            }
+            self.chatInteraction.dismissPeerStatusOptions()
+        }, for: .SingleClick)
+
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        addSubview(dismiss)
+        addSubview(textView)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        switch state {
+        case let .requestChat(_, text, _):
+            let attr = NSMutableAttributedString()
+            _ = attr.append(string: text, color: theme.colors.text, font: .normal(.text))
+            attr.detectBoldColorInString(with: .medium(.text))
+            let layout = TextViewLayout(attr)
+            textView.update(layout)
+            break
+        default:
+            break
+        }
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+        self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
+    }
+    
+    override func layout() {
+        super.layout()
+        dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
+        textView.resize(frame.width - 60)
+        textView.center()
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
 
 private final class ChatPendingRequests : Control, ChatHeaderProtocol {
     private let chatInteraction:ChatInteraction

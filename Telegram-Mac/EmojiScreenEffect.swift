@@ -170,22 +170,8 @@ final class EmojiScreenEffect {
             self?.deinitAnimation(key: key, animated: true)
         }, {})
         
-        let view = EmojiAnimationEffectView(animation: animation, animationSize: animationSize, animationPoint: .zero, frameRect: viewFrame)
-        
-                
-        CATransaction.begin()
-        if mirror {
-            let size = animationSize
-            var fr = CATransform3DIdentity
-            fr = CATransform3DTranslate(fr, viewFrame.width / 2, 0, 0)
-            fr = CATransform3DScale(fr, -1, 1, 1)
-            fr = CATransform3DTranslate(fr, -size.width, 0, 0)
-            view.layer?.sublayerTransform = fr
-        } else {
-            view.layer?.sublayerTransform = CATransform3DIdentity
-        }
-        CATransaction.commit()
-        
+        let view = EmojiAnimationEffectView(animation: animation, animationSize: animationSize, animationPoint: .zero, frameRect: viewFrame, mirror: mirror)
+
         parentView.addSubview(view)
         
         let value: Value = .init(view: .init(value: view), index: 1, emoji: emoji, mirror: mirror, key: key)
@@ -261,9 +247,9 @@ final class EmojiScreenEffect {
                 if animation.mirror {
                     let size = value.animationSize
                     var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, rect.width / 2, 0, 0)
+                    fr = CATransform3DTranslate(fr, size.width, 0, 0)
                     fr = CATransform3DScale(fr, -1, 1, 1)
-                    fr = CATransform3DTranslate(fr, -size.width, 0, 0)
+                    fr = CATransform3DTranslate(fr, -(size.width + size.width/2), 0, 0)
                     value.layer?.sublayerTransform = fr
                 } else {
                     value.layer?.sublayerTransform = CATransform3DIdentity

@@ -358,6 +358,11 @@ open class Control: View {
             super.mouseDown(with: event)
             return
         }
+        
+        if self.handlers.isEmpty, let menu = self.contextMenu?() {
+            NSMenu.popUpContextMenu(menu, with: event, for: self)
+        }
+        
         if userInteractionEnabled {
             updateState()
             send(event: .Down)
@@ -422,9 +427,9 @@ open class Control: View {
     func performSuperMouseDown(_ event: NSEvent) {
         super.mouseDown(with: event)
     }
-    
+    public var contextMenu:(()->NSMenu?)? = nil
     open override func menu(for event: NSEvent) -> NSMenu? {
-        return nil
+        return self.contextMenu?()
     }
     
     public func send(event:ControlEvent) -> Void {

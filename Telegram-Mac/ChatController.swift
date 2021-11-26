@@ -667,7 +667,24 @@ class ChatControllerView : View, ChatInputDelegate {
         } else if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
             state = .promo(voiceChat, kind)
         } else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
-            if peerStatus.canAddContact && settings.contains(.canAddContact) {
+            
+            
+            if let requestChatTitle = settings.requestChatTitle, let date = settings.requestChatDate, let mainPeer = interfaceState.mainPeer {
+                let text: String
+                if settings.requestChatIsChannel == true {
+                    text = strings().chatInviteRequestAdminChannel(mainPeer.displayTitle, requestChatTitle)
+                } else {
+                    text = strings().chatInviteRequestAdminGroup(mainPeer.displayTitle, requestChatTitle)
+                }
+                
+                let formatter = DateFormatter()
+                formatter.dateStyle = .medium
+                formatter.timeStyle = .medium
+                formatter.timeZone = NSTimeZone.local
+                
+                let alertText = strings().chatInviteRequestInfo(requestChatTitle, formatter.string(from: Date(timeIntervalSince1970: TimeInterval(date))))
+                state = .requestChat(voiceChat, text, alertText)
+            } else if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(voiceChat, block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {
                 state = .report(voiceChat, autoArchived: settings.contains(.autoArchived))
@@ -2804,6 +2821,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     .withUpdatedInviteRequestsPendingPeers(nil)
             }
         }
+        
         
         self.chatInteraction.setupChatThemes = { [weak self] in
             self?.showChatThemeSelector()

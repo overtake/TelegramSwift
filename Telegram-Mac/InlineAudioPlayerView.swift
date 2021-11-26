@@ -181,7 +181,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }, for: .SingleClick)
         
         playingSpeed.set(handler: { [weak self] control in
-            FastSettings.setPlayingRate(FastSettings.playingRate == 1.7 ? 1.0 : 1.7)
+            FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
             self?.controller?.baseRate = FastSettings.playingRate
         }, for: .Click)
         
