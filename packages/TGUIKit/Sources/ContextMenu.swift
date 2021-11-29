@@ -66,8 +66,8 @@ public class ContextMenuItem : NSMenuItem {
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
 
-    var onShow:(ContextMenu)->Void = {(ContextMenu) in}
-    var onClose:()->Void = {() in}
+    public var onShow:(ContextMenu)->Void = {(ContextMenu) in}
+    public var onClose:()->Void = {() in}
     
     weak var view:NSView?
     

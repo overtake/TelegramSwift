@@ -1210,7 +1210,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     func applicationDidResignActive(_ notification: Notification) {
         updatePeerPresence()
-        if viewer != nil {
+        if viewer != nil, NSScreen.main == viewer?.window.screen {
             viewer?.window.orderOut(nil)
         }
         self.activeValue.set(false)
