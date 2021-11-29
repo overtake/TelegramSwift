@@ -1,0 +1,17 @@
+//
+//  Beta.xcconfig
+//  Telegram
+//
+//  Created by keepcoder on 14/03/2017.
+//  Copyright © 2017 Telegram. All rights reserved.
+//
+
+#include "common.xcconfig"
+
+DSA_PEM_FILE = dsa_pub.pem
+APPCENTER_SECRET = 6ed2ac30-49e1-4073-87c2-f1ffcb74e81f
+SFEED_URL = https:${SIMPLE_SLASH}/api.appcenter.ms/v0.1/public/sparkle/apps/${APPCENTER_SECRET}
+SOURCE = BETA
+
+TYPE = -D'BETA'
+OTHER_SWIFT_FLAGS = $(TYPE)

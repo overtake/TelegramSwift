@@ -1188,21 +1188,21 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		6E04013A1D1C98690051BCFA /* DebugAppStore */ = {
+		6E04013A1D1C98690051BCFA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 6E37297F1D1DE93800F1E4AE /* AppCenterCrashes Debug.xcconfig */;
 			buildSettings = {
 			};
-			name = DebugAppStore;
+			name = Debug;
 		};
-		6E04013B1D1C98690051BCFA /* ReleaseAppStore */ = {
+		6E04013B1D1C98690051BCFA /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0469D1B31F4E013C00A43A8E /* AppCenterCrashes Release.xcconfig */;
 			buildSettings = {
 			};
-			name = ReleaseAppStore;
+			name = Release;
 		};
-		C9A91F64230BFDB70068070D /* DebugAppStore */ = {
+		C9A91F64230BFDB70068070D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
 			buildSettings = {
@@ -1226,9 +1226,9 @@
 					"-Wno-completion-handler",
 				);
 			};
-			name = DebugAppStore;
+			name = Debug;
 		};
-		C9A91F65230BFDB70068070D /* ReleaseAppStore */ = {
+		C9A91F65230BFDB70068070D /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
 			buildSettings = {
@@ -1252,139 +1252,7 @@
 					"-Wno-completion-handler",
 				);
 			};
-			name = ReleaseAppStore;
-		};
-		D0983E3725683D3C00467703 /* Github */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6E37297F1D1DE93800F1E4AE /* AppCenterCrashes Debug.xcconfig */;
-			buildSettings = {
-			};
-			name = Github;
-		};
-		D0983E3825683D3C00467703 /* Github */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = Github;
-		};
-		D0983E3925683D4300467703 /* ReleaseHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0469D1B31F4E013C00A43A8E /* AppCenterCrashes Release.xcconfig */;
-			buildSettings = {
-			};
-			name = ReleaseHockeyapp;
-		};
-		D0983E3A25683D4300467703 /* ReleaseHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = ReleaseHockeyapp;
-		};
-		D0983E3B25683D4800467703 /* DebugHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0469D1B31F4E013C00A43A8E /* AppCenterCrashes Release.xcconfig */;
-			buildSettings = {
-			};
-			name = DebugHockeyapp;
-		};
-		D0983E3C25683D4800467703 /* DebugHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = DebugHockeyapp;
-		};
-		D0983E3D25683D5300467703 /* HockeyappMacAlpha */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0469D1B31F4E013C00A43A8E /* AppCenterCrashes Release.xcconfig */;
-			buildSettings = {
-			};
-			name = HockeyappMacAlpha;
-		};
-		D0983E3E25683D5300467703 /* HockeyappMacAlpha */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = HockeyappMacAlpha;
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -1392,28 +1260,20 @@
 		6E04012E1D1C98690051BCFA /* Build configuration list for PBXProject "AppCenterCrashes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6E04013A1D1C98690051BCFA /* DebugAppStore */,
-				D0983E3725683D3C00467703 /* Github */,
-				6E04013B1D1C98690051BCFA /* ReleaseAppStore */,
-				D0983E3925683D4300467703 /* ReleaseHockeyapp */,
-				D0983E3B25683D4800467703 /* DebugHockeyapp */,
-				D0983E3D25683D5300467703 /* HockeyappMacAlpha */,
+				6E04013A1D1C98690051BCFA /* Debug */,
+				6E04013B1D1C98690051BCFA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ReleaseAppStore;
+			defaultConfigurationName = Release;
 		};
 		C9A91F63230BFDB70068070D /* Build configuration list for PBXNativeTarget "AppCenterCrashes macOS Framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C9A91F64230BFDB70068070D /* DebugAppStore */,
-				D0983E3825683D3C00467703 /* Github */,
-				C9A91F65230BFDB70068070D /* ReleaseAppStore */,
-				D0983E3A25683D4300467703 /* ReleaseHockeyapp */,
-				D0983E3C25683D4800467703 /* DebugHockeyapp */,
-				D0983E3E25683D5300467703 /* HockeyappMacAlpha */,
+				C9A91F64230BFDB70068070D /* Debug */,
+				C9A91F65230BFDB70068070D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ReleaseAppStore;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

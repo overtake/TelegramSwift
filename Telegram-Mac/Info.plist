@@ -31,12 +31,11 @@
 			<array>
 				<string>tg</string>
 				<string>telegram</string>
-				<string>ton</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>223550</string>
+	<string>223594</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -62,6 +61,8 @@
 	<string>We need access to your microphone so that you can record voice messages and make calls.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SOURCE</key>
+	<string>${SOURCE}</string>
 	<key>SUFeedURL</key>
 	<string>${SFEED_URL}</string>
 	<key>SUPublicDSAKeyFile</key>

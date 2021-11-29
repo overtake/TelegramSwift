@@ -754,7 +754,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		C9A91F3D230BFB970068070D /* DebugAppStore */ = {
+		C9A91F3D230BFB970068070D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
 			buildSettings = {
@@ -778,42 +778,16 @@
 					"-Wno-completion-handler",
 				);
 			};
-			name = DebugAppStore;
+			name = Debug;
 		};
-		C9A91F3E230BFB970068070D /* ReleaseHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = ReleaseHockeyapp;
-		};
-		D0983E3F25683D6200467703 /* ReleaseAppStore */ = {
+		D0983E3F25683D6200467703 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
 			buildSettings = {
 			};
-			name = ReleaseAppStore;
+			name = Release;
 		};
-		D0983E4025683D6200467703 /* ReleaseAppStore */ = {
+		D0983E4025683D6200467703 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
 			buildSettings = {
@@ -837,120 +811,14 @@
 					"-Wno-completion-handler",
 				);
 			};
-			name = ReleaseAppStore;
+			name = Release;
 		};
-		D0983E4125683D6B00467703 /* DebugHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
-			buildSettings = {
-			};
-			name = DebugHockeyapp;
-		};
-		D0983E4225683D6B00467703 /* DebugHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = DebugHockeyapp;
-		};
-		D0983E4325683D7700467703 /* Github */ = {
+		E85547C71D2D6253002DF6E2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B2812EF21DA3148000307DCE /* AppCenterAnalytics Debug.xcconfig */;
 			buildSettings = {
 			};
-			name = Github;
-		};
-		D0983E4425683D7700467703 /* Github */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = Github;
-		};
-		D0983E4525683D7C00467703 /* HockeyappMacAlpha */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
-			buildSettings = {
-			};
-			name = HockeyappMacAlpha;
-		};
-		D0983E4625683D7C00467703 /* HockeyappMacAlpha */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 049BC82B1ECE3B9A00FB6719 /* macOS.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				ONLY_ACTIVE_ARCH = NO;
-				WARNING_CFLAGS = (
-					"-Weverything",
-					"-Wno-objc-missing-property-synthesis",
-					"-Wno-float-equal",
-					"-Wno-pedantic",
-					"-Wno-padded",
-					"-Wno-sign-conversion",
-					"-Wno-c++98-compat",
-					"-Wno-c++98-compat-pedantic",
-					"-Wno-auto-import",
-					"-Wno-assign-enum",
-					"-Wno-exit-time-destructors",
-					"-Wno-global-constructors",
-					"-Wno-cast-align",
-					"-Wno-completion-handler",
-				);
-			};
-			name = HockeyappMacAlpha;
-		};
-		E85547C71D2D6253002DF6E2 /* DebugAppStore */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = B2812EF21DA3148000307DCE /* AppCenterAnalytics Debug.xcconfig */;
-			buildSettings = {
-			};
-			name = DebugAppStore;
-		};
-		E85547C81D2D6253002DF6E2 /* ReleaseHockeyapp */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0469D1B21F4DFE4C00A43A8E /* AppCenterAnalytics Release.xcconfig */;
-			buildSettings = {
-			};
-			name = ReleaseHockeyapp;
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -958,28 +826,20 @@
 		C9A91F3C230BFB970068070D /* Build configuration list for PBXNativeTarget "AppCenterAnalytics macOS Framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				C9A91F3D230BFB970068070D /* DebugAppStore */,
-				D0983E4425683D7700467703 /* Github */,
-				C9A91F3E230BFB970068070D /* ReleaseHockeyapp */,
-				D0983E4025683D6200467703 /* ReleaseAppStore */,
-				D0983E4225683D6B00467703 /* DebugHockeyapp */,
-				D0983E4625683D7C00467703 /* HockeyappMacAlpha */,
+				C9A91F3D230BFB970068070D /* Debug */,
+				D0983E4025683D6200467703 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ReleaseHockeyapp;
+			defaultConfigurationName = Debug;
 		};
 		E85547BB1D2D6253002DF6E2 /* Build configuration list for PBXProject "AppCenterAnalytics" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E85547C71D2D6253002DF6E2 /* DebugAppStore */,
-				D0983E4325683D7700467703 /* Github */,
-				E85547C81D2D6253002DF6E2 /* ReleaseHockeyapp */,
-				D0983E3F25683D6200467703 /* ReleaseAppStore */,
-				D0983E4125683D6B00467703 /* DebugHockeyapp */,
-				D0983E4525683D7C00467703 /* HockeyappMacAlpha */,
+				E85547C71D2D6253002DF6E2 /* Debug */,
+				D0983E3F25683D6200467703 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ReleaseHockeyapp;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
