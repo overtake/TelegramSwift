@@ -754,6 +754,15 @@ class SVideoView: NSView {
         
         controls.menuItems.contextMenu = { [weak self] in
             let menu = ContextMenu(title: "Speed")
+            
+            menu.onShow = { _ in
+                self?.isInMenu = true
+            }
+            menu.onClose = {
+                self?.isInMenu = false
+            }
+            menu.delegate = menu
+    
             menu.addItem(ContextMenuItem("1x", handler: {
                 self?.interactions?.setBaseRate(1.0)
                 self?.controls.updateBaseRate()
@@ -846,6 +855,8 @@ class SVideoView: NSView {
         previewView.duration.display()
         previewView.needsLayout = true
     }
+    
+    private(set) var isInMenu: Bool = false
     
     
     func hideScrubblerPreviewIfNeeded() {

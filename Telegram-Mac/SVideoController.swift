@@ -128,7 +128,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         NSCursor.unhide()
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
-            let hide = NSApp.menu == nil
+            let hide = !self.genericView.isInMenu
             self.hideControls.set(hide)
             if !self.pictureInPicture, !self.isPaused, hide {
                 NSCursor.hide()
@@ -139,7 +139,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
         updateIdleTimer()
         if let rootView = genericView.superview?.superview {
-            var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0 && rootView.enclosingMenuItem == nil
+            var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
                 if !self.isPaused {
