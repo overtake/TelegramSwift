@@ -1,0 +1,15 @@
+//
+//  Alpha.xcconfig
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 13/06/2019.
+//  Copyright © 2019 Telegram. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+#include "common.xcconfig"
+
+TYPE = -D'APP_STORE'
+OTHER_SWIFT_FLAGS = $(TYPE)

@@ -3,7 +3,7 @@
 url=git@github.com:telegramdesktop/libtgvoip
 [submodule "submodules/Sparkle"]
 	path = submodules/Sparkle
-url=https://github.com/overtake/Sparkle
+url=git@gitlab.com:overtake/Sparkle.git
 [submodule "submodules/telegram-ios"]
 	path = submodules/telegram-ios
 url=git@gitlab.com:peter-iakovlev/telegram-ios.git

@@ -20,7 +20,7 @@ beta:
     except:
         - tags
     script:
-        - bash ./buildbox/internal.sh beta
+        - bash ./buildbox/internal.sh Beta
     environment:
         name: beta
 
@@ -33,7 +33,7 @@ alpha:
     except:
         - tags
     script:
-        - bash ./buildbox/internal.sh alpha
+        - bash ./buildbox/internal.sh Alpha
     environment:
         name: alpha
 
@@ -46,7 +46,7 @@ appstore:
     except:
         - tags
     script:
-        - bash ./buildbox/internal.sh appstore
+        - bash ./buildbox/internal.sh Appstore
     environment:
         name: appstore
 
@@ -59,6 +59,6 @@ release:
     except:
         - tags
     script:
-        - bash ./buildbox/internal.sh release
+        - bash ./buildbox/internal.sh Release
     environment:
         name: release

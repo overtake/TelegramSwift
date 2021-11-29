@@ -1,0 +1,24 @@
+//
+//  debug.xcconfig
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 29.11.2021.
+//  Copyright © 2021 Telegram. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+
+#include "common.xcconfig"
+
+DSA_PEM_FILE = dsa_pub.pem
+APPCENTER_SECRET = 6ed2ac30-49e1-4073-87c2-f1ffcb74e81f
+SFEED_URL = https:${SIMPLE_SLASH}/api.appcenter.ms/v0.1/public/sparkle/apps/${APPCENTER_SECRET}
+SOURCE = DEBUG
+
+DEBUG = 1
+GCC_PREPROCESSOR_DEFINITIONS = ${GCC_PREPROCESSOR_DEFINITIONS} DEBUG=${DEBUG}
+
+TYPE = -D'BETA'
+OTHER_SWIFT_FLAGS = $(TYPE)

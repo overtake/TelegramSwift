@@ -569,6 +569,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let voipVersions = OngoingCallContext.versions(includeExperimental: true, includeReference: false).map { version, supportsVideo -> CallSessionManagerImplementationVersion in
                 CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
             }
+        
+            let value = Configuration.value(for: .source)
+            
+            
+           
+            var bp = 0
+            bp += 1
             
             let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedDeviceName: ApiEnvironment.resolvedDeviceName)
             
