@@ -1777,6 +1777,7 @@
 					"-Wno-exit-time-destructors",
 					"-Wno-global-constructors",
 					"-Wno-cast-align",
+					"-Wno-completion-handler",
 				);
 			};
 			name = ReleaseAppStore;
@@ -1832,6 +1833,7 @@
 					"-Wno-exit-time-destructors",
 					"-Wno-global-constructors",
 					"-Wno-cast-align",
+					"-Wno-completion-handler",
 				);
 			};
 			name = ReleaseHockeyapp;
@@ -1887,6 +1889,7 @@
 					"-Wno-exit-time-destructors",
 					"-Wno-global-constructors",
 					"-Wno-cast-align",
+					"-Wno-completion-handler",
 				);
 			};
 			name = DebugHockeyapp;
@@ -1942,6 +1945,7 @@
 					"-Wno-exit-time-destructors",
 					"-Wno-global-constructors",
 					"-Wno-cast-align",
+					"-Wno-completion-handler",
 				);
 			};
 			name = HockeyappMacAlpha;
