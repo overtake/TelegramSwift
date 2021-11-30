@@ -426,6 +426,7 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
+        NSLog("rate: \(FastSettings.playingRate)")
         if FastSettings.playingRate == 1.0 {
             menuItems.set(image: NSImage(named: "PlaybackSpeed_1X")!.precomposed(), for: .Normal)
         } else if FastSettings.playingRate <= 1.25 {
@@ -776,7 +777,7 @@ class SVideoView: NSView {
                 self?.controls.updateBaseRate()
             }))
             menu.addItem(ContextMenuItem.init("1.75x", handler: {
-                self?.interactions?.setBaseRate(1.5)
+                self?.interactions?.setBaseRate(1.75)
                 self?.controls.updateBaseRate()
             }))
             menu.addItem(ContextMenuItem.init("2x", handler: {
