@@ -12,7 +12,7 @@ cd ~/build
 cp "configurations/${BUILD_CONFIGURATION}.xcconfig" "Telegram-Mac/Release.xcconfig"
 sh scripts/configure_frameworks.sh
          
-
+export FASTLANE_XCODE_LIST_TIMEOUT=120
 fastlane Release
 tar cf  "./output/Telegram.tar" -C "./output" .
 
