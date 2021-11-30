@@ -148,16 +148,16 @@ public struct InAppNotificationSettings: Codable, Equatable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
 
-        try container.encode(self.enabled ? 1 : 0, forKey: "e")
-        try container.encode(self.playSounds ? 1 : 0, forKey: "s")
+        try container.encode(Int32(self.enabled ? 1 : 0), forKey: "e")
+        try container.encode(Int32(self.playSounds ? 1 : 0), forKey: "s")
         try container.encode(PeerMessageSoundNativeCodable(self.tone), forKey: "tone")
-        try container.encode(self.displayPreviews ? 1 : 0, forKey: "p")
+        try container.encode(Int32(self.displayPreviews ? 1 : 0), forKey: "p")
         try container.encode(self.muteUntil, forKey: "m2")
         try container.encode(self.notifyAllAccounts, forKey: "naa")
         try container.encode(self.totalUnreadCountDisplayStyle.rawValue, forKey: "tds")
         try container.encode(self.totalUnreadCountDisplayCategory.rawValue, forKey: "totalUnreadCountDisplayCategory")
         try container.encode(self.totalUnreadCountIncludeTags.rawValue, forKey: "totalUnreadCountIncludeTags_2")
-        try container.encode(self.showNotificationsOutOfFocus ? 1 : 0, forKey: "snoof")
+        try container.encode(Int32(self.showNotificationsOutOfFocus ? 1 : 0), forKey: "snoof")
         try container.encode(self.badgeEnabled, forKey: "badge")
         try container.encode(self.requestUserAttention, forKey: "requestUserAttention")
     }
