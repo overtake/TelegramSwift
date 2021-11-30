@@ -1055,7 +1055,6 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         
                         if  ((initialSize.height + offset) / 2) >= lowHeight && !lowSuccess {
                             let item = makeItem(entries[low])
-                            lowHeight += item.height
                             if !item.ignoreAtInitialization {
                                 lowHeight += item.height
                             }
@@ -1064,7 +1063,6 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         
                         if ((initialSize.height + offset) / 2) >= highHeight && !highSuccess  {
                             let item = makeItem(entries[high])
-                            highHeight += item.height
                             if !item.ignoreAtInitialization {
                                 highHeight += item.height
                             }

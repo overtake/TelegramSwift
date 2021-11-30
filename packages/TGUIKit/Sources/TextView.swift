@@ -1388,9 +1388,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
                     }
                 }
-
-                
-//                CTLineDraw(line.line, ctx)
                 
                 if !line.strikethrough.isEmpty {
                     for strikethrough in line.strikethrough {
