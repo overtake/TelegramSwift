@@ -328,9 +328,13 @@ class UserInfoArguments : PeerInfoArguments {
     
     func updateBlocked(peer: Peer,_ blocked:Bool, _ isBot: Bool) {
         let context = self.context
+        var peerId = peer.id
+        if let peer = peer as? TelegramSecretChat {
+            peerId = peer.regularPeerId
+        }
         if blocked {
             confirm(for: context.window, header: strings().peerInfoBlockHeader, information: strings().peerInfoBlockText(peer.displayTitle), okTitle: strings().peerInfoBlockOK, successHandler: { [weak self] _ in
-                let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
+                let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peerId) |> deliverOnMainQueue, for: context.window)
                 self?.blockDisposable.set(signal.start(error: { error in
                     switch error {
                     case .generic:
@@ -341,7 +345,7 @@ class UserInfoArguments : PeerInfoArguments {
                 }))
             })
         } else {
-            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
+            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peerId) |> deliverOnMainQueue, for: context.window)
             blockDisposable.set(signal.start(error: { error in
                 switch error {
                 case .generic:
@@ -1024,18 +1028,22 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.userName(sectionId: sectionId, value: username, viewType: .singleItem))
                 }
                 
-                
                 if !user.isBot {
                     if !view.peerIsContact {
                         infoBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
-                        if let cachedData = view.cachedData as? CachedUserData {
-                            infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
-                        }
                     }
                 }
                 if (peer is TelegramSecretChat) {
                     infoBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
                 }
+                if !user.isBot {
+                    if !view.peerIsContact {
+                        if let cachedData = view.cachedData as? CachedUserData {
+                            infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                        }
+                    }
+                }
+               
                 
                 applyBlock(infoBlock)
             }

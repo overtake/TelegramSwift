@@ -426,7 +426,6 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
-        NSLog("rate: \(FastSettings.playingRate)")
         if FastSettings.playingRate == 1.0 {
             menuItems.set(image: NSImage(named: "PlaybackSpeed_1X")!.precomposed(), for: .Normal)
         } else if FastSettings.playingRate <= 1.25 {
@@ -439,7 +438,6 @@ private final class SVideoControlsView : Control {
             menuItems.set(image: NSImage(named: "PlaybackSpeed_2X")!.precomposed(), for: .Normal)
         }
         self.menuItems.sizeToFit()
-        needsLayout = true
     }
     
     override func setFrameSize(_ newSize: NSSize) {

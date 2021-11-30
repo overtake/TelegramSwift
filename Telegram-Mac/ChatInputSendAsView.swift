@@ -36,7 +36,7 @@ final class ChatInputSendAsView : Control {
             return
         }
         
-        guard let peers = self.peers else {
+        guard let list = self.peers else {
             return
         }
         guard let chatInteraction = self.chatInteraction else {
@@ -48,6 +48,12 @@ final class ChatInputSendAsView : Control {
         let items:[SPopoverItem] = []
         var headerItems: [TableRowItem] = []
         headerItems.append(SeparatorRowItem.init(NSZeroSize, 0, string: strings().chatSendAsHeader))
+        
+        var peers = list
+        if let index = peers.firstIndex(where: { $0.peer.id == currentPeerId }) {
+            peers.move(at: index, to: 0)
+        }
+        
         for peer in peers {
             
             let status: String

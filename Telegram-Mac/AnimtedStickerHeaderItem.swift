@@ -15,10 +15,12 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     fileprivate let sticker: LocalAnimatedSticker
     let stickerSize: NSSize
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(160, 160)) {
+    let bgColor: NSColor?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(160, 160), bgColor: NSColor? = nil) {
         self.context = context
         self.sticker = sticker
         self.stickerSize = stickerSize
+        self.bgColor = bgColor
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
         
@@ -43,6 +45,7 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
 private final class AnimtedStickerHeaderView : TableRowView {
     private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: .zero)
     private let textView: TextView = TextView()
+    private var bgView: View?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -73,6 +76,16 @@ private final class AnimtedStickerHeaderView : TableRowView {
         
         self.textView.update(item.textLayout)
         
+        if let bgColor = item.bgColor {
+            if self.bgView == nil {
+                self.bgView = View()
+                self.addSubview(self.bgView!, positioned: .below, relativeTo: self.imageView)
+            }
+            self.bgView?.backgroundColor = bgColor
+            self.bgView?.setFrameSize(item.stickerSize)
+            self.bgView?.layer?.cornerRadius = 10
+        }
+        
         needsLayout = true
     }
     
@@ -82,6 +95,8 @@ private final class AnimtedStickerHeaderView : TableRowView {
 
         self.imageView.centerX(y: item.inset.top)
         self.textView.centerX(y: self.imageView.frame.maxY + item.inset.bottom)
+        
+        self.bgView?.frame = self.imageView.frame
     }
     
     required init?(coder: NSCoder) {

@@ -35,8 +35,8 @@ struct LaunchSettings: Codable, Equatable {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
 
         self.navigation = nil
-        self.applyText = try container.decode(String.self, forKey: "at")
-        self.previousText = try container.decode(String.self, forKey: "pt")
+        self.applyText = try container.decodeIfPresent(String.self, forKey: "at")
+        self.previousText = try container.decodeIfPresent(String.self, forKey: "pt")
     }
     
     func encode(to encoder: Encoder) throws {
