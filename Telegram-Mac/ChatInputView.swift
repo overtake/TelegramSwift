@@ -458,7 +458,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }
         }
         
-        if let sendAsPeers = inputState.sendAsPeers, !sendAsPeers.isEmpty {
+        if let sendAsPeers = inputState.sendAsPeers, !sendAsPeers.isEmpty && inputState.state == .normal {
             let current: ChatInputSendAsView
             if let view = self.sendAsView {
                 current = view

@@ -71,7 +71,6 @@ class ChatRightView: View, ViewDisplayDelegate {
     
     var isReversed: Bool {
         guard let item = item else {return false}
-        
         return item.isBubbled && !item.isIncoming
     }
     
@@ -99,7 +98,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 sendingView = nil
                 
                 
-                if let peer = item.peer as? TelegramChannel, peer.isChannel && !item.isFailed {
+                if let peer = item.chatInteraction.peer as? TelegramChannel, peer.isChannel && !item.isFailed {
                     stateView?.removeFromSuperview()
                     stateView = nil
                     readImageView?.removeFromSuperview()

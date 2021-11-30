@@ -246,7 +246,7 @@ class ChatRowItem: TableRowItem {
             size = NSMakeSize(date.0.size.width, isBubbled && !isFailed ? 15 : 16)
         }
         
-        if let peer = peer as? TelegramChannel, case .broadcast = peer.info, (!isUnsent && !isFailed) {
+        if let peer = chatInteraction.peer as? TelegramChannel, case .broadcast = peer.info, (!isUnsent && !isFailed) {
             size.width += 0
         } else {
             if (!isIncoming || (isUnsent || isFailed)) && date != nil {
@@ -765,6 +765,7 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
+        
         if authorIsChannel {
             return false
         }
@@ -805,8 +806,15 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
-    let isScam: Bool
-    let isFake: Bool
+    private let _isScam: Bool
+    private let _isFake: Bool
+    
+    var isScam: Bool {
+        return _isScam && self.authorText != nil
+    }
+    var isFake: Bool {
+        return _isFake && self.authorText != nil
+    }
     private(set) var isForwardScam: Bool
     private(set) var isForwardFake: Bool
 
@@ -1408,10 +1416,11 @@ class ChatRowItem: TableRowItem {
                 }
             }
         }
-        self.isScam = isScam
+        
+        self._isScam = isScam
         self.isForwardScam = isForwardScam
             
-        self.isFake = isFake
+        self._isFake = isFake
         self.isForwardFake = isForwardFake
         
         if let message = message {
@@ -1921,9 +1930,9 @@ class ChatRowItem: TableRowItem {
         self.presentation = theme
         self.isIncoming = false
         self.hasBubble = false
-        self.isScam = false
+        self._isScam = false
         self.isForwardScam = false
-        self.isFake = false
+        self._isFake = false
         self.isForwardFake = false
         super.init(initialSize)
     }

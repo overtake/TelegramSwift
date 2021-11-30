@@ -47,7 +47,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             _ = attr.append(string: "\n", color: theme.colors.text, font: .medium(.title))
             _ = attr.append(string: DateUtils.string(forLastSeen: state.session.activityDate), color: theme.colors.listGrayText, font: .normal(.text))
 
-            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: sticker, text: attr, stickerSize: NSMakeSize(60, 60))
+            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: sticker, text: attr, stickerSize: NSMakeSize(60, 60), bgColor: icon.2)
         }))
         index += 1
 
@@ -81,19 +81,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
     
-    let isMobile = state.session.platform.lowercased().contains("ios") || state.session.platform.lowercased().contains("android")
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("secret"), data: InputDataGeneralData(name: strings().sessionPreviewAcceptSecret, color: theme.colors.text, type: .switchable(state.session.flags.contains(.acceptsSecretChats)), viewType: isMobile ? .singleItem : .firstItem, enabled: true, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("secret"), data: InputDataGeneralData(name: strings().sessionPreviewAcceptSecret, color: theme.colors.text, type: .switchable(state.session.flags.contains(.acceptsSecretChats)), viewType: .firstItem, enabled: true, action: {
         arguments.toggleChats(!state.session.flags.contains(.acceptsSecretChats))
     })))
     index += 1
     
-    if !isMobile {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("calls"), data: InputDataGeneralData(name: strings().sessionPreviewAcceptCalls, color: theme.colors.text, type: .switchable(state.session.flags.contains(.acceptsSecretChats)), viewType: .lastItem, enabled: true, action: {
-            arguments.toggleChats(!state.session.flags.contains(.acceptsSecretChats))
-        })))
-        index += 1
-    }
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("calls"), data: InputDataGeneralData(name: strings().sessionPreviewAcceptCalls, color: theme.colors.text, type: .switchable(state.session.flags.contains(.acceptsSecretChats)), viewType: .lastItem, enabled: true, action: {
+        arguments.toggleChats(!state.session.flags.contains(.acceptsSecretChats))
+    })))
+    index += 1
     
     
     entries.append(.sectionId(sectionId, type: .normal))

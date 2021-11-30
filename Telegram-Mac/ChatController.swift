@@ -3740,7 +3740,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.unblock = { [weak self] in
             if let strongSelf = self {
-                strongSelf.unblockDisposable.set(context.blockedPeersContext.remove(peerId: strongSelf.chatInteraction.peerId).start())
+                let presentation = strongSelf.chatInteraction.presentation
+                if let peer = presentation.mainPeer {
+                    strongSelf.unblockDisposable.set(context.blockedPeersContext.remove(peerId: peer.id).start())
+                }
             }
         }
         
