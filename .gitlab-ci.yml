@@ -59,6 +59,6 @@ release:
     except:
         - tags
     script:
-        - bash ./buildbox/internal.sh Release
+        - bash ./buildbox/internal.sh Stable
     environment:
         name: release

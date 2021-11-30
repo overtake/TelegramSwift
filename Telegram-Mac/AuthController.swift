@@ -926,7 +926,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             resetState()
         }, checkCode: { [weak self] code in
             if let strongSelf = self {
-                _ = (authorizeWithCode(accountManager: sharedContext.accountManager, account: strongSelf.account, code: code, termsOfService: nil) |> deliverOnMainQueue ).start(next: { [weak strongSelf] value in
+                _ = (authorizeWithCode(accountManager: sharedContext.accountManager, account: strongSelf.account, code: code, termsOfService: nil, forcedPasswordSetupNotice: { _ in return nil }) |> deliverOnMainQueue ).start(next: { [weak strongSelf] value in
                     if let strongSelf = strongSelf {
                         switch value {
                         case let .signUp(data):
@@ -975,7 +975,7 @@ class AuthController : GenericViewController<AuthHeaderView> {
             })
         }, signUp: { [weak self] firstName, lastName, photo in
             guard let `self` = self else {return}
-            _ = showModalProgress(signal: signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photo != nil ? try? Data(contentsOf: photo!) : nil, avatarVideo: nil, videoStartTimestamp: nil) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+            _ = showModalProgress(signal: signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photo != nil ? try? Data(contentsOf: photo!) : nil, avatarVideo: nil, videoStartTimestamp: nil, forcedPasswordSetupNotice: { _ in return nil }) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
                 let text: String
                 switch error {
                 case .limitExceeded:

@@ -18,34 +18,34 @@ func iconForSession(_ session: RecentAccountSession) -> (CGImage?, LocalAnimated
     let platform = session.platform.lowercased()
     let device = session.deviceModel.lowercased()
     let systemVersion = session.systemVersion.lowercased()
-    if device.contains("xbox") {
+    if platform.contains("xbox") {
         return (NSImage(named: "Icon_Device_Xbox")?.precomposed(), nil)
     }
-    if device.contains("chrome") && !device.contains("chromebook") {
+    if platform.contains("chrome") && !platform.contains("chromebook") {
         return (NSImage(named: "Icon_Device_Chrome")?.precomposed(), LocalAnimatedSticker.device_chrome)
     }
-    if device.contains("brave") {
+    if platform.contains("brave") {
         return (NSImage(named: "Icon_Device_Brave")?.precomposed(), nil)
     }
-    if device.contains("vivaldi") {
+    if platform.contains("vivaldi") {
         return (NSImage(named: "Icon_Device_Vivaldi")?.precomposed(), nil)
     }
-    if device.contains("safari") {
+    if platform.contains("safari") {
         return (NSImage(named: "Icon_Device_Safari")?.precomposed(), LocalAnimatedSticker.device_safari)
     }
-    if device.contains("firefox") {
+    if platform.contains("firefox") {
         return (NSImage(named: "Icon_Device_Firefox")?.precomposed(), LocalAnimatedSticker.device_firefox)
     }
-    if device.contains("opera") {
+    if platform.contains("opera") {
         return (NSImage(named: "Icon_Device_Opera")?.precomposed(), nil)
     }
     if platform.contains("android") {
         return (NSImage(named: "Icon_Device_Android")?.precomposed(), LocalAnimatedSticker.device_android)
     }
-    if systemVersion.contains("macos") {
+    if platform.contains("macos") {
         return (NSImage(named: "Icon_Device_Apple")?.precomposed(), LocalAnimatedSticker.device_mac)
     }
-    if  platform.contains("ipad") {
+    if platform.contains("ipad") {
         return (NSImage(named: "Icon_Device_Ipad")?.precomposed(), LocalAnimatedSticker.device_ipad)
     }
     if platform.contains("ios") {
