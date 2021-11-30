@@ -319,9 +319,24 @@ class ChatMessageItem: ChatRowItem {
                 self.messageText = copy
             }
            
-           
-            
-            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())
+             var spoilers:[TextViewLayout.Spoiler] = []
+             #if DEBUG
+             for attr in message.attributes {
+                 if let attr = attr as? TextEntitiesMessageAttribute {
+                     for entity in attr.entities {
+                         switch entity.type {
+                         case .Code:
+                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)))
+                         default:
+                             break
+                         }
+                     }
+                 }
+             }
+             #endif
+             
+             
+             textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers)
             textLayout.mayBlocked = entry.renderType != .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {

@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKit
-
+import ColorPalette
 
 public enum LinkType {
     case plain
@@ -264,6 +264,14 @@ public struct TextViewCutout: Equatable {
 private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
+    
+    public struct Spoiler {
+        public let range: NSRange
+        public init(range: NSRange) {
+            self.range = range
+        }
+    }
+    
     public var mayItems: Bool = true
     public var selectWholeText: Bool = false
     public fileprivate(set) var attributedString:NSAttributedString
@@ -293,7 +301,9 @@ public final class TextViewLayout : Equatable {
     fileprivate var toolTipRects:[NSRect] = []
     private let disableTooltips: Bool
     fileprivate var isBigEmoji: Bool = false
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true) {
+    fileprivate let spoilers:[Spoiler]
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = []) {
+        self.spoilers = spoilers
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
         self.cutout = cutout
@@ -1366,6 +1376,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     additionY -= 4
                 }
                 
+               
+                
                 ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY + additionY)
                 
                 let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
@@ -1387,6 +1399,40 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
                     }
                 }
+                for spoiler in layout.spoilers {
+                    if let spoilerRange = spoiler.range.intersection(line.range) {
+                        let range = spoilerRange.intersection(layout.selectedRange.range)
+                        
+                        var ranges:[NSRange] = []
+                        if let range = range {
+                            ranges.append(NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound))
+                            ranges.append(NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound))
+                        } else {
+                            ranges.append(spoilerRange)
+                        }
+                        for range in ranges {
+                            let startOffset = CTLineGetOffsetForStringIndex(line.line, range.lowerBound, nil);
+                            let endOffset = CTLineGetOffsetForStringIndex(line.line, range.upperBound, nil);
+
+                            var ascent:CGFloat = 0
+                            var descent:CGFloat = 0
+                            var leading:CGFloat = 0
+                            
+                            _ = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
+                            
+                            var rect:NSRect = line.frame
+                            
+                            rect.size.width = endOffset - startOffset
+                            rect.origin.x = startOffset
+                            rect.origin.y = rect.minY - rect.height
+                            rect.size.height += ceil(descent - leading)
+                            
+                            
+                            ctx.setFillColor(presentation.colors.grayText.cgColor)
+                            ctx.fill(rect)
+                        }
+                    }
+                }
             }
             
             ctx.textMatrix = textMatrix
@@ -1402,6 +1448,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 ctx.fill(hexColor.0)
             }
 
+            
             
         }
         
