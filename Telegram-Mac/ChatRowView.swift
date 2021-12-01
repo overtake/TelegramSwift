@@ -40,7 +40,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private(set) var forwardName:TextView?
     private(set) var captionViews: [CaptionView] = []
     private var shareView:ImageButton?
-    private var likeView:ImageButton?
+    private var reactionsView:ChatReactionsView?
     private var channelCommentsBubbleControl: ChannelCommentsBubbleControl?
     private var channelCommentsBubbleSmallControl: ChannelCommentsSmallControl?
     private var channelCommentsControl: ChannelCommentsControl?
@@ -462,9 +462,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let commentsView = self.channelCommentsBubbleSmallControl, let item = item as? ChatRowItem {
             commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
         }
-        if let likeControl = self.likeView, let item = item as? ChatRowItem {
-            likeControl.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
-        }
     }
     
     
@@ -816,8 +813,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
             
             shareView?.setFrameOrigin(shareViewPoint(item))
-            likeView?.setFrameOrigin(likeViewPoint(item))
             
+            reactionsView?.frame = reactionsRect(item)
         }
     }
     
@@ -837,22 +834,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return point
     }
     
-    func likeViewPoint(_ item: ChatRowItem) -> NSPoint {
-        guard let likeView = self.likeView else {
-            return .zero
-        }
-        var controlOffset: CGFloat = 0
-        if let shareView = shareView {
-            controlOffset += shareView.frame.width + 10
-        }
-        if item.isBubbled {
-            let bubbleFrame = self.bubbleFrame(item)
-            let rightFrame = self.rightFrame(item)
-            return NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10 + controlOffset, item.isStateOverlayLayout ? rightFrame.width + 10 + controlOffset : 0) : bubbleFrame.minX - likeView.frame.width - 10 - controlOffset, bubbleFrame.maxY - (likeView.frame.height - 2) - (item.isVideoOrBigEmoji ? rightFrame.height + 14 : 0))
-        } else {
-            return NSMakePoint(frame.width - 20.0 - likeView.frame.width, rightView.frame.maxY)
-        }
-    }
+
     
     
     
@@ -1040,6 +1022,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 //        }
     }
     
+    func reactionsRect(_ item: ChatRowItem) -> CGRect {
+        guard let reactionsLayout = item.reactionsLayout else {
+            return .zero
+        }
+        let frame = contentFrame(item)
+        return NSMakeRect(frame.minX, frame.maxY, reactionsLayout.size.width, reactionsLayout.size.height)
+    }
+    
     func channelCommentsBubbleFrame(_ item: ChatRowItem) -> CGRect {
         guard let _ = item.commentsBubbleData else {
             return .zero
@@ -1223,14 +1213,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             shareView = nil
         }
     }
-    
-    private func likeImage(_ item: ChatRowItem) -> CGImage {
-        if item.isLiked {
-            return item.presentation.chat.chat_like_message_unlike_bubble(theme: item.presentation)
-        } else {
-            return item.presentation.chat.chat_like_message_bubble(theme: item.presentation)
-        }
-    }
+
     
     override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
         
@@ -1240,59 +1223,21 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
     }
     
-    func fillLikeView(_ item: ChatRowItem, animated: Bool) {
-        if item.isLikable  {
-            var isPresented: Bool = true
-            if likeView == nil {
-                likeView = ImageButton()
-                likeView?.scaleOnClick = true
-                likeView?.autohighlight = false
-                likeView?.disableActions()
-                likeView?.change(opacity: 0, animated: false)
-                rowView.addSubview(likeView!)
-                isPresented = false
+    func fillReactions(_ item: ChatRowItem, animated: Bool) {
+        if let reactionsLayout = item.reactionsLayout  {
+            if reactionsView == nil {
+                reactionsView = ChatReactionsView(frame: reactionsLayout.size.bounds)
+                rowView.addSubview(reactionsView!)
             }
-            
-            guard let control = likeView else {return}
-            
-            if animated && isPresented {
-                control.change(pos: likeViewPoint(item), animated: true)
-            }
-
-            let isLiked = item.isLiked
-            
-            if item.presentation.shouldBlurService  {
-                control.set(image: likeImage(item), for: .Normal)
-                
-                _ = control.sizeToFit()
-                let size = NSMakeSize(control.frame.width, control.frame.height)
-                control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
-                control.set(additionBackgroundColor: item.presentation.chatServiceItemColor, for: .Normal)
-                
-                control.set(cornerRadius: .half, for: .Normal)
-            } else {
-                control.set(image: item.presentation.icons.chat_like_message, for: .Normal)
-                _ = control.sizeToFit()
-                control.background = .clear
-            }
-            
-            control.removeAllHandlers()
-            control.set(handler: { [weak item] control in
-                if let item = item {
-                    let presentation = item.presentation.chat
-                    let from = isLiked ? presentation.chat_like_message_unlike_bubble(theme: item.presentation) : presentation.chat_like_message_bubble(theme: item.presentation)
-                    let to = isLiked ? presentation.chat_like_message_bubble(theme: item.presentation) : presentation.chat_like_message_unlike_bubble(theme: item.presentation)
-                    
-                    (control as? ImageButton)?.applyAnimation(from: from, to: to, animation: .replaceScale)
-                    
-                    item.toggleLike()
-                }
-            
-                
-            }, for: .Click)
+            guard let reactionsView = reactionsView else {return}
+          
+            reactionsView.update(with: reactionsLayout, animated: animated)
+    
         } else {
-            likeView?.removeFromSuperview()
-            likeView = nil
+            if let view = self.reactionsView {
+                self.reactionsView = nil
+                performSubviewRemoval(view, animated: animated)
+            }
         }
     }
     
@@ -1565,7 +1510,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         fillScamForwardButton(item)
         fillPsaButton(item)
         fillShareView(item, animated: animated)
-        fillLikeView(item, animated: animated)
+        fillReactions(item, animated: animated)
         fillReplyMarkup(item, animated: animated)
         fillCaption(item, animated: animated)
         fillChannelComments(item, animated: animated)

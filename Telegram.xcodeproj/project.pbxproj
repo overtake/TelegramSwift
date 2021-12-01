@@ -274,6 +274,8 @@
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
+		27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */; };
+		27EBC7B227579A7200C6A820 /* Reactions in Frameworks */ = {isa = PBXBuildFile; productRef = 27EBC7B127579A7200C6A820 /* Reactions */; };
 		27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27ED5A6C2750CDE100BA55A7 /* FoundationUtils */; };
 		27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75327391E6B00B81F10 /* TelegramIconsTheme */; };
 		27F3B75627391E9200B81F10 /* TelegramIconsTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75527391E9200B81F10 /* TelegramIconsTheme */; };
@@ -1331,6 +1333,8 @@
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
+		27EBC7AD275789BC00C6A820 /* Reactions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Reactions; path = packages/Reactions; sourceTree = "<group>"; };
+		27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatReactionsView.swift; sourceTree = "<group>"; };
 		27ED5A692750CD4000BA55A7 /* FoundationUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FoundationUtils; path = packages/FoundationUtils; sourceTree = "<group>"; };
 		27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopCapturerWindow.swift; sourceTree = "<group>"; };
 		27F3B75027391B1000B81F10 /* MergeLists */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MergeLists; path = packages/MergeLists; sourceTree = "<group>"; };
@@ -2214,6 +2218,7 @@
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
 				2796FF082742484A00DA653C /* CalendarUtils in Frameworks */,
+				27EBC7B227579A7200C6A820 /* Reactions in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
@@ -2422,9 +2427,18 @@
 			name = connecting;
 			sourceTree = "<group>";
 		};
+		27EBC7AE275795CA00C6A820 /* reactions */ = {
+			isa = PBXGroup;
+			children = (
+				27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */,
+			);
+			name = reactions;
+			sourceTree = "<group>";
+		};
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27EBC7AD275789BC00C6A820 /* Reactions */,
 				27ED5A692750CD4000BA55A7 /* FoundationUtils */,
 				27D696EE274F8108008A723E /* KeyboardKey */,
 				27D696ED274F7AA2008A723E /* Strings */,
@@ -2936,6 +2950,7 @@
 		C219E1E51D8AC83A0042F0C8 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				27EBC7AE275795CA00C6A820 /* reactions */,
 				C2A506731DF438A700971A93 /* elements */,
 				C2777B561DCE1174008B69DD /* controls */,
 				C250B01D1DB67934004E9FBE /* webpages */,
@@ -4804,6 +4819,7 @@
 				27D696F7274F845D008A723E /* ThemeSettings */,
 				27D696F9274F8462008A723E /* InAppSettings */,
 				27ED5A6C2750CDE100BA55A7 /* FoundationUtils */,
+				27EBC7B127579A7200C6A820 /* Reactions */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -5200,6 +5216,7 @@
 				2700B21E273AD71E003E4018 /* GroupCallNavigationHeaderView.swift in Sources */,
 				D032AFA42578172400E67215 /* PushToTalk.swift in Sources */,
 				27A6975E273D086400B33415 /* PushToTalkRowItem.swift in Sources */,
+				27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */,
 				27A6975D273D085F00B33415 /* GroupCallSettingsController.swift in Sources */,
 				27A6975C273D085A00B33415 /* GroupCallController.swift in Sources */,
 				27A6975B273D085500B33415 /* PresentationGroupCallManager.swift in Sources */,
@@ -6557,6 +6574,10 @@
 		27E78DEA2743EEF6002D5A23 /* CrashHandler */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CrashHandler;
+		};
+		27EBC7B127579A7200C6A820 /* Reactions */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Reactions;
 		};
 		27ED5A6C2750CDE100BA55A7 /* FoundationUtils */ = {
 			isa = XCSwiftPackageProductDependency;
