@@ -1106,14 +1106,14 @@ func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Acco
         let peerId:PeerId? = messages[0].author?.id
         if account.peerId != peerId {
             for message in messages {
-                if peerId != message.author?.id {
+                if peerId != message.author?.id || !message.flags.contains(.Incoming) {
                     return false
                 }
             }
             return true
         }
     }
-   
+    
     return false
 }
 
