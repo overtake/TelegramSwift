@@ -529,7 +529,7 @@ public extension Message {
     }
     
     var isAnonymousMessage: Bool {
-        if let author = self.author as? TelegramChannel, sourceReference == nil, self.id.peerId == author.id || !flags.contains(.Incoming) {
+        if let author = self.author as? TelegramChannel, sourceReference == nil, self.id.peerId == author.id {
             return true
         } else {
             return false
