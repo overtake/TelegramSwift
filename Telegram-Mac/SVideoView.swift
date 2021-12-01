@@ -224,6 +224,9 @@ private final class SVideoControlsView : Control {
         
         currentTimeView.needsDisplay = true
         durationView.needsDisplay = true
+        
+        updateBaseRate()
+
     }
     
     var status: MediaPlayerStatus? {
@@ -348,7 +351,6 @@ private final class SVideoControlsView : Control {
         _ = playOrPause.sizeToFit()
         _ = toggleFullscreen.sizeToFit()
         _ = togglePip.sizeToFit()
-        _ = menuItems.sizeToFit()
         
         progress.insets = NSEdgeInsetsMake(0, 4.5, 0, 4.5)
         progress.scrubberImage = generateImage(NSMakeSize(8, 8), contextGenerator: { size, ctx in
@@ -407,7 +409,6 @@ private final class SVideoControlsView : Control {
 
         }, for: .MouseDragging)
         
-        updateBaseRate()
     }
     
     override var isFlipped: Bool {
