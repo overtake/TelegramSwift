@@ -765,7 +765,6 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
-        
         if authorIsChannel {
             return false
         }
