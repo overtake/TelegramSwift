@@ -352,6 +352,9 @@ class ChatRowItem: TableRowItem {
             }
         }
         
+        if let reactionsLayout = reactionsLayout {
+            height += reactionsLayout.size.height
+        }
 
         return max(rightSize.height + 8, height)
     }
@@ -1307,6 +1310,19 @@ class ChatRowItem: TableRowItem {
         return _commentsData
     }
     
+    private var _reactionsLayout: ChatReactionsLayout?
+    var reactionsLayout: ChatReactionsLayout? {
+        if let value = _reactionsLayout {
+            return value
+        } else if let message = self.messages.first(where: { $0.reactionsAttribute != nil }) {
+            let layout = ChatReactionsLayout(message: message, renderType: renderType)
+            _reactionsLayout = layout
+            return layout
+        } else {
+            return nil
+        }
+    }
+    
     var forceBackgroundColor: NSColor? = nil
     
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
@@ -2038,6 +2054,7 @@ class ChatRowItem: TableRowItem {
         commentsBubbleDataOverlay?.makeSize()
         commentsData?.makeSize()
         
+        
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
                 layout.layout.dropLayoutSize()
@@ -2061,6 +2078,9 @@ class ChatRowItem: TableRowItem {
             self.previousBlockWidth = widthForContent
             _contentSize = self.makeContentSize(widthForContent)
         }
+        
+        reactionsLayout?.measure(for: _contentSize.width)
+
        
 
         func layout() -> Bool {
