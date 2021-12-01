@@ -916,6 +916,17 @@ class ChatRowItem: TableRowItem {
                         canFillAuthorName = true
                     }
                 }
+                if !isIncoming && message.author?.id != chatInteraction.context.peerId {
+                    var disable: Bool = false
+                    if let media = message.media.first as? TelegramMediaFile {
+                        if media.isSticker || media.isAnimatedSticker {
+                            disable = true
+                        }
+                    }
+                    if !disable {
+                        canFillAuthorName = true
+                    }
+                }
             }
         }
         return canFillAuthorName
@@ -1704,6 +1715,8 @@ class ChatRowItem: TableRowItem {
                             nameColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                         } else if context.peerId != peer.id {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
+                                nameColor = presentation.colors.accentIconBubble_outgoing
+                            } else if object.renderType == .bubble, message.author?.id != context.peerId, !isIncoming {
                                 nameColor = presentation.colors.accentIconBubble_outgoing
                             } else {
                                 let value = abs(Int(peer.id.id._internalGetInt64Value()) % 7)

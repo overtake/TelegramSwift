@@ -428,15 +428,15 @@ private final class SVideoControlsView : Control {
     
     func updateBaseRate() {
         if FastSettings.playingRate == 1.0 {
-            menuItems.set(image: NSImage(named: "PlaybackSpeed_1X")!.precomposed(), for: .Normal)
+            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
         } else if FastSettings.playingRate <= 1.25 {
-            menuItems.set(image: NSImage(named: "PlaybackSpeed_125X")!.precomposed(), for: .Normal)
+            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
         } else if FastSettings.playingRate <= 1.5 {
-            menuItems.set(image: NSImage(named: "PlaybackSpeed_15X")!.precomposed(), for: .Normal)
+            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
         } else if FastSettings.playingRate <= 1.75 {
-            menuItems.set(image: NSImage(named: "PlaybackSpeed_175X")!.precomposed(), for: .Normal)
+            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
         } else {
-            menuItems.set(image: NSImage(named: "PlaybackSpeed_2X")!.precomposed(), for: .Normal)
+            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
         }
         self.menuItems.sizeToFit()
     }
