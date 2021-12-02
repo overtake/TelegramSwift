@@ -599,9 +599,9 @@ public extension Message {
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
-//        if isBubbled, let peer = chatPeer(account.peerId), peer.isChannel {
-//            return true
-//        }
+        if isBubbled, let peer = chatPeer(account.peerId), peer.isChannel {
+            return true
+        }
         
         if id.peerId == account.peerId {
             if let _ = forwardInfo {
