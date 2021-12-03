@@ -45,6 +45,8 @@ class ReplyModel: ChatAccessoryModel {
             make(with :replyMessage, display: false)
         } else {
             make(with: nil, display: false)
+        }
+        if replyMessage == nil || replyMessage?.globallyUniqueId != 0 {
             nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
                 self?.make(with: message, isLoading: false, display: true)
                 if message == nil {
@@ -53,8 +55,7 @@ class ReplyModel: ChatAccessoryModel {
                 return message != nil
              })
         }
-        
-
+       
     }
     
     override var view: ChatAccessoryView? {
