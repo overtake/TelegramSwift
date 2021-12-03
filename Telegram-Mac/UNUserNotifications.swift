@@ -269,7 +269,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.body = notification.informativeText ?? ""
         content.subtitle = notification.subtitle ?? ""
         
-        if notification.hasActionButton {
+        if notification.hasReplyButton {
             content.categoryIdentifier = UNNotification.replyCategory
         }
         
