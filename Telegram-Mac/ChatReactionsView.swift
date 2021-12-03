@@ -12,6 +12,7 @@ import TelegramCore
 import Postbox
 import MergeLists
 import Reactions
+import AppKit
 
 
 
@@ -26,25 +27,51 @@ final class ChatReactionsLayout {
         let insetOuter: CGFloat
         let insetInner: CGFloat
 
+        let renderType: ChatItemRenderType
+        let isIncoming: Bool
+        let isOutOfBounds: Bool
+        let hasWallpaper: Bool
+        
         static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool) -> Theme {
+            let bgColor: NSColor
+            let textColor: NSColor
+            let borderColor: NSColor
+            let selectedColor: NSColor
             switch renderType {
             case .bubble:
                 if isOutOfBounds {
-                    return .init(bgColor: theme.colors.bubbleBackground_incoming.lighter(), textColor: theme.colors.textBubble_incoming, borderColor: .clear, selectedColor: theme.colors.bubbleBackground_incoming.darker(), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                    bgColor = theme.colors.bubbleBackground_incoming
+                    textColor = theme.colors.textBubble_incoming
+                    borderColor = .clear
+                    selectedColor = theme.colors.bubbleBackground_incoming.darker()
                 } else {
                     if isIncoming {
-                        return .init(bgColor: theme.colors.bubbleBackground_incoming.lighter(), textColor: theme.colors.textBubble_incoming, borderColor: .clear, selectedColor: theme.colors.bubbleBackground_incoming.darker(), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                        bgColor = theme.colors.bubbleBackground_incoming.lighter()
+                        textColor = theme.colors.textBubble_incoming
+                        borderColor = .clear
+                        selectedColor = theme.colors.bubbleBackground_incoming.darker()
                     } else {
-                        return .init(bgColor: theme.colors.blendedOutgoingColors.lighter(), textColor: theme.colors.textBubble_outgoing, borderColor: .clear, selectedColor: theme.colors.blendedOutgoingColors.darker(), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                        bgColor = theme.colors.blendedOutgoingColors.lighter()
+                        textColor = theme.colors.textBubble_outgoing
+                        borderColor = .clear
+                        selectedColor = theme.colors.blendedOutgoingColors.darker()
                     }
                 }
             case .list:
                 if theme.dark {
-                    return .init(bgColor: theme.colors.grayBackground.lighter(amount: 0.3), textColor: theme.colors.text, borderColor: .clear, selectedColor: theme.colors.grayForeground, reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                    bgColor = theme.colors.grayBackground.lighter(amount: 0.3)
+                    textColor = theme.colors.text
+                    borderColor = .clear
+                    selectedColor = theme.colors.grayForeground
                 } else {
-                    return .init(bgColor: theme.colors.grayBackground, textColor: theme.colors.text, borderColor: .clear, selectedColor: theme.colors.grayForeground, reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                    bgColor = theme.colors.grayBackground
+                    textColor = theme.colors.text
+                    borderColor = .clear
+                    selectedColor = theme.colors.grayForeground
                 }
             }
+            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
+
         }
     }
     
@@ -106,9 +133,9 @@ final class ChatReactionsLayout {
     
     private(set) var size: NSSize = .zero
     fileprivate let reactions: [Reaction]
+    private var lines:[[Reaction]] = []
     
-    
-    init(account: Account, message: Message, available: AvailableReactions?, engine:Reactions, renderType: ChatItemRenderType, theme: TelegramPresentationTheme, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool) {
+    init(account: Account, message: Message, available: AvailableReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool) {
         self.message = message
         self.account = account
         self.renderType = renderType
@@ -134,18 +161,36 @@ final class ChatReactionsLayout {
         } ?? []
     }
     
+    func haveSpace(for value: CGFloat, maxSize: CGFloat) -> Bool {
+        if let last = lines.last {
+            let w = last.last!.rect.maxX
+            if w + value > maxSize {
+                return false
+            }
+        }
+        return true
+    }
     
+   
     func measure(for width: CGFloat) {
-        
+                
         var lines:[[Reaction]] = []
+        var width = width
+        let medium = self.reactions.reduce(0, { $0 + $1.minimiumSize.width }) / CGFloat(self.reactions.count)
+        if presentation.renderType == .bubble {
+            if !presentation.isOutOfBounds {
+                width = max(width, min(320, medium * 4))
+            }
+        }
         
         var line:[Reaction] = []
         var current: CGFloat = 0
         for reaction in reactions {
-            current += reaction.minimiumSize.width
+            current += reaction.minimiumSize.width + presentation.insetInner
             if current > width && !line.isEmpty {
                 lines.append(line)
                 line.removeAll()
+                line.append(reaction)
                 current = 0
             } else {
                 line.append(reaction)
@@ -157,19 +202,28 @@ final class ChatReactionsLayout {
             line.removeAll()
         }
         
-        var point: CGPoint = .zero
-        for line in lines {
-            for reaction in line {
-                var rect = NSZeroRect
-                rect.origin = point
-                rect.size = reaction.minimiumSize
-                point.x += reaction.minimiumSize.width + presentation.insetInner
-                reaction.rect = rect
+        self.lines = lines
+        
+        if !lines.isEmpty {
+            var point: CGPoint = .zero
+            for line in lines {
+                for reaction in line {
+                    var rect = NSZeroRect
+                    rect.origin = point
+                    rect.size = reaction.minimiumSize
+                    point.x += reaction.minimiumSize.width + presentation.insetInner
+                    reaction.rect = rect
+                }
+                point.x = 0
+                point.y += line.map { $0.minimiumSize.height }.max()! + presentation.insetInner
             }
-            point.x = 0
-            point.y += line.map { $0.minimiumSize.height }.max()! + presentation.insetInner
+            let max_w = lines.max(by: { lhs, rhs in
+                return lhs.last!.rect.maxX < rhs.last!.rect.maxX
+            })!.last!.rect.maxX
+            self.size = NSMakeSize(max_w, point.y - presentation.insetInner)
+        } else {
+            self.size = .zero
         }
-        self.size = NSMakeSize(width, point.y - presentation.insetInner)
     }
 }
 

@@ -1316,7 +1316,7 @@ class ChatRowItem: TableRowItem {
         if let value = _reactionsLayout {
             return value
         } else if let message = self.messages.first(where: { $0.reactionsAttribute != nil }) {
-            let layout = ChatReactionsLayout(account: chatInteraction.context.account, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, renderType: renderType, theme: presentation, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper)
+            let layout = ChatReactionsLayout(account: chatInteraction.context.account, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper)
             
             _reactionsLayout = layout
             return layout
@@ -2120,7 +2120,11 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        
+        if isBubbled {
+            reactionsLayout?.measure(for: _contentSize.width)
+        } else {
+            reactionsLayout?.measure(for: widthForContent)
+        }
 
         
         if let forwardNameLayout = forwardNameLayout {
@@ -2253,9 +2257,10 @@ class ChatRowItem: TableRowItem {
                     _contentSize.width = rightSize.width
                 }
             }
-             
-            
         }
+        
+        
+        
         
         if isBubbled {
             replyMarkupModel?.measureSize(bubbleFrame.width - additionBubbleInset)
@@ -2272,12 +2277,7 @@ class ChatRowItem: TableRowItem {
                  replyMarkupModel?.measureSize(_contentSize.width)
             }
         }
-        
-        if isBubbled {
-            reactionsLayout?.measure(for: bubbleFrame.width)
-        } else {
-            reactionsLayout?.measure(for: widthForContent)
-        }
+      
         
         return result
     }
@@ -2376,9 +2376,13 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(nameWidth + bubbleDefaultInnerInset, rect.width)
         
-        rect.size.width = max(rect.size.width, replyWidth + bubbleDefaultInnerInset)
+        rect.size.width = max(rect.width, replyWidth + bubbleDefaultInnerInset)
         
-        rect.size.width = max(rect.size.width, forwardWidth + bubbleDefaultInnerInset)
+        rect.size.width = max(rect.width, forwardWidth + bubbleDefaultInnerInset)
+        
+        if let reactionsLayout = reactionsLayout {
+            rect.size.width = max(reactionsLayout.size.width + bubbleDefaultInnerInset, rect.width)
+        }
         
         if let commentsBubbleData = commentsBubbleData {
             rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width)

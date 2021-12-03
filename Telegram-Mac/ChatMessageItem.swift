@@ -636,6 +636,13 @@ class ChatMessageItem: ChatRowItem {
         if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
            // return rightSize.height
         }
+        
+        if let reactions = self.reactionsLayout {
+            let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate + 30, maxSize: self.realContentSize.width)
+            if !hasSpace {
+                return rightSize.height
+            }
+        }
        
         if let webpageLayout = webpageLayout {
             if let webpageLayout = webpageLayout as? WPArticleLayout {

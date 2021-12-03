@@ -1041,7 +1041,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 frame.origin.y = bubbleFrame.maxY + item.defaultContentInnerInset
                 frame.origin.x = bubbleFrame.minX + (item.isIncoming ? item.additionBubbleInset : 0)
             } else {
-                frame.origin.y = bubbleFrame.maxY - item.defaultContentInnerInset - reactionsLayout.size.height
+                if item.captionLayouts.isEmpty {
+                    frame.origin.y = contentFrame.maxY + item.defaultContentInnerInset
+                } else if let last = item.captionLayouts.last {
+                    frame.origin.y = max(contentFrame.maxY, captionFrame(item, caption: last).maxY) + item.defaultContentInnerInset
+                }
                 if !item.isBubbleFullFilled {
                     frame.origin.x = contentFrame.minX
                 } else {

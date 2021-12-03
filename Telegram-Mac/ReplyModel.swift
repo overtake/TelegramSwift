@@ -45,14 +45,15 @@ class ReplyModel: ChatAccessoryModel {
             make(with :replyMessage, display: false)
         } else {
             make(with: nil, display: false)
+            nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
+                self?.make(with: message, isLoading: false, display: true)
+                if message == nil {
+                    dismissReply?()
+                }
+                return message != nil
+             })
         }
-        nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
-            self?.make(with: message, isLoading: false, display: true)
-            if message == nil {
-                dismissReply?()
-            }
-            return message != nil
-         })
+        
 
     }
     
