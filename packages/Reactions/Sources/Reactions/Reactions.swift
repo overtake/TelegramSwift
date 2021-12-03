@@ -1,5 +1,6 @@
 import TelegramCore
 import SwiftSignalKit
+import Postbox
 
 public final class Reactions {
     
@@ -8,7 +9,7 @@ public final class Reactions {
     private let disposable = MetaDisposable()
     private let downloadable = DisposableSet()
     private let state: Promise<AvailableReactions?> = Promise()
-    
+    private let reactable = DisposableDict<MessageId>()
     public var stateValue: Signal<AvailableReactions?, NoError> {
         return state.get()
     }
@@ -19,9 +20,14 @@ public final class Reactions {
         download()
     }
     
+    public func react(_ messageId: MessageId, value: String?) {
+        reactable.set(updateMessageReactionsInteractively(postbox: self.engine.account.postbox, messageId: messageId, reaction: value).start(), forKey: messageId)
+    }
+    
     deinit {
         downloadable.dispose()
         disposable.dispose()
+        reactable.dispose()
     }
     
     private func download() {
@@ -34,6 +40,11 @@ public final class Reactions {
                     let files = [reaction.staticIcon, reaction.selectAnimation, reaction.effectAnimation, reaction.activateAnimation]
                     for file in files {
                         downloadable.add(fetchedMediaResource(mediaBox: engine.account.postbox.mediaBox, reference: FileMediaReference.standalone(media: file).resourceReference(file.resource)).start())
+                        
+                        if let representation = smallestImageRepresentation(file.previewRepresentations) {
+                            downloadable.add(fetchedMediaResource(mediaBox: engine.account.postbox.mediaBox, reference: FileMediaReference.standalone(media: file).resourceReference(representation.resource)).start())
+                        }
+                            
                     }
                 }
             }

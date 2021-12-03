@@ -11,40 +11,59 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import MergeLists
+import Reactions
 
 
 
 final class ChatReactionsLayout {
     
-    struct Theme {
+    struct Theme : Equatable {
         let bgColor: NSColor
         let textColor: NSColor
         let borderColor: NSColor
         let selectedColor: NSColor
         let reactionSize: NSSize
-        let inset: CGFloat
-        
-        static func Current(_ renderType: ChatItemRenderType) -> Theme {
+        let insetOuter: CGFloat
+        let insetInner: CGFloat
+
+        static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool) -> Theme {
             switch renderType {
             case .bubble:
-                return .init(bgColor: theme.colors.background, textColor: theme.colors.text, borderColor: theme.colors.border, selectedColor: theme.colors.accent, reactionSize: NSMakeSize(18, 18), inset: 5)
+                if isOutOfBounds {
+                    return .init(bgColor: theme.colors.bubbleBackground_incoming.lighter(), textColor: theme.colors.textBubble_incoming, borderColor: .clear, selectedColor: theme.colors.bubbleBackground_incoming.darker(), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                } else {
+                    if isIncoming {
+                        return .init(bgColor: theme.colors.bubbleBackground_incoming.lighter(), textColor: theme.colors.textBubble_incoming, borderColor: .clear, selectedColor: theme.colors.bubbleBackground_incoming.darker(), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                    } else {
+                        return .init(bgColor: theme.colors.blendedOutgoingColors.lighter(), textColor: theme.colors.textBubble_outgoing, borderColor: .clear, selectedColor: theme.colors.blendedOutgoingColors.darker(), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                    }
+                }
             case .list:
-                return .init(bgColor: theme.colors.background, textColor: theme.colors.text, borderColor: theme.colors.border, selectedColor: theme.colors.accent, reactionSize: NSMakeSize(18, 18), inset: 5)
+                if theme.dark {
+                    return .init(bgColor: theme.colors.grayBackground.lighter(amount: 0.3), textColor: theme.colors.text, borderColor: .clear, selectedColor: theme.colors.grayForeground, reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                } else {
+                    return .init(bgColor: theme.colors.grayBackground, textColor: theme.colors.text, borderColor: .clear, selectedColor: theme.colors.grayForeground, reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5)
+                }
             }
         }
     }
     
     final class Reaction : Equatable, Comparable, Identifiable {
         let value: MessageReaction
-        let text: TextViewLayout
+        let text: DynamicCounterTextView.Value
         let presentation: Theme
         let index: Int
         let minimiumSize: NSSize
-        
+        let available: AvailableReactions.Reaction
+        let action:()->Void
         fileprivate(set) var rect: CGRect = .zero
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
-            return lhs.value == rhs.value
+            return lhs.value == rhs.value &&
+            lhs.presentation == rhs.presentation &&
+            lhs.index == rhs.index &&
+            lhs.minimiumSize == rhs.minimiumSize &&
+            lhs.available == rhs.available
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -53,20 +72,23 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, index: Int, presentation: Theme) {
+        init(value: MessageReaction, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void) {
             self.value = value
             self.index = index
+            self.action = action
             self.presentation = presentation
-            self.text = TextViewLayout.init(.initialize(string: "\(value.count)", color: presentation.textColor, font: .normal(.text)))
-            self.text.measure(width: .greatestFiniteMagnitude)
+            self.available = available
             
-            var width: CGFloat = presentation.inset
-            width += self.text.layoutSize.width
-            width += presentation.inset
+            self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: presentation.textColor, width: .greatestFiniteMagnitude)
+            
+            var width: CGFloat = presentation.insetOuter
             width += presentation.reactionSize.width
-            width += presentation.inset
+            width += presentation.insetInner
+            width += self.text.size.width
+            width += presentation.insetOuter
             
-            let height = max(self.text.layoutSize.height, presentation.reactionSize.height) + presentation.inset * 2
+            
+            let height = max(self.text.size.height, presentation.reactionSize.height) + presentation.insetInner * 2
             
             self.minimiumSize = NSMakeSize(width, height)
         }
@@ -75,19 +97,24 @@ final class ChatReactionsLayout {
            
         }
     }
-    
+    fileprivate let account: Account
     fileprivate let message: Message
     fileprivate let renderType: ChatItemRenderType
-    fileprivate let presentation: Theme
+    fileprivate let available: AvailableReactions?
+    fileprivate let engine: Reactions
+    let presentation: Theme
     
     private(set) var size: NSSize = .zero
     fileprivate let reactions: [Reaction]
     
     
-    init(message: Message, renderType: ChatItemRenderType) {
+    init(account: Account, message: Message, available: AvailableReactions?, engine:Reactions, renderType: ChatItemRenderType, theme: TelegramPresentationTheme, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool) {
         self.message = message
+        self.account = account
         self.renderType = renderType
-        let presentation: Theme = .Current(renderType)
+        self.available = available
+        self.engine = engine
+        let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
         self.presentation = presentation
         
         var index: Int = 0
@@ -96,9 +123,14 @@ final class ChatReactionsLayout {
             return index
         }
         
-        
-        self.reactions = message.reactionsAttribute?.reactions.map {
-            .init(value: $0, index: getIndex(), presentation: presentation)
+        self.reactions = message.reactionsAttribute?.reactions.compactMap { reaction in
+            if let available = available?.reactions.first(where: { $0.value.fixed == reaction.value.fixed }) {
+                return .init(value: reaction, index: getIndex(), available: available, presentation: presentation, action: {
+                    engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
+                })
+            } else {
+                return nil
+            }
         } ?? []
     }
     
@@ -117,6 +149,7 @@ final class ChatReactionsLayout {
                 current = 0
             } else {
                 line.append(reaction)
+                current += presentation.insetInner
             }
         }
         if !line.isEmpty {
@@ -130,14 +163,13 @@ final class ChatReactionsLayout {
                 var rect = NSZeroRect
                 rect.origin = point
                 rect.size = reaction.minimiumSize
-                point.x += reaction.minimiumSize.width
+                point.x += reaction.minimiumSize.width + presentation.insetInner
                 reaction.rect = rect
             }
             point.x = 0
-            point.y += line.map { $0.minimiumSize.height }.max()!
+            point.y += line.map { $0.minimiumSize.height }.max()! + presentation.insetInner
         }
-        NSLog("rects: \(reactions.map { $0.rect })")
-        self.size = NSMakeSize(width, point.y)
+        self.size = NSMakeSize(width, point.y - presentation.insetInner)
     }
 }
 
@@ -145,17 +177,51 @@ final class ChatReactionsView : View {
     
     final class ReactionView: Control {
         private var reaction: ChatReactionsLayout.Reaction?
-        
-        
+        private let imageView: TransformImageView = TransformImageView()
+        private let textView = DynamicCounterTextView(frame: .zero)
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            self.backgroundColor = .random
+            
+            textView.userInteractionEnabled = false
+            addSubview(imageView)
+            addSubview(textView)
+            
+            
             scaleOnClick = true
+            
+            self.set(handler: { [weak self] _ in
+                self?.reaction?.action()
+            }, for: .Click)
         }
         
-        func update(with reaction: ChatReactionsLayout.Reaction, animated: Bool) {
+        func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
             self.reaction = reaction
             self.layer?.cornerRadius = reaction.rect.height / 2
+            self.textView.update(reaction.text, animated: animated)
+            
+//            self.layer?.borderWidth = reaction.value.isSelected || reaction.presentation.borderColor != .clear ? .borderSize : 0
+//            self.layer?.borderColor = .clear
+//
+//
+            
+            self.backgroundColor = reaction.value.isSelected ? reaction.presentation.selectedColor : reaction.presentation.bgColor
+
+            if animated {
+                self.layer?.animateBorder()
+                self.layer?.animateBackground()
+            }
+
+            let arguments = TransformImageArguments(corners: .init(), imageSize: reaction.presentation.reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
+            
+            self.imageView.setSignal(signal: cachedMedia(media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
+
+            if !self.imageView.isFullyLoaded {
+                imageView.setSignal(chatMessageImageFile(account: account, fileReference: .standalone(media: reaction.available.staticIcon), scale: System.backingScale), cacheImage: { result in
+                    cacheMedia(result, media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale)
+                })
+            }
+
+            imageView.set(arguments: arguments)
         }
         
         func isOwner(of reaction: ChatReactionsLayout.Reaction) -> Bool {
@@ -167,8 +233,16 @@ final class ChatReactionsView : View {
         }
         
         func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+            guard let reaction = reaction else {
+                return
+            }
+            let presentation = reaction.presentation
 
+            transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - presentation.reactionSize.height) / 2), size: presentation.reactionSize))
             
+            let center = focus(reaction.text.size)
+            
+            transition.updateFrame(view: self.textView, frame: CGRect.init(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: reaction.text.size))
         }
     }
     
@@ -207,8 +281,10 @@ final class ChatReactionsView : View {
             view.frame = prevFrame ?? item.rect
             self.views.insert(view, at: idx)
             self.reactions.insert(item, at: idx)
-            view.update(with: item, animated: animated)
-            
+            view.update(with: item, account: layout.account, animated: animated)
+            if prevView == nil, animated {
+                view.layer?.animateScale(from: 0.1, to: 1, duration: 0.2)
+            }
             if idx == 0 {
                 addSubview(view, positioned: .below, relativeTo: self.subviews.first)
             } else {
@@ -220,7 +296,7 @@ final class ChatReactionsView : View {
             if prev != idx {
                 self.views[idx].frame = previous[prev].rect
             }
-            self.views[idx].update(with: item, animated: animated)
+            self.views[idx].update(with: item, account: layout.account, animated: animated)
             self.reactions[idx] = item
         }
 

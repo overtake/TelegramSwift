@@ -1784,6 +1784,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return [:]
                 }
         }
+        
+        let reactions = context.reactions.stateValue
 
         
         let customChannelDiscussionReadState: Signal<MessageId?, NoError>
@@ -1936,8 +1938,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   customThreadOutgoingReadState,
                                                   updatingMedia,
                                                   adMessages,
-                                                  effectiveTheme
-) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+                                                  effectiveTheme,
+                                                  reactions
+) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let maxReadIndex = readIndexAndOther.0
             let pollAnswersLoading = readIndexAndOther.1
@@ -2034,7 +2037,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         ads = adMessages
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessages: ads, chatTheme: chatTheme).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessages: ads, chatTheme: chatTheme, reactions: reactions).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {

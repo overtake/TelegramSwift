@@ -353,6 +353,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let reactionsLayout = reactionsLayout {
+            height += defaultContentInnerInset
             height += reactionsLayout.size.height
         }
 
@@ -1315,7 +1316,8 @@ class ChatRowItem: TableRowItem {
         if let value = _reactionsLayout {
             return value
         } else if let message = self.messages.first(where: { $0.reactionsAttribute != nil }) {
-            let layout = ChatReactionsLayout(message: message, renderType: renderType)
+            let layout = ChatReactionsLayout(account: chatInteraction.context.account, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, renderType: renderType, theme: presentation, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper)
+            
             _reactionsLayout = layout
             return layout
         } else {
@@ -2079,7 +2081,7 @@ class ChatRowItem: TableRowItem {
             _contentSize = self.makeContentSize(widthForContent)
         }
         
-        reactionsLayout?.measure(for: _contentSize.width)
+       
 
        
 
@@ -2251,6 +2253,8 @@ class ChatRowItem: TableRowItem {
                     _contentSize.width = rightSize.width
                 }
             }
+             
+            
         }
         
         if isBubbled {
@@ -2269,6 +2273,11 @@ class ChatRowItem: TableRowItem {
             }
         }
         
+        if isBubbled {
+            reactionsLayout?.measure(for: bubbleFrame.width)
+        } else {
+            reactionsLayout?.measure(for: widthForContent)
+        }
         
         return result
     }
@@ -2346,6 +2355,11 @@ class ChatRowItem: TableRowItem {
        
         if isBubbled, let replyMarkup = replyMarkupModel {
             rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
+        }
+        
+        if isBubbleFullFilled, captionLayouts.isEmpty, let reactionsLayout = self.reactionsLayout {
+            rect.size.height -= defaultContentInnerInset
+            rect.size.height -= reactionsLayout.size.height
         }
         
         //if forwardType != nil {

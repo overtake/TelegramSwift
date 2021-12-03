@@ -1026,8 +1026,34 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let reactionsLayout = item.reactionsLayout else {
             return .zero
         }
-        let frame = contentFrame(item)
-        return NSMakeRect(frame.minX, frame.maxY, reactionsLayout.size.width, reactionsLayout.size.height)
+        let contentFrame = self.contentFrame(item)
+        
+        var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, reactionsLayout.size.width, reactionsLayout.size.height)
+        
+        if let captionLayout = item.captionLayouts.first?.layout {
+            frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
+        }
+        
+        let bubbleFrame = self.bubbleFrame(item)
+        
+        if item.hasBubble {
+            if item.isBubbleFullFilled, item.captionLayouts.isEmpty {
+                frame.origin.y = bubbleFrame.maxY + item.defaultContentInnerInset
+                frame.origin.x = bubbleFrame.minX + (item.isIncoming ? item.additionBubbleInset : 0)
+            } else {
+                frame.origin.y = bubbleFrame.maxY - item.defaultContentInnerInset - reactionsLayout.size.height
+                if !item.isBubbleFullFilled {
+                    frame.origin.x = contentFrame.minX
+                } else {
+                    frame.origin.x = contentFrame.minX + item.defaultContentInnerInset + item.additionBubbleInset
+                }
+            }
+           
+        } else if item.isBubbled {
+            
+        }
+        
+        return frame
     }
     
     func channelCommentsBubbleFrame(_ item: ChatRowItem) -> CGRect {
@@ -1487,7 +1513,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.animatedView = nil
         }
         
-        let animated = animated && item.isBubbled && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id == item.message?.id && self.layer?.animation(forKey: "position") == nil && item.presentation.bubbled == previousItem?.presentation.bubbled
+        let animated = animated && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id == item.message?.id && self.layer?.animation(forKey: "position") == nil && item.presentation.bubbled == previousItem?.presentation.bubbled
         
         if previousItem?.message?.id != item.message?.id {
             updateBackground(animated: false, item: item, clean: true)
