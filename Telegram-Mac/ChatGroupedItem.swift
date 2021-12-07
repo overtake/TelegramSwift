@@ -286,7 +286,7 @@ class ChatGroupedItem: ChatRowItem {
         if hasBubble && isBubbleFullFilled && captionLayouts.isEmpty {
             return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2
         } else if hasBubble && !isBubbleFullFilled {
-            return super._defaultHeight + 5
+            return super._defaultHeight
         }
         
         return super._defaultHeight
@@ -1043,7 +1043,9 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     frame.size.height += contentFrame.minY
                 } else if index == item.layout.count - 1 {
                     frame.origin.y += contentFrame.minY
-                    frame.size.height += contentFrame.minY
+                    if item.reactionsLayout == nil {
+                        frame.size.height += contentFrame.minY
+                    }
                 } else {
                     frame.origin.y += contentFrame.minY
                 }

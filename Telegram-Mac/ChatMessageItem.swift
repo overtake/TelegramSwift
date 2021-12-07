@@ -630,17 +630,13 @@ class ChatMessageItem: ChatRowItem {
         if unsupported {
             return rightSize.height
         }
-//        if message?.adAttribute != nil {
-//            return rightSize.height
-//        }
-        if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
-           // return rightSize.height
-        }
         
         if let reactions = self.reactionsLayout {
-            let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate + 30, maxSize: self.realContentSize.width)
+            let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate, maxSize: max(realContentSize.width, maxTitleWidth))
             if !hasSpace {
                 return rightSize.height
+            } else {
+                return nil
             }
         }
        

@@ -276,6 +276,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     var contentColor: NSColor {
         guard let item = item as? ChatRowItem else {return backdorColor}
         
+//        return .random
+        
         if item.hasBubble {
             //System.supportsTransparentFontDrawing ? .clear :
             return item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
@@ -1038,18 +1040,18 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if item.hasBubble {
             if item.isBubbleFullFilled, item.captionLayouts.isEmpty {
-                frame.origin.y = bubbleFrame.maxY + item.defaultContentInnerInset
+                frame.origin.y = bubbleFrame.maxY + item.defaultReactionsInset
                 frame.origin.x = bubbleFrame.minX + (item.isIncoming ? item.additionBubbleInset : 0)
             } else {
                 if item.captionLayouts.isEmpty {
-                    frame.origin.y = contentFrame.maxY + item.defaultContentInnerInset
+                    frame.origin.y = contentFrame.maxY + item.defaultReactionsInset
                 } else if let last = item.captionLayouts.last {
-                    frame.origin.y = max(contentFrame.maxY, captionFrame(item, caption: last).maxY) + item.defaultContentInnerInset
+                    frame.origin.y = max(contentFrame.maxY, captionFrame(item, caption: last).maxY) + item.defaultReactionsInset
                 }
                 if !item.isBubbleFullFilled {
                     frame.origin.x = contentFrame.minX
                 } else {
-                    frame.origin.x = contentFrame.minX + item.defaultContentInnerInset + item.additionBubbleInset
+                    frame.origin.x = contentFrame.minX + item.defaultReactionsInset + item.additionBubbleInset
                 }
             }
            

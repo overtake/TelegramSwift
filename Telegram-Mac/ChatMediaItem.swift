@@ -257,7 +257,7 @@ class ChatMediaItem: ChatRowItem {
         if isBubbled && !hasBubble {
             return 2
         }
-        return isBubbled && !isBubbleFullFilled ? 14 :  super.defaultContentTopOffset
+        return super.defaultContentTopOffset
     }
     
 
@@ -305,8 +305,12 @@ class ChatMediaItem: ChatRowItem {
         }
         return size
     }
+
     
     override var additionalLineForDateInBubbleState: CGFloat? {
+        
+        
+        
         if isForceRightLine {
             return rightSize.height
         }
