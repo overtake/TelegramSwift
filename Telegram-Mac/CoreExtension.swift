@@ -599,7 +599,7 @@ public extension Message {
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
-        if isBubbled, let peer = chatPeer(account.peerId), peer.isChannel {
+        if isBubbled, let peer = coreMessageMainPeer(self), peer.isChannel {
             return true
         }
         
