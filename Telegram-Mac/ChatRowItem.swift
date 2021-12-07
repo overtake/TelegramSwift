@@ -916,7 +916,7 @@ class ChatRowItem: TableRowItem {
                         canFillAuthorName = true
                     }
                 }
-                if !isIncoming && message.author?.id != chatInteraction.context.peerId {
+                if !isIncoming && message.author?.id != chatInteraction.context.peerId, message.globallyUniqueId != 0 {
                     var disable: Bool = false
                     if let media = message.media.first as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
