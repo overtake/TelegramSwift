@@ -56,7 +56,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open var border:BorderType?
     public var animates:Bool = true
     
-    public private(set) var contextMenu:ContextMenu?
+    public private(set) var contextMenu:AppMenu?
     
     
     required public override init(frame frameRect: NSRect) {
@@ -252,30 +252,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                 if let strongSelf = self {
                     let menu = ContextMenu()
 
-                    if let appearance = self?.rowAppearance {
-                        if menu.responds(to: Selector("appearance")) {
-                            menu.appearance = appearance
-                        }
-                    }
-
-//                    presntContextMenu(for: event, items: items.compactMap({ item in
-//                        if !(item is ContextSeparatorItem) {
-//                            return SPopoverItem(item.title, item.handler)
-//                        } else {
-//                            return nil
-//                        }
-//                    }))
-                    
-//                    let window = Window(contentRect: NSMakeRect(event.locationInWindow.x + 100, event.locationInWindow.y, 100, 300), styleMask: [], backing: .buffered, defer: true)
-//                    window.contentView?.wantsLayer = true
-//                    window.contentView?.background = .random
-//                    event.window?.addChildWindow(window, ordered: .above)
-                    
                     menu.onShow = { [weak strongSelf] menu in
-                        strongSelf?.contextMenu = menu
                         strongSelf?.onShowContextMenu()
                     }
-                    menu.delegate = menu
                     menu.onClose = { [weak strongSelf] in
                         strongSelf?.contextMenu = nil
                         strongSelf?.onCloseContextMenu()
@@ -283,18 +262,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                     for item in items {
                         menu.addItem(item)
                     }
+                    strongSelf.contextMenu = AppMenu(menu: menu)
                     
-
-                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
-
-                    
-//                    if #available(OSX 10.12, *) {
-//                        RunLoop.current.perform(inModes: [.modalPanel], block: {
-//                            NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
-//                        })
-//                    } else {
-//                        // Fallback on earlier versions
-//                    }
+                    strongSelf.contextMenu?.show(event: event, view: strongSelf)
                     
                 }
                 
@@ -304,11 +274,6 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
-        if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
-            NSMenu.popUpContextMenu(menu, with: event, for: self)
-        }
-    }
     
     open override func menu(for event: NSEvent) -> NSMenu? {
         return NSMenu()

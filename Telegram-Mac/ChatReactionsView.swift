@@ -162,6 +162,7 @@ final class ChatReactionsLayout {
     }
     
     func haveSpace(for value: CGFloat, maxSize: CGFloat) -> Bool {
+        let maxSize = max(self.size.width, maxSize)
         if let last = lines.last {
             let w = last.last!.rect.maxX
             if w + value > maxSize {
@@ -186,15 +187,14 @@ final class ChatReactionsLayout {
         var line:[Reaction] = []
         var current: CGFloat = 0
         for reaction in reactions {
-            current += reaction.minimiumSize.width + presentation.insetInner
             if current > width && !line.isEmpty {
                 lines.append(line)
                 line.removeAll()
                 line.append(reaction)
-                current = 0
+                current = reaction.minimiumSize.width + presentation.insetInner
             } else {
                 line.append(reaction)
-                current += presentation.insetInner
+                current += reaction.minimiumSize.width + presentation.insetInner
             }
         }
         if !line.isEmpty {

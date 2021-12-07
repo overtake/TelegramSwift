@@ -37,7 +37,7 @@ open class PresentationTheme : Equatable {
         self.search = search
     }
     
-    static var current: PresentationTheme {
+    public static var current: PresentationTheme {
         return presentation
     }
     

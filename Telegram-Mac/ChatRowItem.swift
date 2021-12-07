@@ -352,8 +352,8 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if let reactionsLayout = reactionsLayout {
-            height += defaultContentInnerInset
+        if let reactionsLayout = self.reactionsLayout {
+            height += defaultReactionsInset
             height += reactionsLayout.size.height
         }
 
@@ -362,6 +362,19 @@ class ChatRowItem: TableRowItem {
     
     var defaultReplyMarkupInset: CGFloat {
         return  (isBubbled ? 4 : defaultContentInnerInset)
+    }
+    
+    var defaultReactionsInset: CGFloat {
+        if isBubbled {
+            if isBubbleFullFilled {
+                if captionLayouts.isEmpty {
+                    return defaultReplyMarkupInset
+                }
+            } else {
+                return defaultContentInnerInset
+            }
+        }
+        return defaultContentInnerInset
     }
     
     var defaultContentInnerInset: CGFloat {
@@ -2123,7 +2136,7 @@ class ChatRowItem: TableRowItem {
         if isBubbled {
             reactionsLayout?.measure(for: _contentSize.width)
         } else {
-            reactionsLayout?.measure(for: widthForContent)
+            reactionsLayout?.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
         }
 
         
@@ -2322,7 +2335,7 @@ class ChatRowItem: TableRowItem {
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
-        return min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
+        return max(max(nameWidth, forwardWidth), replyWidth)//min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
     var additionBad: CGFloat {
@@ -2357,8 +2370,8 @@ class ChatRowItem: TableRowItem {
             rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
         }
         
-        if isBubbleFullFilled, captionLayouts.isEmpty, let reactionsLayout = self.reactionsLayout {
-            rect.size.height -= defaultContentInnerInset
+        if let reactionsLayout = self.reactionsLayout, reactionsLayout.presentation.isOutOfBounds {
+            rect.size.height -= defaultReactionsInset
             rect.size.height -= reactionsLayout.size.height
         }
         
@@ -2856,13 +2869,13 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
                 let signal:Signal<(CGImage?, Bool), NoError>
                 if peer.id == context.peerId {
                     let icon = theme.icons.searchSaved
-                    signal = generateEmptyPhoto(NSMakeSize(15, 15), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
+                    signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
                 } else {
-                    signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(30, 30), font: .avatar(7), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                    signal = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
                 }
                 _ = signal.start(next: { [weak item] image, _ in
                     if let image = image {
-                        item?.image = NSImage(cgImage: image, size: NSMakeSize(15, 15))
+                        item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
                     }
                 })
                 return item
@@ -2920,19 +2933,6 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
     }
    
     
-
-    
-    if canForwardMessage(message, chatInteraction: chatInteraction), chatInteraction.peerId != account.peerId, chatInteraction.mode == .history {
-        items.append(ContextMenuItem(strings().messageContextForwardToCloud, handler: { [unowned chatInteraction] in
-            _ = Sender.forwardMessages(messageIds: [message.id], context: chatInteraction.context, peerId: account.peerId).start()
-        }))
-        items.append(ContextSeparatorItem())
-    }
-    
-    
-    
-   
-
     
     var signal:Signal<[ContextMenuItem], NoError> = .single(items)
     
@@ -3100,16 +3100,6 @@ func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: Cha
         return items
     }
     
-    signal = signal |> map { [unowned chatInteraction] items in
-        var items = items
-        if let peer = peer, peer.isGroup || peer.isSupergroup, let author = message.author, chatInteraction.mode == .history {
-            items.append(ContextSeparatorItem())
-            items.append(ContextMenuItem(strings().chatServiceSearchAllMessages(author.compactDisplayTitle), handler: {
-                chatInteraction.searchPeerMessages(author)
-            }))
-        }
-        return items
-    }
     
     signal = signal |> mapToSignal { items in
         return account.pendingUpdateMessageManager.updatingMessageMedia |> take(1) |> deliverOnMainQueue |> map {

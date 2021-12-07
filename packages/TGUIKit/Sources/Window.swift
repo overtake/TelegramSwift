@@ -857,10 +857,15 @@ open class Window: NSWindow {
         super.mouseDown(with: event)
     }
     
-    
+    public var _canBecomeKey = true
     open override var canBecomeKey: Bool {
-        return true
+        return _canBecomeKey
     }
+    public var _canBecomeMain = true
+    open override var canBecomeMain: Bool {
+        return _canBecomeMain
+    }
+    
     
     public var isFullScreen: Bool {
         return styleMask.contains(.fullScreen)

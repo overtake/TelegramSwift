@@ -24,8 +24,10 @@ public class ContextSeparatorItem : ContextMenuItem {
 }
 
 public class ContextMenuItem : NSMenuItem {
-    
-    let handler:()->Void
+    public let id: Int64 = arc4random64()
+    public var rowItem:(()->TableRowItem)? = nil
+
+    public let handler:()->Void
     private let dynamicTitle:(()->String)?
     
     public var contextObject: Any? = nil
@@ -66,17 +68,22 @@ public class ContextMenuItem : NSMenuItem {
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
 
+    
+    public var contextItems: [ContextMenuItem] {
+        return self.items.compactMap {
+            $0 as? ContextMenuItem
+        }
+    }
+    
     public var onShow:(ContextMenu)->Void = {(ContextMenu) in}
     public var onClose:()->Void = {() in}
-    
-    weak var view:NSView?
+        
     
     public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}) -> Void {
         
-        let menu = ContextMenu.init()
+        let menu = ContextMenu()
         menu.onShow = onShow
         menu.onClose = onClose
-        menu.view = view
         
         for item in items {
             menu.addItem(item)

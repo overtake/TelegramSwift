@@ -68,9 +68,16 @@ class ChatContactRowItem: ChatRowItem {
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
-        if vCard != nil {
-            return rightSize.height
+
+        if let reactions = self.reactionsLayout {
+            let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate, maxSize: max(realContentSize.width, maxTitleWidth))
+            if !hasSpace {
+                return rightSize.height
+            } else {
+                return nil
+            }
         }
+        
         if let line = phoneLayout.lines.last, (line.frame.width + 50) > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
             return rightSize.height
         }
@@ -78,10 +85,6 @@ class ChatContactRowItem: ChatRowItem {
     }
     
     override var isFixedRightPosition: Bool {
-        if vCard != nil {
-            return super.isForceRightLine
-        }
-        
         if let line = phoneLayout.lines.last, (line.frame.width + 50) < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
             return true
         }
