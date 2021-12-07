@@ -47,7 +47,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             _ = attr.append(string: "\n", color: theme.colors.text, font: .medium(.title))
             _ = attr.append(string: DateUtils.string(forLastSeen: state.session.activityDate), color: theme.colors.listGrayText, font: .normal(.text))
 
-            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: sticker, text: attr, stickerSize: NSMakeSize(60, 60), bgColor: icon.2)
+            return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: sticker, text: attr, stickerSize: NSMakeSize(60, 60), bgColor: icon.2, modify: icon.3)
         }))
         index += 1
 
