@@ -14,53 +14,61 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 
-func iconForSession(_ session: RecentAccountSession) -> (CGImage?, LocalAnimatedSticker?, NSColor?) {
+
+
+func iconForSession(_ session: RecentAccountSession) -> (CGImage?, LocalAnimatedSticker?, NSColor?, [String]?) {
     let platform = session.platform.lowercased()
     let device = session.deviceModel.lowercased()
     let systemVersion = session.systemVersion.lowercased()
     if device.contains("xbox") {
-        return (NSImage(named: "Icon_Device_Xbox")?.precomposed(), nil, NSColor(rgb: 0x35c759))
+        return (NSImage(named: "Icon_Device_Xbox")?.precomposed(), nil, NSColor(rgb: 0x35c759), nil)
     }
-    if device.contains("chrome") && !platform.contains("chromebook") {
-        return (NSImage(named: "Icon_Device_Chrome")?.precomposed(), LocalAnimatedSticker.device_chrome, NSColor(rgb: 0x35c759))
+    if device.contains("chrome") && !device.contains("chromebook") {
+        return (NSImage(named: "Icon_Device_Chrome")?.precomposed(), LocalAnimatedSticker.device_chrome, NSColor(rgb: 0x35c759), ["Vector 20.Vector 20.Обводка 1", "Ellipse 18.Ellipse 18.Обводка 1"])
     }
     if device.contains("brave") {
-        return (NSImage(named: "Icon_Device_Brave")?.precomposed(), nil, NSColor(rgb: 0xff9500))
+        return (NSImage(named: "Icon_Device_Brave")?.precomposed(), nil, NSColor(rgb: 0xff9500), nil)
     }
     if device.contains("vivaldi") {
-        return (NSImage(named: "Icon_Device_Vivaldi")?.precomposed(), nil, NSColor(rgb: 0xff3c30))
+        return (NSImage(named: "Icon_Device_Vivaldi")?.precomposed(), nil, NSColor(rgb: 0xff3c30), nil)
     }
     if device.contains("safari") {
-        return (NSImage(named: "Icon_Device_Safari")?.precomposed(), LocalAnimatedSticker.device_safari, NSColor(rgb: 0x0079ff))
+        return (NSImage(named: "Icon_Device_Safari")?.precomposed(), LocalAnimatedSticker.device_safari, NSColor(rgb: 0x0079ff), ["Com 2.Com 2.Заливка 1"])
     }
     if device.contains("firefox") {
-        return (NSImage(named: "Icon_Device_Firefox")?.precomposed(), LocalAnimatedSticker.device_firefox, NSColor(rgb: 0xff9500))
+        return (NSImage(named: "Icon_Device_Firefox")?.precomposed(), LocalAnimatedSticker.device_firefox, NSColor(rgb: 0xff9500), nil)
     }
     if device.contains("opera") {
-        return (NSImage(named: "Icon_Device_Opera")?.precomposed(), nil, NSColor(rgb: 0xff3c30))
+        return (NSImage(named: "Icon_Device_Opera")?.precomposed(), nil, NSColor(rgb: 0xff3c30), nil)
     }
     if platform.contains("android") {
-        return (NSImage(named: "Icon_Device_Android")?.precomposed(), LocalAnimatedSticker.device_android, NSColor(rgb: 0x35c759))
+        return (NSImage(named: "Icon_Device_Android")?.precomposed(), LocalAnimatedSticker.device_android, NSColor(rgb: 0x35c759), ["Eye L.Eye L.Заливка 1", "Eye R.Eye R.Заливка 1"])
     }
     if (platform.contains("macos") || systemVersion.contains("macos")) && device.contains("mac")  {
-        return (NSImage(named: "Icon_Device_Apple")?.precomposed(), LocalAnimatedSticker.device_mac, NSColor(rgb: 0x0079ff))
+        return (NSImage(named: "Icon_Device_Apple")?.precomposed(), LocalAnimatedSticker.device_mac, NSColor(rgb: 0x0079ff), nil)
     }
     if device.contains("ipad") {
-        return (NSImage(named: "Icon_Device_Ipad")?.precomposed(), LocalAnimatedSticker.device_ipad, NSColor(rgb: 0x0079ff))
+        return (NSImage(named: "Icon_Device_Ipad1")?.precomposed(), LocalAnimatedSticker.device_ipad, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
     }
+    
+    if device.contains("iphone") {
+        return (NSImage(named: "Icon_Device_Iphone1")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
+    }
+
+    
     if platform.contains("ios") || platform.contains("macos") || systemVersion.contains("macos") {
-        return (NSImage(named: "Icon_Device_Iphone")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff))
+        return (NSImage(named: "Icon_Device_Iphone1")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
     }
     if platform.contains("ubuntu") || systemVersion.contains("ubuntu") {
-        return (NSImage(named: "Icon_Device_Ubuntu")?.precomposed(), LocalAnimatedSticker.device_ubuntu, NSColor(rgb: 0x0079ff))
+        return (NSImage(named: "Icon_Device_Ubuntu")?.precomposed(), LocalAnimatedSticker.device_ubuntu, NSColor(rgb: 0x0079ff), ["Ellipse 25.Ellipse 24.Обводка 1", "Ellipse 24.Ellipse 24.Обводка 1", "Union.Union.Заливка 1"])
     }
     if platform.contains("linux") || systemVersion.contains("linux") {
-        return (NSImage(named: "Icon_Device_Linux")?.precomposed(), LocalAnimatedSticker.device_linux, NSColor(rgb: 0x8e8e93))
+        return (NSImage(named: "Icon_Device_Linux")?.precomposed(), LocalAnimatedSticker.device_linux, NSColor(rgb: 0x8e8e93), nil)
     }
     if platform.contains("windows") || systemVersion.contains("windows") {
-        return (NSImage(named: "Icon_Device_Windows")?.precomposed(), LocalAnimatedSticker.device_windows, NSColor(rgb: 0x0079ff))
+        return (NSImage(named: "Icon_Device_Windows")?.precomposed(), LocalAnimatedSticker.device_windows, NSColor(rgb: 0x0079ff), ["Union.Union.Заливка 1"])
     }
-    return (nil, nil, nil)
+    return (nil, nil, nil, nil)
 }
 
 
