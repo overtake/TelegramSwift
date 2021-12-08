@@ -91,6 +91,21 @@ enum LocalAnimatedSticker : String {
     case device_ubuntu
     case device_windows
     
+    
+    case menu_add_to_folder
+    case menu_archive
+    case menu_clear_history
+    case menu_delete
+    case menu_mute
+    case menu_pin
+    case menu_unmuted
+    case menu_unread
+    case menu_read
+    case menu_unpin
+    case menu_unarchive
+    case menu_mute_for_1_hour
+    case menu_mute_for_2_days
+
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])

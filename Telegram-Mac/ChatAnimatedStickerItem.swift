@@ -17,7 +17,7 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
     let alwaysAccept: Bool?
     let cache: ASCachePurpose?
     let hidePlayer: Bool?
-    let colors: [LottieColor]
+    var colors: [LottieColor]
     let playOnHover: Bool?
     let thumbAtFrame: Int
     let shimmer: Bool

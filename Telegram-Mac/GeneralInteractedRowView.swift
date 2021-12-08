@@ -339,17 +339,15 @@ class GeneralInteractedRowView: GeneralRowView {
                 switch item.type {
                 case let .contextSelector(value, items):
                     if let event = NSApp.currentEvent {
-                        let menu = NSMenu()
-                        if let customTheme = item.customTheme {
-                            menu.appearance = customTheme.appearance
-                        }
+                        let menu = ContextMenu()
+
                         let items = items.map{ pItem -> ContextMenuItem in
                             return ContextMenuItem(pItem.title, handler: pItem.handler, dynamicTitle: nil, state: value == pItem.title ? .on : nil)
                         }
                         for item in items {
                             menu.addItem(item)
                         }
-                        NSMenu.popUpContextMenu(menu, with: event, for: textView)
+                        AppMenu.show(menu: menu, event: event, for: textView)
                     } else {
                         showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
                     }

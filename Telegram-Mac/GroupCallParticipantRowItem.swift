@@ -707,12 +707,12 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             if item.data.state != nil {
                 _ = item.menuItems(in: .zero).start(next: { [weak self] items in
                     if let event = NSApp.currentEvent, let button = self?.button {
-                        let menu = NSMenu()
+                        let menu = ContextMenu()
                         menu.appearance = darkPalette.appearance
                         for item in items {
                             menu.addItem(item)
                         }
-                        NSMenu.popUpContextMenu(menu, with: event, for: button)
+                        AppMenu.show(menu: menu, event: event, for: button)
                     }
                 })
             } 

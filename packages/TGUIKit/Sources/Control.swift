@@ -206,7 +206,7 @@ open class Control: View {
         trackingArea = nil
         
         if let _ = window {
-            let options:NSTrackingArea.Options = [NSTrackingArea.Options.cursorUpdate, NSTrackingArea.Options.mouseEnteredAndExited, NSTrackingArea.Options.mouseMoved, NSTrackingArea.Options.activeInActiveApp, NSTrackingArea.Options.inVisibleRect]
+            let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeInActiveApp, .assumeInside, .inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)
@@ -360,7 +360,7 @@ open class Control: View {
         }
         
         if self.handlers.isEmpty, let menu = self.contextMenu?() {
-            NSMenu.popUpContextMenu(menu, with: event, for: self)
+            AppMenu.show(menu: menu, event: event, for: self)
         }
         
         if userInteractionEnabled {
@@ -427,10 +427,8 @@ open class Control: View {
     func performSuperMouseDown(_ event: NSEvent) {
         super.mouseDown(with: event)
     }
-    public var contextMenu:(()->NSMenu?)? = nil
-    open override func menu(for event: NSEvent) -> NSMenu? {
-        return self.contextMenu?()
-    }
+    public var contextMenu:(()->ContextMenu?)? = nil
+   
     
     public func send(event:ControlEvent) -> Void {
         for value in handlers {
@@ -452,6 +450,9 @@ open class Control: View {
     
     
     open override func rightMouseDown(with event: NSEvent) {
+        if self.handlers.isEmpty, let menu = self.contextMenu?() {
+            AppMenu.show(menu: menu, event: event, for: self)
+        }
         if userInteractionEnabled {
             updateState()
             send(event: .RightDown)

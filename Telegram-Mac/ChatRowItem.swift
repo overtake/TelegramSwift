@@ -15,6 +15,96 @@ import SwiftSignalKit
 import DateUtils
 import InAppSettings
 
+
+struct ChatMenuItemsData {
+    let message: Message
+    let accountPeer: Peer
+    let resourceData: MediaResourceData?
+    let chatState: ChatState
+    let chatMode: ChatMode
+    let isLogInteraction: Bool
+    let pinnedMessage: ChatPinnedMessage?
+    let peer: Peer
+    let fileFinderPath: String?
+    let getIsStickerSaved: Bool?
+    let dialogs: [Peer]
+    let recentUsedPeers: [Peer]
+    let favoritePeers: [Peer]
+}
+func chatMenuItems(for message: Message, item: ChatRowItem, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
+    
+    let context = chatInteraction.context
+    let account = context.account
+    
+   
+    
+    let _dialogs: Signal<[Peer], NoError> = context.account.postbox.tailChatListView(groupId: .root, count: 25, summaryComponents: .init())
+        |> take(1)
+        |> map { view in
+            return view.0.entries.compactMap { entry in
+                switch entry {
+                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                    return renderedPeer.peer
+                default:
+                    return nil
+                }
+            }
+        }
+        |> deliverOnMainQueue
+    
+    
+    let _recentUsedPeers: Signal<[Peer], NoError> = context.recentlyUserPeerIds |> mapToSignal { ids in
+        return context.account.postbox.transaction { transaction in
+            let peers = ids.compactMap { transaction.getPeer($0) }
+            return Array(peers.map { $0 })
+        }
+    }
+    |> take(1)
+    |> deliverOnMainQueue
+    let _favoritePeers: Signal<[Peer], NoError> = context.engine.peers.recentPeers() |> map { recent in
+        switch recent {
+        case .disabled:
+            return []
+        case let .peers(peers):
+            return Array(peers.map { $0 })
+        }
+    }
+    |> take(1)
+    |> deliverOnMainQueue
+    
+    let _accountPeer = context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue
+    
+    var _resourceData: Signal<MediaResourceData?, NoError> = .single(nil)
+    var _fileFinderPath: Signal<String?, NoError> = .single(nil)
+    var _getIsStickerSaved: Signal<Bool?, NoError> = .single(nil)
+    var _recentMedia: Signal<[RecentMediaItem]?, NoError> = .single(nil)
+    
+    var _updatingMessageMedia = account.pendingUpdateMessageManager.updatingMessageMedia
+        
+    if let media = message.media.first as? TelegramMediaFile {
+        _resourceData = context.account.postbox.mediaBox.resourceData(media.resource) |> map(Optional.init)
+        
+        if media.isSticker {
+            _getIsStickerSaved = account.postbox.transaction { transaction -> Bool? in
+                return getIsStickerSaved(transaction: transaction, fileId: media.fileId)
+            }
+        }
+        
+        if media.isAnimated && media.isVideo {
+            _recentMedia = account.postbox.transaction { transaction -> [RecentMediaItem]? in
+                transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap { $0.contents.get(RecentMediaItem.self) }
+            }
+        }
+    } else if let media = message.media.first as? TelegramMediaImage {
+        if let resource = media.representations.last?.resource {
+            _resourceData = context.account.postbox.mediaBox.resourceData(resource) |> map(Optional.init)
+        }
+    }
+    
+    
+    return .complete()
+}
+
 struct ChatFloatingPhoto {
     var point: NSPoint
     var items:[ChatRowItem]
@@ -933,7 +1023,7 @@ class ChatRowItem: TableRowItem {
                         canFillAuthorName = true
                     }
                 }
-                if !isIncoming && message.author?.id != chatInteraction.context.peerId {
+                if !isIncoming && message.author?.id != chatInteraction.context.peerId, message.globallyUniqueId != 0 {
                     var disable: Bool = false
                     if let media = message.media.first as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {

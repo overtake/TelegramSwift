@@ -16,11 +16,13 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
     fileprivate let sticker: LocalAnimatedSticker
     let stickerSize: NSSize
     let bgColor: NSColor?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(160, 160), bgColor: NSColor? = nil) {
+    let modify:[String]?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(160, 160), bgColor: NSColor? = nil, modify:[String]? = nil) {
         self.context = context
         self.sticker = sticker
         self.stickerSize = stickerSize
         self.bgColor = bgColor
+        self.modify = modify
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
         super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
         
@@ -69,7 +71,15 @@ private final class AnimtedStickerHeaderView : TableRowView {
         
         guard let item = item as? AnimatedStickerHeaderItem else { return }
         
-        imageView.update(with: item.sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: item.sticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        let params = item.sticker.parameters
+        
+        if let modify = item.modify, let color = item.bgColor {
+            params.colors = modify.map {
+                .init(keyPath: $0, color: color)
+            }
+        }
+        
+        imageView.update(with: item.sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         
 //        self.imageView.image = item.icon
 //        self.imageView.sizeToFit()
