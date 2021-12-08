@@ -85,31 +85,23 @@ public final class ApiEnvironment {
     
     public static var prefix: String {
         var prefix: String = ""
-        #if DEBUG
-        prefix = "debug"
-        #elseif STABLE
-        prefix = "stable"
-        #elseif APP_STORE
-        prefix = "appstore"
-        #else
-        prefix = "beta"
-        #endif
+        switch Configuration.value(for: .source) {
+        case "DEBUG":
+            prefix = "debug"
+        case "STABLE":
+            prefix = "stable"
+        case "APP_STORE":
+            prefix = "appstore"
+        default:
+            prefix = "beta"
+        }
         return prefix
     }
     
     public static var version: String {
         var suffix: String = ""
-        #if STABLE
-            suffix = "STABLE"
-        #elseif APP_STORE
-            suffix = "APPSTORE"
-        #elseif ALPHA
-            suffix = "ALPHA"
-        #elseif GITHUB
-            suffix = "GITHUB"
-        #else
-            suffix = "BETA"
-        #endif
+        
+        suffix = Configuration.value(for: .source) ?? "DEBUG"
         let shortVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? ""
         return "\(shortVersion) \(suffix)"
     }
