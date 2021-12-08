@@ -231,8 +231,13 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             if folder, let peer = peer {
                 _ = attributedText.append(string: peer.displayTitle + "\n", color: theme.chatList.peerTextColor, font: .normal(.text))
             }
-            
-            if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
+            if let author = message.author as? TelegramChannel, let peer = peer, peer.isGroup || peer.isSupergroup {
+                var peerText: String = (!message.flags.contains(.Incoming) ? "\(strings().chatListYou)" : author.displayTitle)
+                
+                peerText += (folder ? ": " : "\n")
+                _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
+            } else if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
                 var peerText: String = (author.id == account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                 
                 peerText += (folder ? ": " : "\n")
@@ -241,6 +246,8 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             } else {
                 _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
             }
+            
+            
             
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if message.media.first is TelegramMediaAction {
