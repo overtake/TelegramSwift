@@ -949,13 +949,16 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
     }
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
+    }
+    func withUpdatedPolicy(_ playPolicy: LottiePlayPolicy) -> LottieAnimation {
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
     }
     func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
     }
     
     var cacheKey: String {
@@ -1413,6 +1416,10 @@ class LottiePlayerView : NSView {
         } else {
             context?.playSoundEffect()
         }
+    }
+    
+    func playAgain() {
+        self.context?.playAgain()
     }
     
     var currentFrame: Int32? {

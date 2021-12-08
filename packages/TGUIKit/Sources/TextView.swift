@@ -1465,17 +1465,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 if let menuItems = layout.interactions.menuItems?(link?.1) {
                     menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
                         if let strongSelf = self {
-                            let menu = NSMenu()
+                            let menu = ContextMenu()
                             for item in items {
                                 menu.addItem(item)
                             }
-                            RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
+                            AppMenu.show(menu: menu, event: event, for: strongSelf)
                         }
                     }))
                 } else {
                     let link = layout.link(at: location)
                     let resolved: String? = link != nil ? layout.interactions.resolveLink(link!.0) : nil
-                    let menu = NSMenu()
+                    let menu = ContextMenu()
                     let copy = ContextMenuItem(link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), handler: { [weak self] in
                         guard let `self` = self else {return}
                         if let resolved = resolved {
@@ -1487,9 +1487,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             self.copy(self)
                         }
                     })
-                   // let copy = NSMenuItem(title: , action: #selector(copy(_:)), keyEquivalent: "")
                     menu.addItem(copy)
-                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: self, selector: #selector(self.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
+                    AppMenu.show(menu: menu, event: event, for: self)
                 }
             } else {
                 layout.selectedRange.range = NSMakeRange(NSNotFound, 0)
@@ -1501,12 +1500,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
     }
     
-    @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
-        if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
-            NSMenu.popUpContextMenu(menu, with: event, for: self)
-           // menu.delegate = self
-        }
-    }
+
     
     
     public func menuDidClose(_ menu: NSMenu) {

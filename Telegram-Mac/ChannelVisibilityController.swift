@@ -273,11 +273,11 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)
         case let .allowForward(_, selected, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelVisibilityForwardingEnabled, type: .selectable(selected), viewType: viewType, action: {
-                arguments.toggleForwarding(true)
+                arguments.toggleForwarding(false)
             })
         case let .restrictForward(_, selected, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelVisibilityForwardingDisabled, type: .selectable(selected), viewType: viewType, action: {
-                arguments.toggleForwarding(false)
+                arguments.toggleForwarding(true)
             })
         case let .forwardInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: true, textColor: theme.colors.listGrayText, viewType: viewType)

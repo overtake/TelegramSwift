@@ -19,9 +19,9 @@ class RecentSessionRowItem: GeneralRowItem {
     let descLayout:TextViewLayout
     let dateLayout:TextViewLayout
     let handler:()->Void
-    let icon: (CGImage?, LocalAnimatedSticker?, NSColor?)
+    let icon: (CGImage?, LocalAnimatedSticker?, NSColor?, [String]?)
     
-    init(_ initialSize: NSSize, session:RecentAccountSession, stableId:AnyHashable, viewType: GeneralViewType, icon: (CGImage?, LocalAnimatedSticker?, NSColor?), handler: @escaping()->Void) {
+    init(_ initialSize: NSSize, session:RecentAccountSession, stableId:AnyHashable, viewType: GeneralViewType, icon: (CGImage?, LocalAnimatedSticker?, NSColor?, [String]?), handler: @escaping()->Void) {
         self.session = session
         self.handler = handler
         self.icon = icon

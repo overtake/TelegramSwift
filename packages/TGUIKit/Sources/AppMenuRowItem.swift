@@ -8,6 +8,12 @@
 import Foundation
 import AppKit
 
+public protocol AppMenuItemImageDrawable : NSView {
+    func updateState(_ controlState: ControlState)
+    func setColor(_ color: NSColor)
+    func isEqual(to other: ContextMenuItem) -> Bool
+}
+
 public class AppMenuBasicItem : TableRowItem {
     
     struct Interaction {
@@ -105,13 +111,17 @@ final class AppMenuRowItem : AppMenuBasicItem {
         self.item = item
         self.interaction = interaction
         self.presentation = presentation
-        self.text = TextViewLayout(.initialize(string: item.title, color: item.isEnabled ? presentation.textColor : presentation.disabledTextColor, font: .medium(.text)))
+        self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
         super.init(initialSize)
         
         self.observation = item.observe(\.image) { [weak self] object, change in
             self?.redraw()
         }
         
+    }
+    
+    var drawable: AppMenuItemImageDrawable? {
+        return item.itemImage?(presentation.primaryColor(item), item)
     }
     
     deinit {
@@ -121,6 +131,9 @@ final class AppMenuRowItem : AppMenuBasicItem {
     override var effectiveSize: NSSize {
         var defaultSize = NSMakeSize(text.layoutSize.width + leftInset * 2 + innerInset * 2, height)
         if let _ = self.item.image {
+            defaultSize.width += imageSize + leftInset - 2
+        }
+        if let _ = self.item.itemImage {
             defaultSize.width += imageSize + leftInset - 2
         }
         
@@ -154,6 +167,7 @@ final class AppMenuRowItem : AppMenuBasicItem {
 private final class AppMenuRowView: TableRowView {
     private let textView = TextView()
     private var imageView: ImageView? = nil
+    private var drawable: AppMenuItemImageDrawable? = nil
     private let containerView = Control()
     private var more: ImageView? = nil
     required init(frame frameRect: NSRect) {
@@ -173,6 +187,19 @@ private final class AppMenuRowView: TableRowView {
             item.interaction.presentSubmenu(item.item)
         }, for: .Hover)
         
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.drawable?.updateState(.Hover)
+        }, for: .Hover)
+        containerView.set(handler: { [weak self] _ in
+            self?.drawable?.updateState(.Highlight)
+        }, for: .Highlight)
+        containerView.set(handler: { [weak self] _ in
+            self?.drawable?.updateState(.Normal)
+        }, for: .Normal)
+        containerView.set(handler: { [weak self] _ in
+            self?.drawable?.updateState(.Other)
+        }, for: .Other)
            
         containerView.set(handler: { [weak self] _ in
             guard let item = self?.item as? AppMenuRowItem else {
@@ -225,7 +252,10 @@ private final class AppMenuRowView: TableRowView {
         }
         
         containerView.frame = bounds.insetBy(dx: item.innerInset, dy: 2)
-        if let imageView = imageView {
+        if let drawable = drawable {
+            drawable.centerY(x: item.leftInset)
+            textView.centerY(x: drawable.frame.maxX + item.leftInset - 2)
+        } else if let imageView = imageView {
             imageView.centerY(x: item.leftInset)
             textView.centerY(x: imageView.frame.maxX + item.leftInset - 2)
         } else {
@@ -243,6 +273,27 @@ private final class AppMenuRowView: TableRowView {
             return
         }
         textView.update(item.text)
+        
+        
+        let drawable: AppMenuItemImageDrawable?
+        if let current = self.drawable, current.isEqual(to: item.item) {
+            drawable = current
+        } else if let current = item.drawable {
+            drawable = current
+            self.drawable = drawable
+        } else {
+            drawable = nil
+        }
+        
+        if let drawable = drawable {
+            if drawable.superview != containerView {
+                containerView.addSubview(drawable)
+            }
+        } else if let current = self.drawable {
+            self.drawable = nil
+            performSubviewRemoval(current, animated: animated)
+        }
+        
         
         if let image = item.item.image {
             let current: ImageView
@@ -278,7 +329,7 @@ private final class AppMenuRowView: TableRowView {
         } else if let view = self.more {
             performSubviewRemoval(view, animated: animated)
         }
-        
+        needsLayout = true
     }
     
     override var backdorColor: NSColor {

@@ -21,7 +21,7 @@ final class GalleryInteractions {
     var previous:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
     var showActions:(Control)->KeyHandlerResult = {_ in return .rejected}
     var share:(Control)->Void = { _ in }
-    var contextMenu:()->NSMenu? = {return nil}
+    var contextMenu:()->ContextMenu? = {return nil}
     var openInfo:(PeerId)->Void = {_ in}
     var openMessage:()->Void = {}
     var showThumbsControl:(View, Bool)->Void = {_, _ in}
@@ -996,8 +996,8 @@ class GalleryViewer: NSResponder {
     }
     
     
-    var contextMenu:NSMenu {
-        let menu = NSMenu()
+    var contextMenu:ContextMenu {
+        let menu = ContextMenu()
         
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {

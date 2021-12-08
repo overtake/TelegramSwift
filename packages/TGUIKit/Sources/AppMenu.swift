@@ -3,6 +3,11 @@ import AppKit
 import ColorPalette
 public final class AppMenu {
     
+    public enum ItemMode {
+        case normal
+        case destruct
+    }
+    
     public struct Presentation {
         let isDark: Bool
         var textColor: NSColor {
@@ -20,9 +25,11 @@ public final class AppMenu {
         var backgroundColor: NSColor {
             return PresentationTheme.current.colors.background.withAlphaComponent(0.6) 
         }
+        var destructColor: NSColor {
+            return PresentationTheme.current.colors.redUI
+        }
         var more: CGImage {
             let image = NSImage(named: "Icon_Menu_More")!
-            
             return image.precomposed(PresentationTheme.current.colors.text)
         }
         var selected: CGImage {
@@ -34,6 +41,18 @@ public final class AppMenu {
         }
         public static var current: Presentation {
             return Presentation(isDark: PresentationTheme.current.colors.isDark)
+        }
+        func primaryColor(_ item: ContextMenuItem) -> NSColor {
+            if item.isEnabled {
+                switch item.itemMode {
+                case .normal:
+                    return self.textColor
+                case .destruct:
+                    return self.destructColor
+                }
+            } else {
+                return self.disabledTextColor
+            }
         }
     }
     
@@ -50,8 +69,13 @@ public final class AppMenu {
         bp += 1
     }
     
+    public static func show(menu: ContextMenu, event: NSEvent, for view: NSView, presentation: AppMenu.Presentation = .current) {
+        let appMenu = AppMenu(menu: menu, presentation: presentation)
+        appMenu.show(event: event, view: view)
+    }
+    
     public func show(event: NSEvent, view: NSView) {
-        let controller = AppMenuController(self.menu.contextItems, presentation: presentation)
+        let controller = AppMenuController(self.menu.contextItems, presentation: presentation, holder: self)
         
         self.controller = controller
         

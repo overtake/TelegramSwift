@@ -29,8 +29,8 @@ final class MenuView: View, TableViewDelegate {
         self.visualView.blendingMode = .behindWindow
         self.tableView.delegate = self
         let shadow = NSShadow()
-        shadow.shadowBlurRadius = 5
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.5)
+        shadow.shadowBlurRadius = 4
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.4)
         shadow.shadowOffset = NSMakeSize(0, 0)
         self.shadow = shadow
         
@@ -122,10 +122,14 @@ final class AppMenuController : NSObject  {
         let submenuId: Int64?
     }
     
+    private weak var weakHolder: AppMenu?
+    private var strongHolder: AppMenu?
+
     private var windows:[Key : Window] = [:]
 
-    init(_ items: [ContextMenuItem], presentation: AppMenu.Presentation) {
+    init(_ items: [ContextMenuItem], presentation: AppMenu.Presentation, holder: AppMenu) {
         self.items = items
+        self.weakHolder = holder
         self.presentation = presentation
     }
     
@@ -155,6 +159,7 @@ final class AppMenuController : NSObject  {
         }
         self.windows.removeAll()
         self.parent?.removeAllHandlers(for: self)
+        self.strongHolder = nil 
         self.onClose()
     }
     
@@ -286,6 +291,7 @@ final class AppMenuController : NSObject  {
         view.setFrame(rect, display: true)
         view.makeKeyAndOrderFront(nil)
         
+        view.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
     }
     
     
@@ -303,7 +309,7 @@ final class AppMenuController : NSObject  {
         view.setFrame(rect, display: true)
         view.makeKeyAndOrderFront(nil)
 
-        view.view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
+        view.view.layer?.animateScaleSpringTopCorner(from: 0.1, to: 1, duration: 0.3)
     }
     
     private func adjust(_ rect: NSRect, parent: Window? = nil) -> NSRect {
@@ -340,14 +346,19 @@ final class AppMenuController : NSObject  {
     
     func present(event: NSEvent, view: NSView) {
         self.parent = event.window as? Window
+        self.strongHolder = self.weakHolder
+        self.weakHolder = nil
         self.initialize()
         self.activate(event: event, view: view, animated: true)
         self.onShow()
         
+        var skippedFirst: Bool = false
+        
         self.keyDisposable = self.parent?.keyWindowUpdater.start(next: { [weak self] value in
-            if !value {
+            if !value && skippedFirst {
                 self?.close()
             }
+            skippedFirst = true
         })
     }
 }

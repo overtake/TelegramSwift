@@ -32,9 +32,14 @@ public class ContextMenuItem : NSMenuItem {
     
     public var contextObject: Any? = nil
     
-    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil) {
+    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
+    public let itemMode: AppMenu.ItemMode
+    
+    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil) {
         self.handler = handler
         self.dynamicTitle = dynamicTitle
+        self.itemMode = itemMode
+        self.itemImage = itemImage
         super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title
@@ -79,7 +84,7 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     public var onClose:()->Void = {() in}
         
     
-    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}) -> Void {
+    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}, presentation: AppMenu.Presentation = .current) -> Void {
         
         let menu = ContextMenu()
         menu.onShow = onShow
@@ -88,10 +93,8 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
         for item in items {
             menu.addItem(item)
         }
-        
-        menu.delegate = menu
-        
-        NSMenu.popUpContextMenu(menu, with: event, for: view)
+        let app = AppMenu(menu: menu, presentation: presentation)
+        app.show(event: event, view: view)
     }
     
     

@@ -517,31 +517,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
  
     }
-    
-//    private var appMenu: AppMenu?
-//    override func rightMouseDown(with event: NSEvent) {
-//       // super.rightMouseDown(with: event)
-//        let menu = ContextMenu()
-//        menu.addItem(ContextMenuItem("Hello world"))
-//        menu.addItem(ContextMenuItem("Hello world2"))
-//        menu.addItem(ContextMenuItem("Hello world3"))
-//        menu.addItem(ContextMenuItem("Hello world4"))
-//        menu.addItem(ContextMenuItem("Hello world5"))
-//        menu.addItem(ContextMenuItem("Hello world6"))
-//        appMenu = AppMenu(menu: menu)
-//
-//
-//        let menu2 = ContextMenu()
-//        menu2.addItem(ContextMenuItem("world"))
-//        menu2.addItem(ContextMenuItem("world2"))
-//        menu2.addItem(ContextMenuItem("world3"))
-//        menu2.addItem(ContextMenuItem("world4"))
-//        menu2.addItem(ContextMenuItem("world5"))
-//        menu2.addItem(ContextMenuItem("world6"))
-//
-//        menu.item(at: 2)?.submenu = menu2
-//        appMenu?.show(event: event, view: self)
-//    }
 
 
     required init(frame frameRect: NSRect) {

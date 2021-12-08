@@ -419,7 +419,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let hitTestView = window.contentView?.hitTest(point)
                 if view.contentView == hitTestView || hitTestView == view.recognition?.view {
                     if let event = NSApp.currentEvent, let menu = interactions.contextMenu() {
-                        NSMenu.popUpContextMenu(menu, with: event, for: view)
+                        AppMenu.show(menu: menu, event: event, for: view)
                     }
                 } else {
                     return .invokeNext
