@@ -10,6 +10,6 @@
 // https://help.apple.com/xcode/#/dev745c5c974
 
 #include "common.xcconfig"
-
+SOURCE = APP_STORE
 TYPE = -D'APP_STORE'
 OTHER_SWIFT_FLAGS = $(TYPE)
