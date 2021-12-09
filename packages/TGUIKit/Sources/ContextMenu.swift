@@ -21,21 +21,30 @@ public class ContextSeparatorItem : ContextMenuItem {
     required public init(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    public override func rowItem(presentation: AppMenu.Presentation, interaction interactions: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return AppMenuSeparatorItem(.zero, presentation: presentation)
+    }
 }
 
-public class ContextMenuItem : NSMenuItem {
+open class ContextMenuItem : NSMenuItem {
     public let id: Int64 = arc4random64()
-    public var rowItem:(()->TableRowItem)? = nil
 
-    public let handler:()->Void
+    
+    open func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return AppMenuRowItem.init(.zero, item: self, interaction: interaction, presentation: presentation)
+    }
+
+    
+    public let handler:(()->Void)?
     private let dynamicTitle:(()->String)?
     
     public var contextObject: Any? = nil
     
-    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
+    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable?)?
     public let itemMode: AppMenu.ItemMode
     
-    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil) {
+    public init(_ title:String, handler: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil) {
         self.handler = handler
         self.dynamicTitle = dynamicTitle
         self.itemMode = itemMode
@@ -66,7 +75,7 @@ public class ContextMenuItem : NSMenuItem {
     }
     
     @objc func click() -> Void {
-        handler()
+        handler?()
     }
     
 }

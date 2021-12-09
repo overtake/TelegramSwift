@@ -487,83 +487,10 @@ class ChatMessageItem: ChatRowItem {
             }
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
-                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
             interactions.menuItems = { [weak self] type in
-                var items:[ContextMenuItem] = []
-                if let strongSelf = self, let layout = self?.textLayout {
-                    if let message = strongSelf.message, message.isCopyProtected() {
-                        return strongSelf.menuItems(in: NSZeroPoint)
-                    }
-                    let text: String
-                    if let type = type {
-                        text = copyContextText(from: type)
-                        items.append(ContextMenuItem(text, handler: {
-                            if let strongSelf = self {
-                                let pb = NSPasteboard.general
-                                pb.clearContents()
-                                pb.declareTypes([.string], owner: strongSelf)
-                                let layout = strongSelf.textLayout
-                                var effectiveRange = layout.selectedRange.range
-                                if layout.attributedString.range.intersection(effectiveRange) != nil {
-                                    let selectedText = layout.attributedString.attributedSubstring(from: effectiveRange)
-                                    let attribute = layout.attributedString.attribute(NSAttributedString.Key.link, at: layout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                    if let attribute = attribute as? inAppLink {
-                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                    } else {
-                                        pb.setString(selectedText.string, forType: .string)
-                                    }
-                                }
-                            }
-                        }))
-                        
-                    }
-                    
-                    items.append(ContextMenuItem(layout.selectedRange.hasSelectText ? strings().chatCopySelectedText : strings().textCopy, handler: {
-                        let result = self?.textLayout.interactions.copy?()
-                        if let result = result, let strongSelf = self, !result {
-                            if strongSelf.textLayout.selectedRange.hasSelectText {
-                                let pb = NSPasteboard.general
-                                pb.clearContents()
-                                pb.declareTypes([.string], owner: strongSelf)
-                                var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
-                                let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                                if !isCopied {
-                                    let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                    
-                                    if let attribute = attribute as? inAppLink {
-                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                    } else {
-                                        pb.setString(selectedText.string, forType: .string)
-                                    }
-                                }
-                            }
-                            
-                        }
-                    }))
-                   
-                    
-                    if strongSelf.textLayout.selectedRange.hasSelectText {
-                        var effectiveRange: NSRange = NSMakeRange(NSNotFound, 0)
-                        if let _ = strongSelf.textLayout.attributedString.attribute(.preformattedPre, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange) {
-                            let blockText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange).string
-                            items.append(ContextMenuItem(strings().chatContextCopyBlock, handler: {
-                                copyToClipboard(blockText)
-                            }))
-                        }
-                    }
-                    
-                    
-                    return strongSelf.menuItems(in: NSZeroPoint) |> map { basic in
-                        var basic = basic
-                        if basic.count > 1 {
-                            basic.remove(at: 1)
-                            basic.insert(contentsOf: items, at: 1)
-                        }
-                        
-                        return basic
-                    }
+                if let strongSelf = self, let message = strongSelf.message {
+                    return chatMenuItems(for: message, item: strongSelf, textLayout: (strongSelf.textLayout, type), chatInteraction: strongSelf.chatInteraction)
                 }
                 return .complete()
             }
@@ -730,155 +657,11 @@ class ChatMessageItem: ChatRowItem {
    
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        var items = super.menuItems(in: location)
-        
-        
-        if message?.adAttribute != nil {
-            return items
+        if let message = message {
+            return chatMenuItems(for: message, item: self, textLayout: (self.textLayout, nil), chatInteraction: self.chatInteraction)
         }
+        return super.menuItems(in: location)
         
-        let text = messageText.string
-        
-        let context = self.context
-        
-        var media: Media? =  webpageLayout?.content.file ?? webpageLayout?.content.image
-        
-        if let groupLayout = (webpageLayout as? WPArticleLayout)?.groupLayout {
-            if let message = groupLayout.message(at: location) {
-                media = message.media.first
-            }
-        }
-        
-        if let file = media as? TelegramMediaFile, let message = message {
-            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
-                var items = items
-                return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
-                    if data.complete, !message.isCopyProtected() {
-                        items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
-                            saveAs(file, account: context.account)
-                        }))
-                    }
-                    
-                    if file.isStaticSticker, let fileId = file.id {
-                        return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
-                            let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
-                            items.append(ContextMenuItem( !saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
-                                
-                                if !saved {
-                                    _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
-                                } else {
-                                    _ = removeSavedSticker(postbox: context.account.postbox, mediaId: fileId).start()
-                                }
-                            }))
-                            
-                            return items
-                        }
-                    } else if file.isVideo && file.isAnimated {
-                        items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
-                            let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
-                        }))
-                    }
-                    return .single(items)
-                }
-            }
-        } else if let image = media as? TelegramMediaImage {
-            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
-                var items = items
-                if let resource = image.representations.last?.resource {
-                    return context.account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
-                        if data.complete {
-                            items.append(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: {
-                                if let path = link(path: data.path, ext: "jpg") {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.writeObjects([NSURL(fileURLWithPath: path)])
-                                }
-                            }))
-                            items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
-                                savePanel(file: data.path, ext: "jpg", for: mainWindow)
-                            }))
-                        }
-                        return items
-                    }
-                } else {
-                    return .single(items)
-                }
-            }
-        }
-
-        
-        return items |> deliverOnMainQueue |> map { [weak self] items in
-            var items = items
-            
-            var index: Int? = nil
-            for i in 0 ..< items.count {
-                if items[i].title == strings().messageContextCopyMessageLink1 {
-                    index = i
-                }
-            }
-            
-            if index == nil {
-                for i in 0 ..< items.count {
-                    if items[i].title == strings().messageContextReply1 {
-                        index = i + 1
-                        if items.count > index!, items[index!] is ContextSeparatorItem {
-                            index = index! + 1
-                        }
-                    }
-                }
-            }
-            
-            let insert = min(index ?? 0, items.count)
-            if self?.message?.isCopyProtected() == true {
-                
-            } else {
-                items.insert(ContextMenuItem(strings().textCopyText, handler: { [weak self] in
-                    if let message = self?.message, message.isCopyProtected() == true {
-                        showProtectedCopyAlert(message, for: context.window)
-                    } else {
-                        if let string = self?.textLayout.attributedString {
-                            if !globalLinkExecutor.copyAttributedString(string) {
-                                copyToClipboard(string.string)
-                            }
-                        }
-                    }
-                }), at: insert)
-            }
-            
-            if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, index == nil {
-                let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-                if let layout = textView.textLayout {
-                    if let (link, _, range, _) = layout.link(at: point) {
-                        var text:String = layout.attributedString.string.nsstring.substring(with: range)
-                        if let link = link as? inAppLink {
-                            if case let .external(link, _) = link {
-                                text = link
-                            }
-                        }
-                        
-                        for i in 0 ..< items.count {
-                            if items[i].title == strings().messageContextCopyMessageLink1 {
-                                items.remove(at: i)
-                                break
-                            }
-                        }
-                        
-                        items.insert(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
-                            copyToClipboard(text)
-                        }), at: min(1, items.count))
-                        
-                      
-                    }
-                }
-            }
-            if let content = self?.webpageLayout?.content, content.type == "proxy" {
-                items.insert(ContextMenuItem(strings().chatCopyProxyConfiguration, handler: {
-                    copyToClipboard(content.url)
-                }), at: items.isEmpty ? 0 : 1)
-            }
-            
-            return items
-        }
     }
     
     deinit {
@@ -929,7 +712,6 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                
                 string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
             case .Bold:
                 if let fontAttribute = fontAttributes[range] {
@@ -986,35 +768,6 @@ class ChatMessageItem: ChatRowItem {
                     nsString = text as NSString
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
-                if let color = NSColor(hexString: nsString!.substring(with: range)) {
-                    
-                    struct RunStruct {
-                        let ascent: CGFloat
-                        let descent: CGFloat
-                        let width: CGFloat
-                    }
-                    
-                    let dimensions = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
-                    let extentBuffer = UnsafeMutablePointer<RunStruct>.allocate(capacity: 1)
-                    extentBuffer.initialize(to: RunStruct(ascent: 0.0, descent: 0.0, width: dimensions.width))
-                    var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateVersion1, dealloc: { (pointer) in
-                    }, getAscent: { (pointer) -> CGFloat in
-                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
-                        return d.pointee.ascent
-                    }, getDescent: { (pointer) -> CGFloat in
-                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
-                        return d.pointee.descent
-                    }, getWidth: { (pointer) -> CGFloat in
-                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
-                        return d.pointee.width
-                    })
-                    let delegate = CTRunDelegateCreate(&callbacks, extentBuffer)
-                    let key = kCTRunDelegateAttributeName as String
-                    let attrDictionaryDelegate:[NSAttributedString.Key : Any] = [NSAttributedString.Key(key): delegate as Any, .hexColorMark : color, .hexColorMarkDimensions: dimensions]
-                    
-                    string.addAttributes(attrDictionaryDelegate, range: NSMakeRange(range.upperBound - 1, 1))
-                }
-                
             case .Strikethrough:
                 string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
             case .Underline:
@@ -1084,3 +837,35 @@ class ChatMessageItem: ChatRowItem {
         return string.copy() as! NSAttributedString
     }
 }
+
+
+/*
+ if let color = NSColor(hexString: nsString!.substring(with: range)) {
+     
+     struct RunStruct {
+         let ascent: CGFloat
+         let descent: CGFloat
+         let width: CGFloat
+     }
+     
+     let dimensions = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
+     let extentBuffer = UnsafeMutablePointer<RunStruct>.allocate(capacity: 1)
+     extentBuffer.initialize(to: RunStruct(ascent: 0.0, descent: 0.0, width: dimensions.width))
+     var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateVersion1, dealloc: { (pointer) in
+     }, getAscent: { (pointer) -> CGFloat in
+         let d = pointer.assumingMemoryBound(to: RunStruct.self)
+         return d.pointee.ascent
+     }, getDescent: { (pointer) -> CGFloat in
+         let d = pointer.assumingMemoryBound(to: RunStruct.self)
+         return d.pointee.descent
+     }, getWidth: { (pointer) -> CGFloat in
+         let d = pointer.assumingMemoryBound(to: RunStruct.self)
+         return d.pointee.width
+     })
+     let delegate = CTRunDelegateCreate(&callbacks, extentBuffer)
+     let key = kCTRunDelegateAttributeName as String
+     let attrDictionaryDelegate:[NSAttributedString.Key : Any] = [NSAttributedString.Key(key): delegate as Any, .hexColorMark : color, .hexColorMarkDimensions: dimensions]
+     
+     string.addAttributes(attrDictionaryDelegate, range: NSMakeRange(range.upperBound - 1, 1))
+ }
+ */

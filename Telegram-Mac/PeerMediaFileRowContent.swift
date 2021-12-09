@@ -83,7 +83,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
                 var items = items
                 return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> map {data in
                     if data.complete {
-                        items.append(ContextMenuItem(strings().contextCopyMedia, handler: {
+                        items.append(ContextMenuItem(strings().contextSaveMedia, handler: {
                             saveAs(file, account: context.account)
                         }))
                         items.append(ContextMenuItem(strings().contextShowInFinder, handler: {

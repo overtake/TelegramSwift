@@ -1514,7 +1514,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.grouppedFloatingPhotos = []
             return
         }
-        guard peer.isGroup || peer.isSupergroup || peer.id == context.peerId, theme.bubbled else {
+        guard peer.isGroup || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId, theme.bubbled else {
             self.grouppedFloatingPhotos = []
             return
         }

@@ -144,7 +144,7 @@ class TextAndLabelItem: GeneralRowItem {
                 if let strongSelf = self {
                     copyToClipboard(strongSelf.textLayout.attributedString.string)
                 }
-            })])
+            }, itemImage: MenuAnimation.menu_copy.value)])
         }
        
     }

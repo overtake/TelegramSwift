@@ -191,16 +191,19 @@ class PeerPhotosMonthItem: GeneralRowItem {
             if canForwardMessage(message, chatInteraction: chatInteraction) {
                 items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
                     self?.chatInteraction.forwardMessages([message.id])
-                }))
+                }, itemImage: MenuAnimation.menu_forward.value))
             }
-            if canDeleteMessage(message, account: context.account, mode: .history) {
-                items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
-                   self?.chatInteraction.deleteMessages([message.id])
-                }))
-            }
+            
             items.append(ContextMenuItem(strings().messageContextGoto, handler: { [weak self] in
                 self?.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
-            }))
+            }, itemImage: MenuAnimation.menu_show_message.value))
+            
+            if canDeleteMessage(message, account: context.account, mode: .history) {
+                items.append(ContextSeparatorItem())
+                items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
+                   self?.chatInteraction.deleteMessages([message.id])
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            }
         }
         return .single(items)
     }

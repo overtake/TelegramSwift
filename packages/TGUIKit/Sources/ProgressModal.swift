@@ -344,6 +344,10 @@ class TextAndLabelModalController: ModalViewController {
     override var redirectMouseAfterClosing: Bool {
         return true
     }
+    
+    override var handleAllEvents: Bool {
+        return true
+    }
 
     override func becomeFirstResponder() -> Bool? {
         return nil

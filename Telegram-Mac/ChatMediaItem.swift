@@ -515,59 +515,13 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        var items:Signal<[ContextMenuItem], NoError> = .complete()
+       
+        let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId })
+        
         if let message = message {
-            items = chatMenuItems(for: message, item: self, chatInteraction: chatInteraction)
+            return chatMenuItems(for: message, item: self, textLayout: (caption?.layout, nil), chatInteraction: chatInteraction)
         }
-        return items |> map { [weak self] items in
-            var items = items
-            if let captionLayout = self?.captionLayouts.first(where: { $0.id == self?.lastMessage?.stableId }) {
-                let text = captionLayout.layout.attributedString.string
-                if self?.lastMessage?.isCopyProtected() == true {
-                    
-                } else {
-                    items.insert(ContextMenuItem(strings().textCopyText, handler: {
-                        copyToClipboard(text)
-                    }), at: min(items.count, 1))
-                }
-                
-                if let view = self?.view as? ChatRowView, let textView = view.captionViews.first(where: { $0.id == self?.lastMessage?.stableId})?.view, let window = textView.window {
-                    let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-                    if let layout = textView.textLayout {
-                        if let (link, _, range, _) = layout.link(at: point) {
-                            var text:String = layout.attributedString.string.nsstring.substring(with: range)
-                            if let link = link as? inAppLink {
-                                if case let .external(link, _) = link {
-                                    text = link
-                                }
-                            }
-                            
-                            for i in 0 ..< items.count {
-                                if items[i].title == strings().messageContextCopyMessageLink1 {
-                                    items.remove(at: i)
-                                    break
-                                }
-                            }
-                            
-                            items.insert(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
-                                copyToClipboard(text)
-                            }), at: 1)
-                        }
-                    }
-                }
-                
-            }
-            if let media = self?.media as? TelegramMediaFile, media.isMusic, let name = media.fileName {
-                if self?.lastMessage?.isCopyProtected() == true {
-                } else {
-                    items.insert(ContextMenuItem(strings().messageTextCopyMusicTitle, handler: {
-                        copyToClipboard(name)
-                    }), at: 1)
-                }
-                
-            }
-            return items
-        }
+        return super.menuItems(in: location)
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {

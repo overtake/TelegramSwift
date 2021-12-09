@@ -87,8 +87,8 @@ class ChatInputActionsView: View, Notifable {
         }, for: .Up)
         
         inlineCancel.set(handler: { [weak self] _ in
-            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(request) = inputContext {
-                if request.query.isEmpty {
+            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(_, query) = inputContext {
+                if query.isEmpty {
                     self?.chatInteraction.clearInput()
                 } else {
                     self?.chatInteraction.clearContextQuery()
@@ -431,8 +431,8 @@ class ChatInputActionsView: View, Notifable {
                         inlineProgress?.progressColor = theme.colors.grayIcon
                         addSubview(inlineProgress!, positioned: .below, relativeTo: inlineCancel)
                         inlineProgress?.set(handler: { [weak self] _ in
-                            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(request) = inputContext {
-                                if request.query.isEmpty {
+                            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(_, query) = inputContext {
+                                if query.isEmpty {
                                     self?.chatInteraction.clearInput()
                                 } else {
                                     self?.chatInteraction.clearContextQuery()
@@ -515,48 +515,49 @@ class ChatInputActionsView: View, Notifable {
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
-        let handler:(Control)->Void = { [weak chatInteraction] control in
+
+        
+        send.contextMenu = { [weak chatInteraction] in
+            
+            
             if let chatInteraction = chatInteraction, let peer = chatInteraction.peer {
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                    return
+                    return nil
                 }
                 if chatInteraction.presentation.state != .normal {
-                    return
+                    return nil
                 }
-                var items:[SPopoverItem] = []
+                var items:[ContextMenuItem] = []
                 
                 if peer.id != chatInteraction.context.account.peerId {
-                    items.append(SPopoverItem(strings().chatSendWithoutSound, { [weak chatInteraction] in
+                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak chatInteraction] in
                         chatInteraction?.sendMessage(true, nil)
-                    }))
+                    }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
                 case .history:
                     if !peer.isSecretChat {
-                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, {
+                        let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
+                        items.append(ContextMenuItem(text, handler: {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
                                 chatInteraction?.sendMessage(false, date)
                             }), for: context.window)
-                        }))
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
                     }
-                case .scheduled:
-                    break
-                case .replyThread:
-                    break
-                case .pinned, .preview:
+                default:
                     break
                 }
-                
                 if !items.isEmpty {
-                    showPopover(for: control, with: SPopoverViewController(items: items))
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
                 }
             }
+            return nil
         }
-        
-        send.set(handler: handler, for: .RightDown)
-        send.set(handler: handler, for: .LongMouseDown)
-
         
         send.set(handler: { [weak chatInteraction] control in
              chatInteraction?.sendMessage(false, nil)

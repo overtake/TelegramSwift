@@ -99,62 +99,6 @@ class ChatCallRowItem: ChatRowItem {
         }
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        
-        let context = self.context
-        let callId = self.callId ?? 0
-        let message = self.message!
-        return super.menuItems(in: location) |> map { items in
-            var items = items
-            
-
-            
-            var callId: CallId?
-            var isVideo: Bool = false
-            var logPath: String?
-            for media in message.media {
-                if let action = media as? TelegramMediaAction, case let .phoneCall(id, discardReason, _, isVideoValue) = action.action {
-                    isVideo = isVideoValue
-                    if discardReason != .busy && discardReason != .missed {
-                        if let logName = callLogNameForId(id: id, account: context.account) {
-                            let logsPath = callLogsPath(account: context.account)
-                            logPath = logsPath + "/" + logName
-                            let start = logName.index(logName.startIndex, offsetBy: "\(id)".count + 1)
-                            let end: String.Index
-                            if logName.hasSuffix(".log.json") {
-                                end = logName.index(logName.endIndex, offsetBy: -4 - 5)
-                            } else {
-                                end = logName.index(logName.endIndex, offsetBy: -4)
-                            }
-                            let accessHash = logName[start..<end]
-                            if let accessHash = Int64(accessHash) {
-                                callId = CallId(id: id, accessHash: accessHash)
-                            }
-                            
-                        }
-                    }
-                    break
-                }
-            }
-
-            if let callId = callId, let foundLog = logPath {
-                items.append(ContextSeparatorItem())
-
-                items.append(.init(strings().callContextRate, handler: {
-                    showModal(with: CallRatingModalViewController(context, callId: callId, userInitiated: true, isVideo: isVideo), for: context.window)
-                }))
-                if FileManager.default.fileExists(atPath: foundLog), let size = fs(foundLog), size > 0 {
-                    items.append(.init(strings().shareCallLogs, handler: {
-                        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: foundLog)])
-                    }))
-                }
-               
-            }
-           
-            return items
-        }
-    }
-    
     deinit {
         requestSessionId.dispose()
     }

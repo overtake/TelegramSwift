@@ -1976,7 +1976,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     if canRestrict {
                         menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuDelete, handler: {
                             arguments.removePeer(sortedParticipants[i].peerId)
-                        }))
+                        }, itemImage: MenuAnimation.menu_delete.value))
                     }
                     
                     
@@ -2102,18 +2102,21 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if canPromote {
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuPromote, handler: {
                         arguments.promote(sortedParticipants[i].participant)
-                    }))
+                    }, itemImage: MenuAnimation.menu_promote.value))
                 }
                 if canRestrict {
                     if let group = group as? TelegramChannel, group.flags.contains(.isGigagroup) {
                     } else {
                         menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuRestrict, handler: {
                             arguments.restrict(sortedParticipants[i].participant)
-                        }))
+                        }, itemImage: MenuAnimation.menu_restrict.value))
+                    }
+                    if !menuItems.isEmpty {
+                        menuItems.append(ContextSeparatorItem())
                     }
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuDelete, handler: {
                         arguments.removePeer(sortedParticipants[i].peer.id)
-                    }))
+                    }, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
                 

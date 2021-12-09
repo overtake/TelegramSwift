@@ -363,7 +363,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
     
     items.append(ContextMenuItem(isPinned ? strings().chatListContextUnpin : strings().chatListContextPin, handler: {
         togglePin(peer)
-    }))
+    }, itemImage: isPinned ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
     
     let peerId = peer.id
     
@@ -398,7 +398,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
             
             if !submenu.isEmpty {
                 items.append(ContextSeparatorItem())
-                let item = ContextMenuItem(strings().chatListFilterAddToFolder)
+                let item = ContextMenuItem(strings().chatListFilterAddToFolder, itemImage: MenuAnimation.menu_add_to_folder.value)
                 let menu = NSMenu()
                 for item in submenu {
                     menu.addItem(item)

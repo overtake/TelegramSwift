@@ -187,8 +187,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             return
         }
         
-        
-        
         self.containerUrl = containerUrl.path
         
         TempBox.initializeShared(basePath: self.containerUrl, processType: "app", launchSpecificId: arc4random64())

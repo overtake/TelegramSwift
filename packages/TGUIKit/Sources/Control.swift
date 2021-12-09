@@ -350,6 +350,11 @@ open class Control: View {
         longOverHandleDisposable.set(nil)
         
         if event.modifierFlags.contains(.control) {
+            
+            if let menu = self.contextMenu?() {
+                AppMenu.show(menu: menu, event: event, for: self)
+            }
+            
             for handler in handlers {
                 if handler.event == .RightDown {
                     handler.handler(self)
@@ -450,7 +455,7 @@ open class Control: View {
     
     
     open override func rightMouseDown(with event: NSEvent) {
-        if self.handlers.isEmpty, let menu = self.contextMenu?() {
+        if let menu = self.contextMenu?() {
             AppMenu.show(menu: menu, event: event, for: self)
         }
         if userInteractionEnabled {
