@@ -74,19 +74,19 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             if let reference = reference?.0.fileReference?.media.stickerReference {
                 menu.addItem(ContextMenuItem(strings().contextViewStickerSet, handler: {
                     showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
-                }))
+                }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             }
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak item] in
                     item?.chatInteraction.sendAppFile(file, true, nil, false)
                     item?.chatInteraction.clearInput()
-                }))
+                }, itemImage: MenuAnimation.menu_mute.value))
             }
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak item] in
                     item?.chatInteraction.sendAppFile(file, false, nil, true)
                     item?.chatInteraction.clearInput()
-                }))
+                }, itemImage: MenuAnimation.menu_schedule_message.value))
             }
         }
         return menu

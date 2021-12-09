@@ -360,7 +360,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
                 }, contextMenuItems: {
                     return .single([ContextMenuItem(strings().chatListFilterIncludeRemoveChat, handler: {
                         arguments.removeIncluded(peer.id)
-                    })])
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
                 })
             }))
             index += 1

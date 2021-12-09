@@ -1055,29 +1055,29 @@ class ChatListRowItem: TableRowItem {
             if let mainPeer = peer, let peerId = peerId, let peer = renderedPeer?.peers[peerId] {
                                     
                 if !isAd && groupId == .root {
-                    firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? AppMenu.pin : AppMenu.unpin))
+                    firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
                 }
                 
                 if groupId == .root, (canArchive || associatedGroupId != .root), filter == nil {
-                    secondGroup.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive, itemImage: associatedGroupId == .root ? AppMenu.archive : AppMenu.unarchive))
+                    secondGroup.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive, itemImage: associatedGroupId == .root ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
                 }
                 
                 if context.peerId != peer.id, !isAd {
-                    let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? AppMenu.unmute : AppMenu.mute)
+                    let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value)
                     
                     if !isMuted {
                         let submenu = ContextMenu()
                         submenu.addItem(ContextMenuItem(strings().chatListMute1Hour, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: 60 * 60 * 1).start()
-                        }, itemImage: AppMenu.mute_for_1_hour))
+                        }, itemImage: MenuAnimation.menu_mute_for_1_hour.value))
                         
                         submenu.addItem(ContextMenuItem(strings().chatListMute3Days, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: 60 * 60 * 24 * 3).start()
-                        }, itemImage: AppMenu.mute_for_2_days))
+                        }, itemImage: MenuAnimation.menu_mute_for_2_days.value))
                         
                         submenu.addItem(ContextMenuItem(strings().chatListMuteForever, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: Int32.max).start()
-                        }, itemImage: AppMenu.mute))
+                        }, itemImage: MenuAnimation.menu_mute.value))
                         
                         muteItem.submenu = submenu
                     }
@@ -1088,8 +1088,8 @@ class ChatListRowItem: TableRowItem {
                 if mainPeer is TelegramUser {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer, mainPeer: mainPeer)
-                    }, itemImage: AppMenu.clear_history))
-                    thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat, itemMode: .destruct, itemImage: AppMenu.delete))
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
+                    thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
                 if !isSecret {
@@ -1097,12 +1097,12 @@ class ChatListRowItem: TableRowItem {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsUnread, handler: {
                             _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
                             
-                        }, itemImage: AppMenu.unread))
+                        }, itemImage: MenuAnimation.menu_unread.value))
                         
                     } else if isUnread {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
                             _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
-                        }, itemImage: AppMenu.read))
+                        }, itemImage: MenuAnimation.menu_read.value))
                     }
                 }
                 
@@ -1114,19 +1114,19 @@ class ChatListRowItem: TableRowItem {
                 if let peer = peer as? TelegramGroup, !isAd {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer, mainPeer: mainPeer)
-                    }, itemImage: AppMenu.delete))
-                    thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat, itemMode: .destruct, itemImage: AppMenu.delete))
+                    }, itemImage: MenuAnimation.menu_delete.value))
+                    thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 } else if let peer = peer as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
                     
                     if case .broadcast = peer.info {
-                        thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveChannel, handler: deleteChat, itemMode: .destruct, itemImage: AppMenu.delete))
+                        thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveChannel, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_leave.value))
                     } else if !isAd {
                         if peer.addressName == nil {
                             thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                                 clearHistory(context: context, peer: peer, mainPeer: mainPeer)
-                            }, itemImage: AppMenu.clear_history))
+                            }, itemImage: MenuAnimation.menu_clear_history.value))
                         }
-                        thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveGroup, handler: deleteChat, itemMode: .destruct, itemImage: AppMenu.delete))
+                        thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveGroup, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                 }
                 
@@ -1134,7 +1134,7 @@ class ChatListRowItem: TableRowItem {
                 if !isAd, groupId == .root {
                     firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
                         ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
-                    }, itemImage: isPinned ? AppMenu.unpin : AppMenu.pin))
+                    }, itemImage: isPinned ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
                 }
             }
             
@@ -1187,7 +1187,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             if !submenu.isEmpty {
-                let item = ContextMenuItem(strings().chatListFilterAddToFolder, itemImage: AppMenu.add_to_folder)
+                let item = ContextMenuItem(strings().chatListFilterAddToFolder, itemImage: MenuAnimation.menu_add_to_folder.value)
                 let menu = NSMenu()
                 for item in submenu {
                     menu.addItem(item)

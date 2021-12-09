@@ -130,7 +130,7 @@ class StickerPackPanelRowItem: TableRowItem {
                     if let reference = file.stickerReference {
                         items.append(ContextMenuItem(strings().contextViewStickerSet, handler: { [weak self] in
                             self?.arguments.showPack(reference)
-                        }))
+                        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
                     }
                 default:
                     break inner
@@ -140,13 +140,13 @@ class StickerPackPanelRowItem: TableRowItem {
                     if let mediaId = file.id {
                         items.append(ContextMenuItem(strings().contextRemoveFaveSticker, handler: {
                             _ = removeSavedSticker(postbox: context.account.postbox, mediaId: mediaId).start()
-                        }))
+                        }, itemImage: MenuAnimation.menu_remove_from_favorites.value))
                     }
                 default:
                     if packInfo.installed {
                         items.append(ContextMenuItem(strings().chatContextAddFavoriteSticker, handler: {
                             _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
-                        }))
+                        }, itemImage: MenuAnimation.menu_add_to_favorites.value))
                     }
                 }
                 items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
@@ -160,7 +160,7 @@ class StickerPackPanelRowItem: TableRowItem {
                     if let contentView = contentView {
                         self.arguments.sendMedia(file, contentView, true, false)
                     }
-                }))
+                }, itemImage: MenuAnimation.menu_mute.value))
                 
                 items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
                     guard let `self` = self else {
@@ -173,7 +173,7 @@ class StickerPackPanelRowItem: TableRowItem {
                     if let contentView = contentView {
                         self.arguments.sendMedia(file, contentView, false, true)
                     }
-                }))
+                }, itemImage: MenuAnimation.menu_schedule_message.value))
                 
                 break
             }

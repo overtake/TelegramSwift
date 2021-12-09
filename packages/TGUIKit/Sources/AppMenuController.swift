@@ -138,13 +138,20 @@ final class AppMenuController : NSObject  {
             self?.close()
             return .invoked
         }, with: self, for: .leftMouseDown, priority: .supreme)
+        
+        self.parent?.set(mouseHandler: { event in
+            return .invoked
+        }, with: self, for: .leftMouseUp, priority: .supreme)
 
         self.parent?.set(mouseHandler: { [weak self] event in
             self?.close()
             return .invoked
         }, with: self, for: .rightMouseDown, priority: .supreme)
 
-        
+        self.parent?.set(mouseHandler: { event in
+            return .invoked
+        }, with: self, for: .rightMouseUp, priority: .supreme)
+
         self.parent?.set(handler: { [weak self] _ in
             self?.close()
             return .invoked
@@ -154,7 +161,9 @@ final class AppMenuController : NSObject  {
     func close() {
         for (_, panel) in self.windows {
             panel.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak panel] _ in
-                panel?.orderOut(nil)
+                if let panel = panel {
+                    panel.parent?.removeChildWindow(panel)
+                }
             })
         }
         self.windows.removeAll()
@@ -170,6 +179,7 @@ final class AppMenuController : NSObject  {
         let panel = Window(contentRect: .zero, styleMask: [], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
+        panel.level = parent?.level ?? .normal
         panel.backgroundColor = .clear
 
 
@@ -184,8 +194,10 @@ final class AppMenuController : NSObject  {
         let presentation = self.presentation
         
         let interaction = AppMenuBasicItem.Interaction(action: { [weak self] item in
-            item.handler()
-            self?.close()
+            if let handler = item.handler {
+                handler()
+                self?.close()
+            }
         }, presentSubmenu: { [weak self, weak panel] item in
             let submenu = item.submenu?.items.compactMap { $0 as? ContextMenuItem } ?? []
             if !submenu.isEmpty, let parentView = panel {
@@ -202,11 +214,7 @@ final class AppMenuController : NSObject  {
         })
         
         var items:[TableRowItem] = items.compactMap { item in
-            if item.isSeparatorItem {
-                return AppMenuSeparatorItem(.zero, presentation: presentation)
-            } else {
-                return item.rowItem?() ?? AppMenuRowItem(.zero, item: item, interaction: interaction, presentation: presentation)
-            }
+            return item.rowItem(presentation: presentation, interaction: interaction)
         }
         
         var copy = items
@@ -263,7 +271,9 @@ final class AppMenuController : NSObject  {
         if let submenu = submenu {
             submenu.view.parentView?.view.tableView.cancelSelection()
             submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
-                submenu?.orderOut(nil)
+                if let submenu = submenu {
+                    submenu.parent?.removeChildWindow(submenu)
+                }
             })
         }
     }
@@ -289,7 +299,7 @@ final class AppMenuController : NSObject  {
         let rect = adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
         
         view.setFrame(rect, display: true)
-        view.makeKeyAndOrderFront(nil)
+        parent?.addChildWindow(view, ordered: .above)
         
         view.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
     }
@@ -307,7 +317,7 @@ final class AppMenuController : NSObject  {
         rect = adjust(rect)
         
         view.setFrame(rect, display: true)
-        view.makeKeyAndOrderFront(nil)
+        parent?.addChildWindow(view, ordered: .above)
 
         view.view.layer?.animateScaleSpringTopCorner(from: 0.1, to: 1, duration: 0.3)
     }

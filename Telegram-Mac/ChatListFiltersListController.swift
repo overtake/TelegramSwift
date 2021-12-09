@@ -79,7 +79,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }, menuItems: {
             return [ContextMenuItem(strings().chatListFilterListRemove, handler: {
                 arguments.removePreset(filter)
-            })]
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
         })))
         index += 1
     }

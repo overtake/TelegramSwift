@@ -14,25 +14,25 @@ public protocol AppMenuItemImageDrawable : NSView {
     func isEqual(to other: ContextMenuItem) -> Bool
 }
 
-public class AppMenuBasicItem : TableRowItem {
+open class AppMenuBasicItem : TableRowItem {
     
-    struct Interaction {
-        let action:(ContextMenuItem)->Void
-        let presentSubmenu:(ContextMenuItem)->Void
-        let cancelSubmenu:(ContextMenuItem)->Void
+    public struct Interaction {
+        public let action:(ContextMenuItem)->Void
+        public let presentSubmenu:(ContextMenuItem)->Void
+        public let cancelSubmenu:(ContextMenuItem)->Void
     }
     
     
-    public override var height: CGFloat {
+    open override var height: CGFloat {
         return 2
     }
-    public var effectiveSize: NSSize {
+    open var effectiveSize: NSSize {
         return NSMakeSize(0, height)
     }
-    public override var stableId: AnyHashable {
+    open override var stableId: AnyHashable {
         return arc4random64()
     }
-    public override func viewClass() -> AnyClass {
+    open override func viewClass() -> AnyClass {
         return AppMenuBasicItemView.self
     }
 }
@@ -96,39 +96,53 @@ private final class AppMenuSeparatorItemView: TableRowView {
 }
 
 
-final class AppMenuRowItem : AppMenuBasicItem {
-    fileprivate let item: ContextMenuItem
-    let text: TextViewLayout
-    let presentation: AppMenu.Presentation
-    let leftInset: CGFloat = 11
-    let innerInset: CGFloat = 4
-    let imageSize: CGFloat = 18
-    let moreSize: NSSize = NSMakeSize(6, 8)
-    let selectedSize: NSSize = NSMakeSize(9, 8)
-    let interaction: Interaction
-    private var observation: NSKeyValueObservation?
-    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: Interaction, presentation: AppMenu.Presentation) {
+open class AppMenuRowItem : AppMenuBasicItem {
+    public let item: ContextMenuItem
+    public private(set) var text: TextViewLayout
+    public let presentation: AppMenu.Presentation
+    public let leftInset: CGFloat = 11
+    public let innerInset: CGFloat = 4
+    public let imageSize: CGFloat = 18
+    public let moreSize: NSSize = NSMakeSize(6, 8)
+    public let selectedSize: NSSize = NSMakeSize(9, 8)
+    public let interaction: Interaction
+    private var observation_i: NSKeyValueObservation?
+    private var observation_t: NSKeyValueObservation?
+    public init(_ initialSize: NSSize, item: ContextMenuItem, interaction: Interaction, presentation: AppMenu.Presentation) {
         self.item = item
         self.interaction = interaction
         self.presentation = presentation
         self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
         super.init(initialSize)
         
-        self.observation = item.observe(\.image) { [weak self] object, change in
+        self.observation_i = item.observe(\.image) { [weak self] object, change in
             self?.redraw()
         }
+        self.observation_t = item.observe(\.title) { [weak self] object, change in
+            self?.redraw()
+        }
+    }
+    
+    public override func redraw(animated: Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false) {
+        
+        self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
+        
+        _ = makeSize(self.width)
+        
+        super.redraw(animated: animated, options: options, presentAsNew: presentAsNew)
         
     }
     
-    var drawable: AppMenuItemImageDrawable? {
+    public var drawable: AppMenuItemImageDrawable? {
         return item.itemImage?(presentation.primaryColor(item), item)
     }
     
     deinit {
-        self.observation?.invalidate()
+        self.observation_i?.invalidate()
+        self.observation_t?.invalidate()
     }
     
-    override var effectiveSize: NSSize {
+    open override var effectiveSize: NSSize {
         var defaultSize = NSMakeSize(text.layoutSize.width + leftInset * 2 + innerInset * 2, height)
         if let _ = self.item.image {
             defaultSize.width += imageSize + leftInset - 2
@@ -146,31 +160,31 @@ final class AppMenuRowItem : AppMenuBasicItem {
         return defaultSize
     }
     
-    override var height: CGFloat {
+    open override var height: CGFloat {
         return 32
     }
     
-    override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
+    open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         text.measure(width: width - leftInset * 2 - innerInset * 2)
         return true
     }
     
-    override var stableId: AnyHashable {
+    open override var stableId: AnyHashable {
         return item.id
     }
-    override func viewClass() -> AnyClass {
+    open override func viewClass() -> AnyClass {
         return AppMenuRowView.self
     }
 }
 
-private final class AppMenuRowView: TableRowView {
+open class AppMenuRowView: TableRowView {
     private let textView = TextView()
     private var imageView: ImageView? = nil
     private var drawable: AppMenuItemImageDrawable? = nil
     private let containerView = Control()
     private var more: ImageView? = nil
-    required init(frame frameRect: NSRect) {
+    public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         containerView.addSubview(textView)
         addSubview(containerView)
@@ -212,19 +226,19 @@ private final class AppMenuRowView: TableRowView {
         
     }
     
-    override func mouseDown(with event: NSEvent) {
+    open override func mouseDown(with event: NSEvent) {
         
     }
-    override func mouseUp(with event: NSEvent) {
+    open override func mouseUp(with event: NSEvent) {
         
     }
     
-    override func updateMouse() {
+    open override func updateMouse() {
         super.updateMouse()
         updateColors()
     }
     
-    override func updateColors() {
+    open override func updateColors() {
         super.updateColors()
         guard let item = item as? AppMenuRowItem else {
             return
@@ -240,11 +254,11 @@ private final class AppMenuRowView: TableRowView {
         
     }
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func layout() {
+    open override func layout() {
         super.layout()
         
         guard let item = item as? AppMenuRowItem else {
@@ -266,7 +280,7 @@ private final class AppMenuRowView: TableRowView {
         }
     }
     
-    override func set(item: TableRowItem, animated: Bool = false) {
+    open override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
         guard let item = item as? AppMenuRowItem else {
@@ -332,7 +346,7 @@ private final class AppMenuRowView: TableRowView {
         needsLayout = true
     }
     
-    override var backdorColor: NSColor {
+    open override var backdorColor: NSColor {
         return .clear
     }
 }

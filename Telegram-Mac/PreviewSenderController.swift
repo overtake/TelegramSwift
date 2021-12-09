@@ -240,47 +240,45 @@ fileprivate class PreviewSenderView : Control {
             self?.controller?.send(false)
         }, for: .SingleClick)
         
-        let handler:(Control)->Void = { [weak self] control in
+
+        
+        sendButton.contextMenu = { [weak self] in
             if let controller = self?.controller, let peer = controller.chatInteraction.peer {
-                
                 let chatInteraction = controller.chatInteraction
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                    return
+                    return nil
                 }
-                
-                var items:[SPopoverItem] = []
+                var items:[ContextMenuItem] = []
                 
                 if peer.id != chatInteraction.context.account.peerId {
-                    items.append(SPopoverItem(strings().chatSendWithoutSound, { [weak controller] in
+                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak controller] in
                         controller?.send(true)
-                    }))
+                    }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
                 case .history:
                     if !peer.isSecretChat {
-                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, {
+                        items.append(ContextMenuItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, handler: {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
                                 controller?.send(false, atDate: date)
                             }), for: context.window)
-                        }))
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
                     }
-                case .scheduled:
-                    break
-                case .replyThread:
-                    break
-                case .pinned, .preview:
+                default:
                     break
                 }
                 if !items.isEmpty {
-                    showPopover(for: control, with: SPopoverViewController(items: items))
+                   let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
                 }
             }
+            return nil
         }
         
-        sendButton.set(handler: handler, for: .RightDown)
-        sendButton.set(handler: handler, for: .LongMouseDown)
-
         textView.setFrameSize(NSMakeSize(280, 34))
 
         addSubview(tableView)

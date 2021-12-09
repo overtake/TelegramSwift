@@ -12,74 +12,14 @@ import SwiftSignalKit
 import AppKit
 
 
+typealias MenuAnimation = LocalAnimatedSticker
 
-extension AppMenu {
-    static var add_to_folder:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
+extension MenuAnimation {
+    var value: (NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
         { color, item in
-            AppMenuAnimatedImage(.menu_add_to_folder, color, item)
+            return AppMenuAnimatedImage(self, color, item)
         }
     }
-    static var archive:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_archive, color, item)
-        }
-    }
-    static var clear_history:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_clear_history, color, item)
-        }
-    }
-    static var delete:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_delete, color, item)
-        }
-    }
-    static var mute:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_mute, color, item)
-        }
-    }
-    static var pin:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_pin, color, item)
-        }
-    }
-    static var unmute:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_unmuted, color, item)
-        }
-    }
-    static var unread:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_unread, color, item)
-        }
-    }
-    static var unarchive:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_unarchive, color, item)
-        }
-    }
-    static var read:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_read, color, item)
-        }
-    }
-    static var unpin:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_unpin, color, item)
-        }
-    }
-    static var mute_for_1_hour:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_mute_for_1_hour, color, item)
-        }
-    }
-    static var mute_for_2_days:(NSColor, ContextMenuItem)-> AppMenuItemImageDrawable {
-        { color, item in
-            AppMenuAnimatedImage(.menu_mute_for_2_days, color, item)
-        }
-    }
-    
 }
 
 

@@ -585,6 +585,7 @@ public class TableScrollListener : NSObject {
     public var handler:(ScrollPosition)->Void
     fileprivate let dispatchWhenVisibleRangeUpdated: Bool
     fileprivate var first: Bool = true
+    fileprivate var dispatchRange: NSRange = NSMakeRange(NSNotFound, 0)
     public init(dispatchWhenVisibleRangeUpdated: Bool = true, _ handler:@escaping(ScrollPosition)->Void) {
         self.dispatchWhenVisibleRangeUpdated = dispatchWhenVisibleRangeUpdated
         self.handler = handler
@@ -1082,9 +1083,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         
                     }
                     for listener in strongSelf.scrollListeners {
-                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
+                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, listener.dispatchRange) {
                             listener.handler(scroll.current)
                             listener.first = false
+                            listener.dispatchRange = scroll.current.visibleRows
                         }
                     }
                     

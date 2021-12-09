@@ -76,14 +76,12 @@ private final class PopularPeerItem : TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
+        let context = self.context
         switch type {
         case let .peer(peer, _, _):
-            items.append(ContextMenuItem(strings().searchPopularDelete, handler: { [weak self] in
-                guard let `self` = self else {return}
-               // self.table?.remove(at: self.index, redraw: true, animation: .effectFade)
-                _ = self.context.engine.peers.removeRecentPeer(peerId: peer.id).start()
-  
-            }))
+            items.append(ContextMenuItem(strings().searchPopularDelete, handler: {
+                _ = context.engine.peers.removeRecentPeer(peerId: peer.id).start()
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         default:
             break
         }

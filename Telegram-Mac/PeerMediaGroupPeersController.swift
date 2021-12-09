@@ -235,19 +235,12 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                     }
                     
                     var menuItems: [ContextMenuItem] = []
-                    if sortedParticipants[i].peerId != arguments.context.peerId {
-                        menuItems.append(ContextMenuItem(strings().chatListContextPreview, handler: {
-                            arguments.chatPreview(sortedParticipants[i].peerId)
-                        }))
-                        if canRestrict {
-                            menuItems.append(ContextSeparatorItem())
-                        }
-                    }
+
                    
                     if canRestrict {
                         menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuDelete, handler: {
                             arguments.removePeer(sortedParticipants[i].peerId)
-                        }))
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                     
                     usersBlock.append(.member(section: Int(sectionId), index: i, peerId: peer.id, peer: peer, presence: view.peerPresences[peer.id], activity: inputActivities[peer.id], memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: !disabledPeerIds.contains(peer.id), viewType: .singleItem))
@@ -365,27 +358,19 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                 var menuItems:[ContextMenuItem] = []
                 
                 
-                if sortedParticipants[i].participant.peerId != arguments.context.peerId {
-                    menuItems.append(ContextMenuItem(strings().chatListContextPreview, handler: {
-                        arguments.chatPreview(sortedParticipants[i].participant.peerId)
-                    }))
-                    if canPromote || canRestrict {
-                        menuItems.append(ContextSeparatorItem())
-                    }
-                }
-                
                 if canPromote {
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuPromote, handler: {
                         arguments.promote(sortedParticipants[i].participant)
-                    }))
+                    }, itemImage: MenuAnimation.menu_promote.value))
                 }
                 if canRestrict {
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuRestrict, handler: {
                         arguments.restrict(sortedParticipants[i].participant)
-                    }))
+                    }, itemImage: MenuAnimation.menu_restrict.value))
+                    menuItems.append(ContextSeparatorItem())
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuDelete, handler: {
                         arguments.removePeer(sortedParticipants[i].peer.id)
-                    }))
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
                 let editing:ShortPeerDeleting?

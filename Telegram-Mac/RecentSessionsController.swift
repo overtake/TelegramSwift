@@ -48,16 +48,16 @@ func iconForSession(_ session: RecentAccountSession) -> (CGImage?, LocalAnimated
         return (NSImage(named: "Icon_Device_Apple")?.precomposed(), LocalAnimatedSticker.device_mac, NSColor(rgb: 0x0079ff), nil)
     }
     if device.contains("ipad") {
-        return (NSImage(named: "Icon_Device_Ipad1")?.precomposed(), LocalAnimatedSticker.device_ipad, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
+        return (NSImage(named: "Icon_Device_Ipad2")?.precomposed(), LocalAnimatedSticker.device_ipad, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
     }
     
     if device.contains("iphone") {
-        return (NSImage(named: "Icon_Device_Iphone1")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
+        return (NSImage(named: "Icon_Device_Iphone2")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
     }
 
     
     if platform.contains("ios") || platform.contains("macos") || systemVersion.contains("macos") {
-        return (NSImage(named: "Icon_Device_Iphone1")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
+        return (NSImage(named: "Icon_Device_Iphone2")?.precomposed(), LocalAnimatedSticker.device_iphone, NSColor(rgb: 0x0079ff), ["apple.apple.Заливка 1"])
     }
     if platform.contains("ubuntu") || systemVersion.contains("ubuntu") {
         return (NSImage(named: "Icon_Device_Ubuntu")?.precomposed(), LocalAnimatedSticker.device_ubuntu, NSColor(rgb: 0x0079ff), ["Ellipse 25.Ellipse 24.Обводка 1", "Ellipse 24.Ellipse 24.Обводка 1", "Union.Union.Заливка 1"])

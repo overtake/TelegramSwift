@@ -1917,8 +1917,14 @@ public final class L10n {
   public static var chatContextClearHistory: String  { return L10n.tr("Localizable", "Chat.Context.ClearHistory") }
   /// Clear All
   public static var chatContextClearScheduled: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled") }
+  /// Copy
+  public static var chatContextCopy: String  { return L10n.tr("Localizable", "Chat.Context.Copy") }
   /// Copy Preformatted Block
   public static var chatContextCopyBlock: String  { return L10n.tr("Localizable", "Chat.Context.CopyBlock") }
+  /// Copy Media
+  public static var chatContextCopyMedia: String  { return L10n.tr("Localizable", "Chat.Context.CopyMedia") }
+  /// Copy Text
+  public static var chatContextCopyText: String  { return L10n.tr("Localizable", "Chat.Context.CopyText") }
   /// Create Group
   public static var chatContextCreateGroup: String  { return L10n.tr("Localizable", "Chat.Context.CreateGroup") }
   /// Unmute
@@ -1937,6 +1943,8 @@ public final class L10n {
   public static var chatContextRemoveFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.RemoveFavoriteSticker") }
   /// Restrict
   public static var chatContextRestrict: String  { return L10n.tr("Localizable", "Chat.Context.Restrict") }
+  /// Save as...
+  public static var chatContextSaveMedia: String  { return L10n.tr("Localizable", "Chat.Context.SaveMedia") }
   /// Shared Media
   public static var chatContextSharedMedia: String  { return L10n.tr("Localizable", "Chat.Context.SharedMedia") }
   /// Unarchive
@@ -2743,7 +2751,7 @@ public final class L10n {
   public static func chatSendAsGroupZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.SendAs.Group_zero", p1)
   }
-  /// SEND MESSAGE ASS...
+  /// SEND MESSAGE AS...
   public static var chatSendAsHeader: String  { return L10n.tr("Localizable", "Chat.SendAs.Header") }
   /// personal account
   public static var chatSendAsPersonalAccount: String  { return L10n.tr("Localizable", "Chat.SendAs.PersonalAccount") }
@@ -3927,18 +3935,24 @@ public final class L10n {
   public static var contactsPhoneNumberNotRegistred: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.NotRegistred") }
   /// Phone Number
   public static var contactsPhoneNumberPlaceholder: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.Placeholder") }
-  /// Save as...
-  public static var contextCopyMedia: String  { return L10n.tr("Localizable", "Context.CopyMedia") }
+  /// Copy
+  public static var contextCopy: String  { return L10n.tr("Localizable", "Context.Copy") }
   /// Open in Quick Look
   public static var contextOpenInQuickLook: String  { return L10n.tr("Localizable", "Context.OpenInQuickLook") }
   /// Remove
   public static var contextRecentGifRemove: String  { return L10n.tr("Localizable", "Context.RecentGifRemove") }
   /// Remove
   public static var contextRemoveFaveSticker: String  { return L10n.tr("Localizable", "Context.RemoveFaveSticker") }
+  /// Save as...
+  public static var contextSaveMedia: String  { return L10n.tr("Localizable", "Context.SaveMedia") }
   /// Show In Finder
   public static var contextShowInFinder: String  { return L10n.tr("Localizable", "Context.ShowInFinder") }
   /// View Sticker Set
   public static var contextViewStickerSet: String  { return L10n.tr("Localizable", "Context.ViewStickerSet") }
+  /// Copied to Clipboard
+  public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
+  /// This link will only work for members of this chat
+  public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
   /// Are you sure? This action cannot be undone.
   public static var convertToSuperGroupConfirm: String  { return L10n.tr("Localizable", "ConvertToSuperGroup.Confirm") }
   /// Something went wrong, sorry. Please try again later.

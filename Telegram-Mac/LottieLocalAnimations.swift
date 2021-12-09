@@ -105,6 +105,35 @@ enum LocalAnimatedSticker : String {
     case menu_unarchive
     case menu_mute_for_1_hour
     case menu_mute_for_2_days
+    case menu_forward
+    case menu_open_with
+    case menu_reply
+    case menu_report
+    case menu_restrict
+    case menu_retract_vote
+    case menu_stop_poll
+    case menu_leave
+    case menu_edit
+    case menu_copy_media
+    case menu_copy
+    case menu_copy_link
+    case menu_save_as
+    case menu_select_messages
+    case menu_schedule_message
+    case menu_send_now
+    case menu_seen
+    case menu_view_replies
+    case menu_add_to_favorites
+    case menu_add_gif
+    case menu_remove_gif
+    case menu_plus
+    case menu_remove_from_favorites
+    case menu_copyright
+    case menu_pornography
+    case menu_violence
+    case menu_view_sticker_set
+    case menu_show_message
+    case menu_promote
 
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
