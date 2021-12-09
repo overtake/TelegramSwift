@@ -585,6 +585,7 @@ public class TableScrollListener : NSObject {
     public var handler:(ScrollPosition)->Void
     fileprivate let dispatchWhenVisibleRangeUpdated: Bool
     fileprivate var first: Bool = true
+    fileprivate var dispatchRange: NSRange = NSMakeRange(NSNotFound, 0)
     public init(dispatchWhenVisibleRangeUpdated: Bool = true, _ handler:@escaping(ScrollPosition)->Void) {
         self.dispatchWhenVisibleRangeUpdated = dispatchWhenVisibleRangeUpdated
         self.handler = handler
@@ -652,7 +653,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var needUpdateVisibleAfterScroll:Bool = false
     private var scrollHandler:(_ scrollPosition:ScrollPosition) ->Void = {_ in}
     
-    private var backgroundView: ImageView? 
+    private var backgroundView: ImageView?
     
     private var scrollListeners:[TableScrollListener] = []
     
@@ -1082,9 +1083,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         
                     }
                     for listener in strongSelf.scrollListeners {
-                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, scroll.previous.visibleRows) {
+                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, listener.dispatchRange) {
                             listener.handler(scroll.current)
                             listener.first = false
+                            listener.dispatchRange = scroll.current.visibleRows
                         }
                     }
                     
@@ -2648,7 +2650,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //                scrollView.tile()
 //                scrollView.reflectScrolledClipView(scrollView.contentView)
 //            }
-//            
+//
             if self.searchView == nil {
                 self.searchView = TableSearchView(frame: NSMakeRect(0, -50, frame.width, 50))
                 addSubview(self.searchView!)
