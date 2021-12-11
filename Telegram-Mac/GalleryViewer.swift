@@ -13,6 +13,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import AVFoundation
+import ColorPalette
 
 final class GalleryInteractions {
     var dismiss:(NSEvent)->KeyHandlerResult = { _ in return .rejected}
@@ -760,19 +761,14 @@ class GalleryViewer: NSResponder {
     
     func showControlsPopover(_ control:Control) {
         
-        if let popover = control.popover {
-            popover.hide()
-            return
-        }
-        
-        var items:[SPopoverItem] = []
+        var items:[ContextMenuItem] = []
         
         let isProtected = pager.selectedItem?.entry.message?.containsSecretMedia == true || pager.selectedItem?.entry.message?.isCopyProtected() == true
         
         if !isProtected {
-            items.append(SPopoverItem(strings().galleryContextSaveAs, {[weak self] in
+            items.append(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
                 self?.saveAs()
-            }))
+            }, itemImage: MenuAnimation.menu_save_as.value))
         }
         
         let context = self.context
@@ -786,64 +782,72 @@ class GalleryViewer: NSResponder {
             let file = item.media
             if file.isAnimated && file.isVideo {
                 let reference = item.entry.fileReference(file)
-                items.append(SPopoverItem(strings().gallerySaveGif, {
+                items.append(ContextMenuItem(strings().gallerySaveGif, handler: {
                     let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
-                }))
-            }
-        }
-        
-       
-        
-        if let _ = self.contentInteractions {
-            if let message = pager.selectedItem?.entry.message {
-                if self.type == .history {
-                    items.append(SPopoverItem(strings().galleryContextShowMessage, { [weak self] in
-                        self?.showMessage()
-                    }))
-                }
-                if chatMode == .history && message.id.peerId != repliesPeerId && self.type == .history {
-                    items.append(SPopoverItem(strings().galleryContextShowGallery, { [weak self] in
-                        self?.showSharedMedia()
-                    }))
-                }
-                if canDeleteMessage(message, account: context.account, mode: .history) {
-                    items.append(SPopoverItem(strings().galleryContextDeletePhoto, { [weak self] in
-                        self?.deleteMessage(control)
-                    }))
-                }
+                }, itemImage: MenuAnimation.menu_add_gif.value))
             }
         }
         
         if !isProtected {
-            items.append(SPopoverItem(strings().galleryContextCopyToClipboard, {[weak self] in
+            items.append(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
                 self?.copy(nil)
-            }))
+            }, itemImage: MenuAnimation.menu_copy.value))
+        }
+        
+        
+        if let _ = self.contentInteractions {
+            if let message = pager.selectedItem?.entry.message {
+                if self.type == .history {
+                    items.append(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
+                        self?.showMessage()
+                    }, itemImage: MenuAnimation.menu_show_message.value))
+                }
+                if chatMode == .history && message.id.peerId != repliesPeerId && self.type == .history {
+                    items.append(ContextMenuItem(strings().galleryContextShowGallery, handler: { [weak self] in
+                        self?.showSharedMedia()
+                    }, itemImage: MenuAnimation.menu_shared_media.value))
+                }
+                
+                if canDeleteMessage(message, account: context.account, mode: .history) {
+                    if !items.isEmpty {
+                        items.append(ContextSeparatorItem())
+                    }
+                    items.append(ContextMenuItem(strings().galleryContextDeletePhoto, handler: { [weak self] in
+                        self?.deleteMessage(control)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                }
+            }
         }
         
         
         switch type {
         case .profile(let peerId):
             if peerId == context.peerId {
-                items.append(SPopoverItem(strings().galleryContextDeletePhoto, {[weak self] in
-                    self?.deletePhoto()
-                }))
                 if pager.currentIndex != 0 {
-                    items.append(SPopoverItem(strings().galleryContextMainPhoto, { [weak self] in
+                    items.append(ContextMenuItem(strings().galleryContextMainPhoto, handler: { [weak self] in
                         self?.updateMainPhoto()
-                    }))
+                    }, itemImage: MenuAnimation.menu_copy_media.value))
                 }
+                if !items.isEmpty {
+                    items.append(ContextSeparatorItem())
+                }
+                items.append(ContextMenuItem(strings().galleryContextDeletePhoto, handler: { [weak self] in
+                    self?.deletePhoto()
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
             }
         default:
             break
         }
         
-        items.append(SPopoverItem(strings().navigationClose, { [weak self] in
-            if let event = NSApp.currentEvent {
-                _ = self?.interactions.dismiss(event)
-            }
-        }))
+    
         
-        showPopover(for: control, with: SPopoverViewController(items: items, visibility: 6), inset:NSMakePoint((-105 + 14), 0), static: true)
+        let menu = ContextMenu(presentation: .current(darkPalette))
+        for item in items {
+            menu.addItem(item)
+        }
+        if let event = NSApp.currentEvent {
+            AppMenu.show(menu: menu, event: event, for: control)
+        }
     }
     
     private func deleteMessages(_ messages:[Message]) {
@@ -997,7 +1001,7 @@ class GalleryViewer: NSResponder {
     
     
     var contextMenu:ContextMenu {
-        let menu = ContextMenu()
+        let menu = ContextMenu(presentation: .current(darkPalette))
         
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {
@@ -1006,7 +1010,7 @@ class GalleryViewer: NSResponder {
                 } else {
                     menu.addItem(ContextMenuItem(strings().galleryContextSaveAs, handler: { [weak self] in
                         self?.saveAs()
-                    }))
+                    }, itemImage: MenuAnimation.menu_save_as.value))
                 }
             }
             if item.entry.message?.isCopyProtected() == true {
@@ -1015,7 +1019,7 @@ class GalleryViewer: NSResponder {
                 if let text = self.pager.selectedText {
                     menu.addItem(ContextMenuItem(strings().chatCopySelectedText, handler: {
                         copyToClipboard(text)
-                    }))
+                    }, itemImage: MenuAnimation.menu_copy.value))
                 }
             }
             
@@ -1023,14 +1027,14 @@ class GalleryViewer: NSResponder {
             if let _ = self.contentInteractions {
                 menu.addItem(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
                     self?.showMessage()
-                }))
+                }, itemImage: MenuAnimation.menu_show_message.value))
             }
             if item.entry.message?.isCopyProtected() == true {
                 
             } else {
                 menu.addItem(ContextMenuItem(strings().galleryContextCopyToClipboard, handler: { [weak self] in
                     self?.copy(nil)
-                }))
+                }, itemImage: MenuAnimation.menu_copy_media.value))
             }
             
         }

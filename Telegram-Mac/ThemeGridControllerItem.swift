@@ -40,22 +40,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
     deinit {
         fetchDisposable.dispose()
     }
-    
-    override func menu(for event: NSEvent) -> NSMenu? {
-        let menu = NSMenu(title: "")
-        if let wallpaper = self.wallpaper {
-            switch wallpaper {
-            case .file:
-                menu.addItem(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
-                    self?.delete?()
-                }))
-            default:
-                break
-            }
-        }
-       
-        return menu
-    }
+
     
     override func layout() {
         super.layout()

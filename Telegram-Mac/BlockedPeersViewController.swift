@@ -127,7 +127,7 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 if case .plain = interactionType {
                     return .single([ContextMenuItem(strings().chatInputUnblock, handler: {
                         arguments.removePeer(peer.id)
-                    })])
+                    }, itemImage: MenuAnimation.menu_unblock.value)])
                 } else {
                     return .single([])
                 }

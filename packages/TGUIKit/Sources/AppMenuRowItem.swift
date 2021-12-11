@@ -142,12 +142,20 @@ open class AppMenuRowItem : AppMenuBasicItem {
         self.observation_t?.invalidate()
     }
     
+    var hasDrawable: Bool {
+        if let menu = item.menu {
+            return menu.items.compactMap { $0 as? ContextMenuItem }.contains(where: { $0.itemImage != nil })
+        }
+        return false
+    }
+    
     open override var effectiveSize: NSSize {
         var defaultSize = NSMakeSize(text.layoutSize.width + leftInset * 2 + innerInset * 2, height)
         if let _ = self.item.image {
             defaultSize.width += imageSize + leftInset - 2
         }
-        if let _ = self.item.itemImage {
+        
+        if hasDrawable {
             defaultSize.width += imageSize + leftInset - 2
         }
         
@@ -204,15 +212,19 @@ open class AppMenuRowView: TableRowView {
         
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Hover)
+            self?.updateState(.Hover)
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Highlight)
+            self?.updateState(.Highlight)
         }, for: .Highlight)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Normal)
+            self?.updateState(.Normal)
         }, for: .Normal)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Other)
+            self?.updateState(.Other)
         }, for: .Other)
            
         containerView.set(handler: { [weak self] _ in
@@ -224,6 +236,10 @@ open class AppMenuRowView: TableRowView {
         
        
         
+    }
+    private var previous: ControlState = .Normal
+    open func updateState(_ state: ControlState) {
+      
     }
     
     open override func mouseDown(with event: NSEvent) {
@@ -272,6 +288,8 @@ open class AppMenuRowView: TableRowView {
         } else if let imageView = imageView {
             imageView.centerY(x: item.leftInset)
             textView.centerY(x: imageView.frame.maxX + item.leftInset - 2)
+        } else if item.hasDrawable {
+            textView.centerY(x: item.leftInset + item.imageSize + item.leftInset - 2)
         } else {
             textView.centerY(x: item.leftInset)
         }

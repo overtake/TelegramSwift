@@ -93,7 +93,7 @@ public var viewEnableTouchBar: Bool = true
 
 open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
-    
+        
     public var isDynamicColorUpdateLocked: Bool = false
     
     public var noWayToRemoveFromSuperview: Bool = false

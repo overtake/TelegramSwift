@@ -1249,7 +1249,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let messageIndexDisposable: MetaDisposable = MetaDisposable()
     private let dateDisposable:MetaDisposable = MetaDisposable()
     private let interactiveReadingDisposable: MetaDisposable = MetaDisposable()
-    private let showRightControlsDisposable: MetaDisposable = MetaDisposable()
     private let deleteChatDisposable: MetaDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable: MetaDisposable = MetaDisposable()
     private let updateMediaDisposable = MetaDisposable()
@@ -1313,6 +1312,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let _historyReady = Promise<Bool>()
     private var didSetHistoryReady = false
 
+    
+    private var currentPeerView: PeerView?
     
     private let location:Promise<ChatHistoryLocation> = Promise()
     private let _locationValue:Atomic<ChatHistoryLocation?> = Atomic(value: nil)
@@ -4299,7 +4300,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {return}
             (self.centerBarView as? ChatTitleBarView)?.postboxView = postboxView
             let peerView = postboxView as? PeerView
-            
+            self.currentPeerView = peerView
             switch self.chatInteraction.mode {
             case .history, .preview:
                 
@@ -5225,163 +5226,158 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         doneButton.userInteractionEnabled = false
         editButton.userInteractionEnabled = false
         
-        back.set(handler: { [weak self] _ in
-            self?.showRightControls()
-        }, for: .Click)
+        let context = self.context
+        let chatLocation = self.chatLocation
+        
+        
+        editButton.contextMenu = { [weak self] in
+            
+            guard let `self` = self, let peerView = self.currentPeerView else {
+                return nil
+            }
+            let chatInteraction = self.chatInteraction
+            let menu = ContextMenu(betterInside: true)
+            
+            var items:[ContextMenuItem] = []
+            let peerId = chatLocation.peerId
+            switch self.mode {
+            case .scheduled:
+                items.append(ContextMenuItem(strings().chatContextClearScheduled, handler: {
+                    confirm(for: context.window, header: strings().chatContextClearScheduledConfirmHeader, information: strings().chatContextClearScheduledConfirmInfo, okTitle: strings().chatContextClearScheduledConfirmOK, successHandler: { _ in
+                        _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, type: .scheduledMessages).start()
+                    })
+                }, itemImage: MenuAnimation.menu_schedule_message.value))
+            case .history:
+                switch chatLocation {
+                case let .peer(peerId):
+                    items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                        self?.changeState()
+                    }, itemImage: MenuAnimation.menu_edit.value))
+                    
+                    if peerId != repliesPeerId {
+                        items.append(ContextMenuItem(strings().chatContextInfo, handler: { [weak self] in
+                            self?.chatInteraction.openInfo(peerId, false, nil, nil)
+                        }, itemImage: MenuAnimation.menu_show_info.value))
+                    }
+                    
+                    
+                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, !self.isAdChat  {
+                        if chatInteraction.peerId != context.peerId {
+                            items.append(ContextMenuItem(!notificationSettings.isMuted ? strings().chatContextEnableNotifications : strings().chatContextDisableNotifications, handler: { [weak self] in
+                                self?.chatInteraction.toggleNotifications(notificationSettings.isMuted)
+                            }, itemImage: notificationSettings.isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
+                        }
+                    }
+                    
+                    if let peer = peerView.peers[peerView.peerId], let mainPeer = peerViewMainPeer(peerView) {
+                        
+                        var activeCall = (peerView.cachedData as? CachedGroupData)?.activeCall
+                        activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
+                        
+                        if peer.groupAccess.canMakeVoiceChat {
+                            var isLiveStream: Bool = false
+                            if let peer = peer as? TelegramChannel {
+                                isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
+                            }
+                            items.append(ContextMenuItem(isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, handler: { [weak self] in
+                                self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
+                            }, itemImage: MenuAnimation.menu_video_chat.value))
+                        }
+                        if peer.isUser, peer.id != context.peerId {
+                            items.append(ContextMenuItem(strings().chatContextCreateGroup, handler: { [weak self] in
+                                self?.createGroup()
+                            }, itemImage: MenuAnimation.menu_create_group.value))
+                            
+                            items.append(ContextMenuItem(strings().peerInfoChatColors, handler: { [weak self] in
+                                self?.showChatThemeSelector()
+                            }, itemImage: MenuAnimation.menu_change_colors.value))
+                        }
+                        
+                        if let groupId = peerView.groupId, groupId != .root {
+                            items.append(ContextMenuItem(strings().chatContextUnarchive, handler: {
+                                _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
+                            }, itemImage: MenuAnimation.menu_unarchive.value))
+                        } else {
+                            items.append(ContextMenuItem(strings().chatContextArchive, handler: {
+                                _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
+                            }, itemImage: MenuAnimation.menu_archive.value))
+                        }
+                        
+                        if peer.canSendMessage(self.mode.isThreadMode), peerView.peerId.namespace != Namespaces.Peer.SecretChat {
+                            let text: String
+                            if peer.id != context.peerId {
+                                text = strings().chatRightContextScheduledMessages
+                            } else {
+                                text = strings().chatRightContextReminder
+                            }
+                            items.append(ContextMenuItem(text, handler: { [weak self] in
+                                self?.openScheduledChat()
+                            }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        }
+                      
+                        
+                        let deleteChat = { [weak self] in
+                            guard let `self` = self else {return}
+                            let signal = removeChatInteractively(context: context, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
+                                return context.globalPeerHandler.get() |> take(1)
+                                } |> deliverOnMainQueue
+                            
+                            self.deleteChatDisposable.set(signal.start(next: { [weak self] location in
+                                if location == self?.chatInteraction.chatLocation {
+                                    self?.context.sharedContext.bindings.rootNavigation().close()
+                                }
+                            }))
+                        }
+                        
+                        let animation: LocalAnimatedSticker
+                        let text: String
+                        if peer.isGroup {
+                            text = strings().chatListContextDeleteAndExit
+                            animation = .menu_delete
+                        } else if peer.isChannel {
+                            text = strings().chatListContextLeaveChannel
+                            animation = .menu_leave
+                        } else if peer.isSupergroup {
+                            text = strings().chatListContextLeaveGroup
+                            animation = .menu_leave
+                        } else {
+                            text = strings().chatListContextDeleteChat
+                            animation = .menu_delete
+                        }
+                        
+                        if !items.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
+                        
+                        if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
+                            items.append(ContextMenuItem(strings().chatContextClearHistory, handler: {
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                            }, itemImage: MenuAnimation.menu_clear_history.value))
+                        }
+                        
+                        items.append(ContextMenuItem(text, handler: deleteChat, itemMode: .destruct, itemImage: animation.value))
+                        
+                    }
+                case .replyThread:
+                    break
+                }
+            case .replyThread, .pinned:
+                 items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                    self?.changeState()
+                 }, itemImage: MenuAnimation.menu_edit.value))
+            case .preview:
+                break
+            }
+            for item in items {
+                menu.addItem(item)
+            }
+            return menu
+        }
+        
         requestUpdateRightBar()
         return back
     }
 
-    private func showRightControls() {
-        switch state {
-        case .Normal:
-            if let button = editButton {
-                let context = self.context
-                showRightControlsDisposable.set((peerView.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] view in
-                    guard let `self` = self else {return}
-                    var items:[SPopoverItem] = []
-                    let peerId = self.chatLocation.peerId
-                    switch self.mode {
-                    case .scheduled:
-                        items.append(SPopoverItem(strings().chatContextClearScheduled, {
-                            confirm(for: context.window, header: strings().chatContextClearScheduledConfirmHeader, information: strings().chatContextClearScheduledConfirmInfo, okTitle: strings().chatContextClearScheduledConfirmOK, successHandler: { _ in
-                                _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, type: .scheduledMessages).start()
-                            })
-                        }, theme.icons.chatActionClearHistory))
-                    case .history:
-                        switch self.chatLocation {
-                        case let .peer(peerId):
-                            guard let peerView = view as? PeerView else {return}
-                            
-                            items.append(SPopoverItem(strings().chatContextEdit1 + (FastSettings.tooltipAbility(for: .edit) ? " (\(strings().chatContextEditHelp))" : ""),  { [weak self] in
-                                self?.changeState()
-                            }, theme.icons.chatActionEdit))
-                            if peerId != repliesPeerId {
-                                items.append(SPopoverItem(strings().chatContextInfo,  { [weak self] in
-                                    self?.chatInteraction.openInfo(peerId, false, nil, nil)
-                                }, theme.icons.chatActionInfo))
-                            }
-                            
-                            
-                            
-                            
-                            if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, !self.isAdChat  {
-                                if self.chatInteraction.peerId != context.peerId {
-                                    items.append(SPopoverItem(!notificationSettings.isMuted ? strings().chatContextEnableNotifications : strings().chatContextDisableNotifications, { [weak self] in
-                                        self?.chatInteraction.toggleNotifications(notificationSettings.isMuted)
-                                    }, !notificationSettings.isMuted ? theme.icons.chatActionUnmute : theme.icons.chatActionMute))
-                                }
-                            }
-                            
-                            if let peer = peerView.peers[peerView.peerId], let mainPeer = peerViewMainPeer(peerView) {
-                                
-                                var activeCall = (peerView.cachedData as? CachedGroupData)?.activeCall
-                                activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
-                                
-                                if peer.groupAccess.canMakeVoiceChat {
-                                    var isLiveStream: Bool = false
-                                    if let peer = peer as? TelegramChannel {
-                                        isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
-                                    }
-                                    items.append(SPopoverItem(isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, { [weak self] in
-                                        self?.makeVoiceChat(activeCall, callJoinPeerId: nil)
-                                    }, theme.icons.chat_info_voice_chat))
-                                }
-                                if peer.isUser, peer.id != context.peerId {
-                                    items.append(SPopoverItem(strings().chatContextCreateGroup, { [weak self] in
-                                        self?.createGroup()
-                                    }, theme.icons.chat_info_create_group))
-                                    
-                                    items.append(SPopoverItem(strings().peerInfoChatColors, { [weak self] in
-                                        self?.showChatThemeSelector()
-                                    }, theme.icons.chat_info_change_colors))
-                                }
-                                
-                                if let groupId = peerView.groupId, groupId != .root {
-                                    items.append(SPopoverItem(strings().chatContextUnarchive, {
-                                        _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
-                                    }, theme.icons.chatUnarchive))
-                                } else {
-                                    items.append(SPopoverItem(strings().chatContextArchive, {
-                                        _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
-                                    }, theme.icons.chatArchive))
-                                }
-                                
-                                if peer.canSendMessage(self.mode.isThreadMode), peerView.peerId.namespace != Namespaces.Peer.SecretChat {
-                                    let text: String
-                                    if peer.id != context.peerId {
-                                        text = strings().chatRightContextScheduledMessages
-                                    } else {
-                                        text = strings().chatRightContextReminder
-                                    }
-                                    items.append(SPopoverItem(text, { [weak self] in
-                                        self?.openScheduledChat()
-                                    }, theme.icons.scheduledInputAction))
-                                }
-                                
-                                if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
-                                    items.append(SPopoverItem(strings().chatContextClearHistory, {
-                                        clearHistory(context: context, peer: peer, mainPeer: mainPeer)
-                                    }, theme.icons.chatActionClearHistory))
-                                }
-                                
-                                let deleteChat = { [weak self] in
-                                    guard let `self` = self else {return}
-                                    let signal = removeChatInteractively(context: context, peerId: self.chatInteraction.peerId, userId: self.chatInteraction.peer?.id) |> filter {$0} |> mapToSignal { _ -> Signal<ChatLocation?, NoError> in
-                                        return context.globalPeerHandler.get() |> take(1)
-                                        } |> deliverOnMainQueue
-                                    
-                                    self.deleteChatDisposable.set(signal.start(next: { [weak self] location in
-                                        if location == self?.chatInteraction.chatLocation {
-                                            self?.context.sharedContext.bindings.rootNavigation().close()
-                                        }
-                                    }))
-                                }
-                                
-                                let text: String
-                                if peer.isGroup {
-                                    text = strings().chatListContextDeleteAndExit
-                                } else if peer.isChannel {
-                                    text = strings().chatListContextLeaveChannel
-                                } else if peer.isSupergroup {
-                                    text = strings().chatListContextLeaveGroup
-                                } else {
-                                    text = strings().chatListContextDeleteChat
-                                }
-                                
-                                
-                                items.append(SPopoverItem(text, deleteChat, theme.icons.chatActionDeleteChat))
-                                
-                            }
-                        case .replyThread:
-                            break
-                        }
-                    case .replyThread:
-                         items.append(SPopoverItem(strings().chatContextEdit1,  { [weak self] in
-                            self?.changeState()
-                         }, theme.icons.chatActionEdit))
-                    case .pinned:
-                        items.append(SPopoverItem(strings().chatContextEdit1,  { [weak self] in
-                            self?.changeState()
-                        }, theme.icons.chatActionEdit))
-                    case .preview:
-                        break
-                    }
-                    if !items.isEmpty {
-                        if let popover = button.popover {
-                            popover.hide()
-                        } else {
-                            showPopover(for: button, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -65))
-                        }
-                    }
-                }))
-            }
-        case .Edit:
-            changeState()
-        case .Some:
-            break
-        }
-    }
     private func createGroup() {
         context.composeCreateGroup(selectedPeers: [self.chatLocation.peerId])
     }
@@ -5558,7 +5554,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         messageIndexDisposable.dispose()
         dateDisposable.dispose()
         interactiveReadingDisposable.dispose()
-        showRightControlsDisposable.dispose()
         deleteChatDisposable.dispose()
         loadSelectionMessagesDisposable.dispose()
         updateMediaDisposable.dispose()

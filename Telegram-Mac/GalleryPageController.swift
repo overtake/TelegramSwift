@@ -427,7 +427,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
             }
             return .invoked
-        }, with: self, for: .rightMouseUp)
+        }, with: self, for: .rightMouseDown)
         
         controller.view = view
         controller.view.frame = frame

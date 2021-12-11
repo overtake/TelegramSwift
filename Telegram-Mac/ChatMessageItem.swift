@@ -490,7 +490,7 @@ class ChatMessageItem: ChatRowItem {
             }
             interactions.menuItems = { [weak self] type in
                 if let strongSelf = self, let message = strongSelf.message {
-                    return chatMenuItems(for: message, item: strongSelf, textLayout: (strongSelf.textLayout, type), chatInteraction: strongSelf.chatInteraction)
+                    return chatMenuItems(for: message, entry: strongSelf.entry, textLayout: (strongSelf.textLayout, type), chatInteraction: strongSelf.chatInteraction)
                 }
                 return .complete()
             }
@@ -658,7 +658,7 @@ class ChatMessageItem: ChatRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         if let message = message {
-            return chatMenuItems(for: message, item: self, textLayout: (self.textLayout, nil), chatInteraction: self.chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: (self.textLayout, nil), chatInteraction: self.chatInteraction)
         }
         return super.menuItems(in: location)
         

@@ -42,14 +42,14 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
         
-        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0, formatting: DataSizeStringFormatting.current)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end)
+        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0, formatting: DataSizeStringFormatting.current)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end, alwaysStaticItems: true)
         
         let localAction = NSMutableAttributedString()
         let range = localAction.append(string: strings().contextShowInFinder, color: theme.colors.link, font: .normal(.text))
         localAction.add(link: inAppLink.callback("finder", { _ in
             showInFinder(file, account: interface.context.account)
         }), for: range)
-        actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end)
+        actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end, alwaysStaticItems: true)
         actionLayoutLocal.interactions = globalLinkExecutor
         
         let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
@@ -75,28 +75,6 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         super.init(initialSize,interface,object, viewType: viewType)
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        let signal = super.menuItems(in: location)
-        let context = self.interface.context
-        if let file = self.file {
-            return signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
-                var items = items
-                return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> map {data in
-                    if data.complete {
-                        items.append(ContextMenuItem(strings().contextSaveMedia, handler: {
-                            saveAs(file, account: context.account)
-                        }))
-                        items.append(ContextMenuItem(strings().contextShowInFinder, handler: {
-                            showInFinder(file, account: context.account)
-                        }))
-                    }
-                    return items
-                }
-                
-            }
-        }
-        return signal
-    }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)

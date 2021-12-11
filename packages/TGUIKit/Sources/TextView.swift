@@ -1486,7 +1486,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         } else {
                             self.copy(self)
                         }
-                    })
+                    }, itemImage: TextView.context_copy_animation)
                     menu.addItem(copy)
                     AppMenu.show(menu: menu, event: event, for: self)
                 }
@@ -1500,7 +1500,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
     }
     
-
+    public static var context_copy_animation: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
     
     
     public func menuDidClose(_ menu: NSMenu) {

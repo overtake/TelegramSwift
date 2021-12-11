@@ -73,8 +73,8 @@ final class MenuView: View, TableViewDelegate {
         }
         
         self.setFrameSize(max, min(tableView.listHeight, min(600, screen.visibleFrame.height - 200)))
-        if presentation.isDark {
-            visualView.material = .ultraDark
+        if presentation.colors.isDark {
+            visualView.material = .dark
         } else {
             visualView.material = .light
         }
@@ -112,6 +112,7 @@ final class AppMenuController : NSObject  {
     var items:[ContextMenuItem] = []
     var parent: Window?
     let presentation: AppMenu.Presentation
+    private let betterInside: Bool
     
     private var keyDisposable: Disposable?
  
@@ -124,33 +125,68 @@ final class AppMenuController : NSObject  {
     
     private weak var weakHolder: AppMenu?
     private var strongHolder: AppMenu?
+    
+    private let overlay = OverlayControl()
 
     private var windows:[Key : Window] = [:]
 
-    init(_ items: [ContextMenuItem], presentation: AppMenu.Presentation, holder: AppMenu) {
+    init(_ items: [ContextMenuItem], presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool) {
         self.items = items
         self.weakHolder = holder
         self.presentation = presentation
+        self.betterInside = betterInside
     }
     
     func initialize() {
-        self.parent?.set(mouseHandler: { [weak self] event in
-            self?.close()
+        var isInteracted: Bool = false
+        self.parent?.set(mouseHandler: { event in
+            isInteracted = true
             return .invoked
         }, with: self, for: .leftMouseDown, priority: .supreme)
         
-        self.parent?.set(mouseHandler: { event in
+        self.parent?.set(mouseHandler: { [weak self] event in
+            if isInteracted {
+                self?.close()
+            }
+            isInteracted = true
             return .invoked
         }, with: self, for: .leftMouseUp, priority: .supreme)
 
-        self.parent?.set(mouseHandler: { [weak self] event in
-            self?.close()
+        self.parent?.set(mouseHandler: { event in
+            isInteracted = true
             return .invoked
         }, with: self, for: .rightMouseDown, priority: .supreme)
 
-        self.parent?.set(mouseHandler: { event in
+        self.parent?.set(mouseHandler: { [weak self] event in
+            if isInteracted {
+                self?.close()
+            }
+            isInteracted = true
             return .invoked
         }, with: self, for: .rightMouseUp, priority: .supreme)
+        
+        self.parent?.set(mouseHandler: { event in
+            return .invoked
+        }, with: self, for: .mouseMoved, priority: .supreme)
+        
+        self.parent?.set(mouseHandler: { event in
+            return .invoked
+        }, with: self, for: .mouseExited, priority: .supreme)
+
+        self.parent?.set(mouseHandler: { event in
+            return .invoked
+        }, with: self, for: .mouseEntered, priority: .supreme)
+
+
+        self.parent?.set(mouseHandler: { event in
+            return .invoked
+        }, with: self, for: .leftMouseDragged, priority: .supreme)
+
+        self.parent?.set(handler: { [weak self] event in
+            self?.close()
+            return .invoked
+        }, with: self, for: .All, priority: .supreme)
+        
 
         self.parent?.set(handler: { [weak self] _ in
             self?.close()
@@ -158,18 +194,23 @@ final class AppMenuController : NSObject  {
         }, with: self, for: .Escape, priority: .supreme)
     }
     
+    private var isClosed = false
     func close() {
-        for (_, panel) in self.windows {
-            panel.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak panel] _ in
-                if let panel = panel {
-                    panel.parent?.removeChildWindow(panel)
-                }
-            })
+        if !isClosed {
+            for (_, panel) in self.windows {
+                panel.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak panel] _ in
+                    if let panel = panel {
+                        panel.parent?.removeChildWindow(panel)
+                    }
+                })
+            }
+            self.windows.removeAll()
+            self.parent?.removeAllHandlers(for: self)
+            self.strongHolder = nil
+            self.overlay.removeFromSuperview()
+            self.onClose()
         }
-        self.windows.removeAll()
-        self.parent?.removeAllHandlers(for: self)
-        self.strongHolder = nil 
-        self.onClose()
+        self.isClosed = true
     }
     
 
@@ -313,22 +354,28 @@ final class AppMenuController : NSObject  {
         let view = getView(for: self.items, parentView: nil, submenuId: nil)
         
         var rect = window.convertToScreen(CGRect(origin: event.locationInWindow, size: view.frame.size))
-        rect.origin = rect.origin.offsetBy(dx: -10, dy: -rect.height + 10)
+        rect.origin = rect.origin.offsetBy(dx: -8, dy: -rect.height + 10)
         rect = adjust(rect)
         
         view.setFrame(rect, display: true)
         parent?.addChildWindow(view, ordered: .above)
-
-        view.view.layer?.animateScaleSpringTopCorner(from: 0.1, to: 1, duration: 0.3)
+                
+        var anchor = view.view.convert(view.mouseLocationOutsideOfEventStream, to: nil)
+        anchor.y = rect.height - anchor.y
+        
+        view.view.layer?.animateScaleSpringFrom(anchor: anchor, from: 0.1, to: 1, duration: 0.35)
+        
+        overlay.frame = window.bounds
+        window.contentView?.addSubview(overlay)
     }
     
     private func adjust(_ rect: NSRect, parent: Window? = nil) -> NSRect {
-        guard let screen = NSScreen.main else {
+        guard let screen = NSScreen.main, let owner = self.parent else {
             return rect
         }
         var rect = rect
         
-        let visible = screen.visibleFrame
+        let visible = parent != nil || !self.betterInside ? screen.visibleFrame : owner.frame
         
         if rect.minY < visible.minY {
             rect.origin.y = visible.minY
@@ -340,7 +387,7 @@ final class AppMenuController : NSObject  {
             if let parent = parent {
                 rect.origin.x = parent.frame.maxX - 10
             } else {
-                rect.origin.x = visible.minX
+                rect.origin.x = visible.minX + 10
             }
         } else if rect.maxX > visible.maxX {
             if let parent = parent {
@@ -349,6 +396,7 @@ final class AppMenuController : NSObject  {
                 rect.origin.x = visible.maxX - rect.width
             }
         }
+
 
         
         return rect

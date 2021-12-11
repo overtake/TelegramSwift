@@ -2549,7 +2549,7 @@ class ChatRowItem: TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         if let message = message {
-            return chatMenuItems(for: message, item: self, textLayout: nil, chatInteraction: chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: nil, chatInteraction: chatInteraction)
         }
         return super.menuItems(in: location)
     }

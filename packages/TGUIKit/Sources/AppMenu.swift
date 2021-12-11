@@ -9,38 +9,38 @@ public final class AppMenu {
     }
     
     public struct Presentation {
-        let isDark: Bool
+        let colors: ColorPalette
         var textColor: NSColor {
-            return PresentationTheme.current.colors.text
+            return colors.text
         }
         var disabledTextColor: NSColor {
-            return PresentationTheme.current.colors.grayText
+            return colors.grayText
         }
         var highlightColor: NSColor {
-            return PresentationTheme.current.colors.grayIcon.withAlphaComponent(0.1)
+            return colors.grayIcon.withAlphaComponent(0.15)
         }
         var borderColor: NSColor {
-            return PresentationTheme.current.colors.grayIcon.withAlphaComponent(0.1)
+            return colors.grayIcon.withAlphaComponent(0.1)
         }
         var backgroundColor: NSColor {
-            return PresentationTheme.current.colors.background.withAlphaComponent(0.6) 
+            return colors.background.withAlphaComponent(0.7)
         }
         var destructColor: NSColor {
-            return PresentationTheme.current.colors.redUI
+            return colors.redUI
         }
         var more: CGImage {
             let image = NSImage(named: "Icon_Menu_More")!
-            return image.precomposed(PresentationTheme.current.colors.text)
+            return image.precomposed(colors.text)
         }
         var selected: CGImage {
             let image = NSImage(named: "Icon_Menu_Selected")!
-            return image.precomposed(PresentationTheme.current.colors.text)
+            return image.precomposed(colors.text)
         }
-        public init(isDark: Bool) {
-            self.isDark = isDark
+        public init(colors: ColorPalette) {
+            self.colors = colors
         }
-        public static var current: Presentation {
-            return Presentation(isDark: PresentationTheme.current.colors.isDark)
+        public static func current(_ palette: ColorPalette) -> Presentation {
+            return Presentation(colors: palette)
         }
         func primaryColor(_ item: ContextMenuItem) -> NSColor {
             if item.isEnabled {
@@ -59,7 +59,7 @@ public final class AppMenu {
     private let menu: ContextMenu
     private var controller: AppMenuController?
     private let presentation: Presentation
-    public init(menu: ContextMenu, presentation: Presentation = Presentation.current) {
+    public init(menu: ContextMenu, presentation: Presentation = Presentation.current(PresentationTheme.current.colors)) {
         self.menu = menu
         self.presentation = presentation
     }
@@ -69,24 +69,30 @@ public final class AppMenu {
         bp += 1
     }
     
-    public static func show(menu: ContextMenu, event: NSEvent, for view: NSView, presentation: AppMenu.Presentation = .current) {
-        let appMenu = AppMenu(menu: menu, presentation: presentation)
+    public static func show(menu: ContextMenu, event: NSEvent, for view: NSView) {
+        let appMenu = AppMenu(menu: menu, presentation: menu.presentation)
         appMenu.show(event: event, view: view)
     }
     
     public func show(event: NSEvent, view: NSView) {
-        let controller = AppMenuController(self.menu.contextItems, presentation: presentation, holder: self)
+        guard !self.menu.contextItems.isEmpty else {
+            return
+        }
+        let controller = AppMenuController(self.menu.contextItems, presentation: presentation, holder: self, betterInside: menu.betterInside)
         
         self.controller = controller
         
-        controller.onShow = { [weak self] in
+        controller.onShow = { [weak self, weak view] in
             if let menu = self?.menu {
                 self?.menu.onShow(menu)
             }
+            (view as? Control)?.isSelected = true
         }
-        controller.onClose = { [weak self] in
+        controller.onClose = { [weak self, weak view] in
             self?.menu.onClose()
+            (view as? Control)?.isSelected = false
         }
         controller.present(event: event, view: view)
+        
     }
 }

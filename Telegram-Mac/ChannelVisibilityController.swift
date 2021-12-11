@@ -211,10 +211,11 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 if let link = link {
                     items.append(ContextMenuItem(strings().channelVisibiltiyContextCopy, handler: {
                         arguments.copy(link.link)
-                    }))
+                    }, itemImage: MenuAnimation.menu_copy.value))
+                    items.append(ContextSeparatorItem())
                     items.append(ContextMenuItem(strings().channelVisibiltiyContextRevoke, handler: {
                         arguments.revokeLink()
-                    }))
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
                 return .single(items)
@@ -232,7 +233,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             }
             return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: "t.me", defaultText:"https://t.me/", rightItem: rightItem, filter: { $0 }, updated: { updatedText in
                 arguments.updatePublicLinkText(currentText, updatedText)
-            }, limit: 33)
+            }, limit: 32 + 13)
         case let .privateLinkInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .publicLinkInfo(_, text, viewType):

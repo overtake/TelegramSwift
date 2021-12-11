@@ -66,7 +66,7 @@ final class ChatMenuItemsData {
         self.textLayout = textLayout
     }
 }
-func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
+func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
     
     let context = chatInteraction.context
     let account = context.account
@@ -78,7 +78,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let peerId = chatInteraction.peerId
     let peer = chatInteraction.peer
     let canPinMessage = chatInteraction.presentation.canPinMessage
-    let additionalData = entry.additionalData
+    let additionalData = entry?.additionalData ?? MessageEntryAdditionalData()
     
     
     var file: TelegramMediaFile? = nil
@@ -169,10 +169,10 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 }
 
 
-func chatMenuItems(for message: Message, item: ChatRowItem, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
+func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     
-    return chatMenuItemsData(for: message, textLayout: textLayout, entry: item.entry, chatInteraction: chatInteraction) |> map { data in
+    return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
 
         let peer = data.message.peers[data.message.id.peerId]
         let isNotFailed = !message.flags.contains(.Failed) && !message.flags.contains(.Unsent) && !data.message.flags.contains(.Sending)
@@ -618,9 +618,9 @@ func chatMenuItems(for message: Message, item: ChatRowItem, textLayout: (TextVie
             }
         }
         
-        if (MessageReadMenuItem.canViewReadStats(message: data.message, chatInteraction: data.chatInteraction, appConfig: appConfiguration)), !message.flags.contains(.Incoming) || item.isRead {
-            fourthBlock.append(MessageReadMenuItem(context: context, message: message))
-        }
+//        if (MessageReadMenuItem.canViewReadStats(message: data.message, chatInteraction: data.chatInteraction, appConfig: appConfiguration)) {
+//            fourthBlock.append(MessageReadMenuItem(context: context, message: message))
+//        }
         
         if canReportMessage(data.message, account), data.chatMode != .pinned {
             
