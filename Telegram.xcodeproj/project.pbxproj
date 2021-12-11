@@ -298,6 +298,7 @@
 		27CB176E27638F0000DD25E0 /* menu_check_selected.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB176D27638F0000DD25E0 /* menu_check_selected.tgs */; };
 		27CB177027638F4000DD25E0 /* menu_replace.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB176F27638F4000DD25E0 /* menu_replace.tgs */; };
 		27CB1772276392EB00DD25E0 /* menu_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB1771276392EB00DD25E0 /* menu_folder.tgs */; };
+		27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB177327648DAF00DD25E0 /* menu_calendar.tgs */; };
 		27CE375B2760931E007E6F1B /* AppMenuAnimatedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */; };
 		27CE37652760960A007E6F1B /* menu_archive.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE375D27609604007E6F1B /* menu_archive.tgs */; };
 		27CE37662760960A007E6F1B /* menu_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE375E27609605007E6F1B /* menu_unread.tgs */; };
@@ -1423,6 +1424,7 @@
 		27CB176D27638F0000DD25E0 /* menu_check_selected.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_check_selected.tgs; sourceTree = "<group>"; };
 		27CB176F27638F4000DD25E0 /* menu_replace.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_replace.tgs; sourceTree = "<group>"; };
 		27CB1771276392EB00DD25E0 /* menu_folder.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder.tgs; sourceTree = "<group>"; };
+		27CB177327648DAF00DD25E0 /* menu_calendar.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_calendar.tgs; sourceTree = "<group>"; };
 		27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenuAnimatedImage.swift; sourceTree = "<group>"; };
 		27CE375D27609604007E6F1B /* menu_archive.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_archive.tgs; sourceTree = "<group>"; };
 		27CE375E27609605007E6F1B /* menu_unread.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_unread.tgs; sourceTree = "<group>"; };
@@ -2524,6 +2526,7 @@
 		27CE375C276095DA007E6F1B /* menu */ = {
 			isa = PBXGroup;
 			children = (
+				27CB177327648DAF00DD25E0 /* menu_calendar.tgs */,
 				27CB1771276392EB00DD25E0 /* menu_folder.tgs */,
 				27CB176F27638F4000DD25E0 /* menu_replace.tgs */,
 				27CB176D27638F0000DD25E0 /* menu_check_selected.tgs */,
@@ -5166,6 +5169,7 @@
 				A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */,
 				D0830FC424127473006198E7 /* new_folder.tgs in Resources */,
 				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
+				27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
 				27336738276241EE0027441E /* menu_remove_gif.tgs in Resources */,
