@@ -247,6 +247,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         FFMpegGlobals.initializeGlobals()
         
         
+        TextView.context_copy_animation = MenuAnimation.menu_copy.value
+        
        // applyMainMenuLocalization(window)
         
         mw = window

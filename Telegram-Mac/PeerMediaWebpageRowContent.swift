@@ -143,7 +143,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                         let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
                         items.insert(ContextMenuItem(strings().textCopy, handler: {
                             copyToClipboard(text.string)
-                        }), at: 0)
+                        }, itemImage: MenuAnimation.menu_copy.value), at: 0)
                         items.insert(ContextSeparatorItem(), at: 1)
                     }
                     return items

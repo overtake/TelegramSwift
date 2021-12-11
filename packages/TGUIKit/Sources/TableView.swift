@@ -924,6 +924,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if !tableView.inLiveResize && oldWidth != 0 {
             saveScrollState(visibleItems)
         }
+        
+        for listener in scrollListeners {
+            listener.handler(self.scrollPosition().current)
+        }
     }
     
     private var liveScrollStartPosition: NSPoint?

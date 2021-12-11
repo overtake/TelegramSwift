@@ -375,7 +375,7 @@ class ChatGroupedItem: ChatRowItem {
 
 
         if let message = _message {
-            return chatMenuItems(for: message, item: self, textLayout: (caption, nil), chatInteraction: self.chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction)
         }
         return super.menuItems(in: location)
     }

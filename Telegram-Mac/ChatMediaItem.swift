@@ -519,7 +519,7 @@ class ChatMediaItem: ChatRowItem {
         let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId })
         
         if let message = message {
-            return chatMenuItems(for: message, item: self, textLayout: (caption?.layout, nil), chatInteraction: chatInteraction)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption?.layout, nil), chatInteraction: chatInteraction)
         }
         return super.menuItems(in: location)
     }

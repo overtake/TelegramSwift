@@ -69,7 +69,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntry>], to
             case let .inputEntry(inputState):
                 return InputDataRowItem(initialSize, stableId: entry.stableId, mode: .plain, error: nil, viewType: inputState.viewType, currentText: inputState.state.username ?? "", placeholder: nil, inputPlaceholder: inputState.placeholder, filter: { $0 }, updated: { value in
                      availability.set(value)
-                }, limit: 30)
+                }, limit: 32)
             case let .stateEntry(_, text, color, viewType):
                 return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
             case let .descEntry(_, text, viewType):

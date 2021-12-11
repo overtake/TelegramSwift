@@ -99,11 +99,16 @@ class GroupNameRowView : InputDataRowView {
                 if item.photo == nil {
                     item.pickPicture?(true)
                 } else {
-                    ContextMenu.show(items: [ContextMenuItem(strings().peerCreatePeerContextUpdatePhoto, handler: {
+                    
+                    var items:[ContextMenuItem] = []
+                    items.append(ContextMenuItem(strings().peerCreatePeerContextUpdatePhoto, handler: {
                         item.pickPicture?(true)
-                    }), ContextMenuItem(strings().peerCreatePeerContextRemovePhoto, handler: {
+                    }, itemImage: MenuAnimation.menu_shared_media.value))
+                    items.append(ContextSeparatorItem())
+                    items.append(ContextMenuItem(strings().peerCreatePeerContextRemovePhoto, handler: {
                         item.pickPicture?(false)
-                    })], view: photoView, event: event)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    ContextMenu.show(items: items, view: photoView, event: event)
                 }
             }
         }

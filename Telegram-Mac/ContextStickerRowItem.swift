@@ -65,8 +65,8 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
         return nil
     }
     
-    override func menu(for event: NSEvent) -> NSMenu? {
-        let menu = NSMenu()
+    override func showContextMenu(_ event: NSEvent) {
+        let menu = ContextMenu()
         if let item = item as? ContextStickerRowItem {
             
             let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
@@ -89,7 +89,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 }, itemImage: MenuAnimation.menu_schedule_message.value))
             }
         }
-        return menu
+        AppMenu.show(menu: menu, event: event, for: self)
     }
     
     override func set(item: TableRowItem, animated: Bool) {

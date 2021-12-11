@@ -64,26 +64,29 @@ private func entries(_ state: State, admin: Peer?, invitation: ExportedInvitatio
 
             items.append(ContextMenuItem(strings().exportedInvitationContextCopy, handler: {
                 arguments.copyLink(invitation.link)
-            }))
+            }, itemImage: MenuAnimation.menu_copy.value))
 
             if !invitation.isRevoked {
                 if !invitation.isExpired {
                     items.append(ContextMenuItem(strings().manageLinksContextShare, handler: {
                         arguments.shareLink(invitation.link)
-                    }))
+                    }, itemImage: MenuAnimation.menu_share.value))
                 }
                 if !invitation.isPermanent {
                     items.append(ContextMenuItem(strings().manageLinksContextEdit, handler: {
                         arguments.editLink(invitation)
-                    }))
+                    }, itemImage: MenuAnimation.menu_edit.value))
                 }
                
                 if admin?.isBot == true {
                     
                 } else {
+                    if !items.isEmpty {
+                        items.append(ContextSeparatorItem())
+                    }
                     items.append(ContextMenuItem(strings().manageLinksContextRevoke, handler: {
                         arguments.revokeLink(invitation)
-                    }))
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
             }
             return .single(items)

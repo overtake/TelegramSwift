@@ -281,14 +281,17 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
                 if cloud.isCreator {
                     items.append(ContextMenuItem(strings().appearanceThemeEdit, handler: {
                         arguments.editTheme(cloud)
-                    }))
+                    }, itemImage: MenuAnimation.menu_edit.value))
                 }
                 items.append(ContextMenuItem(strings().appearanceThemeShare, handler: {
                     arguments.shareTheme(cloud)
-                }))
+                }, itemImage: MenuAnimation.menu_share.value))
+                
+                items.append(ContextSeparatorItem())
+                
                 items.append(ContextMenuItem(strings().appearanceThemeRemove, handler: {
                     arguments.removeTheme(cloud)
-                }))
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
             }
 
             return items
@@ -313,10 +316,11 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
                 if let cloud = accent.cloudTheme {
                     items.append(ContextMenuItem(strings().appearanceThemeShare, handler: {
                         arguments.shareTheme(cloud)
-                    }))
+                    }, itemImage: MenuAnimation.menu_share.value))
+                    items.append(ContextSeparatorItem())
                     items.append(ContextMenuItem(strings().appearanceThemeRemove, handler: {
                         arguments.removeTheme(cloud)
-                    }))
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 return items
             })
@@ -599,23 +603,24 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         
         let view = ImageBarView(controller: controller, theme.icons.chatActions)
         
-        view.button.set(handler: { control in
-            var items:[SPopoverItem] = []
+        
+        view.button.contextMenu = {
+            var items:[ContextMenuItem] = []
             if theme.colors.parent != .system {
-                items.append(SPopoverItem(strings().appearanceNewTheme, {
+                items.append(ContextMenuItem(strings().appearanceNewTheme, handler: {
                     showModal(with: NewThemeController(context: context, palette: theme.colors.withUpdatedWallpaper(theme.wallpaper.paletteWallpaper)), for: context.window)
-                }))
-                items.append(SPopoverItem(strings().appearanceExportTheme, {
+                }, itemImage: MenuAnimation.menu_change_colors.value))
+                items.append(ContextMenuItem(strings().appearanceExportTheme, handler: {
                     exportPalette(palette: theme.colors.withUpdatedName(theme.cloudTheme?.title ?? theme.colors.name).withUpdatedWallpaper(theme.wallpaper.paletteWallpaper))
-                }))
+                }, itemImage: MenuAnimation.menu_save_as.value))
                 if let cloudTheme = theme.cloudTheme {
-                    items.append(SPopoverItem(strings().appearanceThemeShare, {
+                    items.append(ContextMenuItem(strings().appearanceThemeShare, handler: {
                         showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/addtheme/\(cloudTheme.slug)")), for: context.window)
-                    }))
+                    }, itemImage: MenuAnimation.menu_share.value))
                 }
                 
                 if theme.cloudTheme != nil || theme.colors.accent != theme.colors.basicAccent {
-                    items.append(SPopoverItem(strings().appearanceReset, {
+                    items.append(ContextMenuItem(strings().appearanceReset, handler: {
                          _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                             var settings = settings
                             if settings.defaultIsDark {
@@ -628,12 +633,18 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
                                 return ThemeWallpaper(wallpaper: settings.palette.wallpaper.wallpaper, associated: nil)
                             }).installDefaultWallpaper()
                          }).start()
-                    }))
+                    }, itemImage: MenuAnimation.menu_reset.value))
                 }
                 
-                showPopover(for: control, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-50))
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
             }
-        }, for: .Click)
+            return nil
+        }
+      
         view.button.set(image: theme.icons.chatActions, for: .Normal)
         view.button.set(image: theme.icons.chatActionsActive, for: .Highlight)
         return view

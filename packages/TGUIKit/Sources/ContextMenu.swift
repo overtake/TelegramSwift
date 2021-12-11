@@ -41,7 +41,7 @@ open class ContextMenuItem : NSMenuItem {
     
     public var contextObject: Any? = nil
     
-    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable?)?
+    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
     public let itemMode: AppMenu.ItemMode
     
     public init(_ title:String, handler: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil) {
@@ -82,6 +82,17 @@ open class ContextMenuItem : NSMenuItem {
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
 
+    let presentation: AppMenu.Presentation
+    let betterInside: Bool
+    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false) {
+        self.presentation = presentation
+        self.betterInside = betterInside
+        super.init(title: "")
+    }
+    
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     public var contextItems: [ContextMenuItem] {
         return self.items.compactMap {
@@ -93,19 +104,25 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     public var onClose:()->Void = {() in}
         
     
-    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}, presentation: AppMenu.Presentation = .current) -> Void {
+    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}, presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors)) -> Void {
         
-        let menu = ContextMenu()
+        let menu = ContextMenu(presentation: presentation)
         menu.onShow = onShow
         menu.onClose = onClose
         
         for item in items {
             menu.addItem(item)
         }
-        let app = AppMenu(menu: menu, presentation: presentation)
+        let app = AppMenu(menu: menu)
         app.show(event: event, view: view)
     }
     
+    
+    public override class func popUpContextMenu(_ menu: NSMenu, with event: NSEvent, for view: NSView) {
+        show(items: menu.items.compactMap {
+            $0 as? ContextMenuItem
+        }, view: view, event: event)
+    }
     
     public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         return true

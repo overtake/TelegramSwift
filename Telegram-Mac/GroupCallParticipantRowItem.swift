@@ -12,6 +12,7 @@ import SwiftSignalKit
 import ColorPalette
 import Postbox
 import TelegramCore
+import AppKit
 
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
@@ -712,7 +713,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                         for item in items {
                             menu.addItem(item)
                         }
-                        AppMenu.show(menu: menu, event: event, for: button)
+                        NSMenu.popUpContextMenu(menu, with: event, for: button)
+                    //    AppMenu.show(menu: menu, event: event, for: button)
                     }
                 })
             } 

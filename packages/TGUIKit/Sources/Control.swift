@@ -66,7 +66,7 @@ internal struct ControlStateHandler : Hashable {
 open class Control: View {
     
     public var contextObject: Any?
-
+    
     
     public internal(set) weak var popover: Popover?
     
@@ -84,10 +84,10 @@ open class Control: View {
 
     open var isSelected:Bool {
         didSet {
+            updateState()
             if isSelected != oldValue {
                 apply(state: isSelected ? .Highlight : self.controlState)
             }
-            updateState()
             
             updateSelected(isSelected)
         }
@@ -171,11 +171,6 @@ open class Control: View {
         } else {
             self.layer?.backgroundColor = backgroundState[.Normal]?.cgColor ?? self.backgroundColor.cgColor
         }
-        if state == .Highlight, (NSEvent.pressedMouseButtons & (1 << 0)) == 0 {
-            self.mouseIsDown = false
-            self.updateState()
-            return
-        }
         if animates {
             self.layer?.animateBackground()
         }
@@ -194,7 +189,9 @@ open class Control: View {
         previousState = state
     }
     
-    private var mouseIsDown:Bool = false
+    private var mouseIsDown:Bool {
+        return (NSEvent.pressedMouseButtons & (1 << 0)) != 0
+    }
     
     open override func updateTrackingAreas() {
         super.updateTrackingAreas();
@@ -228,6 +225,7 @@ open class Control: View {
             self.removeTrackingArea(trackingArea)
         }
         self.popover?.hide()
+        
     //    longHandleDisposable.dispose()
      //   longOverHandleDisposable.dispose()
     }
@@ -345,13 +343,12 @@ open class Control: View {
     
     
     override open func mouseDown(with event: NSEvent) {
-        mouseIsDown = true
         longInvoked = false
         longOverHandleDisposable.set(nil)
         
         if event.modifierFlags.contains(.control) {
             
-            if let menu = self.contextMenu?() {
+            if let menu = self.contextMenu?(), !menu.contextItems.isEmpty {
                 AppMenu.show(menu: menu, event: event, for: self)
             }
             
@@ -364,7 +361,7 @@ open class Control: View {
             return
         }
         
-        if self.handlers.isEmpty, let menu = self.contextMenu?() {
+        if self.handlers.isEmpty, let menu = self.contextMenu?(), !menu.contextItems.isEmpty {
             AppMenu.show(menu: menu, event: event, for: self)
         }
         
@@ -394,7 +391,6 @@ open class Control: View {
     override open func mouseUp(with event: NSEvent) {
         longHandleDisposable.set(nil)
         longOverHandleDisposable.set(nil)
-        mouseIsDown = false
         
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
             if isEnabled && layer!.opacity > 0 {
@@ -455,7 +451,7 @@ open class Control: View {
     
     
     open override func rightMouseDown(with event: NSEvent) {
-        if let menu = self.contextMenu?() {
+        if let menu = self.contextMenu?(), !menu.contextItems.isEmpty {
             AppMenu.show(menu: menu, event: event, for: self)
         }
         if userInteractionEnabled {

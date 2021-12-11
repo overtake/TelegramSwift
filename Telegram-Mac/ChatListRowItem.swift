@@ -1143,11 +1143,11 @@ class ChatListRowItem: TableRowItem {
                 case .collapsed:
                     firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
                         ChatListRowItem.collapseOrExpandArchive(context: context)
-                    }))
+                    }, itemImage: MenuAnimation.menu_expand.value))
                 default:
                     firstGroup.append(ContextMenuItem(strings().chatListRevealActionCollapse, handler: {
                         ChatListRowItem.collapseOrExpandArchive(context: context)
-                    }))
+                    }, itemImage: MenuAnimation.menu_collapse.value))
                 }
             }
             
@@ -1180,7 +1180,7 @@ class ChatListRowItem: TableRowItem {
                             alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
                         }
                        
-                    }, state: item.data.includePeers.peers.contains(peerId) ? NSControl.StateValue.on : nil)
+                    }, itemImage: item.data.includePeers.peers.contains(peerId) ? MenuAnimation.menu_check_selected.value : MenuAnimation.menu_folder.value)
                     
                     submenu.append(menuItem)
                 }

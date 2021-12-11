@@ -258,13 +258,13 @@ public extension CALayer {
         self.add(animation, forKey: "transform")
     }
     
-    func animateScaleSpringTopCorner(from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
+    func animateScaleSpringFrom(anchor: NSPoint, from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
         let animation = bounce ? makeSpringBounceAnimation("transform", initialVelocity) : makeSpringAnimation("transform")
         
         var fr = CATransform3DIdentity
-        fr = CATransform3DTranslate(fr, floorToScreenPixels(System.backingScale, 0), floorToScreenPixels(System.backingScale, frame.height), 0)
+        fr = CATransform3DTranslate(fr, anchor.x, anchor.y, 0)
         fr = CATransform3DScale(fr, from, from, 1)
-        fr = CATransform3DTranslate(fr, -floorToScreenPixels(System.backingScale, 0), -floorToScreenPixels(System.backingScale, frame.height), 0)
+        fr = CATransform3DTranslate(fr, -anchor.x, -anchor.y, 0)
         
         animation.fromValue = NSValue(caTransform3D: fr)
         animation.toValue = to
@@ -281,9 +281,9 @@ public extension CALayer {
         animation.isAdditive = additive
         
         var tr = CATransform3DIdentity
-        tr = CATransform3DTranslate(tr, floorToScreenPixels(System.backingScale, 0), floorToScreenPixels(System.backingScale, frame.height), 0)
+        tr = CATransform3DTranslate(tr, anchor.x, anchor.y, 0)
         tr = CATransform3DScale(tr, to, to, 1)
-        tr = CATransform3DTranslate(tr, -floorToScreenPixels(System.backingScale, 0), -floorToScreenPixels(System.backingScale, frame.height), 0)
+        tr = CATransform3DTranslate(tr, -anchor.x, -anchor.y, 0)
         animation.toValue = NSValue(caTransform3D: tr)
 
         
