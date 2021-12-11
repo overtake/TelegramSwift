@@ -21,7 +21,7 @@ public final class Reactions {
     }
     
     public func react(_ messageId: MessageId, value: String?) {
-        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value).start(), forKey: messageId)
+        reactable.set(updateMessageReactionsInteractively(postbox: self.engine.account.postbox, messageId: messageId, reaction: value).start(), forKey: messageId)
     }
     
     deinit {
