@@ -22,7 +22,21 @@ open class AppMenuBasicItem : TableRowItem {
         public let cancelSubmenu:(ContextMenuItem)->Void
     }
     
+    fileprivate(set) public var menuItem: ContextMenuItem?
+    fileprivate(set) public var interaction: Interaction?
+    public let presentation: AppMenu.Presentation
+
+    public init(_ initialSize: NSSize, presentation: AppMenu.Presentation, menuItem: ContextMenuItem? = nil, interaction: Interaction? = nil) {
+        self.menuItem = menuItem
+        self.interaction = interaction
+        self.presentation = presentation
+        super.init(initialSize)
+    }
     
+    public var searchable: String {
+        return ""
+    }
+        
     open override var height: CGFloat {
         return 2
     }
@@ -36,8 +50,38 @@ open class AppMenuBasicItem : TableRowItem {
         return AppMenuBasicItemView.self
     }
 }
-private final class AppMenuBasicItemView: TableRowView {
-    override var backdorColor: NSColor {
+open class AppMenuBasicItemView: TableRowView {
+    
+    public let containerView = Control()
+
+    public required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        super.addSubview(containerView)
+        containerView.layer?.cornerRadius = .cornerRadius
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    open override func addSubview(_ view: NSView) {
+        containerView.addSubview(view)
+    }
+    
+    open override func layout() {
+        super.layout()
+        if bounds.height > 4 {
+            containerView.frame = bounds.insetBy(dx: 4, dy: 2)
+        } else {
+            containerView.frame = .zero
+        }
+    }
+    
+    deinit {
+        containerView.removeAllSubviews()
+    }
+    
+    open override var backdorColor: NSColor {
         return .clear
     }
 }
@@ -45,10 +89,8 @@ private final class AppMenuBasicItemView: TableRowView {
 
 public class AppMenuSeparatorItem : AppMenuBasicItem {
     
-    fileprivate let presentation: AppMenu.Presentation
     public init(_ initialSize: NSSize, presentation: AppMenu.Presentation) {
-        self.presentation = presentation
-        super.init(initialSize)
+        super.init(initialSize, presentation: presentation)
     }
     
     public override var height: CGFloat {
@@ -64,7 +106,7 @@ public class AppMenuSeparatorItem : AppMenuBasicItem {
         return AppMenuSeparatorItemView.self
     }
 }
-private final class AppMenuSeparatorItemView: TableRowView {
+private final class AppMenuSeparatorItemView: AppMenuBasicItemView {
     private let view: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -87,7 +129,7 @@ private final class AppMenuSeparatorItemView: TableRowView {
     
     override func layout() {
         super.layout()
-        view.frame = NSMakeRect(11 + 4, 2, frame.width - 22 - 8, 1)
+        view.frame = NSMakeRect(11, 0, containerView.frame.width - 22, 1)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -99,28 +141,38 @@ private final class AppMenuSeparatorItemView: TableRowView {
 open class AppMenuRowItem : AppMenuBasicItem {
     public let item: ContextMenuItem
     public private(set) var text: TextViewLayout
-    public let presentation: AppMenu.Presentation
     public let leftInset: CGFloat = 11
     public let innerInset: CGFloat = 4
     public let imageSize: CGFloat = 18
     public let moreSize: NSSize = NSMakeSize(6, 8)
     public let selectedSize: NSSize = NSMakeSize(9, 8)
-    public let interaction: Interaction
+    
+    fileprivate let keyEquivalentText: TextViewLayout?
+    
     private var observation_i: NSKeyValueObservation?
     private var observation_t: NSKeyValueObservation?
     public init(_ initialSize: NSSize, item: ContextMenuItem, interaction: Interaction, presentation: AppMenu.Presentation) {
         self.item = item
-        self.interaction = interaction
-        self.presentation = presentation
         self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
-        super.init(initialSize)
         
+        if item.keyEquivalent.isEmpty {
+            keyEquivalentText = nil
+        } else {
+            keyEquivalentText = TextViewLayout(.initialize(string: item.keyEquivalent, color: presentation.secondaryColor(item), font: .medium(.text)))
+        }
+        super.init(initialSize, presentation: presentation, menuItem: item, interaction: interaction)
+        self.menuItem = item
         self.observation_i = item.observe(\.image) { [weak self] object, change in
-            self?.redraw()
+            self?.redraw(animated: true)
         }
         self.observation_t = item.observe(\.title) { [weak self] object, change in
-            self?.redraw()
+            self?.redraw(animated: true)
         }
+        
+    }
+    
+    public override var searchable: String {
+        return item.title
     }
     
     public override func redraw(animated: Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false) {
@@ -158,6 +210,9 @@ open class AppMenuRowItem : AppMenuBasicItem {
         if hasDrawable {
             defaultSize.width += imageSize + leftInset - 2
         }
+        if let keyEquivalentText = keyEquivalentText {
+            defaultSize.width += keyEquivalentText.layoutSize.width + 6
+        }
         
         if item.submenu != nil {
             defaultSize.width += moreSize.width + leftInset
@@ -174,7 +229,8 @@ open class AppMenuRowItem : AppMenuBasicItem {
     
     open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-        text.measure(width: width - leftInset * 2 - innerInset * 2)
+        self.text.measure(width: width - leftInset * 2 - innerInset * 2)
+        self.keyEquivalentText?.measure(width: .greatestFiniteMagnitude)
         return true
     }
     
@@ -186,19 +242,22 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
 }
 
-open class AppMenuRowView: TableRowView {
+open class AppMenuRowView: AppMenuBasicItemView {
     private let textView = TextView()
     private var imageView: ImageView? = nil
+    private var keyEquivalent: TextView? = nil
     private var drawable: AppMenuItemImageDrawable? = nil
-    private let containerView = Control()
     private var more: ImageView? = nil
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        containerView.addSubview(textView)
-        addSubview(containerView)
+        self.addSubview(textView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         textView.disableBackgroundDrawing = true
+
+        
+        containerView.scaleOnClick = true
+
         containerView.layer?.cornerRadius = .cornerRadius
         containerView.scaleOnClick = true
         
@@ -206,7 +265,7 @@ open class AppMenuRowView: TableRowView {
             guard let item = self?.item as? AppMenuRowItem else {
                 return
             }
-            item.interaction.presentSubmenu(item.item)
+            item.interaction?.presentSubmenu(item.item)
         }, for: .Hover)
         
         
@@ -231,11 +290,8 @@ open class AppMenuRowView: TableRowView {
             guard let item = self?.item as? AppMenuRowItem else {
                 return
             }
-            item.interaction.action(item.item)
+            item.interaction?.action(item.item)
         }, for: .Click)
-        
-       
-        
     }
     private var previous: ControlState = .Normal
     open func updateState(_ state: ControlState) {
@@ -253,25 +309,54 @@ open class AppMenuRowView: TableRowView {
         super.updateMouse()
         updateColors()
     }
+
     
     open override func updateColors() {
         super.updateColors()
-        guard let item = item as? AppMenuRowItem else {
+        guard let item = item as? AppMenuRowItem, let table = item.table else {
             return
         }
         containerView.isSelected = item.isSelected
         
         containerView.isEnabled = item.item.isEnabled
         
-        containerView.set(background: item.presentation.highlightColor, for: .Hover)
+        let canHighlight = table.selectedItem() == nil || item.isSelected
+        
+        containerView.set(background: canHighlight ? item.presentation.highlightColor : .clear, for: .Hover)
         containerView.set(background: .clear, for: .Normal)
-        containerView.set(background: item.presentation.highlightColor, for: .Highlight)
+        containerView.set(background: canHighlight ? item.presentation.highlightColor : .clear, for: .Highlight)
         
         
     }
     
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public var textX: CGFloat {
+        guard let item = item as? AppMenuRowItem else {
+            return 0
+        }
+        if let _ = drawable {
+            return item.leftInset + item.imageSize + item.leftInset - 2
+        } else if let _ = imageView {
+            return item.leftInset + item.imageSize + item.leftInset - 2
+        } else if item.hasDrawable {
+            return item.leftInset + item.imageSize + item.leftInset - 2
+        } else {
+            return item.leftInset
+        }
+    }
+    
+    public var rightX: CGFloat {
+        guard let item = item as? AppMenuRowItem else {
+            return 0
+        }
+        var right: CGFloat = containerView.frame.width - item.leftInset
+        if item.item.submenu != nil {
+            right -= (item.moreSize.width + 2)
+        }
+        return right
     }
     
     open override func layout() {
@@ -281,7 +366,6 @@ open class AppMenuRowView: TableRowView {
             return
         }
         
-        containerView.frame = bounds.insetBy(dx: item.innerInset, dy: 2)
         if let drawable = drawable {
             drawable.centerY(x: item.leftInset)
             textView.centerY(x: drawable.frame.maxX + item.leftInset - 2)
@@ -294,7 +378,11 @@ open class AppMenuRowView: TableRowView {
             textView.centerY(x: item.leftInset)
         }
         if let more = more {
-            more.centerY(x: containerView.frame.width - more.frame.width - item.leftInset)
+            more.centerY(x: containerView.frame.width - item.leftInset - more.frame.width)
+        }
+        
+        if let keyEquivalent = keyEquivalent {
+            keyEquivalent.centerY(x: self.rightX - keyEquivalent.frame.width)
         }
     }
     
@@ -305,7 +393,7 @@ open class AppMenuRowView: TableRowView {
             return
         }
         textView.update(item.text)
-        
+        textView.change(opacity: item.item.title.isEmpty ? 0 : 1, animated: animated)
         
         let drawable: AppMenuItemImageDrawable?
         if let current = self.drawable, current.isEqual(to: item.item) {
@@ -339,6 +427,7 @@ open class AppMenuRowView: TableRowView {
             }
             current.layer?.contents = image
         } else if let view = self.imageView {
+            self.imageView = nil
             performSubviewRemoval(view, animated: animated)
         }
         
@@ -359,8 +448,27 @@ open class AppMenuRowView: TableRowView {
             }
             current.image = item.item.state == .on ? item.presentation.selected : item.presentation.more
         } else if let view = self.more {
+            self.more = nil
             performSubviewRemoval(view, animated: animated)
         }
+        
+        if let keyEquivalent = item.keyEquivalentText {
+            let current: TextView
+            if let view = self.keyEquivalent {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.addSubview(current)
+                self.keyEquivalent = current
+            }
+            current.update(keyEquivalent)
+        } else if let view = self.keyEquivalent {
+            self.keyEquivalent = nil
+            performSubviewRemoval(view, animated: animated)
+        }
+        
         needsLayout = true
     }
     

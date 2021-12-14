@@ -55,6 +55,14 @@ open class OverlayControl: Control {
             super.rightMouseDown(with: event)
         }
     }
+    
+    open override func scrollWheel(with event: NSEvent) {
+        if userInteractionEnabled {
+            updateState()
+        } else {
+            super.scrollWheel(with: event)
+        }
+    }
 
     
 }

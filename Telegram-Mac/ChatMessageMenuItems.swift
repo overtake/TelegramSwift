@@ -35,12 +35,12 @@ final class ChatMenuItemsData {
     let updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia]
     let recentMedia: [RecentMediaItem]
     let additionalData: MessageEntryAdditionalData
-    
+    let availableReactions: AvailableReactions?
     let file: TelegramMediaFile?
     let image: TelegramMediaImage?
     let textLayout: (TextViewLayout?, LinkType?)?
     
-    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?) {
+    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?) {
         self.chatInteraction = chatInteraction
         self.message = message
         self.accountPeer = accountPeer
@@ -64,6 +64,7 @@ final class ChatMenuItemsData {
         self.file = file
         self.image = image
         self.textLayout = textLayout
+        self.availableReactions = availableReactions
     }
 }
 func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
@@ -159,12 +160,12 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         }
     }
     
-    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia)
+    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue)
     |> take(1)
     
     
-    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia in
-        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout)
+    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions in
+        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions)
     }
 }
 
@@ -355,17 +356,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if isNotFailed, !message.isScheduledMessage {
                 thirdBlock.append(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: { [weak data] in
                     if let data = data {
-                        if peer.addressName == nil {
-                            copyToClipboard("https://t.me/\(peer.id.id)/\(messageId.id)")
-                            showModalText(for: context.window, text: strings().contextAlertCopyPrivate)
-                        } else {
-                            _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: messageId, isThread: data.chatMode.threadId != nil), for: context.window).start(next: { link in
-                                if let link = link {
-                                    copyToClipboard(link)
-                                    showModalText(for: context.window, text: strings().contextAlertCopied)
-                                }
-                            })
-                        }
+                        _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: messageId, isThread: data.chatMode.threadId != nil), for: context.window).start(next: { link in
+                            if let link = link {
+                                copyToClipboard(link)
+                            }
+                        })
                     }
                     
                 }, itemImage: MenuAnimation.menu_copy_link.value))
@@ -572,7 +567,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if resourceData.complete {
                     thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
                         saveAs(file, account: account)
-                    }, itemImage: MenuAnimation.menu_save_as.value))
+                    }, itemImage: MenuAnimation.menu_save_as.value, keyEquivalent: .cmds))
                    
                     if let downloadPath = data.fileFinderPath {
                         if !file.isVoice {
@@ -610,17 +605,21 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             pb.writeObjects([NSURL(fileURLWithPath: path)])
                             showModalText(for: context.window, text: strings().contextAlertCopied)
                         }
-                    }, itemImage: MenuAnimation.menu_copy_media.value))
+                    }, itemImage: MenuAnimation.menu_copy_media.value, keyEquivalent: .cmdc))
                     thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
                         savePanel(file: resourceData.path, ext: "jpg", for: mainWindow)
-                    }, itemImage: MenuAnimation.menu_save_as.value))
+                    }, itemImage: MenuAnimation.menu_save_as.value, keyEquivalent: .cmds))
                 }
             }
         }
         
-//        if (MessageReadMenuItem.canViewReadStats(message: data.message, chatInteraction: data.chatInteraction, appConfig: appConfiguration)) {
-//            fourthBlock.append(MessageReadMenuItem(context: context, message: message))
-//        }
+        if (MessageReadMenuItem.canViewReadStats(message: data.message, chatInteraction: data.chatInteraction, appConfig: appConfiguration)) {
+            fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message, availableReactions: data.availableReactions))
+        }
+        
+//        #if DEBUG
+//        fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message))
+//        #endif
         
         if canReportMessage(data.message, account), data.chatMode != .pinned {
             

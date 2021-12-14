@@ -30,11 +30,19 @@ public class ContextSeparatorItem : ContextMenuItem {
 open class ContextMenuItem : NSMenuItem {
     public let id: Int64 = arc4random64()
 
+    public enum KeyEquiavalent: String {
+        case none = ""
+        case cmds = "⌘S"
+        case cmdc = "⌘C"
+    }
     
     open func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
         return AppMenuRowItem.init(.zero, item: self, interaction: interaction, presentation: presentation)
     }
 
+    open func stickClass() -> AnyClass? {
+        return nil
+    }
     
     public let handler:(()->Void)?
     private let dynamicTitle:(()->String)?
@@ -44,12 +52,15 @@ open class ContextMenuItem : NSMenuItem {
     public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
     public let itemMode: AppMenu.ItemMode
     
-    public init(_ title:String, handler: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil) {
+    public let keyEquivalentValue: KeyEquiavalent
+    
+    public init(_ title:String, handler: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none) {
         self.handler = handler
         self.dynamicTitle = dynamicTitle
         self.itemMode = itemMode
         self.itemImage = itemImage
-        super.init(title: title, action: nil, keyEquivalent: "")
+        self.keyEquivalentValue = keyEquivalent
+        super.init(title: title, action: nil, keyEquivalent: keyEquivalent.rawValue)
         
         self.title = title
         self.action = #selector(click)
@@ -89,6 +100,10 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
         self.betterInside = betterInside
         super.init(title: "")
     }
+    
+    public var copyItem: ContextMenuItem?
+    public var saveItem: ContextMenuItem?
+
     
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
