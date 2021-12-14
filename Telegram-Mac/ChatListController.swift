@@ -320,7 +320,6 @@ class ChatListController : PeersListController {
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
     private let archivationTooltipDisposable = MetaDisposable()
-    private let undoTooltipControl: UndoTooltipControl
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
     private var activityStatusesDisposable:Disposable?
     
@@ -796,7 +795,6 @@ class ChatListController : PeersListController {
     func addUndoAction(_ action:ChatUndoAction) {
         let context = self.context
         guard self.context.sharedContext.layout != .minimisize else { return }
-        self.undoTooltipControl.add(controller: self)
     }
     
     private func enqueueTransition(_ transition: TableUpdateTransition) {
@@ -1415,7 +1413,6 @@ class ChatListController : PeersListController {
     
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil, filterId: Int32? = nil) {
-        self.undoTooltipControl = UndoTooltipControl(context: context)
         
         let mode: PeerListMode
         if let filterId = filterId {

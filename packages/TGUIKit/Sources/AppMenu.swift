@@ -9,30 +9,30 @@ public final class AppMenu {
     }
     
     public struct Presentation {
-        let colors: ColorPalette
-        var textColor: NSColor {
+        public let colors: ColorPalette
+        public var textColor: NSColor {
             return colors.text
         }
-        var disabledTextColor: NSColor {
-            return colors.grayText
+        public var disabledTextColor: NSColor {
+            return colors.grayText.withAlphaComponent(0.75)
         }
-        var highlightColor: NSColor {
+        public var highlightColor: NSColor {
             return colors.grayIcon.withAlphaComponent(0.15)
         }
-        var borderColor: NSColor {
+        public var borderColor: NSColor {
             return colors.grayIcon.withAlphaComponent(0.1)
         }
-        var backgroundColor: NSColor {
+        public var backgroundColor: NSColor {
             return colors.background.withAlphaComponent(0.7)
         }
-        var destructColor: NSColor {
+        public var destructColor: NSColor {
             return colors.redUI
         }
-        var more: CGImage {
+        public var more: CGImage {
             let image = NSImage(named: "Icon_Menu_More")!
             return image.precomposed(colors.text)
         }
-        var selected: CGImage {
+        public var selected: CGImage {
             let image = NSImage(named: "Icon_Menu_Selected")!
             return image.precomposed(colors.text)
         }
@@ -42,7 +42,7 @@ public final class AppMenu {
         public static func current(_ palette: ColorPalette) -> Presentation {
             return Presentation(colors: palette)
         }
-        func primaryColor(_ item: ContextMenuItem) -> NSColor {
+        public func primaryColor(_ item: ContextMenuItem) -> NSColor {
             if item.isEnabled {
                 switch item.itemMode {
                 case .normal:
@@ -53,6 +53,10 @@ public final class AppMenu {
             } else {
                 return self.disabledTextColor
             }
+        }
+        
+        public func secondaryColor(_ item: ContextMenuItem) -> NSColor {
+            return self.disabledTextColor
         }
     }
     
@@ -78,7 +82,7 @@ public final class AppMenu {
         guard !self.menu.contextItems.isEmpty else {
             return
         }
-        let controller = AppMenuController(self.menu.contextItems, presentation: presentation, holder: self, betterInside: menu.betterInside)
+        let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside)
         
         self.controller = controller
         

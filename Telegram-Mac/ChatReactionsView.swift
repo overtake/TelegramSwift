@@ -83,7 +83,7 @@ final class ChatReactionsLayout {
         let minimiumSize: NSSize
         let available: AvailableReactions.Reaction
         let action:()->Void
-        fileprivate(set) var rect: CGRect = .zero
+        var rect: CGRect = .zero
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.value == rhs.value &&
@@ -297,6 +297,10 @@ final class ChatReactionsView : View {
             let center = focus(reaction.text.size)
             
             transition.updateFrame(view: self.textView, frame: CGRect.init(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: reaction.text.size))
+        }
+        override func layout() {
+            super.layout()
+            updateLayout(size: frame.size, transition: .immediate)
         }
     }
     

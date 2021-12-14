@@ -745,7 +745,7 @@ open class Window: NSWindow {
                     for globalHandler in globalHandlers {
                         let handle = keyHandlers[keyCode]?.sorted(by: >).first
                         if handle == nil || globalHandler.priority > handle!.priority {
-                            if (handle?.modifierFlags == nil || event.modifierFlags.contains(handle!.modifierFlags!)) {
+                            if (handle?.modifierFlags == nil || !event.modifierFlags.contains(handle!.modifierFlags!)) || globalHandler.priority == .supreme {
                                 switch globalHandler.handler(event) {
                                 case .invoked:
                                     return

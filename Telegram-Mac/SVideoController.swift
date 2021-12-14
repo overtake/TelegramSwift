@@ -89,7 +89,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     func setBaseRate(_ baseRate: Double) {        
         mediaPlayer.setBaseRate(baseRate)
-        FastSettings.setPlayingRate(baseRate)
+        FastSettings.setPlayingVideoRate(baseRate)
     }
     
     func playOrPause() {

@@ -8,6 +8,7 @@
 import Foundation
 import SwiftSignalKit
 import AppKit
+import KeyboardKey
 
 private extension Window {
     var view: MenuView {
@@ -37,8 +38,12 @@ final class MenuView: View, TableViewDelegate {
         self.layer?.cornerRadius = 10
         self.visualView.layer?.cornerRadius = 10
         self.backgroundView.layer?.cornerRadius = 10
-
+        self.tableView.layer?.cornerRadius = 10
         self.backgroundColor = NSColor.black.withAlphaComponent(0.001)
+    }
+    
+    override var canBecomeKeyView: Bool {
+        return true
     }
     
     required init?(coder: NSCoder) {
@@ -82,6 +87,54 @@ final class MenuView: View, TableViewDelegate {
         backgroundView.backgroundColor = presentation.backgroundColor
     }
     
+    func merge(items: [ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
+        
+        let stick = items.first(where: { $0.stickClass() != nil})?.stickClass()
+        
+        if stick != nil {
+            var bp = 0
+            bp += 1
+        }
+        
+        tableView.set(stickClass: stick, handler: { _ in
+            
+        })
+        
+        tableView.beginUpdates()
+        
+        var items:[TableRowItem] = items.compactMap { item in
+            return item.rowItem(presentation: presentation, interaction: interaction)
+        }
+        
+        var copy = items
+        for (i, item) in items.enumerated() {
+            let isSeparator = item is AppMenuSeparatorItem
+            if isSeparator, i == 0 {
+                copy.removeFirst()
+            } else if isSeparator, i == items.count - 1 {
+                copy.removeFirst()
+            }
+            if i > 0 && i != items.count - 1 {
+                let prev = items[i - 1] is AppMenuSeparatorItem
+                if prev && isSeparator {
+                    copy.remove(at: i)
+                }
+            }
+        }
+        items = copy
+        
+        _ = tableView.addItem(item: AppMenuBasicItem(.zero, presentation: presentation))
+        for item in items {
+            _ = item.makeSize(300, oldWidth: 0)
+            _ = tableView.addItem(item: item)
+        }
+        _ = tableView.addItem(item: AppMenuBasicItem(.zero, presentation: presentation))
+
+        tableView.endUpdates()
+
+        
+    }
+    
     func item(for id: AnyHashable) -> TableRowItem? {
         return self.tableView.item(stableId: id)
     }
@@ -90,10 +143,16 @@ final class MenuView: View, TableViewDelegate {
         
     }
     func selectionWillChange(row:Int, item:TableRowItem, byClick:Bool) -> Bool {
-        return true
+        if let item = item as? AppMenuBasicItem {
+            return item.menuItem != nil
+        }
+        return false
     }
     func isSelectable(row:Int, item:TableRowItem) -> Bool {
-        return true
+        if let item = item as? AppMenuBasicItem {
+            return item.menuItem != nil
+        }
+        return false
     }
     
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
@@ -104,24 +163,33 @@ final class MenuView: View, TableViewDelegate {
         
     }
     
+    func updateScroll() {
+        if let item = tableView.selectedItem() {
+            self.tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+        }
+    }
+    
     var submenuId: Int64?
     weak var parentView: Window?
 }
 
 final class AppMenuController : NSObject  {
-    var items:[ContextMenuItem] = []
+    let menu:ContextMenu
     var parent: Window?
     let presentation: AppMenu.Presentation
     private let betterInside: Bool
     
     private var keyDisposable: Disposable?
- 
+    private let search = MetaDisposable()
     var onClose:()->Void = {}
     var onShow:()->Void = {}
     
     struct Key : Hashable {
         let submenuId: Int64?
+        let timestamp: TimeInterval
     }
+    
+    private var query: String = ""
     
     private weak var weakHolder: AppMenu?
     private var strongHolder: AppMenu?
@@ -129,9 +197,11 @@ final class AppMenuController : NSObject  {
     private let overlay = OverlayControl()
 
     private var windows:[Key : Window] = [:]
+    
+    private var previousCopyHandler: (()->Void)? = nil
 
-    init(_ items: [ContextMenuItem], presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool) {
-        self.items = items
+    init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool) {
+        self.menu = menu
         self.weakHolder = holder
         self.presentation = presentation
         self.betterInside = betterInside
@@ -183,15 +253,111 @@ final class AppMenuController : NSObject  {
         }, with: self, for: .leftMouseDragged, priority: .supreme)
 
         self.parent?.set(handler: { [weak self] event in
-            self?.close()
+            self?.addStackEvent(event)
             return .invoked
         }, with: self, for: .All, priority: .supreme)
+        
         
 
         self.parent?.set(handler: { [weak self] _ in
             self?.close()
             return .invoked
         }, with: self, for: .Escape, priority: .supreme)
+        
+
+    }
+    
+    private func invokeKeyEquivalent(_ keyEquivalent: ContextMenuItem.KeyEquiavalent) {
+        guard let activeMenu = self.activeMenu else {
+            return
+        }
+        var found: AppMenuBasicItem?
+        activeMenu.tableView.enumerateItems(with: { item in
+            if let item = item as? AppMenuBasicItem, let contextItem = item.menuItem {
+                if contextItem.keyEquivalentValue == keyEquivalent {
+                    found = item
+                }
+            }
+            return true
+        })
+        if let found = found, let item = found.menuItem {
+            _ = activeMenu.tableView.select(item: found)
+            delay(0.02, closure: {
+                found.interaction?.action(item)
+            })
+        }
+    }
+    
+    private var activeMenu: MenuView? {
+        return self.windows.sorted(by: { $0.key.timestamp > $1.key.timestamp }).first?.value.view
+    }
+    
+    private func addStackEvent(_ event: NSEvent) {
+        let chars = event.characters
+        if let chars = chars?.trimmingCharacters(in: CharacterSet.alphanumerics.inverted), !chars.isEmpty {
+            
+            if event.modifierFlags.contains(.command) {
+                if event.keyCode == KeyboardKey.S.rawValue {
+                    invokeKeyEquivalent(.cmds)
+                    return
+                }
+                if event.keyCode == KeyboardKey.C.rawValue {
+                    invokeKeyEquivalent(.cmdc)
+                    return
+                }
+            }
+            self.query += chars
+            let signal = delaySignal(0.3)
+            search.set(signal.start(completed: { [weak self] in
+                self?.query = ""
+            }))
+            
+            searchItem(self.query)
+        } else {
+            if event.keyCode == KeyboardKey.Return.rawValue || event.keyCode == KeyboardKey.KeypadEnter.rawValue {
+                if let item = self.activeMenu?.tableView.selectedItem() as? AppMenuRowItem {
+                    if let _ = item.item.submenu {
+                        item.interaction?.presentSubmenu(item.item)
+                        if let view = findSubmenu(item.item.id)?.view {
+                            view.tableView.selectNext()
+                            view.updateScroll()
+                        }
+                    } else {
+                        item.interaction?.action(item.item)
+                    }
+                }
+            } else if event.keyCode == KeyboardKey.UpArrow.rawValue {
+                if let activeMenu = self.activeMenu {
+                    activeMenu.tableView.selectPrev()
+                    activeMenu.updateScroll()
+                }
+            } else if event.keyCode == KeyboardKey.DownArrow.rawValue {
+                if let activeMenu = self.activeMenu {
+                    activeMenu.tableView.selectNext()
+                    activeMenu.updateScroll()
+                }
+            }
+        }
+    }
+    
+    private func searchItem(_ query: String) {
+        guard let current = self.activeMenu else {
+            return
+        }
+        var found: AppMenuBasicItem?
+        current.tableView.enumerateItems(with: { item in
+            if let item = item as? AppMenuBasicItem {
+                if item.searchable.lowercased().hasPrefix(query.lowercased()) {
+                    found = item
+                    return false
+                }
+            }
+            return true
+        })
+        if let found = found {
+            _ = current.tableView.select(item: found)
+            current.updateScroll()
+        }
     }
     
     private var isClosed = false
@@ -200,7 +366,7 @@ final class AppMenuController : NSObject  {
             for (_, panel) in self.windows {
                 panel.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak panel] _ in
                     if let panel = panel {
-                        panel.parent?.removeChildWindow(panel)
+                        panel.orderOut(nil)
                     }
                 })
             }
@@ -208,6 +374,8 @@ final class AppMenuController : NSObject  {
             self.parent?.removeAllHandlers(for: self)
             self.strongHolder = nil
             self.overlay.removeFromSuperview()
+            self.parent?.copyhandler = self.previousCopyHandler
+
             self.onClose()
         }
         self.isClosed = true
@@ -228,10 +396,7 @@ final class AppMenuController : NSObject  {
         view.submenuId = submenuId
         view.parentView = parentView
         
-        
-        view.tableView.beginUpdates()
-        view.tableView.removeAll()
-        
+                
         let presentation = self.presentation
         
         let interaction = AppMenuBasicItem.Interaction(action: { [weak self] item in
@@ -254,35 +419,8 @@ final class AppMenuController : NSObject  {
             self?.cancelSubmenu(item)
         })
         
-        var items:[TableRowItem] = items.compactMap { item in
-            return item.rowItem(presentation: presentation, interaction: interaction)
-        }
         
-        var copy = items
-        for (i, item) in items.enumerated() {
-            let isSeparator = item is AppMenuSeparatorItem
-            if isSeparator, i == 0 {
-                copy.removeFirst()
-            } else if isSeparator, i == items.count - 1 {
-                copy.removeFirst()
-            }
-            if i > 0 && i != items.count - 1 {
-                let prev = items[i - 1] is AppMenuSeparatorItem
-                if prev && isSeparator {
-                    copy.remove(at: i)
-                }
-            }
-        }
-        items = copy
-        
-        _ = view.tableView.addItem(item: AppMenuBasicItem(.zero))
-        for item in items {
-            _ = item.makeSize(300, oldWidth: 0)
-            _ = view.tableView.addItem(item: item)
-        }
-        _ = view.tableView.addItem(item: AppMenuBasicItem(.zero))
-
-        view.tableView.endUpdates()
+        view.merge(items: items, presentation: presentation, interaction: interaction)
         
         view.makeSize(presentation: presentation)
         
@@ -294,7 +432,7 @@ final class AppMenuController : NSObject  {
         panel.contentView?.addSubview(view)
         view.center()
         
-        self.windows[.init(submenuId: submenuId)] = panel
+        self.windows[.init(submenuId: submenuId, timestamp: Date().timeIntervalSince1970)] = panel
         
         return panel
         
@@ -308,7 +446,9 @@ final class AppMenuController : NSObject  {
     
     private func cancelSubmenu(_ item: ContextMenuItem) {
         let submenu = findSubmenu(item.id)
-        self.windows.removeValue(forKey: .init(submenuId: item.id))
+        self.windows = self.windows.filter({
+            $0.key.submenuId != item.id
+        })
         if let submenu = submenu {
             submenu.view.parentView?.view.tableView.cancelSelection()
             submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
@@ -340,25 +480,25 @@ final class AppMenuController : NSObject  {
         let rect = adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
         
         view.setFrame(rect, display: true)
-        parent?.addChildWindow(view, ordered: .above)
+        view.makeKeyAndOrderFront(nil)
         
         view.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
     }
     
     
     func activate(event: NSEvent, view: NSView, animated: Bool) {
-        guard let window = event.window else {
+        guard let window = event.window as? Window else {
             return
         }
         
-        let view = getView(for: self.items, parentView: nil, submenuId: nil)
+        let view = getView(for: self.menu.contextItems, parentView: nil, submenuId: nil)
         
         var rect = window.convertToScreen(CGRect(origin: event.locationInWindow, size: view.frame.size))
         rect.origin = rect.origin.offsetBy(dx: -8, dy: -rect.height + 10)
         rect = adjust(rect)
         
         view.setFrame(rect, display: true)
-        parent?.addChildWindow(view, ordered: .above)
+        view.makeKeyAndOrderFront(nil)
                 
         var anchor = view.view.convert(view.mouseLocationOutsideOfEventStream, to: nil)
         anchor.y = rect.height - anchor.y
@@ -367,6 +507,12 @@ final class AppMenuController : NSObject  {
         
         overlay.frame = window.bounds
         window.contentView?.addSubview(overlay)
+        
+        self.previousCopyHandler = window.copyhandler
+        
+        window.copyhandler = { [weak self] in
+            self?.invokeKeyEquivalent(.cmdc)
+        }
     }
     
     private func adjust(_ rect: NSRect, parent: Window? = nil) -> NSRect {
@@ -393,7 +539,7 @@ final class AppMenuController : NSObject  {
             if let parent = parent {
                 rect.origin.x = parent.frame.minX - rect.width + 20 + 5
             } else {
-                rect.origin.x = visible.maxX - rect.width
+                rect.origin.x = rect.minX - rect.width + 20
             }
         }
 
