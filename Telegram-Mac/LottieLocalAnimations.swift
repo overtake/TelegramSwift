@@ -155,6 +155,7 @@ enum LocalAnimatedSticker : String {
     case menu_replace
     case menu_folder
     case menu_calendar
+    case menu_reactions
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

@@ -66,7 +66,7 @@ class ChatRightView: View, ViewDisplayDelegate {
     private var stateView:ImageView?
     private var readImageView:ImageView?
     private var sendingView:SendingClockProgress?
-
+    private var reactionsView: ChatReactionsView?
     private weak var item:ChatRowItem?
     
     var isReversed: Bool {
@@ -80,6 +80,21 @@ class ChatRightView: View, ViewDisplayDelegate {
         item.updateTooltip = { [weak self] value in
             self?.toolTip = value
         }
+        
+        if let reactionsLayout = item.reactionsLayout, reactionsLayout.mode == .short  {
+            if reactionsView == nil {
+                reactionsView = ChatReactionsView(frame: reactionsLayout.size.bounds)
+                addSubview(reactionsView!)
+            }
+            guard let reactionsView = reactionsView else {return}
+            reactionsView.update(with: reactionsLayout, animated: animated)
+        } else {
+            if let view = self.reactionsView {
+                self.reactionsView = nil
+                performSubviewRemoval(view, animated: animated)
+            }
+        }
+        
         if !item.isIncoming || item.isUnsent || item.isFailed
             && !item.chatInteraction.isLogInteraction {
             if item.isUnsent {
@@ -151,7 +166,24 @@ class ChatRightView: View, ViewDisplayDelegate {
         textView?.frame = bounds
         
         
+       
+        
         if let item = item {
+            
+            
+            if let reactions = item.reactionsLayout {
+                if let reactionsView = reactionsView {
+                    var f = focus(reactions.size)
+                    if item.isStateOverlayLayout {
+                        f.origin.x = 4
+                    } else {
+                        f.origin.x = 1
+                    }
+                    f.origin.y -= 1
+                    reactionsView.frame = f
+                }
+            }
+            
             var rightInset:CGFloat = 0
             if let date = item.date {
                 if !isReversed {

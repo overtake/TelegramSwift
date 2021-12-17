@@ -240,6 +240,10 @@ class ChannelInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
+    func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
+        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, isGroup: true))
+    }
+
     
     func setupDiscussion() {
         _ = (self.context.account.postbox.loadedPeerWithId(self.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
@@ -614,6 +618,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
+    case reactions(section: ChannelInfoSection, text: String, allowedReactions: [String]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -640,6 +645,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
         case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
+        case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
@@ -780,6 +786,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .reactions(sectionId, text, allowedReactions, availableReactions, viewType):
+            if case .reactions(sectionId, text, allowedReactions, availableReactions, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .discussionDesc(sectionId, viewType):
             if case .discussionDesc(sectionId, viewType) = entry {
                 return true
@@ -858,24 +870,26 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 12
         case .requests:
             return 13
-        case .discussion:
+        case .reactions:
             return 14
-        case .discussionDesc:
+        case .discussion:
             return 15
-        case .aboutInput:
+        case .discussionDesc:
             return 16
-        case .aboutDesc:
+        case .aboutInput:
             return 17
-        case .signMessages:
+        case .aboutDesc:
             return 18
-        case .signDesc:
+        case .signMessages:
             return 19
-        case .report:
+        case .signDesc:
             return 20
-        case .leave:
+        case .report:
             return 21
-        case .media:
+        case .leave:
             return 22
+        case .media:
+            return 23
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -906,6 +920,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .requests(sectionId, _, _):
             return sectionId.rawValue
         case let .discussion(sectionId, _, _, _):
+            return sectionId.rawValue
+        case let .reactions(sectionId, _, _, _, _):
             return sectionId.rawValue
         case let .discussionDesc(sectionId, _):
             return sectionId.rawValue
@@ -953,6 +969,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .requests(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussion(sectionId, _, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .reactions(sectionId, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussionDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1031,6 +1049,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDiscussion, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .discussionDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoDiscussionDesc, viewType: viewType)
+        case let .reactions(_, text, allowedReactions, availableReactions, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_requests, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
+            })
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .aboutInput(_, text, viewType):
@@ -1065,7 +1087,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {
@@ -1120,7 +1142,25 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                         block.append(.requests(section: .type, count: joinRequestsCount, viewType: .singleItem))
                     }
                 }
-                if channel.adminRights?.rights.contains(.canChangeInfo) == true {
+                if channel.groupAccess.canEditGroupInfo {
+                    let cachedData = view.cachedData as? CachedChannelData
+                    let allCount = cachedData?.allowedReactions?.count ?? availableReactions?.reactions.count ?? 0
+                    
+                    let text: String
+                    if let availableReactions = availableReactions {
+                        if allCount == availableReactions.reactions.count {
+                            text = strings().peerInfoReactionsAll
+                        } else if allCount == 0 {
+                            text = strings().peerInfoReactionsDisabled
+                        } else {
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.reactions.count)")
+                        }
+                    } else {
+                        text = strings().peerInfoReactionsAll
+                    }
+                    
+                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
                 }
                 applyBlock(block)

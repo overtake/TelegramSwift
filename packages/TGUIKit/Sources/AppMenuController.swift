@@ -17,7 +17,31 @@ private extension Window {
 }
 
 final class MenuView: View, TableViewDelegate {
+    
+    struct Entry : Identifiable, Comparable, Equatable {
+        static func < (lhs: MenuView.Entry, rhs: MenuView.Entry) -> Bool {
+            return lhs.index < rhs.index
+        }
+        static func == (lhs: MenuView.Entry, rhs: MenuView.Entry) -> Bool {
+            return lhs.stableId == rhs.stableId && lhs.index == rhs.index
+        }
+        let item: ContextMenuItem?
+        let index: Int
+        var stableId: AnyHashable {
+            return item?.id ?? Int64(index)
+        }
+        
+        func makeItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+            if let item = item {
+                return item.rowItem(presentation: presentation, interaction: interaction)
+            } else {
+                return AppMenuBasicItem(.zero, presentation: presentation, menuItem: nil, interaction: interaction)
+            }
+        }
+    }
+    
     let tableView: TableView = TableView(frame: .zero)
+    private var contextItems: [Entry] = []
     private let backgroundView = View()
     private let visualView = NSVisualEffectView(frame: .zero)
     required init(frame frameRect: NSRect) {
@@ -30,8 +54,8 @@ final class MenuView: View, TableViewDelegate {
         self.visualView.blendingMode = .behindWindow
         self.tableView.delegate = self
         let shadow = NSShadow()
-        shadow.shadowBlurRadius = 4
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.4)
+        shadow.shadowBlurRadius = 8
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
         shadow.shadowOffset = NSMakeSize(0, 0)
         self.shadow = shadow
         
@@ -61,7 +85,7 @@ final class MenuView: View, TableViewDelegate {
         super.setFrameSize(newSize)
     }
     
-    func makeSize(presentation: AppMenu.Presentation) {
+    func makeSize(presentation: AppMenu.Presentation, appearMode: AppMenu.AppearMode) {
         
         var max: CGFloat = 0
         tableView.enumerateItems(with: { item in
@@ -77,7 +101,7 @@ final class MenuView: View, TableViewDelegate {
             return
         }
         
-        self.setFrameSize(max, min(tableView.listHeight, min(600, screen.visibleFrame.height - 200)))
+        self.setFrameSize(max, min(tableView.listHeight, min(appearMode.max, screen.visibleFrame.height - 200)))
         if presentation.colors.isDark {
             visualView.material = .dark
         } else {
@@ -87,52 +111,82 @@ final class MenuView: View, TableViewDelegate {
         backgroundView.backgroundColor = presentation.backgroundColor
     }
     
-    func merge(items: [ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
-        
-        let stick = items.first(where: { $0.stickClass() != nil})?.stickClass()
-        
-        if stick != nil {
-            var bp = 0
-            bp += 1
-        }
-        
-        tableView.set(stickClass: stick, handler: { _ in
-            
-        })
-        
-        tableView.beginUpdates()
-        
-        var items:[TableRowItem] = items.compactMap { item in
+    func insertItems(_ items:[ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
+        let items:[TableRowItem] = items.compactMap { item in
             return item.rowItem(presentation: presentation, interaction: interaction)
         }
-        
+        for item in items {
+            _ = item.makeSize(300, oldWidth: 0)
+            _ = tableView.addItem(item: item)
+        }
+    }
+    private var observation:NSKeyValueObservation?
+    
+    private func purify(_ items:[ContextMenuItem]) -> [ContextMenuItem] {
         var copy = items
         for (i, item) in items.enumerated() {
-            let isSeparator = item is AppMenuSeparatorItem
+            let isSeparator = item is ContextSeparatorItem
             if isSeparator, i == 0 {
                 copy.removeFirst()
             } else if isSeparator, i == items.count - 1 {
                 copy.removeFirst()
             }
             if i > 0 && i != items.count - 1 {
-                let prev = items[i - 1] is AppMenuSeparatorItem
+                let prev = items[i - 1] is ContextSeparatorItem
                 if prev && isSeparator {
                     copy.remove(at: i)
                 }
             }
         }
-        items = copy
+        return copy
+    }
+    
+    func merge(menu: ContextMenu, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
+        self.observation = menu.observe(\._items, options: [.new], changeHandler: { [weak self] menu, value in
+            let new = value.newValue?.compactMap { $0 as? ContextMenuItem } ?? []
+            self?.apply(current: new, presentation: presentation, interaction: interaction)
+        })
+        self.apply(current: menu.contextItems, presentation: presentation, interaction: interaction)
+    }
+    
+    private func apply(current: [ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
+        let items = purify(current)
         
-        _ = tableView.addItem(item: AppMenuBasicItem(.zero, presentation: presentation))
+        var entries:[Entry] = []
+       
+        var index: Int = 0
+        entries.append(Entry(item: nil, index: -1))
+        
         for item in items {
-            _ = item.makeSize(300, oldWidth: 0)
-            _ = tableView.addItem(item: item)
+            entries.append(Entry(item: item, index: index))
+            index += 1
         }
-        _ = tableView.addItem(item: AppMenuBasicItem(.zero, presentation: presentation))
+        entries.append(Entry(item: nil, index: .max))
 
-        tableView.endUpdates()
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.contextItems, rightList: entries)
 
+        tableView.beginTableUpdates()
         
+        for deleteIndex in deleteIndices.reversed() {
+            self.tableView.remove(at: deleteIndex)
+        }
+        for indicesAndItem in indicesAndItems {
+            let item = indicesAndItem.1.makeItem(presentation: presentation, interaction: interaction)
+            _ = item.makeSize(300, oldWidth: 0)
+            _ = self.tableView.insert(item: item, at: indicesAndItem.0)
+        }
+        for updateIndex in updateIndices {
+            let item = updateIndex.1.makeItem(presentation: presentation, interaction: interaction)
+            _ = item.makeSize(300, oldWidth: 0)
+            self.tableView.replace(item: item, at: updateIndex.0, animated: false)
+        }
+        self.contextItems = entries
+        tableView.endTableUpdates()
+
+    }
+    
+    deinit {
+        self.observation?.invalidate()
     }
     
     func item(for id: AnyHashable) -> TableRowItem? {
@@ -178,6 +232,7 @@ final class AppMenuController : NSObject  {
     var parent: Window?
     let presentation: AppMenu.Presentation
     private let betterInside: Bool
+    private let appearMode: AppMenu.AppearMode
     
     private var keyDisposable: Disposable?
     private let search = MetaDisposable()
@@ -200,11 +255,16 @@ final class AppMenuController : NSObject  {
     
     private var previousCopyHandler: (()->Void)? = nil
 
-    init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool) {
+    private weak var parentView: NSView?
+    private let delayDisposable = MetaDisposable()
+    
+    init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool, appearMode: AppMenu.AppearMode, parentView: NSView?) {
         self.menu = menu
         self.weakHolder = holder
         self.presentation = presentation
-        self.betterInside = betterInside
+        self.betterInside = betterInside// || appearMode == .hover
+        self.appearMode = appearMode
+        self.parentView = parentView
     }
     
     func initialize() {
@@ -235,20 +295,27 @@ final class AppMenuController : NSObject  {
             return .invoked
         }, with: self, for: .rightMouseUp, priority: .supreme)
         
-        self.parent?.set(mouseHandler: { event in
+        self.parent?.set(mouseHandler: { [weak self] event in
+            self?.checkEvent(event)
             return .invoked
         }, with: self, for: .mouseMoved, priority: .supreme)
         
-        self.parent?.set(mouseHandler: { event in
+        self.parent?.set(mouseHandler: { [weak self] event in
+            self?.checkEvent(event)
             return .invoked
         }, with: self, for: .mouseExited, priority: .supreme)
 
-        self.parent?.set(mouseHandler: { event in
+        self.parent?.set(mouseHandler: { [weak self] event in
+            self?.checkEvent(event)
             return .invoked
         }, with: self, for: .mouseEntered, priority: .supreme)
 
 
-        self.parent?.set(mouseHandler: { event in
+        self.parent?.set(mouseHandler: { [weak self] event in
+            if isInteracted {
+                self?.close()
+            }
+            isInteracted = true
             return .invoked
         }, with: self, for: .leftMouseDragged, priority: .supreme)
 
@@ -265,6 +332,30 @@ final class AppMenuController : NSObject  {
         }, with: self, for: .Escape, priority: .supreme)
         
 
+    }
+    
+    private func checkEvent(_ event: NSEvent) {
+        switch appearMode {
+        case .hover:
+            if let window = event.window {
+                if let parentView = parentView, let superview = parentView.superview {
+                    let s_v_rect = window.convertToScreen(superview.convert(parentView.frame, to: nil))
+                    let s_m_point = window.convertToScreen(CGRect(origin: event.locationInWindow, size: .zero)).origin
+                    let mouseInMenu = self.activeMenu?.mouseInside() == true
+                    if NSPointInRect(s_m_point, s_v_rect) || mouseInMenu {
+                        delayDisposable.set(nil)
+                    } else {
+                        delayDisposable.set(delaySignal(0.1).start(completed: { [weak self] in
+                            self?.close()
+                        }))
+                    }
+                }
+            }
+            
+        case .click:
+            break
+        }
+        
     }
     
     private func invokeKeyEquivalent(_ keyEquivalent: ContextMenuItem.KeyEquiavalent) {
@@ -364,10 +455,10 @@ final class AppMenuController : NSObject  {
     func close() {
         if !isClosed {
             for (_, panel) in self.windows {
-                panel.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak panel] _ in
-                    if let panel = panel {
-                        panel.orderOut(nil)
-                    }
+                var panel: Window? = panel
+                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { _ in
+                    panel?.orderOut(nil)
+                    panel = nil
                 })
             }
             self.windows.removeAll()
@@ -383,13 +474,14 @@ final class AppMenuController : NSObject  {
     
 
     
-    private func getView(for items: [ContextMenuItem], parentView: Window?, submenuId: Int64?) -> Window {
+    private func getView(for menu: ContextMenu, parentView: Window?, submenuId: Int64?) -> Window {
         
         let panel = Window(contentRect: .zero, styleMask: [], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
-        panel.level = parent?.level ?? .normal
+        panel.level = .popUpMenu
         panel.backgroundColor = .clear
+        panel.isOpaque = false
 
 
         let view = MenuView(frame: .zero)
@@ -404,35 +496,45 @@ final class AppMenuController : NSObject  {
                 handler()
                 self?.close()
             }
-        }, presentSubmenu: { [weak self, weak panel] item in
-            let submenu = item.submenu?.items.compactMap { $0 as? ContextMenuItem } ?? []
-            if !submenu.isEmpty, let parentView = panel {
+        }, presentSubmenu: { [weak self, weak panel, weak menu] item in
+            if let submenu = item.submenu as? ContextMenu, let parentView = panel, self?.findSubmenu(item.id) == nil {
                 self?.presentSubmenu(submenu, parentView: parentView, for: item.id)
             }
-            for value in items {
-                if value.id != item.id {
-                    self?.cancelSubmenu(value)
+            if let menu = menu {
+                for value in menu.contextItems {
+                    if value.id != item.id {
+                        self?.cancelSubmenu(value)
+                    }
                 }
             }
-            
         }, cancelSubmenu: { [weak self] item in
             self?.cancelSubmenu(item)
         })
         
         
-        view.merge(items: items, presentation: presentation, interaction: interaction)
+        view.merge(menu: menu, presentation: presentation, interaction: interaction)
         
-        view.makeSize(presentation: presentation)
+        view.makeSize(presentation: presentation, appearMode: appearMode)
         
         view.tableView.needUpdateVisibleAfterScroll = true
         view.tableView.getBackgroundColor = {
             .clear
         }
-        panel.setFrame(view.frame.insetBy(dx: -10, dy: -10), display: false)
+        
+        panel.setFrame(view.frame.insetBy(dx: -20, dy: -20), display: false)
         panel.contentView?.addSubview(view)
         view.center()
         
         self.windows[.init(submenuId: submenuId, timestamp: Date().timeIntervalSince1970)] = panel
+        
+        view.tableView.setScrollHandler { [weak menu] position in
+            switch position.direction {
+            case .bottom:
+                menu?.loadMore?()
+            default:
+                break
+            }
+        }
         
         return panel
         
@@ -459,13 +561,13 @@ final class AppMenuController : NSObject  {
         }
     }
     
-    private func presentSubmenu(_ items: [ContextMenuItem], parentView: Window, for id: Int64) {
+    private func presentSubmenu(_ menu: ContextMenu, parentView: Window, for id: Int64) {
         
         guard findSubmenu(id) == nil else {
             return
         }
         
-        let view = getView(for: items, parentView: parentView, submenuId: id)
+        let view = getView(for: menu, parentView: parentView, submenuId: id)
         guard let parentItem = parentView.view.item(for: id), let parentItemView = parentItem.view else {
             return
         }
@@ -475,7 +577,7 @@ final class AppMenuController : NSObject  {
         point = parentView.convertToScreen(CGRect(origin: point, size: .zero)).origin
         
         point.y -= view.frame.height
-        point.x -= 10
+        point.x -= 20
         
         let rect = adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
         
@@ -491,10 +593,22 @@ final class AppMenuController : NSObject  {
             return
         }
         
-        let view = getView(for: self.menu.contextItems, parentView: nil, submenuId: nil)
+        let view = getView(for: self.menu, parentView: nil, submenuId: nil)
         
-        var rect = window.convertToScreen(CGRect(origin: event.locationInWindow, size: view.frame.size))
-        rect.origin = rect.origin.offsetBy(dx: -8, dy: -rect.height + 10)
+        var rect: NSRect
+        switch self.appearMode {
+        case .hover:
+            if let parentView = parentView, let superview = parentView.superview {
+                let v_rect = window.convertToScreen(superview.convert(parentView.frame, to: nil))
+                rect = CGRect(origin: NSMakePoint(v_rect.minX, v_rect.minY - 5), size: view.frame.size)
+            } else {
+                rect = window.convertToScreen(CGRect(origin: event.locationInWindow, size: view.frame.size))
+            }
+        case .click:
+            rect = window.convertToScreen(CGRect(origin: event.locationInWindow, size: view.frame.size))
+        }
+        
+        rect.origin = rect.origin.offsetBy(dx: -18, dy: -rect.height + 20)
         rect = adjust(rect)
         
         view.setFrame(rect, display: true)
@@ -503,10 +617,20 @@ final class AppMenuController : NSObject  {
         var anchor = view.view.convert(view.mouseLocationOutsideOfEventStream, to: nil)
         anchor.y = rect.height - anchor.y
         
-        view.view.layer?.animateScaleSpringFrom(anchor: anchor, from: 0.1, to: 1, duration: 0.35)
+        anchor.x -= 20
+        anchor.y -= 20
         
-        overlay.frame = window.bounds
-        window.contentView?.addSubview(overlay)
+        
+        switch appearMode {
+        case .click:
+            view.view.layer?.animateScaleSpringFrom(anchor: anchor, from: 0.1, to: 1, duration: 0.2, bounce: false)
+            overlay.frame = window.bounds
+            window.contentView?.addSubview(overlay)
+        default:
+            break
+        }
+        view.view.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
+
         
         self.previousCopyHandler = window.copyhandler
         
@@ -531,20 +655,18 @@ final class AppMenuController : NSObject  {
         
         if rect.minX < visible.minX {
             if let parent = parent {
-                rect.origin.x = parent.frame.maxX - 10
+                rect.origin.x = parent.frame.maxX - 40
             } else {
-                rect.origin.x = visible.minX + 10
+                rect.origin.x = visible.minX + 40
             }
         } else if rect.maxX > visible.maxX {
             if let parent = parent {
-                rect.origin.x = parent.frame.minX - rect.width + 20 + 5
+                rect.origin.x = parent.frame.minX - rect.width + 40 + 5
             } else {
-                rect.origin.x = rect.minX - rect.width + 20
+                rect.origin.x = rect.minX - rect.width + 40
             }
         }
 
-
-        
         return rect
     }
     
@@ -564,5 +686,9 @@ final class AppMenuController : NSObject  {
             }
             skippedFirst = true
         })
+    }
+    
+    deinit {
+        self.delayDisposable.dispose()
     }
 }

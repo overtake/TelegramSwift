@@ -84,6 +84,7 @@ final class LeftSidebarView: View {
 
         visualEffectView.blendingMode = .behindWindow
         visualEffectView.material = .ultraDark
+        visualEffectView.state = .active
        
         updateLocalizationAndTheme(theme: theme)
     }

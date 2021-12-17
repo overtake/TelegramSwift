@@ -399,7 +399,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
             if !submenu.isEmpty {
                 items.append(ContextSeparatorItem())
                 let item = ContextMenuItem(strings().chatListFilterAddToFolder, itemImage: MenuAnimation.menu_add_to_folder.value)
-                let menu = NSMenu()
+                let menu = ContextMenu()
                 for item in submenu {
                     menu.addItem(item)
                 }

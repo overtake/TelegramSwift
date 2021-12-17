@@ -529,7 +529,7 @@ public class Modal: NSObject {
             window.set(mouseHandler: { [weak self] _ in
                 self?.controller?.close()
                 return .rejected
-            }, with: self, for: .leftMouseDown)
+            }, with: self, for: .leftMouseDown, priority: controller.responderPriority)
         }
         
         var isDown: Bool = false

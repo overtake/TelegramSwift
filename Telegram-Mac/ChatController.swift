@@ -5221,10 +5221,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.doneButton = doneButton
 
         
+        doneButton.set(handler: { [weak self] _ in
+            self?.changeState()
+        }, for: .Click)
+        
         doneButton.isHidden = true
         
-        doneButton.userInteractionEnabled = false
-        editButton.userInteractionEnabled = false
+//        doneButton.userInteractionEnabled = false
+//        editButton.userInteractionEnabled = false
         
         let context = self.context
         let chatLocation = self.chatLocation

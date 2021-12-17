@@ -38,7 +38,7 @@ open class AppMenuBasicItem : TableRowItem {
     }
         
     open override var height: CGFloat {
-        return 2
+        return 4
     }
     open var effectiveSize: NSSize {
         return NSMakeSize(0, height)
@@ -70,11 +70,7 @@ open class AppMenuBasicItemView: TableRowView {
     
     open override func layout() {
         super.layout()
-        if bounds.height > 4 {
-            containerView.frame = bounds.insetBy(dx: 4, dy: 2)
-        } else {
-            containerView.frame = .zero
-        }
+        containerView.frame = bounds.insetBy(dx: 4, dy: 0)
     }
     
     deinit {
@@ -129,7 +125,7 @@ private final class AppMenuSeparatorItemView: AppMenuBasicItemView {
     
     override func layout() {
         super.layout()
-        view.frame = NSMakeRect(11, 0, containerView.frame.width - 22, 1)
+        view.frame = NSMakeRect(11, 2, containerView.frame.width - 22, 1)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -224,7 +220,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
     
     open override var height: CGFloat {
-        return 32
+        return 28
     }
     
     open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {

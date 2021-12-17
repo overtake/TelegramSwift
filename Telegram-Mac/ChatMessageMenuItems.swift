@@ -309,48 +309,49 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
-        if let textLayout = data.textLayout?.0 {
-            if !textLayout.selectedRange.hasSelectText {
-                thirdBlock.append(ContextMenuItem(strings().chatContextCopyText, handler: { [weak textLayout] in
-                    if let textLayout = textLayout {
-                        if !globalLinkExecutor.copyAttributedString(textLayout.attributedString) {
-                            copyToClipboard(textLayout.attributedString.string)
+        if !data.message.isCopyProtected() {
+            if let textLayout = data.textLayout?.0 {
+                if !textLayout.selectedRange.hasSelectText {
+                    thirdBlock.append(ContextMenuItem(strings().chatContextCopyText, handler: { [weak textLayout] in
+                        if let textLayout = textLayout {
+                            if !globalLinkExecutor.copyAttributedString(textLayout.attributedString) {
+                                copyToClipboard(textLayout.attributedString.string)
+                            }
                         }
-                        showModalText(for: context.window, text: strings().contextAlertCopied)
-                    }
-                }, itemImage: MenuAnimation.menu_copy.value))
-            } else {
-                let text: String
-                if let linkType = data.textLayout?.1 {
-                    text = copyContextText(from: linkType)
+                    }, itemImage: MenuAnimation.menu_copy.value))
                 } else {
-                    text = strings().chatCopySelectedText
-                }
-                thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
-                    if let textLayout = textLayout {
-                        let result = textLayout.interactions.copy?()
-                        let attr = textLayout.attributedString
-                        if let result = result, !result {
-                            let pb = NSPasteboard.general
-                            pb.clearContents()
-                            pb.declareTypes([.string], owner: textLayout)
-                            var effectiveRange = textLayout.selectedRange.range
-                            let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                            let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                            if !isCopied {
-                                let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                if let attribute = attribute as? inAppLink {
-                                    pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                } else {
-                                    pb.setString(selectedText.string, forType: .string)
+                    let text: String
+                    if let linkType = data.textLayout?.1 {
+                        text = copyContextText(from: linkType)
+                    } else {
+                        text = strings().chatCopySelectedText
+                    }
+                    thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
+                        if let textLayout = textLayout {
+                            let result = textLayout.interactions.copy?()
+                            let attr = textLayout.attributedString
+                            if let result = result, !result {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.declareTypes([.string], owner: textLayout)
+                                var effectiveRange = textLayout.selectedRange.range
+                                let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                                let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
+                                if !isCopied {
+                                    let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                    if let attribute = attribute as? inAppLink {
+                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                    } else {
+                                        pb.setString(selectedText.string, forType: .string)
+                                    }
                                 }
                             }
                         }
-                        showModalText(for: context.window, text: strings().contextAlertCopied)
-                    }
-                }, itemImage: MenuAnimation.menu_copy.value))
+                    }, itemImage: MenuAnimation.menu_copy.value))
+                }
             }
         }
+       
         
         if let peer = peer as? TelegramChannel, !isService {
             if isNotFailed, !message.isScheduledMessage {
@@ -464,6 +465,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }.prefix(5)
             
             var items:[ContextMenuItem] = []
+            
             
             func makeItem(_ peer: Peer) -> ContextMenuItem {
                 let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(25)
