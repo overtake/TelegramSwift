@@ -7,6 +7,18 @@ public final class AppMenu {
         case normal
         case destruct
     }
+    public enum AppearMode {
+        case click
+        case hover
+        var max: CGFloat {
+            switch self {
+            case .click:
+                return 600
+            case .hover:
+                return 288
+            }
+        }
+    }
     
     public struct Presentation {
         public let colors: ColorPalette
@@ -63,9 +75,11 @@ public final class AppMenu {
     private let menu: ContextMenu
     private var controller: AppMenuController?
     private let presentation: Presentation
-    public init(menu: ContextMenu, presentation: Presentation = Presentation.current(PresentationTheme.current.colors)) {
+    private let appearMode: AppearMode
+    public init(menu: ContextMenu, presentation: Presentation = Presentation.current(PresentationTheme.current.colors), appearMode: AppearMode = .click) {
         self.menu = menu
         self.presentation = presentation
+        self.appearMode = appearMode
     }
     
     deinit {
@@ -73,8 +87,8 @@ public final class AppMenu {
         bp += 1
     }
     
-    public static func show(menu: ContextMenu, event: NSEvent, for view: NSView) {
-        let appMenu = AppMenu(menu: menu, presentation: menu.presentation)
+    public static func show(menu: ContextMenu, event: NSEvent, for view: NSView, appearMode: AppearMode = .click) {
+        let appMenu = AppMenu(menu: menu, presentation: menu.presentation, appearMode: appearMode)
         appMenu.show(event: event, view: view)
     }
     
@@ -82,7 +96,7 @@ public final class AppMenu {
         guard !self.menu.contextItems.isEmpty else {
             return
         }
-        let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside)
+        let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside, appearMode: appearMode, parentView: view)
         
         self.controller = controller
         

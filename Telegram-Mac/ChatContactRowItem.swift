@@ -69,7 +69,7 @@ class ChatContactRowItem: ChatRowItem {
     
     override var additionalLineForDateInBubbleState: CGFloat? {
 
-        if let reactions = self.reactionsLayout {
+        if let reactions = self.reactionsLayout, reactions.mode == .full {
             let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate, maxSize: max(realContentSize.width, maxTitleWidth))
             if !hasSpace {
                 return rightSize.height

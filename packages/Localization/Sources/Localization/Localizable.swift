@@ -1939,6 +1939,38 @@ public final class L10n {
   public static var chatContextFeedInfo: String  { return L10n.tr("Localizable", "Chat.Context.FeedInfo") }
   /// Info
   public static var chatContextInfo: String  { return L10n.tr("Localizable", "Chat.Context.Info") }
+  /// %1$@/%2$@ Reacted
+  public static func chatContextReacted(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Reacted", p1, p2)
+  }
+  /// %d
+  public static func chatContextReactedFastCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_countable", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_few", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_many", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_one", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_other", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_two", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_zero", p1)
+  }
   /// Remove from Favorites
   public static var chatContextRemoveFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.RemoveFavoriteSticker") }
   /// Restrict
@@ -6701,6 +6733,8 @@ public final class L10n {
   public static var peerInfoPhone: String  { return L10n.tr("Localizable", "PeerInfo.Phone") }
   /// Chat History For New Members
   public static var peerInfoPreHistory: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory") }
+  /// Reactions
+  public static var peerInfoReactions: String  { return L10n.tr("Localizable", "PeerInfo.Reactions") }
   /// Removed Users
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
@@ -6903,6 +6937,14 @@ public final class L10n {
   public static var peerInfoPreHistoryHidden: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Hidden") }
   /// Visible
   public static var peerInfoPreHistoryVisible: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Visible") }
+  /// All
+  public static var peerInfoReactionsAll: String  { return L10n.tr("Localizable", "PeerInfo.Reactions.All") }
+  /// Disabled
+  public static var peerInfoReactionsDisabled: String  { return L10n.tr("Localizable", "PeerInfo.Reactions.Disabled") }
+  /// %1$@/%2$@
+  public static func peerInfoReactionsPart(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Reactions.Part", p1, p2)
+  }
   /// Select Messages
   public static var peerInfoReportSelectMessages: String  { return L10n.tr("Localizable", "PeerInfo.Report.SelectMessages") }
   /// Append names of the admins to the messages they post.
@@ -7717,6 +7759,16 @@ public final class L10n {
   public static var quickSwitcherRecently: String  { return L10n.tr("Localizable", "QuickSwitcher.Recently") }
   /// Zoom
   public static var r4oN2Eq4Title: String  { return L10n.tr("Localizable", "R4o-n2-Eq4.title") }
+  /// Allow Reactions
+  public static var reactionSettingsAllow: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow") }
+  /// Reactions
+  public static var reactionSettingsTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Title") }
+  /// Allow subscribers to reacts to channel posts.
+  public static var reactionSettingsAllowChannelInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Channel.Info") }
+  /// Allow members to reacts to messages.
+  public static var reactionSettingsAllowGroupInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Group.Info") }
+  /// AVAILABLE REACTIONS
+  public static var reactionSettingsAvailableInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Available.Info") }
   /// Delete
   public static var recentCallsDelete: String  { return L10n.tr("Localizable", "RecentCalls.Delete") }
   /// Are you sure you want to delete call?

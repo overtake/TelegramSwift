@@ -634,7 +634,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
-                if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) != nil || item.commentsBubbleData != nil {
+                if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil || item.commentsBubbleData != nil {
                     positionFlags.remove(.bottom)
                 }
                 if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
@@ -953,7 +953,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     var positionFlags: LayoutPositionFlags = data.flags
                     
                     if item.hasBubble  {
-                        if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) == nil {
+                        if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) == nil {
                             positionFlags.remove(.bottom)
                         }
                         if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
@@ -1007,7 +1007,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 var positionFlags: LayoutPositionFlags = data.flags
                 
                 if item.hasBubble  {
-                    if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) != nil {
+                    if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil {
                         positionFlags.remove(.bottom)
                     }
                     if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {

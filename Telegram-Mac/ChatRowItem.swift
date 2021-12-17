@@ -293,6 +293,16 @@ class ChatRowItem: TableRowItem {
         
         size.width += stateOverlayAdditionCorner * 2
         size.height = isStateOverlayLayout ? 17 : size.height
+        
+        if let reactions = reactionsLayout {
+            switch reactions.mode {
+            case .short:
+                size.width += reactions.size.width + 4
+            default:
+                break
+            }
+        }
+        
         return size
         
     }
@@ -353,9 +363,9 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if let reactionsLayout = self.reactionsLayout {
+        if let reactions = self.reactionsLayout, reactions.mode == .full {
             height += defaultReactionsInset
-            height += reactionsLayout.size.height
+            height += reactions.size.height
         }
 
         return max(rightSize.height + 8, height)
@@ -1329,11 +1339,15 @@ class ChatRowItem: TableRowItem {
     var reactionsLayout: ChatReactionsLayout? {
         if let value = _reactionsLayout {
             return value
-        } else if let message = self.messages.first(where: { $0.reactionsAttribute != nil }) {
-            let layout = ChatReactionsLayout(account: chatInteraction.context.account, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper)
-            
-            _reactionsLayout = layout
-            return layout
+        } else if let message = self.messages.first, let attr = message.reactionsAttribute {
+            if !attr.reactions.isEmpty {
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)))
+                
+                _reactionsLayout = layout
+                return layout
+            } else {
+                return nil
+            }
         } else {
             return nil
         }
@@ -1362,7 +1376,7 @@ class ChatRowItem: TableRowItem {
         
         var hasGroupCaption: Bool = object.message?.text.isEmpty == false
         if case let .groupedPhotos(entries, _) = object {
-            object = entries.filter({!$0.message!.media.isEmpty}).last!
+            object = entries.filter({!$0.message!.media.isEmpty}).first!
             
             loop: for entry in entries {
                 if let _ = captionMessage, !entry.message!.text.isEmpty {
@@ -2134,11 +2148,19 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if isBubbled {
-            reactionsLayout?.measure(for: _contentSize.width)
-        } else {
-            reactionsLayout?.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+        if let reactions = reactionsLayout {
+            switch reactions.mode {
+            case .full:
+                if isBubbled {
+                    reactions.measure(for: _contentSize.width)
+                } else {
+                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+                }
+            case .short:
+                reactions.measure(for: widthForContent)
+            }
         }
+       
 
         
         if let forwardNameLayout = forwardNameLayout {
@@ -2371,9 +2393,11 @@ class ChatRowItem: TableRowItem {
             rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
         }
         
-        if let reactionsLayout = self.reactionsLayout, reactionsLayout.presentation.isOutOfBounds {
-            rect.size.height -= defaultReactionsInset
-            rect.size.height -= reactionsLayout.size.height
+        if let reactions = self.reactionsLayout {
+            if reactions.presentation.isOutOfBounds, reactions.mode == .full {
+                rect.size.height -= defaultReactionsInset
+                rect.size.height -= reactions.size.height
+            }
         }
         
         //if forwardType != nil {
@@ -2394,8 +2418,8 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(rect.width, forwardWidth + bubbleDefaultInnerInset)
         
-        if let reactionsLayout = reactionsLayout {
-            rect.size.width = max(reactionsLayout.size.width + bubbleDefaultInnerInset, rect.width)
+        if let reactions = reactionsLayout, reactions.mode == .full {
+            rect.size.width = max(reactions.size.width + bubbleDefaultInnerInset, rect.width)
         }
         
         if let commentsBubbleData = commentsBubbleData {
