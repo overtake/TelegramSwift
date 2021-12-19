@@ -1598,7 +1598,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .requests(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoMembersRequest, icon: theme.icons.profile_requests, type: .badge(count > 0 ? "\(count)" : "", theme.colors.redUI), viewType: viewType, action: arguments.openRequests)
         case let .reactions(_, text, allowedReactions, availableReactions, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_requests, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
             })
         case let .linkedChannel(_, channel, _, viewType):

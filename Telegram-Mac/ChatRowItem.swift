@@ -117,27 +117,11 @@ class ChatRowItem: TableRowItem {
     }
 
     //right view
-    private(set) var date:(TextNodeLayout,TextNode)?
-    
-    private(set) var likesNode:TextNode?
-    private(set) var likes:(TextNodeLayout,TextNode)?
-    private(set) var likesAttributed:NSAttributedString?
-    
-    private(set) var channelViewsNode:TextNode?
-    private(set) var channelViews:(TextNodeLayout,TextNode)?
-    private(set) var channelViewsAttributed:NSAttributedString?
-    
-    private(set) var replyCountNode:TextNode?
-    private(set) var replyCount:(TextNodeLayout,TextNode)?
-    private(set) var replyCountAttributed:NSAttributedString?
-
-    
-    
-    private(set) var postAuthorNode:TextNode?
-    private(set) var postAuthor:(TextNodeLayout,TextNode)?
-    private(set) var postAuthorAttributed:NSAttributedString?
-    
-    private(set) var editedLabel:(TextNodeLayout,TextNode)?
+    private(set) var date:TextViewLayout?
+    private(set) var channelViews:TextViewLayout?
+    private(set) var replyCount:TextViewLayout?
+    private(set) var postAuthor:TextViewLayout?
+    private(set) var editedLabel:TextViewLayout?
    
     private(set) var fullDate:String?
     private(set) var forwardHid: String?
@@ -225,7 +209,7 @@ class ChatRowItem: TableRowItem {
             
         } else {
             if case .Full = itemType {
-                let additionWidth:CGFloat = date?.0.size.width ?? 20
+                let additionWidth:CGFloat = date?.layoutSize.width ?? 20
                 widthForContent = width - self.contentOffset.x - 44 - additionWidth
             } else {
                 widthForContent = width - self.contentOffset.x - rightSize.width - 44
@@ -239,72 +223,20 @@ class ChatRowItem: TableRowItem {
         return widthForContent
     }
     
+    private(set) var rightFrames: ChatRightView.Frames?
+    private var rightHeight: CGFloat {
+        var height:CGFloat = isBubbled && !isFailed ? 15 : 16
+        if isStateOverlayLayout {
+            height = 17
+        }
+        return height
+    }
     public var rightSize:NSSize {
-        
-        var size:NSSize = NSZeroSize
-        
-        if let date = date {
-            size = NSMakeSize(date.0.size.width, isBubbled && !isFailed ? 15 : 16)
-        }
-        
-        if let peer = chatInteraction.peer as? TelegramChannel, case .broadcast = peer.info, (!isUnsent && !isFailed) {
-            size.width += 0
+        if let frames = rightFrames {
+            return NSMakeSize(frames.width, rightHeight)
         } else {
-            if (!isIncoming || (isUnsent || isFailed)) && date != nil {
-                if isBubbled  {
-                    size.width += 16
-                    if isFailed {
-                        size.width += 4
-                    }
-                } else {
-                    size.width += 20
-                }
-            }
+            return .zero
         }
-        
-        
-        
-        if let channelViews = channelViews {
-            size.width += channelViews.0.size.width + 8 + 16
-        }
-        if let replyCount = replyCount {
-            size.width += replyCount.0.size.width + 18
-        }
-        if let likes = likes {
-            size.width += likes.0.size.width + 18
-        }
-        if isPinned {
-            if self.isStateOverlayLayout {
-                size.width += 14
-            } else {
-                size.width += 18
-            }
-        }
-        
-        if let postAuthor = postAuthor {
-            size.width += postAuthor.0.size.width + 8
-        }
-        
-        if let editedLabel = editedLabel {
-            size.width += editedLabel.0.size.width + 7
-        }
-        
-        size.width = max(isBubbled ? size.width : 54, size.width)
-        
-        size.width += stateOverlayAdditionCorner * 2
-        size.height = isStateOverlayLayout ? 17 : size.height
-        
-        if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .short:
-                size.width += reactions.size.width + 4
-            default:
-                break
-            }
-        }
-        
-        return size
-        
     }
     
     var stateOverlayAdditionCorner: CGFloat {
@@ -914,12 +846,18 @@ class ChatRowItem: TableRowItem {
                     return false
                 }
             }
+            
             if message.isImported {
                 return true
             }
+            for attr in message.attributes {
+                if let attr = attr as? EditedMessageAttribute {
+                    return !chatInteraction.isLogInteraction && message.id.peerId != context.peerId && !attr.isHidden
+                }
+            }
         }
         
-        return !chatInteraction.isLogInteraction && message?.id.peerId != context.peerId
+        return false
     }
     
     private static func canFillAuthorName(_ message: Message, chatInteraction: ChatInteraction, renderType: ChatItemRenderType, isIncoming: Bool, hasBubble: Bool) -> Bool {
@@ -1341,7 +1279,9 @@ class ChatRowItem: TableRowItem {
             return value
         } else if let message = self.messages.first, let attr = message.reactionsAttribute {
             if !attr.reactions.isEmpty {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)))
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak self] peerId in
+                    self?.chatInteraction.openInfo(peerId, false, nil, nil)
+                })
                 
                 _reactionsLayout = layout
                 return layout
@@ -1549,15 +1489,14 @@ class ChatRowItem: TableRowItem {
                 for attr in message.attributes {
                     if let attr = attr as? AuthorSignatureMessageAttribute {
                         if !message.flags.contains(.Failed) {
-                            postAuthorAttributed = .initialize(string: attr.signature, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            let attr: NSAttributedString = .initialize(string: attr.signature.prefix(15), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            postAuthor = TextViewLayout(attr, maximumNumberOfLines: 1)
+                            
+                            postAuthor?.measure(width: .greatestFiniteMagnitude)
                         }
                         break
                     }
                 }
-//                if let _ = message.adAttribute {
-//                    //TODOLANG
-//                    postAuthorAttributed = .initialize(string: "sponsored", color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
-//                }
             }
             if let peer = peer, peer.isSupergroup, message.isAnonymousMessage {
                 for attr in message.attributes {
@@ -1573,9 +1512,10 @@ class ChatRowItem: TableRowItem {
                     }
                 }
             }
-            if postAuthorAttributed == nil, ChatRowItem.authorIsChannel(message: message, account: context.account) {
+            if postAuthor == nil, ChatRowItem.authorIsChannel(message: message, account: context.account) {
                 if let author = message.forwardInfo?.authorSignature {
-                    postAuthorAttributed = .initialize(string: author, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    let attr: NSAttributedString = .initialize(string: author, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    postAuthor = TextViewLayout(attr, maximumNumberOfLines: 1)
                 }
             }
             
@@ -1829,10 +1769,13 @@ class ChatRowItem: TableRowItem {
                 dateFormatter.timeStyle = .short
                 dateFormatter.dateStyle = .none
                 dateFormatter.timeZone = NSTimeZone.local
-                
-                date = TextNode.layoutText(maybeNode: nil, .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
+                self.date?.measure(width: .greatestFiniteMagnitude)
             } else if message.adAttribute != nil {
-                date = TextNode.layoutText(maybeNode: nil, .initialize(string: strings().chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+                let attr: NSAttributedString = .initialize(string: strings().chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
+                self.date?.measure(width: .greatestFiniteMagnitude)
             }
 
         } else {
@@ -1871,23 +1814,29 @@ class ChatRowItem: TableRowItem {
                 for attribute in message.attributes {
                     if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0 {
                         if let peer = chatInteraction.peer, peer.isSupergroup, !chatInteraction.mode.isThreadMode {
-                            replyCountAttributed = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            let attr: NSAttributedString = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            self.replyCount = TextViewLayout(attr, maximumNumberOfLines: 1)
                         }
                         break
                     }
                 }
             }
             
-            if let attribute = editedAttribute {
-                if isEditMarkVisible {
-                    editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: strings().chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
+            if editedAttribute != nil || message.id.namespace == Namespaces.Message.Cloud {
+                if isEditMarkVisible || isUnsent {
+                    let attr: NSAttributedString = .initialize(string: strings().chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    editedLabel = TextViewLayout(attr, maximumNumberOfLines: 1)
+                    editedLabel?.measure(width: .greatestFiniteMagnitude)
                 }
                 
-                let formatterEdited = DateFormatter()
-                formatterEdited.dateStyle = .medium
-                formatterEdited.timeStyle = .medium
-                formatterEdited.timeZone = NSTimeZone.local
-                fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
+                
+                if let attribute = editedAttribute {
+                    let formatterEdited = DateFormatter()
+                    formatterEdited.dateStyle = .medium
+                    formatterEdited.timeStyle = .medium
+                    formatterEdited.timeZone = NSTimeZone.local
+                    fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
+                }
             } else if message.isImported, let forwardInfo = message.forwardInfo  {
                 let formatter = DateFormatter()
                 formatter.dateStyle = .short
@@ -1898,10 +1847,11 @@ class ChatRowItem: TableRowItem {
                 if forwardInfo.date == message.timestamp {
                     text = strings().chatMessageImportedShort
                 } else {
-                   text  = strings().chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
+                   text = strings().chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
                 }
-                editedLabel = TextNode.layoutText(maybeNode: nil, .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .left)
-                
+                let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                editedLabel = TextViewLayout(attr, maximumNumberOfLines: 1)
+                editedLabel?.measure(width: .greatestFiniteMagnitude)
                 fullDate = strings().chatMessageImportedText + "\n\n" + fullDate
             } else if let forwardInfo = message.forwardInfo {
                 let formatterEdited = DateFormatter()
@@ -1925,8 +1875,10 @@ class ChatRowItem: TableRowItem {
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
-                    channelViewsAttributed = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
+                    self.channelViews = TextViewLayout(attr, maximumNumberOfLines: 1)
+                    self.channelViews?.measure(width: .greatestFiniteMagnitude)
                     var author: String = ""
                     loop: for attr in message.attributes {
                         if let attr = attr as? AuthorSignatureMessageAttribute {
@@ -2085,33 +2037,45 @@ class ChatRowItem: TableRowItem {
         commentsData?.makeSize()
         
         
+       
+        
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
                 layout.layout.dropLayoutSize()
             }
         }
         
-        if let channelViewsAttributed = channelViewsAttributed {
-            channelViews = TextNode.layoutText(maybeNode: channelViewsNode, channelViewsAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
-        }
-        
-        if let replyCountAttributed = replyCountAttributed {
-            replyCount = TextNode.layoutText(maybeNode: replyCountNode, replyCountAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
-        }
-        
-        if let likesAttributed = likesAttributed {
-            likes = TextNode.layoutText(maybeNode: likesNode, likesAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150), 20), nil, false, .left)
-        }
+        channelViews?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
+        replyCount?.measure(width: hasBubble ? 60 : max(150,width - contentOffset.x - 44 - 150))
        
+        if let reactions = reactionsLayout {
+            switch reactions.mode {
+            case .short:
+                reactions.measure(for: .greatestFiniteMagnitude)
+            default:
+                break
+            }
+        }
+        self.rightFrames = ChatRightView.Frames(self, size: NSMakeSize(.greatestFiniteMagnitude, rightHeight))
+        
         var widthForContent: CGFloat = blockWidth
         if previousBlockWidth != widthForContent {
             self.previousBlockWidth = widthForContent
             _contentSize = self.makeContentSize(widthForContent)
         }
         
-       
-
-       
+        if let reactions = reactionsLayout {
+            switch reactions.mode {
+            case .full:
+                if isBubbled {
+                    reactions.measure(for: _contentSize.width)
+                } else {
+                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+                }
+            default:
+                break
+            }
+        }
 
         func layout() -> Bool {
             if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
@@ -2126,7 +2090,6 @@ class ChatRowItem: TableRowItem {
         }
         
         if hasBubble {
-           
             while !layout() {}
         }
         
@@ -2148,19 +2111,6 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .full:
-                if isBubbled {
-                    reactions.measure(for: _contentSize.width)
-                } else {
-                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
-                }
-            case .short:
-                reactions.measure(for: widthForContent)
-            }
-        }
-       
 
         
         if let forwardNameLayout = forwardNameLayout {
@@ -2225,20 +2175,6 @@ class ChatRowItem: TableRowItem {
             }
             
             var supplyOffset: CGFloat = 0
-           
-//            if let channelViews = channelViews {
-//                supplyOffset += channelViews.0.size.width + 16
-//            }
-//            if let replyCount = replyCount {
-//                supplyOffset += replyCount.0.size.width + 16
-//            }
-//
-//            if let _ = postAuthorAttributed {
-//                supplyOffset += 50
-//            }
-//            if let commentsData = commentsData {
-//                supplyOffset += commentsData.size(false).width
-//            }
             if !isBubbled {
                 supplyOffset += rightSize.width
             }
@@ -2246,46 +2182,8 @@ class ChatRowItem: TableRowItem {
             authorText?.measure(width: widthForContent - adminWidth - supplyOffset)
             
         }
-      
-       
-        if let postAuthorAttributed = postAuthorAttributed {
-            
-            postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize(hasBubble ? 60 : (width - (authorText != nil ? authorText!.layoutSize.width : 0) - contentOffset.x - 44) / 2, 20), nil, false, .left)
-        }
-        
-        if hasBubble && isBubbleFullFilled {
-            if let postAuthor = postAuthor, let postAuthorAttributed = postAuthorAttributed {
-                let width: CGFloat = _contentSize.width - (rightSize.width - postAuthor.0.size.width - 8) - bubbleContentInset - additionBubbleInset - 10
-                if width < 0 {
-                    self.postAuthor = nil
-                } else {
-                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( width, 20), nil, false, .left)
-                }
-            }
-        }
         
          if hasBubble && !isBubbleFullFilled {
-            if let postAuthorAttributed = postAuthorAttributed, let postAuthor = postAuthor {
-                if bubbleFrame.width < width - 150 {
-                    let size = rightSize.width - postAuthor.0.size.width - 8
-                    var w = width - bubbleFrame.width - 150
-                    if let _ = self as? ChatMessageItem, additionalLineForDateInBubbleState != nil {
-                        w = _contentSize.width - size
-                    }
-                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( w, 20), nil, false, .left)
-                } else if bubbleFrame.width > _contentSize.width + rightSize.width + bubbleDefaultInnerInset {
-                    var size = bubbleFrame.width - (_contentSize.width + rightSize.width + bubbleDefaultInnerInset)
-                    if !postAuthor.0.isPerfectSized {
-                        size = bubbleFrame.width - (_contentSize.width + bubbleDefaultInnerInset)
-                    }
-                    self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( size, 20), nil, false, .left)
-                    while !layout() {}
-                }
-                
-            }
-            
-            
-            
             if _contentSize.width < rightSize.width {
                 if !(self is ChatMessageItem)  {
                     _contentSize.width = rightSize.width
@@ -2616,3 +2514,40 @@ class ChatRowItem: TableRowItem {
         return media.isInteractiveMedia
     }
 }
+
+
+/*
+ 
+ 
+ 
+ if hasBubble && isBubbleFullFilled {
+     if let postAuthor = postAuthor, let postAuthorAttributed = postAuthorAttributed {
+         let width: CGFloat = _contentSize.width - (rightSize.width - postAuthor.0.size.width - 8) - bubbleContentInset - additionBubbleInset - 10
+         if width < 0 {
+             self.postAuthor = nil
+         } else {
+             self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( width, 20), nil, false, .left)
+         }
+     }
+ }
+ if let postAuthorAttributed = postAuthorAttributed, let postAuthor = postAuthor {
+     if bubbleFrame.width < width - 150 {
+         let size = rightSize.width - postAuthor.0.size.width - 8
+         var w = width - bubbleFrame.width - 150
+         if let _ = self as? ChatMessageItem, additionalLineForDateInBubbleState != nil {
+             w = _contentSize.width - size
+         }
+         self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( w, 20), nil, false, .left)
+     } else if bubbleFrame.width > _contentSize.width + rightSize.width + bubbleDefaultInnerInset {
+         var size = bubbleFrame.width - (_contentSize.width + rightSize.width + bubbleDefaultInnerInset)
+         if !postAuthor.0.isPerfectSized {
+             size = bubbleFrame.width - (_contentSize.width + bubbleDefaultInnerInset)
+         }
+         self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( size, 20), nil, false, .left)
+         while !layout() {}
+     }
+     
+ }
+ 
+ 
+ */

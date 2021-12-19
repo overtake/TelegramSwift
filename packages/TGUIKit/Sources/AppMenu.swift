@@ -76,6 +76,8 @@ public final class AppMenu {
     private var controller: AppMenuController?
     private let presentation: Presentation
     private let appearMode: AppearMode
+    private var observation:NSKeyValueObservation?
+    private var timerDisposable: Disposable?
     public init(menu: ContextMenu, presentation: Presentation = Presentation.current(PresentationTheme.current.colors), appearMode: AppearMode = .click) {
         self.menu = menu
         self.presentation = presentation
@@ -83,22 +85,24 @@ public final class AppMenu {
     }
     
     deinit {
-        var bp = 0
-        bp += 1
+        self.observation?.invalidate()
     }
     
     public static func show(menu: ContextMenu, event: NSEvent, for view: NSView, appearMode: AppearMode = .click) {
-        let appMenu = AppMenu(menu: menu, presentation: menu.presentation, appearMode: appearMode)
-        appMenu.show(event: event, view: view)
+        if !menu.isShown {
+            let appMenu = AppMenu(menu: menu, presentation: menu.presentation, appearMode: appearMode)
+            appMenu.show(event: event, view: view)
+        }
     }
     
     public func show(event: NSEvent, view: NSView) {
-        guard !self.menu.contextItems.isEmpty else {
-            return
-        }
-        let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside, appearMode: appearMode, parentView: view)
+        
+        
+        let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside, appearMode: self.appearMode, parentView: view)
         
         self.controller = controller
+        self.observation?.invalidate()
+        self.observation = nil
         
         controller.onShow = { [weak self, weak view] in
             if let menu = self?.menu {
@@ -110,7 +114,24 @@ public final class AppMenu {
             self?.menu.onClose()
             (view as? Control)?.isSelected = false
         }
-        controller.present(event: event, view: view)
         
+        if !self.menu.contextItems.isEmpty {
+            self.presentIfNeeded(event: event, view: view)
+            timerDisposable?.dispose()
+        } else {
+            self.observation = self.menu.observe(\._items, options: [.new], changeHandler: { [weak view, weak self] menu, value in
+                if !menu.isShown, let view = view, !menu.contextItems.isEmpty {
+                    self?.presentIfNeeded(event: event, view: view)
+                    self?.timerDisposable?.dispose()
+                }
+            })
+            self.timerDisposable = delaySignal(3.0).start(completed: { [weak self] in
+                self?.observation?.invalidate()
+                self?.controller?.close()
+            })
+        }
+    }
+    private func presentIfNeeded(event: NSEvent, view: NSView) {
+        self.controller?.present(event: event, view: view)
     }
 }

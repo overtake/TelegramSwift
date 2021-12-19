@@ -348,7 +348,7 @@ open class Control: View {
         
         if event.modifierFlags.contains(.control) {
             
-            if let menu = self.contextMenu?(), !menu.contextItems.isEmpty {
+            if let menu = self.contextMenu?() {
                 AppMenu.show(menu: menu, event: event, for: self)
             }
             
@@ -361,7 +361,7 @@ open class Control: View {
             return
         }
         
-        if self.handlers.isEmpty, let menu = self.contextMenu?(), !menu.contextItems.isEmpty {
+        if self.handlers.isEmpty, let menu = self.contextMenu?() {
             AppMenu.show(menu: menu, event: event, for: self)
         }
         
@@ -451,8 +451,9 @@ open class Control: View {
     
     
     open override func rightMouseDown(with event: NSEvent) {
-        if let menu = self.contextMenu?(), !menu.contextItems.isEmpty {
+        if let menu = self.contextMenu?() {
             AppMenu.show(menu: menu, event: event, for: self)
+            return
         }
         if userInteractionEnabled {
             updateState()

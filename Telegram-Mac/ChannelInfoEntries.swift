@@ -1050,7 +1050,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussionDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoDiscussionDesc, viewType: viewType)
         case let .reactions(_, text, allowedReactions, availableReactions, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_requests, type: .nextContext(text), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
             })
         case let .setTitle(_, text, viewType):

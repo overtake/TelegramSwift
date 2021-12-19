@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ModernMessageCheckmark2.png",
+      "filename" : "reactions.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ModernMessageCheckmark2@2x.png",
+      "filename" : "reactions@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
