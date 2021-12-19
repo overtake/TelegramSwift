@@ -248,6 +248,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.reactionsView!)
                 if animated {
                     self.reactionsView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.reactionsView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.reactionsView?.update(with: reactionsLayout, animated: animated)
@@ -255,6 +256,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.reactionsView {
                 self.reactionsView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         if let sendingRect = frames.sending {
@@ -263,6 +265,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(sendingView!)
                 if animated {
                     self.sendingView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.sendingView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             let f = item.presentation.chat.sendingFrameIcon(item)
@@ -274,6 +277,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.sendingView {
                 self.sendingView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         
@@ -284,6 +288,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 self.addSubview(stateView!)
                 if animated {
                     self.stateView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.stateView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             let stateImage = item.presentation.chat.stateStateIcon(item)
@@ -293,6 +298,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.stateView {
                 self.stateView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         if let readRect = frames.read {
@@ -301,6 +307,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(readImageView!)
                 if animated {
                     self.readImageView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.readImageView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.readImageView?.image = item.presentation.chat.readStateIcon(item)
@@ -309,6 +316,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.readImageView {
                 self.readImageView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         
@@ -318,6 +326,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.pinView!)
                 if animated {
                     self.pinView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.pinView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.pinView?.image = item.presentation.chat.messagePinnedIcon(item)
@@ -326,6 +335,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.pinView {
                 self.pinView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         
@@ -337,6 +347,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.dateView!)
                 if animated {
                     self.dateView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.dateView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.dateView?.update(date)
@@ -344,6 +355,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.dateView {
                 self.dateView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         
@@ -355,6 +367,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.editView!)
                 if animated {
                     self.editView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.editView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.editView?.update(editedLabel)
@@ -362,6 +375,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.editView {
                 self.editView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         if let channelViews = item.channelViews, let viewsImageRect = frames.viewsImage, let viewsCountRect = frames.viewsCount {
@@ -372,6 +386,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.viewsCountView!)
                 if animated {
                     self.viewsCountView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.viewsCountView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.viewsCountView?.update(channelViews)
@@ -381,6 +396,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.viewsImageView!)
                 if animated {
                     self.viewsImageView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.viewsImageView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.viewsImageView?.image = item.presentation.chat.channelViewsIcon(item)
@@ -390,10 +406,12 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.viewsCountView {
                 self.viewsCountView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
             if let view = self.viewsImageView {
                 self.viewsImageView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         
@@ -405,6 +423,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 addSubview(self.postAuthorView!)
                 if animated {
                     self.postAuthorView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.postAuthorView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                 }
             }
             self.postAuthorView?.update(postAuthor)
@@ -412,6 +431,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let view = self.postAuthorView {
                 self.postAuthorView = nil
                 performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
             }
         }
         
