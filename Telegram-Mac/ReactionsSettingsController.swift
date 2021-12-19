@@ -80,7 +80,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: [String]?, availableReactions: AvailableReactions?, isGroup: Bool) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
-
+    let update = MetaDisposable()
+    actionsDisposable.add(update)
     let allowed = allowedReactions ?? availableReactions?.reactions.map { $0.value } ?? []
     
     let initialState = State(isGroup: isGroup, reactions: allowed, availableReactions: availableReactions)
@@ -119,7 +120,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
             current.reactions = value
             return current
         }
-        actionsDisposable.add(context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: value).start())
+        update.set(context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: value).start())
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

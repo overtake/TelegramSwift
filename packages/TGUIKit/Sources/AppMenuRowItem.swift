@@ -288,6 +288,13 @@ open class AppMenuRowView: AppMenuBasicItemView {
             }
             item.interaction?.action(item.item)
         }, for: .Click)
+        
+        containerView.set(handler: { [weak self] _ in
+            guard let item = self?.item as? AppMenuRowItem else {
+                return
+            }
+            item.interaction?.action(item.item)
+        }, for: .RightDown)
     }
     private var previous: ControlState = .Normal
     open func updateState(_ state: ControlState) {

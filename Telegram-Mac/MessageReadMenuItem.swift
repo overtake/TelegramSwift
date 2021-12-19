@@ -80,8 +80,8 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             switch self {
             case let .stats(read, reactions):
                 if let reactions = reactions, !reactions.items.isEmpty {
-                    if let read = read {
-                        return strings().chatContextReacted("\(reactions.totalCount)", "\(read.count + reactions.totalCount)")
+                    if let read = read, read.count > reactions.totalCount {
+                        return strings().chatContextReacted("\(reactions.totalCount)", "\(read.count)")
                     } else {
                         return strings().chatContextReactedFastCountable(reactions.totalCount)
                     }
@@ -562,7 +562,9 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
     
     override var effectiveSize: NSSize {
         var size = super.effectiveSize
-        size.width += 16 + 2 + self.innerInset
+        if let _ = reaction {
+            size.width += 16 + 2 + self.innerInset
+        }
         return size
     }
     

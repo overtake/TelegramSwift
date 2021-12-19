@@ -255,7 +255,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if let data = data {
                     data.chatInteraction.setupReplyMessage(data.message.id)
                 }
-            }, itemImage: MenuAnimation.menu_reply.value))
+            }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
         }
         
         
@@ -373,7 +373,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if let data = data {
                     data.chatInteraction.beginEditingMessage(data.message)
                 }
-            }, itemImage: MenuAnimation.menu_edit.value))
+            }, itemImage: MenuAnimation.menu_edit.value, keyEquivalent: .cmde))
         }
         
         if !data.message.isScheduledMessage, let peer = peer, !peer.isDeleted, isNotFailed, data.peerId == data.message.id.peerId, !isService {
@@ -468,7 +468,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             
             func makeItem(_ peer: Peer) -> ContextMenuItem {
-                let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(25)
+                let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(20)
                 let item = ContextMenuItem(title, handler: {
                     _ = forwardObject.perform(to: [peer.id]).start()
                 })

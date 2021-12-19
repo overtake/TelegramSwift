@@ -101,9 +101,11 @@ final class ChatReactionsLayout {
         let available: AvailableReactions.Reaction
         let mode: ChatReactionsLayout.Mode
         let disposable: MetaDisposable = MetaDisposable()
+        let delayDisposable = MetaDisposable()
         let action:()->Void
         let context: AccountContext
         let message: Message
+        let openInfo: (PeerId)->Void
         var rect: CGRect = .zero
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
@@ -121,7 +123,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void) {
+        init(value: MessageReaction, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void, openInfo: @escaping (PeerId)->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -130,6 +132,7 @@ final class ChatReactionsLayout {
             self.presentation = presentation
             self.available = available
             self.mode = mode
+            self.openInfo = openInfo
             switch mode {
             case .full:
                 self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: presentation.textColor, width: .greatestFiniteMagnitude)
@@ -167,11 +170,22 @@ final class ChatReactionsLayout {
         
         private var reactions: EngineMessageReactionListContext?
         
-        func loadMenu(_ f: @escaping(ContextMenu)->Void) {
+        func cancelMenu() {
+            delayDisposable.set(nil)
+            disposable.set(nil)
+        }
+        
+        func loadMenu() -> ContextMenu? {
+            if let peer = self.message.peers[message.id.peerId] {
+                guard peer.isGroup || peer.isSupergroup else {
+                    return nil
+                }
+            }
             if let menu = menu {
-                f(menu)
+                return menu
             } else {
-                
+                let menu = ContextMenu()
+                self.menu = menu
                 let current: EngineMessageReactionListContext
                 if let reactions = reactions {
                     current = reactions
@@ -181,19 +195,22 @@ final class ChatReactionsLayout {
                 }
                 let signal = current.state |> deliverOnMainQueue
                 self.disposable.set(signal.start(next: { [weak self] state in
-                    self?.applyState(state, f)
+                    self?.applyState(state)
                 }))
+                
+                return menu
             }
         }
-        func applyState(_ state: EngineMessageReactionListContext.State, _ f: @escaping(ContextMenu)->Void) {
-            
+        private var state: EngineMessageReactionListContext.State?
+        func applyState(_ state: EngineMessageReactionListContext.State) {
+            self.state = state
             let account = self.context.account
             let context = self.context
+            weak var weakSelf = self
             let makeItem:(_ peer: Peer) -> ContextMenuItem = { peer in
                 let title = peer.displayTitle.prefixWithDots(25)
-                
                 let item = ReactionPeerMenu(title: title, handler: {
-                    
+                    weakSelf?.openInfo(peer.id)
                 }, peerId: peer.id, context: context, reaction: nil)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
@@ -205,22 +222,13 @@ final class ChatReactionsLayout {
                 })
                 return item
             }
-
-            if let menu = self.menu {
-                menu.items = state.items.map {
-                    return makeItem($0.peer._asPeer())
-                }
-            } else {
-                let menu = ContextMenu()
-                menu.loadMore = { [weak self] in
+            menu?.loadMore = { [weak self] in
+                if self?.state?.canLoadMore == true {
                     self?.reactions?.loadMore()
                 }
-                menu.items = state.items.map {
-                    return makeItem($0.peer._asPeer())
-                }
-                self.menu = menu
-                
-                f(menu)
+            }
+            menu?.items = state.items.map {
+                return makeItem($0.peer._asPeer())
             }
         }
     }
@@ -229,6 +237,7 @@ final class ChatReactionsLayout {
     fileprivate let renderType: ChatItemRenderType
     fileprivate let available: AvailableReactions?
     fileprivate let engine: Reactions
+    fileprivate let openInfo:(PeerId)->Void
     let presentation: Theme
     
     private(set) var size: NSSize = .zero
@@ -242,7 +251,7 @@ final class ChatReactionsLayout {
     
     let mode: Mode
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void) {
         
         let mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
         
@@ -252,6 +261,7 @@ final class ChatReactionsLayout {
         self.available = available
         self.engine = engine
         self.mode = mode
+        self.openInfo = openInfo
         let presentation: Theme = .Current(theme: theme, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper, stateOverlayTextColor: stateOverlayTextColor, mode: mode)
         self.presentation = presentation
         
@@ -265,7 +275,7 @@ final class ChatReactionsLayout {
             if let available = available?.reactions.first(where: { $0.value.fixed == reaction.value.fixed }) {
                 return .init(value: reaction, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
                     engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
-                })
+                }, openInfo: openInfo)
             } else {
                 return nil
             }
@@ -370,15 +380,19 @@ final class ChatReactionsView : View {
                 self?.reaction?.action()
             }, for: .Click)
             
-            self.set(handler: { [weak self] control in
-                if let event = NSApp.currentEvent, let reaction = self?.reaction {
-                    reaction.loadMenu({ [weak control] menu in
-                        if let control = control {
-                            AppMenu.show(menu: menu, event: event, for: control, appearMode: .hover)
-                        }
-                    })
+            
+            self.contextMenu = { [weak self] in
+                if let reaction = self?.reaction {
+                    return reaction.loadMenu()
                 }
-            }, for: .Hover)
+                return nil
+            }
+            
+            
+            self.set(handler: { [weak self] _ in
+                self?.reaction?.cancelMenu()
+            }, for: .Normal)
+            
         }
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {

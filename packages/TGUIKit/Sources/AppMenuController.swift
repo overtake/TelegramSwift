@@ -107,6 +107,7 @@ final class MenuView: View, TableViewDelegate {
         } else {
             visualView.material = .light
         }
+        effectiveSize = max
         
         backgroundView.backgroundColor = presentation.backgroundColor
     }
@@ -116,7 +117,7 @@ final class MenuView: View, TableViewDelegate {
             return item.rowItem(presentation: presentation, interaction: interaction)
         }
         for item in items {
-            _ = item.makeSize(300, oldWidth: 0)
+            _ = item.makeSize(effectiveSize ?? 300, oldWidth: 0)
             _ = tableView.addItem(item: item)
         }
     }
@@ -149,6 +150,8 @@ final class MenuView: View, TableViewDelegate {
         self.apply(current: menu.contextItems, presentation: presentation, interaction: interaction)
     }
     
+    private var effectiveSize: CGFloat? = nil
+    
     private func apply(current: [ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
         let items = purify(current)
         
@@ -172,12 +175,12 @@ final class MenuView: View, TableViewDelegate {
         }
         for indicesAndItem in indicesAndItems {
             let item = indicesAndItem.1.makeItem(presentation: presentation, interaction: interaction)
-            _ = item.makeSize(300, oldWidth: 0)
+            _ = item.makeSize(effectiveSize ?? 300, oldWidth: 0)
             _ = self.tableView.insert(item: item, at: indicesAndItem.0)
         }
         for updateIndex in updateIndices {
             let item = updateIndex.1.makeItem(presentation: presentation, interaction: interaction)
-            _ = item.makeSize(300, oldWidth: 0)
+            _ = item.makeSize(effectiveSize ?? 300, oldWidth: 0)
             self.tableView.replace(item: item, at: updateIndex.0, animated: false)
         }
         self.contextItems = entries
@@ -265,36 +268,44 @@ final class AppMenuController : NSObject  {
         self.betterInside = betterInside// || appearMode == .hover
         self.appearMode = appearMode
         self.parentView = parentView
+        self.strongHolder = holder
     }
     
     func initialize() {
         var isInteracted: Bool = false
-        self.parent?.set(mouseHandler: { event in
-            isInteracted = true
-            return .invoked
-        }, with: self, for: .leftMouseDown, priority: .supreme)
-        
-        self.parent?.set(mouseHandler: { [weak self] event in
-            if isInteracted {
-                self?.close()
-            }
-            isInteracted = true
-            return .invoked
-        }, with: self, for: .leftMouseUp, priority: .supreme)
+        switch self.appearMode {
+        case .click:
+            self.parent?.set(mouseHandler: { event in
+                isInteracted = true
+                return .invoked
+            }, with: self, for: .leftMouseDown, priority: .supreme)
+            
+            self.parent?.set(mouseHandler: { [weak self] event in
+                if isInteracted {
+                    self?.close()
+                }
+                isInteracted = true
+                return .invoked
+            }, with: self, for: .leftMouseUp, priority: .supreme)
 
-        self.parent?.set(mouseHandler: { event in
-            isInteracted = true
-            return .invoked
-        }, with: self, for: .rightMouseDown, priority: .supreme)
+            self.parent?.set(mouseHandler: { event in
+                isInteracted = true
+                return .invoked
+            }, with: self, for: .rightMouseDown, priority: .supreme)
 
-        self.parent?.set(mouseHandler: { [weak self] event in
-            if isInteracted {
-                self?.close()
-            }
-            isInteracted = true
-            return .invoked
-        }, with: self, for: .rightMouseUp, priority: .supreme)
-        
+            self.parent?.set(mouseHandler: { [weak self] event in
+                if isInteracted {
+                    self?.close()
+                }
+                isInteracted = true
+                return .invoked
+            }, with: self, for: .rightMouseUp, priority: .supreme)
+            
+
+        case .hover:
+            break
+        }
+       
         self.parent?.set(mouseHandler: { [weak self] event in
             self?.checkEvent(event)
             return .invoked
@@ -311,19 +322,11 @@ final class AppMenuController : NSObject  {
         }, with: self, for: .mouseEntered, priority: .supreme)
 
 
-        self.parent?.set(mouseHandler: { [weak self] event in
-            if isInteracted {
-                self?.close()
-            }
-            isInteracted = true
-            return .invoked
-        }, with: self, for: .leftMouseDragged, priority: .supreme)
 
         self.parent?.set(handler: { [weak self] event in
             self?.addStackEvent(event)
             return .invoked
         }, with: self, for: .All, priority: .supreme)
-        
         
 
         self.parent?.set(handler: { [weak self] _ in
@@ -394,6 +397,14 @@ final class AppMenuController : NSObject  {
                 }
                 if event.keyCode == KeyboardKey.C.rawValue {
                     invokeKeyEquivalent(.cmdc)
+                    return
+                }
+                if event.keyCode == KeyboardKey.R.rawValue {
+                    invokeKeyEquivalent(.cmdr)
+                    return
+                }
+                if event.keyCode == KeyboardKey.E.rawValue {
+                    invokeKeyEquivalent(.cmde)
                     return
                 }
             }
@@ -469,6 +480,7 @@ final class AppMenuController : NSObject  {
 
             self.onClose()
         }
+        self.menu.isShown = false
         self.isClosed = true
     }
     
@@ -637,6 +649,7 @@ final class AppMenuController : NSObject  {
         window.copyhandler = { [weak self] in
             self?.invokeKeyEquivalent(.cmdc)
         }
+        self.menu.isShown = true
     }
     
     private func adjust(_ rect: NSRect, parent: Window? = nil) -> NSRect {
@@ -672,7 +685,6 @@ final class AppMenuController : NSObject  {
     
     func present(event: NSEvent, view: NSView) {
         self.parent = event.window as? Window
-        self.strongHolder = self.weakHolder
         self.weakHolder = nil
         self.initialize()
         self.activate(event: event, view: view, animated: true)
