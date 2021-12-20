@@ -68,7 +68,7 @@ open class ContextMenuItem : NSMenuItem {
         self.itemMode = itemMode
         self.itemImage = itemImage
         self.keyEquivalentValue = keyEquivalent
-        super.init(title: title, action: nil, keyEquivalent: keyEquivalent.rawValue)
+        super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title
         self.action = #selector(click)

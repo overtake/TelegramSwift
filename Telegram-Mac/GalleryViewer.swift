@@ -240,7 +240,6 @@ class GalleryViewer: NSResponder {
             let bounds = NSMakeRect(0, 0, screen.frame.width, screen.frame.height)
             self.window = Window(contentRect: bounds, styleMask: [.borderless], backing: .buffered, defer: false, screen: screen)
             self.window.contentView?.wantsLayer = true
-            self.window.contentView?.canDrawSubviewsIntoLayer = true
 
             self.window.level = .popUpMenu
             self.window.isOpaque = false

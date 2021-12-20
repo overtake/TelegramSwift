@@ -754,7 +754,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         return self.photoView
     }
     
-    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+    override func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }

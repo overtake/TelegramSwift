@@ -11,6 +11,9 @@ import SwiftSignalKit
 import AVFoundation
 public struct System {
 
+    
+    public static var legacyMenu: Bool = true
+    
     public static var scaleFactor: Atomic<CGFloat> = Atomic(value: 2.0)
     
     public static var isRetina:Bool {
