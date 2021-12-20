@@ -23,6 +23,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         private(set) var sending:NSRect?
         private(set) var reactions: NSRect?
         private(set) var replyCount: NSRect?
+        private(set) var replyImage: NSRect?
         private(set) var viewsCount: NSRect?
         private(set) var viewsImage: NSRect?
         private(set) var postAuthor: NSRect?
@@ -48,6 +49,18 @@ class ChatRightView: View, ViewDisplayDelegate {
                 default:
                     break
                 }
+            }
+            
+            if let views = item.replyCount {
+                var rect_i = size.bounds.focus(item.presentation.chat.repliesCountIcon(item).backingSize)
+                rect_i.origin.x = x + 2
+                x = rect_i.maxX
+                var rect_t = size.bounds.focus(views.layoutSize)
+                rect_t.origin.x = x + 2
+                x = rect_t.maxX
+                
+                self.replyImage = rect_i
+                self.replyCount = rect_t
             }
             
             if item.isPinned {
@@ -92,7 +105,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             self.sending = makeSending(item, size, &x)
             
             if !stateIsEnd {
-                if self.read == nil {
+                if self.read == nil && (self.state != nil || self.sending != nil)  {
                     x += 4
                 }
                 self.date = makeDate(item, size, &x)
@@ -159,7 +172,7 @@ class ChatRightView: View, ViewDisplayDelegate {
                 max.origin.x += 4
             }
             if isStateOverlay {
-                return max.maxX + 6
+                return max.maxX + 4
             } else {
                 return max.maxX
             }
@@ -196,6 +209,7 @@ class ChatRightView: View, ViewDisplayDelegate {
     private var sendingView:SendingClockProgress?
     private var reactionsView: ChatReactionsView?
     private var replyCountView: TextView?
+    private var replyCountImage: ImageView?
     private var viewsCountView: TextView?
     private var viewsImageView: ImageView?
     private var postAuthorView: TextView?
@@ -320,6 +334,44 @@ class ChatRightView: View, ViewDisplayDelegate {
             }
         }
         
+        if let replyCount = item.replyCount, let replyImageRect = frames.replyImage, let replyCountRect = frames.replyCount {
+            if self.replyCountView == nil {
+                self.replyCountView = TextView(frame: replyCountRect)
+                self.replyCountView?.disableBackgroundDrawing = true
+                self.replyCountView?.userInteractionEnabled = false
+                self.replyCountView?.isSelectable = false
+                addSubview(self.replyCountView!)
+                if animated {
+                    self.replyCountView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.replyCountView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            self.replyCountView?.update(replyCount)
+            
+            if self.replyCountImage == nil {
+                self.replyCountImage = ImageView(frame: replyImageRect)
+                addSubview(self.replyCountImage!)
+                if animated {
+                    self.replyCountImage?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.replyCountImage?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            self.replyCountImage?.image = item.presentation.chat.repliesCountIcon(item)
+            self.replyCountImage?.sizeToFit()
+            
+        } else {
+            if let view = self.replyCountView {
+                self.replyCountView = nil
+                performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+            }
+            if let view = self.replyCountImage {
+                self.replyCountImage = nil
+                performSubviewRemoval(view, animated: animated)
+                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+            }
+        }
+        
         if let pinRect = frames.pin {
             if self.pinView == nil {
                 self.pinView = ImageView(frame: pinRect)
@@ -339,9 +391,12 @@ class ChatRightView: View, ViewDisplayDelegate {
             }
         }
         
+        
+        
         if let date = item.date, let dateRect = frames.date {
             if self.dateView == nil {
                 self.dateView = TextView(frame: dateRect)
+                self.dateView?.disableBackgroundDrawing = true
                 self.dateView?.userInteractionEnabled = false
                 self.dateView?.isSelectable = false
                 addSubview(self.dateView!)
@@ -362,6 +417,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         if let editedLabel = item.editedLabel, let editRect = frames.edit {
             if self.editView == nil {
                 self.editView = TextView(frame: editRect)
+                self.editView?.disableBackgroundDrawing = true
                 self.editView?.userInteractionEnabled = false
                 self.editView?.isSelectable = false
                 addSubview(self.editView!)
@@ -381,6 +437,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         if let channelViews = item.channelViews, let viewsImageRect = frames.viewsImage, let viewsCountRect = frames.viewsCount {
             if self.viewsCountView == nil {
                 self.viewsCountView = TextView(frame: viewsCountRect)
+                self.viewsCountView?.disableBackgroundDrawing = true
                 self.viewsCountView?.userInteractionEnabled = false
                 self.viewsCountView?.isSelectable = false
                 addSubview(self.viewsCountView!)
@@ -418,6 +475,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         if let postAuthor = item.postAuthor, let postAuthorRect = frames.postAuthor {
             if self.postAuthorView == nil {
                 self.postAuthorView = TextView(frame: postAuthorRect)
+                self.postAuthorView?.disableBackgroundDrawing = true
                 self.postAuthorView?.userInteractionEnabled = false
                 self.postAuthorView?.isSelectable = false
                 addSubview(self.postAuthorView!)
@@ -487,10 +545,10 @@ class ChatRightView: View, ViewDisplayDelegate {
         if let frame = frames.viewsCount, let view = viewsCountView {
             transition.updateFrame(view: view, frame: frame)
         }
-        if let frame = frames.viewsImage, let view = viewsImageView {
+        if let frame = frames.replyCount, let view = replyCountView {
             transition.updateFrame(view: view, frame: frame)
         }
-        if let frame = frames.replyCount, let view = replyCountView {
+        if let frame = frames.replyImage, let view = replyCountImage {
             transition.updateFrame(view: view, frame: frame)
         }
     }
