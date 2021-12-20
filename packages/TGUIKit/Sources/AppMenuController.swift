@@ -492,9 +492,9 @@ final class AppMenuController : NSObject  {
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
-        panel.backgroundColor = .clear
+        panel.backgroundColor = NSColor.black.withAlphaComponent(0.001)
         panel.isOpaque = false
-
+        panel.hasShadow = false
 
         let view = MenuView(frame: .zero)
         view.submenuId = submenuId
@@ -567,7 +567,7 @@ final class AppMenuController : NSObject  {
             submenu.view.parentView?.view.tableView.cancelSelection()
             submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
                 if let submenu = submenu {
-                    submenu.parent?.removeChildWindow(submenu)
+                    submenu.orderOut(nil)
                 }
             })
         }
