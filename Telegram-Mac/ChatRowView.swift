@@ -1135,9 +1135,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 rowView.addSubview(reactionsView!)
             }
             guard let reactionsView = reactionsView else {return}
-          
             reactionsView.update(with: reactionsLayout, animated: animated)
-    
         } else {
             if let view = self.reactionsView {
                 self.reactionsView = nil
@@ -1391,8 +1389,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         let animated = animated && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id == item.message?.id && self.layer?.animation(forKey: "position") == nil && item.presentation.bubbled == previousItem?.presentation.bubbled
         
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
-
         
         if previousItem?.message?.id != item.message?.id {
             updateBackground(animated: false, item: item, clean: true)
@@ -1434,9 +1430,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         return
                     }
                 }
-//                if NSPointInRect(location, bubbleFrame(item)), item.isBubbled {
-//                    return
-//                }
                 if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, mode: item.chatInteraction.mode) {
                     item.chatInteraction.setupReplyMessage(item.message?.id)
                 }
