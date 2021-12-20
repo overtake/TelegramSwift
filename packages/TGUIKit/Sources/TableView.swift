@@ -1781,7 +1781,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let height = item.heightValue
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
-        item.view?.updateLayout(size: NSMakeSize(frame.width, height), transition: transition)
+        if let view = item.view {
+            view.updateLayout(size: NSMakeSize(frame.width, height), transition: transition)
+            transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: NSMakeSize(frame.width, height)))
+        }
     }
     
     
@@ -1798,15 +1801,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 
-                view.set(item: item, animated: animated)
                 
                 let height:CGFloat = item.heightValue
                 let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
 
                 let size = NSMakeSize(width, height)
-                
                 let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+                view.set(item: item, animated: animated)
                 view.updateLayout(size: size, transition: transition)
+                transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: size))
             } else {
                 NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
