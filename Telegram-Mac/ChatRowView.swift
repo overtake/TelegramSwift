@@ -1106,7 +1106,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 
 
             }
-            let size = NSMakeSize(control.frame.width, control.frame.height)
+            let size = NSMakeSize(29, 29)
             control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
             control.set(cornerRadius: .half, for: .Normal)
 
