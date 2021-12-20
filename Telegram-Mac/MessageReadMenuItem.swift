@@ -86,7 +86,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                         return strings().chatContextReactedFastCountable(reactions.totalCount)
                     }
                 } else if let peers = read {
-                    if peers.count == 1 {
+                    if peers.isEmpty {
+                        return strings().chatMessageReadStatsEmptyViews
+                    } else if peers.count == 1 {
                         return peers[0].compactDisplayTitle.prefixWithDots(20)
                     } else {
                         if let media = message.media.first as? TelegramMediaFile {
@@ -353,6 +355,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
     private var contentView: AvatarContentView?
     private var loadingView: View?
 
+    private var isLoading: Bool = false
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
@@ -378,10 +381,10 @@ private final class MessageReadMenuItemView : AppMenuRowView {
         let photos = item.state.photos(item.message)
         
         let updated = photos.map { $0.id }
-        if updated != self.photos {
+        if updated != self.photos || self.isLoading != item.state.isLoading(item.message) {
             self.photos = updated
-            
-            if item.state.isLoading(item.message) {
+            self.isLoading = item.state.isLoading(item.message)
+            if self.isLoading {
                 contentView = .init(context: item.context, message: item.message, peers: nil, size: NSMakeSize(18, 18))
             } else {
                 if !item.state.isEmpty {

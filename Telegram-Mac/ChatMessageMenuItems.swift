@@ -393,13 +393,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if isNotFailed {
                     if !data.chatMode.isThreadMode, (needUnpin || data.chatMode != .pinned) {
                         secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                            if peer.isSupergroup, !needUnpin {
+                            if peer.isSupergroup, !needUnpin, let data = data {
                                 let info = pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1
                                 
-                                modernConfirm(for: context.window, information: info, okTitle:  strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { [weak data] result in
-                                    if let data = data {
-                                        data.chatInteraction.updatePinned(data.message.id, needUnpin, result != .thrid, false)
-                                    }
+                                modernConfirm(for: context.window, information: info, okTitle:  strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
+                                    data.chatInteraction.updatePinned(data.message.id, needUnpin, result != .thrid, false)
                                 })
                             } else if let data = data {
                                 data.chatInteraction.updatePinned(data.message.id, needUnpin, true, false)
@@ -415,11 +413,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }, itemImage: pinImage))
             } else if let peer = peer as? TelegramGroup, peer.canPinMessage, (needUnpin || data.chatMode != .pinned) {
                 secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                    if !needUnpin {
-                        modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { [weak data] result in
-                            if let data = data {
-                                data.chatInteraction.updatePinned(data.message.id, needUnpin, result == .thrid, false)
-                            }
+                    if !needUnpin, let data = data {
+                        modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
+                            data.chatInteraction.updatePinned(data.message.id, needUnpin, result == .thrid, false)
                         })
                     } else if let data = data {
                         data.chatInteraction.updatePinned(data.message.id, needUnpin, false, false)
@@ -427,11 +423,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }, itemImage: pinImage))
             } else if data.canPinMessage, let peer = data.peer, (needUnpin || data.chatMode != .pinned) {
                 secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                    if !needUnpin {
-                        modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: strings().chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { [weak data] result in
-                            if let data = data {
-                                data.chatInteraction.updatePinned(data.message.id, needUnpin, false, result != .thrid)
-                            }
+                    if !needUnpin, let data = data {
+                        modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: strings().chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
+                            data.chatInteraction.updatePinned(data.message.id, needUnpin, false, result != .thrid)
                         })
                     } else if let data = data {
                         data.chatInteraction.updatePinned(data.message.id, needUnpin, false, false)
