@@ -342,6 +342,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func layout() {
         super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     public func notifySubviewsToLayout(_ subview:NSView) -> Void {
@@ -438,24 +439,17 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open func shakeViewWithData(_ data: Any) {
         
     }
-    
-    open func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) -> Void  {
-        super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-    }
-    
-    open func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
-        super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-    }
-    open func change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
-        super._change(opacity: to, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-    }
-    
+        
     open func mouseInside() -> Bool {
         return super._mouseInside()
     }
     
     open var rowAppearance: NSAppearance? {
         return self.appearance
+    }
+    
+    open func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
     }
     
 }

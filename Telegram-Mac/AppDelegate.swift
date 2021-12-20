@@ -323,6 +323,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             })
             themeSemaphore.wait()
             
+            System.legacyMenu = themeSettings.legacyMenu
+            
             var localization: LocalizationSettings? = nil
             let localizationSemaphore = DispatchSemaphore(value: 0)
             _ = (accountManager.transaction { transaction in
@@ -457,6 +459,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let signal: Signal<TelegramPresentationTheme?, NoError> = combineLatest(queue: resourcesQueue, themeSettingsView(accountManager: accountManager), backingProperties.get()) |> map { settings, backingScale in
                 let previous = basicTheme.swap(settings)
                 let previousScale = previousBackingScale.swap(backingScale)
+                System.legacyMenu = settings.legacyMenu
                 if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper.wallpaper != settings.wallpaper.wallpaper || previous?.fontSize != settings.fontSize || previousScale != backingScale  {
                     return updateTheme(with: settings, animated: true && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
                 } else {

@@ -1359,7 +1359,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         
                         let updatedPoint = NSMakePoint(0, yTopOffset + stickTopInset)
                         if stickView.frame.origin != updatedPoint {
-                            stickView.change(pos: updatedPoint, animated: animated)
+                            stickView._change(pos: updatedPoint, animated: animated)
                         }
                         stickView.header = abs(dif) <= item.heightValue
                         
@@ -1418,7 +1418,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 } else  {
                     if index == -1 {
                         if animated, let stickView = self.stickView {
-                            stickView.change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
+                            stickView._change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
                                 stickView?.removeFromSuperview()
                             })
                         } else {
@@ -1777,6 +1777,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NSAnimationContext.current.timingFunction = nil
         }
         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+        let item = self.item(at: row)
+        let height = item.heightValue
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        item.view?.updateLayout(size: NSMakeSize(frame.width, height), transition: transition)
     }
     
     
@@ -1793,12 +1798,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 
+                view.set(item: item, animated: animated)
+                
                 let height:CGFloat = item.heightValue
                 let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
 
+                let size = NSMakeSize(width, height)
                 
-                view.change(size: NSMakeSize(width, height), animated: animated)
-                view.set(item: item, animated: animated)
+                let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+                view.updateLayout(size: size, transition: transition)
             } else {
                 NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)

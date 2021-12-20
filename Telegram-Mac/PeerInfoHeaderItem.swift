@@ -237,7 +237,7 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             }
 
             table.noteHeightOfRow(item.index, animated)
-            change(size: NSMakeSize(frame.width, item.height), animated: animated)
+            
         }
     }
     

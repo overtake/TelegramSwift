@@ -269,8 +269,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.reactionsView {
                 self.reactionsView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         if let sendingRect = frames.sending {
@@ -290,8 +289,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.sendingView {
                 self.sendingView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -311,8 +309,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.stateView {
                 self.stateView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         if let readRect = frames.read {
@@ -329,8 +326,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.readImageView {
                 self.readImageView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -362,13 +358,11 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.replyCountView {
                 self.replyCountView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
             if let view = self.replyCountImage {
                 self.replyCountImage = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -386,8 +380,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.pinView {
                 self.pinView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -409,8 +402,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.dateView {
                 self.dateView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -430,8 +422,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.editView {
                 self.editView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         if let channelViews = item.channelViews, let viewsImageRect = frames.viewsImage, let viewsCountRect = frames.viewsCount {
@@ -462,13 +453,11 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.viewsCountView {
                 self.viewsCountView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
             if let view = self.viewsImageView {
                 self.viewsImageView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -488,8 +477,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         } else {
             if let view = self.postAuthorView {
                 self.postAuthorView = nil
-                performSubviewRemoval(view, animated: animated)
-                view.layer?.animateScaleCenter(from: 1.0, to: 0.1, duration: 0.2, removeOnCompletion: false)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
