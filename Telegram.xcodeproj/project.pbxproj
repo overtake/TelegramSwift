@@ -143,6 +143,7 @@
 		27672EC126F8D65400297DB4 /* 109.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 27672EAB26F8D5B200297DB4 /* 109.m4a */; };
 		27672EC226F8D65600297DB4 /* 110.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 27672EA426F8D5B100297DB4 /* 110.m4a */; };
 		27672EC326F8D65800297DB4 /* 111.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 27672EAC26F8D5B200297DB4 /* 111.m4a */; };
+		276885032770D7BE0021C891 /* ChatAddReactionControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276885022770D7BE0021C891 /* ChatAddReactionControl.swift */; };
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
 		276C1EBF261B451500FE41C9 /* Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276C1EBE261B451500FE41C9 /* Currency.swift */; };
@@ -1296,6 +1297,7 @@
 		27672EAB26F8D5B200297DB4 /* 109.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = 109.m4a; sourceTree = "<group>"; };
 		27672EAC26F8D5B200297DB4 /* 111.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = 111.m4a; sourceTree = "<group>"; };
 		27672EAD26F8D5B200297DB4 /* 4.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = 4.m4a; sourceTree = "<group>"; };
+		276885022770D7BE0021C891 /* ChatAddReactionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAddReactionControl.swift; sourceTree = "<group>"; };
 		276957A82746C07400297991 /* SessionModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionModalController.swift; sourceTree = "<group>"; };
 		276A1D58265D0E600083D6E7 /* GroupCallSpeakingTooltipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSpeakingTooltipView.swift; sourceTree = "<group>"; };
 		276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPackTrendingItem.swift; sourceTree = "<group>"; };
@@ -3176,6 +3178,7 @@
 				D0E82DFF2500F10E00E09A20 /* MergedAvatarsView.swift */,
 				D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */,
 				270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */,
+				276885022770D7BE0021C891 /* ChatAddReactionControl.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -6125,6 +6128,7 @@
 				27C4088E25B0603700372302 /* GeneralLoadingRowItem.swift in Sources */,
 				A76C8AA02422132400FDB071 /* VerticalTabsView.swift in Sources */,
 				C218FF961F3DAD7200DD7D35 /* InstantPageSelectText.swift in Sources */,
+				276885032770D7BE0021C891 /* ChatAddReactionControl.swift in Sources */,
 				C2DE5D3E1F3CAF2B0081EC1E /* InstantPageShapeItem.swift in Sources */,
 				9F18908D2237B5A400665EF5 /* InputURLFormatterModalController.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,

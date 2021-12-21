@@ -1760,4 +1760,26 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         super.removeFromSuperview()
     }
     
+    var rectForReaction: NSRect {
+        guard let item = self.item as? ChatRowItem else {
+            return .zero
+        }
+        if item.isBubbled {
+            let bubbleFrame = self.bubbleView.frame
+            var rect = NSMakeRect(bubbleFrame.maxX - 10, bubbleFrame.maxY - 10, 20, 20)
+            if item.isIncoming {
+                rect.origin.x -= 5
+                rect.origin.y -= 5
+            } else {
+                rect.origin.x -= item.bubbleCornerInset
+                rect.origin.y -= item.bubbleCornerInset
+            }
+            return rect
+        } else {
+            let rightFrame = self.rightView.frame
+            let rect = NSMakeRect(rightFrame.maxX - 14, rightFrame.maxY, 14, 14)
+            return rect
+        }
+    }
+    
 }

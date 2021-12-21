@@ -366,6 +366,7 @@ final class ChatReactionsView : View {
         private var reaction: ChatReactionsLayout.Reaction?
         private let imageView: TransformImageView = TransformImageView()
         private let textView = DynamicCounterTextView(frame: .zero)
+        private var first: Bool = true
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             
@@ -423,6 +424,10 @@ final class ChatReactionsView : View {
             }
 
             imageView.set(arguments: arguments)
+            if first {
+                updateLayout(size: reaction.rect.size, transition: .immediate)
+                first = false
+            }
         }
         
         func isOwner(of reaction: ChatReactionsLayout.Reaction) -> Bool {
@@ -455,11 +460,11 @@ final class ChatReactionsView : View {
         private var reaction: ChatReactionsLayout.Reaction?
         private let imageView: TransformImageView = TransformImageView()
         private var textView: DynamicCounterTextView?
+        private var first = true
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             userInteractionEnabled = false
             addSubview(imageView)
-            
         }
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
@@ -489,6 +494,11 @@ final class ChatReactionsView : View {
                     performSubviewRemoval(view, animated: animated)
                     self.textView = nil
                 }
+            }
+            
+            if first {
+                updateLayout(size: reaction.rect.size, transition: .immediate)
+                first = false
             }
         }
         
@@ -571,7 +581,8 @@ final class ChatReactionsView : View {
             self.reactions.insert(item, at: idx)
             (view as? ReactionViewImpl)?.update(with: item, account: layout.context.account, animated: animated)
             if prevView == nil, animated {
-                view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             if idx == 0 {
                 addSubview(view, positioned: .below, relativeTo: self.subviews.first)

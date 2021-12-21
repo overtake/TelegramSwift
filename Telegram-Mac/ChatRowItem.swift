@@ -708,6 +708,25 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    var canReact: Bool {
+        if let message = firstMessage {
+            if message.id.namespace != Namespaces.Message.Cloud {
+                return false
+            }
+            if message.id.peerId.namespace == Namespaces.Peer.SecretChat {
+                return false
+            }
+            if isUnsent {
+                return false
+            }
+            if isFailed {
+                return false
+            }
+            return true
+        }
+        return false
+    }
+    
     var isSharable: Bool {
         var peers:[Peer] = []
         if let peer = peer {
@@ -2076,23 +2095,6 @@ class ChatRowItem: TableRowItem {
                 break
             }
         }
-
-        func layout() -> Bool {
-            if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
-                if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent {
-                   // widthForContent = _contentSize.width - 5
-                    self.isForceRightLine = true
-                    //_contentSize = self.makeContentSize(widthForContent)
-                    return true
-                }
-            }
-            return true
-        }
-        
-        if hasBubble {
-            while !layout() {}
-        }
-        
         
         
         var maxContentWidth = _contentSize.width
@@ -2112,6 +2114,14 @@ class ChatRowItem: TableRowItem {
         }
         
 
+        if hasBubble {
+            if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
+                if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent {
+                    self.isForceRightLine = true
+                }
+            }
+        }
+        
         
         if let forwardNameLayout = forwardNameLayout {
             var w = widthForContent
@@ -2303,7 +2313,14 @@ class ChatRowItem: TableRowItem {
         //}
         
         if additionalLineForDateInBubbleState == nil && !isFixedRightPosition && rightSize.width > 0 {
-            rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset
+            if let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId }) {
+                let add = rect.size.width - caption.layout.layoutSize.width
+                if add > 0 {
+                    rect.size.width += (rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset - add)
+                }
+            } else {
+                rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset
+            }
         } else {
             rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
         }
@@ -2316,7 +2333,7 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(rect.width, forwardWidth + bubbleDefaultInnerInset)
         
-        if let reactions = reactionsLayout, reactions.mode == .full {
+        if let reactions = reactionsLayout, reactions.mode == .full, !reactions.presentation.isOutOfBounds {
             rect.size.width = max(reactions.size.width + bubbleDefaultInnerInset, rect.width)
         }
         

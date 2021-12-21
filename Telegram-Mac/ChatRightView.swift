@@ -42,10 +42,17 @@ class ChatRightView: View, ViewDisplayDelegate {
                 switch reactions.mode {
                 case .short:
                     var rect = size.bounds.focus(reactions.size)
-                    rect.origin.y -= 1
+                    if item.isBubbled {
+                        rect.origin.y -= 1
+                    }
                     rect.origin.x = x
                     self.reactions = rect
-                    x = rect.maxX
+                    if item.isBubbled {
+                        x = rect.maxX + 1
+                    } else {
+                        x = rect.maxX + 3
+                    }
+                    
                 default:
                     break
                 }
@@ -54,6 +61,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let views = item.replyCount {
                 var rect_i = size.bounds.focus(item.presentation.chat.repliesCountIcon(item).backingSize)
                 rect_i.origin.x = x + 2
+                rect_i.origin.y -= 1
                 x = rect_i.maxX
                 var rect_t = size.bounds.focus(views.layoutSize)
                 rect_t.origin.x = x + 2

@@ -102,17 +102,17 @@ class ChatFileMediaItem: ChatMediaItem {
         var width = width
         
         let parameters = self.parameters as! ChatFileLayoutParameters
-        let file = media as! TelegramMediaFile
         let optionalWidth = parameters.makeLabelsForWidth(width)
-        
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-        
+                
         width = min(width, max(optionalWidth, 320))
         
         return NSMakeSize(width, parameters.hasThumb ? 70 : 40)
     }
     
     override var additionalLineForDateInBubbleState: CGFloat? {
+        
+        
+        
         let file = media as! TelegramMediaFile
         let parameters = self.parameters as! ChatFileLayoutParameters
 
@@ -124,7 +124,7 @@ class ChatFileMediaItem: ChatMediaItem {
             return super.additionalLineForDateInBubbleState
         }
         
-        let caption = captionLayouts.first(where: { $0.id == messages.last?.stableId })?.layout
+        let caption = captionLayouts.first(where: { $0.id == firstMessage?.stableId })?.layout
         
         if let textLayout = caption {
             if textLayout.lines.count == 1 {
@@ -140,6 +140,7 @@ class ChatFileMediaItem: ChatMediaItem {
     }
     
     override var isFixedRightPosition: Bool {
+                
         let file = media as! TelegramMediaFile
         
         let parameters = self.parameters as! ChatFileLayoutParameters
