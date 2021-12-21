@@ -708,6 +708,10 @@ func initialize() -> [String] {
     array.append("widget_peers_favorite_active")
     array.append("widget_peers_recent_active")
     array.append("widget_peers_both_active")
+    
+    array.append("chat_reactions_add")
+    array.append("chat_reactions_add_bubble")
+    array.append("chat_reactions_add_active")
 
     return array
 }

@@ -5771,6 +5771,8 @@ public final class L10n {
   public static var messageContextConfirmPin1: String  { return L10n.tr("Localizable", "Message.Context.Confirm.Pin1") }
   /// Thank you! Your report will be reviewed by our team very soon.
   public static var messageContextReportAlertOK: String  { return L10n.tr("Localizable", "Message.Context.Report.AlertOK") }
+  /// Edit Message...
+  public static var messagePlaceholderEdit: String  { return L10n.tr("Localizable", "Message.Placeholder.Edit") }
   /// archived folder
   public static var messageStatusArchived: String  { return L10n.tr("Localizable", "Message.Status.Archived") }
   /// preparing archive

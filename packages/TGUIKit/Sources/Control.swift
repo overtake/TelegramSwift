@@ -143,7 +143,7 @@ open class Control: View {
     
     public var controlState:ControlState = .Normal {
         didSet {
-            stateDidUpdated(controlState)
+            stateDidUpdate(controlState)
             if oldValue != controlState {
                 apply(state: isSelected ? .Highlight : controlState)
                 
@@ -176,7 +176,7 @@ open class Control: View {
         }
     }
     private var previousState: ControlState?
-    open func stateDidUpdated(_ state: ControlState) {
+    open func stateDidUpdate(_ state: ControlState) {
         if self.scaleOnClick {
             if state != previousState {
                 if state == .Highlight {

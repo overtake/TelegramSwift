@@ -264,18 +264,11 @@ class ChatMediaItem: ChatRowItem {
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
-        //
-        if hasBubble {
-            if  forwardNameLayout != nil {
-                offset.y += defaultContentInnerInset
-            } else if !isBubbleFullFilled  {
-                offset.y += (defaultContentInnerInset + 2)
-            }
+        
+        if hasBubble, isBubbleFullFilled {
+            offset.y -= (defaultContentInnerInset + 1)
         }
-
-        if hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil {
-            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2 - (isBubbleFullFilled ? 1 : 0))
-        }
+        
         return offset
     }
     
@@ -309,8 +302,7 @@ class ChatMediaItem: ChatRowItem {
     
     override var additionalLineForDateInBubbleState: CGFloat? {
         
-        
-        
+                
         if isForceRightLine {
             return rightSize.height
         }
@@ -329,6 +321,7 @@ class ChatMediaItem: ChatRowItem {
     }
     
     override var isFixedRightPosition: Bool {
+        
         if media is TelegramMediaImage {
             return true
         } else if let media = media as? TelegramMediaFile {

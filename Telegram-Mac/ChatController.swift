@@ -1228,6 +1228,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let peerView = Promise<PostboxView?>()
     
     private let emojiEffects: EmojiScreenEffect
+    private var addReactionControl:ChatAddReactionControl?
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
@@ -1367,6 +1368,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
     private let unsupportedMessageProcessingManager = ChatMessageThrottledProcessingManager()
+    private let reactionsMessageProcessingManager = ChatMessageThrottledProcessingManager()
     private let messageMentionProcessingManager = ChatMessageThrottledProcessingManager(delay: 0.2)
     var historyState:ChatHistoryState = ChatHistoryState() {
         didSet {
@@ -1596,7 +1598,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
-        
+        self.addReactionControl = .init(view: self.genericView, context: self.context, priority: self.responderPriority, window: self.context.window)
+
 
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
             guard let `self` = self else {
@@ -4770,6 +4773,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 var messageIdsWithViewCount: [MessageId] = []
                 var messageIdsWithUnseenPersonalMention: [MessageId] = []
+                var messageIdsWithReactions:[MessageId] = []
                 var unsupportedMessagesIds: [MessageId] = []
                 var topVisibleMessageRange: ChatTopVisibleMessageRange?
 
@@ -4813,6 +4817,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     messageIdsWithViewCount.append(message.id)
                                     break inner
                                 }
+                            }
+                            if message.id.peerId.namespace == Namespaces.Peer.CloudChannel || message.id.peerId.namespace == Namespaces.Peer.CloudGroup {
+                                messageIdsWithReactions.append(message.id)
                             }
                             if message.media.first is TelegramMediaUnsupported {
                                 unsupportedMessagesIds.append(message.id)
@@ -4862,6 +4869,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 if !unsupportedMessagesIds.isEmpty {
                     strongSelf.unsupportedMessageProcessingManager.add(unsupportedMessagesIds)
+                }
+                
+                if !messageIdsWithReactions.isEmpty {
+                    strongSelf.reactionsMessageProcessingManager.add(messageIdsWithReactions)
                 }
                 
                 if let message = message {
@@ -6084,7 +6095,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.messageMentionProcessingManager.process = { messageIds in
             context.account.viewTracker.updateMarkMentionsSeenForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
         }
-        
+        self.reactionsMessageProcessingManager.process = { messageIds in
+            context.account.viewTracker.updateReactionsForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
+        }
         
         self.location.set(peerView.get() |> take(1) |> deliverOnMainQueue |> map { [weak self] view -> ChatHistoryLocation in
             

@@ -85,7 +85,7 @@ final class MenuView: View, TableViewDelegate {
         super.setFrameSize(newSize)
     }
     
-    func makeSize(presentation: AppMenu.Presentation, appearMode: AppMenu.AppearMode) {
+    func makeSize(presentation: AppMenu.Presentation, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
         
         var max: CGFloat = 0
         tableView.enumerateItems(with: { item in
@@ -101,7 +101,7 @@ final class MenuView: View, TableViewDelegate {
             return
         }
         
-        self.setFrameSize(max, min(tableView.listHeight, min(appearMode.max, screen.visibleFrame.height - 200)))
+        self.setFrameSize(max, min(tableView.listHeight, min(maxHeight ?? appearMode.max, screen.visibleFrame.height - 200)))
         if presentation.colors.isDark {
             visualView.material = .dark
         } else {
@@ -526,7 +526,7 @@ final class AppMenuController : NSObject  {
         
         view.merge(menu: menu, presentation: presentation, interaction: interaction)
         
-        view.makeSize(presentation: presentation, appearMode: appearMode)
+        view.makeSize(presentation: presentation, maxHeight: self.menu.maxHeight, appearMode: appearMode)
         
         view.tableView.needUpdateVisibleAfterScroll = true
         view.tableView.getBackgroundColor = {
@@ -535,6 +535,14 @@ final class AppMenuController : NSObject  {
         
         panel.setFrame(view.frame.insetBy(dx: -20, dy: -20), display: false)
         panel.contentView?.addSubview(view)
+        
+        
+        panel.set(mouseHandler: { [weak view, weak self] _ in
+            if view?.mouseInside() == false {
+                self?.close()
+            }
+            return .rejected
+        }, with: self, for: .leftMouseDown)
         view.center()
         
         self.windows[.init(submenuId: submenuId, timestamp: Date().timeIntervalSince1970)] = panel

@@ -2303,7 +2303,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                widget_peers_both: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.text) },
                                                widget_peers_favorite_active: { NSImage(named: "Icon_Widget_Peers_Favorite")!.precomposed(palette.accent) },
                                                widget_peers_recent_active: { NSImage(named: "Icon_Widget_Peers_Recent")!.precomposed(palette.accent) },
-                                               widget_peers_both_active: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.accent) }
+                                               widget_peers_both_active: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.accent) },
+                                               chat_reactions_add: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.grayIcon) },
+                                               chat_reactions_add_bubble: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.text) },
+                                               chat_reactions_add_active: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.accent) }
     )
 
 }
