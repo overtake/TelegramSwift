@@ -33,7 +33,6 @@ final class ChatAddReactionControl : NSObject {
             backgroundView.isEventLess = true
             
             
-            addSubview(imageView)
             self.layer?.cornerRadius = frameRect.height / 2
             updateLocalizationAndTheme(theme: theme)
             
@@ -49,7 +48,8 @@ final class ChatAddReactionControl : NSObject {
                 addSubview(visualEffect)
                 addSubview(backgroundView)
             }
-           
+            addSubview(imageView)
+
             
             contextMenu = { [weak self] in
                 guard let reactions = self?.reactions else {
