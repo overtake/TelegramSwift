@@ -286,7 +286,7 @@ final class ChatAddReactionControl : NSObject {
             }
             
             if state == .Hover && previous != .Hover {
-                disposable.set(delaySignal(1.2).start(completed: { [weak self] in
+                disposable.set(delaySignal(0.5).start(completed: { [weak self] in
                     self?.present()
                 }))
             } else if state != .Hover {
@@ -445,6 +445,7 @@ final class ChatAddReactionControl : NSObject {
     private let lockDisposable = MetaDisposable()
     private var reactions: AvailableReactions?
     private var peerView: PeerView?
+    private var settings: ReactionSettings = ReactionSettings.default
     init(view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
         self.window = window
         self.view = view
@@ -481,8 +482,19 @@ final class ChatAddReactionControl : NSObject {
             self?.delayAndUpdate()
         }))
         
-        disposable.set(context.reactions.stateValue.start(next: { [weak self] reactions in
+        let settings = context.account.postbox.preferencesView(keys: [PreferencesKeys.reactionSettings])
+           |> map { preferencesView -> ReactionSettings in
+               let reactionSettings: ReactionSettings
+               if let entry = preferencesView.values[PreferencesKeys.reactionSettings], let value = entry.get(ReactionSettings.self) {
+                   reactionSettings = value
+               } else {
+                   reactionSettings = .default
+               }
+               return reactionSettings
+           }
+        disposable.set(combineLatest(queue: .mainQueue(), context.reactions.stateValue, settings).start(next: { [weak self] reactions, settings in
             self?.reactions = reactions
+            self?.settings = settings
             self?.delayAndUpdate()
         }))
     }
@@ -504,20 +516,25 @@ final class ChatAddReactionControl : NSObject {
     private func update(transition: ContainedViewLayoutTransition = .immediate) {
         
         var available:[AvailableReactions.Reaction] = []
+        let settings: ReactionSettings = self.settings
+
         if let reactions = reactions {
             if let cachedData = peerView?.cachedData as? CachedGroupData {
-                available = reactions.reactions.filter {
+                available = reactions.enabled.filter {
                     cachedData.allowedReactions == nil || cachedData.allowedReactions!.contains($0.value)
                 }
             } else if let cachedData = peerView?.cachedData as? CachedChannelData {
-                available = reactions.reactions.filter {
+                available = reactions.enabled.filter {
                     cachedData.allowedReactions == nil || cachedData.allowedReactions!.contains($0.value)
                 }
             } else {
-                available = reactions.reactions
+                available = reactions.enabled
             }
         }
-        
+       
+        if let index = available.firstIndex(where: { $0.value == settings.quickReaction }) {
+            available.move(at: index, to: 0)
+        }
         
         if let view = self.view, !available.isEmpty {
             
@@ -526,7 +543,7 @@ final class ChatAddReactionControl : NSObject {
             
             if let current = currentView, current.isRevealed, let item = previousItem {
                 let base = current.frame
-                let safeRect = base.insetBy(dx: -20, dy: -20)
+                let safeRect = base.insetBy(dx: -current.frame.width * 4, dy: -current.frame.width * 4)
                 var inSafeRect = NSPointInRect(inside, safeRect)
                 inSafeRect = inSafeRect && NSPointInRect(NSMakePoint(base.maxX, base.maxY), view.tableView.frame)
 

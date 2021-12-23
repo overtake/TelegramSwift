@@ -41,7 +41,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let all = state.availableReactions?.reactions.map { $0.value } ?? []
+    let all = state.availableReactions?.enabled.map { $0.value } ?? []
   
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_allow, data: .init(name: strings().reactionSettingsAllow, color: theme.colors.text, type: .switchable(!state.reactions.isEmpty), viewType: .singleItem, action: {
         arguments.toggleReaction(state.reactions.isEmpty ? all : [])
@@ -56,8 +56,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     if let available = state.availableReactions {
-        for (i, reaction) in available.reactions.enumerated() {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(reaction.value), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: .switchable(state.reactions.contains(reaction.value)), viewType: bestGeneralViewType(available.reactions, for: i), action: {
+        for (i, reaction) in available.enabled.enumerated() {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(reaction.value), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: .switchable(state.reactions.contains(reaction.value)), viewType: bestGeneralViewType(available.enabled, for: i), action: {
                 let contains = state.reactions.contains(reaction.value)
                 var updated = state.reactions
                 if contains {
@@ -109,7 +109,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
                     return current
                 }
             }))
-            
+
         }
     }
     

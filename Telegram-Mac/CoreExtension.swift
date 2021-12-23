@@ -557,9 +557,30 @@ public extension Message {
             for attr in self.attributes {
                 if let attr = attr as? PendingReactionsMessageAttribute {
                     if let value = attr.value {
-                        reactions = .init(reactions: remote.reactions.filter { !$0.isSelected } + [.init(value: value, count: 1, isSelected: true)], recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                        var values = remote.reactions
+                        if let index = values.firstIndex(where: { $0.isSelected })  {
+                            if values[index].count == 1 {
+                                values.remove(at: index)
+                            } else {
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
+                            }
+                        }
+                        if let index = values.firstIndex(where: { $0.value == value }) {
+                            values[index] = MessageReaction(value: value, count: values[index].count + 1, isSelected: true)
+                        } else {
+                            values.append(.init(value: value, count: 1, isSelected: true))
+                        }
+                        reactions = .init(reactions: values, recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
                     } else {
-                        reactions = .init(reactions: remote.reactions.filter { !$0.isSelected }, recentPeers: remote.recentPeers)
+                        var values = remote.reactions
+                        if let index = values.firstIndex(where: { $0.isSelected })  {
+                            if values[index].count == 1 {
+                                values.remove(at: index)
+                            } else {
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: true)
+                            }
+                        }
+                        reactions = .init(reactions: values, recentPeers: remote.recentPeers)
                     }
                 }
             }
@@ -799,6 +820,12 @@ extension ChatLocation : Hashable {
        
     }
    
+}
+
+extension AvailableReactions {
+    var enabled: [AvailableReactions.Reaction] {
+        return self.reactions.filter { $0.isEnabled }
+    }
 }
 
 extension SuggestedLocalizationInfo {
