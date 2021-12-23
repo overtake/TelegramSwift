@@ -2630,9 +2630,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         case let .none(animation):
             // print("scroll do nothing")
             animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
-//            if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-//                saveVisible(.upper)
-//            }
+            if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
+                saveVisible(.lower)
+            }
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
         case .up, .down, .upOffset:

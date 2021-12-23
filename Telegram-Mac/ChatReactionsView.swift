@@ -556,7 +556,7 @@ final class ChatReactionsView : View {
             self.reactions.remove(at: idx)
             let view = self.views.remove(at: idx)
             deletedViews[idx] = view
-            performSubviewRemoval(view, animated: animated, checkCompletion: true)
+            performSubviewRemoval(view, animated: animated, checkCompletion: true, scale: true)
         }
         for (idx, item, pix) in inserted {
             var prevFrame: NSRect? = nil
@@ -580,8 +580,8 @@ final class ChatReactionsView : View {
             self.views.insert(view, at: idx)
             self.reactions.insert(item, at: idx)
             (view as? ReactionViewImpl)?.update(with: item, account: layout.context.account, animated: animated)
-            if prevView == nil, animated {
-                view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+            if animated {
+                view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
                 view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             if idx == 0 {

@@ -1748,16 +1748,16 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     
                     let cachedGroupData = view.cachedData as? CachedGroupData
                     
-                    let allCount = cachedGroupData?.allowedReactions?.count ?? availableReactions?.reactions.count ?? 0
+                    let allCount = cachedGroupData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
                     
                     let text: String
                     if let availableReactions = availableReactions {
-                        if allCount == availableReactions.reactions.count {
+                        if allCount == availableReactions.enabled.count {
                             text = strings().peerInfoReactionsAll
                         } else if allCount == 0 {
                             text = strings().peerInfoReactionsDisabled
                         } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.reactions.count)")
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll
@@ -1809,12 +1809,12 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     
                     let text: String
                     if let availableReactions = availableReactions {
-                        if allCount == availableReactions.reactions.count {
+                        if allCount == availableReactions.enabled.count {
                             text = strings().peerInfoReactionsAll
                         } else if allCount == 0 {
                             text = strings().peerInfoReactionsDisabled
                         } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.reactions.count)")
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll

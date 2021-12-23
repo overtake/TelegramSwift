@@ -1144,16 +1144,16 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
                 if channel.groupAccess.canEditGroupInfo {
                     let cachedData = view.cachedData as? CachedChannelData
-                    let allCount = cachedData?.allowedReactions?.count ?? availableReactions?.reactions.count ?? 0
+                    let allCount = cachedData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
                     
                     let text: String
                     if let availableReactions = availableReactions {
-                        if allCount == availableReactions.reactions.count {
+                        if allCount == availableReactions.enabled.count {
                             text = strings().peerInfoReactionsAll
                         } else if allCount == 0 {
                             text = strings().peerInfoReactionsDisabled
                         } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.reactions.count)")
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll
