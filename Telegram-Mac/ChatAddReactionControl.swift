@@ -536,6 +536,7 @@ final class ChatAddReactionControl : NSObject {
             available.move(at: index, to: 0)
         }
         
+        
         if let view = self.view, !available.isEmpty {
             
             let point = view.tableView.contentView.convert(self.window.mouseLocationOutsideOfEventStream, from: nil)
@@ -543,7 +544,7 @@ final class ChatAddReactionControl : NSObject {
             
             if let current = currentView, current.isRevealed, let item = previousItem {
                 let base = current.frame
-                let safeRect = base.insetBy(dx: -base.width, dy: -base.width)
+                let safeRect = base.insetBy(dx: -current.frame.width * 4, dy: -current.frame.width * 4)
                 var inSafeRect = NSPointInRect(inside, safeRect)
                 inSafeRect = inSafeRect && NSPointInRect(NSMakePoint(base.maxX, base.maxY), view.tableView.frame)
 
@@ -615,7 +616,7 @@ final class ChatAddReactionControl : NSObject {
                         let base = current.makeRect(view.convert(rect, from: itemView))
 
                         
-                        let safeRect = base.insetBy(dx: -base.width * 3, dy: -base.height * 3)
+                        let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
                         if NSPointInRect(inside, safeRect), NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
                             transition.updateFrame(view: current, frame: base)
                         } else {
