@@ -303,7 +303,7 @@ final class ChatAddReactionControl : NSObject {
         
         private func present() {
             
-            guard reactions.count > 1 else {
+            guard self.reactions.count > 1 && self.listView == nil else {
                 return
             }
             
