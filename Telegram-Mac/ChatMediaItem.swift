@@ -265,8 +265,10 @@ class ChatMediaItem: ChatRowItem {
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
         
-        if hasBubble, isBubbleFullFilled {
+        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
             offset.y -= (defaultContentInnerInset + 1)
+        } else if isBubbleFullFilled, hasBubble {
+            offset.y += defaultContentInnerInset
         }
         
         return offset

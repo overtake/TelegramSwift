@@ -178,6 +178,8 @@ final class ChatInteraction : InterfaceObserver  {
         return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
     }
     
+    var updateFrame:(NSRect, ContainedViewLayoutTransition) -> Void = { _, _ in }
+    
     var unarchive: ()->Void = { }
 
     var closeAfterPeek:(Int32)->Void = { _ in }

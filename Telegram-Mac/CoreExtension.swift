@@ -545,6 +545,28 @@ public extension Message {
         return nil
     }
     
+    func effectiveReactions(_ accountPeerId: PeerId) -> ReactionsMessageAttribute? {
+        var reactions = self.reactionsAttribute
+        if reactions == nil {
+            for attr in self.attributes {
+                if let attr = attr as? PendingReactionsMessageAttribute, let value = attr.value {
+                    reactions = .init(reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                }
+            }
+        } else if let remote = reactions {
+            for attr in self.attributes {
+                if let attr = attr as? PendingReactionsMessageAttribute {
+                    if let value = attr.value {
+                        reactions = .init(reactions: remote.reactions.filter { !$0.isSelected } + [.init(value: value, count: 1, isSelected: true)], recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                    } else {
+                        reactions = .init(reactions: remote.reactions.filter { !$0.isSelected }, recentPeers: remote.recentPeers)
+                    }
+                }
+            }
+        }
+        return reactions
+    }
+    
     func isCrosspostFromChannel(account: Account) -> Bool {
         
         var sourceReference: SourceReferenceMessageAttribute?

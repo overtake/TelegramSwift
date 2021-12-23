@@ -465,48 +465,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var previousHeight:CGFloat = 50
     func inputChanged(height: CGFloat, animated: Bool) {
-        if previousHeight != height {
-            let header:CGFloat = self.header.state.toleranceHeight
-            
-            let size = NSMakeSize(frame.width, frame.height - height - header)
-            let resizeAnimated = animated && tableView.contentOffset.y < height
-            //(previousHeight < height || tableView.contentOffset.y < height)
-            
-            tableView.change(size: size, animated: animated)
-            
-            floatingPhotosView.change(size: size, animated: animated)
-            
-            if tableView.contentOffset.y > height {
-               // tableView.clipView.scroll(to: NSMakePoint(0, tableView.contentOffset.y - (previousHeight - height)))
-            }
-            
-            inputView.change(pos: NSMakePoint(0, tableView.frame.maxY), animated: animated)
-            if let view = inputContextHelper.accessoryView {
-                view._change(pos: NSMakePoint(0, frame.height - inputView.frame.height - view.frame.height), animated: animated)
-            }
-            
-            scroller.change(pos: NSMakePoint(frame.width - scroller.frame.width - 6, frame.height - height - scroller.frame.height - 6), animated: animated)
-            
-            if let mentions = mentions {
-                mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: animated )
-            }
-            if let failed = failed {
-                var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
-                if let mentions = mentions {
-                    offset += (mentions.frame.height + 6)
-                }
-                failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: animated)
-            }
-            
-            previousHeight = height
-
-            self.tableView.enumerateVisibleViews(with: { view in
-                if let view = view as? ChatRowView {
-                    view.updateBackground(animated: animated, item: view.item)
-                }
-            })
-        }
-        
+        updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     required init?(coder: NSCoder) {
@@ -595,6 +554,7 @@ class ChatControllerView : View, ChatInputDelegate {
         if let themeSelectorView = self.themeSelectorView {
             transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
         }
+        self.chatInteraction.updateFrame(frame, transition)
     }
 
     override var responder: NSResponder? {
@@ -626,14 +586,8 @@ class ChatControllerView : View, ChatInputDelegate {
                 progressView?.progressColor = currentTheme.chatServiceItemTextColor
                 progressView?.layer?.cornerRadius = 15
             case .visible:
-                if animated {
-                    progressView?.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak self] (completed) in
-                        self?.progressView?.removeFromSuperview()
-                        self?.progressView?.animates = false
-                        self?.progressView = nil
-                    })
-                } else {
-                    progressView?.removeFromSuperview()
+                if let view = progressView {
+                    performSubviewRemoval(view, animated: animated)
                     progressView = nil
                 }
             }
@@ -1314,7 +1268,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var didSetHistoryReady = false
 
     
-    private var currentPeerView: PeerView?
+    private var currentPeerView: PeerView? {
+        didSet {
+            self.addReactionControl?.updatePeerView(currentPeerView)
+        }
+    }
     
     private let location:Promise<ChatHistoryLocation> = Promise()
     private let _locationValue:Atomic<ChatHistoryLocation?> = Atomic(value: nil)
@@ -1598,7 +1556,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
-        self.addReactionControl = .init(view: self.genericView, context: self.context, priority: self.responderPriority, window: self.context.window)
+        self.addReactionControl = .init(view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
 
 
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
@@ -2094,7 +2052,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.readHistoryDisposable.set(readHistory.start())
         
         
-
+        chatInteraction.updateFrame = { [weak self] frame, transition in
+            self?.addReactionControl?.updateLayout(size: frame.size, transition: transition)
+        }
         
         chatInteraction.setupReplyMessage = { [weak self] messageId in
             guard let `self` = self else { return }

@@ -151,7 +151,19 @@ class ChatMessageItem: ChatRowItem {
     
     func invokeAction() {
         if let adAttribute = message?.adAttribute, let peer = peer {
-            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: peer.isChannel, postId: adAttribute.messageId?.id, callback: chatInteraction.openInfo)
+            let link: inAppLink
+            switch adAttribute.target {
+            case let .peer(id, messageId, startParam):
+                let action: ChatInitialAction?
+                if let startParam = startParam {
+                    action = .start(parameter: startParam, behavior: .none)
+                } else {
+                    action = nil
+                }
+                link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: peer.isChannel, postId: messageId?.id, callback: chatInteraction.openInfo)
+            case let .join(_, joinHash):
+                link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
+            }
             execute(inapp: link)
         } else if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)

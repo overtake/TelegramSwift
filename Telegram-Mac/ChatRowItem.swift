@@ -1296,8 +1296,10 @@ class ChatRowItem: TableRowItem {
     var reactionsLayout: ChatReactionsLayout? {
         if let value = _reactionsLayout {
             return value
-        } else if let message = self.messages.first, let attr = message.reactionsAttribute {
-            if !attr.reactions.isEmpty {
+        } else if let message = self.messages.first {
+            
+            var reactions = message.effectiveReactions(context.peerId)
+            if let reactions = reactions, !reactions.reactions.isEmpty {
                 let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak self] peerId in
                     self?.chatInteraction.openInfo(peerId, false, nil, nil)
                 })
@@ -1508,7 +1510,7 @@ class ChatRowItem: TableRowItem {
                 for attr in message.attributes {
                     if let attr = attr as? AuthorSignatureMessageAttribute {
                         if !message.flags.contains(.Failed) {
-                            let attr: NSAttributedString = .initialize(string: attr.signature.prefix(15), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            let attr: NSAttributedString = .initialize(string: attr.signature.prefixWithDots(13), color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                             postAuthor = TextViewLayout(attr, maximumNumberOfLines: 1)
                             
                             postAuthor?.measure(width: .greatestFiniteMagnitude)
