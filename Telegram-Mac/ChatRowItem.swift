@@ -1298,7 +1298,7 @@ class ChatRowItem: TableRowItem {
             return value
         } else if let message = self.messages.first {
             
-            var reactions = message.effectiveReactions(context.peerId)
+            let reactions = message.effectiveReactions(context.peerId)
             if let reactions = reactions, !reactions.reactions.isEmpty {
                 let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak self] peerId in
                     self?.chatInteraction.openInfo(peerId, false, nil, nil)
