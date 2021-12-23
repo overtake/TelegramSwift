@@ -526,7 +526,7 @@ final class ChatAddReactionControl : NSObject {
             
             if let current = currentView, current.isRevealed, let item = previousItem {
                 let base = current.frame
-                let safeRect = base.insetBy(dx: -base.width * 3, dy: -base.height * 0.3)
+                let safeRect = base.insetBy(dx: -20, dy: -20)
                 var inSafeRect = NSPointInRect(inside, safeRect)
                 inSafeRect = inSafeRect && NSPointInRect(NSMakePoint(base.maxX, base.maxY), view.tableView.frame)
 
