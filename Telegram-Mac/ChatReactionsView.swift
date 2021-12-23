@@ -271,7 +271,7 @@ final class ChatReactionsLayout {
             return index
         }
         
-        self.reactions = message.reactionsAttribute?.reactions.compactMap { reaction in
+        self.reactions = message.effectiveReactions(context.peerId)?.reactions.compactMap { reaction in
             if let available = available?.reactions.first(where: { $0.value.fixed == reaction.value.fixed }) {
                 return .init(value: reaction, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
                     engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)

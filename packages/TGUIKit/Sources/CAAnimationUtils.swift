@@ -289,6 +289,40 @@ public extension CALayer {
         
         self.add(animation, forKey: "transform")
     }
+    
+    func animateScaleAnchor(anchor: NSPoint, from: CGFloat, to: CGFloat, duration: Double, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let animation = CABasicAnimation(keyPath: "transform")
+        animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
+
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, anchor.x, anchor.y, 0)
+        fr = CATransform3DScale(fr, from, from, 1)
+        fr = CATransform3DTranslate(fr, -anchor.x, -anchor.y, 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = .forwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        let speed: Float = 1.0
+        
+        
+        animation.speed = speed * Float(animation.duration / duration)
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, anchor.x, anchor.y, 0)
+        tr = CATransform3DScale(tr, to, to, 1)
+        tr = CATransform3DTranslate(tr, -anchor.x, -anchor.y, 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+
+        
+        self.add(animation, forKey: "transform")
+    }
+
 
     
     func animateScaleCenter(from: CGFloat, to: CGFloat, duration: Double, removeOnCompletion: Bool = true, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
@@ -322,6 +356,104 @@ public extension CALayer {
         
         self.add(animation, forKey: "transform")
     }
+    
+    func animateScaleCenter(fromX: CGFloat, fromY: CGFloat, to: CGFloat, anchor: NSPoint, duration: Double, removeOnCompletion: Bool = true, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let animation = CABasicAnimation(keyPath: "transform")
+        animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
+
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, anchor.x, anchor.y, 0)
+        fr = CATransform3DScale(fr, fromX, fromY, 1)
+        fr = CATransform3DTranslate(fr, -anchor.x, -anchor.y, 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = .forwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        
+        
+        animation.duration = duration
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, anchor.x, anchor.y, 0)
+        tr = CATransform3DScale(tr, to, to, 1)
+        fr = CATransform3DTranslate(fr, -anchor.x, -anchor.y, 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+        
+        
+        self.add(animation, forKey: "transform")
+    }
+
+    
+    func animateScaleXCenter(from: CGFloat, to: CGFloat, duration: Double, removeOnCompletion: Bool = true, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let animation = CABasicAnimation(keyPath: "transform")
+        animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
+
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, frame.width / 2, 0, 0)
+        fr = CATransform3DScale(fr, from, from, 1)
+        fr = CATransform3DTranslate(fr, -frame.width / 2, 0, 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = .forwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        
+        
+        animation.duration = duration
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, frame.width / 2, 0, 0)
+        tr = CATransform3DScale(tr, to, to, 1)
+        tr = CATransform3DTranslate(tr, -frame.width / 2, 0, 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+        
+        
+        self.add(animation, forKey: "transform")
+    }
+    
+    func animateScaleYCenter(from: CGFloat, to: CGFloat, duration: Double, removeOnCompletion: Bool = true, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let animation = CABasicAnimation(keyPath: "transform")
+        animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
+
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, 0, frame.height / 2, 0)
+        fr = CATransform3DScale(fr, from, from, 1)
+        fr = CATransform3DTranslate(fr, 0, -frame.height / 2, 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = .forwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        
+        
+        animation.duration = duration
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, 0, frame.height / 2, 0)
+        tr = CATransform3DScale(tr, to, to, 1)
+        tr = CATransform3DTranslate(tr, 0, -frame.height / 2, 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+        
+        
+        self.add(animation, forKey: "transform")
+    }
+
     
     func animateRotateCenter(from: CGFloat, to: CGFloat, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
         

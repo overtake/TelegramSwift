@@ -1766,13 +1766,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         if item.isBubbled {
             let bubbleFrame = self.bubbleView.frame
-            var rect = NSMakeRect(bubbleFrame.maxX - 10, bubbleFrame.maxY - 10, 20, 20)
+            var rect = NSMakeRect(bubbleFrame.maxX - 10, bubbleFrame.maxY - 10, 18, 18)
             if item.isIncoming {
                 rect.origin.x -= 5
                 rect.origin.y -= 5
             } else {
-                rect.origin.x -= item.bubbleCornerInset
-                rect.origin.y -= item.bubbleCornerInset
+                rect.origin.x = bubbleFrame.minX - 5
+                rect.origin.y -= 5
             }
             return rect
         } else {

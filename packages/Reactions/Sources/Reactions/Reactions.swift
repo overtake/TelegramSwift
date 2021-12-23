@@ -37,7 +37,7 @@ public final class Reactions {
             if let reactions = reactions {
                 for reaction in reactions.reactions {
                     
-                    let files = [reaction.staticIcon, reaction.selectAnimation, reaction.effectAnimation, reaction.activateAnimation]
+                    let files = [reaction.staticIcon, reaction.selectAnimation, reaction.effectAnimation, reaction.activateAnimation, reaction.appearAnimation]
                     for file in files {
                         downloadable.add(fetchedMediaResource(mediaBox: engine.account.postbox.mediaBox, reference: FileMediaReference.standalone(media: file).resourceReference(file.resource)).start())
                         

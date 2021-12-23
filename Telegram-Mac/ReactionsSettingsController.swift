@@ -109,7 +109,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
                     return current
                 }
             }))
-
+            
         }
     }
     
