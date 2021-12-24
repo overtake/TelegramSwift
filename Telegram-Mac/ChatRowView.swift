@@ -1477,6 +1477,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let view = item.replyModel?.view {
             transition.updateFrame(view: view, frame: replyFrame(item))
+            view.needsDisplay = true
         }
         if let view = scamButton {
             transition.updateFrame(view: view, frame: CGRect(origin: scamPoint(item), size: view.frame.size))
