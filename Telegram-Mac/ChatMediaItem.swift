@@ -269,7 +269,7 @@ class ChatMediaItem: ChatRowItem {
             offset.y -= (defaultContentInnerInset + 1)
         } else if isBubbleFullFilled, hasBubble {
             offset.y += defaultContentInnerInset
-        } else if hasBubble, authorText == nil,  replyModel != nil || forwardNameLayout != nil {
+        } else if hasBubble, authorText != nil || replyModel != nil || forwardNameLayout != nil {
             offset.y += defaultContentInnerInset
         }
         
