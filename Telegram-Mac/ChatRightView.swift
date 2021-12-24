@@ -30,6 +30,7 @@ class ChatRightView: View, ViewDisplayDelegate {
         private(set) var pin: NSRect?
         private(set) var edit: NSRect?
         private(set) var date: NSRect?
+        private(set) var failed: NSRect?
         private let isStateOverlay: Bool
         init(_ item: ChatRowItem, size: NSSize) {
             
@@ -61,7 +62,9 @@ class ChatRightView: View, ViewDisplayDelegate {
             if let views = item.replyCount {
                 var rect_i = size.bounds.focus(item.presentation.chat.repliesCountIcon(item).backingSize)
                 rect_i.origin.x = x + 2
-                rect_i.origin.y -= 1
+                if item.isBubbled {
+                    rect_i.origin.y -= 1
+                }
                 x = rect_i.maxX
                 var rect_t = size.bounds.focus(views.layoutSize)
                 rect_t.origin.x = x + 2
@@ -102,6 +105,13 @@ class ChatRightView: View, ViewDisplayDelegate {
                 rect.origin.x = x + 2
                 self.edit = rect
                 x = rect.maxX
+            }
+            if item.isFailed {
+                var rect = size.bounds.focus(item.presentation.icons.sentFailed.backingSize)
+                rect.origin.x = x + 2
+                self.failed = rect
+                x = rect.maxX
+                
             }
             
             if stateIsEnd {
@@ -224,7 +234,7 @@ class ChatRightView: View, ViewDisplayDelegate {
     private var pinView: ImageView?
     private var editView: TextView?
     private var dateView: TextView?
-    
+    private var failedView: ImageView?
     private weak var item:ChatRowItem?
     
     var isReversed: Bool {
@@ -414,6 +424,24 @@ class ChatRightView: View, ViewDisplayDelegate {
             }
         }
         
+        if let failedRect = frames.failed {
+            if self.failedView == nil {
+                self.failedView = ImageView(frame: failedRect)
+                addSubview(self.failedView!)
+                if animated {
+                    self.failedView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self.failedView?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            self.failedView?.image = item.presentation.icons.sentFailed
+            self.failedView?.sizeToFit()
+        } else {
+            if let view = self.failedView {
+                self.failedView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+        }
+        
         if let editedLabel = item.editedLabel, let editRect = frames.edit {
             if self.editView == nil {
                 self.editView = TextView(frame: editRect)
@@ -515,6 +543,9 @@ class ChatRightView: View, ViewDisplayDelegate {
             transition.updateFrame(view: view, frame: frame)
         }
         if let frame = frames.pin, let view = pinView {
+            transition.updateFrame(view: view, frame: frame)
+        }
+        if let frame = frames.failed, let view = failedView {
             transition.updateFrame(view: view, frame: frame)
         }
         if let frame = frames.edit, let view = editView {

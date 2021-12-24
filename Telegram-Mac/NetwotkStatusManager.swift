@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import ObjcUtils
+import AppKit
 
 private enum Status : Equatable {
     case core(ConnectionStatus)
@@ -93,7 +94,7 @@ private enum Status : Equatable {
 
 private final class ConnectingStatusView: View {
     private let textView: TextView = TextView()
-    private let visualEffect: VisualEffect
+    private let visualEffect: NSVisualEffectView
     private let container = View()
     private var progressView: InfiniteProgressView?
     private let imageView: ImageView
@@ -103,7 +104,7 @@ private final class ConnectingStatusView: View {
     
         
     required init(frame frameRect: NSRect) {
-        self.visualEffect = VisualEffect(frame: frameRect.size.bounds)
+        self.visualEffect = NSVisualEffectView(frame: frameRect.size.bounds)
         self.imageView = ImageView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         autoresizingMask = [.width, .height]
@@ -113,7 +114,8 @@ private final class ConnectingStatusView: View {
         container.addSubview(textView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
-        
+        visualEffect.state = .active
+        visualEffect.blendingMode = .withinWindow
     
     }
     
@@ -218,7 +220,10 @@ private final class ConnectingStatusView: View {
         
         updateAnimation()
         
-        self.visualEffect.bgColor = .clear
+//        self.visualEffect.bgColor = .clear
+        
+        visualEffect.material = theme.colors.isDark ? .dark : .light
+
         
         if status.shouldAddProgress {
             if self.progressView == nil {

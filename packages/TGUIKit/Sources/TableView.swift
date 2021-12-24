@@ -1142,6 +1142,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     stickView = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), stickItem.heightValue))
                     stickView!.header = true
                     stickView!.set(item: stickItem, animated: false)
+                    stickView!.updateLayout(size: stickView!.frame.size, transition: .immediate)
                  //   tableView.addSubview(stickView!)
                 }
             }
@@ -1574,7 +1575,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                     if view.superview != self {
                         view.frame = self.convert(view.frame, from: view.superview)
+                        let item = self.item(at: range.location)
                         view.set(item: self.item(at: range.location), animated: false)
+                        view.updateLayout(size: view.frame.size, transition: .immediate)
                         controller.resortView = view
                         self.addSubview(view)
                     }
@@ -2330,7 +2333,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.beforeSetupItem?(view, item)
         
         view.set(item: item, animated: false)
-        
+        view.updateLayout(size: view.frame.size, transition: .immediate)
         self.afterSetupItem?(view, item)
 
         

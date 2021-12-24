@@ -1370,13 +1370,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
-        
         let previousItem = self.item as? ChatRowItem
-                
+
+        super.set(item: item, animated: animated)
+
+
         if let item = previousItem {
             item.chatInteraction.remove(observer: self)
         }
-    
         guard let item = item as? ChatRowItem else {
             return
         }
@@ -1415,9 +1416,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         fillCaption(item, animated: animated)
         fillChannelComments(item, animated: animated)
         
-        super.set(item: item, animated: animated)
         
-        self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
         self.needsDisplay = true
         self.needsLayout = true
 

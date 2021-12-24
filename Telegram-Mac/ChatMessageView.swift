@@ -51,26 +51,40 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     override func layout() {
         super.layout()
-        if let item = self.item as? ChatMessageItem {
-
-            if let webpageLayout = item.webpageLayout {
-                webpageContent?.frame = NSMakeRect(0, text.frame.maxY + item.defaultContentInnerInset, webpageLayout.size.width, webpageLayout.size.height)
+       
+    }
+    
+    func webpageFrame(_ item: ChatMessageItem) -> NSRect {
+        guard let item = self.item as? ChatMessageItem else {
+            return .zero
+        }
+        if let webpageLayout = item.webpageLayout {
+            return CGRect(origin: NSMakePoint(0, text.frame.maxY + item.defaultContentInnerInset), size: webpageLayout.size)
+        }
+        return .zero
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        guard let item = self.item as? ChatMessageItem else {
+            return
+        }
+        if let webpageContent = webpageContent {
+            transition.updateFrame(view: webpageContent, frame: webpageFrame(item))
+        }
+        if let actionButton = actionButton {
+            var add = item.additionalLineForDateInBubbleState ?? 0
+            if !item.isBubbled {
+                add = 0
+            } else if webpageContent != nil {
+                add = 0
             }
-            if let actionButton = actionButton {
-                var add = item.additionalLineForDateInBubbleState ?? 0
-                if !item.isBubbled {
-                    add = 0
-                } else if webpageContent != nil {
-                    add = 0
-                }
-                let contentRect = self.contentFrame(item)
-                actionButton.setFrameOrigin(contentRect.minX, contentRect.maxY - actionButton.frame.height + add)
-            }
-        } 
+            let contentRect = self.contentFrame(item)
+            transition.updateFrame(view: actionButton, frame: CGRect(origin: NSMakePoint(contentRect.minX, contentRect.maxY - actionButton.frame.height + add), size: actionButton.frame.size))
+        }
     }
     
     override func canStartTextSelecting(_ event: NSEvent) -> Bool {
-      //  return true
         if let superTextView = text.superview {
             if let webpageContent = webpageContent {
                 return !NSPointInRect(superTextView.convert(event.locationInWindow, from: nil), webpageContent.frame)
@@ -95,19 +109,14 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
         let point = self.contentView.convert(location, from: nil)
-//        if let webpageContent = webpageContent {
-//            return !NSPointInRect(point, webpageContent.frame)
-//        }
         return true
     }
 
     override func set(item:TableRowItem, animated:Bool = false) {
-        
-        if let item = item as? ChatMessageItem {
-            
-            self.text.update(item.textLayout)
+        super.set(item: item, animated: animated)
 
-            
+        if let item = item as? ChatMessageItem {
+            self.text.update(item.textLayout)
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
                 
@@ -115,15 +124,16 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     webpageContent?.removeFromSuperview()
                     let vz = webpageLayout.viewClass() as! WPContentView.Type
                     webpageContent = vz.init()
+                    webpageContent!.frame = webpageFrame(item)
                     addSubview(webpageContent!)
                 }
                 webpageContent?.update(with: webpageLayout)
             } else {
-                webpageContent?.removeFromSuperview()
-                webpageContent = nil
+                if let view = webpageContent {
+                    performSubviewRemoval(view, animated: animated)
+                    webpageContent = nil
+                }
             }
-            
-            
             if let text = item.actionButtonText {
                 if actionButton == nil {
                     actionButton = TitleButton()
@@ -144,12 +154,13 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 30), thatFit: true)
                 
             } else {
-                actionButton?.removeFromSuperview()
-                actionButton = nil
+                if let view = actionButton {
+                    performSubviewRemoval(view, animated: animated)
+                    actionButton = nil
+                }
             }
 
         }
-        super.set(item: item, animated: animated)
 
     }
     
