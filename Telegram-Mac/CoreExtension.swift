@@ -568,7 +568,7 @@ public extension Message {
                         if let index = values.firstIndex(where: { $0.value == value }) {
                             values[index] = MessageReaction(value: value, count: values[index].count + 1, isSelected: true)
                         } else {
-                            values.append(.init(value: value, count: 1, isSelected: true))
+                            values.insert(.init(value: value, count: 1, isSelected: true), at: 0)
                         }
                         reactions = .init(reactions: values, recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
                     } else {
@@ -577,7 +577,7 @@ public extension Message {
                             if values[index].count == 1 {
                                 values.remove(at: index)
                             } else {
-                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: true)
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
                             }
                         }
                         reactions = .init(reactions: values, recentPeers: remote.recentPeers)

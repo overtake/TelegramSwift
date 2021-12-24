@@ -2089,7 +2089,11 @@ class ChatRowItem: TableRowItem {
             switch reactions.mode {
             case .full:
                 if isBubbled {
-                    reactions.measure(for: _contentSize.width)
+                    if isBubbleFullFilled {
+                        reactions.measure(for: _contentSize.width - bubbleDefaultInnerInset)
+                    } else {
+                        reactions.measure(for: _contentSize.width)
+                    }
                 } else {
                     reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
                 }
