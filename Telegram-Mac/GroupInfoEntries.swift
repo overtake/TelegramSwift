@@ -235,7 +235,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         }))
     }
     func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
-        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, isGroup: true))
+        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: true)))
     }
     
     private func changeControllers(_ peerId: PeerId?) {
@@ -1372,9 +1372,9 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 10
         case .requests:
             return 11
-        case .linkedChannel:
-            return 12
         case .reactions:
+            return 12
+        case .linkedChannel:
             return 13
         case .preHistory:
             return 14

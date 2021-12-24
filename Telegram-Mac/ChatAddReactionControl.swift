@@ -89,6 +89,14 @@ final class ChatAddReactionControl : NSObject {
                 set(handler: { _ in
                     add(reaction.value)
                 }, for: .Click)
+                
+                contextMenu = {
+                    let menu = ContextMenu()
+                    menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                        context.reactions.updateQuick(reaction.value)
+                    }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                    return menu
+                }
             }
             
             private func apply(_ data: Data) {
@@ -266,7 +274,7 @@ final class ChatAddReactionControl : NSObject {
 
             imageView.set(arguments: arguments)
             
-            set(handler: { [weak self] _ in
+            set(handler: { _ in
                 add(first.value)
             }, for: .Click)
             
@@ -544,7 +552,7 @@ final class ChatAddReactionControl : NSObject {
             
             if let current = currentView, current.isRevealed, let item = previousItem {
                 let base = current.frame
-                let safeRect = base.insetBy(dx: -current.frame.width * 4, dy: -current.frame.width * 4)
+                let safeRect = base.insetBy(dx: -20 * 4, dy: -20)
                 var inSafeRect = NSPointInRect(inside, safeRect)
                 inSafeRect = inSafeRect && NSPointInRect(NSMakePoint(base.maxX, base.maxY), view.tableView.frame)
 
@@ -664,7 +672,7 @@ final class ChatAddReactionControl : NSObject {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        delay(0.05, closure: { [weak self] in
+        delay(0.01, closure: { [weak self] in
             self?.update(transition: transition)
         })
     }

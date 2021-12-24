@@ -2013,6 +2013,8 @@ public final class L10n {
   public static var chatContextClearScheduledConfirmOK: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.OK") }
   /// More...
   public static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
+  /// Set As Quick
+  public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
   /// Reschedule
   public static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
@@ -5155,6 +5157,8 @@ public final class L10n {
   public static var installedStickersLoopAnimated: String  { return L10n.tr("Localizable", "InstalledStickers.LoopAnimated") }
   /// STICKER SETS
   public static var installedStickersPacksTitle: String  { return L10n.tr("Localizable", "InstalledStickers.PacksTitle") }
+  /// Quick Reaction
+  public static var installedStickersQuickReaction: String  { return L10n.tr("Localizable", "InstalledStickers.QuickReaction") }
   /// Trending Stickers
   public static var installedStickersTranding: String  { return L10n.tr("Localizable", "InstalledStickers.Tranding") }
   /// Delete
@@ -6059,6 +6063,14 @@ public final class L10n {
   public static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// Reply
   public static var notificationReply: String  { return L10n.tr("Localizable", "Notification.Reply") }
+  /// %1$@ to your %2$@
+  public static func notificationContactReacted(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.Contact.Reacted", p1, p2)
+  }
+  /// %1$@: %2$@ to your %3$@
+  public static func notificationGroupReacted(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Notification.Group.Reacted", p1, p2, p3)
+  }
   /// Type message...
   public static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
   /// Reply
@@ -7771,6 +7783,8 @@ public final class L10n {
   public static var reactionSettingsAllowGroupInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Group.Info") }
   /// AVAILABLE REACTIONS
   public static var reactionSettingsAvailableInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Available.Info") }
+  /// QUICK REACTION.
+  public static var reactionSettingsQuickInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Info") }
   /// Delete
   public static var recentCallsDelete: String  { return L10n.tr("Localizable", "RecentCalls.Delete") }
   /// Are you sure you want to delete call?

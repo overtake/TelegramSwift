@@ -24,6 +24,10 @@ public final class Reactions {
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value).start(), forKey: messageId)
     }
     
+    public func updateQuick(_ value: String) {
+        _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
+    }
+    
     deinit {
         downloadable.dispose()
         disposable.dispose()

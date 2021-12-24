@@ -241,7 +241,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         }))
     }
     func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
-        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, isGroup: true))
+        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
     }
 
     

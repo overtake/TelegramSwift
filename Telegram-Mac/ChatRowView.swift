@@ -1417,7 +1417,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         super.set(item: item, animated: animated)
         
-        updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        self.needsDisplay = true
+        self.needsLayout = true
+
     }
 
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {

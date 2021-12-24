@@ -550,7 +550,7 @@ public extension Message {
         if reactions == nil {
             for attr in self.attributes {
                 if let attr = attr as? PendingReactionsMessageAttribute, let value = attr.value {
-                    reactions = .init(reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                    reactions = .init(canViewList: false, reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
                 }
             }
         } else if let remote = reactions {
@@ -568,9 +568,9 @@ public extension Message {
                         if let index = values.firstIndex(where: { $0.value == value }) {
                             values[index] = MessageReaction(value: value, count: values[index].count + 1, isSelected: true)
                         } else {
-                            values.insert(.init(value: value, count: 1, isSelected: true), at: 0)
+                            values.append(.init(value: value, count: 1, isSelected: true))
                         }
-                        reactions = .init(reactions: values, recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
                     } else {
                         var values = remote.reactions
                         if let index = values.firstIndex(where: { $0.isSelected })  {
@@ -580,7 +580,7 @@ public extension Message {
                                 values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
                             }
                         }
-                        reactions = .init(reactions: values, recentPeers: remote.recentPeers)
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers)
                     }
                 }
             }
