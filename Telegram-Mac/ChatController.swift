@@ -1210,7 +1210,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let editCurrentMessagePhotoDisposable = MetaDisposable()
     private let failedMessageEventsDisposable = MetaDisposable()
     private let selectMessagePollOptionDisposables: DisposableDict<MessageId> = DisposableDict()
-    private let updateReqctionsDisposable: DisposableDict<MessageId> = DisposableDict()
     private let failedMessageIdsDisposable = MetaDisposable()
     private let hasScheduledMessagesDisposable = MetaDisposable()
     private let onlineMemberCountDisposable = MetaDisposable()
@@ -1326,7 +1325,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
     private let unsupportedMessageProcessingManager = ChatMessageThrottledProcessingManager()
-    private let reactionsMessageProcessingManager = ChatMessageThrottledProcessingManager()
+    private let reactionsMessageProcessingManager = ChatMessageThrottledProcessingManager(submitInterval: 4.0)
     private let messageMentionProcessingManager = ChatMessageThrottledProcessingManager(delay: 0.2)
     var historyState:ChatHistoryState = ChatHistoryState() {
         didSet {
@@ -3863,12 +3862,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             _ = self?.context.window.makeFirstResponder(self?.firstResponder())
         }
         
-        chatInteraction.updateReactions = { [weak self] messageId, reaction, loading in
-            guard let `self` = self else {
-                return
-            }
-//            self.updateReqctionsDisposable.set((updateMessageReactionsInteractively(postbox: self.context.account.postbox, messageId: messageId, reaction: reaction) |> deliverOnMainQueue).start(), forKey: messageId)
-        }
+
         chatInteraction.withToggledSelectedMessage = { [weak self] f in
             guard let `self` = self else {
                 return
@@ -5541,7 +5535,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         slowModeDisposable.dispose()
         slowModeInProgressDisposable.dispose()
         forwardMessagesDisposable.dispose()
-        updateReqctionsDisposable.dispose()
         shiftSelectedDisposable.dispose()
         failedMessageIdsDisposable.dispose()
         hasScheduledMessagesDisposable.dispose()

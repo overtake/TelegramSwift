@@ -114,7 +114,9 @@ final class ChatReactionsLayout {
             lhs.index == rhs.index &&
             lhs.minimumSize == rhs.minimumSize &&
             lhs.available == rhs.available &&
-            lhs.mode == rhs.mode
+            lhs.mode == rhs.mode &&
+            lhs.rect == rhs.rect
+            
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -302,7 +304,7 @@ final class ChatReactionsLayout {
         switch mode {
         case .full:
             if presentation.renderType == .bubble {
-                if !presentation.isOutOfBounds {
+                if presentation.isOutOfBounds {
                     width = max(width, min(320, medium * 4))
                 }
             }
@@ -314,20 +316,30 @@ final class ChatReactionsLayout {
         var line:[Reaction] = []
         var current: CGFloat = 0
         for reaction in reactions {
+            current += reaction.minimumSize.width
             if current > width && !line.isEmpty {
                 lines.append(line)
                 line.removeAll()
                 line.append(reaction)
-                current = reaction.minimumSize.width + presentation.insetInner
+                current = reaction.minimumSize.width
             } else {
                 line.append(reaction)
-                current += reaction.minimumSize.width + presentation.insetInner
             }
+            current += presentation.insetInner
         }
         if !line.isEmpty {
             lines.append(line)
             line.removeAll()
         }
+            
+        
+        let count = lines.reduce(0, {
+            $0 + $1.count
+        })
+        
+        
+        
+        assert(count == reactions.count)
         
         self.lines = lines
         
@@ -351,6 +363,7 @@ final class ChatReactionsLayout {
         } else {
             self.size = .zero
         }
+        
     }
 }
 
@@ -584,11 +597,7 @@ final class ChatReactionsView : View {
                 view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
                 view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            if idx == 0 {
-                addSubview(view, positioned: .below, relativeTo: self.subviews.first)
-            } else {
-                addSubview(view, positioned: .above, relativeTo: self.subviews[idx - 1])
-            }
+            addSubview(view)
         }
         
         for (idx, item, prev) in updated {
@@ -597,6 +606,10 @@ final class ChatReactionsView : View {
             }
             (self.views[idx] as? ReactionViewImpl)?.update(with: item, account: layout.context.account, animated: animated)
             self.reactions[idx] = item
+        }
+        
+        for (i, view) in views.enumerated() {
+            view.layer?.zPosition = CGFloat(i)
         }
 
         self.currentLayout = layout
@@ -607,6 +620,7 @@ final class ChatReactionsView : View {
         } else {
             transition = .immediate
         }
+        
         self.updateLayout(size: layout.size, transition: transition)
     }
     

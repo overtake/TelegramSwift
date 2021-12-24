@@ -9,23 +9,26 @@
 import Cocoa
 import Postbox
 import SwiftSignalKit
-
-private let queue = Queue(name: "ChatMessageThrottledProcessingManager")
+import TGUIKit
 
 final class ChatMessageThrottledProcessingManager {
     private let queue = Queue()
     
     private let delay: Double
+    private let submitInterval: Double?
     
     var process: ((Set<MessageId>) -> Void)?
     
     private var timer: SwiftSignalKit.Timer?
     private var processedList: [MessageId] = []
-    private var processed = Set<MessageId>()
+    private var processed: [MessageId: Double] = [:]
     private var buffer = Set<MessageId>()
     
-    init(delay: Double = 1.0) {
+    private let disposable = MetaDisposable()
+    
+    init(delay: Double = 1.0, submitInterval: Double? = nil) {
         self.delay = delay
+        self.submitInterval = submitInterval
     }
     
     func setProcess(process: @escaping (Set<MessageId>) -> Void) {
@@ -36,9 +39,17 @@ final class ChatMessageThrottledProcessingManager {
     
     func add(_ messageIds: [MessageId]) {
         self.queue.async {
+            let timestamp = CFAbsoluteTimeGetCurrent()
+            
             for id in messageIds {
-                if !self.processed.contains(id) {
-                    self.processed.insert(id)
+                if let processedTimestamp = self.processed[id] {
+                    if let submitInterval = self.submitInterval, (timestamp - processedTimestamp) >= submitInterval {
+                        self.processed[id] = timestamp
+                        self.processedList.append(id)
+                        self.buffer.insert(id)
+                    }
+                } else {
+                    self.processed[id] = timestamp
                     self.processedList.append(id)
                     self.buffer.insert(id)
                 }
@@ -46,7 +57,7 @@ final class ChatMessageThrottledProcessingManager {
             
             if self.processedList.count > 1000 {
                 for i in 0 ..< 200 {
-                    self.processed.remove(self.processedList[i])
+                    self.processed.removeValue(forKey: self.processedList[i])
                 }
                 self.processedList.removeSubrange(0 ..< 200)
             }
@@ -63,6 +74,14 @@ final class ChatMessageThrottledProcessingManager {
                         }
                         let buffer = strongSelf.buffer
                         strongSelf.buffer.removeAll()
+
+                        if let submitInterval = strongSelf.submitInterval {
+                            strongSelf.disposable.set(delaySignal(submitInterval).start(completed: { [weak strongSelf]in
+                                strongSelf?.add(Array(buffer))
+                            }))
+                        } else {
+                            strongSelf.disposable.set(nil)
+                        }
                         strongSelf.process?(buffer)
                     }
                 }

@@ -581,7 +581,7 @@ final class ChatAddReactionControl : NSObject {
                                 delayDisposable.set(delaySignal(0.1).start(completed: { [weak self, weak item, weak view] in
                                     if let item = item, let view = view {
                                         let current = ReactionView(frame: base, isBubbled: item.isBubbled, context: context, reactions: available, add: { [weak self] value in
-                                            let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value }) == true
+                                            let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                                             context.reactions.react(message.id, value: isSelected ? nil : value)
                                             self?.clearAndLock()
                                         })
