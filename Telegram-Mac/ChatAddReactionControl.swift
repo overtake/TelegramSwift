@@ -13,8 +13,8 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
-final class ChatAddReactionControl : NSObject {
-    
+final class ChatAddReactionControl : NSObject, Notifable {
+   
     private final class ItemView : View {
         private let reaction: AvailableReactions.Reaction
         init(frame frameRect: NSRect, reaction: AvailableReactions.Reaction) {
@@ -454,7 +454,10 @@ final class ChatAddReactionControl : NSObject {
     private var reactions: AvailableReactions?
     private var peerView: PeerView?
     private var settings: ReactionSettings = ReactionSettings.default
-    init(view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
+    private var disabled: Bool = false
+    private let chatInteraction: ChatInteraction
+    init(chatInteraction: ChatInteraction, view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
+        self.chatInteraction = chatInteraction
         self.window = window
         self.view = view
         self.context = context
@@ -471,6 +474,9 @@ final class ChatAddReactionControl : NSObject {
     
     
     private func initialize() {
+        
+        chatInteraction.add(observer: self)
+        
         window.set(mouseHandler: { [weak self] event in
             self?.delayAndUpdate()
             return .rejected
@@ -512,6 +518,7 @@ final class ChatAddReactionControl : NSObject {
         window.removeAllHandlers(for: self)
         delayDisposable.dispose()
         lockDisposable.dispose()
+        chatInteraction.remove(observer: self)
     }
     
     private var previousItem: ChatRowItem?
@@ -545,7 +552,7 @@ final class ChatAddReactionControl : NSObject {
         }
         
         
-        if let view = self.view, !available.isEmpty {
+        if let view = self.view, !available.isEmpty, !disabled {
             
             let point = view.tableView.contentView.convert(self.window.mouseLocationOutsideOfEventStream, from: nil)
             let inside = view.convert(self.window.mouseLocationOutsideOfEventStream, from: nil)
@@ -675,6 +682,28 @@ final class ChatAddReactionControl : NSObject {
         delay(0.01, closure: { [weak self] in
             self?.update(transition: transition)
         })
+    }
+    
+    func notify(with value: Any, oldValue: Any, animated: Bool) {
+        let presentation = value as? ChatPresentationInterfaceState
+        if let presentation = presentation {
+            if presentation.state == .selecting {
+                disabled = true
+                clear()
+                removeCurrent(animated: true)
+            } else {
+                disabled = false
+                update()
+            }
+        }
+    }
+    
+    func isEqual(to other: Notifable) -> Bool {
+        if let other = other as? ChatAddReactionControl {
+            return other === self
+        } else {
+            return false
+        }
     }
     
 }

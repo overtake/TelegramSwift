@@ -269,6 +269,8 @@ class ChatMediaItem: ChatRowItem {
             offset.y -= (defaultContentInnerInset + 1)
         } else if isBubbleFullFilled, hasBubble {
             offset.y += defaultContentInnerInset
+        } else if hasBubble, authorText == nil,  replyModel != nil || forwardNameLayout != nil {
+            offset.y += defaultContentInnerInset
         }
         
         return offset
@@ -677,6 +679,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
+        super.set(item: item, animated: animated)
         if let item:ChatMediaItem = item as? ChatMediaItem {
             if contentNode == nil || !contentNode!.isKind(of: item.contentNode())  {
                 self.contentNode?.removeFromSuperview()
@@ -694,7 +697,6 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 self.pinchToZoom?.remove()
             }
         }
-        super.set(item: item, animated: animated)
     }
         
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
