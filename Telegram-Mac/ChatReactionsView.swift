@@ -87,7 +87,7 @@ final class ChatReactionsLayout {
                 size = NSMakeSize(12, 12)
             }
             
-            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, reactionSize: size, insetOuter: 10, insetInner: 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
+            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, reactionSize: size, insetOuter: 10, insetInner: mode == .short ? 1 : 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
 
         }
     }
@@ -106,6 +106,7 @@ final class ChatReactionsLayout {
         let context: AccountContext
         let message: Message
         let openInfo: (PeerId)->Void
+        let canViewList: Bool
         var rect: CGRect = .zero
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
@@ -115,7 +116,8 @@ final class ChatReactionsLayout {
             lhs.minimumSize == rhs.minimumSize &&
             lhs.available == rhs.available &&
             lhs.mode == rhs.mode &&
-            lhs.rect == rhs.rect
+            lhs.rect == rhs.rect &&
+            lhs.canViewList == rhs.canViewList
             
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
@@ -125,10 +127,11 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void, openInfo: @escaping (PeerId)->Void) {
+        init(value: MessageReaction, canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void, openInfo: @escaping (PeerId)->Void) {
             self.value = value
             self.index = index
             self.message = message
+            self.canViewList = canViewList
             self.action = action
             self.context = context
             self.presentation = presentation
@@ -182,6 +185,9 @@ final class ChatReactionsLayout {
                 guard peer.isGroup || peer.isSupergroup else {
                     return nil
                 }
+            }
+            if !self.canViewList {
+                return nil
             }
             if let menu = menu {
                 return menu
@@ -273,15 +279,17 @@ final class ChatReactionsLayout {
             return index
         }
         
-        self.reactions = message.effectiveReactions(context.peerId)?.reactions.compactMap { reaction in
+        let reactions = message.effectiveReactions(context.peerId)!
+        
+        self.reactions = reactions.reactions.compactMap { reaction in
             if let available = available?.reactions.first(where: { $0.value.fixed == reaction.value.fixed }) {
-                return .init(value: reaction, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
+                return .init(value: reaction, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
                     engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
                 }, openInfo: openInfo)
             } else {
                 return nil
             }
-        } ?? []
+        }
     }
     
     func haveSpace(for value: CGFloat, maxSize: CGFloat) -> Bool {
