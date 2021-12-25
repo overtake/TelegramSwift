@@ -267,9 +267,7 @@ class ChatMediaItem: ChatRowItem {
         
         if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
             offset.y -= (defaultContentInnerInset + 1)
-        } else if isBubbleFullFilled, hasBubble {
-            offset.y += defaultContentInnerInset
-        } else if hasBubble, authorText != nil || replyModel != nil || forwardNameLayout != nil {
+        } else if hasBubble, !isBubbleFullFilled, authorText != nil || replyModel != nil || forwardNameLayout != nil {
             offset.y += defaultContentInnerInset
         }
         
@@ -303,41 +301,6 @@ class ChatMediaItem: ChatRowItem {
         return size
     }
 
-    
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        
-                
-        if isForceRightLine {
-            return rightSize.height
-        }
-        if let file = self.media as? TelegramMediaFile, file.isEmojiAnimatedSticker {
-            return rightSize.height + 3
-        }
-        if let caption = captionLayouts.last?.layout {
-            if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                return rightSize.height
-            }
-        }
-        if postAuthor != nil {
-            return isStateOverlayLayout ? nil : rightSize.height
-        }
-        return super.additionalLineForDateInBubbleState
-    }
-    
-    override var isFixedRightPosition: Bool {
-        
-        if media is TelegramMediaImage {
-            return true
-        } else if let media = media as? TelegramMediaFile {
-            
-            if let captionLayout = captionLayouts.last?.layout, let line = captionLayout.lines.last, line.frame.width < realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                return true
-            }
-            
-            return media.isVideo || media.isAnimated || media.isVoice || media.isMusic || media.isStaticSticker || media.isAnimatedSticker
-        }
-        return super.isFixedRightPosition
-    }
     
     override var instantlyResize: Bool {
         if !captionLayouts.isEmpty && media.isInteractiveMedia {

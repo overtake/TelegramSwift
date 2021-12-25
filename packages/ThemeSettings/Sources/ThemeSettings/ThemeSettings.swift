@@ -743,7 +743,19 @@ final class ColorPaletteNativeCodable : Codable {
                                     listBackground: try parseColor(container, "listBackground") ?? palette.listBackground,
                                     listGrayText: try parseColor(container, "listGrayText") ?? palette.listGrayText,
                                     grayHighlight: try parseColor(container, "grayHighlight") ?? palette.grayHighlight,
-                                    focusAnimationColor: try parseColor(container, "focusAnimationColor") ?? palette.focusAnimationColor
+                                    focusAnimationColor: try parseColor(container, "focusAnimationColor") ?? palette.focusAnimationColor,
+                                  reaction_foreground_bubble_incoming: try parseColor(container, "reaction_foreground_bubble_incoming") ?? palette.reaction_foreground_bubble_incoming,
+                                  reaction_foreground_bubble_outgoing: try parseColor(container, "reaction_foreground_bubble_outgoing") ?? palette.reaction_foreground_bubble_outgoing,
+                                  reaction_foreground_selected_bubble_incoming: try parseColor(container, "reaction_foreground_selected_bubble_incoming") ?? palette.reaction_foreground_selected_bubble_incoming,
+                                  reaction_foreground_selected_bubble_outgoing: try parseColor(container, "reaction_foreground_selected_bubble_outgoing") ?? palette.reaction_foreground_selected_bubble_outgoing,
+                                  reaction_background_bubble_incoming: try parseColor(container, "reaction_background_bubble_incoming") ?? palette.reaction_background_bubble_incoming,
+                                  reaction_background_bubble_outgoing: try parseColor(container, "reaction_background_bubble_outgoing") ?? palette.reaction_background_bubble_outgoing,
+                                  reaction_background_selected_bubble_incoming: try parseColor(container, "reaction_background_selected_bubble_incoming") ?? palette.reaction_background_selected_bubble_incoming,
+                                  reaction_background_selected_bubble_outgoing: try parseColor(container, "reaction_background_selected_bubble_outgoing") ?? palette.reaction_background_selected_bubble_outgoing,
+                                  reaction_foreground: try parseColor(container, "reaction_foreground") ?? palette.reaction_foreground,
+                                  reaction_background: try parseColor(container, "reaction_background") ?? palette.reaction_background,
+                                  reaction_foreground_selected: try parseColor(container, "reaction_foreground_selected") ?? palette.reaction_foreground_selected,
+                                  reaction_background_selected: try parseColor(container, "reaction_background_selected") ?? palette.reaction_background_selected
         )
         
     }

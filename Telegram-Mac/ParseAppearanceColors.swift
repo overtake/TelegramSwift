@@ -546,7 +546,19 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 listBackground: colors["listBackground"] ?? parent.palette.listBackground,
                                 listGrayText: colors["listGrayText"] ?? parent.palette.listGrayText,
                                 grayHighlight: colors["grayHighlight"] ?? parent.palette.grayHighlight,
-                                focusAnimationColor: colors["focusAnimationColor"] ?? parent.palette.focusAnimationColor)
+                                focusAnimationColor: colors["focusAnimationColor"] ?? parent.palette.focusAnimationColor,
+                                reaction_foreground_bubble_incoming: colors["reaction_foreground_bubble_incoming"] ?? parent.palette.reaction_foreground_bubble_incoming,
+                                reaction_foreground_bubble_outgoing: colors["reaction_foreground_bubble_outgoing"] ?? parent.palette.reaction_foreground_bubble_outgoing,
+                                reaction_foreground_selected_bubble_incoming: colors["reaction_foreground_selected_bubble_incoming"] ?? parent.palette.reaction_foreground_selected_bubble_incoming,
+                                reaction_foreground_selected_bubble_outgoing: colors["reaction_foreground_selected_bubble_outgoing"] ?? parent.palette.reaction_foreground_selected_bubble_outgoing,
+                                reaction_background_bubble_incoming: colors["reaction_background_bubble_incoming"] ?? parent.palette.reaction_background_bubble_incoming,
+                                reaction_background_bubble_outgoing: colors["reaction_background_bubble_outgoing"] ?? parent.palette.reaction_background_bubble_outgoing,
+                                reaction_background_selected_bubble_incoming: colors["reaction_background_selected_bubble_incoming"] ?? parent.palette.reaction_background_selected_bubble_incoming,
+                                reaction_background_selected_bubble_outgoing: colors["reaction_background_selected_bubble_outgoing"] ?? parent.palette.reaction_background_selected_bubble_outgoing,
+                                reaction_foreground: colors["reaction_foreground"] ?? parent.palette.reaction_foreground,
+                                reaction_background: colors["reaction_background"] ?? parent.palette.reaction_background,
+                                reaction_foreground_selected: colors["reaction_foreground_selected"] ?? parent.palette.reaction_foreground_selected,
+                                reaction_background_selected: colors["reaction_background_selected"] ?? parent.palette.reaction_background_selected)
         }
         
     }

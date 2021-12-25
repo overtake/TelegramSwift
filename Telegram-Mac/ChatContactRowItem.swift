@@ -67,29 +67,12 @@ class ChatContactRowItem: ChatRowItem {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-
-        if let reactions = self.reactionsLayout, reactions.mode == .full {
-            let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate, maxSize: max(realContentSize.width, maxTitleWidth))
-            if !hasSpace {
-                return rightSize.height
-            } else {
-                return nil
-            }
-        }
-        
+    override var isForceRightLine: Bool {
         if let line = phoneLayout.lines.last, (line.frame.width + 50) > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return rightSize.height
-        }
-        return nil
-    }
-    
-    override var isFixedRightPosition: Bool {
-        if let line = phoneLayout.lines.last, (line.frame.width + 50) < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
             return true
         }
         return super.isForceRightLine
-    }
+    }   
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         nameLayout.measure(width: width - 50)

@@ -23,6 +23,7 @@ final class ChatReactionsLayout {
         let textColor: NSColor
         let borderColor: NSColor
         let selectedColor: NSColor
+        let textSelectedColor: NSColor
         let reactionSize: NSSize
         let insetOuter: CGFloat
         let insetInner: CGFloat
@@ -35,6 +36,7 @@ final class ChatReactionsLayout {
         static func Current(theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, mode: ChatReactionsLayout.Mode) -> Theme {
             let bgColor: NSColor
             let textColor: NSColor
+            let textSelectedColor: NSColor
             let borderColor: NSColor
             let selectedColor: NSColor
             switch mode {
@@ -42,41 +44,39 @@ final class ChatReactionsLayout {
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
-                        bgColor = theme.colors.bubbleBackground_incoming
-                        textColor = theme.colors.textBubble_incoming
+                        bgColor = theme.colors.accent.withAlphaComponent(0.2)
+                        textColor = theme.colors.accent
                         borderColor = .clear
-                        selectedColor = theme.colors.bubbleBackground_incoming.darker()
+                        selectedColor = theme.colors.accent
+                        textSelectedColor = NSColor.white
                     } else {
                         if isIncoming {
-                            bgColor = theme.colors.bubbleBackground_incoming.lighter()
-                            textColor = theme.colors.textBubble_incoming
+                            bgColor = theme.colors.accent.withAlphaComponent(0.2)
+                            textColor = theme.colors.accent
                             borderColor = .clear
-                            selectedColor = theme.colors.bubbleBackground_incoming.darker()
+                            selectedColor = theme.colors.accent
+                            textSelectedColor = NSColor.white
                         } else {
-                            bgColor = theme.colors.blendedOutgoingColors.lighter()
-                            textColor = theme.colors.textBubble_outgoing
+                            bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.2)
+                            textColor = theme.chat.grayText(false, true)
                             borderColor = .clear
-                            selectedColor = theme.colors.blendedOutgoingColors.darker()
+                            selectedColor = theme.chat.grayText(false, true)
+                            textSelectedColor = NSColor.white
                         }
                     }
                 case .list:
-                    if theme.dark {
-                        bgColor = theme.colors.grayBackground.lighter(amount: 0.3)
-                        textColor = theme.colors.text
-                        borderColor = .clear
-                        selectedColor = theme.colors.grayForeground
-                    } else {
-                        bgColor = theme.colors.grayBackground
-                        textColor = theme.colors.text
-                        borderColor = .clear
-                        selectedColor = theme.colors.grayForeground
-                    }
+                    bgColor = theme.colors.accent.withAlphaComponent(0.2)
+                    textColor = theme.colors.accent
+                    borderColor = .clear
+                    selectedColor = theme.colors.accent
+                    textSelectedColor = NSColor.white
                 }
             case .short:
                 bgColor = .clear
                 textColor = stateOverlayTextColor
                 borderColor = .clear
                 selectedColor = .clear
+                textSelectedColor = .clear
             }
            
             let size: NSSize
@@ -87,7 +87,7 @@ final class ChatReactionsLayout {
                 size = NSMakeSize(12, 12)
             }
             
-            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, reactionSize: size, insetOuter: 10, insetInner: mode == .short ? 1 : 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
+            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, textSelectedColor: textSelectedColor, reactionSize: size, insetOuter: 10, insetInner: mode == .short ? 1 : 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
 
         }
     }
@@ -140,7 +140,7 @@ final class ChatReactionsLayout {
             self.openInfo = openInfo
             switch mode {
             case .full:
-                self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: presentation.textColor, width: .greatestFiniteMagnitude)
+                self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
                 
                 var width: CGFloat = presentation.insetOuter
                 width += presentation.reactionSize.width
@@ -281,7 +281,30 @@ final class ChatReactionsLayout {
         
         let reactions = message.effectiveReactions(context.peerId)!
         
-        self.reactions = reactions.reactions.compactMap { reaction in
+        var indexes:[String: Int] = [:]
+        if let available = available {
+            var index: Int = 0
+            for value in available.reactions {
+                indexes[value.value] = index
+                index += 1
+            }
+        }
+        
+        let sorted = reactions.reactions.sorted(by: { lhs, rhs in
+            if lhs.count == rhs.count {
+                let lhsIndex = indexes[lhs.value]
+                let rhsIndex = indexes[rhs.value]
+                if let lhsIndex = lhsIndex, let rhsIndex = rhsIndex {
+                    return lhsIndex < rhsIndex
+                } else {
+                    return false
+                }
+            } else {
+                return lhs.count > rhs.count
+            }
+        })
+        
+        self.reactions = sorted.compactMap { reaction in
             if let available = available?.reactions.first(where: { $0.value.fixed == reaction.value.fixed }) {
                 return .init(value: reaction, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
                     engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
@@ -303,29 +326,34 @@ final class ChatReactionsLayout {
         return true
     }
     
+    var lastLineSize: NSSize {
+        if let line = lines.last {
+            if let lastItem = line.last {
+                return NSMakeSize(lastItem.rect.maxX, lastItem.rect.height)
+            }
+        }
+        return .zero
+    }
+    var oneLine: Bool {
+        return lines.count == 1
+    }
+    
    
     func measure(for width: CGFloat) {
                 
         var lines:[[Reaction]] = []
-        var width = width
-        let medium = self.reactions.reduce(0, { $0 + $1.minimumSize.width }) / CGFloat(self.reactions.count)
-        switch mode {
-        case .full:
-            if presentation.renderType == .bubble {
-                if presentation.isOutOfBounds {
-                    width = max(width, min(320, medium * 4))
-                }
-            }
-        default:
-            break
-        }
-       
         
         var line:[Reaction] = []
         var current: CGFloat = 0
         for reaction in reactions {
             current += reaction.minimumSize.width
-            if current > width && !line.isEmpty {
+            let force: Bool
+            if let lastCount = lines.last?.count {
+                force = lastCount == line.count
+            } else {
+                force = false
+            }
+            if (current - presentation.insetInner > width && !line.isEmpty) || force {
                 lines.append(line)
                 line.removeAll()
                 line.append(reaction)
@@ -422,11 +450,7 @@ final class ChatReactionsView : View {
             self.layer?.cornerRadius = reaction.rect.height / 2
             self.textView.update(reaction.text, animated: animated)
             
-//            self.layer?.borderWidth = reaction.value.isSelected || reaction.presentation.borderColor != .clear ? .borderSize : 0
-//            self.layer?.borderColor = .clear
-//
-//
-            
+
             self.backgroundColor = reaction.value.isSelected ? reaction.presentation.selectedColor : reaction.presentation.bgColor
 
             if animated {

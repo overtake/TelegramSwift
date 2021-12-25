@@ -72,13 +72,9 @@ class ChatMessageItem: ChatRowItem {
     
     let containsBigEmoji: Bool
     
-    var unsupported: Bool {
 
-        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
-            return message.inlinePeer == nil
-        } else {
-            return false
-        }
+    override var isBigEmoji: Bool {
+        return containsBigEmoji
     }
     
     var actionButtonWidth: CGFloat {
@@ -532,90 +528,31 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var isForceRightLine: Bool {
+         if let webpageLayout = webpageLayout {
+             if let webpageLayout = webpageLayout as? WPArticleLayout {
+                 if webpageLayout.hasInstantPage {
+                     return true
+                 }
+                 if let _ = webpageLayout.imageSize, webpageLayout.isFullImageSize || textLayout.layoutSize.height - 10 <= webpageLayout.contrainedImageSize.height {
+                     return true
+                 }
+                 if actionButtonText != nil {
+                     return true
+                 }
+                 if webpageLayout.groupLayout != nil {
+                     return true
+                 }
+                 
+             } else if webpageLayout is WPMediaLayout {
+                 return true
+             }
+         }
+        
         if self.webpageLayout?.content.type == "proxy" {
             return true
         } else {
             return super.isForceRightLine
         }
-    }
-    
-    override var isFixedRightPosition: Bool {
-        if containsBigEmoji {
-            return true
-        }
-        if let webpageLayout = webpageLayout {
-            if let webpageLayout = webpageLayout as? WPArticleLayout, let textLayout = webpageLayout.textLayout {
-                if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                    return true
-                }
-            }
-            return super.isFixedRightPosition
-        }
-        
-        if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return true
-        }
-        return super.isForceRightLine
-    }
-    
-    override var additionalLineForDateInBubbleState: CGFloat? {
-
-        if containsBigEmoji {
-            return rightSize.height + 3
-        }
-        if isForceRightLine {
-            return rightSize.height
-        }
-        if unsupported {
-            return rightSize.height
-        }
-        
-        if let reactions = self.reactionsLayout, reactions.mode == .full {
-            let hasSpace = reactions.haveSpace(for: rightSize.width + insetBetweenContentAndDate, maxSize: max(realContentSize.width, maxTitleWidth))
-            if !hasSpace {
-                return rightSize.height
-            } else {
-                return nil
-            }
-        }
-       
-        if let webpageLayout = webpageLayout {
-            if let webpageLayout = webpageLayout as? WPArticleLayout {
-                if let textLayout = webpageLayout.textLayout {
-                    if webpageLayout.hasInstantPage {
-                        return rightSize.height + 4
-                    }
-                    if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                        return rightSize.height
-                    }
-                    if let _ = webpageLayout.imageSize, webpageLayout.isFullImageSize || textLayout.layoutSize.height - 10 <= webpageLayout.contrainedImageSize.height {
-                        return rightSize.height
-                    }
-                    if actionButtonText != nil {
-                        return rightSize.height + 4
-                    }
-                    if webpageLayout.groupLayout != nil {
-                        return rightSize.height
-                    }
-                } else {
-                    return rightSize.height
-                }
-                
-                
-            } else if webpageLayout is WPMediaLayout {
-                return rightSize.height
-            }
-            return nil
-        }
-        
-        if textLayout.lines.count == 1 {
-            if contentOffset.x + textLayout.layoutSize.width - (rightSize.width + insetBetweenContentAndDate) > width {
-                return rightSize.height
-            }
-        } else if let line = textLayout.lines.last, max(realContentSize.width, maxTitleWidth) < line.frame.width + (rightSize.width + insetBetweenContentAndDate) {
-            return rightSize.height
-        }
-        return nil
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
