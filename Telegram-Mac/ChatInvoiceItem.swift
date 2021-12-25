@@ -84,17 +84,11 @@ class ChatInvoiceItem: ChatRowItem {
         return size
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if isForceRightLine {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate ) {
-            return rightSize.height
+            return true
         }
-        if postAuthor != nil {
-            return isStateOverlayLayout ? nil : rightSize.height
-        }
-        return super.additionalLineForDateInBubbleState
+        return super.isForceRightLine
     }
     
     

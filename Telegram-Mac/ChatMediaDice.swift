@@ -14,12 +14,10 @@ import Postbox
 import SwiftSignalKit
 
 class ChatMediaDice: ChatMediaItem {
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        return rightSize.height + 5
-    }
-    override var isFixedRightPosition: Bool {
+    override var isForceRightLine: Bool {
         return true
     }
+   
     override var isBubbleFullFilled: Bool {
         return true
     }

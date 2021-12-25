@@ -404,11 +404,11 @@ class ChatRowItem: TableRowItem {
         var inset: CGFloat = leftInset
         if isBubbled {
             if hasPhoto {
-                inset += 36 + 6
+                inset += 36 + 4
             } else if self.isIncoming, let message = message {
                 if let peer = message.peers[message.id.peerId] {
                     if peer.isGroup || peer.isSupergroup {
-                        inset += 36 + 6
+                        inset += 36 + 4
                     }
                 }
             }
@@ -720,6 +720,12 @@ class ChatRowItem: TableRowItem {
                 return false
             }
             if isFailed {
+                return false
+            }
+            if message.adAttribute != nil {
+                return false
+            }
+            if unsupported {
                 return false
             }
             return true
@@ -2085,23 +2091,6 @@ class ChatRowItem: TableRowItem {
             _contentSize = self.makeContentSize(widthForContent)
         }
         
-        if let reactions = reactionsLayout {
-            switch reactions.mode {
-            case .full:
-                if isBubbled {
-                    if isBubbleFullFilled {
-                        reactions.measure(for: _contentSize.width - bubbleDefaultInnerInset)
-                    } else {
-                        reactions.measure(for: _contentSize.width)
-                    }
-                } else {
-                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
-                }
-            default:
-                break
-            }
-        }
-        
         
         var maxContentWidth = _contentSize.width
         if hasBubble {
@@ -2111,6 +2100,25 @@ class ChatRowItem: TableRowItem {
         if isBubbled && isBubbleFullFilled {
             widthForContent = maxContentWidth
         }
+        
+        if let reactions = reactionsLayout {
+            switch reactions.mode {
+            case .full:
+                if isBubbled {
+                    if !hasBubble {
+                        reactions.measure(for: min(320, blockWidth))
+                    } else {
+                        reactions.measure(for: widthForContent)
+                    }
+                } else {
+                    reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
+                }
+            default:
+                break
+            }
+        }
+        
+       
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
                 if layout.layout.layoutSize == .zero {
@@ -2118,16 +2126,6 @@ class ChatRowItem: TableRowItem {
                 }
             }
         }
-        
-
-        if hasBubble {
-            if additionalLineForDateInBubbleState == nil && !isFixedRightPosition {
-                if _contentSize.width + rightSize.width + insetBetweenContentAndDate > widthForContent {
-                    self.isForceRightLine = true
-                }
-            }
-        }
-        
         
         if let forwardNameLayout = forwardNameLayout {
             var w = widthForContent
@@ -2318,15 +2316,33 @@ class ChatRowItem: TableRowItem {
          //   rect.origin.x -= leftContentInset
         //}
         
-        if additionalLineForDateInBubbleState == nil && !isFixedRightPosition && rightSize.width > 0 {
-            if let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId }) {
-                let add = rect.size.width - caption.layout.layoutSize.width
-                if add > 0 {
-                    rect.size.width += (rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset - add)
+        if additionalLineForDateInBubbleState == nil && rightSize.width > 0 {
+            if let lastLine = lastLineContentWidth {
+                if lastLine.single {
+                    rect.size.width = max(rect.size.width, lastLine.width)
+                    if rect.size.width + rightSize.width < blockWidth {
+                        rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleContentInset * 2
+                    } else {
+                        let effective = lastLine.width + rightSize.width + insetBetweenContentAndDate
+                        let add = effective - rect.size.width
+                        if add > 0 {
+                            rect.size.width += add
+                        }
+                        rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
+                    }
+                } else {
+                    rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
                 }
-            } else {
-                rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset
             }
+//
+//            if let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId }) {
+//                let add = rect.size.width - caption.layout.layoutSize.width
+//                if add > 0 {
+//                    rect.size.width += (rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset - add)
+//                }
+//            } else {
+//                rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset
+//            }
         } else {
             rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
         }
@@ -2349,11 +2365,43 @@ class ChatRowItem: TableRowItem {
         return rect
     }
     
-    var isFixedRightPosition: Bool {
-        return additionalLineForDateInBubbleState != nil
+    
+    var unsupported: Bool {
+        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
+            return message.inlinePeer == nil
+        } else {
+            return false
+        }
+    }
+    
+    var isBigEmoji: Bool {
+        return false
     }
     
     var additionalLineForDateInBubbleState: CGFloat? {
+        
+        if isBigEmoji {
+            return rightSize.height + 3
+        }
+        if unsupported {
+            return rightSize.height
+        }
+                
+        if let lastLine = lastLineContentWidth {
+            if lastLine.single {
+                if contentOffset.x + lastLine.width + (rightSize.width + insetBetweenContentAndDate) > blockWidth {
+                    return rightSize.height
+                } else {
+                    return nil
+                }
+            } else {
+                if max(realContentSize.width, maxTitleWidth) < lastLine.width + (rightSize.width + insetBetweenContentAndDate) {
+                    return rightSize.height
+                } else {
+                    return nil
+                }
+            }
+        }
         return isForceRightLine ? rightSize.height : nil
     }
     
@@ -2536,41 +2584,49 @@ class ChatRowItem: TableRowItem {
         }
         return media.isInteractiveMedia
     }
+    
+    struct LastLineData {
+        let width: CGFloat
+        let single: Bool
+    }
+    var lastLineContentWidth: LastLineData? {
+        if let reactionsLayout = reactionsLayout {
+            switch reactionsLayout.mode {
+            case .full:
+                if !reactionsLayout.presentation.isOutOfBounds {
+                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: reactionsLayout.oneLine)
+                }
+            default:
+                break
+            }
+        }
+        if captionLayouts.count == 1 {
+            if let caption = captionLayouts.first(where: { $0.id == self.firstMessage?.stableId})?.layout {
+                if let line = caption.lines.last {
+                    return LastLineData(width: line.frame.width, single: caption.lines.count == 1 && isBubbleFullFilled)
+                }
+            }
+        } else if captionLayouts.count > 1 {
+            if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
+                if let line = caption.lines.last {
+                    return LastLineData(width: line.frame.width, single: caption.lines.count == 1)
+                }
+            }
+        }
+        
+        if let item = self as? ChatMessageItem {
+            if let webpageLayout = item.webpageLayout as? WPArticleLayout {
+                if let textLayout = webpageLayout.textLayout {
+                    if let line = textLayout.lines.last {
+                        return LastLineData(width: line.frame.width, single: false)
+                    }
+                }
+            }
+            if let line = item.textLayout.lines.last {
+                return LastLineData(width: line.frame.width, single: item.textLayout.lines.count == 1)
+            }
+        }
+        return nil
+    }
 }
 
-
-/*
- 
- 
- 
- if hasBubble && isBubbleFullFilled {
-     if let postAuthor = postAuthor, let postAuthorAttributed = postAuthorAttributed {
-         let width: CGFloat = _contentSize.width - (rightSize.width - postAuthor.0.size.width - 8) - bubbleContentInset - additionBubbleInset - 10
-         if width < 0 {
-             self.postAuthor = nil
-         } else {
-             self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( width, 20), nil, false, .left)
-         }
-     }
- }
- if let postAuthorAttributed = postAuthorAttributed, let postAuthor = postAuthor {
-     if bubbleFrame.width < width - 150 {
-         let size = rightSize.width - postAuthor.0.size.width - 8
-         var w = width - bubbleFrame.width - 150
-         if let _ = self as? ChatMessageItem, additionalLineForDateInBubbleState != nil {
-             w = _contentSize.width - size
-         }
-         self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( w, 20), nil, false, .left)
-     } else if bubbleFrame.width > _contentSize.width + rightSize.width + bubbleDefaultInnerInset {
-         var size = bubbleFrame.width - (_contentSize.width + rightSize.width + bubbleDefaultInnerInset)
-         if !postAuthor.0.isPerfectSized {
-             size = bubbleFrame.width - (_contentSize.width + bubbleDefaultInnerInset)
-         }
-         self.postAuthor = TextNode.layoutText(maybeNode: postAuthorNode, postAuthorAttributed, !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, renderType == .bubble), 1, .end, NSMakeSize( size, 20), nil, false, .left)
-         while !layout() {}
-     }
-     
- }
- 
- 
- */

@@ -405,7 +405,7 @@ class ChatPollItem: ChatRowItem {
         self.titleTypeText = TextViewLayout(.initialize(string: typeText, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         var size: NSSize = .zero
         if let action = self.actionButtonText {
             size = TitleButton.size(with: action, font: .normal(.text))
@@ -416,22 +416,17 @@ class ChatPollItem: ChatRowItem {
         if size.width > 0 {
             let dif = contentSize.width - (contentSize.width / 2 + size.width / 2)
             if dif < (rightSize.width + insetBetweenContentAndDate) {
-                return 20
+                return true
             }
             
         }
         
         if isBotQuiz {
-            return 10
+            return true
         }
-        
-        return super.additionalLineForDateInBubbleState
+        return super.isForceRightLine
     }
-
     
-    override var isFixedRightPosition: Bool {
-        return true
-    }
         
     private func stop() {
         if let message = message {

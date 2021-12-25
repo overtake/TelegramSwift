@@ -301,25 +301,7 @@ class ChatGroupedItem: ChatRowItem {
         return size
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        let layout: TextViewLayout?
-        switch self.layout.type {
-        case .files:
-            layout = captionLayouts.last?.layout
-        case .photoOrVideo:
-            layout = captionLayouts.first?.layout
-        }
-        if let caption = layout {
-            if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                return rightSize.height
-            }
-        }
-        return super.additionalLineForDateInBubbleState
-    }
     
-    override var isFixedRightPosition: Bool {
-        return true
-    }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         var _width: CGFloat = 0
