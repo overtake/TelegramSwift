@@ -1526,7 +1526,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         transition.updateFrame(view: self.swipingRightView, frame: NSMakeRect(frame.width, 0, rightRevealWidth, frame.height))
         
         if let view = shareView {
-            transition.updateFrame(view: view, frame: CGRect.init(origin: shareViewPoint(item), size: view.frame.size))
+            transition.updateFrame(view: view, frame: CGRect(origin: shareViewPoint(item), size: view.frame.size))
         }
         
         if let view = reactionsView {
@@ -1768,20 +1768,22 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = self.item as? ChatRowItem else {
             return .zero
         }
+        
+        
         if item.isBubbled {
             let bubbleFrame = self.bubbleView.frame
-            var rect = NSMakeRect(bubbleFrame.maxX - 10, bubbleFrame.maxY - 10, 20, 20)
+            var rect = NSMakeRect(bubbleFrame.maxX - 10 + self.rowView.frame.minX, bubbleFrame.maxY - 10, 20, 20)
             if item.isIncoming {
                 rect.origin.x -= 5
                 rect.origin.y -= 5
             } else {
-                rect.origin.x = bubbleFrame.minX - 5
+                rect.origin.x = bubbleFrame.minX - 5 + self.rowView.frame.minX
                 rect.origin.y -= 5
             }
             return rect
         } else {
-            let contentFrame = self.contentFrame(item)
-            let rect = NSMakeRect(contentFrame.minX - 20 - 10, contentFrame.minY, 20, 20)
+            let contentFrame = self.contentView.frame
+            let rect = NSMakeRect(contentFrame.minX - 20 - 10 + self.rowView.frame.minX, contentFrame.minY, 20, 20)
             return rect
         }
     }

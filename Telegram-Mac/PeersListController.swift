@@ -211,7 +211,7 @@ class PeerListContainerView : View {
             searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
                 
                 
-                var items: [SPopoverItem] = []
+                var items: [ContextMenuItem] = []
 
                 
                 for tag in tags {
@@ -219,17 +219,48 @@ class PeerListContainerView : View {
                     if currentTag != tag.0 {
                         append = true
                     }
+                    
                     if append {
-                        items.append(SPopoverItem(tag.1, {
-                            currentTag = tag.0
-                            updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                            let collected = collectTags()
-                            updateTitle(collected.0, collected.1)
-                        }))
+                        if let messagetag = tag.0 {
+                            let itemImage: MenuAnimation?
+                            switch messagetag {
+                            case .photo:
+                                itemImage = .menu_shared_media
+                            case .video:
+                                itemImage = .menu_video
+                            case .webPage:
+                                itemImage = .menu_copy_link
+                            case .voiceOrInstantVideo:
+                                itemImage = .menu_voice
+                            case .gif:
+                                itemImage = .menu_add_gif
+                            case .file:
+                                itemImage = .menu_file
+                            default:
+                                itemImage = nil
+                            }
+                            if let itemImage = itemImage {
+                                items.append(ContextMenuItem(tag.1, handler: {
+                                    currentTag = tag.0
+                                    updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                                    let collected = collectTags()
+                                    updateTitle(collected.0, collected.1)
+                                }, itemImage: itemImage.value))
+                            }
+                        }
+                        
                     }
                 }
                 
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                
+                let value = AppMenu(menu: menu)
+                if let event = NSApp.currentEvent {
+                    value.show(event: event, view: control)
+                }
             }, deleteTag: { [weak self] index in
                 var count: Int = 0
                 if currentTag != nil {

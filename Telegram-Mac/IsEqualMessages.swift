@@ -71,7 +71,7 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     } else {
         for (messageId, lhsAssociatedMessage) in lhsMessage.associatedMessages {
             if let rhsAssociatedMessage = rhsMessage.associatedMessages[messageId] {
-                if lhsAssociatedMessage.stableVersion != rhsAssociatedMessage.stableVersion {
+                if !isEqualMessages(lhsAssociatedMessage, rhsAssociatedMessage) {
                     return false
                 }
             } else {

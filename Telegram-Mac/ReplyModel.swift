@@ -43,6 +43,7 @@ class ReplyModel: ChatAccessoryModel {
         
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
+            self.nodeReady.set(.single(true))
         } else {
             make(with: nil, display: false)
         }

@@ -12,6 +12,7 @@ import AppKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import ObjcUtils
 
 final class ChatAddReactionControl : NSObject, Notifable {
    
@@ -243,7 +244,6 @@ final class ChatAddReactionControl : NSObject, Notifable {
             super.init(frame: frameRect)
             self.visualEffect.state = .active
             self.visualEffect.wantsLayer = true
-            self.visualEffect.state = .active
             self.visualEffect.blendingMode = .withinWindow
             backgroundView.isEventLess = true
             
@@ -392,6 +392,8 @@ final class ChatAddReactionControl : NSObject, Notifable {
             }
             backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.4)
             needsLayout = true
+            
+           
         }
         
         var isRevealed: Bool {
@@ -478,9 +480,8 @@ final class ChatAddReactionControl : NSObject, Notifable {
     private func initialize() {
         
         if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
-            self.uniqueLimit = Int(value) ?? Int.max
+            self.uniqueLimit = Int(value)
         }
-        
 
         chatInteraction.add(observer: self)
         
@@ -535,7 +536,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
         self.update()
     }
         
-    private func update(transition: ContainedViewLayoutTransition = .immediate) {
+    func update(transition: ContainedViewLayoutTransition = .immediate) {
         
         var available:[AvailableReactions.Reaction] = []
         let settings: ReactionSettings = self.settings
@@ -645,12 +646,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
                     for item in candidates {
                         if let itemView = item.view as? ChatRowView {
                             let rect = view.convert(itemView.rectForReaction, from: itemView)
-                            
-                            let xdst = inside.x - rect.midX
-                            let ydst = inside.y - rect.midY
-
-                            let dst = sqrt((xdst * xdst) + (ydst * ydst))
-                            
+                            let dst = inside.distance(p2: NSMakePoint(rect.midX, rect.midY))
                             if dst < min_dst {
                                 best = item
                                 min_dst = dst
@@ -720,10 +716,10 @@ final class ChatAddReactionControl : NSObject, Notifable {
                         
                         let base = current.makeRect(view.convert(rect, from: itemView))
 
-                        
                         let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
                         if NSPointInRect(inside, safeRect), NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
                             transition.updateFrame(view: current, frame: base)
+                            current.updateLayout(base.size, transition: transition)
                         } else {
                             self.clear()
                         }
@@ -799,3 +795,17 @@ final class ChatAddReactionControl : NSObject, Notifable {
     }
     
 }
+
+
+
+//
+//                        let viewRect = view.convert(rect, from: itemView)
+//                        let dst = 50 - min(max(0, inside.distance(p2: NSMakePoint(viewRect.midX, viewRect.midY))), 50)
+//
+//
+//                        let multiplier = log2(mappingRange(dst, 0, 50, 1, 100))
+//
+//                        NSLog("\(log2(mappingRange(dst, 0, 50, 1, 100)))")
+                        
+//                        let updated = base.insetBy(dx: -3 * (multiplier / 7), dy: -3 * (multiplier / 7))
+                        
