@@ -318,9 +318,9 @@ class ChannelInfoArguments : PeerInfoArguments {
             let updateVideo = self.updateVideo
             
             
-            var items:[SPopoverItem] = []
+            var items:[ContextMenuItem] = []
             
-            items.append(.init(strings().editAvatarPhotoOrVideo, {
+            items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         updatePhoto(image)
@@ -330,9 +330,9 @@ class ChannelInfoArguments : PeerInfoArguments {
                         })
                     }
                 })
-            }))
+            }, itemImage: MenuAnimation.menu_shared_media.value))
             
-            items.append(.init(strings().editAvatarStickerOrGif, { [weak control] in
+            items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
                 let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
                 controller._frameRect = NSMakeRect(0, 0, 350, 400)
                 
@@ -382,10 +382,15 @@ class ChannelInfoArguments : PeerInfoArguments {
                 if let control = control {
                     showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
                 }
-            }))
+            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             
-            if let control = control {
-                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(0, -60))
+            if let control = control, let event = NSApp.currentEvent {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                let value = AppMenu(menu: menu)
+                value.show(event: event, view: control)
             } else {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {

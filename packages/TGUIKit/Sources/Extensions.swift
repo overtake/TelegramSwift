@@ -1074,6 +1074,11 @@ public extension CGPoint {
     func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
         return CGPoint(x: self.x + dx, y: self.y + dy)
     }
+    func distance(p2: CGPoint) -> CGFloat {
+        let xdst = self.x - p2.x
+        let ydst = self.y - p2.y
+        return sqrt((xdst * xdst) + (ydst * ydst))
+    }
 }
 
 
