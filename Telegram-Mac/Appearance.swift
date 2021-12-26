@@ -1273,24 +1273,30 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
 }
 #if !SHARE
 private func builtinBackgound(_ palette: ColorPalette) -> NSImage {
-    var data = try! Data(contentsOf: Bundle.main.url(forResource: "builtin-wallpaper-svg", withExtension: nil)!)
-    data = TGGUnzipData(data, 8 * 1024 * 1024)!
-    var image = drawSvgImageNano(data, NSMakeSize(400, 800))!
-    
-    let intense = CGFloat(0.5)
-    if palette.isDark {
-        image = generateImage(image.size, contextGenerator: { size, ctx in
+    let data = try? Data(contentsOf: Bundle.main.url(forResource: "builtin-wallpaper-svg", withExtension: nil)!)
+    if let data = data {
+        var image = drawSvgImageNano(TGGUnzipData(data, 8 * 1024 * 1024)!, NSMakeSize(400, 800))!
+        
+        let intense = CGFloat(0.5)
+        if palette.isDark {
+            image = generateImage(image.size, contextGenerator: { size, ctx in
+                ctx.clear(size.bounds)
+                ctx.setFillColor(NSColor.black.cgColor)
+                ctx.fill(size.bounds)
+                ctx.clip(to: size.bounds, mask: image._cgImage!)
+                
+                ctx.clear(size.bounds)
+                ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                ctx.fill(size.bounds)
+            })!._NSImage
+        }
+        return image
+    } else {
+        return generateImage(NSMakeSize(400, 800), contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.cgColor)
-            ctx.fill(size.bounds)
-            ctx.clip(to: size.bounds, mask: image._cgImage!)
-            
-            ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
-            ctx.fill(size.bounds)
+            ctx.setFillColor(palette.background.cgColor)
         })!._NSImage
     }
-    return image
 }
 #endif
 class TelegramPresentationTheme : PresentationTheme {

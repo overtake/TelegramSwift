@@ -309,17 +309,24 @@ class ChatInputActionsView: View, Notifable {
                         _ = secretTimer?.sizeToFit()
                         addSubview(secretTimer!)
 
-                        secretTimer?.set(handler: { [weak self] control in
-                            if let strongSelf = self {
-                                if let peer = strongSelf.chatInteraction.peer {
-                                    if peer.isSecretChat {
-                                        showPopover(for: control, with: SPopoverViewController(items:strongSelf.secretTimerItems(), visibility: 6), edge: .maxX, inset:NSMakePoint(120, 10))
-                                    }  else if let control = strongSelf.secretTimer {
-                                        strongSelf.chatInteraction.showDeleterSetup(control)
+                        if let peer = self.chatInteraction.peer {
+                            if peer.isSecretChat {
+                                secretTimer?.contextMenu = { [weak self] in
+                                    let menu = ContextMenu()
+                                    
+                                    if let items = self?.secretTimerItems() {
+                                        for item in items {
+                                            menu.addItem(item)
+                                        }
                                     }
+                                    return menu
                                 }
+                            } else {
+                                secretTimer?.set(handler: { [weak self] control in
+                                    self?.chatInteraction.showDeleterSetup(control)
+                                }, for: .Click)
                             }
-                        }, for: .Click)
+                        }
                     }
                 } else {
                     secretTimer?.removeFromSuperview()
@@ -588,37 +595,37 @@ class ChatInputActionsView: View, Notifable {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func secretTimerItems() -> [SPopoverItem] {
+    func secretTimerItems() -> [ContextMenuItem] {
         
-        var items:[SPopoverItem] = []
+        var items:[ContextMenuItem] = []
         
         if chatInteraction.hasSetDestructiveTimer {
             if chatInteraction.presentation.messageSecretTimeout != nil {
-                items.append(SPopoverItem(strings().secretTimerOff, { [weak self] in
+                items.append(ContextMenuItem(strings().secretTimerOff, handler: { [weak self] in
                     self?.chatInteraction.setChatMessageAutoremoveTimeout(nil)
                 }))
             }
         }
         if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
             for i in 0 ..< 30 {
-                items.append(SPopoverItem(strings().timerSecondsCountable(i + 1), { [weak self] in
+                items.append(ContextMenuItem(strings().timerSecondsCountable(i + 1), handler: { [weak self] in
                     self?.chatInteraction.setChatMessageAutoremoveTimeout(Int32(i + 1))
                 }))
             }
 
-            items.append(SPopoverItem(strings().timerMinutesCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerMinutesCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60)
             }))
 
-            items.append(SPopoverItem(strings().timerHoursCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerHoursCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60)
             }))
 
-            items.append(SPopoverItem(strings().timerDaysCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerDaysCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24)
             }))
 
-            items.append(SPopoverItem(strings().timerWeeksCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerWeeksCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24 * 7)
             }))
         }

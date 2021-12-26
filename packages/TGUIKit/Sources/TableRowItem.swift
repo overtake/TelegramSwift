@@ -94,6 +94,9 @@ open class TableRowItem: NSObject {
         return false
     }
     
+    open var isLegacyMenu: Bool {
+        return false
+    }
     
     open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         return .single([])

@@ -377,6 +377,8 @@ class ChatRowItem: TableRowItem {
         
         if !isBubbled, forwardHeader == nil {
             top -= topInset
+        } else if isBubbled {
+            top -= topInset
         }
         
         if let author = authorText {
@@ -493,7 +495,7 @@ class ChatRowItem: TableRowItem {
         if let forwardNameLayout = forwardNameLayout, !isBubbled || !isInstantVideo  {
             top += forwardNameLayout.layoutSize.height
             //if !isBubbled {
-                top += 2
+               // top += 2
             //}
         }
         
@@ -769,9 +771,9 @@ class ChatRowItem: TableRowItem {
             if let peer = peer as? TelegramChannel {
                 switch peer.info {
                 case .broadcast:
-                    return !chatInteraction.isLogInteraction
+                    return isIncoming && !chatInteraction.isLogInteraction
                 default:
-                    break
+                    return false
                 }
             }
             if let peer = peer as? TelegramUser {
@@ -2312,10 +2314,6 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        //if forwardType != nil {
-         //   rect.origin.x -= leftContentInset
-        //}
-        
         if additionalLineForDateInBubbleState == nil && rightSize.width > 0 {
             if let lastLine = lastLineContentWidth {
                 if lastLine.single {
@@ -2333,20 +2331,12 @@ class ChatRowItem: TableRowItem {
                 } else {
                     rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
                 }
+            } else {
+                rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
             }
-//
-//            if let caption = self.captionLayouts.first(where: { $0.id == self.firstMessage?.stableId }) {
-//                let add = rect.size.width - caption.layout.layoutSize.width
-//                if add > 0 {
-//                    rect.size.width += (rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset - add)
-//                }
-//            } else {
-//                rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset
-//            }
         } else {
             rect.size.width += bubbleContentInset * 2 + insetBetweenContentAndDate
         }
-        
         
         
         rect.size.width = max(nameWidth + bubbleDefaultInnerInset, rect.width)
@@ -2379,10 +2369,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var additionalLineForDateInBubbleState: CGFloat? {
-        
-        if isBigEmoji {
-            return rightSize.height + 3
-        }
+
         if unsupported {
             return rightSize.height
         }
@@ -2601,7 +2588,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         if captionLayouts.count == 1 {
-            if let caption = captionLayouts.first(where: { $0.id == self.firstMessage?.stableId})?.layout {
+            if let caption = captionLayouts.first?.layout {
                 if let line = caption.lines.last {
                     return LastLineData(width: line.frame.width, single: caption.lines.count == 1 && isBubbleFullFilled)
                 }

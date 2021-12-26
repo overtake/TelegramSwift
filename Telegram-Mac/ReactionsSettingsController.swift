@@ -185,7 +185,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().reactionSettingsTitle, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: mode == .quick ? strings().reactionSettingsQuickTitle : strings().reactionSettingsTitle, hasDone: false)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
