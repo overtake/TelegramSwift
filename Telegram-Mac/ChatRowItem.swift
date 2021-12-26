@@ -2596,6 +2596,9 @@ class ChatRowItem: TableRowItem {
         }
         
         if let item = self as? ChatMessageItem {
+            if item.actionButtonText != nil {
+                return nil
+            }
             if let webpageLayout = item.webpageLayout as? WPArticleLayout {
                 if webpageLayout.isFullImageSize {
                     return nil
