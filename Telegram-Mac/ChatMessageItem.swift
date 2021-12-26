@@ -526,6 +526,9 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var isForceRightLine: Bool {
+        if actionButtonText != nil  {
+            return true
+        }
          if let webpageLayout = webpageLayout {
              if let webpageLayout = webpageLayout as? WPArticleLayout {
                  if webpageLayout.hasInstantPage {
