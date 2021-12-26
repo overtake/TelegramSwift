@@ -248,9 +248,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         contextMenu = nil
         
         if let item = item {
-            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
-                if let strongSelf = self {
-                    let menu = ContextMenu()
+            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self, weak item] items in
+                if let strongSelf = self, let item = item {
+                    let menu = ContextMenu(isLegacy: item.isLegacyMenu)
 
                     menu.onShow = { [weak strongSelf] menu in
                         strongSelf?.onShowContextMenu()

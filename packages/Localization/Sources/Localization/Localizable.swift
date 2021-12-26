@@ -6063,11 +6063,11 @@ public final class L10n {
   public static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// Reply
   public static var notificationReply: String  { return L10n.tr("Localizable", "Notification.Reply") }
-  /// %1$@ to your %2$@
+  /// %1$@ to your "%2$@"
   public static func notificationContactReacted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Notification.Contact.Reacted", p1, p2)
   }
-  /// %1$@: %2$@ to your %3$@
+  /// %1$@: %2$@ to your "%3$@"
   public static func notificationGroupReacted(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Notification.Group.Reacted", p1, p2, p3)
   }
@@ -7785,6 +7785,8 @@ public final class L10n {
   public static var reactionSettingsAvailableInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Available.Info") }
   /// QUICK REACTION.
   public static var reactionSettingsQuickInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Info") }
+  /// Quick Reaction
+  public static var reactionSettingsQuickTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Title") }
   /// Delete
   public static var recentCallsDelete: String  { return L10n.tr("Localizable", "RecentCalls.Delete") }
   /// Are you sure you want to delete call?

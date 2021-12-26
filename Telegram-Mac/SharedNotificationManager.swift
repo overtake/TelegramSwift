@@ -397,7 +397,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 let msg = pullText(from: message) as String
                                 title = message.peers[message.id.peerId]?.displayTitle ?? ""
                                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
-                                    text = strings().notificationContactReacted(value, msg)
+                                    text = strings().notificationContactReacted(value.fixed, msg)
                                 } else {
                                     text = strings().notificationGroupReacted(peer.displayTitle, value, msg)
                                 }

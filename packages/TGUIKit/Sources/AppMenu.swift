@@ -98,7 +98,7 @@ public final class AppMenu {
     public func show(event: NSEvent, view: NSView) {
         
         
-        if System.legacyMenu {
+        if System.legacyMenu || self.menu.isLegacy {
             NSMenu.popUpContextMenu(self.menu, with: event, for: view)
         } else {
             let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside, appearMode: self.appearMode, parentView: view)

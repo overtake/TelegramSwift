@@ -104,11 +104,13 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     let presentation: AppMenu.Presentation
     let betterInside: Bool
     let maxHeight: CGFloat
+    let isLegacy: Bool
     public internal(set) var isShown: Bool = false
-    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600) {
+    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600, isLegacy: Bool = false) {
         self.presentation = presentation
         self.betterInside = betterInside
         self.maxHeight = maxHeight
+        self.isLegacy = isLegacy
         super.init(title: "")
     }
     

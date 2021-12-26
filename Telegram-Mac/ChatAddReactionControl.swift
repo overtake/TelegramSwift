@@ -35,7 +35,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
         
         
         private final class ReactionView : Control {
-            
+                    
             private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 20, 20))
             private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 20, 20))
             private let disposable = MetaDisposable()
@@ -220,6 +220,10 @@ final class ChatAddReactionControl : NSObject, Notifable {
     }
     
     private final class ReactionView : Control {
+        
+        weak var item: TableRowItem?
+
+        
         private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 12, 12))
         private let visualEffect = NSVisualEffectView(frame: .zero)
         private let backgroundView = View()
@@ -229,6 +233,8 @@ final class ChatAddReactionControl : NSObject, Notifable {
         private let disposable = MetaDisposable()
         private var listView: ListView?
         private let add:(String)->Void
+        var isReversed: Bool = false
+        var isRemoving: Bool = false
         required init(frame frameRect: NSRect, isBubbled: Bool, context: AccountContext, reactions: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
             self.isBubbled = isBubbled
             self.reactions = reactions
@@ -325,11 +331,10 @@ final class ChatAddReactionControl : NSObject, Notifable {
                 addSubview(backgroundView, positioned: .below, relativeTo: self.imageView)
             }
             
-            let bounds = getBounds()
             let height = ListView.height(for: self.reactions)
             
             
-            let isReversed = self.frame.minY + height + 20 > bounds.height
+            self.isReversed = self.frame.minY - height - 20 > 0
             
             
             self.listView = ListView(frame: NSMakeRect(0, 0, 30, ListView.height(for: self.reactions)), context: context, isReversed: isReversed, list: reactions, add: { [weak self] value in
@@ -394,9 +399,6 @@ final class ChatAddReactionControl : NSObject, Notifable {
         var isRevealed: Bool {
             return listView != nil
         }
-        var isReversed: Bool {
-            return false
-        }
         override func layout() {
             super.layout()
             updateLayout(self.frame.size, transition: .immediate)
@@ -419,12 +421,11 @@ final class ChatAddReactionControl : NSObject, Notifable {
                 
                 let dx = 30 - rect.width
                 
-                let bounds = getBounds()
                 
                 let x = rect.minX - dx / 2
                 var y = rect.minY
                 
-                if y + height + 20 > bounds.height {
+                if isReversed {
                     y = rect.maxY - height
                 }
                 
@@ -456,6 +457,9 @@ final class ChatAddReactionControl : NSObject, Notifable {
     private var settings: ReactionSettings = ReactionSettings.default
     private var disabled: Bool = false
     private let chatInteraction: ChatInteraction
+    
+    private var inOrderToRemove:[WeakReference<ReactionView>] = []
+    
     init(chatInteraction: ChatInteraction, view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
         self.chatInteraction = chatInteraction
         self.window = window
@@ -532,6 +536,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
         
         var available:[AvailableReactions.Reaction] = []
         let settings: ReactionSettings = self.settings
+        
 
         if let reactions = reactions {
             if let cachedData = peerView?.cachedData as? CachedGroupData {
@@ -551,8 +556,22 @@ final class ChatAddReactionControl : NSObject, Notifable {
             available.move(at: index, to: 0)
         }
         
+        inOrderToRemove = inOrderToRemove.filter({
+            $0.value != nil
+        })
+        
+        for value in inOrderToRemove {
+            if let current = value.value, let view = self.view {
+                if let itemView = current.item?.view as? ChatRowView {
+                    let rect = itemView.rectForReaction
+                    let base = current.makeRect(view.convert(rect, from: itemView))
+                    transition.updateFrame(view: current, frame: base)
+                }
+            }
+        }
         
         if let view = self.view, !available.isEmpty, !disabled {
+            
             
             let point = view.tableView.contentView.convert(self.window.mouseLocationOutsideOfEventStream, from: nil)
             let inside = view.convert(self.window.mouseLocationOutsideOfEventStream, from: nil)
@@ -562,13 +581,19 @@ final class ChatAddReactionControl : NSObject, Notifable {
                 let safeRect = base.insetBy(dx: -20 * 4, dy: -20)
                 var inSafeRect = NSPointInRect(inside, safeRect)
                 inSafeRect = inSafeRect && NSPointInRect(NSMakePoint(base.maxX, base.maxY), view.tableView.frame)
-
-                if !inSafeRect {
+                
+                if !inSafeRect || item.view?.visibleRect == .zero {
                     self.clear()
                 } else if let itemView = item.view as? ChatRowView {
                     let rect = itemView.rectForReaction
+                    let prev = current.isReversed
                     let base = current.makeRect(view.convert(rect, from: itemView))
-                    transition.updateFrame(view: current, frame: base)
+                    let updated = current.isReversed
+                    if prev != updated {
+                        self.clear()
+                    } else {
+                        transition.updateFrame(view: current, frame: base)
+                    }
                 }
                 return
             }
@@ -613,6 +638,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
                                             current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                                         }
                                         self?.currentView = current
+                                        current.item = item
                                     }
                                 }))
                             } else {
@@ -675,6 +701,8 @@ final class ChatAddReactionControl : NSObject, Notifable {
         if let view = currentView {
             self.currentView = nil
             performSubviewRemoval(view, animated: animated, duration: 0.2, scale: !view.isRevealed)
+            view.isRemoving = true
+            self.inOrderToRemove.append(.init(value: view))
         }
     }
     

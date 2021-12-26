@@ -112,6 +112,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return isVertical ? 120 : 48
     }
     
+    
+    override var isLegacyMenu: Bool {
+        return true
+    }
+    
     override var inset: NSEdgeInsets {
         let insets: NSEdgeInsets
         if isVertical {
@@ -1072,6 +1077,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
     override func updateColors() {
         super.updateColors()
     }
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)

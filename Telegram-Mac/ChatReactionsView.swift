@@ -61,7 +61,7 @@ final class ChatReactionsLayout {
                             textColor = theme.chat.grayText(false, true)
                             borderColor = .clear
                             selectedColor = theme.chat.grayText(false, true)
-                            textSelectedColor = NSColor.white
+                            textSelectedColor = theme.colors.blendedOutgoingColors
                         }
                     }
                 case .list:
