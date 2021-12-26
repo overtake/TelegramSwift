@@ -459,7 +459,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
     private let chatInteraction: ChatInteraction
     
     private var inOrderToRemove:[WeakReference<ReactionView>] = []
-    
+    private var uniqueLimit: Int = 0
     init(chatInteraction: ChatInteraction, view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
         self.chatInteraction = chatInteraction
         self.window = window
@@ -479,6 +479,8 @@ final class ChatAddReactionControl : NSObject, Notifable {
     
     private func initialize() {
         
+        self.uniqueLimit = context.appConfiguration.data?["reactions_uniq_max"] as? Int ?? Int.max
+
         chatInteraction.add(observer: self)
         
         window.set(mouseHandler: { [weak self] event in
@@ -531,7 +533,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
     private func delayAndUpdate() {
         self.update()
     }
-    
+        
     private func update(transition: ContainedViewLayoutTransition = .immediate) {
         
         var available:[AvailableReactions.Reaction] = []
@@ -559,6 +561,22 @@ final class ChatAddReactionControl : NSObject, Notifable {
         inOrderToRemove = inOrderToRemove.filter({
             $0.value != nil
         })
+        
+        func filter(_ list:[AvailableReactions.Reaction], attr: ReactionsMessageAttribute?) -> [AvailableReactions.Reaction] {
+            if let attr = attr {
+                if attr.reactions.count >= uniqueLimit {
+                    return list.filter { reaction in
+                        attr.reactions.contains(where: {
+                            $0.value == reaction.value
+                        })
+                    }
+                } else {
+                    return list
+                }
+            } else {
+                return list
+            }
+        }
         
         for value in inOrderToRemove {
             if let current = value.value, let view = self.view {
@@ -620,6 +638,9 @@ final class ChatAddReactionControl : NSObject, Notifable {
                             if NSPointInRect(inside, safeRect), NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
                                 delayDisposable.set(delaySignal(0.1).start(completed: { [weak self, weak item, weak view] in
                                     if let item = item, let view = view {
+                                        
+                                        let available = filter(available, attr: item.firstMessage?.reactionsAttribute)
+                                        
                                         let current = ReactionView(frame: base, isBubbled: item.isBubbled, context: context, reactions: available, add: { [weak self] value in
                                             let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                                             context.reactions.react(message.id, value: isSelected ? nil : value)

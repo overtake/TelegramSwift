@@ -44,18 +44,18 @@ final class ChatReactionsLayout {
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
-                        bgColor = theme.colors.accent.withAlphaComponent(0.2)
-                        textColor = theme.colors.accent
+                        bgColor = theme.chatServiceItemColor
+                        textColor = theme.chatServiceItemTextColor
                         borderColor = .clear
                         selectedColor = theme.colors.accent
-                        textSelectedColor = NSColor.white
+                        textSelectedColor = theme.colors.underSelectedColor
                     } else {
                         if isIncoming {
                             bgColor = theme.colors.accent.withAlphaComponent(0.2)
                             textColor = theme.colors.accent
                             borderColor = .clear
                             selectedColor = theme.colors.accent
-                            textSelectedColor = NSColor.white
+                            textSelectedColor = theme.colors.underSelectedColor
                         } else {
                             bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.2)
                             textColor = theme.chat.grayText(false, true)
@@ -69,7 +69,7 @@ final class ChatReactionsLayout {
                     textColor = theme.colors.accent
                     borderColor = .clear
                     selectedColor = theme.colors.accent
-                    textSelectedColor = NSColor.white
+                    textSelectedColor = theme.colors.underSelectedColor
                 }
             case .short:
                 bgColor = .clear
