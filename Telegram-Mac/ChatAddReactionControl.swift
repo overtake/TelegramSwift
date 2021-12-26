@@ -253,15 +253,13 @@ final class ChatAddReactionControl : NSObject, Notifable {
             visualEffect.layer?.cornerRadius = frameRect.height / 2
             backgroundView.layer?.cornerRadius = frameRect.height / 2
 
-            if isBubbled {
-                let shadow = NSShadow()
-                shadow.shadowBlurRadius = 8
-                shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
-                shadow.shadowOffset = NSMakeSize(0, 0)
-                self.shadow = shadow
-                addSubview(visualEffect)
-                addSubview(backgroundView)
-            }
+            let shadow = NSShadow()
+            shadow.shadowBlurRadius = 8
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
+            shadow.shadowOffset = NSMakeSize(0, 0)
+            self.shadow = shadow
+            addSubview(visualEffect)
+            addSubview(backgroundView)
             addSubview(imageView)
 
             
@@ -459,7 +457,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
     private let chatInteraction: ChatInteraction
     
     private var inOrderToRemove:[WeakReference<ReactionView>] = []
-    private var uniqueLimit: Int = 0
+    private var uniqueLimit: Int = Int.max
     init(chatInteraction: ChatInteraction, view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
         self.chatInteraction = chatInteraction
         self.window = window
@@ -479,7 +477,10 @@ final class ChatAddReactionControl : NSObject, Notifable {
     
     private func initialize() {
         
-        self.uniqueLimit = context.appConfiguration.data?["reactions_uniq_max"] as? Int ?? Int.max
+        if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
+            self.uniqueLimit = Int(value) ?? Int.max
+        }
+        
 
         chatInteraction.add(observer: self)
         
@@ -562,11 +563,13 @@ final class ChatAddReactionControl : NSObject, Notifable {
             $0.value != nil
         })
         
+        let uniqueLimit = self.uniqueLimit
+        
         func filter(_ list:[AvailableReactions.Reaction], attr: ReactionsMessageAttribute?) -> [AvailableReactions.Reaction] {
             if let attr = attr {
                 if attr.reactions.count >= uniqueLimit {
                     return list.filter { reaction in
-                        attr.reactions.contains(where: {
+                        return attr.reactions.contains(where: {
                             $0.value == reaction.value
                         })
                     }
@@ -618,12 +621,51 @@ final class ChatAddReactionControl : NSObject, Notifable {
 
             
             let context = self.context
-            let row = view.tableView.row(at: point)
-            if row != -1, NSPointInRect(inside, view.tableView.frame)  {
-                let item = view.tableView.item(at: row) as? ChatRowItem
-                let canReact = item?.canReact == true && lockId != item?.stableId
+            
+            let findClosest:(NSPoint)->ChatRowItem? = { [weak view] point in
+                if let view = view {
+                    let current = view.tableView.row(at: point)
+                    if current == -1 {
+                        return nil
+                    }
+                    let around:[Int] = [current, current - 1, current + 1].filter { current in
+                        return current >= 0 && current < view.tableView.count
+                    }
+                    var candidates: [ChatRowItem] = []
+                    for index in around {
+                        if let item = view.tableView.item(at: index) as? ChatRowItem {
+                            candidates.append(item)
+                        }
+                    }
+                    if candidates.isEmpty {
+                        return nil
+                    }
+                    var best: ChatRowItem? = nil
+                    var min_dst: CGFloat = .greatestFiniteMagnitude
+                    for item in candidates {
+                        if let itemView = item.view as? ChatRowView {
+                            let rect = view.convert(itemView.rectForReaction, from: itemView)
+                            
+                            let xdst = inside.x - rect.midX
+                            let ydst = inside.y - rect.midY
+
+                            let dst = sqrt((xdst * xdst) + (ydst * ydst))
+                            
+                            if dst < min_dst {
+                                best = item
+                                min_dst = dst
+                            }
+                        }
+                    }
+                    return best
+                }
+                return nil
+            }
+            
+            if let item = findClosest(point), NSPointInRect(inside, view.tableView.frame) {
+                let canReact = item.canReact == true && lockId != item.stableId
                 
-                if let item = item, canReact {
+                if canReact {
                     if item.message?.id != self.previousItem?.message?.id {
                         let animated = item.stableId != self.previousItem?.stableId
                         self.previousItem = item
@@ -646,6 +688,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
                                             context.reactions.react(message.id, value: isSelected ? nil : value)
                                             self?.clearAndLock()
                                         })
+                                                                                
                                         current.getBounds = { [weak view] in
                                             if let view = view {
                                                 return view.tableView.bounds

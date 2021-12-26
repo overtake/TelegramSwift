@@ -333,7 +333,7 @@ class ChatMessageItem: ChatRowItem {
                      for entity in attr.entities {
                          switch entity.type {
                          case .Spoiler:
-                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)))
+                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.grayUI))
                          default:
                              break
                          }
@@ -531,7 +531,7 @@ class ChatMessageItem: ChatRowItem {
                  if webpageLayout.hasInstantPage {
                      return true
                  }
-                 if let _ = webpageLayout.imageSize, webpageLayout.isFullImageSize || textLayout.layoutSize.height - 10 <= webpageLayout.contrainedImageSize.height {
+                 if let _ = webpageLayout.imageSize {
                      return true
                  }
                  if actionButtonText != nil {
