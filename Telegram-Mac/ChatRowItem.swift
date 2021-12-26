@@ -2584,7 +2584,7 @@ class ChatRowItem: TableRowItem {
         if captionLayouts.count == 1 {
             if let caption = captionLayouts.first?.layout {
                 if let line = caption.lines.last {
-                    return LastLineData(width: line.frame.width, single: caption.lines.count == 1 && isBubbleFullFilled)
+                    return LastLineData(width: line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
                 }
             }
         } else if captionLayouts.count > 1 {
