@@ -1382,7 +1382,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return
         }
         
-        
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
             self.animatedView?.removeFromSuperview()
             self.animatedView = nil
@@ -1771,7 +1770,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         if item.isBubbled {
             let bubbleFrame = self.bubbleView.frame
-            var rect = NSMakeRect(bubbleFrame.maxX - 10, bubbleFrame.maxY - 10, 18, 18)
+            var rect = NSMakeRect(bubbleFrame.maxX - 10, bubbleFrame.maxY - 10, 20, 20)
             if item.isIncoming {
                 rect.origin.x -= 5
                 rect.origin.y -= 5
@@ -1781,8 +1780,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             return rect
         } else {
-            let rightFrame = self.rightView.frame
-            let rect = NSMakeRect(rightFrame.maxX - 14, rightFrame.maxY, 14, 14)
+            let contentFrame = self.contentFrame(item)
+            let rect = NSMakeRect(contentFrame.minX - 20 - 10, contentFrame.minY, 20, 20)
             return rect
         }
     }

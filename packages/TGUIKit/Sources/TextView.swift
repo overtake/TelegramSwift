@@ -267,8 +267,10 @@ public final class TextViewLayout : Equatable {
     
     public struct Spoiler {
         public let range: NSRange
-        public init(range: NSRange) {
+        public let color: NSColor
+        public init(range: NSRange, color: NSColor) {
             self.range = range
+            self.color = color
         }
     }
     
@@ -1400,16 +1402,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     if let spoilerRange = spoiler.range.intersection(line.range) {
                         let range = spoilerRange.intersection(layout.selectedRange.range)
                         
-                        var ranges:[NSRange] = []
+                        var ranges:[(NSRange, NSColor)] = []
                         if let range = range {
-                            ranges.append(NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound))
-                            ranges.append(NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound))
+                            ranges.append((NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound), spoiler.color))
+                            ranges.append((NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound), spoiler.color))
                         } else {
-                            ranges.append(spoilerRange)
+                            ranges.append((spoilerRange, spoiler.color))
                         }
                         for range in ranges {
-                            let startOffset = CTLineGetOffsetForStringIndex(line.line, range.lowerBound, nil);
-                            let endOffset = CTLineGetOffsetForStringIndex(line.line, range.upperBound, nil);
+                            let startOffset = CTLineGetOffsetForStringIndex(line.line, range.0.lowerBound, nil);
+                            let endOffset = CTLineGetOffsetForStringIndex(line.line, range.0.upperBound, nil);
 
                             var ascent:CGFloat = 0
                             var descent:CGFloat = 0
@@ -1425,7 +1427,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             rect.size.height += ceil(descent - leading)
                             
                             
-                            ctx.setFillColor(presentation.colors.grayText.cgColor)
+                            ctx.setFillColor(range.1.cgColor)
                             ctx.fill(rect)
                         }
                     }

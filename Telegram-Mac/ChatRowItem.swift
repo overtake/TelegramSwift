@@ -1894,13 +1894,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
                     let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, makesizeCallback: { [weak self] in
-                        guard let `self` = self else {return}
-                        _ = self.makeSize(self.oldWidth, oldWidth: 0)
-                        Queue.mainQueue().async { [weak self] in
-                            self?.redraw()
-                        }
-                    })
+                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation)
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
@@ -2603,7 +2597,10 @@ class ChatRowItem: TableRowItem {
         
         if let item = self as? ChatMessageItem {
             if let webpageLayout = item.webpageLayout as? WPArticleLayout {
-                if let textLayout = webpageLayout.textLayout {
+                if webpageLayout.isFullImageSize {
+                    return nil
+                }
+                if let textLayout = webpageLayout.textLayout, !webpageLayout.isFullImageSize {
                     if let line = textLayout.lines.last {
                         return LastLineData(width: line.frame.width, single: false)
                     }
