@@ -135,6 +135,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 }
             }
             if let text = item.actionButtonText {
+                var isNew = false
                 if actionButton == nil {
                     actionButton = TitleButton()
                     actionButton?.layer?.cornerRadius = .cornerRadius
@@ -142,6 +143,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     actionButton?.disableActions()
                     actionButton?.set(font: .normal(.text), for: .Normal)
                     self.rowView.addSubview(actionButton!)
+                    isNew = true
                 }
                 actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
@@ -152,7 +154,10 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 actionButton?.layer?.borderColor = item.wpPresentation.activity.cgColor
                 actionButton?.set(color: item.wpPresentation.activity, for: .Normal)
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 30), thatFit: true)
-                
+                if animated, isNew {
+                    actionButton?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2, timingFunction: .easeOut)
+                    actionButton?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             } else {
                 if let view = actionButton {
                     performSubviewRemoval(view, animated: animated)
