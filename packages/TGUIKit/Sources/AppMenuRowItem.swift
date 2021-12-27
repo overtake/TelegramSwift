@@ -311,6 +311,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
     open override func updateMouse() {
         super.updateMouse()
         updateColors()
+        containerView.updateState()
     }
 
     

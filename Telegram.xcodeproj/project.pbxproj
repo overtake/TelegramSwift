@@ -35,6 +35,7 @@
 		272934122778E01100F10D3C /* menu_video.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934112778E01100F10D3C /* menu_video.tgs */; };
 		272934142778E03E00F10D3C /* menu_voice.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934132778E03E00F10D3C /* menu_voice.tgs */; };
 		272934162778E05000F10D3C /* menu_music.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934152778E05000F10D3C /* menu_music.tgs */; };
+		2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */; };
 		272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272C182F267D00350030B5FB /* CoreMediaIO.framework */; };
 		273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */; };
 		273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */; };
@@ -1198,6 +1199,8 @@
 		272934112778E01100F10D3C /* menu_video.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_video.tgs; sourceTree = "<group>"; };
 		272934132778E03E00F10D3C /* menu_voice.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_voice.tgs; sourceTree = "<group>"; };
 		272934152778E05000F10D3C /* menu_music.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_music.tgs; sourceTree = "<group>"; };
+		2729341727799D2B00F10D3C /* menu_file.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = menu_file.tgs; path = "../../../../../../Downloads/macMenuTestIcons 12/menu_file.tgs"; sourceTree = "<group>"; };
+		2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_select_multiple.tgs; sourceTree = "<group>"; };
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
 		273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperColorPickerContainerView.swift; sourceTree = "<group>"; };
@@ -2541,6 +2544,8 @@
 		27CE375C276095DA007E6F1B /* menu */ = {
 			isa = PBXGroup;
 			children = (
+				2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */,
+				2729341727799D2B00F10D3C /* menu_file.tgs */,
 				272934152778E05000F10D3C /* menu_music.tgs */,
 				272934132778E03E00F10D3C /* menu_voice.tgs */,
 				272934112778E01100F10D3C /* menu_video.tgs */,
@@ -5300,6 +5305,7 @@
 				2780DE40271F0BB30092323F /* zoom.tgs in Resources */,
 				27336739276241EE0027441E /* menu_add_gif.tgs in Resources */,
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
+				2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */,
 				2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */,
 				D07450F32340E89100769D7F /* sad_man.tgs in Resources */,
 				D07C6D802346A43000468B1A /* monkey_unsee.tgs in Resources */,

@@ -767,9 +767,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        delay(0.01, closure: { [weak self] in
-            self?.update(transition: transition)
-        })
+        self.update(transition: transition)
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
