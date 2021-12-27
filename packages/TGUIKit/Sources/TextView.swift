@@ -265,9 +265,10 @@ private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
     
-    public struct Spoiler {
+    public class Spoiler {
         public let range: NSRange
         public let color: NSColor
+        public fileprivate(set) var isRevealed: Bool = false
         public init(range: NSRange, color: NSColor) {
             self.range = range
             self.color = color
@@ -914,6 +915,17 @@ public final class TextViewLayout : Equatable {
         }
         return nil
     }
+    
+    func spoiler(at point: NSPoint) -> Spoiler? {
+        for spoiler in spoilers {
+            if spoiler.range.contains(self.findIndex(location: point)) {
+                if !spoiler.isRevealed {
+                    return spoiler
+                }
+            }
+        }
+        return nil
+    }
 
     public func link(at point:NSPoint) -> (Any, LinkType, NSRange, NSRect)? {
         
@@ -1398,7 +1410,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
                     }
                 }
-                for spoiler in layout.spoilers {
+                for spoiler in layout.spoilers.filter({ !$0.isRevealed }) {
                     if let spoilerRange = spoiler.range.intersection(line.range) {
                         let range = spoilerRange.intersection(layout.selectedRange.range)
                         
@@ -1603,9 +1615,15 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
         if !userInteractionEnabled {
             super.mouseDown(with: event)
-        }
-        else if let layout = textLayout {
+        } else if let layout = textLayout {
             let point = self.convert(event.locationInWindow, from: nil)
+            
+            
+            if let spoiler = layout.spoiler(at: point) {
+                spoiler.isRevealed = true
+                needsDisplay = true
+            }
+            
             let index = layout.findIndex(location: point)
             if point.x > layout.lines[index].frame.maxX {
                 superview?.mouseDown(with: event)
@@ -1765,7 +1783,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         let location = self.convert(event.locationInWindow, from: nil)
         
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
-            if textLayout?.color(at: location) != nil {
+            if textLayout?.spoiler(at: location) != nil {
+                NSCursor.pointingHand.set()
+            }  else if textLayout?.color(at: location) != nil {
                 NSCursor.pointingHand.set()
                 textLayout?.interactions.hoverOnLink(.exited)
             } else if let layout = textLayout, let (value, _, _, _) = layout.link(at: location) {

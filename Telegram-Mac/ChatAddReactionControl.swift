@@ -530,7 +530,16 @@ final class ChatAddReactionControl : NSObject, Notifable {
     }
     
     private var previousItem: ChatRowItem?
-    private var lockId: AnyHashable?
+    private var lockId: AnyHashable? {
+        didSet {
+            if lockId != nil {
+                lockDisposable.set(delaySignal(1.0).start(completed: { [weak self] in
+                    self?.lockId = nil
+                    self?.update(transition: .animated(duration: 0.2, curve: .easeOut))
+                }))
+            }
+        }
+    }
     
     private func delayAndUpdate() {
         self.update()
@@ -744,6 +753,9 @@ final class ChatAddReactionControl : NSObject, Notifable {
     }
     
     private func clear() {
+        if let view = self.currentView, view.isRevealed {
+            self.lockId = self.previousItem?.stableId
+        }
         self.removeCurrent(animated: true)
         self.previousItem = nil
         self.delayDisposable.set(nil)
@@ -751,10 +763,6 @@ final class ChatAddReactionControl : NSObject, Notifable {
     private func clearAndLock() {
         self.lockId = self.previousItem?.stableId
         clear()
-        lockDisposable.set(delaySignal(1.0).start(completed: { [weak self] in
-            self?.lockId = nil
-            self?.update(transition: .animated(duration: 0.2, curve: .easeOut))
-        }))
     }
     
     private func removeCurrent(animated: Bool) {
