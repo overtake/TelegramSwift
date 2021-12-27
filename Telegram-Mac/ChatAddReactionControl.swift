@@ -298,7 +298,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
             }
             
             if state == .Hover && previous != .Hover {
-                disposable.set(delaySignal(0.5).start(completed: { [weak self] in
+                disposable.set(delaySignal(0.7).start(completed: { [weak self] in
                     self?.present()
                 }))
             } else if state != .Hover {
@@ -394,6 +394,13 @@ final class ChatAddReactionControl : NSObject, Notifable {
             needsLayout = true
             
            
+        }
+        
+        override func scrollWheel(with event: NSEvent) {
+            if let superview = superview as? ChatControllerView {
+                superview.tableView.scrollWheel(with: event)
+            }
+            disposable.set(nil)
         }
         
         var isRevealed: Bool {

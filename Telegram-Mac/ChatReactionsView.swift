@@ -93,8 +93,33 @@ final class ChatReactionsLayout {
     }
     
     final class Reaction : Equatable, Comparable, Identifiable {
+        
+        struct Avatar : Comparable, Identifiable {
+            static func < (lhs: Avatar, rhs: Avatar) -> Bool {
+                return lhs.index < rhs.index
+            }
+            
+            var stableId: PeerId {
+                return peer.id
+            }
+            
+            static func == (lhs: Avatar, rhs: Avatar) -> Bool {
+                if lhs.index != rhs.index {
+                    return false
+                }
+                if !lhs.peer.isEqual(rhs.peer) {
+                    return false
+                }
+                return true
+            }
+            
+            let peer: Peer
+            let index: Int
+        }
+
+        
         let value: MessageReaction
-        let text: DynamicCounterTextView.Value!
+        let text: DynamicCounterTextView.Value?
         let presentation: Theme
         let index: Int
         let minimumSize: NSSize
@@ -107,6 +132,8 @@ final class ChatReactionsLayout {
         let message: Message
         let openInfo: (PeerId)->Void
         let canViewList: Bool
+        
+        let avatars:[Avatar]
         var rect: CGRect = .zero
         
         static func ==(lhs: Reaction, rhs: Reaction) -> Bool {
@@ -127,7 +154,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void, openInfo: @escaping (PeerId)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void, openInfo: @escaping (PeerId)->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -140,16 +167,39 @@ final class ChatReactionsLayout {
             self.openInfo = openInfo
             switch mode {
             case .full:
-                self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
+                if recentPeers.isEmpty {
+                    self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
+                } else {
+                    self.text = nil
+                }
                 
                 var width: CGFloat = presentation.insetOuter
                 width += presentation.reactionSize.width
-                width += presentation.insetInner
-                width += self.text.size.width
-                width += presentation.insetOuter
+                if let text = text {
+                    width += presentation.insetInner
+                    width += text.size.width
+                    width += presentation.insetOuter
+                } else if !recentPeers.isEmpty {
+                    width += presentation.insetInner
+                    if recentPeers.count == 1 {
+                        width += presentation.reactionSize.width
+                    } else if !recentPeers.isEmpty {
+                        width += 12 * CGFloat(recentPeers.count)
+                    }
+                    width += presentation.insetOuter
+                }
                 
                 
-                let height = max(self.text.size.height, presentation.reactionSize.height) + presentation.insetInner * 2
+                
+                
+                var index: Int = 0
+                self.avatars = recentPeers.map { peer in
+                    let avatar = Avatar(peer: peer, index: index)
+                    index += 1
+                    return avatar
+                }
+                                
+                let height = presentation.reactionSize.height + presentation.insetInner * 2
                 
                 self.minimumSize = NSMakeSize(width, height)
 
@@ -157,12 +207,14 @@ final class ChatReactionsLayout {
                 var width: CGFloat = presentation.reactionSize.width
                 let height = presentation.reactionSize.height
                 if value.count > 1 {
-                    self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .italic(.short), textColor: presentation.textColor, width: .greatestFiniteMagnitude)
-                    width += self.text.size.width + 2
+                    let text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .italic(.short), textColor: presentation.textColor, width: .greatestFiniteMagnitude)
+                    self.text = text
+                    width += text.size.width + 2
                 } else {
                     self.text = nil
                     width += 2
                 }
+                self.avatars = []
                 self.minimumSize = NSMakeSize(width, height)
             }
         }
@@ -305,8 +357,15 @@ final class ChatReactionsLayout {
         })
         
         self.reactions = sorted.compactMap { reaction in
-            if let available = available?.reactions.first(where: { $0.value.fixed == reaction.value.fixed }) {
-                return .init(value: reaction, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
+            if let available = available?.reactions.first(where: { $0.value == reaction.value }) {
+                
+                let recentPeers:[Peer] = reactions.recentPeers.filter { recent in
+                    return recent.value == reaction.value
+                }.compactMap {
+                    message.peers[$0.peerId]
+                }
+                
+                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
                     engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
                 }, openInfo: openInfo)
             } else {
@@ -414,16 +473,17 @@ final class ChatReactionsView : View {
     final class ReactionView: Control, ReactionViewImpl {
         private var reaction: ChatReactionsLayout.Reaction?
         private let imageView: TransformImageView = TransformImageView()
-        private let textView = DynamicCounterTextView(frame: .zero)
+        private var textView: DynamicCounterTextView?
+        private let avatarsContainer = View(frame: NSMakeRect(0, 0, 16 * 3, 16))
+        private var avatars:[AvatarContentView] = []
+        private var peers:[ChatReactionsLayout.Reaction.Avatar] = []
         private var first: Bool = true
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             
-            textView.userInteractionEnabled = false
             addSubview(imageView)
-            addSubview(textView)
-            
-            
+            addSubview(avatarsContainer)
+            avatarsContainer.isEventLess = true
             scaleOnClick = true
             
             self.set(handler: { [weak self] _ in
@@ -448,9 +508,80 @@ final class ChatReactionsView : View {
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
             self.reaction = reaction
             self.layer?.cornerRadius = reaction.rect.height / 2
-            self.textView.update(reaction.text, animated: animated)
             
-
+            let presentation = reaction.presentation
+            
+            if let text = reaction.text {
+                let current: DynamicCounterTextView
+                if let view = self.textView {
+                    current = view
+                } else {
+                    current = DynamicCounterTextView(frame: CGRect(origin: NSMakePoint(presentation.insetOuter + presentation.reactionSize.width + presentation.insetInner, (frame.height - text.size.height) / 2), size: text.size))
+                    current.userInteractionEnabled = false
+                    self.textView = current
+                    addSubview(current)
+                }
+                current.update(text, animated: animated)
+            } else {
+                if let view = self.textView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.textView = nil
+                }
+            }
+            
+            
+            let (removed, inserted, updated) = mergeListsStableWithUpdates(leftList: self.peers, rightList: reaction.avatars)
+            
+            let size = reaction.presentation.reactionSize
+            
+            for removed in removed.reversed() {
+                let control = avatars.remove(at: removed)
+                let peer = self.peers[removed]
+                let haveNext = reaction.avatars.contains(where: { $0.stableId == peer.stableId })
+                control.updateLayout(size: size, isClipped: false, animated: animated)
+                if animated && !haveNext {
+                    control.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, timingFunction: .easeOut, removeOnCompletion: false, completion: { [weak control] _ in
+                        control?.removeFromSuperview()
+                    })
+                    control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: 0.2)
+                } else {
+                    control.removeFromSuperview()
+                }
+            }
+            for inserted in inserted {
+                let control = AvatarContentView(context: reaction.context, peer: inserted.1.peer, message: reaction.message, synchronousLoad: false, size: size)
+                control.updateLayout(size: size, isClipped: inserted.0 != 0, animated: animated)
+                control.userInteractionEnabled = false
+                control.setFrameSize(size)
+                control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 12, 0))
+                avatars.insert(control, at: inserted.0)
+                avatarsContainer.subviews.insert(control, at: inserted.0)
+                if animated {
+                    if let index = inserted.2 {
+                        control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 12, 0), to: control.frame.origin, duration: 0.2, timingFunction: .easeOut)
+                    } else {
+                        control.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeOut)
+                        control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.2)
+                    }
+                }
+            }
+            for updated in updated {
+                let control = avatars[updated.0]
+                control.updateLayout(size: size, isClipped: updated.0 != 0, animated: animated)
+                let updatedPoint = NSMakePoint(CGFloat(updated.0) * 12, 0)
+                if animated {
+                    control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: 0.2, timingFunction: .easeOut, additive: true)
+                }
+                control.setFrameOrigin(updatedPoint)
+            }
+            var index: CGFloat = 10
+            for control in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }) {
+                control.layer?.zPosition = index
+                index -= 1
+            }
+            
+            self.peers = reaction.avatars
+            
             self.backgroundColor = reaction.value.isSelected ? reaction.presentation.selectedColor : reaction.presentation.bgColor
 
             if animated {
@@ -491,9 +622,14 @@ final class ChatReactionsView : View {
 
             transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - presentation.reactionSize.height) / 2), size: presentation.reactionSize))
             
-            let center = focus(reaction.text.size)
+            if let textView = textView, let text = reaction.text {
+                let center = focus(text.size)
+                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.size))
+            } else {
+                let center = focus(presentation.reactionSize)
+                transition.updateFrame(view: avatarsContainer, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: avatarsContainer.frame.size))
+            }
             
-            transition.updateFrame(view: self.textView, frame: CGRect.init(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: reaction.text.size))
         }
         override func layout() {
             super.layout()
@@ -559,8 +695,8 @@ final class ChatReactionsView : View {
             guard let reaction = reaction else {
                 return
             }
-            if let textView = textView {
-                var text_r = focus(reaction.text.size)
+            if let textView = textView, let text = reaction.text {
+                var text_r = focus(text.size)
                 text_r.origin.x = 2
                 var img_r = focus(reaction.presentation.reactionSize)
                 img_r.origin.x = text_r.maxX
