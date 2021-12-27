@@ -610,7 +610,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var rightBorder: View? = nil
     public var separator:TableSeparator = .none
     
-    public var onCAScroll:(NSRect, NSRect)->Void = { _, _ in }
     
     public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
         didSet {
@@ -3076,49 +3075,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 shouldSuspend = true
             }
             
-//            clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
-//                self?.removeScroll(listener: scrollListener)
-//            })
-            contentView.layer?.removeAllAnimations()
-            self.layer?.removeAllAnimations()
-            
-            if abs(bounds.minY - clipView.bounds.minY) < height || ignoreLayerAnimation {
-                if animate {
-                    areSuspended = shouldSuspend
-                    clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
-                        if let `self` = self {
-                            scrollListener.handler(self.scrollPosition().current)
-                            self.removeScroll(listener: scrollListener)
-                            completion(completed)
-                            self.areSuspended = false
-                            self.enqueueTransitions()
-                        }
-                        
-                    })
-                } else {
-                    self.contentView.scroll(to: bounds.origin)
-                    reflectScrolledClipView(clipView)
-                    removeScroll(listener: scrollListener)
-                    scrollListener.handler(self.scrollPosition().current)
-                }
-               
-            } else {
-               
+            if animate {
                 areSuspended = shouldSuspend
-                let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
-                clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
-                    guard let `self` = self else {
-                        return
+                clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
+                    if let `self` = self {
+                        scrollListener.handler(self.scrollPosition().current)
+                        self.removeScroll(listener: scrollListener)
+                        completion(completed)
+                        self.areSuspended = false
+                        self.enqueueTransitions()
                     }
-                    scrollListener.handler(self.scrollPosition().current)
-                    self.removeScroll(listener: scrollListener)
-                    completion(completed)
-                    self.areSuspended = false
-                    self.enqueueTransitions()
+                    
                 })
-                if animate {
-                    self.onCAScroll(edgeRect, bounds)
-                }
+            } else {
+                self.contentView.scroll(to: bounds.origin)
+                reflectScrolledClipView(clipView)
+                removeScroll(listener: scrollListener)
+                scrollListener.handler(self.scrollPosition().current)
             }
         } else {
             if let item = item, focus.focus {

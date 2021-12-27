@@ -330,13 +330,28 @@ class InstalledStickerPacksController: TableViewController {
     private func openSuggestionOptions() {
         let postbox: Postbox = context.account.postbox
         if let view = (genericView.item(stableId: InstalledStickerPacksEntryId.index(0))?.view as? GeneralInteractedRowView)?.textView {
-            showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(strings().stickersSuggestAll, {
-                _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.all)}).start()
-            }), SPopoverItem(strings().stickersSuggestAdded, {
-                 _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.installed)}).start()
-            }), SPopoverItem(strings().stickersSuggestNone, {
-                 _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.none)}).start()
-            })]), edge: .minX, inset: NSMakePoint(0,-30))
+            if let event = NSApp.currentEvent {
+                
+                let menu = ContextMenu()
+                
+                menu.addItem(ContextMenuItem(strings().stickersSuggestAll, handler: {
+                    _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.all)}).start()
+                }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+                
+                menu.addItem(ContextMenuItem(strings().stickersSuggestAdded, handler: {
+                    _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.installed)}).start()
+                }, itemImage: MenuAnimation.menu_open_profile.value))
+                
+                menu.addItem(ContextMenuItem(strings().stickersSuggestNone, handler: {
+                    _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.none)}).start()
+               }, itemImage: MenuAnimation.menu_clear_history.value))
+                
+                let value = AppMenu(menu: menu)
+                
+                value.show(event: event, view: view)
+                
+            }
+         
         }
     }
     

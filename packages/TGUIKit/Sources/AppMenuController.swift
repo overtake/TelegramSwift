@@ -338,6 +338,7 @@ final class AppMenuController : NSObject  {
     }
     
     private func checkEvent(_ event: NSEvent) {
+        
         switch appearMode {
         case .hover:
             if let window = event.window {
@@ -543,6 +544,19 @@ final class AppMenuController : NSObject  {
             }
             return .rejected
         }, with: self, for: .leftMouseDown)
+        
+        panel.set(mouseHandler: { [weak self] _ in
+            if let windows = self?.windows {
+                for (_, window) in windows {
+                    window.view.tableView.enumerateViews(with: { view in
+                        view.updateMouse()
+                        return true
+                    })
+                }
+            }
+            return .rejected
+        }, with: self, for: .mouseMoved)
+        
         view.center()
         
         self.windows[.init(submenuId: submenuId, timestamp: Date().timeIntervalSince1970)] = panel
@@ -567,18 +581,27 @@ final class AppMenuController : NSObject  {
     }
     
     private func cancelSubmenu(_ item: ContextMenuItem) {
-        let submenu = findSubmenu(item.id)
-        self.windows = self.windows.filter({
-            $0.key.submenuId != item.id
+        delay(0.1, closure: { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            let submenu = self.findSubmenu(item.id)
+            let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
+            let insideItem = tableItem?.view?.mouseInside() ?? false
+            
+            if let submenu = submenu, !submenu.view.mouseInside() && !insideItem {
+                self.windows = self.windows.filter({
+                    $0.key.submenuId != item.id
+                })
+                submenu.view.parentView?.view.tableView.cancelSelection()
+                submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
+                    if let submenu = submenu {
+                        submenu.orderOut(nil)
+                    }
+                })
+            }
         })
-        if let submenu = submenu {
-            submenu.view.parentView?.view.tableView.cancelSelection()
-            submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
-                if let submenu = submenu {
-                    submenu.orderOut(nil)
-                }
-            })
-        }
+        
     }
     
     private func presentSubmenu(_ menu: ContextMenu, parentView: Window, for id: Int64) {
@@ -587,11 +610,15 @@ final class AppMenuController : NSObject  {
             return
         }
         
+        
+        
         let view = getView(for: menu, parentView: parentView, submenuId: id)
         guard let parentItem = parentView.view.item(for: id), let parentItemView = parentItem.view else {
             return
         }
         _ = parentView.view.tableView.select(item: parentItem)
+        
+
         
         var point = parentItemView.convert(NSMakePoint(parentItemView.frame.width - 5, -parentItemView.frame.height), to: nil)
         point = parentView.convertToScreen(CGRect(origin: point, size: .zero)).origin

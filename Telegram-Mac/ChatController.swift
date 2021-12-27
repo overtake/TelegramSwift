@@ -372,15 +372,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 }
             })
         }))
-        
-        tableView.onCAScroll = { [weak self] from, to in
-            guard let strongSelf = self else {
-                return
-            }
-            for view in strongSelf.floatingPhotosView.subviews {
-                view.layer?.animatePosition(from: NSMakePoint(view.frame.minX, view.frame.minY - (from.minY - to.minY)), to: view.frame.origin, duration: 0.4, timingFunction: .spring)
-            }
-        }
+       
     }
         
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
@@ -550,10 +542,13 @@ class ChatControllerView : View, ChatInputDelegate {
                 view.updateBackground(animated: transition.isAnimated, item: view.item)
             }
         })
-        
+        tableView.tile()
+
         if let themeSelectorView = self.themeSelectorView {
             transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
         }
+        
+        
         self.chatInteraction.updateFrame(frame, transition)
     }
 

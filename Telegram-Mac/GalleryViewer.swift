@@ -811,9 +811,46 @@ class GalleryViewer: NSResponder {
                     if !items.isEmpty {
                         items.append(ContextSeparatorItem())
                     }
-                    items.append(ContextMenuItem(strings().galleryContextDeletePhoto, handler: { [weak self] in
-                        self?.deleteMessage(control)
-                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    
+                    let item = ContextMenuItem(strings().galleryContextDeletePhoto, handler: { [weak self] in
+                        self?.deleteMessages([message])
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)
+                    
+                    let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
+                    if messages.count > 1 {
+                        var items:[ContextMenuItem] = []
+                        
+                        let thisTitle: String
+                        if message.media.first is TelegramMediaImage {
+                            thisTitle = strings().galleryContextShareThisPhoto
+                        } else {
+                            thisTitle = strings().galleryContextShareThisVideo
+                        }
+                        items.append(ContextMenuItem(thisTitle, handler: { [weak self] in
+                            self?.deleteMessages([message])
+                        }))
+                       
+                        let allTitle: String
+                        if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
+                            allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
+                        } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
+                            allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
+                        } else {
+                            allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
+                        }
+                        
+                        items.append(ContextMenuItem(allTitle, handler: { [weak self] in
+                            self?.deleteMessages(messages)
+                        }))
+                        
+                        let submenu = ContextMenu()
+                        for item in items {
+                            submenu.addItem(item)
+                        }
+                        item.submenu = submenu
+                    }
+                    
+                    items.append(item)
                 }
             }
         }
