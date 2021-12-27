@@ -20,58 +20,71 @@ enum MessageTextMediaViewType {
 }
 
 func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> NSString {
-    var messageText: NSString = message.text.fixed.nsstring
+    var messageText: String = message.text
+    for attr in message.attributes {
+        if let attr = attr as? TextEntitiesMessageAttribute {
+            for entity in attr.entities {
+                switch entity.type {
+                case .Spoiler:
+                    messageText = messageText.spoiler(NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound))
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
     for media in message.media {
         switch media {
         case _ as TelegramMediaImage:
             
             if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                messageText = strings().chatListServiceDestructingPhoto.nsstring
+                messageText = strings().chatListServiceDestructingPhoto
             } else {
-                messageText = strings().chatListPhoto1Countable(messagesCount).nsstring
+                messageText = strings().chatListPhoto1Countable(messagesCount)
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("🖼 " + message.text.fixed).nsstring
+                        messageText = ("🖼 " + message.text.fixed)
                     case .text:
-                        messageText = message.text.fixed.nsstring
+                        messageText = message.text.fixed
                     case .none:
                         break
                     }
                 }
             }
         case let dice as TelegramMediaDice:
-            messageText = dice.emoji.nsstring
+            messageText = dice.emoji
         case let fileMedia as TelegramMediaFile:
             if fileMedia.isStaticSticker || fileMedia.isAnimatedSticker {
-                messageText = strings().chatListSticker(fileMedia.stickerText?.fixed ?? "").nsstring
+                messageText = strings().chatListSticker(fileMedia.stickerText?.fixed ?? "")
             } else if fileMedia.isVoice {
-                messageText = strings().chatListVoice.nsstring
+                messageText = strings().chatListVoice
                 if !message.text.fixed.isEmpty {
-                    messageText = ("🎤" + " " + message.text.fixed).nsstring
+                    messageText = ("🎤" + " " + message.text.fixed)
                 }
             } else if fileMedia.isMusic  {
-                messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1).nsstring
+                messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1)
             } else if fileMedia.isInstantVideo {
-                messageText = strings().chatListInstantVideo.nsstring
+                messageText = strings().chatListInstantVideo
             } else if fileMedia.isVideo {
                 
                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-                    messageText = strings().chatListServiceDestructingVideo.nsstring
+                    messageText = strings().chatListServiceDestructingVideo
                 } else {
                     if fileMedia.isAnimated {
-                        messageText = strings().chatListGIF.nsstring
+                        messageText = strings().chatListGIF
                         if !message.text.fixed.isEmpty {
-                             messageText = (strings().chatListGIF + ", " + message.text.fixed).nsstring
+                             messageText = (strings().chatListGIF + ", " + message.text.fixed)
                         }
                     } else {
-                        messageText = strings().chatListVideo1Countable(messagesCount).nsstring
+                        messageText = strings().chatListVideo1Countable(messagesCount)
                         if !message.text.fixed.isEmpty {
                             switch mediaViewType {
                             case .emoji:
-                                messageText = ("📹 " + message.text.fixed).nsstring
+                                messageText = ("📹 " + message.text.fixed)
                             case .text:
-                                messageText = message.text.fixed.nsstring
+                                messageText = message.text.fixed
                             case .none:
                                 break
                             }
@@ -81,36 +94,36 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 
                 
             } else {
-                messageText = fileMedia.fileName?.fixed.nsstring ?? "File"
+                messageText = fileMedia.fileName?.fixed ?? "File"
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("📎 " + message.text.fixed).nsstring
+                        messageText = ("📎 " + message.text.fixed)
                     case .text:
-                        messageText = message.text.fixed.nsstring
+                        messageText = message.text.fixed
                     case .none:
                         break
                     }
                 }
             }
         case _ as TelegramMediaMap:
-            messageText = strings().chatListMap.nsstring
+            messageText = strings().chatListMap
         case _ as TelegramMediaContact:
-            messageText = strings().chatListContact.nsstring
+            messageText = strings().chatListContact
         case let game as TelegramMediaGame:
-            messageText = "🎮 \(game.title)".nsstring
+            messageText = "🎮 \(game.title)"
         case let invoice as TelegramMediaInvoice:
-            messageText = invoice.title.nsstring
+            messageText = invoice.title
         case let poll as TelegramMediaPoll:
-            messageText = "📊 \(poll.text)".nsstring
+            messageText = "📊 \(poll.text)"
         case let webpage as TelegramMediaWebpage:
             if case let .Loaded(content) = webpage.content {
                 if let _ = content.image {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("🖼 " + message.text.fixed).nsstring
+                        messageText = ("🖼 " + message.text.fixed)
                     case .text:
-                        messageText = message.text.fixed.nsstring
+                        messageText = message.text.fixed
                     case .none:
                         break
                     }
@@ -118,18 +131,18 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     if (file.isVideo && !file.isInstantVideo)  {
                         switch mediaViewType {
                         case .emoji:
-                            messageText = ("🖼 " + message.text.fixed).nsstring
+                            messageText = ("🖼 " + message.text.fixed)
                         case .text:
-                            messageText = message.text.fixed.nsstring
+                            messageText = message.text.fixed
                         case .none:
                             break
                         }
                     } else if file.isGraphicFile {
                         switch mediaViewType {
                         case .emoji:
-                            messageText = ("📹 " + message.text.fixed).nsstring
+                            messageText = ("📹 " + message.text.fixed)
                         case .text:
-                            messageText = message.text.fixed.nsstring
+                            messageText = message.text.fixed
                         case .none:
                             break
                         }
@@ -140,7 +153,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
-    return messageText.replacingOccurrences(of: "\n", with: " ").nsstring.replacingOccurrences(of: "\r", with: " ").trimmed.nsstring
+    return messageText.replacingOccurrences(of: "\n", with: " ").nsstring.replacingOccurrences(of: "\r", with: " ").trimmed.fixed.nsstring
     
 }
 

@@ -333,7 +333,7 @@ class ChatMessageItem: ChatRowItem {
                      for entity in attr.entities {
                          switch entity.type {
                          case .Spoiler:
-                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.grayUI))
+                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.text))
                          default:
                              break
                          }
