@@ -49,11 +49,13 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 if let reactions = reactions {
                     photos = Array(reactions.items.map { $0.peer._asPeer() }.prefix(3))
                 }
-                if photos.count < 3, let read = read {
-                    let read = read.filter { read in
-                        return !photos.contains(where: { $0.id == read.id })
+                if photos.isEmpty {
+                    if photos.count < 3, let read = read {
+                        let read = read.filter { read in
+                            return !photos.contains(where: { $0.id == read.id })
+                        }
+                        photos += Array(read.prefix(3 - photos.count))
                     }
-                    photos += Array(read.prefix(3 - photos.count))
                 }
                 return photos
             }

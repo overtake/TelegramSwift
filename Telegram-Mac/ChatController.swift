@@ -5783,6 +5783,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invoked
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
+        
     
 /*
  #if DEBUG
@@ -5812,7 +5813,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.genericView.inputView.makeItalic()
             return .invoked
         }, with: self, for: .I, priority: .medium, modifierFlags: [.command])
-        
+                
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else { return .rejected }
             self.chatInteraction.startRecording(true, nil)

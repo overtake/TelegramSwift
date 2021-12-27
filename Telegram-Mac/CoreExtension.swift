@@ -580,7 +580,7 @@ public extension Message {
                                 values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
                             }
                         }
-                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers)
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers.filter({ $0.peerId != accountPeerId }))
                     }
                 }
             }

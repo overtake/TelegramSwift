@@ -2600,7 +2600,7 @@ class ChatRowItem: TableRowItem {
                 return nil
             }
             if let webpageLayout = item.webpageLayout as? WPArticleLayout {
-                if webpageLayout.isFullImageSize {
+                if webpageLayout.imageSize != nil {
                     return nil
                 }
                 if let textLayout = webpageLayout.textLayout, !webpageLayout.isFullImageSize {
