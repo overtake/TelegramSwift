@@ -99,6 +99,15 @@ class ChatCallRowItem: ChatRowItem {
         }
     }
     
+    
+    override var lastLineContentWidth: ChatRowItem.LastLineData? {
+        if let timeLayout = timeLayout {
+            return .init(width: timeLayout.layoutSize.width + 60, single: true)
+        } else {
+            return super.lastLineContentWidth
+        }
+    }
+    
     deinit {
         requestSessionId.dispose()
     }
