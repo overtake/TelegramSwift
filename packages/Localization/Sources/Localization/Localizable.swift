@@ -951,6 +951,10 @@ public final class L10n {
   public static func channelAdminLogAllowedNewMembersToSpeak(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.AllowedNewMembersToSpeak", p1)
   }
+  /// %1$@ updated the list of allowed reactions to: %2$@
+  public static func channelAdminLogAllowedReactionsUpdated(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.AllowedReactionsUpdated", p1, p2)
+  }
   /// Invite Users via Link
   public static var channelAdminLogCanInviteUsersViaLink: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanInviteUsersViaLink") }
   /// Manage Voice Chats
@@ -994,6 +998,10 @@ public final class L10n {
   /// %1$@ muted %2$@
   public static func channelAdminLogMutedParticipant(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.MutedParticipant", p1, p2)
+  }
+  /// %1$@ disabled reactions
+  public static func channelAdminLogReactionsDisabled(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.ReactionsDisabled", p1)
   }
   /// %1$@ revoked invite link %2$@
   public static func channelAdminLogRevokedInviteLink(_ p1: String, _ p2: String) -> String {

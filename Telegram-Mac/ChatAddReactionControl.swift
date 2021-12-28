@@ -598,15 +598,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
             }
         }
         
-        for value in inOrderToRemove {
-            if let current = value.value, let view = self.view {
-                if let itemView = current.item?.view as? ChatRowView {
-                    let rect = itemView.rectForReaction
-                    let base = current.makeRect(view.convert(rect, from: itemView))
-                    transition.updateFrame(view: current, frame: base)
-                }
-            }
-        }
+        updateToBeRemoved(transition: transition)
         
         if let view = self.view, !available.isEmpty, !disabled {
             
@@ -781,8 +773,23 @@ final class ChatAddReactionControl : NSObject, Notifable {
         }
     }
     
+    private func updateToBeRemoved(transition: ContainedViewLayoutTransition) {
+        for value in inOrderToRemove {
+            if let current = value.value, let view = self.view {
+                if let itemView = current.item?.view as? ChatRowView {
+                    let rect = itemView.rectForReaction
+                    let base = current.makeRect(view.convert(rect, from: itemView))
+                    transition.updateFrame(view: current, frame: base)
+                }
+            }
+        }
+    }
+    
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         self.update(transition: transition)
+        if transition.isAnimated {
+            updateToBeRemoved(transition: transition)
+        }
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
