@@ -271,7 +271,7 @@ public final class TextViewLayout : Equatable {
         public fileprivate(set) var isRevealed: Bool = false
         public init(range: NSRange, color: NSColor) {
             self.range = range
-            self.color = color
+            self.color = color.withAlphaComponent(1.0)
         }
     }
     
