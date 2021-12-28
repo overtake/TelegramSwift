@@ -248,7 +248,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let viewSize = NSMakeSize(15 * CGFloat(3) - (CGFloat(3) - 1) * 1, 15)
         size.width += viewSize.width + 6
 
-        size.width += 50
+        size.width += 80
         
         return size
     }
