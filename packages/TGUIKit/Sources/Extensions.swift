@@ -988,9 +988,9 @@ public extension NSImage {
     }
     
     
-    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in

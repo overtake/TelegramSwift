@@ -85,7 +85,7 @@ final class MenuView: View, TableViewDelegate {
         super.setFrameSize(newSize)
     }
     
-    func makeSize(presentation: AppMenu.Presentation, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
+    func makeSize(presentation: AppMenu.Presentation, screen: NSScreen, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
         
         var max: CGFloat = 0
         tableView.enumerateItems(with: { item in
@@ -97,9 +97,6 @@ final class MenuView: View, TableViewDelegate {
             return true
         })
         
-        guard let screen = NSScreen.main else {
-            return
-        }
         
         self.setFrameSize(max, min(tableView.listHeight, min(maxHeight ?? appearMode.max, screen.visibleFrame.height - 200)))
         if presentation.colors.isDark {
@@ -487,8 +484,7 @@ final class AppMenuController : NSObject  {
     
 
     
-    private func getView(for menu: ContextMenu, parentView: Window?, submenuId: Int64?) -> Window {
-        
+    private func getView(for menu: ContextMenu, screen: NSScreen, parentView: Window?, submenuId: Int64?) -> Window {
         let panel = Window(contentRect: .zero, styleMask: [], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
@@ -527,7 +523,7 @@ final class AppMenuController : NSObject  {
         
         view.merge(menu: menu, presentation: presentation, interaction: interaction)
         
-        view.makeSize(presentation: presentation, maxHeight: self.menu.maxHeight, appearMode: appearMode)
+        view.makeSize(presentation: presentation, screen: screen, maxHeight: self.menu.maxHeight, appearMode: appearMode)
         
         view.tableView.needUpdateVisibleAfterScroll = true
         view.tableView.getBackgroundColor = {
@@ -606,13 +602,13 @@ final class AppMenuController : NSObject  {
     
     private func presentSubmenu(_ menu: ContextMenu, parentView: Window, for id: Int64) {
         
-        guard findSubmenu(id) == nil else {
+        guard findSubmenu(id) == nil, let screen = self.parent?.screen else {
             return
         }
         
         
         
-        let view = getView(for: menu, parentView: parentView, submenuId: id)
+        let view = getView(for: menu, screen: screen, parentView: parentView, submenuId: id)
         guard let parentItem = parentView.view.item(for: id), let parentItemView = parentItem.view else {
             return
         }
@@ -636,11 +632,11 @@ final class AppMenuController : NSObject  {
     
     
     func activate(event: NSEvent, view: NSView, animated: Bool) {
-        guard let window = event.window as? Window else {
+        guard let window = event.window as? Window, let screen = window.screen else {
             return
         }
         
-        let view = getView(for: self.menu, parentView: nil, submenuId: nil)
+        let view = getView(for: self.menu, screen: screen, parentView: nil, submenuId: nil)
         
         var rect: NSRect
         switch self.appearMode {
@@ -688,7 +684,7 @@ final class AppMenuController : NSObject  {
     }
     
     private func adjust(_ rect: NSRect, parent: Window? = nil) -> NSRect {
-        guard let screen = NSScreen.main, let owner = self.parent else {
+        guard let owner = self.parent, let screen = owner.screen else {
             return rect
         }
         var rect = rect
