@@ -1,5 +1,5 @@
 //
-//  ChatAddReactionControl.swift
+//  AddReactionManager.swift
 //  Telegram
 //
 //  Created by Mikhail Filimonov on 20.12.2021.
@@ -14,7 +14,7 @@ import TelegramCore
 import Postbox
 import ObjcUtils
 
-final class ChatAddReactionControl : NSObject, Notifable {
+final class AddReactionManager : NSObject, Notifable {
    
     private final class ItemView : View {
         private let reaction: AvailableReactions.Reaction
@@ -807,7 +807,7 @@ final class ChatAddReactionControl : NSObject, Notifable {
     }
     
     func isEqual(to other: Notifable) -> Bool {
-        if let other = other as? ChatAddReactionControl {
+        if let other = other as? AddReactionManager {
             return other === self
         } else {
             return false

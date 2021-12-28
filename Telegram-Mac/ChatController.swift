@@ -1177,7 +1177,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let peerView = Promise<PostboxView?>()
     
     private let emojiEffects: EmojiScreenEffect
-    private var addReactionControl:ChatAddReactionControl?
+    private var reactionManager:AddReactionManager?
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
@@ -1264,7 +1264,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var currentPeerView: PeerView? {
         didSet {
-            self.addReactionControl?.updatePeerView(currentPeerView)
+            self.reactionManager?.updatePeerView(currentPeerView)
         }
     }
     
@@ -1550,7 +1550,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
-        self.addReactionControl = .init(chatInteraction: self.chatInteraction, view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
+        self.reactionManager = .init(chatInteraction: self.chatInteraction, view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
 
 
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
@@ -1805,6 +1805,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         let animatedRows:([TableAnimationInterface.AnimateItem])->Void = { [weak self] items in
             self?.currentAnimationRows = items
+            if !items.isEmpty {
+                self?.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
+            }
         }
         
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
@@ -2047,7 +2050,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         chatInteraction.updateFrame = { [weak self] frame, transition in
-            self?.addReactionControl?.updateLayout(size: frame.size, transition: transition)
+            self?.reactionManager?.updateLayout(size: frame.size, transition: transition)
         }
         
         chatInteraction.setupReplyMessage = { [weak self] messageId in
@@ -5044,6 +5047,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.currentAnimationRows = []
         genericView.tableView.merge(with: transition)
         
+        
         self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
         
         genericView.chatTheme = processedView.theme
@@ -5880,7 +5884,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 view.moveReveal(delta: delta)
                 self.updateFloatingPhotos(self.genericView.scroll, animated: false)
-                self.addReactionControl?.update()
+                self.reactionManager?.update()
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController
                 guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
@@ -5888,7 +5892,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 view.completeReveal(direction: direction)
                 self.updateFloatingPhotos(self.genericView.scroll, animated: true)
                 
-                self.addReactionControl?.update(transition: .animated(duration: 0.2, curve: .easeOut))
+                self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
 
             }
             
