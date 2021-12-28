@@ -1375,7 +1375,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 }))
             } else {
-                genericView.tableView.scroll(to: .down(true))
+                genericView.tableView.scroll(to: .down(!force))
             }
 
         }
@@ -2545,7 +2545,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if removeStack {
                     strongSelf.historyState = strongSelf.historyState.withClearReplies()
                 }
-                strongSelf.scrollup()
+                strongSelf.scrollup(force: removeStack)
             }
         }
 
