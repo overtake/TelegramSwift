@@ -1415,7 +1415,7 @@ class ChatListController : PeersListController {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }
                     controller.clearReplyStack()
-                    controller.scrollup(force: true)
+                    controller.scrollup(force: false)
                 case .scheduled, .pinned, .preview:
                     navigation.back()
                 }
