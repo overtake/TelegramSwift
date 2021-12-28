@@ -917,8 +917,9 @@ public final class TextViewLayout : Equatable {
     }
     
     func spoiler(at point: NSPoint) -> Spoiler? {
+        let index = self.findCharacterIndex(at: point)
         for spoiler in spoilers {
-            if spoiler.range.contains(self.findIndex(location: point)) {
+            if spoiler.range.contains(index) {
                 if !spoiler.isRevealed {
                     return spoiler
                 }
@@ -1622,6 +1623,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if let spoiler = layout.spoiler(at: point) {
                 spoiler.isRevealed = true
                 needsDisplay = true
+                return
             }
             
             let index = layout.findIndex(location: point)

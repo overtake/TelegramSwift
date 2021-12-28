@@ -42,11 +42,11 @@ public final class AppMenu {
         }
         public var more: CGImage {
             let image = NSImage(named: "Icon_Menu_More")!
-            return image.precomposed(colors.text)
+            return image.precomposed(colors.text, scale: System.backingScale)
         }
         public var selected: CGImage {
             let image = NSImage(named: "Icon_Menu_Selected")!
-            return image.precomposed(colors.text)
+            return image.precomposed(colors.text, scale: System.backingScale)
         }
         public init(colors: ColorPalette) {
             self.colors = colors

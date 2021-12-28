@@ -359,10 +359,16 @@ final class ChatReactionsLayout {
         self.reactions = sorted.compactMap { reaction in
             if let available = available?.reactions.first(where: { $0.value == reaction.value }) {
                 
-                let recentPeers:[Peer] = reactions.recentPeers.filter { recent in
+                var recentPeers:[Peer] = reactions.recentPeers.filter { recent in
                     return recent.value == reaction.value
                 }.compactMap {
                     message.peers[$0.peerId]
+                }
+                
+                if let peer = message.peers[message.id.peerId] {
+                    if !peer.isGroup && !peer.isSupergroup {
+                        recentPeers = []
+                    }
                 }
                 
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
@@ -478,6 +484,7 @@ final class ChatReactionsView : View {
         private var avatars:[AvatarContentView] = []
         private var peers:[ChatReactionsLayout.Reaction.Avatar] = []
         private var first: Bool = true
+        private var backgroundView: View? = nil
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             
@@ -506,6 +513,8 @@ final class ChatReactionsView : View {
         }
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
+            let selectedUpdated = self.reaction?.value.isSelected != reaction.value.isSelected
+            let reactionupdated = self.reaction?.value != reaction.value
             self.reaction = reaction
             self.layer?.cornerRadius = reaction.rect.height / 2
             
@@ -582,8 +591,32 @@ final class ChatReactionsView : View {
             
             self.peers = reaction.avatars
             
-            self.backgroundColor = reaction.value.isSelected ? reaction.presentation.selectedColor : reaction.presentation.bgColor
+            self.backgroundColor = reaction.presentation.bgColor
 
+            
+            if selectedUpdated {
+                if reaction.value.isSelected {
+                    let view = View(frame: bounds)
+                    view.isEventLess = true
+                    view.layer?.cornerRadius = view.frame.height / 2
+                    self.backgroundView = view
+                    self.addSubview(view, positioned: .below, relativeTo: subviews.first)
+                    
+                    if animated {
+                        view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
+                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                } else {
+                    if let view = backgroundView {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.backgroundView = nil
+                    }
+                }
+            }
+
+            self.backgroundView?.backgroundColor = reaction.presentation.selectedColor
+
+            
             if animated {
                 self.layer?.animateBorder()
                 self.layer?.animateBackground()
@@ -597,6 +630,10 @@ final class ChatReactionsView : View {
                 imageView.setSignal(chatMessageImageFile(account: account, fileReference: .standalone(media: reaction.available.staticIcon), scale: System.backingScale), cacheImage: { result in
                     cacheMedia(result, media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale)
                 })
+            }
+            
+            if !first, reactionupdated, animated {
+                self.imageView.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
             }
 
             imageView.set(arguments: arguments)
@@ -618,6 +655,11 @@ final class ChatReactionsView : View {
             guard let reaction = reaction else {
                 return
             }
+            
+            if let backgroundView = backgroundView {
+                transition.updateFrame(view: backgroundView, frame: size.bounds)
+            }
+            
             let presentation = reaction.presentation
 
             transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - presentation.reactionSize.height) / 2), size: presentation.reactionSize))
@@ -732,12 +774,12 @@ final class ChatReactionsView : View {
         
 
         var deletedViews:[Int: NSView] = [:]
-
+        var reused:Set<Int> = Set()
+        
         for idx in removed.reversed() {
             self.reactions.remove(at: idx)
             let view = self.views.remove(at: idx)
             deletedViews[idx] = view
-            performSubviewRemoval(view, animated: animated, checkCompletion: true, scale: true)
         }
         for (idx, item, pix) in inserted {
             var prevFrame: NSRect? = nil
@@ -745,8 +787,14 @@ final class ChatReactionsView : View {
             if let pix = pix {
                 prevFrame = previous[pix].rect
                 prevView = deletedViews[pix]
-            }
-            
+                if prevView != nil {
+                    reused.insert(pix)
+                }
+            } else if inserted.count == 1, removed.count == 1 {
+               let kv = deletedViews.first!
+               prevView = kv.value
+               reused.insert(kv.key)
+           }
             let getView: ()->NSView = {
                 switch layout.mode {
                 case .full:
@@ -761,7 +809,7 @@ final class ChatReactionsView : View {
             self.views.insert(view, at: idx)
             self.reactions.insert(item, at: idx)
             (view as? ReactionViewImpl)?.update(with: item, account: layout.context.account, animated: animated)
-            if animated {
+            if animated, prevView == nil {
                 view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
                 view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
@@ -778,6 +826,12 @@ final class ChatReactionsView : View {
         
         for (i, view) in views.enumerated() {
             view.layer?.zPosition = CGFloat(i)
+        }
+        
+        for (index, view) in deletedViews {
+            if !reused.contains(index) {
+                performSubviewRemoval(view, animated: animated, checkCompletion: true, scale: true)
+            }
         }
 
         self.currentLayout = layout
