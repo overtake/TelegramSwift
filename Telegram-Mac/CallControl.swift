@@ -94,7 +94,7 @@ final class CallControl : Control {
     }
     private var previousState: ControlState?
     
-    override func stateDidUpdated( _ state: ControlState) {
+    override func stateDidUpdate( _ state: ControlState) {
         switch controlState {
         case .Highlight:
             imageBackgroundView?._change(opacity: 0.9)

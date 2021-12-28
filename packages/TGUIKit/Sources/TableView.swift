@@ -610,7 +610,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private var rightBorder: View? = nil
     public var separator:TableSeparator = .none
     
-    public var onCAScroll:(NSRect, NSRect)->Void = { _, _ in }
     
     public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
         didSet {
@@ -924,6 +923,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if !tableView.inLiveResize && oldWidth != 0 {
             saveScrollState(visibleItems)
         }
+        
+        for listener in scrollListeners {
+            listener.handler(self.scrollPosition().current)
+        }
     }
     
     private var liveScrollStartPosition: NSPoint?
@@ -1138,6 +1141,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     stickView = vz.init(frame:NSMakeRect(0, 0, NSWidth(self.frame), stickItem.heightValue))
                     stickView!.header = true
                     stickView!.set(item: stickItem, animated: false)
+                    stickView!.updateLayout(size: stickView!.frame.size, transition: .immediate)
                  //   tableView.addSubview(stickView!)
                 }
             }
@@ -1355,7 +1359,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         
                         let updatedPoint = NSMakePoint(0, yTopOffset + stickTopInset)
                         if stickView.frame.origin != updatedPoint {
-                            stickView.change(pos: updatedPoint, animated: animated)
+                            stickView._change(pos: updatedPoint, animated: animated)
                         }
                         stickView.header = abs(dif) <= item.heightValue
                         
@@ -1414,7 +1418,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 } else  {
                     if index == -1 {
                         if animated, let stickView = self.stickView {
-                            stickView.change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
+                            stickView._change(pos: NSMakePoint(0, -stickView.frame.height), animated: animated, removeOnCompletion: false, completion: { [weak stickView] _ in
                                 stickView?.removeFromSuperview()
                             })
                         } else {
@@ -1570,7 +1574,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                     if view.superview != self {
                         view.frame = self.convert(view.frame, from: view.superview)
+                        let item = self.item(at: range.location)
                         view.set(item: self.item(at: range.location), animated: false)
+                        view.updateLayout(size: view.frame.size, transition: .immediate)
                         controller.resortView = view
                         self.addSubview(view)
                     }
@@ -1773,6 +1779,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NSAnimationContext.current.timingFunction = nil
         }
         tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+        let item = self.item(at: row)
+        let height = item.heightValue
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        if let view = item.view {
+            view.updateLayout(size: NSMakeSize(frame.width, height), transition: transition)
+            transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: NSMakeSize(frame.width, height)))
+        }
     }
     
     
@@ -1789,12 +1803,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
                 
+                
                 let height:CGFloat = item.heightValue
                 let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
 
-                
-                view.change(size: NSMakeSize(width, height), animated: animated)
+                let size = NSMakeSize(width, height)
+                let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
                 view.set(item: item, animated: animated)
+                view.updateLayout(size: size, transition: transition)
+                transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: size))
             } else {
                 NSAnimationContext.current.duration = animated ? 0.2 : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
@@ -2315,7 +2332,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.beforeSetupItem?(view, item)
         
         view.set(item: item, animated: false)
-        
+        view.updateLayout(size: view.frame.size, transition: .immediate)
         self.afterSetupItem?(view, item)
 
         
@@ -2616,7 +2633,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             // print("scroll do nothing")
             animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
             if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                saveVisible(.upper)
+                saveVisible(.lower)
             }
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
@@ -3058,49 +3075,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 shouldSuspend = true
             }
             
-//            clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] _ in
-//                self?.removeScroll(listener: scrollListener)
-//            })
-            contentView.layer?.removeAllAnimations()
-            self.layer?.removeAllAnimations()
-            
-            if abs(bounds.minY - clipView.bounds.minY) < height || ignoreLayerAnimation {
-                if animate {
-                    areSuspended = shouldSuspend
-                    clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
-                        if let `self` = self {
-                            scrollListener.handler(self.scrollPosition().current)
-                            self.removeScroll(listener: scrollListener)
-                            completion(completed)
-                            self.areSuspended = false
-                            self.enqueueTransitions()
-                        }
-                        
-                    })
-                } else {
-                    self.contentView.scroll(to: bounds.origin)
-                    reflectScrolledClipView(clipView)
-                    removeScroll(listener: scrollListener)
-                    scrollListener.handler(self.scrollPosition().current)
-                }
-               
-            } else {
-               
+            if animate {
                 areSuspended = shouldSuspend
-                let edgeRect:NSRect = NSMakeRect(clipView.bounds.minX, bounds.minY - getEdgeInset() - frame.minY, clipView.bounds.width, clipView.bounds.height)
-                clipView._changeBounds(from: edgeRect, to: bounds, animated: animate, duration: 0.4, timingFunction: timingFunction, completion: { [weak self] completed in
-                    guard let `self` = self else {
-                        return
+                clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
+                    if let `self` = self {
+                        scrollListener.handler(self.scrollPosition().current)
+                        self.removeScroll(listener: scrollListener)
+                        completion(completed)
+                        self.areSuspended = false
+                        self.enqueueTransitions()
                     }
-                    scrollListener.handler(self.scrollPosition().current)
-                    self.removeScroll(listener: scrollListener)
-                    completion(completed)
-                    self.areSuspended = false
-                    self.enqueueTransitions()
+                    
                 })
-                if animate {
-                    self.onCAScroll(edgeRect, bounds)
-                }
+            } else {
+                self.contentView.scroll(to: bounds.origin)
+                reflectScrolledClipView(clipView)
+                removeScroll(listener: scrollListener)
+                scrollListener.handler(self.scrollPosition().current)
             }
         } else {
             if let item = item, focus.focus {

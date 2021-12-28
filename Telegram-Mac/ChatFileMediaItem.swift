@@ -102,57 +102,30 @@ class ChatFileMediaItem: ChatMediaItem {
         var width = width
         
         let parameters = self.parameters as! ChatFileLayoutParameters
-        let file = media as! TelegramMediaFile
         let optionalWidth = parameters.makeLabelsForWidth(width)
-        
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-        
+                
         width = min(width, max(optionalWidth, 320))
         
         return NSMakeSize(width, parameters.hasThumb ? 70 : 40)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+
+    override var lastLineContentWidth: ChatRowItem.LastLineData? {
+        if let lastLineContentWidth = super.lastLineContentWidth {
+            return lastLineContentWidth
+        }
         let file = media as! TelegramMediaFile
-        let parameters = self.parameters as! ChatFileLayoutParameters
+        if file.previewRepresentations.isEmpty {
+            let parameters = self.parameters as! ChatFileLayoutParameters
 
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
+            let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
 
-        let accesoryWidth = max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth) + (file.previewRepresentations.isEmpty ? 50 : 80)
-        
-        if file.previewRepresentations.isEmpty, accesoryWidth > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return super.additionalLineForDateInBubbleState
+            let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
+            return ChatRowItem.LastLineData(width: width, single: false)
         }
-        
-        let caption = captionLayouts.first(where: { $0.id == messages.last?.stableId })?.layout
-        
-        if let textLayout = caption {
-            if textLayout.lines.count == 1 {
-                if contentOffset.x + textLayout.layoutSize.width - (rightSize.width + insetBetweenContentAndDate) > width {
-                    return rightSize.height
-                }
-            } else if let line = textLayout.lines.last, max(realContentSize.width, maxTitleWidth) < line.frame.width + (rightSize.width + insetBetweenContentAndDate) {
-                return rightSize.height
-            }
-        }
-        
         return nil
     }
     
-    override var isFixedRightPosition: Bool {
-        let file = media as! TelegramMediaFile
-        
-        let parameters = self.parameters as! ChatFileLayoutParameters
-        
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-        let accesoryWidth = max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth) + (file.previewRepresentations.isEmpty ? 50 : 80)
-        
-        if file.previewRepresentations.isEmpty, accesoryWidth < realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return true
-        }
-        
-        return file.previewRepresentations.isEmpty || !captionLayouts.isEmpty ? super.isFixedRightPosition : true
-    }
     
     override func contentNode() -> ChatMediaContentView.Type {
         return ChatFileContentView.self

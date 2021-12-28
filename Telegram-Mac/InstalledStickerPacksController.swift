@@ -36,7 +36,8 @@ private final class InstalledStickerPacksControllerArguments {
     let openArchived: ([ArchivedStickerPackItem]?) -> Void
     let openSuggestionOptions: () -> Void
     let toggleLoopAnimated: (Bool)->Void
-    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping ([ArchivedStickerPackItem]?) -> Void, openSuggestionOptions: @escaping() -> Void, toggleLoopAnimated: @escaping(Bool)->Void) {
+    let quickSetup:(AvailableReactions?)->Void
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping ([ArchivedStickerPackItem]?) -> Void, openSuggestionOptions: @escaping() -> Void, toggleLoopAnimated: @escaping(Bool)->Void, quickSetup:@escaping(AvailableReactions?)->Void) {
         self.context = context
         self.openStickerPack = openStickerPack
         self.removePack = removePack
@@ -45,6 +46,7 @@ private final class InstalledStickerPacksControllerArguments {
         self.openArchived = openArchived
         self.openSuggestionOptions = openSuggestionOptions
         self.toggleLoopAnimated = toggleLoopAnimated
+        self.quickSetup = quickSetup
     }
 }
 
@@ -125,6 +127,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     case suggestOptions(sectionId: Int32, String, GeneralViewType)
     case trending(sectionId:Int32, Int32, GeneralViewType)
     case archived(sectionId:Int32, ArchivedListContainer, GeneralViewType)
+    case quickReaction(sectionId:Int32, AvailableReactions?, CGImage?, GeneralViewType)
     case loopAnimated(sectionId: Int32, Bool, GeneralViewType)
     case packsTitle(sectionId:Int32, String, GeneralViewType)
     case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, Bool, ItemListStickerPackItemEditing, GeneralViewType)
@@ -139,6 +142,8 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return .index(1)
         case .archived:
             return .index(2)
+        case .quickReaction:
+            return .index(3)
         case .loopAnimated:
             return .index(4)
         case .packsTitle:
@@ -161,14 +166,16 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return 1
         case .archived:
             return 2
-        case .loopAnimated:
+        case .quickReaction:
             return 3
-        case .packsTitle:
+        case .loopAnimated:
             return 4
+        case .packsTitle:
+            return 5
         case .pack:
             fatalError("")
         case .packsInfo:
-            return 5
+            return 6
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -181,6 +188,8 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
         case let .trending(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .archived(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .quickReaction(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .loopAnimated(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -213,6 +222,10 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersArchived, type: .next, viewType: viewType, action: {
                 arguments.openArchived(archived.archived)
             })
+        case let .quickReaction(_, available, image, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersQuickReaction, type: image != nil ? .image(image!) : .next, viewType: viewType, action: {
+                arguments.quickSetup(available)
+            })
         case let .loopAnimated(_, value, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersLoopAnimated, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleLoopAnimated(!value)
@@ -237,36 +250,12 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
 }
 
 private struct InstalledStickerPacksControllerState: Equatable {
-    let editing: Bool
-    
-    init() {
-        self.editing = false
-    }
-    
-    init(editing: Bool) {
-        self.editing = editing
-    }
-    
-    static func ==(lhs: InstalledStickerPacksControllerState, rhs: InstalledStickerPacksControllerState) -> Bool {
-        
-        if lhs.editing != rhs.editing {
-            return false
-        }
-        
-        return true
-    }
-    
-    func withUpdatedEditing(_ editing: Bool) -> InstalledStickerPacksControllerState {
-        return InstalledStickerPacksControllerState(editing: editing)
-    }
-    
-    func withUpdatedPackIdWithRevealedOptions(_ packIdWithRevealedOptions: ItemCollectionId?) -> InstalledStickerPacksControllerState {
-        return InstalledStickerPacksControllerState(editing: self.editing)
-    }
+    var editing: Bool
+    var quickImage: CGImage?
 }
 
 
-private func installedStickerPacksControllerEntries(state: InstalledStickerPacksControllerState, autoplayMedia: AutoplayMediaPreferences, stickerSettings: StickerSettings, view: CombinedView, featured: [FeaturedStickerPackItem], archived: [ArchivedStickerPackItem]?) -> [InstalledStickerPacksEntry] {
+private func installedStickerPacksControllerEntries(state: InstalledStickerPacksControllerState, autoplayMedia: AutoplayMediaPreferences, stickerSettings: StickerSettings, view: CombinedView, featured: [FeaturedStickerPackItem], archived: [ArchivedStickerPackItem]?, availableReactions: AvailableReactions?) -> [InstalledStickerPacksEntry] {
     var entries: [InstalledStickerPacksEntry] = []
     
     var sectionId:Int32 = 1
@@ -295,6 +284,7 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
         entries.append(.trending(sectionId: sectionId, unreadCount, .innerItem))
     }
     entries.append(.archived(sectionId: sectionId, ArchivedListContainer(archived: archived), .innerItem))
+    entries.append(.quickReaction(sectionId: sectionId, availableReactions, state.quickImage, .innerItem))
     entries.append(.loopAnimated(sectionId: sectionId, autoplayMedia.loopAnimatedStickers, .lastItem))
     
     entries.append(.section(sectionId: sectionId))
@@ -340,13 +330,28 @@ class InstalledStickerPacksController: TableViewController {
     private func openSuggestionOptions() {
         let postbox: Postbox = context.account.postbox
         if let view = (genericView.item(stableId: InstalledStickerPacksEntryId.index(0))?.view as? GeneralInteractedRowView)?.textView {
-            showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(strings().stickersSuggestAll, {
-                _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.all)}).start()
-            }), SPopoverItem(strings().stickersSuggestAdded, {
-                 _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.installed)}).start()
-            }), SPopoverItem(strings().stickersSuggestNone, {
-                 _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.none)}).start()
-            })]), edge: .minX, inset: NSMakePoint(0,-30))
+            if let event = NSApp.currentEvent {
+                
+                let menu = ContextMenu()
+                
+                menu.addItem(ContextMenuItem(strings().stickersSuggestAll, handler: {
+                    _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.all)}).start()
+                }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+                
+                menu.addItem(ContextMenuItem(strings().stickersSuggestAdded, handler: {
+                    _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.installed)}).start()
+                }, itemImage: MenuAnimation.menu_open_profile.value))
+                
+                menu.addItem(ContextMenuItem(strings().stickersSuggestNone, handler: {
+                    _ = updateStickerSettingsInteractively(postbox: postbox, {$0.withUpdatedEmojiStickerSuggestionMode(.none)}).start()
+               }, itemImage: MenuAnimation.menu_clear_history.value))
+                
+                let value = AppMenu(menu: menu)
+                
+                value.show(event: event, view: view)
+                
+            }
+         
         }
     }
     
@@ -358,8 +363,8 @@ class InstalledStickerPacksController: TableViewController {
         super.viewDidLoad()
         
         let context = self.context
-        let statePromise = ValuePromise(InstalledStickerPacksControllerState(), ignoreRepeated: true)
-        let stateValue = Atomic(value: InstalledStickerPacksControllerState())
+        let statePromise = ValuePromise(InstalledStickerPacksControllerState(editing: false), ignoreRepeated: true)
+        let stateValue = Atomic(value: InstalledStickerPacksControllerState(editing: false))
         let updateState: ((InstalledStickerPacksControllerState) -> InstalledStickerPacksControllerState) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
         }
@@ -405,6 +410,8 @@ class InstalledStickerPacksController: TableViewController {
             _ = updateAutoplayMediaSettingsInteractively(postbox: context.account.postbox, {
                 $0.withUpdatedLoopAnimatedStickers(value)
             }).start()
+        }, quickSetup: { available in
+            context.sharedContext.bindings.rootNavigation().push(ReactionsSettingsController(context: context, peerId: context.peerId, allowedReactions: nil, availableReactions: available, mode: .quick))
         })
         let stickerPacks = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])
         
@@ -419,8 +426,48 @@ class InstalledStickerPacksController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<InstalledStickerPacksEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, archivedPromise.get(), appearanceSignal, preferencesView)
-            |> map { state, view, featured, archived, appearance, preferencesView -> TableUpdateTransition in
+        
+        let settings = context.account.postbox.preferencesView(keys: [PreferencesKeys.reactionSettings])
+           |> map { preferencesView -> ReactionSettings in
+               let reactionSettings: ReactionSettings
+               if let entry = preferencesView.values[PreferencesKeys.reactionSettings], let value = entry.get(ReactionSettings.self) {
+                   reactionSettings = value
+               } else {
+                   reactionSettings = .default
+               }
+               return reactionSettings
+           }
+        actionsDisposable.add(combineLatest(settings, context.reactions.stateValue).start(next: { settings, availableReactions in
+            if let reactions = availableReactions {
+                var reaction = reactions.reactions.first(where: { $0.value == settings.quickReaction })
+                if let current = reaction, !current.isEnabled {
+                    reaction = reactions.reactions.first
+                } else if reaction == nil {
+                    reaction = reactions.reactions.first
+                }
+                if let reaction = reaction {
+                    let signal = chatMessageImageFile(account: context.account, fileReference: .standalone(media: reaction.staticIcon), scale: System.backingScale)
+                    
+                    let arguments = TransformImageArguments(corners: .init(), imageSize: NSMakeSize(24, 24), boundingSize: NSMakeSize(24, 24), intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
+
+                    actionsDisposable.add(signal.start(next: { value in
+                        updateState { current in
+                            var current = current
+                            let image = value.execute(arguments, value.data)?.generateImage()
+                            current.quickImage = image
+                            return current
+                        }
+                    }))
+                }
+            }
+        }))
+        
+        
+      
+
+        
+        let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, archivedPromise.get(), appearanceSignal, preferencesView, context.reactions.stateValue)
+            |> map { state, view, featured, archived, appearance, preferencesView, availableReactions -> TableUpdateTransition in
                 
                 var stickerSettings = StickerSettings.defaultSettings
                 if let view = preferencesView.views[preferencesKey] as? PreferencesView {
@@ -436,7 +483,7 @@ class InstalledStickerPacksController: TableViewController {
                     }
                 }
                 
-                let entries = installedStickerPacksControllerEntries(state: state, autoplayMedia: autoplayMedia, stickerSettings: stickerSettings, view: view, featured: featured, archived: archived).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = installedStickerPacksControllerEntries(state: state, autoplayMedia: autoplayMedia, stickerSettings: stickerSettings, view: view, featured: featured, archived: archived, availableReactions: availableReactions).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()

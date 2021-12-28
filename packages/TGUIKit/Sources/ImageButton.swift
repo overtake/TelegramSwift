@@ -107,6 +107,7 @@ open class ImageButton: Button {
         super.apply(state: state)
         self.previousState = state
         
+        
         let updated: CGImage?
         
         if let image = images[state], isEnabled {

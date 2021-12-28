@@ -21,7 +21,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>223733</string>
+	<string>225624</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSExtension</key>
@@ -53,5 +53,7 @@
 	</dict>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2017 Telegram. All rights reserved.</string>
+	<key>SOURCE</key>
+	<string>${SOURCE}</string>
 </dict>
 </plist>

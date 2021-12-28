@@ -50,19 +50,15 @@ class ChatVoiceRowItem: ChatMediaItem {
         return super.canMultiselectTextIn(location)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if isForceRightLine {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
-                return rightSize.height
+                return true
             }
         }
-        
-        return super.additionalLineForDateInBubbleState
+        return super.isForceRightLine
     }
-    
+
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)

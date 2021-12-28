@@ -1775,6 +1775,18 @@ extension Array {
     }
 }
 
+extension String {
+    func spoiler(_ range: NSRange) -> String {
+        var string = self.nsstring
+        
+        var rep: String = ""
+        for i in 0 ..< range.length {
+            rep += "▚"
+        }
+        return string.replacingCharacters(in: range, with: rep)
+    }
+}
+
 func copyToClipboard(_ string:String) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.declareTypes([.string], owner: nil)

@@ -155,6 +155,28 @@ final class AccentColorRowView : TableRowView {
         containerView.addSubview(borderView)
         documentView.backgroundColor = .clear
         addSubview(containerView)
+        
+        containerView.contextMenu = { [weak self] in
+            guard let item = self?.item as? AccentColorRowItem, let documentView = self?.documentView else {
+                return nil
+            }
+            guard let event = NSApp.currentEvent else {
+                return nil
+            }
+            let documentPoint = documentView.convert(event.locationInWindow, from: nil)
+            
+            for (_, subview) in documentView.subviews.enumerated() {
+                if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
+                    let items = item.menuItems(accent)
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
+                }
+            }
+            return nil
+        }
     }
 
     override var backdorColor: NSColor {
@@ -189,26 +211,6 @@ final class AccentColorRowView : TableRowView {
         scrollView.frame = NSMakeRect(0, innerInset.top, item.blockWidth, containerView.frame.height - innerInset.top - innerInset.bottom)
     }
     
-    override func menu(for event: NSEvent) -> NSMenu? {
-        guard let item = item as? AccentColorRowItem else {
-            return nil
-        }
-        
-        let documentPoint = documentView.convert(event.locationInWindow, from: nil)
-        
-        for (_, subview) in documentView.subviews.enumerated() {
-            if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
-                let items = item.menuItems(accent)
-                let menu = ContextMenu()
-                for item in items {
-                    menu.addItem(item)
-                }
-                return menu
-            }
-        }
-        
-        return nil
-    }
     
     private let selectedImageView = ImageView()
     

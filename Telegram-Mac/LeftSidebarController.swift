@@ -18,7 +18,7 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
     if var filter = filter {
         items.append(.init(strings().chatListFilterEdit, handler: {
             context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
-        }))
+        }, itemImage: MenuAnimation.menu_edit.value))
         items.append(.init(strings().chatListFilterAddChats, handler: {
             showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: strings().chatListFilterIncludeLimitReached, callback: { peerIds in
                 return context.engine.peers.updateChatListFiltersInteractively({ filters in
@@ -31,7 +31,10 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
                 }) |> ignoreValues
                 
             })), for: context.window)
-        }))
+        }, itemImage: MenuAnimation.menu_plus.value))
+        
+        items.append(ContextSeparatorItem())
+        
         items.append(.init(strings().chatListFilterDelete, handler: {
             confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                 _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
@@ -41,11 +44,11 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
                 }).start()
             })
             
-        }))
+        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
     } else {
         items.append(.init(strings().chatListFilterEditFilters, handler: {
             context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
-        }))
+        }, itemImage: MenuAnimation.menu_edit.value))
     }
     
     return items
@@ -81,6 +84,7 @@ final class LeftSidebarView: View {
 
         visualEffectView.blendingMode = .behindWindow
         visualEffectView.material = .ultraDark
+        visualEffectView.state = .active
        
         updateLocalizationAndTheme(theme: theme)
     }

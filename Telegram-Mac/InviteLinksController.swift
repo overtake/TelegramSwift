@@ -387,19 +387,22 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                 if let permanent = state.permanent {
                     items.append(ContextMenuItem(strings().manageLinksContextCopy, handler: {
                         arguments.copyLink(permanent.link)
-                    }))
+                    }, itemImage: MenuAnimation.menu_copy.value))
                     if state.adminPeer?.peer.isBot == true {
                         
                     } else {
+                        if !items.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
                         items.append(ContextMenuItem(strings().manageLinksContextRevoke, handler: {
                             arguments.revokeLink(permanent)
-                        }))
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                     
                 } else if let addressName = state.peer?.peer.addressName {
                     items.append(ContextMenuItem(strings().manageLinksContextCopy, handler: {
                         arguments.copyLink(addressName)
-                    }))
+                    }, itemImage: MenuAnimation.menu_copy.value))
                 }
 
                 return .single(items)
@@ -459,25 +462,28 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
                         var items:[ContextMenuItem] = []
                         items.append(ContextMenuItem(strings().manageLinksContextCopy, handler: {
                             arguments.copyLink(link.link)
-                        }))
+                        }, itemImage: MenuAnimation.menu_copy.value))
                         if !link.isRevoked {
                             if !link.isExpired {
                                 items.append(ContextMenuItem(strings().manageLinksContextShare, handler: {
                                     arguments.shareLink(link.link)
-                                }))
+                                }, itemImage: MenuAnimation.menu_share.value))
                             }
                             if !link.isPermanent {
                                 items.append(ContextMenuItem(strings().manageLinksContextEdit, handler: {
                                     arguments.editLink(link)
-                                }))
+                                }, itemImage: MenuAnimation.menu_edit.value))
                             }
                            
                             if state.adminPeer?.peer.isBot == true {
                                 
                             } else {
+                                if !items.isEmpty {
+                                    items.append(ContextSeparatorItem())
+                                }
                                 items.append(ContextMenuItem(strings().manageLinksContextRevoke, handler: {
                                     arguments.revokeLink(link)
-                                }))
+                                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                             }
                         }
 

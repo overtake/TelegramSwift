@@ -247,6 +247,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         FFMpegGlobals.initializeGlobals()
         
         
+        TextView.context_copy_animation = MenuAnimation.menu_copy.value
+        
        // applyMainMenuLocalization(window)
         
         mw = window
@@ -305,7 +307,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
 
-        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true)
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true, removeDatabaseOnError: true)
 
         if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
@@ -320,6 +322,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 themeSemaphore.signal()
             })
             themeSemaphore.wait()
+            
+            System.legacyMenu = themeSettings.legacyMenu
             
             var localization: LocalizationSettings? = nil
             let localizationSemaphore = DispatchSemaphore(value: 0)
@@ -354,7 +358,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     subscriber.putCompletion()
                     DispatchQueue.main.async {
                         let appEncryption = AppEncryptionParameters(path: rootPath)
-                        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true)
+                        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: self.containerUrl + "/accounts-metadata", isTemporary: false, isReadOnly: false, useCaches: true, removeDatabaseOnError: true)
                         if let params = appEncryption.decrypt() {
                             let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
                             self.launchApp(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
@@ -455,6 +459,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let signal: Signal<TelegramPresentationTheme?, NoError> = combineLatest(queue: resourcesQueue, themeSettingsView(accountManager: accountManager), backingProperties.get()) |> map { settings, backingScale in
                 let previous = basicTheme.swap(settings)
                 let previousScale = previousBackingScale.swap(backingScale)
+                System.legacyMenu = settings.legacyMenu
                 if previous?.palette != settings.palette || previous?.bubbled != settings.bubbled || previous?.wallpaper.wallpaper != settings.wallpaper.wallpaper || previous?.fontSize != settings.fontSize || previousScale != backingScale  {
                     return updateTheme(with: settings, animated: true && ((previous?.fontSize == settings.fontSize && previous?.palette != settings.palette) || previous?.bubbled != settings.bubbled || previous?.cloudTheme?.id != settings.cloudTheme?.id || previous?.palette.isDark != settings.palette.isDark))
                 } else {

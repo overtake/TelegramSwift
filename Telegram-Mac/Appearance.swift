@@ -1273,24 +1273,30 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
 }
 #if !SHARE
 private func builtinBackgound(_ palette: ColorPalette) -> NSImage {
-    var data = try! Data(contentsOf: Bundle.main.url(forResource: "builtin-wallpaper-svg", withExtension: nil)!)
-    data = TGGUnzipData(data, 8 * 1024 * 1024)!
-    var image = drawSvgImageNano(data, NSMakeSize(400, 800))!
-    
-    let intense = CGFloat(0.5)
-    if palette.isDark {
-        image = generateImage(image.size, contextGenerator: { size, ctx in
+    let data = try? Data(contentsOf: Bundle.main.url(forResource: "builtin-wallpaper-svg", withExtension: nil)!)
+    if let data = data {
+        var image = drawSvgImageNano(TGGUnzipData(data, 8 * 1024 * 1024)!, NSMakeSize(400, 800))!
+        
+        let intense = CGFloat(0.5)
+        if palette.isDark {
+            image = generateImage(image.size, contextGenerator: { size, ctx in
+                ctx.clear(size.bounds)
+                ctx.setFillColor(NSColor.black.cgColor)
+                ctx.fill(size.bounds)
+                ctx.clip(to: size.bounds, mask: image._cgImage!)
+                
+                ctx.clear(size.bounds)
+                ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                ctx.fill(size.bounds)
+            })!._NSImage
+        }
+        return image
+    } else {
+        return generateImage(NSMakeSize(400, 800), contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.cgColor)
-            ctx.fill(size.bounds)
-            ctx.clip(to: size.bounds, mask: image._cgImage!)
-            
-            ctx.clear(size.bounds)
-            ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
-            ctx.fill(size.bounds)
+            ctx.setFillColor(palette.background.cgColor)
         })!._NSImage
     }
-    return image
 }
 #endif
 class TelegramPresentationTheme : PresentationTheme {
@@ -1389,7 +1395,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if let icon = _chatChannelViewsOverlayServiceBubble {
             return icon
         } else {
-            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            let new = #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(self.chatServiceItemTextColor)
             _chatChannelViewsOverlayServiceBubble = new
             return new
         }
@@ -1400,7 +1406,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if let icon = _chat_pinned_message_overlay_service_bubble {
             return icon
         } else {
-            let new = NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            let new = NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(self.chatServiceItemTextColor)
             _chat_pinned_message_overlay_service_bubble = new
             return new
         }
@@ -1412,33 +1418,12 @@ class TelegramPresentationTheme : PresentationTheme {
         if let icon = _chat_reply_count_overlay_service_bubble {
             return icon
         } else {
-            let new = NSImage(named: "Icon_ChatRepliesCount")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
+            let new = NSImage(named: "Icon_ChatRepliesCount")!.precomposed(self.chatServiceItemTextColor)
             _chat_reply_count_overlay_service_bubble = new
             return new
         }
     }
     
-    private var _chat_like_inside_bubble_service: CGImage?
-    var chat_like_inside_bubble_service: CGImage {
-        if let icon = _chat_like_inside_bubble_service {
-            return icon
-        } else {
-            
-            let new = NSImage(named: "Icon_Like_MessageInside")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
-            _chat_like_inside_bubble_service = new
-            return new
-        }
-    }
-    private var _chat_like_inside_empty_bubble_service: CGImage?
-    var chat_like_inside_empty_bubble_service: CGImage {
-        if let icon = _chat_like_inside_empty_bubble_service {
-            return icon
-        } else {
-            let new = NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(self.chatServiceItemTextColor, flipVertical: true)
-            _chat_like_inside_empty_bubble_service = new
-            return new
-        }
-    }
     
     private var _chat_comments_overlay: CGImage?
     var chat_comments_overlay: CGImage {
@@ -1759,10 +1744,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                     ctx.clear(NSMakeRect(0, 0, size.width, size.height))
                                                     ctx.draw(#imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(), in: NSMakeRect(0, 0, size.width, size.height))
                                                })! },
-                                               chatChannelViewsInBubble_incoming: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
-                                               chatChannelViewsInBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
-                                               chatChannelViewsOutBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon, flipVertical: true) },
-                                               chatChannelViewsOverlayBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(.white, flipVertical: true) },
+                                               chatChannelViewsInBubble_incoming: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_incoming) },
+                                               chatChannelViewsInBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIconBubble_outgoing) },
+                                               chatChannelViewsOutBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(palette.grayIcon) },
+                                               chatChannelViewsOverlayBubble: { #imageLiteral(resourceName: "Icon_ChannelViews").precomposed(.white) },
                                                chatNavigationBack: { #imageLiteral(resourceName: "Icon_ChatNavigationBack").precomposed(palette.accentIcon) },
                                                peerInfoAddMember: { #imageLiteral(resourceName: "Icon_NewContact").precomposed(palette.accentIcon, flipVertical: true) },
                                                chatSearchUp: { #imageLiteral(resourceName: "Icon_SearchArrow").precomposed(palette.accentIcon) },
@@ -2228,10 +2213,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                search_filter_music: { NSImage(named: "Icon_SearchFilter_Music")!.precomposed(palette.grayIcon) },
                                                search_filter_add_peer: { NSImage(named: "Icon_SearchFilter_AddPeer")!.precomposed(palette.grayIcon) },
                                                search_filter_add_peer_active: { NSImage(named: "Icon_SearchFilter_AddPeer")!.precomposed(palette.underSelectedColor) }, 
-                                               chat_reply_count_bubble_incoming: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
-                                               chat_reply_count_bubble_outgoing: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
-                                               chat_reply_count: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIcon, flipVertical: true) },
-                                               chat_reply_count_overlay: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(.white, flipVertical: true) },
+                                               chat_reply_count_bubble_incoming: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_incoming) },
+                                               chat_reply_count_bubble_outgoing: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIconBubble_outgoing) },
+                                               chat_reply_count: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(palette.grayIcon) },
+                                               chat_reply_count_overlay: { NSImage(named: "Icon_ChatRepliesCount")!.precomposed(.white) },
                                                channel_comments_bubble: { NSImage(named: "Icon_ChannelComments_Bubble")!.precomposed(palette.accentIcon
                                                 , flipVertical: true) },
                                                channel_comments_bubble_next: { NSImage(named: "Icon_ChannelComments_Next")!.precomposed(palette.accentIcon, flipVertical: true) },
@@ -2242,10 +2227,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                group_selection_foreground_bubble_incoming: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_incoming.withAlphaComponent(0.4), backgroundColor: NSColor.black.withAlphaComponent(0.1)) },
                                                group_selection_foreground_bubble_outgoing: { generateChatGroupToggleSelectionForeground(foregroundColor: palette.grayTextBubble_outgoing.withAlphaComponent(0.4), backgroundColor: NSColor.black.withAlphaComponent(0.1)) },
                                                chat_pinned_list: { NSImage(named: "Icon_ChatPinnedList")!.precomposed(palette.accentIcon) },
-                                               chat_pinned_message: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.accentIcon, flipVertical: true) },
-                                               chat_pinned_message_bubble_incoming: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
-                                               chat_pinned_message_bubble_outgoing: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
-                                               chat_pinned_message_overlay_bubble: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(.white, flipVertical: true) },
+                                               chat_pinned_message: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.accentIcon) },
+                                               chat_pinned_message_bubble_incoming: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.grayIconBubble_incoming) },
+                                               chat_pinned_message_bubble_outgoing: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(palette.grayIconBubble_outgoing) },
+                                               chat_pinned_message_overlay_bubble: { NSImage(named: "Icon_ChatPinnedMessage")!.precomposed(.white) },
                                                chat_voicechat_can_unmute: { NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(.white) },
                                                chat_voicechat_cant_unmute: { NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(palette.redUI) },
                                                chat_voicechat_unmuted: { NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(.white) },
@@ -2262,6 +2247,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
                                                profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
                                                profile_requests: {NSImage(named: "Icon_Profile_Requests")!.precomposed(palette.accent, flipVertical: true)},
+                                               profile_reactions: {NSImage(named: "Icon_PeerInfo_Reactions")!.precomposed(flipVertical: true)},
                                                profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
                                                profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)},
                                                destruct_clear_history: { NSImage(named: "Icon_ClearChat")!.precomposed(palette.redUI, flipVertical: true) },
@@ -2323,7 +2309,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                widget_peers_both: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.text) },
                                                widget_peers_favorite_active: { NSImage(named: "Icon_Widget_Peers_Favorite")!.precomposed(palette.accent) },
                                                widget_peers_recent_active: { NSImage(named: "Icon_Widget_Peers_Recent")!.precomposed(palette.accent) },
-                                               widget_peers_both_active: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.accent) }
+                                               widget_peers_both_active: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.accent) },
+                                               chat_reactions_add: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.grayIcon) },
+                                               chat_reactions_add_bubble: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.text) },
+                                               chat_reactions_add_active: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.accent) }
     )
 
 }

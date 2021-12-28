@@ -12,6 +12,7 @@ import SwiftSignalKit
 import ColorPalette
 import Postbox
 import TelegramCore
+import AppKit
 
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
@@ -109,6 +110,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     
     override var height: CGFloat {
         return isVertical ? 120 : 48
+    }
+    
+    
+    override var isLegacyMenu: Bool {
+        return true
     }
     
     override var inset: NSEdgeInsets {
@@ -707,12 +713,13 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             if item.data.state != nil {
                 _ = item.menuItems(in: .zero).start(next: { [weak self] items in
                     if let event = NSApp.currentEvent, let button = self?.button {
-                        let menu = NSMenu()
+                        let menu = ContextMenu()
                         menu.appearance = darkPalette.appearance
                         for item in items {
                             menu.addItem(item)
                         }
                         NSMenu.popUpContextMenu(menu, with: event, for: button)
+                    //    AppMenu.show(menu: menu, event: event, for: button)
                     }
                 })
             } 
@@ -752,7 +759,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         return self.photoView
     }
     
-    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+    override func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
@@ -1070,6 +1077,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
     override func updateColors() {
         super.updateColors()
     }
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)

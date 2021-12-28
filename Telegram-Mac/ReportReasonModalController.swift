@@ -59,7 +59,7 @@ private let _id_custom = InputDataIdentifier("_id_custom")
 private let _id_fake = InputDataIdentifier("_id_fake")
 private let _id_custom_input = InputDataIdentifier("_id_custom_input")
 
-private extension ReportReason {
+extension ReportReason {
     var id: InputDataIdentifier {
         switch self {
         case .spam:

@@ -20,7 +20,7 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    let flags: ExternalJoiningChatState.InviteFlags
+    let flags: ExternalJoiningChatState.Invite.Flags
     let title: String
     let about: String?
     let photoRepresentation: TelegramMediaImageRepresentation?
@@ -64,10 +64,10 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
 
 
     switch invite {
-    case let .invite(flags, title, about, photoRepresentation, participantsCount, _):
+    case let .invite(state):
         let actionsDisposable = DisposableSet()
 
-        let initialState = State(flags: flags, title: title, about: about, photoRepresentation: photoRepresentation, participantsCount: participantsCount, isChannelOrMegagroup: flags.isChannel && flags.isBroadcast)
+        let initialState = State(flags: state.flags, title: state.title, about: state.about, photoRepresentation: state.photoRepresentation, participantsCount: state.participantsCount, isChannelOrMegagroup: state.flags.isChannel && state.flags.isBroadcast)
         
         var close:(()->Void)? = nil
         
@@ -85,7 +85,7 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
             return InputDataSignalValue(entries: entries(state, arguments: arguments))
         }
         
-        let controller = InputDataController(dataSignal: signal, title: title)
+        let controller = InputDataController(dataSignal: signal, title: state.title)
         
         controller.onDeinit = {
             actionsDisposable.dispose()

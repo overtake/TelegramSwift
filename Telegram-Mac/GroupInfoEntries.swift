@@ -234,6 +234,9 @@ final class GroupInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
+    func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
+        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: true)))
+    }
     
     private func changeControllers(_ peerId: PeerId?) {
         guard let navigationController = self.pullNavigation() else {
@@ -795,9 +798,9 @@ final class GroupInfoArguments : PeerInfoArguments {
             let updateVideo = self.updateVideo
             
             
-            var items:[SPopoverItem] = []
+            var items:[ContextMenuItem] = []
             
-            items.append(.init(strings().editAvatarPhotoOrVideo, {
+            items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         updatePhoto(image)
@@ -807,9 +810,9 @@ final class GroupInfoArguments : PeerInfoArguments {
                         })
                     }
                 })
-            }))
+            }, itemImage: MenuAnimation.menu_shared_media.value))
             
-            items.append(.init(strings().editAvatarStickerOrGif, { [weak control] in
+            items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
                 let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
                 controller._frameRect = NSMakeRect(0, 0, 350, 400)
                 
@@ -859,10 +862,15 @@ final class GroupInfoArguments : PeerInfoArguments {
                 if let control = control {
                     showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
                 }
-            }))
+            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             
-            if let control = control {
-                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(0, -60))
+            if let control = control, let event = NSApp.currentEvent {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                let value = AppMenu(menu: menu)
+                value.show(event: event, view: control)
             } else {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
@@ -1014,6 +1022,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case inviteLinks(section:Int, count: Int32, viewType: GeneralViewType)
     case requests(section:Int, count: Int32, viewType: GeneralViewType)
     case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
+    case reactions(section:Int, text: String, allowedReactions: [String]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
     case groupStickerset(section:Int, packName: String, viewType: GeneralViewType)
@@ -1043,6 +1052,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .autoDeleteMessages(section, timer, _): return .autoDeleteMessages(section: section, timer: timer, viewType: viewType)
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
         case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
+        case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
         case let .linkedChannel(section, channel, subscriber, _): return .linkedChannel(section: section, channel: channel, subscribers: subscriber, viewType: viewType)
         case let .groupDescriptionSetup(section, text, _): return .groupDescriptionSetup(section: section, text: text, viewType: viewType)
         case let .groupAboutDescription(section, _): return .groupAboutDescription(section: section, viewType: viewType)
@@ -1209,6 +1219,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .reactions(sectionId, text, allowedReactions, availableReactions, viewType):
+            if case .reactions(sectionId, text, allowedReactions, availableReactions, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .requests(sectionId, count, viewType):
             if case .requests(sectionId, count, viewType) = entry {
                 return true
@@ -1361,26 +1377,28 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 10
         case .requests:
             return 11
-        case .linkedChannel:
+        case .reactions:
             return 12
-        case .preHistory:
+        case .linkedChannel:
             return 13
-        case .groupStickerset:
+        case .preHistory:
             return 14
-        case .autoDeleteMessages:
+        case .groupStickerset:
             return 15
-        case .groupManagementInfoLabel:
+        case .autoDeleteMessages:
             return 16
-        case .permissions:
+        case .groupManagementInfoLabel:
             return 17
-        case .blocked:
+        case .permissions:
             return 18
-        case .administrators:
+        case .blocked:
             return 19
-        case .usersHeader:
+        case .administrators:
             return 20
-        case .addMember:
+        case .usersHeader:
             return 21
+        case .addMember:
+            return 22
         case .member:
             fatalError("no stableIndex")
         case .showMore:
@@ -1419,6 +1437,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .inviteLinks(sectionId, _, _):
             return sectionId
         case let .requests(sectionId, _, _):
+            return sectionId
+        case let .reactions(sectionId, _, _, _, _):
             return sectionId
         case let .linkedChannel(sectionId, _, _, _):
             return sectionId
@@ -1478,6 +1498,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .inviteLinks(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .requests(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .reactions(sectionId, _, _, _, _):
             return (sectionId * 100000) + stableIndex
         case let .linkedChannel(sectionId, _, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1580,6 +1602,10 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
         case let .requests(_, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoMembersRequest, icon: theme.icons.profile_requests, type: .badge(count > 0 ? "\(count)" : "", theme.colors.redUI), viewType: viewType, action: arguments.openRequests)
+        case let .reactions(_, text, allowedReactions, availableReactions, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
+            })
         case let .linkedChannel(_, channel, _, viewType):
             let title: String
             if let address = channel.addressName {
@@ -1666,7 +1692,7 @@ enum GroupInfoSection : Int {
 }
 
 
-func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32) -> [PeerInfoEntry] {
+func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant] = [], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?) -> [PeerInfoEntry] {
     var entries: [GroupInfoEntry] = []
     if let group = peerViewMainPeer(view), let arguments = arguments as? GroupInfoArguments, let state = arguments.state as? GroupInfoState {
         
@@ -1724,7 +1750,26 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     if case .creator = group.role {
                         actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: false, viewType: .singleItem))
                     }
-//                    actionBlock.append(.autoDeleteMessages(section: GroupInfoSection.type.rawValue, timer: (view.cachedData as? CachedGroupData)?.autoremoveTimeout, viewType: .singleItem))
+                    
+                    let cachedGroupData = view.cachedData as? CachedGroupData
+                    
+                    let allCount = cachedGroupData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
+                    
+                    let text: String
+                    if let availableReactions = availableReactions {
+                        if allCount == availableReactions.enabled.count {
+                            text = strings().peerInfoReactionsAll
+                        } else if allCount == 0 {
+                            text = strings().peerInfoReactionsDisabled
+                        } else {
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
+                        }
+                    } else {
+                        text = strings().peerInfoReactionsAll
+                    }
+                    
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    
                 default:
                     break
                 }
@@ -1742,6 +1787,8 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     }
                     
                     actionBlock.append(.inviteLinks(section: GroupInfoSection.type.rawValue, count: inviteLinksCount, viewType: .firstItem))
+                    
+                    
                     
                     if joinRequestsCount > 0 {
                         actionBlock.append(.requests(section: GroupInfoSection.type.rawValue, count: joinRequestsCount, viewType: .singleItem))
@@ -1762,6 +1809,25 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     actionBlock.append(.groupTypeSetup(section: GroupInfoSection.type.rawValue, isPublic: group.addressName != nil, viewType: .singleItem))
                 }
                 
+                if access.canEditGroupInfo {
+                    let allCount = cachedChannelData.allowedReactions?.count ?? availableReactions?.reactions.count ?? 0
+                    
+                    let text: String
+                    if let availableReactions = availableReactions {
+                        if allCount == availableReactions.enabled.count {
+                            text = strings().peerInfoReactionsAll
+                        } else if allCount == 0 {
+                            text = strings().peerInfoReactionsDisabled
+                        } else {
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
+                        }
+                    } else {
+                        text = strings().peerInfoReactionsAll
+                    }
+                    
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                }
+                
 
                 if (channel.adminRights != nil || channel.flags.contains(.isCreator)), let linkedDiscussionPeerId = cachedChannelData.linkedDiscussionPeerId.peerId, let peer = view.peers[linkedDiscussionPeerId] {
                     actionBlock.append(.linkedChannel(section: GroupInfoSection.type.rawValue, channel: peer, subscribers: cachedChannelData.participantsSummary.memberCount, viewType: .singleItem))
@@ -1770,7 +1836,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         actionBlock.append(.preHistory(section: GroupInfoSection.type.rawValue, enabled: cachedChannelData.flags.contains(.preHistoryEnabled), viewType: .singleItem))
                     }
                 }
-                
+                                
                 if cachedChannelData.flags.contains(.canSetStickerSet) && access.canEditGroupInfo {
                     actionBlock.append(.groupStickerset(section: GroupInfoSection.type.rawValue, packName: cachedChannelData.stickerPack?.title ?? "", viewType: .singleItem))
                 }
@@ -1976,7 +2042,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     if canRestrict {
                         menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuDelete, handler: {
                             arguments.removePeer(sortedParticipants[i].peerId)
-                        }))
+                        }, itemImage: MenuAnimation.menu_delete.value))
                     }
                     
                     
@@ -2102,18 +2168,21 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if canPromote {
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuPromote, handler: {
                         arguments.promote(sortedParticipants[i].participant)
-                    }))
+                    }, itemImage: MenuAnimation.menu_promote.value))
                 }
                 if canRestrict {
                     if let group = group as? TelegramChannel, group.flags.contains(.isGigagroup) {
                     } else {
                         menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuRestrict, handler: {
                             arguments.restrict(sortedParticipants[i].participant)
-                        }))
+                        }, itemImage: MenuAnimation.menu_restrict.value))
+                    }
+                    if !menuItems.isEmpty {
+                        menuItems.append(ContextSeparatorItem())
                     }
                     menuItems.append(ContextMenuItem(strings().peerInfoGroupMenuDelete, handler: {
                         arguments.removePeer(sortedParticipants[i].peer.id)
-                    }))
+                    }, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
                 

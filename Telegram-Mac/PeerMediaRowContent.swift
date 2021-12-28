@@ -46,31 +46,73 @@ class PeerMediaRowItem: GeneralRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
-        var items:[ContextMenuItem] = []
-        if canForwardMessage(message, chatInteraction: interface) {
-            items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
-                if let strongSelf = self {
-                    strongSelf.interface.forwardMessages([strongSelf.message.id])
-                }
-            }))
-        }
+        var resourceData: Signal<(TelegramMediaFile, MediaResourceData)?, NoError> = .single(nil)
         
-        if canDeleteMessage(message, account: interface.context.account, mode: .history) {
-            items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
-                if let strongSelf = self {
-                    strongSelf.interface.deleteMessages([strongSelf.message.id])
-                }
-            }))
-        }
-        
-        items.append(ContextMenuItem(strings().messageContextGoto, handler: { [weak self] in
-            if let strongSelf = self {
-                strongSelf.interface.focusMessageId(nil, strongSelf.message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+        let context = self.interface.context
+        if let file = self.message.media.first as? TelegramMediaFile {
+            resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> map {
+                (file, $0)
             }
-        }))
+        }
         
+        let message = self.message
+        let interface = self.interface
+        let messageId = self.message.id
+                
+        return resourceData
+        |> take(1)
+        |> deliverOnMainQueue
+        |> map { resourceData in
+            
+            var items:[ContextMenuItem] = []
+            
+            
+            var firstBlock:[ContextMenuItem] = []
+            var secondBlock: [ContextMenuItem] = []
+            var thirdBlock: [ContextMenuItem] = []
+            
 
-        return .single(items)
+            if let resourceData = resourceData, resourceData.1.complete {
+                firstBlock.append(ContextMenuItem(strings().contextSaveMedia, handler: {
+                    saveAs(resourceData.0, account: context.account)
+                }, itemImage: MenuAnimation.menu_save_as.value))
+                firstBlock.append(ContextMenuItem(strings().contextShowInFinder, handler: {
+                    showInFinder(resourceData.0, account: context.account)
+                }, itemImage: MenuAnimation.menu_show_in_finder.value))
+            }
+            
+       
+            if canForwardMessage(message, chatInteraction: interface) {
+                secondBlock.append(ContextMenuItem(strings().messageContextForward, handler: {
+                    interface.forwardMessages([messageId])
+                }, itemImage: MenuAnimation.menu_forward.value))
+            }
+            
+            
+            secondBlock.append(ContextMenuItem(strings().messageContextGoto, handler: {
+                interface.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+            }, itemImage: MenuAnimation.menu_show_message.value))
+            
+            if canDeleteMessage(message, account: interface.context.account, mode: .history) {
+                thirdBlock.append(ContextMenuItem(strings().messageContextDelete, handler: {
+                    interface.deleteMessages([messageId])
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            }
+            
+            let blocks:[[ContextMenuItem]] = [firstBlock,
+                                              secondBlock,
+                                              thirdBlock].filter { !$0.isEmpty }
+            
+            for (i, block) in blocks.enumerated() {
+                if i != 0 {
+                    items.append(ContextSeparatorItem())
+                }
+                items.append(contentsOf: block)
+            }
+            
+            return items
+            
+        }
     }
     
     override var instantlyResize: Bool {

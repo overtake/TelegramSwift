@@ -7350,6 +7350,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_reactions: CGImage {
+      if let image = cached.with({ $0["profile_reactions"] }) {
+          return image
+      } else {
+          let image = _profile_reactions()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_reactions"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var profile_removed: CGImage {
       if let image = cached.with({ $0["profile_removed"] }) {
           return image
@@ -8156,6 +8169,45 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chat_reactions_add: CGImage {
+      if let image = cached.with({ $0["chat_reactions_add"] }) {
+          return image
+      } else {
+          let image = _chat_reactions_add()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reactions_add"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_reactions_add_bubble: CGImage {
+      if let image = cached.with({ $0["chat_reactions_add_bubble"] }) {
+          return image
+      } else {
+          let image = _chat_reactions_add_bubble()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reactions_add_bubble"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_reactions_add_active: CGImage {
+      if let image = cached.with({ $0["chat_reactions_add_active"] }) {
+          return image
+      } else {
+          let image = _chat_reactions_add_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reactions_add_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8722,6 +8774,7 @@ public final class TelegramIconsTheme {
   private let _profile_group_destruct: ()->CGImage
   private let _profile_group_discussion: ()->CGImage
   private let _profile_requests: ()->CGImage
+  private let _profile_reactions: ()->CGImage
   private let _profile_removed: ()->CGImage
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
@@ -8784,6 +8837,9 @@ public final class TelegramIconsTheme {
   private let _widget_peers_favorite_active: ()->CGImage
   private let _widget_peers_recent_active: ()->CGImage
   private let _widget_peers_both_active: ()->CGImage
+  private let _chat_reactions_add: ()->CGImage
+  private let _chat_reactions_add_bubble: ()->CGImage
+  private let _chat_reactions_add_active: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9351,6 +9407,7 @@ public final class TelegramIconsTheme {
       profile_group_destruct: @escaping()->CGImage,
       profile_group_discussion: @escaping()->CGImage,
       profile_requests: @escaping()->CGImage,
+      profile_reactions: @escaping()->CGImage,
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
       destruct_clear_history: @escaping()->CGImage,
@@ -9412,7 +9469,10 @@ public final class TelegramIconsTheme {
       widget_peers_both: @escaping()->CGImage,
       widget_peers_favorite_active: @escaping()->CGImage,
       widget_peers_recent_active: @escaping()->CGImage,
-      widget_peers_both_active: @escaping()->CGImage
+      widget_peers_both_active: @escaping()->CGImage,
+      chat_reactions_add: @escaping()->CGImage,
+      chat_reactions_add_bubble: @escaping()->CGImage,
+      chat_reactions_add_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -9979,6 +10039,7 @@ public final class TelegramIconsTheme {
       self._profile_group_destruct = profile_group_destruct
       self._profile_group_discussion = profile_group_discussion
       self._profile_requests = profile_requests
+      self._profile_reactions = profile_reactions
       self._profile_removed = profile_removed
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history
@@ -10041,5 +10102,8 @@ public final class TelegramIconsTheme {
       self._widget_peers_favorite_active = widget_peers_favorite_active
       self._widget_peers_recent_active = widget_peers_recent_active
       self._widget_peers_both_active = widget_peers_both_active
+      self._chat_reactions_add = chat_reactions_add
+      self._chat_reactions_add_bubble = chat_reactions_add_bubble
+      self._chat_reactions_add_active = chat_reactions_add_active
   }
 }

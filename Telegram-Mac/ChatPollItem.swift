@@ -405,7 +405,7 @@ class ChatPollItem: ChatRowItem {
         self.titleTypeText = TextViewLayout(.initialize(string: typeText, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         var size: NSSize = .zero
         if let action = self.actionButtonText {
             size = TitleButton.size(with: action, font: .normal(.text))
@@ -416,61 +416,18 @@ class ChatPollItem: ChatRowItem {
         if size.width > 0 {
             let dif = contentSize.width - (contentSize.width / 2 + size.width / 2)
             if dif < (rightSize.width + insetBetweenContentAndDate) {
-                return 20
+                return true
             }
             
         }
         
         if isBotQuiz {
-            return 10
+            return true
         }
+        return super.isForceRightLine
+    }
+    
         
-        return super.additionalLineForDateInBubbleState
-    }
-
-    
-    override var isFixedRightPosition: Bool {
-        return true
-    }
-    
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return super.menuItems(in: location) |> map { [weak self] items in
-            guard let `self` = self, let message = self.message else { return items }
-            var items = items
-            if let poll = message.media.first as? TelegramMediaPoll {
-                if !self.isClosed && !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                    var index: Int = 0
-                    if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
-                        items.insert(ContextMenuItem(strings().chatPollUnvote, handler: { [weak self] in
-                            self?.unvote()
-                        }), at: index)
-                        index += 1
-                    }
-                    if message.forwardInfo == nil {
-                        var canClose: Bool = message.author?.id == self.context.peerId
-                        if let peer = self.peer as? TelegramChannel {
-                            canClose = peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
-                        }
-                        if canClose {
-                            
-                            items.insert(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak self] in
-                                confirm(for: mainWindow, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, okTitle: strings().alertConfirmStop, successHandler: { [weak self] _ in
-                                    self?.stop()
-                                })
-                            }), at: index)
-                            index += 1
-                        }
-                    }
-                    if index != 0 {
-                        items.insert(ContextSeparatorItem(), at: index)
-                    }
-                }
-                
-            }
-            return items
-        }
-    }
-    
     private func stop() {
         if let message = message {
             chatInteraction.closePoll(message.id)

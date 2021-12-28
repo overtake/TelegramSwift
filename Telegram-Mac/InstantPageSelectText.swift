@@ -204,9 +204,9 @@ class InstantPageSelectText : NSObject {
                         textView.isEditable = false
                         textView.isFieldEditor = false
                         textView.textStorage?.setAttributedString(instantSelectManager.attributedString)
-                        if let menu = textView.menu {
-                            NSMenu.popUpContextMenu(menu, with: event, for: documentView)
-                        }
+//                        if let menu = textView.menu {
+//                            AppMenu.show(menu: menu, event: event, for: documentView)
+//                        }
                         
                     }
                 }

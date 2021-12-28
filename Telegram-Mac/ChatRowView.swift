@@ -40,7 +40,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private(set) var forwardName:TextView?
     private(set) var captionViews: [CaptionView] = []
     private var shareView:ImageButton?
-    private var likeView:ImageButton?
+    private var reactionsView:ChatReactionsView?
     private var channelCommentsBubbleControl: ChannelCommentsBubbleControl?
     private var channelCommentsBubbleSmallControl: ChannelCommentsSmallControl?
     private var channelCommentsControl: ChannelCommentsControl?
@@ -115,18 +115,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         let gradientRect = item.chatInteraction.getGradientOffsetRect()
         let size = NSMakeSize(gradientRect.width, gradientRect.height + 60)
         
-        let inset = size.height - gradientRect.minY + (frame.height - bubbleFrame(item).maxY) - 30
+        let inset = size.height - gradientRect.minY + (frame.height - self.bubbleView.frame.maxY) - 30
         let animated = animated && visibleRect.height > 0 && !clean && self.layer?.animation(forKey: "position") == nil
         let rect = self.frame
-        bubbleView.update(rect: rect.offsetBy(dx: bubbleFrame(item).minX, dy: inset), within: size, animated: animated, rotated: rotated)
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        bubbleView.update(rect: rect.offsetBy(dx: self.bubbleView.frame.minX, dy: inset), within: size, transition: transition, rotated: rotated)
     }
-    
-//    func updateFloatingPhoto() {
-//        if let item = self.item as? ChatRowItem, let table = item.table {
-//            
-//        }
-//    }
-//    
+      
     var selectableTextViews: [TextView] {
         return captionViews.map { $0.view }
     }
@@ -146,16 +143,21 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {
+        
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             if (value.selectionState != oldValue.selectionState) {
                 updateSelectingState(!NSIsEmptyRect(visibleRect), selectingMode:value.selectionState != nil, item: self.item as? ChatRowItem, needUpdateColors: true)
-                self.needsLayout = true
+                
+                updateLayout(size: frame.size, transition: transition)
             } else if let item = item as? ChatRowItem, let message = item.message {
                 if value.selectionState?.selectedIds.contains(message.id) != oldValue.selectionState?.selectedIds.contains(message.id) {
                     if let selectionState = value.selectionState {
                         selectingView?.set(selected: selectionState.selectedIds.contains(message.id), animated: !NSIsEmptyRect(visibleRect))
                         updateColors()
-                        self.needsLayout = true
+                        updateLayout(size: frame.size, transition: transition)
                     }
                 }
             }
@@ -167,53 +169,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func updateSelectingState(_ animated:Bool = false, selectingMode:Bool, item: ChatRowItem?, needUpdateColors: Bool) {
         
         let selectingMode = selectingMode && item?.chatInteraction.mode.threadId != item?.message?.id
-        
         if let item = item {
-            let defRight = frame.width - item.rightSize.width - item.rightInset
-            
-            if !item.isBubbled {
-                rightView.change(pos: NSMakePoint(defRight, rightView.frame.minY), animated: animated)
-                if let control = channelCommentsControl {
-                    let x = defRight - control.frame.width - 4
-                    control.change(pos: NSMakePoint(x, control.frame.minY), animated: animated)
-                }
-            } else {
-                if rowView.frame.origin != rowPoint(item) {
-                    rowView.change(pos: rowPoint(item), animated: animated)
-                }
-            }
-            
-            
             updateMouse()
-            
             if selectingMode {
-                let force: Bool = selectingView == nil
                 if selectingView == nil {
                     selectingView = SelectingControl(unselectedImage: item.presentation.chat_toggle_unselected, selectedImage: item.presentation.chat_toggle_selected, selected: item.isSelectedMessage)
                     selectingView?.setFrameOrigin(NSMakePoint(frame.width, selectingPoint(item).y))
-                    selectingView?.layer?.opacity = 0
                     super.addSubview(selectingView!)
+                    
+                    if animated {
+                        selectingView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
-                if selectingView!.isSelected != item.isSelectedMessage || force {
-                    selectingView?.change(opacity: 1.0, animated: animated)
-                    selectingView?.change(pos: selectingPoint(item), animated: animated)
-                }
-                
             } else {
-                if animated {
-                    selectingView?.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion:false, completion:{ [weak self] (completed) in
-                        //if completed {
-                            self?.selectingView?.removeFromSuperview()
-                            self?.selectingView = nil
-                        //}
-                    })
-                } else {
-                    self.selectingView?.removeFromSuperview()
+                if let view = self.selectingView {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    view.layer?.animatePosition(from: view.frame.origin, to: view.frame.origin.offsetBy(dx: 20, dy: 0), removeOnCompletion: false)
                     self.selectingView = nil
                 }
-                selectingView?.change(pos: NSMakePoint(frame.width, selectingPoint(item).y), animated: animated)
             }
-            
             updateSelectionViewAfterUpdateState(item: item, animated: animated)
             if needUpdateColors {
                 renderLayoutType(item, animated: animated)
@@ -224,11 +198,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             } else {
                restoreHierarchyInteraction()
             }
-            
             self.channelCommentsControl?.isEnabled = !item.isFailed && !item.isUnsent && item.chatInteraction.presentation.state != .selecting
             self.channelCommentsBubbleSmallControl?.isEnabled = !item.isFailed && !item.isUnsent && item.chatInteraction.presentation.state != .selecting
             self.channelCommentsBubbleControl?.isEnabled = !item.isFailed && !item.isUnsent && item.chatInteraction.presentation.state != .selecting
-
         }
     }
     
@@ -275,11 +247,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     var contentColor: NSColor {
         guard let item = item as? ChatRowItem else {return backdorColor}
-        
         if item.hasBubble {
-            //System.supportsTransparentFontDrawing ? .clear :
             return item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
-            //return .clear//isSelect || contextMenu != nil ? item.presentation.chat.backgoundSelectedColor(item.isIncoming, item.renderType == .bubble) : item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
         } else {
             return backdorColor//backdorColor
         }
@@ -400,8 +369,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
 
-      //  super.draw(layer, in: ctx)
-
         if let item = self.item as? ChatRowItem {
             
             if let fwdHeader = item.forwardHeader, !item.isBubbled, layer == rowView.layer {
@@ -414,9 +381,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             
             let radius:CGFloat = 1.0
-          //  ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
-      //     ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
-          //  ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
             
             //draw separator
             if let fwdType = item.forwardType, !item.isBubbled, layer == rowView.layer {
@@ -462,9 +426,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let commentsView = self.channelCommentsBubbleSmallControl, let item = item as? ChatRowItem {
             commentsView.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
         }
-        if let likeControl = self.likeView, let item = item as? ChatRowItem {
-            likeControl.change(opacity: item.chatInteraction.presentation.state != .selecting && mouseInside() ? 1.0 : 0.0, animated: true)
-        }
     }
     
     
@@ -473,34 +434,30 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         self.contentView.addSubview(view)
     }
     
-    func fillReplyIfNeeded(_ reply:ReplyModel?, _ item:ChatRowItem) -> Void {
+    func fillReply(_ item:ChatRowItem, animated: Bool) -> Void {
         
-        if let reply = reply {
-            
+        if let reply = item.replyModel {
             if replyView == nil {
-                replyView = ChatAccessoryView()
+                replyView = ChatAccessoryView(frame: replyFrame(item))
                 rowView.addSubview(replyView!)
             }
-            
             if reply.isSideAccessory {
                 replyView?.layer?.cornerRadius = .cornerRadius
             } else {
                 replyView?.layer?.cornerRadius = 0
             }
-            
             replyView?.removeAllHandlers()
             replyView?.set(handler: { [weak item] _ in
                 item?.chatInteraction.focusInputField()
                 item?.openReplyMessage()
-                
-                
             }, for: .Click)
             
             reply.view = replyView
-            //reply.view?.needsDisplay = true
         } else {
-            replyView?.removeFromSuperview()
-            replyView = nil
+            if let view = replyView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                replyView = nil
+            }
         }
         
     }
@@ -762,63 +719,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func layout() {
-    //    super.layout()
-        if let item = item as? ChatRowItem {
-            
-            hasBeenLayout = true
-            
-            bubbleView.frame = bubbleFrame(item)
-            contentView.frame = contentFrameModifier(item)
-            
-
-            
-            rowView.setFrameOrigin(rowPoint(item))
-            
-            forwardName?.setFrameOrigin(forwardNamePoint(item))
-            forwardAccessory?.setFrameOrigin(forwardNamePoint(item))
-
-            rightView.frame = rightFrame(item)
-
-            nameView?.setFrameOrigin(namePoint(item))
-            
-            adminBadge?.setFrameOrigin(adminBadgePoint(item))
-            
-            viaAccessory?.setFrameOrigin(viaAccesoryPoint(item))
-            item.replyModel?.frame = replyFrame(item)
-
-            
-            scamButton?.setFrameOrigin(scamPoint(item))
-            scamForwardButton?.setFrameOrigin(scamForwardPoint(item))
-            
-            psaButton?.setFrameOrigin(psaPoint(item))
-            
-            avatar?.frame = avatarFrame(item)
-            
-            for captionView in captionViews {
-                if let caption = item.captionLayouts.first(where: { $0.id == captionView.id }) {
-                    captionView.view.frame = captionFrame(item, caption: caption)
-                }
-            }
-            
-            
-            replyMarkupView?.frame = replyMarkupFrame(item)
-            item.replyMarkupModel?.layout()
-
-            
-            selectingView?.setFrameOrigin(selectingPoint(item))
-            
-            animatedView?.frame = bounds
-            
-            channelCommentsBubbleControl?.frame = channelCommentsBubbleFrame(item)
-            channelCommentsControl?.frame = channelCommentsFrame(item)
-            channelCommentsBubbleSmallControl?.frame = channelCommentsOverlayFrame(item)
-
-            swipingRightView.frame = NSMakeRect(frame.width, 0, rightRevealWidth, frame.height)
-            
-            shareView?.setFrameOrigin(shareViewPoint(item))
-            likeView?.setFrameOrigin(likeViewPoint(item))
-            
-        }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     func shareViewPoint(_ item: ChatRowItem) -> NSPoint {
@@ -837,56 +738,46 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return point
     }
     
-    func likeViewPoint(_ item: ChatRowItem) -> NSPoint {
-        guard let likeView = self.likeView else {
-            return .zero
-        }
-        var controlOffset: CGFloat = 0
-        if let shareView = shareView {
-            controlOffset += shareView.frame.width + 10
-        }
-        if item.isBubbled {
-            let bubbleFrame = self.bubbleFrame(item)
-            let rightFrame = self.rightFrame(item)
-            return NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10 + controlOffset, item.isStateOverlayLayout ? rightFrame.width + 10 + controlOffset : 0) : bubbleFrame.minX - likeView.frame.width - 10 - controlOffset, bubbleFrame.maxY - (likeView.frame.height - 2) - (item.isVideoOrBigEmoji ? rightFrame.height + 14 : 0))
-        } else {
-            return NSMakePoint(frame.width - 20.0 - likeView.frame.width, rightView.frame.maxY)
-        }
-    }
+
     
     
     
-    func fillForward(_ item:ChatRowItem) -> Void {
+    func fillForward(_ item:ChatRowItem, animated: Bool) -> Void {
         if let forwardNameLayout = item.forwardNameLayout {
             if item.isBubbled && !item.hasBubble {
-                forwardName?.removeFromSuperview()
-                forwardName = nil
-                
-                if forwardAccessory == nil {
-                    forwardAccessory = ChatBubbleAccessoryForward(frame: NSZeroRect)
-                    rowView.addSubview(forwardAccessory!)
+                if let view = forwardName {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    forwardName = nil
                 }
                 
+                if forwardAccessory == nil {
+                    forwardAccessory = ChatBubbleAccessoryForward(frame: CGRect(origin: forwardNamePoint(item), size: forwardNameLayout.layoutSize))
+                    rowView.addSubview(forwardAccessory!)
+                }
                 forwardAccessory?.updateText(layout: forwardNameLayout)
                 
             } else {
-                forwardAccessory?.removeFromSuperview()
-                forwardAccessory = nil
-                
+                if let view = forwardAccessory {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    forwardAccessory = nil
+                }
                 if forwardName == nil {
-                    forwardName = TextView()
+                    forwardName = TextView(frame: CGRect(origin: forwardNamePoint(item), size: forwardNameLayout.layoutSize))
                     forwardName?.isSelectable = false
                     rowView.addSubview(forwardName!)
                 }
                 forwardName?.update(forwardNameLayout)
-                
             }
             
         } else {
-            forwardName?.removeFromSuperview()
-            forwardName = nil
-            forwardAccessory?.removeFromSuperview()
-            forwardAccessory = nil
+            if let view = forwardName {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                forwardName = nil
+            }
+            if let view = forwardAccessory {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                forwardAccessory = nil
+            }
         }
     }
     
@@ -899,12 +790,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return avatar
     }
     
-    func fillPhoto(_ item:ChatRowItem) -> Void {
+    func fillPhoto(_ item:ChatRowItem, animated: Bool) -> Void {
         if item.hasPhoto, let peer = item.peer, item.renderType != .bubble {
             
             if avatar == nil {
                 avatar = AvatarControl(font: .avatar(.text))
-                avatar?.setFrameSize(36,36)
+                avatar?.frame = avatarFrame(item)
                 rowView.addSubview(avatar!)
             }
             avatar?.removeAllHandlers()
@@ -915,20 +806,21 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             self.avatar?.setPeer(account: item.context.account, peer: peer, message: item.message)
             
         } else {
-            avatar?.removeFromSuperview()
-            avatar = nil
+            if let view = avatar {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.avatar = nil
+            }
         }
     }
     
-    func fillPsaButton(_ item: ChatRowItem) -> Void {
+    func fillPsaButton(_ item: ChatRowItem, animated: Bool) -> Void {
         if let text = item.psaButton, item.forwardNameLayout != nil || !item.isBubbled {
             
             let icon = item.presentation.chat.channelInfoPromo(item.isIncoming, item.isBubbled, icons: theme.icons)
             
             if psaButton == nil {
-                psaButton = ImageButton()
+                psaButton = ImageButton(frame: CGRect(origin: psaPoint(item), size: icon.backingSize))
                 psaButton?.autohighlight = false
-                psaButton?.setFrameSize(icon.backingSize)
                 rowView.addSubview(psaButton!)
                 psaButton?.set(handler: { control in
                     tooltip(for: control, text: "", attributedText: text, interactions: globalLinkExecutor)
@@ -937,18 +829,19 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             psaButton?.set(image: icon, for: .Normal)
             
         } else {
-            psaButton?.removeFromSuperview()
-            psaButton = nil
+            if let view = psaButton {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                psaButton = nil
+            }
         }
     }
     
-    func fillScamButton(_ item: ChatRowItem) -> Void {
+    func fillScamButton(_ item: ChatRowItem, animated: Bool) -> Void {
         if item.isScam || item.isFake, item.canFillAuthorName {
             if scamButton == nil {
                 let text: String = !item.isScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
-                scamButton = ImageButton()
+                scamButton = ImageButton(frame: CGRect(origin: scamPoint(item), size: item.badIcon.backingSize))
                 scamButton?.autohighlight = false
-                scamButton?.setFrameSize(item.badIcon.backingSize)
                 rowView.addSubview(scamButton!)
                 scamButton?.set(handler: { control in
                     tooltip(for: control, text: text)
@@ -957,18 +850,19 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             scamButton?.set(image: item.badIcon, for: .Normal)
             
         } else {
-            scamButton?.removeFromSuperview()
-            scamButton = nil
+            if let view = scamButton {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                scamButton = nil
+            }
         }
     }
     
-    func fillScamForwardButton(_ item: ChatRowItem) -> Void {
+    func fillScamForwardButton(_ item: ChatRowItem, animated: Bool) -> Void {
         if item.isForwardScam || item.isForwardFake {
             if scamForwardButton == nil {
                 let text: String = !item.isForwardScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
-                scamForwardButton = ImageButton()
+                scamForwardButton = ImageButton(frame: CGRect(origin: scamForwardPoint(item), size: item.forwardBadIcon.backingSize))
                 scamForwardButton?.autohighlight = false
-                scamForwardButton?.setFrameSize(item.forwardBadIcon.backingSize)
                 rowView.addSubview(scamForwardButton!)
                 scamForwardButton?.set(handler: { control in
                     tooltip(for: control, text: text)
@@ -977,8 +871,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             scamForwardButton?.set(image: item.forwardBadIcon, for: .Normal)
             
         } else {
-            scamForwardButton?.removeFromSuperview()
-            scamForwardButton = nil
+            if let view = scamForwardButton {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                scamForwardButton = nil
+            }
         }
     }
     
@@ -1016,28 +912,44 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             view?.view.update(layout.layout)
         }
+    }
+    
+    func reactionsRect(_ item: ChatRowItem) -> CGRect {
+        guard let reactionsLayout = item.reactionsLayout else {
+            return .zero
+        }
+        let contentFrame = self.contentFrame(item)
         
+        var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, reactionsLayout.size.width, reactionsLayout.size.height)
         
+        if let captionLayout = item.captionLayouts.first?.layout {
+            frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
+        }
         
-//        if let layout = item.captionLayout {
-//            if captionView == nil {
-//                captionView = TextView()
-//                rowView.addSubview(captionView!)
-//                rowView.addSubview(rightView)
-//                captionView?.frame = captionFrame(item)
-//            }
-//            captionView?.update(layout)
-//        } else {
-//            if animated, let captionView = self.captionView {
-//                self.captionView = nil
-//                captionView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak captionView] _ in
-//                    captionView?.removeFromSuperview()
-//                })
-//            } else {
-//                captionView?.removeFromSuperview()
-//                captionView = nil
-//            }
-//        }
+        let bubbleFrame = self.bubbleFrame(item)
+        
+        if item.hasBubble {
+            if item.isBubbleFullFilled, item.captionLayouts.isEmpty {
+                frame.origin.y = bubbleFrame.maxY + item.defaultReactionsInset
+                frame.origin.x = bubbleFrame.minX + (item.isIncoming ? item.additionBubbleInset : 0)
+            } else {
+                if item.captionLayouts.isEmpty {
+                    frame.origin.y = contentFrame.maxY + item.defaultReactionsInset
+                } else if let last = item.captionLayouts.last {
+                    frame.origin.y = max(contentFrame.maxY, captionFrame(item, caption: last).maxY) + item.defaultReactionsInset
+                }
+                if !item.isBubbleFullFilled {
+                    frame.origin.x = contentFrame.minX
+                } else {
+                    frame.origin.x = contentFrame.minX + item.defaultReactionsInset + item.additionBubbleInset
+                }
+            }
+           
+        } else if item.isBubbled {
+            
+        }
+        
+        return frame
     }
     
     func channelCommentsBubbleFrame(_ item: ChatRowItem) -> CGRect {
@@ -1163,25 +1075,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {
         if item.shareVisible || item.hasSource {
-            var isPresented: Bool = true
             if shareView == nil {
-                shareView = ImageButton()
+                shareView = ImageButton(frame: CGRect(origin: shareViewPoint(item), size: NSMakeSize(29, 29)))
                 shareView?.disableActions()
                 shareView?.scaleOnClick = true
                 shareView?.change(opacity: 0, animated: false)
                 rowView.addSubview(shareView!)
-                isPresented = false
             }
             
             guard let control = shareView else {return}
             control.autohighlight = false
-
-            
-            if animated && isPresented {
-                control.change(pos: shareViewPoint(item), animated: true)
-            } else {
-                control.setFrameOrigin(shareViewPoint(item))
-            }
             
             if item.presentation.shouldBlurService  {
                 
@@ -1203,8 +1106,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 
 
             }
-            control.setFrameSize(NSMakeSize(29, 29))
-            let size = NSMakeSize(control.frame.width, control.frame.height)
+            let size = NSMakeSize(29, 29)
             control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
             control.set(cornerRadius: .half, for: .Normal)
 
@@ -1219,92 +1121,35 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }, for: .Click)
         } else {
-            shareView?.removeFromSuperview()
-            shareView = nil
+            if let view = shareView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                shareView = nil
+            }
         }
     }
     
-    private func likeImage(_ item: ChatRowItem) -> CGImage {
-        if item.isLiked {
-            return item.presentation.chat.chat_like_message_unlike_bubble(theme: item.presentation)
+    func fillReactions(_ item: ChatRowItem, animated: Bool) {
+        if let reactionsLayout = item.reactionsLayout, reactionsLayout.mode == .full  {
+            if reactionsView == nil {
+                reactionsView = ChatReactionsView(frame: reactionsRect(item))
+                rowView.addSubview(reactionsView!)
+            }
+            guard let reactionsView = reactionsView else {return}
+            reactionsView.update(with: reactionsLayout, animated: animated)
         } else {
-            return item.presentation.chat.chat_like_message_bubble(theme: item.presentation)
-        }
-    }
-    
-    override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
-        
-        rowView.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        
-        super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        
-    }
-    
-    func fillLikeView(_ item: ChatRowItem, animated: Bool) {
-        if item.isLikable  {
-            var isPresented: Bool = true
-            if likeView == nil {
-                likeView = ImageButton()
-                likeView?.scaleOnClick = true
-                likeView?.autohighlight = false
-                likeView?.disableActions()
-                likeView?.change(opacity: 0, animated: false)
-                rowView.addSubview(likeView!)
-                isPresented = false
+            if let view = self.reactionsView {
+                self.reactionsView = nil
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
-            
-            guard let control = likeView else {return}
-            
-            if animated && isPresented {
-                control.change(pos: likeViewPoint(item), animated: true)
-            }
-
-            let isLiked = item.isLiked
-            
-            if item.presentation.shouldBlurService  {
-                control.set(image: likeImage(item), for: .Normal)
-                
-                _ = control.sizeToFit()
-                let size = NSMakeSize(control.frame.width, control.frame.height)
-                control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
-                control.set(additionBackgroundColor: item.presentation.chatServiceItemColor, for: .Normal)
-                
-                control.set(cornerRadius: .half, for: .Normal)
-            } else {
-                control.set(image: item.presentation.icons.chat_like_message, for: .Normal)
-                _ = control.sizeToFit()
-                control.background = .clear
-            }
-            
-            control.removeAllHandlers()
-            control.set(handler: { [weak item] control in
-                if let item = item {
-                    let presentation = item.presentation.chat
-                    let from = isLiked ? presentation.chat_like_message_unlike_bubble(theme: item.presentation) : presentation.chat_like_message_bubble(theme: item.presentation)
-                    let to = isLiked ? presentation.chat_like_message_bubble(theme: item.presentation) : presentation.chat_like_message_unlike_bubble(theme: item.presentation)
-                    
-                    (control as? ImageButton)?.applyAnimation(from: from, to: to, animation: .replaceScale)
-                    
-                    item.toggleLike()
-                }
-            
-                
-            }, for: .Click)
-        } else {
-            likeView?.removeFromSuperview()
-            likeView = nil
         }
     }
     
     func fillReplyMarkup(_ item:ChatRowItem, animated: Bool) -> Void {
         if let replyMarkup = item.replyMarkupModel {
             if replyMarkupView == nil {
-                replyMarkupView = View()
+                replyMarkupView = View(frame: replyMarkupFrame(item))
                 rowView.addSubview(replyMarkupView!)
-                replyMarkupView?.frame = replyMarkupFrame(item)
             }
-            
-            replyMarkupView?.setFrameSize(replyMarkup.size.width, replyMarkup.size.height)
             replyMarkup.view = replyMarkupView
             replyMarkup.redraw()
         } else {
@@ -1326,67 +1171,67 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillName(_ item:ChatRowItem, animated: Bool) -> Void {
         if let author = item.authorText {
             if item.isBubbled && !item.hasBubble {
-                nameView?.removeFromSuperview()
-                nameView = nil
-                
-                adminBadge?.removeFromSuperview()
-                adminBadge = nil
+                if let view = nameView {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.nameView = nil
+                }
+                if let view = adminBadge {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.adminBadge = nil
+                }
                 
                 if viaAccessory == nil {
                     viaAccessory = ChatBubbleViaAccessory(frame: NSZeroRect)
                 }
-                
                 guard let viaAccessory = viaAccessory else {return}
-                
                 viaAccessory.removeFromSuperview()
                 if replyView != nil {
                     replyView?.addSubview(viaAccessory)
                 } else {
                     rowView.addSubview(viaAccessory)
                 }
-                
                 viaAccessory.updateText(layout: author)
-                
-                
             } else {
-                
-                viaAccessory?.removeFromSuperview()
-                viaAccessory = nil
-                
-                if nameView == nil {
-                    nameView = TextView()
-                    nameView?.isSelectable = false
-                    
-                    rowView.addSubview(nameView!)
+                if let view = viaAccessory {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.viaAccessory = nil
                 }
                 
+                if nameView == nil {
+                    nameView = TextView(frame: CGRect(origin: namePoint(item), size: author.layoutSize))
+                    nameView?.isSelectable = false
+                    rowView.addSubview(nameView!)
+                }
                 if let adminBadge = item.adminBadge {
                     if self.adminBadge == nil {
-                        self.adminBadge = TextView()
+                        self.adminBadge = TextView(frame: CGRect(origin: adminBadgePoint(item), size: adminBadge.layoutSize))
                         self.adminBadge?.isSelectable = false
                         rowView.addSubview(self.adminBadge!)
                     }
-                    self.adminBadge?.update(adminBadge, origin: adminBadgePoint(item))
+                    self.adminBadge?.update(adminBadge)
                 } else {
-                    adminBadge?.removeFromSuperview()
-                    adminBadge = nil
+                    if let view = adminBadge {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.adminBadge = nil
+                    }
                 }
-                
                 nameView?.update(author)
-                nameView?.change(pos: namePoint(item), animated: animated)
                 nameView?.toolTip = item.nameHide
             }
             
         } else {
-            
-            viaAccessory?.removeFromSuperview()
-            viaAccessory = nil
-            
-            nameView?.removeFromSuperview()
-            nameView = nil
-            
-            adminBadge?.removeFromSuperview()
-            adminBadge = nil
+            if let view = viaAccessory {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.viaAccessory = nil
+            }
+            if let view = nameView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.nameView = nil
+            }
+            if let view = adminBadge {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.adminBadge = nil
+            }
         }
     }
     
@@ -1525,24 +1370,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
-        
         let previousItem = self.item as? ChatRowItem
-                
+
+        super.set(item: item, animated: animated)
+
+
         if let item = previousItem {
             item.chatInteraction.remove(observer: self)
         }
-    
         guard let item = item as? ChatRowItem else {
             return
         }
-        
         
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
             self.animatedView?.removeFromSuperview()
             self.animatedView = nil
         }
         
-        let animated = animated && item.isBubbled && hasBeenLayout && bubbleView.layer?.animation(forKey: "shake") == nil && previousItem?.message?.id == item.message?.id && self.layer?.animation(forKey: "position") == nil && item.presentation.bubbled == previousItem?.presentation.bubbled
+        let animated = animated && item.presentation.bubbled == previousItem?.presentation.bubbled
+        
         
         if previousItem?.message?.id != item.message?.id {
             updateBackground(animated: false, item: item, clean: true)
@@ -1556,55 +1402,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
         
         rightView.set(item:item, animated:animated)
-        fillReplyIfNeeded(item.replyModel, item)
+        fillReply(item, animated: animated)
         fillName(item, animated: animated)
-        fillForward(item)
-        fillPhoto(item)
-        fillForward(item)
-        fillScamButton(item)
-        fillScamForwardButton(item)
-        fillPsaButton(item)
+        fillForward(item, animated: animated)
+        fillPhoto(item, animated: animated)
+        fillScamButton(item, animated: animated)
+        fillScamForwardButton(item, animated: animated)
+        fillPsaButton(item, animated: animated)
         fillShareView(item, animated: animated)
-        fillLikeView(item, animated: animated)
+        fillReactions(item, animated: animated)
         fillReplyMarkup(item, animated: animated)
         fillCaption(item, animated: animated)
         fillChannelComments(item, animated: animated)
         
-        super.set(item: item, animated: animated)
+        
+        self.needsDisplay = true
+        self.needsLayout = true
 
-        if animated {
-            
-            let bubbleFrame = self.bubbleFrame
-            let contentFrameModifier = self.contentFrameModifier
-            
-            nameView?.change(pos: namePoint(item), animated: animated)
-            
-            bubbleView.change(pos: bubbleFrame(item).origin, animated: animated)
-            bubbleView.change(size: bubbleFrame(item).size, animated: animated)
-            contentView.change(pos: contentFrameModifier(item).origin, animated: animated)
-            contentView.change(size: contentFrameModifier(item).size, animated: animated)
-            updateBackground(animated: animated, item: item)
-            
-            let rightFrame = self.rightFrame(item)
-            
-//            if rightFrame.width != rightView.frame.width && rightFrame.minX < rightView.frame.minX {
-//                rightView.setFrameOrigin(NSMakePoint(rightFrame.minX, rightView.frame.minY))
-//            }
-            rightView.change(pos: rightFrame.origin, animated: animated)
-            rightView.change(size: rightFrame.size, animated: animated)
-            
-            
-            replyView?._change(pos: replyFrame(item).origin, animated: animated)
-            replyMarkupView?.change(pos: replyMarkupFrame(item).origin, animated: animated)
-            for view in captionViews {
-                if let caption = item.captionLayouts.first(where: { $0.id == view.id }) {
-                    view.view._change(pos: captionFrame(item, caption: caption).origin, animated: animated)
-                }
-            }
-        }
-
-        rowView.needsDisplay = true
-        needsLayout = true
     }
 
     open override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
@@ -1619,15 +1433,109 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         return
                     }
                 }
-//                if NSPointInRect(location, bubbleFrame(item)), item.isBubbled {
-//                    return
-//                }
                 if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, mode: item.chatInteraction.mode) {
                     item.chatInteraction.setupReplyMessage(item.message?.id)
                 }
             }
         }
     }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        guard let item = item as? ChatRowItem else {
+            return
+        }
+        hasBeenLayout = true
+                
+        transition.updateFrame(view: bubbleView, frame: bubbleFrame(item))
+        bubbleView.updateLayout(size: bubbleView.frame.size, transition: transition)
+        transition.updateFrame(view: contentView, frame: contentFrameModifier(item))
+        transition.updateFrame(view: rowView, frame: CGRect(origin: rowPoint(item), size: size))
+        
+        updateBackground(animated: transition.isAnimated, item: item)
+        
+        if let view = forwardName {
+            transition.updateFrame(view: view, frame: CGRect(origin: forwardNamePoint(item), size: view.frame.size))
+        }
+        if let view = forwardAccessory {
+            transition.updateFrame(view: view, frame: CGRect(origin: forwardNamePoint(item), size: view.frame.size))
+        }
+
+        transition.updateFrame(view: rightView, frame: rightFrame(item))
+        rightView.updateLayout(size: rightView.frame.size, transition: transition)
+
+        if let view = nameView {
+            transition.updateFrame(view: view, frame: CGRect(origin: namePoint(item), size: view.frame.size))
+        }
+        
+        if let view = adminBadge {
+            transition.updateFrame(view: view, frame: CGRect(origin: adminBadgePoint(item), size: view.frame.size))
+        }
+        if let view = viaAccessory {
+            transition.updateFrame(view: view, frame: CGRect(origin: viaAccesoryPoint(item), size: view.frame.size))
+        }
+        
+        if let view = item.replyModel?.view {
+            transition.updateFrame(view: view, frame: replyFrame(item))
+            view.needsDisplay = true
+        }
+        if let view = scamButton {
+            transition.updateFrame(view: view, frame: CGRect(origin: scamPoint(item), size: view.frame.size))
+        }
+        if let view = scamForwardButton {
+            transition.updateFrame(view: view, frame: CGRect(origin: scamForwardPoint(item), size: view.frame.size))
+        }
+        
+        if let view = psaButton {
+            transition.updateFrame(view: view, frame: CGRect(origin: psaPoint(item), size: view.frame.size))
+        }
+        
+        if let view = avatar {
+            transition.updateFrame(view: view, frame: avatarFrame(item))
+        }
+        
+        for captionView in captionViews {
+            if let caption = item.captionLayouts.first(where: { $0.id == captionView.id }) {
+                transition.updateFrame(view: captionView.view, frame: captionFrame(item, caption: caption))
+            }
+        }
+        
+        
+        if let view = replyMarkupView {
+            transition.updateFrame(view: view, frame: replyMarkupFrame(item))
+            item.replyMarkupModel?.layout()
+        }
+        
+        if let view = selectingView {
+            transition.updateFrame(view: view, frame: CGRect(origin: selectingPoint(item), size: view.frame.size))
+        }
+        
+        
+        if let view = animatedView {
+            transition.updateFrame(view: view, frame: size.bounds)
+        }
+        if let view = channelCommentsBubbleControl {
+            transition.updateFrame(view: view, frame: channelCommentsBubbleFrame(item))
+        }
+        if let view = channelCommentsControl {
+            transition.updateFrame(view: view, frame: channelCommentsFrame(item))
+        }
+        if let view = channelCommentsBubbleSmallControl {
+            transition.updateFrame(view: view, frame: channelCommentsOverlayFrame(item))
+        }
+
+        transition.updateFrame(view: self.swipingRightView, frame: NSMakeRect(frame.width, 0, rightRevealWidth, frame.height))
+        
+        if let view = shareView {
+            transition.updateFrame(view: view, frame: CGRect(origin: shareViewPoint(item), size: view.frame.size))
+        }
+        
+        if let view = reactionsView {
+            transition.updateFrame(view: view, frame: reactionsRect(item))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
+
+    }
+    
     
     func toggleSelected(_ select: Bool, in point: NSPoint) {
         guard let item = item as? ChatRowItem else { return }
@@ -1854,6 +1762,30 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     override func removeFromSuperview() {
         super.removeFromSuperview()
+    }
+    
+    var rectForReaction: NSRect {
+        guard let item = self.item as? ChatRowItem else {
+            return .zero
+        }
+        
+        
+        if item.isBubbled {
+            let bubbleFrame = self.bubbleView.frame
+            var rect = NSMakeRect(bubbleFrame.maxX - 10 + self.rowView.frame.minX, bubbleFrame.maxY - 10, 20, 20)
+            if item.isIncoming {
+                rect.origin.x -= 5
+                rect.origin.y -= 5
+            } else {
+                rect.origin.x = bubbleFrame.minX - 5 + self.rowView.frame.minX
+                rect.origin.y -= 5
+            }
+            return rect
+        } else {
+            let contentFrame = self.contentView.frame
+            let rect = NSMakeRect(contentFrame.minX - 20 - 10 + self.rowView.frame.minX, contentFrame.minY, 20, 20)
+            return rect
+        }
     }
     
 }

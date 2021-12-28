@@ -159,6 +159,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 return strings().messagesPlaceholderReply
             }
         }
+        if chatInteraction.presentation.interfaceState.editState != nil {
+            return strings().messagePlaceholderEdit
+        }
         if let replyMarkup = chatInteraction.presentation.keyboardButtonsMessage?.replyMarkup {
             if let placeholder = replyMarkup.placeholder {
                 return placeholder

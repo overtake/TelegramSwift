@@ -89,18 +89,17 @@ class ChatMapRowItem: ChatMediaItem {
         }
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {
             if parameters.isVenue {
-                return rightSize.width > (_contentSize.width - 70) ? rightSize.height : nil
+                if rightSize.width > (_contentSize.width - 70) {
+                    return true
+                }
             }
         }
-        return nil
+        return super.isForceRightLine
     }
     
-    override var isFixedRightPosition: Bool {
-        return true
-    }
     
     override var instantlyResize:Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {

@@ -128,9 +128,9 @@ class JoinLinkPreviewModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         switch join {
-        case let .invite(_, title, _, image, memberCount, participants):
-            let peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt64Value(0)), title: title, photo: image.flatMap { [$0] } ?? [], participantCount: Int(memberCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
-                        genericView.update(with: peer, account: context.account, participants: participants, groupUserCount: memberCount)
+        case let .invite(state):
+            let peer = TelegramGroup(id: PeerId(namespace: Namespaces.Peer.CloudGroup, id: PeerId.Id._internalFromInt64Value(0)), title: state.title, photo: state.photoRepresentation.flatMap { [$0] } ?? [], participantCount: Int(state.participantsCount), role: .member, membership: .Left, flags: [], defaultBannedRights: nil, migrationReference: nil, creationDate: 0, version: 0)
+            genericView.update(with: peer, account: context.account, participants: state.participants?.map { $0._asPeer() }, groupUserCount: state.participantsCount)
         default:
             break
         }
@@ -153,8 +153,8 @@ class JoinLinkPreviewModalController: ModalViewController {
         
         var rect = NSMakeRect(0, 0, 270, 180)
         switch join {
-        case let .invite(_, _, _, _, _, participants):
-            if let participants = participants, participants.count > 0 {
+        case let .invite(state):
+            if let participants = state.participants, participants.count > 0 {
                 rect.size.height = 230
             }
         default:

@@ -211,7 +211,7 @@ class PeerListContainerView : View {
             searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
                 
                 
-                var items: [SPopoverItem] = []
+                var items: [ContextMenuItem] = []
 
                 
                 for tag in tags {
@@ -219,17 +219,48 @@ class PeerListContainerView : View {
                     if currentTag != tag.0 {
                         append = true
                     }
+                    
                     if append {
-                        items.append(SPopoverItem(tag.1, {
-                            currentTag = tag.0
-                            updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                            let collected = collectTags()
-                            updateTitle(collected.0, collected.1)
-                        }))
+                        if let messagetag = tag.0 {
+                            let itemImage: MenuAnimation?
+                            switch messagetag {
+                            case .photo:
+                                itemImage = .menu_shared_media
+                            case .video:
+                                itemImage = .menu_video
+                            case .webPage:
+                                itemImage = .menu_copy_link
+                            case .voiceOrInstantVideo:
+                                itemImage = .menu_voice
+                            case .gif:
+                                itemImage = .menu_add_gif
+                            case .file:
+                                itemImage = .menu_file
+                            default:
+                                itemImage = nil
+                            }
+                            if let itemImage = itemImage {
+                                items.append(ContextMenuItem(tag.1, handler: {
+                                    currentTag = tag.0
+                                    updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                                    let collected = collectTags()
+                                    updateTitle(collected.0, collected.1)
+                                }, itemImage: itemImage.value))
+                            }
+                        }
+                        
                     }
                 }
                 
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                
+                let value = AppMenu(menu: menu)
+                if let event = NSApp.currentEvent {
+                    value.show(event: event, view: control)
+                }
             }, deleteTag: { [weak self] index in
                 var count: Int = 0
                 if currentTag != nil {
@@ -278,11 +309,11 @@ class PeerListContainerView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
         self.backgroundColor = theme.colors.background
-        compose.background = .clear
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
         compose.set(background: theme.colors.accent, for: .Highlight)
         compose.set(image: theme.icons.composeNewChat, for: .Normal)
+        compose.set(image: theme.icons.composeNewChat, for: .Hover)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
         compose.setFrameSize(NSMakeSize(40, 30))
@@ -527,26 +558,24 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }, for: .Click)
         
-        genericView.compose.set(handler: { [weak self] control in
-            if let strongSelf = self, !control.isSelected {
-                
-                let items = [SPopoverItem(strings().composePopoverNewGroup, { [weak strongSelf] in
-                    guard let strongSelf = strongSelf else {return}
-                    strongSelf.context.composeCreateGroup()
-                }, theme.icons.composeNewGroup),SPopoverItem(strings().composePopoverNewSecretChat, { [weak strongSelf] in
-                    guard let strongSelf = strongSelf else {return}
-                    strongSelf.context.composeCreateSecretChat()
-                }, theme.icons.composeNewSecretChat),SPopoverItem(strings().composePopoverNewChannel, { [weak strongSelf] in
-                    guard let strongSelf = strongSelf else {return}
-                    strongSelf.context.composeCreateChannel()
-                }, theme.icons.composeNewChannel)];
-                if let popover = control.popover {
-                    popover.hide()
-                } else {
-                    showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(-138,  -(strongSelf.genericView.compose.frame.maxY + 10)))
-                }
+        
+        genericView.compose.contextMenu = { [weak self] in
+            let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
+                self?.context.composeCreateGroup()
+            }, itemImage: MenuAnimation.menu_create_group.value),
+            ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
+                self?.context.composeCreateSecretChat()
+            }, itemImage: MenuAnimation.menu_secret_chat.value),
+            ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
+                self?.context.composeCreateChannel()
+            }, itemImage: MenuAnimation.menu_channel.value)];
+            
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
             }
-        }, for: .Click)
+            return menu
+        }
         
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in

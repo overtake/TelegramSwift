@@ -92,7 +92,22 @@ class ChatGroupedItem: ChatRowItem {
                 if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                     caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
                 }
-                let layout: ChatRowItem.RowCaption = .init(id: message.stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected()))
+                
+                var spoilers:[TextViewLayout.Spoiler] = []
+                for attr in message.attributes {
+                    if let attr = attr as? TextEntitiesMessageAttribute {
+                        for entity in attr.entities {
+                            switch entity.type {
+                            case .Spoiler:
+                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.text))
+                            default:
+                                break
+                            }
+                        }
+                    }
+                }
+                
+                let layout: ChatRowItem.RowCaption = .init(id: message.stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers))
                 layout.layout.interactions = globalLinkExecutor
                 captionLayouts.append(layout)
             }
@@ -286,7 +301,7 @@ class ChatGroupedItem: ChatRowItem {
         if hasBubble && isBubbleFullFilled && captionLayouts.isEmpty {
             return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2
         } else if hasBubble && !isBubbleFullFilled {
-            return super._defaultHeight + 5
+            return super._defaultHeight
         }
         
         return super._defaultHeight
@@ -301,25 +316,7 @@ class ChatGroupedItem: ChatRowItem {
         return size
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        let layout: TextViewLayout?
-        switch self.layout.type {
-        case .files:
-            layout = captionLayouts.last?.layout
-        case .photoOrVideo:
-            layout = captionLayouts.first?.layout
-        }
-        if let caption = layout {
-            if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                return rightSize.height
-            }
-        }
-        return super.additionalLineForDateInBubbleState
-    }
     
-    override var isFixedRightPosition: Bool {
-        return true
-    }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         var _width: CGFloat = 0
@@ -362,7 +359,6 @@ class ChatGroupedItem: ChatRowItem {
 
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var _message: Message? = nil
-        let context = self.context
         
         for i in 0 ..< layout.count {
             if NSPointInRect(location, layout.frame(at: i)) {
@@ -370,164 +366,15 @@ class ChatGroupedItem: ChatRowItem {
                 break
             }
         }
-        if let message = _message {
-            return chatMenuItems(for: message, item: self, chatInteraction: self.chatInteraction)
-        }
+        _message = _message ?? self.message
         
-        guard let message = layout.messages.first else {
-            return .single([])
-        }
-        
-        var items: [ContextMenuItem] = []
-        
-        if canReplyMessage(message, peerId: chatInteraction.peerId, mode: chatInteraction.mode)  {
-            items.append(ContextMenuItem(strings().messageContextReply1, handler: { [weak chatInteraction] in
-                chatInteraction?.setupReplyMessage(message.id)
-            }))
-        }
-        
-        if chatInteraction.mode == .scheduled, let peer = chatInteraction.peer {
-            items.append(ContextMenuItem(strings().chatContextScheduledSendNow, handler: {
-                _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: message.id).start()
-            }))
-            items.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
-                showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                    _ = context.engine.messages.requestEditMessage(messageId: message.id, text: message.text, media: .keep, scheduleTime: Int32(date.timeIntervalSince1970)).start()
-                }), for: context.window)
-            }))
-            items.append(ContextSeparatorItem())
-        }
-        
-        
-        items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak self] in
-            guard let `self` = self else {return}
-            let messageIds = self.layout.messages.map{$0.id}
-            self.chatInteraction.withToggledSelectedMessage({ current in
-                var current = current
-                for id in messageIds {
-                    current = current.withToggledSelectedMessage(id)
-                }
-                return current
-            })
-        }))
-        
-        var canDelete = true
-        for i in 0 ..< layout.count {
-            if !canDeleteMessage(layout.messages[i], account: context.account, mode: chatInteraction.mode)  {
-                canDelete = false
-                break
-            }
-        }
-        
-        var canPin = true
-        for i in 0 ..< layout.count {
-            if let peer = peer {
-                if !canPinMessage(layout.messages[i], for: peer, account: context.account)  {
-                    canPin = false
-                    break
-                }
-            }
-        }
-        
-        let chatInteraction = self.chatInteraction
-        let account = self.context.account
-        
-        if let peer = message.peers[message.id.peerId] as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)), chatInteraction.mode == .history {
-            if !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                items.append(ContextMenuItem(strings().messageContextPin, handler: {
-                    if peer.isSupergroup {
-                        modernConfirm(for: mainWindow, account: account, peerId: nil, header: strings().messageContextConfirmPin1, information: nil, thridTitle: strings().messageContextConfirmNotifyPin, successHandler: { result in
-                            chatInteraction.updatePinned(message.id, false, result != .thrid, false)
-                        })
-                    } else {
-                        chatInteraction.updatePinned(message.id, false, true, false)
-                    }
-                }))
-            }
-        } else if message.id.peerId == account.peerId, chatInteraction.mode == .history {
-            items.append(ContextMenuItem(strings().messageContextPin, handler: {
-                chatInteraction.updatePinned(message.id, false, true, false)
-            }))
-        } else if let peer = message.peers[message.id.peerId] as? TelegramGroup, peer.canPinMessage, chatInteraction.mode == .history {
-            items.append(ContextMenuItem(strings().messageContextPin, handler: {
-                modernConfirm(for: mainWindow, account: account, peerId: nil, header: strings().messageContextConfirmPin1, information: nil, thridTitle: strings().messageContextConfirmNotifyPin, successHandler: { result in
-                    chatInteraction.updatePinned(message.id, false, result == .thrid, false)
-                })
-            }))
-        }
+        let caption = self.captionLayouts.first(where: { $0.id == _message?.stableId })?.layout
 
-        
-        if canDelete {
-            items.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak self] in
-                guard let `self` = self else {return}
-                self.chatInteraction.deleteMessages(self.layout.messages.map{$0.id})
-            }))
+
+        if let message = _message {
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction)
         }
-        
-        if let message = layout.messages.first, let peer = peer, canReplyMessage(message, peerId: peer.id, mode: chatInteraction.mode) {
-            items.append(ContextMenuItem(strings().messageContextReply1, handler: { [weak self] in
-                self?.chatInteraction.setupReplyMessage(message.id)
-            }))
-        }
-        
-        if let message = layout.messages.last, !message.flags.contains(.Failed), !message.flags.contains(.Unsent), chatInteraction.mode == .history {
-            if let peer = message.peers[message.id.peerId] as? TelegramChannel {
-                items.append(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
-                    _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: message.id), for: context.window).start(next: { link in
-                        if let link = link {
-                            copyToClipboard(link)
-                        }
-                    })
-                }))
-            }
-        }
-        
-        var editMessage: Message? = nil
-        for message in layout.messages {
-            if let _ = editMessage, !message.text.isEmpty {
-                editMessage = nil
-                break
-            }
-            if !message.text.isEmpty {
-                editMessage = message
-            }
-        }
-        if let editMessage = editMessage {
-            if canEditMessage(editMessage, chatInteraction: chatInteraction, context: context) {
-                items.append(ContextMenuItem(strings().messageContextEdit, handler: { [weak self] in
-                    self?.chatInteraction.beginEditingMessage(editMessage)
-                }))
-            }
-        }
-        var canForward: Bool = true
-        for message in layout.messages {
-            if !canForwardMessage(message, chatInteraction: chatInteraction) {
-                canForward = false
-                break
-            }
-        }
-        
-        if canForward {
-            items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
-                guard let `self` = self else {return}
-                self.chatInteraction.forwardMessages(self.layout.messages.map {$0.id})
-            }))
-        }
-        
-        return .single(items) |> map { [weak self] items in
-            var items = items
-            if let captionLayout = self?.captionLayouts.first(where: { $0.id == _message?.stableId}) {
-                let text = captionLayout.layout.attributedString.string
-                if _message?.isCopyProtected() == true {
-                } else {
-                    items.insert(ContextMenuItem(strings().textCopy, handler: {
-                        copyToClipboard(text)
-                    }), at: 1)
-                }
-            }
-            
-            return items
-        }
+        return super.menuItems(in: location)
     }
     
     override var instantlyResize: Bool {
@@ -784,7 +631,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
-                if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) != nil || item.commentsBubbleData != nil {
+                if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil || item.commentsBubbleData != nil {
                     positionFlags.remove(.bottom)
                 }
                 if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
@@ -1043,7 +890,9 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     frame.size.height += contentFrame.minY
                 } else if index == item.layout.count - 1 {
                     frame.origin.y += contentFrame.minY
-                    frame.size.height += contentFrame.minY
+                    if item.reactionsLayout == nil {
+                        frame.size.height += contentFrame.minY
+                    }
                 } else {
                     frame.origin.y += contentFrame.minY
                 }
@@ -1101,7 +950,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     var positionFlags: LayoutPositionFlags = data.flags
                     
                     if item.hasBubble  {
-                        if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) == nil {
+                        if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) == nil {
                             positionFlags.remove(.bottom)
                         }
                         if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
@@ -1155,7 +1004,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 var positionFlags: LayoutPositionFlags = data.flags
                 
                 if item.hasBubble  {
-                    if item.captionLayouts.first(where: { $0.id == item.lastMessage?.stableId }) != nil {
+                    if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil {
                         positionFlags.remove(.bottom)
                     }
                     if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {

@@ -57,21 +57,13 @@ class ChatMusicRowItem: ChatMediaItem {
         self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if isForceRightLine {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
-                return rightSize.height
+                return true
             }
         }
-        if let caption = captionLayouts.last?.layout {
-            if let line = caption.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                return rightSize.height
-            }
-        }
-        return super.additionalLineForDateInBubbleState
+        return super.isForceRightLine
     }
     
     override var instantlyResize: Bool {

@@ -988,9 +988,9 @@ public extension NSImage {
     }
     
     
-    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: 2.0, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
@@ -1073,6 +1073,11 @@ public extension CGRect {
 public extension CGPoint {
     func offsetBy(dx: CGFloat, dy: CGFloat) -> CGPoint {
         return CGPoint(x: self.x + dx, y: self.y + dy)
+    }
+    func distance(p2: CGPoint) -> CGFloat {
+        let xdst = self.x - p2.x
+        let ydst = self.y - p2.y
+        return sqrt((xdst * xdst) + (ydst * ydst))
     }
 }
 
@@ -1841,7 +1846,7 @@ public func arc4random64() -> Int64 {
 }
 
 
-public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, checkCompletion: Bool = false) {
+public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, checkCompletion: Bool = false, scale: Bool = false) {
     if animated {
         view.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] completed in
             if checkCompletion {
@@ -1852,6 +1857,9 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
                 view?.removeFromSuperview()
             }
         })
+        if scale {
+            view.layer?.animateScaleCenter(from: 1, to: 0.1, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+        }
     } else {
         view.removeFromSuperview()
     }

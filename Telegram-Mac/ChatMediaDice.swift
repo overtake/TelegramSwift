@@ -14,29 +14,12 @@ import Postbox
 import SwiftSignalKit
 
 class ChatMediaDice: ChatMediaItem {
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        return rightSize.height + 5
-    }
-    override var isFixedRightPosition: Bool {
+    override var isForceRightLine: Bool {
         return true
     }
+   
     override var isBubbleFullFilled: Bool {
         return true
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return super.menuItems(in: location) |> map { [weak self] items in
-            var items = items
-            if self?.message?.isCopyProtected() == true {
-            } else {
-                items.insert(ContextMenuItem(strings().textCopyText, handler: {
-                    if let media = self?.media as? TelegramMediaDice {
-                        copyToClipboard(media.emoji)
-                    }
-                }), at: 0)
-            }
-           
-            return items
-        }
-    }
 }

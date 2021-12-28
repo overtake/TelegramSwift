@@ -129,11 +129,18 @@ private final class HorizontalThemeView : HorizontalRowView {
             }
         }, for: .Click)
         
-        overlay.set(handler: { [weak item] control in
-            if let item = item, let event = NSApp.currentEvent {
-                ContextMenu.show(items: item.menuItems(item.themeType), view: control, event: event)
+        overlay.contextMenu = { [weak item] in
+            if let item = item {
+                let items = item.menuItems(item.themeType)
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
+            } else {
+                return nil
             }
-        }, for: .RightDown)
+        }
         
         progressIndicator.progressColor = item.theme.colors.grayIcon
         
