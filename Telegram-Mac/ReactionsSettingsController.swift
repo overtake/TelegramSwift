@@ -176,10 +176,11 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
             current.reactions = value
             return current
         }
-        update.set(context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: value).start())
     }, updateQuick:{ value in
         context.reactions.updateQuick(value)
     })
+    
+    
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
@@ -189,6 +190,12 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+        switch mode {
+        case .chat:
+            _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: stateValue.with { $0.reactions }).start()
+        default:
+            break
+        }
     }
 
     return controller
