@@ -514,7 +514,7 @@ final class ChatReactionsView : View {
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
             let selectedUpdated = self.reaction?.value.isSelected != reaction.value.isSelected
-            let reactionupdated = self.reaction?.value != reaction.value
+            let reactionUpdated = self.reaction?.value.value != reaction.value.value
             self.reaction = reaction
             self.layer?.cornerRadius = reaction.rect.height / 2
             
@@ -632,7 +632,7 @@ final class ChatReactionsView : View {
                 })
             }
             
-            if !first, reactionupdated, animated {
+            if !first, reactionUpdated, animated {
                 self.imageView.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
             }
 
