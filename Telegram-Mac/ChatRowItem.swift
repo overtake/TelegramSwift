@@ -2603,7 +2603,7 @@ class ChatRowItem: TableRowItem {
                 if webpageLayout.imageSize != nil {
                     return nil
                 }
-                if let textLayout = webpageLayout.textLayout, !webpageLayout.isFullImageSize {
+                if let textLayout = webpageLayout.textLayout {
                     if let line = textLayout.lines.last {
                         return LastLineData(width: line.frame.width, single: false)
                     }
