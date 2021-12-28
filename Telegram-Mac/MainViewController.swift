@@ -389,22 +389,26 @@ class MainViewController: TelegramViewController {
     }
     
     private func _showFastChatSettings(_ control: Control, unreadCount: Int32) {
-        var items: [SPopoverItem] = []
+        var items: [ContextMenuItem] = []
         let context = self.context
         
         if unreadCount > 0 {
-            items.append(SPopoverItem(strings().chatListPopoverReadAll, {
+            items.append(ContextMenuItem(strings().chatListPopoverReadAll, handler: {
                 confirm(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
                     _ = context.account.postbox.transaction ({ transaction -> Void in
                         markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root, filterPredicate: nil)
                         markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive, filterPredicate: nil)
                     }).start()
                 })
-            }))
+            }, itemImage: MenuAnimation.menu_read.value))
         }
         
-        if self.tabController.current == chatListNavigation, !items.isEmpty {
-            showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxX, inset: NSMakePoint(control.frame.width + 12, 0))
+        if self.tabController.current == chatListNavigation, !items.isEmpty, let event = NSApp.currentEvent {
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
+            }
+            AppMenu.show(menu: menu, event: event, for: control)
         }
     }
     

@@ -87,8 +87,8 @@ class ChatInputActionsView: View, Notifable {
         }, for: .Up)
         
         inlineCancel.set(handler: { [weak self] _ in
-            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(request) = inputContext {
-                if request.query.isEmpty {
+            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(_, query) = inputContext {
+                if query.isEmpty {
                     self?.chatInteraction.clearInput()
                 } else {
                     self?.chatInteraction.clearContextQuery()
@@ -309,17 +309,24 @@ class ChatInputActionsView: View, Notifable {
                         _ = secretTimer?.sizeToFit()
                         addSubview(secretTimer!)
 
-                        secretTimer?.set(handler: { [weak self] control in
-                            if let strongSelf = self {
-                                if let peer = strongSelf.chatInteraction.peer {
-                                    if peer.isSecretChat {
-                                        showPopover(for: control, with: SPopoverViewController(items:strongSelf.secretTimerItems(), visibility: 6), edge: .maxX, inset:NSMakePoint(120, 10))
-                                    }  else if let control = strongSelf.secretTimer {
-                                        strongSelf.chatInteraction.showDeleterSetup(control)
+                        if let peer = self.chatInteraction.peer {
+                            if peer.isSecretChat {
+                                secretTimer?.contextMenu = { [weak self] in
+                                    let menu = ContextMenu()
+                                    
+                                    if let items = self?.secretTimerItems() {
+                                        for item in items {
+                                            menu.addItem(item)
+                                        }
                                     }
+                                    return menu
                                 }
+                            } else {
+                                secretTimer?.set(handler: { [weak self] control in
+                                    self?.chatInteraction.showDeleterSetup(control)
+                                }, for: .Click)
                             }
-                        }, for: .Click)
+                        }
                     }
                 } else {
                     secretTimer?.removeFromSuperview()
@@ -431,8 +438,8 @@ class ChatInputActionsView: View, Notifable {
                         inlineProgress?.progressColor = theme.colors.grayIcon
                         addSubview(inlineProgress!, positioned: .below, relativeTo: inlineCancel)
                         inlineProgress?.set(handler: { [weak self] _ in
-                            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(request) = inputContext {
-                                if request.query.isEmpty {
+                            if let inputContext = self?.chatInteraction.presentation.inputContext, case let .contextRequest(_, query) = inputContext {
+                                if query.isEmpty {
                                     self?.chatInteraction.clearInput()
                                 } else {
                                     self?.chatInteraction.clearContextQuery()
@@ -515,48 +522,49 @@ class ChatInputActionsView: View, Notifable {
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
         
-        let handler:(Control)->Void = { [weak chatInteraction] control in
+
+        
+        send.contextMenu = { [weak chatInteraction] in
+            
+            
             if let chatInteraction = chatInteraction, let peer = chatInteraction.peer {
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                    return
+                    return nil
                 }
                 if chatInteraction.presentation.state != .normal {
-                    return
+                    return nil
                 }
-                var items:[SPopoverItem] = []
+                var items:[ContextMenuItem] = []
                 
                 if peer.id != chatInteraction.context.account.peerId {
-                    items.append(SPopoverItem(strings().chatSendWithoutSound, { [weak chatInteraction] in
+                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak chatInteraction] in
                         chatInteraction?.sendMessage(true, nil)
-                    }))
+                    }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
                 case .history:
                     if !peer.isSecretChat {
-                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, {
+                        let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
+                        items.append(ContextMenuItem(text, handler: {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
                                 chatInteraction?.sendMessage(false, date)
                             }), for: context.window)
-                        }))
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
                     }
-                case .scheduled:
-                    break
-                case .replyThread:
-                    break
-                case .pinned, .preview:
+                default:
                     break
                 }
-                
                 if !items.isEmpty {
-                    showPopover(for: control, with: SPopoverViewController(items: items))
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
                 }
             }
+            return nil
         }
-        
-        send.set(handler: handler, for: .RightDown)
-        send.set(handler: handler, for: .LongMouseDown)
-
         
         send.set(handler: { [weak chatInteraction] control in
              chatInteraction?.sendMessage(false, nil)
@@ -587,37 +595,37 @@ class ChatInputActionsView: View, Notifable {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func secretTimerItems() -> [SPopoverItem] {
+    func secretTimerItems() -> [ContextMenuItem] {
         
-        var items:[SPopoverItem] = []
+        var items:[ContextMenuItem] = []
         
         if chatInteraction.hasSetDestructiveTimer {
             if chatInteraction.presentation.messageSecretTimeout != nil {
-                items.append(SPopoverItem(strings().secretTimerOff, { [weak self] in
+                items.append(ContextMenuItem(strings().secretTimerOff, handler: { [weak self] in
                     self?.chatInteraction.setChatMessageAutoremoveTimeout(nil)
                 }))
             }
         }
         if chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
             for i in 0 ..< 30 {
-                items.append(SPopoverItem(strings().timerSecondsCountable(i + 1), { [weak self] in
+                items.append(ContextMenuItem(strings().timerSecondsCountable(i + 1), handler: { [weak self] in
                     self?.chatInteraction.setChatMessageAutoremoveTimeout(Int32(i + 1))
                 }))
             }
 
-            items.append(SPopoverItem(strings().timerMinutesCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerMinutesCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60)
             }))
 
-            items.append(SPopoverItem(strings().timerHoursCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerHoursCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60)
             }))
 
-            items.append(SPopoverItem(strings().timerDaysCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerDaysCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24)
             }))
 
-            items.append(SPopoverItem(strings().timerWeeksCountable(1), { [weak self] in
+            items.append(ContextMenuItem(strings().timerWeeksCountable(1), handler: { [weak self] in
                 self?.chatInteraction.setChatMessageAutoremoveTimeout(60 * 60 * 24 * 7)
             }))
         }

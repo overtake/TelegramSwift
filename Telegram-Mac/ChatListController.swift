@@ -320,7 +320,6 @@ class ChatListController : PeersListController {
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
     private let archivationTooltipDisposable = MetaDisposable()
-    private let undoTooltipControl: UndoTooltipControl
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
     private var activityStatusesDisposable:Disposable?
     
@@ -796,7 +795,6 @@ class ChatListController : PeersListController {
     func addUndoAction(_ action:ChatUndoAction) {
         let context = self.context
         guard self.context.sharedContext.layout != .minimisize else { return }
-        self.undoTooltipControl.add(controller: self)
     }
     
     private func enqueueTransition(_ transition: TableUpdateTransition) {
@@ -978,64 +976,6 @@ class ChatListController : PeersListController {
             }
         }
         scrollToTop()
-    
-        
-    }
-    
-    var filterMenuItems: Signal<[SPopoverItem], NoError> {
-        let context = self.context
-       
-        let isEnabled = context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
-            |> map { view -> Bool in
-                let configuration = ChatListFilteringConfiguration(appConfiguration: view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? .defaultValue)
-                return configuration.isEnabled
-        }
-        
-        return combineLatest(chatListFilterPreferences(engine: context.engine), isEnabled)
-            |> take(1)
-            |> deliverOnMainQueue
-            |> map { [weak self] filters, isEnabled -> [SPopoverItem] in
-                var items:[SPopoverItem] = []
-                if isEnabled {
-                    items.append(SPopoverItem(filters.list.isEmpty ? strings().chatListFilterSetupEmpty : strings().chatListFilterSetup, {
-                        context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
-                    }, filters.list.isEmpty ? theme.icons.chat_filter_add : theme.icons.chat_filter_edit))
-                    
-                    if self?.filterValue?.filter != nil {
-                        items.append(SPopoverItem(strings().chatListFilterAll, {
-                            self?.updateFilter {
-                                $0.withUpdatedFilter(nil)
-                            }
-                        }))
-                    }
-                    
-                    if !filters.list.isEmpty {
-                        items.append(SPopoverItem(false))
-                    }
-                    for filter in filters.list {
-                        let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
-                            
-                        }, getColor: { isSelected in
-                            return isSelected ? .white : theme.colors.accent
-                        }, filter: filter)
-                        let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
-                            badge?.isSelected = isSelected
-                        })
-                        
-                        items.append(SPopoverItem(filter.title, { [weak self] in
-                            guard let `self` = self, filter.id != self.filterValue?.filter?.id else {
-                                return
-                            }
-                            self.updateFilter {
-                                $0.withUpdatedFilter(filter)
-                            }
-                            self.scrollup(force: true)
-                        }, filter.icon, additionView: additionView))
-                    }
-                }
-                return items
-        }
-        
     }
     
     
@@ -1415,7 +1355,6 @@ class ChatListController : PeersListController {
     
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil, filterId: Int32? = nil) {
-        self.undoTooltipControl = UndoTooltipControl(context: context)
         
         let mode: PeerListMode
         if let filterId = filterId {
@@ -1476,7 +1415,7 @@ class ChatListController : PeersListController {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }
                     controller.clearReplyStack()
-                    controller.scrollup(force: true)
+                    controller.scrollup(force: false)
                 case .scheduled, .pinned, .preview:
                     navigation.back()
                 }

@@ -14,6 +14,7 @@ import ColorPalette
 import TGUIKit
 import InAppSettings
 import ThemeSettings
+import Reactions
 
 protocol ChatLocationContextHolder: class {
 }
@@ -93,6 +94,7 @@ final class AccountContext {
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
+    let reactions: Reactions
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
     
     
@@ -215,6 +217,7 @@ final class AccountContext {
         self.activeSessionsContext = engine.privacy.activeSessions()
         self.webSessions = engine.privacy.webSessions()
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
+        self.reactions = Reactions(engine)
         #endif
         
         

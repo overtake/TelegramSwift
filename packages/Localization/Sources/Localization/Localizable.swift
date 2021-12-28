@@ -951,6 +951,10 @@ public final class L10n {
   public static func channelAdminLogAllowedNewMembersToSpeak(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.AllowedNewMembersToSpeak", p1)
   }
+  /// %1$@ updated the list of allowed reactions to: %2$@
+  public static func channelAdminLogAllowedReactionsUpdated(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.AllowedReactionsUpdated", p1, p2)
+  }
   /// Invite Users via Link
   public static var channelAdminLogCanInviteUsersViaLink: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanInviteUsersViaLink") }
   /// Manage Voice Chats
@@ -994,6 +998,10 @@ public final class L10n {
   /// %1$@ muted %2$@
   public static func channelAdminLogMutedParticipant(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.MutedParticipant", p1, p2)
+  }
+  /// %1$@ disabled reactions
+  public static func channelAdminLogReactionsDisabled(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.ReactionsDisabled", p1)
   }
   /// %1$@ revoked invite link %2$@
   public static func channelAdminLogRevokedInviteLink(_ p1: String, _ p2: String) -> String {
@@ -1917,8 +1925,14 @@ public final class L10n {
   public static var chatContextClearHistory: String  { return L10n.tr("Localizable", "Chat.Context.ClearHistory") }
   /// Clear All
   public static var chatContextClearScheduled: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled") }
+  /// Copy
+  public static var chatContextCopy: String  { return L10n.tr("Localizable", "Chat.Context.Copy") }
   /// Copy Preformatted Block
   public static var chatContextCopyBlock: String  { return L10n.tr("Localizable", "Chat.Context.CopyBlock") }
+  /// Copy Media
+  public static var chatContextCopyMedia: String  { return L10n.tr("Localizable", "Chat.Context.CopyMedia") }
+  /// Copy Text
+  public static var chatContextCopyText: String  { return L10n.tr("Localizable", "Chat.Context.CopyText") }
   /// Create Group
   public static var chatContextCreateGroup: String  { return L10n.tr("Localizable", "Chat.Context.CreateGroup") }
   /// Unmute
@@ -1933,10 +1947,44 @@ public final class L10n {
   public static var chatContextFeedInfo: String  { return L10n.tr("Localizable", "Chat.Context.FeedInfo") }
   /// Info
   public static var chatContextInfo: String  { return L10n.tr("Localizable", "Chat.Context.Info") }
+  /// %1$@/%2$@ Reacted
+  public static func chatContextReacted(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Reacted", p1, p2)
+  }
+  /// %d
+  public static func chatContextReactedFastCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_countable", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_few", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_many", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_one", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_other", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_two", p1)
+  }
+  /// %d Reacted
+  public static func chatContextReactedFastZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ReactedFast_zero", p1)
+  }
   /// Remove from Favorites
   public static var chatContextRemoveFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.RemoveFavoriteSticker") }
   /// Restrict
   public static var chatContextRestrict: String  { return L10n.tr("Localizable", "Chat.Context.Restrict") }
+  /// Save as...
+  public static var chatContextSaveMedia: String  { return L10n.tr("Localizable", "Chat.Context.SaveMedia") }
   /// Shared Media
   public static var chatContextSharedMedia: String  { return L10n.tr("Localizable", "Chat.Context.SharedMedia") }
   /// Unarchive
@@ -1973,6 +2021,8 @@ public final class L10n {
   public static var chatContextClearScheduledConfirmOK: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.OK") }
   /// More...
   public static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
+  /// Set As Quick
+  public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
   /// Reschedule
   public static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
@@ -2743,7 +2793,7 @@ public final class L10n {
   public static func chatSendAsGroupZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.SendAs.Group_zero", p1)
   }
-  /// SEND MESSAGE ASS...
+  /// SEND MESSAGE AS...
   public static var chatSendAsHeader: String  { return L10n.tr("Localizable", "Chat.SendAs.Header") }
   /// personal account
   public static var chatSendAsPersonalAccount: String  { return L10n.tr("Localizable", "Chat.SendAs.PersonalAccount") }
@@ -3927,18 +3977,24 @@ public final class L10n {
   public static var contactsPhoneNumberNotRegistred: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.NotRegistred") }
   /// Phone Number
   public static var contactsPhoneNumberPlaceholder: String  { return L10n.tr("Localizable", "Contacts.PhoneNumber.Placeholder") }
-  /// Save as...
-  public static var contextCopyMedia: String  { return L10n.tr("Localizable", "Context.CopyMedia") }
+  /// Copy
+  public static var contextCopy: String  { return L10n.tr("Localizable", "Context.Copy") }
   /// Open in Quick Look
   public static var contextOpenInQuickLook: String  { return L10n.tr("Localizable", "Context.OpenInQuickLook") }
   /// Remove
   public static var contextRecentGifRemove: String  { return L10n.tr("Localizable", "Context.RecentGifRemove") }
   /// Remove
   public static var contextRemoveFaveSticker: String  { return L10n.tr("Localizable", "Context.RemoveFaveSticker") }
+  /// Save as...
+  public static var contextSaveMedia: String  { return L10n.tr("Localizable", "Context.SaveMedia") }
   /// Show In Finder
   public static var contextShowInFinder: String  { return L10n.tr("Localizable", "Context.ShowInFinder") }
   /// View Sticker Set
   public static var contextViewStickerSet: String  { return L10n.tr("Localizable", "Context.ViewStickerSet") }
+  /// Copied to Clipboard
+  public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
+  /// This link will only work for members of this chat
+  public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
   /// Are you sure? This action cannot be undone.
   public static var convertToSuperGroupConfirm: String  { return L10n.tr("Localizable", "ConvertToSuperGroup.Confirm") }
   /// Something went wrong, sorry. Please try again later.
@@ -5109,6 +5165,8 @@ public final class L10n {
   public static var installedStickersLoopAnimated: String  { return L10n.tr("Localizable", "InstalledStickers.LoopAnimated") }
   /// STICKER SETS
   public static var installedStickersPacksTitle: String  { return L10n.tr("Localizable", "InstalledStickers.PacksTitle") }
+  /// Quick Reaction
+  public static var installedStickersQuickReaction: String  { return L10n.tr("Localizable", "InstalledStickers.QuickReaction") }
   /// Trending Stickers
   public static var installedStickersTranding: String  { return L10n.tr("Localizable", "InstalledStickers.Tranding") }
   /// Delete
@@ -5725,6 +5783,8 @@ public final class L10n {
   public static var messageContextConfirmPin1: String  { return L10n.tr("Localizable", "Message.Context.Confirm.Pin1") }
   /// Thank you! Your report will be reviewed by our team very soon.
   public static var messageContextReportAlertOK: String  { return L10n.tr("Localizable", "Message.Context.Report.AlertOK") }
+  /// Edit Message...
+  public static var messagePlaceholderEdit: String  { return L10n.tr("Localizable", "Message.Placeholder.Edit") }
   /// archived folder
   public static var messageStatusArchived: String  { return L10n.tr("Localizable", "Message.Status.Archived") }
   /// preparing archive
@@ -6011,6 +6071,14 @@ public final class L10n {
   public static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// Reply
   public static var notificationReply: String  { return L10n.tr("Localizable", "Notification.Reply") }
+  /// %1$@ to your "%2$@"
+  public static func notificationContactReacted(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Notification.Contact.Reacted", p1, p2)
+  }
+  /// %1$@: %2$@ to your "%3$@"
+  public static func notificationGroupReacted(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Notification.Group.Reacted", p1, p2, p3)
+  }
   /// Type message...
   public static var notificationInputReply: String  { return L10n.tr("Localizable", "Notification.Input.Reply") }
   /// Reply
@@ -6687,6 +6755,8 @@ public final class L10n {
   public static var peerInfoPhone: String  { return L10n.tr("Localizable", "PeerInfo.Phone") }
   /// Chat History For New Members
   public static var peerInfoPreHistory: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory") }
+  /// Reactions
+  public static var peerInfoReactions: String  { return L10n.tr("Localizable", "PeerInfo.Reactions") }
   /// Removed Users
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
@@ -6889,6 +6959,14 @@ public final class L10n {
   public static var peerInfoPreHistoryHidden: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Hidden") }
   /// Visible
   public static var peerInfoPreHistoryVisible: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Visible") }
+  /// All
+  public static var peerInfoReactionsAll: String  { return L10n.tr("Localizable", "PeerInfo.Reactions.All") }
+  /// Disabled
+  public static var peerInfoReactionsDisabled: String  { return L10n.tr("Localizable", "PeerInfo.Reactions.Disabled") }
+  /// %1$@/%2$@
+  public static func peerInfoReactionsPart(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Reactions.Part", p1, p2)
+  }
   /// Select Messages
   public static var peerInfoReportSelectMessages: String  { return L10n.tr("Localizable", "PeerInfo.Report.SelectMessages") }
   /// Append names of the admins to the messages they post.
@@ -7703,6 +7781,20 @@ public final class L10n {
   public static var quickSwitcherRecently: String  { return L10n.tr("Localizable", "QuickSwitcher.Recently") }
   /// Zoom
   public static var r4oN2Eq4Title: String  { return L10n.tr("Localizable", "R4o-n2-Eq4.title") }
+  /// Allow Reactions
+  public static var reactionSettingsAllow: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow") }
+  /// Reactions
+  public static var reactionSettingsTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Title") }
+  /// Allow subscribers to reacts to channel posts.
+  public static var reactionSettingsAllowChannelInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Channel.Info") }
+  /// Allow members to reacts to messages.
+  public static var reactionSettingsAllowGroupInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Group.Info") }
+  /// AVAILABLE REACTIONS
+  public static var reactionSettingsAvailableInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Available.Info") }
+  /// QUICK REACTION.
+  public static var reactionSettingsQuickInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Info") }
+  /// Quick Reaction
+  public static var reactionSettingsQuickTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Title") }
   /// Delete
   public static var recentCallsDelete: String  { return L10n.tr("Localizable", "RecentCalls.Delete") }
   /// Are you sure you want to delete call?

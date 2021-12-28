@@ -344,6 +344,7 @@ class TextAndLabelModalController: ModalViewController {
     override var redirectMouseAfterClosing: Bool {
         return true
     }
+    
 
     override func becomeFirstResponder() -> Bool? {
         return nil
@@ -385,10 +386,6 @@ class TextAndLabelModalController: ModalViewController {
         
     }
     
-    override var handleEvents: Bool {
-        return true
-    }
-    
     override var responderPriority: HandlerPriority {
         return .modal
     }
@@ -403,6 +400,14 @@ class TextAndLabelModalController: ModalViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+    }
+    
+    override var canBecomeResponder: Bool {
+        return false
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return nil
     }
 
     deinit {

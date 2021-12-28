@@ -579,7 +579,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             
             item.calculateHeight()
             
-            change(size: NSMakeSize(item.width, item.height), animated: animated)
+            _change(size: NSMakeSize(item.width, item.height), animated: animated)
 
             let containerRect: NSRect
             switch item.viewType {

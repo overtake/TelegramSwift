@@ -427,13 +427,13 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
-        if FastSettings.playingRate == 1.0 {
+        if FastSettings.playingVideoRate == 1.0 {
             menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingRate <= 1.25 {
+        } else if FastSettings.playingVideoRate <= 1.25 {
             menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingRate <= 1.5 {
+        } else if FastSettings.playingVideoRate <= 1.5 {
             menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingRate <= 1.75 {
+        } else if FastSettings.playingVideoRate <= 1.75 {
             menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
         } else {
             menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
@@ -753,7 +753,7 @@ class SVideoView: NSView {
         }, for: .Click)
         
         controls.menuItems.contextMenu = { [weak self] in
-            let menu = ContextMenu(title: "Speed")
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkPalette))
             
             menu.onShow = { _ in
                 self?.isInMenu = true

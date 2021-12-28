@@ -570,30 +570,6 @@ class ChatServiceItem: ChatRowItem {
     override func viewClass() -> AnyClass {
         return ChatServiceRowView.self
     }
-    
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        
-        var items:[ContextMenuItem] = []
-        let chatInteraction = self.chatInteraction
-        if chatInteraction.presentation.state != .selecting {
-            
-            if let message = message, let peer = coreMessageMainPeer(message) {
-                if !message.containsSecretMedia, canReplyMessage(message, peerId: peer.id, mode: chatInteraction.mode) {
-                    items.append(ContextMenuItem(strings().messageContextReply1, handler: {
-                        chatInteraction.setupReplyMessage(message.id)
-                    }))
-                }
-                if canDeleteMessage(message, account: context.account, mode: chatInteraction.mode) {
-                    items.append(ContextMenuItem(strings().messageContextDelete, handler: {
-                        chatInteraction.deleteMessages([message.id])
-                    }))
-                }
-            }
-        }
-        
-        return .single(items)
-    }
-
 }
 
 class ChatServiceRowView: TableRowView {

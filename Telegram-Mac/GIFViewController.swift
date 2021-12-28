@@ -128,18 +128,18 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                             if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
                                 items.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
                                     let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
-                                }))
+                                }, itemImage: MenuAnimation.menu_remove_gif.value))
                             } else {
                                 items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                                     let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
-                                }))
+                                }, itemImage: MenuAnimation.menu_add_gif.value))
                             }
                             items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: {
                                 arguments?.sendAppFile(file, view, true, false)
-                            }))
+                            }, itemImage: MenuAnimation.menu_mute.value))
                             items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: {
                                 arguments?.sendAppFile(file, view, false, true)
-                            }))
+                            }, itemImage: MenuAnimation.menu_schedule_message.value))
                         }
                         return items
                     }

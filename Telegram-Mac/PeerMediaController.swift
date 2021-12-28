@@ -650,9 +650,37 @@
          doneButton.userInteractionEnabled = false
          editButton.userInteractionEnabled = false
          
-         back.set(handler: { [weak self] _ in
-             self?.showRightControls()
-         }, for: .Click)
+         let context = self.context
+         editButton.contextMenu = { [weak self] in
+             
+             let mode = self?.mode
+             
+             var items:[ContextMenuItem] = []
+             items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
+                 self?.changeState()
+             }, itemImage: MenuAnimation.menu_edit.value))
+             
+             if mode == .photoOrVideo {
+                 let context = context
+                 items.append(ContextMenuItem(strings().peerMediaCalendarTitle, handler: { [weak self] in
+                     guard let sparseCalendar = self?.sparseCalendar else {
+                         return
+                     }
+                     showModal(with: ChatCalendarModalController(context: context, sparseCalendar: sparseCalendar, jumpTo: { [weak self] message in
+                         self?.mediaGrid.jumpTo(message)
+                     }), for: context.window)
+                 }, itemImage: MenuAnimation.menu_calendar.value))
+             }
+            
+             let menu = ContextMenu(betterInside: true)
+             
+             for item in items {
+                 menu.addItem(item)
+             }
+             
+             return menu
+         }
+
          requestUpdateRightBar()
          return back
      }
@@ -661,29 +689,7 @@
          switch state {
          case .Normal:
              if let button = editButton {
-                 var items:[SPopoverItem] = []
-                 items.append(SPopoverItem(strings().chatContextEdit1,  { [weak self] in
-                     self?.changeState()
-                 }, theme.icons.chatActionEdit))
-                 
-                 if self.mode == .photoOrVideo {
-                     let context = self.context
-                     items.append(SPopoverItem(strings().peerMediaCalendarTitle, { [weak self] in
-                         guard let sparseCalendar = self?.sparseCalendar else {
-                             return
-                         }
-                         showModal(with: ChatCalendarModalController(context: context, sparseCalendar: sparseCalendar, jumpTo: { [weak self] message in
-                             self?.mediaGrid.jumpTo(message)
-                         }), for: context.window)
-                     }, theme.icons.chatSearchCalendar))
-                 }
                 
-                 
-                 if let popover = button.popover {
-                     popover.hide()
-                 } else {
-                     showPopover(for: button, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -65))
-                 }
              }
          case .Edit:
              self.changeState()

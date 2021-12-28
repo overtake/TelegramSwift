@@ -54,11 +54,20 @@ fileprivate final class ActionButton : Control {
         self.layer?.cornerRadius = 10
         
         self.removeAllHandlers()
-        if let subItems = item.subItems {
-            self.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: subItems.map { SPopoverItem($0.text, $0.action, nil, $0.destruct ? theme.colors.redUI : theme.colors.text) }, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -60))
-            }, for: .Down)
+        if let subItems = item.subItems, !subItems.isEmpty {
+            self.contextMenu = {
+                let menu = ContextMenu()
+                for sub in subItems {
+                    let item = ContextMenuItem(sub.text, handler: sub.action, itemMode: sub.destruct ? .destruct : .normal, itemImage: sub.animation.value)
+                    if sub.destruct {
+                        menu.addItem(ContextSeparatorItem())
+                    }
+                    menu.addItem(item)
+                }
+                return menu
+            }
         } else {
+            self.contextMenu = nil
             self.set(handler: { [weak item] _ in
                 item?.action()
             }, for: .Click)
@@ -108,8 +117,10 @@ private struct SubActionItem {
     let text: String
     let destruct: Bool
     let action:()->Void
-    init(text: String, destruct: Bool = false, action:@escaping()->Void) {
+    let animation: LocalAnimatedSticker
+    init(text: String, animation: LocalAnimatedSticker, destruct: Bool = false, action:@escaping()->Void) {
         self.text = text
+        self.animation = animation
         self.action = action
         self.destruct = destruct
     }
@@ -120,17 +131,18 @@ private final class ActionItem {
     let destruct: Bool
     let image: CGImage
     let action:()->Void
-    
+    let animation: LocalAnimatedSticker
     let subItems:[SubActionItem]?
     
     
     let textLayout: TextViewLayout
     let size: NSSize
     
-    init(text: String, image: CGImage, destruct: Bool = false, action: @escaping()->Void, subItems:[SubActionItem]? = nil) {
+    init(text: String, image: CGImage, animation: LocalAnimatedSticker, destruct: Bool = false, action: @escaping()->Void, subItems:[SubActionItem]? = nil) {
         self.text = text
         self.image = image
         self.action = action
+        self.animation = animation
         self.subItems = subItems
         self.destruct = destruct
         self.textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.accent, font: .normal(.text)), alignment: .center)
@@ -156,11 +168,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
  
     if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
-            items.append(ActionItem(text: strings().peerInfoActionMessage, image: theme.icons.profile_message, action: arguments.sendMessage))
+            items.append(ActionItem(text: strings().peerInfoActionMessage, image: theme.icons.profile_message, animation: .menu_show_message, action: arguments.sendMessage))
         }
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
             if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.voiceCallsAvailable {
-                items.append(ActionItem(text: strings().peerInfoActionCall, image: theme.icons.profile_call, action: {
+                items.append(ActionItem(text: strings().peerInfoActionCall, image: theme.icons.profile_call, animation: .menu_call, action: {
                     arguments.call(false)
                 }))
             }
@@ -183,52 +195,52 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty, isVideoPossible {
             if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.videoCallsAvailable {
-                items.append(ActionItem(text: strings().peerInfoActionVideoCall, image: theme.icons.profile_video_call, action: {
+                items.append(ActionItem(text: strings().peerInfoActionVideoCall, image: theme.icons.profile_video_call, animation: .menu_video_call, action: {
                     arguments.call(true)
                 }))
             }
         }
         let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
-        items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
+        items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
             arguments.toggleNotifications(value)
         }))
         if !peer.isBot {
             if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
-                items.append(ActionItem(text: strings().peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, action: arguments.startSecretChat))
+                items.append(ActionItem(text: strings().peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, animation: .menu_secret_chat, action: arguments.startSecretChat))
             }
             if peer.id != item.context.peerId, item.peerView.peerIsContact, peer.phone != nil {
-                items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, action: arguments.shareContact))
+                items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, animation: .menu_forward, action: arguments.shareContact))
             }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
-                items.append(ActionItem(text: (!cachedData.isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, destruct: true, action: {
+                items.append(ActionItem(text: (!cachedData.isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, animation: cachedData.isBlocked ? .menu_unblock : .menu_restrict, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, false)
                 }))
             }
         } else if let botInfo = peer.botInfo {
             
             if let address = peer.addressName, !address.isEmpty {
-                items.append(ActionItem(text: strings().peerInfoBotShare, image: theme.icons.profile_share, action: {
+                items.append(ActionItem(text: strings().peerInfoBotShare, image: theme.icons.profile_share, animation: .menu_forward, action: {
                     arguments.botShare(address)
                 }))
             }
             
             if botInfo.flags.contains(.worksWithGroups) {
-                items.append(ActionItem(text: strings().peerInfoBotAddToGroup, image: theme.icons.profile_more, action: arguments.botAddToGroup))
+                items.append(ActionItem(text: strings().peerInfoBotAddToGroup, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botAddToGroup))
             }
            
             if let cachedData = item.peerView.cachedData as? CachedUserData, let botInfo = cachedData.botInfo {
                 for command in botInfo.commands {
                     if command.text == "settings" {
-                        items.append(ActionItem(text: strings().peerInfoBotSettings, image: theme.icons.profile_more, action: arguments.botSettings))
+                        items.append(ActionItem(text: strings().peerInfoBotSettings, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botSettings))
                     }
                     if command.text == "help" {
-                        items.append(ActionItem(text: strings().peerInfoBotHelp, image: theme.icons.profile_more, action: arguments.botHelp))
+                        items.append(ActionItem(text: strings().peerInfoBotHelp, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botHelp))
                     }
                     if command.text == "privacy" {
-                        items.append(ActionItem(text: strings().peerInfoBotPrivacy, image: theme.icons.profile_more, action: arguments.botPrivacy))
+                        items.append(ActionItem(text: strings().peerInfoBotPrivacy, image: theme.icons.profile_more, animation: .menu_plus, action: arguments.botPrivacy))
                     }
                 }
-                items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, image: theme.icons.profile_more, destruct: true, action: {
+                items.append(ActionItem(text: !cachedData.isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot, image: theme.icons.profile_more, animation: .menu_restrict, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, true)
                 }))
             }
@@ -238,12 +250,12 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         let access = peer.groupAccess
         
         if access.canAddMembers {
-            items.append(ActionItem(text: strings().peerInfoActionAddMembers, image: theme.icons.profile_add_member, action: {
+            items.append(ActionItem(text: strings().peerInfoActionAddMembers, image: theme.icons.profile_add_member, animation: .menu_plus, action: {
                 arguments.addMember(access.canCreateInviteLink)
             }))
         }
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
+            items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: value ? .menu_unmuted : .menu_mute, action: {
                 arguments.toggleNotifications(value)
             }))
         }
@@ -252,13 +264,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if let cachedData = item.peerView.cachedData as? CachedChannelData, let peer = peer as? TelegramChannel {
             if peer.groupAccess.canMakeVoiceChat {
                 let isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
-                items.append(ActionItem(text: isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                items.append(ActionItem(text: isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, animation: .menu_video_chat, action: {
                     arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
                 }))
             }
         } else if let cachedData = item.peerView.cachedData as? CachedGroupData {
             if peer.groupAccess.canMakeVoiceChat {
-                items.append(ActionItem(text: strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                items.append(ActionItem(text: strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, animation: .menu_call, action: {
                     arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
                 }))
             }
@@ -266,21 +278,21 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
-                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
+                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
             }
         }
         if access.canReport {
-            items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, destruct: false, action: arguments.report))
+            items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, animation: .menu_report, destruct: false, action: arguments.report))
         }
         if let group = peer as? TelegramGroup {
             if case .Member = group.membership {
-                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, animation: .menu_leave, destruct: true, action: arguments.delete))
             }
         } else if let group = peer as? TelegramChannel {
             if case .member = group.participationStatus {
-                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, animation: .menu_delete, destruct: true, action: arguments.delete))
             }
         }
         
@@ -288,7 +300,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
-            items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, action: {
+            items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: value ? .menu_unmuted : .menu_mute, action: {
                 arguments.toggleNotifications(value)
             }))
         }
@@ -299,7 +311,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             switch cachedData.linkedDiscussionPeerId {
             case let .known(peerId):
                 if let peerId = peerId {
-                    items.append(ActionItem(text: strings().peerInfoActionDiscussion, image: theme.icons.profile_message, action: { [weak arguments] in
+                    items.append(ActionItem(text: strings().peerInfoActionDiscussion, image: theme.icons.profile_message, animation: .menu_show_message, action: { [weak arguments] in
                         arguments?.peerChat(peerId)
                     }))
                 }
@@ -308,30 +320,30 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
             
             if cachedData.statsDatacenterId > 0, cachedData.flags.contains(.canViewStats) {
-                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, action: {
+                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
             }
         }
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             if peer.groupAccess.canMakeVoiceChat {
-                items.append(ActionItem(text: strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, action: {
+                items.append(ActionItem(text: strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, animation: .menu_call, action: {
                     arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
                 }))
             }
         }
         if let address = peer.addressName, !address.isEmpty {
-            items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, action: arguments.share))
+            items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, animation: .menu_share, action: arguments.share))
         }
     
         if peer.groupAccess.canReport {
-            items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, action: arguments.report))
+            items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, animation: .menu_report, action: arguments.report))
         }
         
         
         switch peer.participationStatus {
         case .member:
-            items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, destruct: true, action: arguments.delete))
+            items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, animation: .menu_leave, destruct: true, action: arguments.delete))
         default:
             break
         }
@@ -342,10 +354,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         var subItems:[SubActionItem] = []
         while items.count > rowItemsCount - 1 {
             let item = items.removeLast()
-            subItems.insert(SubActionItem(text: item.text, destruct: item.destruct, action: item.action), at: 0)
+            subItems.insert(SubActionItem(text: item.text, animation: item.animation, destruct: item.destruct, action: item.action), at: 0)
         }
         if !subItems.isEmpty {
-            items.append(ActionItem(text: strings().peerInfoActionMore, image: theme.icons.profile_more, action: { }, subItems: subItems))
+            items.append(ActionItem(text: strings().peerInfoActionMore, image: theme.icons.profile_more, animation: .menu_plus, action: { }, subItems: subItems))
         }
     }
     

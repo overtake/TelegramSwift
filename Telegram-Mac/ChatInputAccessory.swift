@@ -125,46 +125,51 @@ class ChatInputAccessory: Node {
                 }
             }
             
-            var items:[SPopoverItem] = []
-            
-            let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
 
-            let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
-            
-            items.append(SPopoverItem(strings().chatAlertForwardActionShow1Countable(authors), {
-                setHideAction(false)
-            }, !hideSendersName ? theme.icons.chat_action_menu_selected : nil))
-            
-            items.append(SPopoverItem(strings().chatAlertForwardActionHide1Countable(authors), {
-                setHideAction(true)
-            }, hideSendersName ? theme.icons.chat_action_menu_selected : nil))
-        
-            items.append(SPopoverItem(true))
-            
-            let messagesWithCaption = state.interfaceState.forwardMessages.filter {
-                !$0.text.isEmpty && $0.media.first != nil
-            }.count
-            
-            if messagesWithCaption > 0 {
+            container.contextMenu = {
+                var items:[ContextMenuItem] = []
                 
-                items.append(SPopoverItem(strings().chatAlertForwardActionShowCaptionCountable(messagesWithCaption), {
-                    setHideCaption(false)
-                }, !state.interfaceState.hideCaptions ? theme.icons.chat_action_menu_selected : nil))
+                let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
+
+                let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
                 
-                items.append(SPopoverItem(strings().chatAlertForwardActionHideCaptionCountable(messagesWithCaption), {
-                    setHideCaption(true)
-                }, state.interfaceState.hideCaptions ? theme.icons.chat_action_menu_selected : nil))
+                items.append(ContextMenuItem(strings().chatAlertForwardActionShow1Countable(authors), handler: {
+                    setHideAction(false)
+                }, itemImage: !hideSendersName ? MenuAnimation.menu_check_selected.value : nil))
                 
-                items.append(SPopoverItem(true))
+                items.append(ContextMenuItem(strings().chatAlertForwardActionHide1Countable(authors), handler: {
+                    setHideAction(true)
+                }, itemImage: hideSendersName ? MenuAnimation.menu_check_selected.value : nil))
+            
+                items.append(ContextSeparatorItem())
+                
+                let messagesWithCaption = state.interfaceState.forwardMessages.filter {
+                    !$0.text.isEmpty && $0.media.first != nil
+                }.count
+                
+                if messagesWithCaption > 0 {
+                    
+                    items.append(ContextMenuItem(strings().chatAlertForwardActionShowCaptionCountable(messagesWithCaption), handler: {
+                        setHideCaption(false)
+                    }, itemImage: !state.interfaceState.hideCaptions ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    items.append(ContextMenuItem(strings().chatAlertForwardActionHideCaptionCountable(messagesWithCaption), handler: {
+                        setHideCaption(true)
+                    }, itemImage: state.interfaceState.hideCaptions ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    items.append(ContextSeparatorItem())
+
+                }
+                
+                items.append(ContextMenuItem(strings().chatAlertForwardActionAnother, handler: anotherAction, itemImage: MenuAnimation.menu_replace.value))
+                
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
 
             }
-            
-            items.append(SPopoverItem(strings().chatAlertForwardActionAnother, anotherAction, theme.icons.chat_action_menu_update_chat))
-
-        
-            container.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), inset: NSMakePoint(-5, 3))
-            }, for: .Hover)
             
             dismiss.set(handler: { [weak self] _ in
                 self?.dismissForward()

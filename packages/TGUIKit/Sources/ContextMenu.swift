@@ -21,18 +21,53 @@ public class ContextSeparatorItem : ContextMenuItem {
     required public init(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    public override func rowItem(presentation: AppMenu.Presentation, interaction interactions: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return AppMenuSeparatorItem(.zero, presentation: presentation)
+    }
 }
 
-public class ContextMenuItem : NSMenuItem {
+open class ContextMenuItem : NSMenuItem {
+    private var _id: Int64?
+    open var id: Int64 {
+        if _id == nil {
+            _id = arc4random64()
+        }
+        return _id!
+    }
+
+    public enum KeyEquiavalent: String {
+        case none = ""
+        case cmds = "⌘S"
+        case cmdc = "⌘C"
+        case cmde = "⌘E"
+        case cmdr = "⌘R"
+    }
     
-    let handler:()->Void
+    open func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return AppMenuRowItem.init(.zero, item: self, interaction: interaction, presentation: presentation)
+    }
+
+    open func stickClass() -> AnyClass? {
+        return nil
+    }
+    
+    public var handler:(()->Void)?
     private let dynamicTitle:(()->String)?
     
     public var contextObject: Any? = nil
     
-    public init(_ title:String, handler:@escaping()->Void = {}, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil) {
+    public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
+    public let itemMode: AppMenu.ItemMode
+    
+    public let keyEquivalentValue: KeyEquiavalent
+    
+    public init(_ title:String, handler: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none) {
         self.handler = handler
         self.dynamicTitle = dynamicTitle
+        self.itemMode = itemMode
+        self.itemImage = itemImage
+        self.keyEquivalentValue = keyEquivalent
         super.init(title: title, action: nil, keyEquivalent: "")
         
         self.title = title
@@ -59,34 +94,83 @@ public class ContextMenuItem : NSMenuItem {
     }
     
     @objc func click() -> Void {
-        handler()
+        handler?()
     }
     
 }
 
 public final class ContextMenu : NSMenu, NSMenuDelegate {
 
+    let presentation: AppMenu.Presentation
+    let betterInside: Bool
+    let maxHeight: CGFloat
+    let isLegacy: Bool
+    public internal(set) var isShown: Bool = false
+    public init(presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), betterInside: Bool = false, maxHeight: CGFloat = 600, isLegacy: Bool = false) {
+        self.presentation = presentation
+        self.betterInside = betterInside
+        self.maxHeight = maxHeight
+        self.isLegacy = isLegacy
+        super.init(title: "")
+    }
+    
+    public var loadMore: (()->Void)? = nil
+
+    @objc dynamic internal var _items:[NSMenuItem] = [] {
+        didSet {
+            self.removeAllItems()
+            for item in _items {
+                super.addItem(item)
+            }
+        }
+    }
+    
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public override func addItem(_ newItem: NSMenuItem) {
+        _items.append(newItem)
+    }
+    
+    public override var items: [NSMenuItem] {
+        get {
+            return _items
+        }
+        set {
+            _items = newValue
+        }
+    }
+    
+    public var contextItems: [ContextMenuItem] {
+        return self.items.compactMap {
+            $0 as? ContextMenuItem
+        }
+    }
+    
     public var onShow:(ContextMenu)->Void = {(ContextMenu) in}
     public var onClose:()->Void = {() in}
-    
-    weak var view:NSView?
-    
-    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}) -> Void {
         
-        let menu = ContextMenu.init()
+    
+    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}, presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors)) -> Void {
+        
+        let menu = ContextMenu(presentation: presentation)
         menu.onShow = onShow
         menu.onClose = onClose
-        menu.view = view
         
         for item in items {
             menu.addItem(item)
         }
-        
-        menu.delegate = menu
-        
-        NSMenu.popUpContextMenu(menu, with: event, for: view)
+        let app = AppMenu(menu: menu)
+        app.show(event: event, view: view)
     }
     
+    
+    public override class func popUpContextMenu(_ menu: NSMenu, with event: NSEvent, for view: NSView) {
+        show(items: menu.items.compactMap {
+            $0 as? ContextMenuItem
+        }, view: view, event: event)
+    }
     
     public func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         return true

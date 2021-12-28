@@ -617,7 +617,55 @@ public class ColorPalette : Equatable {
         return self._focusAnimationColor
     }
     
+    private let _reaction_foreground_bubble_incoming:NSColor
+    public var reaction_foreground_bubble_incoming: NSColor {
+        return self._reaction_foreground_bubble_incoming
+    }
+    private let _reaction_foreground_bubble_outgoing:NSColor
+    public var reaction_foreground_bubble_outgoing: NSColor {
+        return self._reaction_foreground_bubble_outgoing
+    }
+    private let _reaction_foreground_selected_bubble_incoming:NSColor
+    public var reaction_foreground_selected_bubble_incoming: NSColor {
+        return self._reaction_foreground_selected_bubble_incoming
+    }
+    private let _reaction_foreground_selected_bubble_outgoing:NSColor
+    public var reaction_foreground_selected_bubble_outgoing: NSColor {
+        return self._reaction_foreground_selected_bubble_outgoing
+    }
+    private let _reaction_background_bubble_incoming:NSColor
+    public var reaction_background_bubble_incoming: NSColor {
+        return self._reaction_background_bubble_incoming
+    }
+    private let _reaction_background_bubble_outgoing:NSColor
+    public var reaction_background_bubble_outgoing: NSColor {
+        return self._reaction_background_bubble_outgoing
+    }
+    private let _reaction_background_selected_bubble_incoming:NSColor
+    public var reaction_background_selected_bubble_incoming: NSColor {
+        return self._reaction_background_selected_bubble_incoming
+    }
+    private let _reaction_background_selected_bubble_outgoing:NSColor
+    public var reaction_background_selected_bubble_outgoing: NSColor {
+        return self._reaction_background_selected_bubble_outgoing
+    }
     
+    private let _reaction_background:NSColor
+    public var reaction_background: NSColor {
+        return self._reaction_background
+    }
+    private let _reaction_background_selected:NSColor
+    public var reaction_background_selected: NSColor {
+        return self._reaction_background_selected
+    }
+    private let _reaction_foreground:NSColor
+    public var reaction_foreground: NSColor {
+        return self._reaction_foreground
+    }
+    private let _reaction_foreground_selected:NSColor
+    public var reaction_foreground_selected: NSColor {
+        return self._reaction_foreground_selected
+    }
     
     public var underSelectedColor: NSColor {
         if basicAccent != accent {
@@ -793,7 +841,19 @@ public class ColorPalette : Equatable {
                 listBackground: NSColor,
                 listGrayText: NSColor,
                 grayHighlight: NSColor,
-                focusAnimationColor: NSColor) {
+                focusAnimationColor: NSColor,
+                reaction_foreground_bubble_incoming: NSColor,
+                reaction_foreground_bubble_outgoing: NSColor,
+                reaction_foreground_selected_bubble_incoming: NSColor,
+                reaction_foreground_selected_bubble_outgoing: NSColor,
+                reaction_background_bubble_incoming: NSColor,
+                reaction_background_bubble_outgoing: NSColor,
+                reaction_background_selected_bubble_incoming: NSColor,
+                reaction_background_selected_bubble_outgoing: NSColor,
+                reaction_foreground: NSColor,
+                reaction_background: NSColor,
+                reaction_foreground_selected: NSColor,
+                reaction_background_selected: NSColor) {
         
         let background: NSColor = background.withAlphaComponent(1.0)
         let grayBackground: NSColor = grayBackground.withAlphaComponent(1.0)
@@ -1001,6 +1061,19 @@ public class ColorPalette : Equatable {
         self._listGrayText = listGrayText
         self._grayHighlight = grayHighlight
         self._focusAnimationColor = focusAnimationColor
+        
+        self._reaction_foreground_bubble_incoming = reaction_foreground_bubble_incoming
+        self._reaction_foreground_bubble_outgoing = reaction_foreground_bubble_outgoing
+        self._reaction_foreground_selected_bubble_incoming = reaction_foreground_selected_bubble_incoming
+        self._reaction_foreground_selected_bubble_outgoing = reaction_foreground_selected_bubble_outgoing
+        self._reaction_background_bubble_incoming = reaction_background_bubble_incoming
+        self._reaction_background_bubble_outgoing = reaction_background_bubble_outgoing
+        self._reaction_background_selected_bubble_incoming = reaction_background_selected_bubble_incoming
+        self._reaction_background_selected_bubble_outgoing = reaction_background_selected_bubble_outgoing
+        self._reaction_foreground = reaction_foreground
+        self._reaction_background = reaction_background
+        self._reaction_foreground_selected = reaction_foreground_selected
+        self._reaction_background_selected = reaction_background_selected
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -1165,7 +1238,19 @@ public class ColorPalette : Equatable {
                             listBackground: listBackground,
                             listGrayText: listGrayText,
                             grayHighlight: grayHighlight,
-                            focusAnimationColor: focusAnimationColor)
+                            focusAnimationColor: focusAnimationColor,
+                            reaction_foreground_bubble_incoming: reaction_foreground_bubble_incoming,
+                            reaction_foreground_bubble_outgoing: reaction_foreground_bubble_outgoing,
+                            reaction_foreground_selected_bubble_incoming: reaction_foreground_selected_bubble_incoming,
+                            reaction_foreground_selected_bubble_outgoing: reaction_foreground_selected_bubble_outgoing,
+                            reaction_background_bubble_incoming: reaction_background_bubble_incoming,
+                            reaction_background_bubble_outgoing: reaction_background_bubble_outgoing,
+                            reaction_background_selected_bubble_incoming: reaction_background_selected_bubble_incoming,
+                            reaction_background_selected_bubble_outgoing: reaction_background_selected_bubble_outgoing,
+                            reaction_foreground: reaction_foreground,
+                            reaction_background: reaction_background,
+                            reaction_foreground_selected: reaction_foreground_selected,
+                            reaction_background_selected: reaction_background_selected)
     }
     public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
         return ColorPalette(isNative: self.isNative, isDark: isDark,
@@ -1292,7 +1377,19 @@ public class ColorPalette : Equatable {
                             listBackground: listBackground,
                             listGrayText: listGrayText,
                             grayHighlight: grayHighlight,
-                            focusAnimationColor: focusAnimationColor)
+                            focusAnimationColor: focusAnimationColor,
+                            reaction_foreground_bubble_incoming: reaction_foreground_bubble_incoming,
+                            reaction_foreground_bubble_outgoing: reaction_foreground_bubble_outgoing,
+                            reaction_foreground_selected_bubble_incoming: reaction_foreground_selected_bubble_incoming,
+                            reaction_foreground_selected_bubble_outgoing: reaction_foreground_selected_bubble_outgoing,
+                            reaction_background_bubble_incoming: reaction_background_bubble_incoming,
+                            reaction_background_bubble_outgoing: reaction_background_bubble_outgoing,
+                            reaction_background_selected_bubble_incoming: reaction_background_selected_bubble_incoming,
+                            reaction_background_selected_bubble_outgoing: reaction_background_selected_bubble_outgoing,
+                            reaction_foreground: reaction_foreground,
+                            reaction_background: reaction_background,
+                            reaction_foreground_selected: reaction_foreground_selected,
+                            reaction_background_selected: reaction_background_selected)
     }
     
     public func withAccentColor(_ color: PaletteAccentColor, disableTint: Bool = false) -> ColorPalette {
@@ -1571,7 +1668,19 @@ public class ColorPalette : Equatable {
                             listBackground: listBackground,
                             listGrayText: listGrayText,
                             grayHighlight: grayHighlight,
-                            focusAnimationColor: focusAnimationColor)
+                            focusAnimationColor: focusAnimationColor,
+                            reaction_foreground_bubble_incoming: reaction_foreground_bubble_incoming,
+                            reaction_foreground_bubble_outgoing: reaction_foreground_bubble_outgoing,
+                            reaction_foreground_selected_bubble_incoming: reaction_foreground_selected_bubble_incoming,
+                            reaction_foreground_selected_bubble_outgoing: reaction_foreground_selected_bubble_outgoing,
+                            reaction_background_bubble_incoming: reaction_background_bubble_incoming,
+                            reaction_background_bubble_outgoing: reaction_background_bubble_outgoing,
+                            reaction_background_selected_bubble_incoming: reaction_background_selected_bubble_incoming,
+                            reaction_background_selected_bubble_outgoing: reaction_background_selected_bubble_outgoing,
+                            reaction_foreground: reaction_foreground,
+                            reaction_background: reaction_background,
+                            reaction_foreground_selected: reaction_foreground_selected,
+                            reaction_background_selected: reaction_background_selected)
     }
 }
 
@@ -1762,7 +1871,19 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                         listBackground: NSColor(0xefeff3),
                                         listGrayText: NSColor(0x6D6D71),
                                         grayHighlight: NSColor(0xF8F8F8),
-                                        focusAnimationColor: NSColor(0x68A8E2)
+                                        focusAnimationColor: NSColor(0x68A8E2),
+                                       reaction_foreground_bubble_incoming: .random,
+                                       reaction_foreground_bubble_outgoing: .random,
+                                       reaction_foreground_selected_bubble_incoming: .random,
+                                       reaction_foreground_selected_bubble_outgoing: .random,
+                                       reaction_background_bubble_incoming: .random,
+                                       reaction_background_bubble_outgoing: .random,
+                                       reaction_background_selected_bubble_incoming: .random,
+                                       reaction_background_selected_bubble_outgoing: .random,
+                                       reaction_foreground: .random,
+                                       reaction_background: .random,
+                                       reaction_foreground_selected: .random,
+                                       reaction_background_selected: .random
 )
 
 
@@ -1908,7 +2029,19 @@ public let nightAccentPalette = ColorPalette(isNative: true, isDark: true,
                                            listBackground: NSColor(0x131415),
                                            listGrayText: NSColor(0xb1c3d5),
                                            grayHighlight: NSColor(0x18222d).darker(amount: 0.08),
-                                           focusAnimationColor: NSColor(0x68A8E2)
+                                           focusAnimationColor: NSColor(0x68A8E2),
+                                             reaction_foreground_bubble_incoming: .random,
+                                             reaction_foreground_bubble_outgoing: .random,
+                                             reaction_foreground_selected_bubble_incoming: .random,
+                                             reaction_foreground_selected_bubble_outgoing: .random,
+                                             reaction_background_bubble_incoming: .random,
+                                             reaction_background_bubble_outgoing: .random,
+                                             reaction_background_selected_bubble_incoming: .random,
+                                             reaction_background_selected_bubble_outgoing: .random,
+                                             reaction_foreground: .random,
+                                             reaction_background: .random,
+                                             reaction_foreground_selected: .random,
+                                             reaction_background_selected: .random
 )
 public let dayClassicPalette = ColorPalette(isNative: true,
                                             isDark: false,
@@ -2041,7 +2174,19 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             listBackground: NSColor(0xefeff3),
                                             listGrayText: NSColor(0x6D6D71),
                                             grayHighlight: NSColor(0xF8F8F8),
-                                            focusAnimationColor: NSColor(0x68A8E2)
+                                            focusAnimationColor: NSColor(0x68A8E2),
+                                            reaction_foreground_bubble_incoming: NSColor(0x007AFF),
+                                            reaction_foreground_bubble_outgoing: .random,
+                                            reaction_foreground_selected_bubble_incoming: NSColor(0xFFFFFF),
+                                            reaction_foreground_selected_bubble_outgoing: .random,
+                                            reaction_background_bubble_incoming: NSColor(0x007AFF, 0.2),
+                                            reaction_background_bubble_outgoing: .random,
+                                            reaction_background_selected_bubble_incoming: NSColor(0x007AFF),
+                                            reaction_background_selected_bubble_outgoing: .random,
+                                            reaction_foreground: NSColor(0x007AFF),
+                                            reaction_background: NSColor(0x007AFF, 0.2),
+                                            reaction_foreground_selected: NSColor(0xFFFFFF),
+                                            reaction_background_selected: NSColor(0x007AFF)
 )
 
 public let darkPalette = ColorPalette(isNative: true, isDark:true,
@@ -2175,7 +2320,19 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       listBackground: NSColor(0x131415),
                                       listGrayText: NSColor(0x8699a3),
                                       grayHighlight: NSColor(0x292b36).darker(amount: 0.08),
-                                      focusAnimationColor: NSColor(0x68A8E2)
+                                      focusAnimationColor: NSColor(0x68A8E2),
+                                      reaction_foreground_bubble_incoming: .random,
+                                      reaction_foreground_bubble_outgoing: .random,
+                                      reaction_foreground_selected_bubble_incoming: .random,
+                                      reaction_foreground_selected_bubble_outgoing: .random,
+                                      reaction_background_bubble_incoming: .random,
+                                      reaction_background_bubble_outgoing: .random,
+                                      reaction_background_selected_bubble_incoming: .random,
+                                      reaction_background_selected_bubble_outgoing: .random,
+                                      reaction_foreground: .random,
+                                      reaction_background: .random,
+                                      reaction_foreground_selected: .random,
+                                      reaction_background_selected: .random
 )
 
 @available(macOS 10.14, *)
@@ -2472,7 +2629,19 @@ public let systemPalette: ColorPalette = {
                             listBackground: NSColor(0x131415),
                             listGrayText: NSColor(0xb1c3d5),
                             grayHighlight: NSColor(0x292a2f).darker(amount: 0.08),
-                            focusAnimationColor: NSColor(0x68A8E2)
+                            focusAnimationColor: NSColor(0x68A8E2),
+                                   reaction_foreground_bubble_incoming: .random,
+                                   reaction_foreground_bubble_outgoing: .random,
+                                   reaction_foreground_selected_bubble_incoming: .random,
+                                   reaction_foreground_selected_bubble_outgoing: .random,
+                                   reaction_background_bubble_incoming: .random,
+                                   reaction_background_bubble_outgoing: .random,
+                                   reaction_background_selected_bubble_incoming: .random,
+                                   reaction_background_selected_bubble_outgoing: .random,
+                                   reaction_foreground: .random,
+                                   reaction_background: .random,
+                                   reaction_foreground_selected: .random,
+                                   reaction_background_selected: .random
     )
     
    

@@ -733,6 +733,15 @@ class ServiceEventLogItem: TableRowItem {
                     text = strings().channelAdminLogMessageChangedAutoremoveTimeoutRemove(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .changeAvailableReactions(_, updatedValue):
+                var text: String = ""
+                if !updatedValue.isEmpty {
+                    let emojiString = updatedValue.map { $0.fixed }.joined(separator: ", ")
+                    text = strings().channelAdminLogAllowedReactionsUpdated(peer.displayTitle, emojiString)
+                } else {
+                    text = strings().channelAdminLogReactionsDisabled(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }

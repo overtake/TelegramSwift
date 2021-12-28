@@ -545,6 +545,49 @@ public extension Message {
         return nil
     }
     
+    func effectiveReactions(_ accountPeerId: PeerId) -> ReactionsMessageAttribute? {
+        var reactions = self.reactionsAttribute
+        if reactions == nil {
+            for attr in self.attributes {
+                if let attr = attr as? PendingReactionsMessageAttribute, let value = attr.value {
+                    reactions = .init(canViewList: false, reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                }
+            }
+        } else if let remote = reactions {
+            for attr in self.attributes {
+                if let attr = attr as? PendingReactionsMessageAttribute {
+                    if let value = attr.value {
+                        var values = remote.reactions
+                        if let index = values.firstIndex(where: { $0.isSelected })  {
+                            if values[index].count == 1 {
+                                values.remove(at: index)
+                            } else {
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
+                            }
+                        }
+                        if let index = values.firstIndex(where: { $0.value == value }) {
+                            values[index] = MessageReaction(value: value, count: values[index].count + 1, isSelected: true)
+                        } else {
+                            values.append(.init(value: value, count: 1, isSelected: true))
+                        }
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                    } else {
+                        var values = remote.reactions
+                        if let index = values.firstIndex(where: { $0.isSelected })  {
+                            if values[index].count == 1 {
+                                values.remove(at: index)
+                            } else {
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
+                            }
+                        }
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers.filter({ $0.peerId != accountPeerId }))
+                    }
+                }
+            }
+        }
+        return reactions
+    }
+    
     func isCrosspostFromChannel(account: Account) -> Bool {
         
         var sourceReference: SourceReferenceMessageAttribute?
@@ -777,6 +820,12 @@ extension ChatLocation : Hashable {
        
     }
    
+}
+
+extension AvailableReactions {
+    var enabled: [AvailableReactions.Reaction] {
+        return self.reactions.filter { $0.isEnabled }
+    }
 }
 
 extension SuggestedLocalizationInfo {

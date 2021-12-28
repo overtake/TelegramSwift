@@ -50,27 +50,8 @@ class StickerPackRowItem: TableRowItem {
         case let .pack(id):
             items.append(ContextMenuItem(strings().stickersContextArchive, handler: {
                 _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: RemoveStickerPackOption.archive).start()
-            }))
-            
-            
-            #if BETA || ALPHA || DEBUG
-            if let resource = info.thumbnail?.resource {
-                items.append(ContextMenuItem("Copy Pack Thumbnail (Dev.)", handler: {
-                    let signal = context.account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue
-                    _ = signal.start(next: { data in
-                        if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
-                            _ = getAnimatedStickerThumb(data: data, size: NSMakeSize(128, 128)).start(next: { path in
-                                if let path = path {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.writeObjects([NSURL(fileURLWithPath: path)])
-                                }
-                            })
-                        }
-                    })
-                }))
-            }
-            #endif
+            }, itemImage: MenuAnimation.menu_archive.value))
+
         default:
             break
         }

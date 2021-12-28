@@ -626,6 +626,7 @@ func initialize() -> [String] {
     array.append("profile_group_discussion")
     
     array.append("profile_requests")
+    array.append("profile_reactions")
 
     array.append("profile_removed")
     array.append("profile_links")
@@ -707,6 +708,10 @@ func initialize() -> [String] {
     array.append("widget_peers_favorite_active")
     array.append("widget_peers_recent_active")
     array.append("widget_peers_both_active")
+    
+    array.append("chat_reactions_add")
+    array.append("chat_reactions_add_bubble")
+    array.append("chat_reactions_add_active")
 
     return array
 }

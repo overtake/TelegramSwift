@@ -10,7 +10,6 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
 import Postbox
 
 
@@ -518,7 +517,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
  
     }
-    
 
 
     required init(frame frameRect: NSRect) {

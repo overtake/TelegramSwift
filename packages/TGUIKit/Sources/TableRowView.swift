@@ -56,7 +56,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open var border:BorderType?
     public var animates:Bool = true
     
-    public private(set) var contextMenu:ContextMenu?
+    public private(set) var contextMenu:AppMenu?
     
     
     required public override init(frame frameRect: NSRect) {
@@ -248,34 +248,13 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         contextMenu = nil
         
         if let item = item {
-            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self] items in
-                if let strongSelf = self {
-                    let menu = ContextMenu()
+            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self, weak item] items in
+                if let strongSelf = self, let item = item {
+                    let menu = ContextMenu(isLegacy: item.isLegacyMenu)
 
-                    if let appearance = self?.rowAppearance {
-                        if menu.responds(to: Selector("appearance")) {
-                            menu.appearance = appearance
-                        }
-                    }
-
-//                    presntContextMenu(for: event, items: items.compactMap({ item in
-//                        if !(item is ContextSeparatorItem) {
-//                            return SPopoverItem(item.title, item.handler)
-//                        } else {
-//                            return nil
-//                        }
-//                    }))
-                    
-//                    let window = Window(contentRect: NSMakeRect(event.locationInWindow.x + 100, event.locationInWindow.y, 100, 300), styleMask: [], backing: .buffered, defer: true)
-//                    window.contentView?.wantsLayer = true
-//                    window.contentView?.background = .random
-//                    event.window?.addChildWindow(window, ordered: .above)
-                    
                     menu.onShow = { [weak strongSelf] menu in
-                        strongSelf?.contextMenu = menu
                         strongSelf?.onShowContextMenu()
                     }
-                    menu.delegate = menu
                     menu.onClose = { [weak strongSelf] in
                         strongSelf?.contextMenu = nil
                         strongSelf?.onCloseContextMenu()
@@ -283,18 +262,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                     for item in items {
                         menu.addItem(item)
                     }
+                    strongSelf.contextMenu = AppMenu(menu: menu)
                     
-
-                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
-
-                    
-//                    if #available(OSX 10.12, *) {
-//                        RunLoop.current.perform(inModes: [.modalPanel], block: {
-//                            NSMenu.popUpContextMenu(menu, with: event, for: strongSelf)
-//                        })
-//                    } else {
-//                        // Fallback on earlier versions
-//                    }
+                    strongSelf.contextMenu?.show(event: event, view: strongSelf)
                     
                 }
                 
@@ -304,11 +274,6 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
-        if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
-            NSMenu.popUpContextMenu(menu, with: event, for: self)
-        }
-    }
     
     open override func menu(for event: NSEvent) -> NSMenu? {
         return NSMenu()
@@ -377,6 +342,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func layout() {
         super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     public func notifySubviewsToLayout(_ subview:NSView) -> Void {
@@ -473,24 +439,17 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open func shakeViewWithData(_ data: Any) {
         
     }
-    
-    open func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) -> Void  {
-        super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-    }
-    
-    open func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
-        super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-    }
-    open func change(opacity to: CGFloat, animated: Bool = true, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
-        super._change(opacity: to, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-    }
-    
+        
     open func mouseInside() -> Bool {
         return super._mouseInside()
     }
     
     open var rowAppearance: NSAppearance? {
         return self.appearance
+    }
+    
+    open func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
     }
     
 }

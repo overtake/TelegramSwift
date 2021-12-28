@@ -43,10 +43,11 @@ class ReplyModel: ChatAccessoryModel {
         
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
+            self.nodeReady.set(.single(true))
         } else {
             make(with: nil, display: false)
         }
-        if replyMessage == nil || replyMessage?.globallyUniqueId != 0 {
+        if replyMessage == nil {
             nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
                 self?.make(with: message, isLoading: false, display: true)
                 if message == nil {
@@ -252,21 +253,12 @@ class ReplyModel: ChatAccessoryModel {
         }
         
         if !isLoading {
-            if let makesizeCallback = makesizeCallback {
-                messagesViewQueue.async {
-                    makesizeCallback()
-                }
-                return
-            } else {
-                measureSize(width, sizeToFit: sizeToFit)
-                display = true
-            }
+            measureSize(width, sizeToFit: sizeToFit)
+            display = true
         }
         if display {
-            Queue.mainQueue().async {
-                self.view?.setFrameSize(self.size)
-                self.setNeedDisplay()
-            }
+            self.view?.setFrameSize(self.size)
+            self.setNeedDisplay()
         }
     }
 

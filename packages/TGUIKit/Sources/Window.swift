@@ -745,7 +745,7 @@ open class Window: NSWindow {
                     for globalHandler in globalHandlers {
                         let handle = keyHandlers[keyCode]?.sorted(by: >).first
                         if handle == nil || globalHandler.priority > handle!.priority {
-                            if (handle?.modifierFlags == nil || event.modifierFlags.contains(handle!.modifierFlags!)) {
+                            if (handle?.modifierFlags == nil || !event.modifierFlags.contains(handle!.modifierFlags!)) || globalHandler.priority == .supreme {
                                 switch globalHandler.handler(event) {
                                 case .invoked:
                                     return
@@ -857,10 +857,15 @@ open class Window: NSWindow {
         super.mouseDown(with: event)
     }
     
-    
+    public var _canBecomeKey = true
     open override var canBecomeKey: Bool {
-        return true
+        return _canBecomeKey
     }
+    public var _canBecomeMain = true
+    open override var canBecomeMain: Bool {
+        return _canBecomeMain
+    }
+    
     
     public var isFullScreen: Bool {
         return styleMask.contains(.fullScreen)

@@ -11,6 +11,7 @@ import Cocoa
 public enum ContainedViewLayoutTransitionCurve {
     case linear
     case easeInOut
+    case easeOut
     case spring
     case legacy
 }
@@ -37,6 +38,8 @@ public extension ContainedViewLayoutTransitionCurve {
             return CAMediaTimingFunctionName.easeInEaseOut
         case .linear:
             return CAMediaTimingFunctionName.linear
+        case .easeOut:
+            return CAMediaTimingFunctionName.easeOut
         }
     }
     func solve(at offset: CGFloat) -> CGFloat {
@@ -47,6 +50,8 @@ public extension ContainedViewLayoutTransitionCurve {
             return listViewAnimationCurveSystem(offset)
         case .legacy:
              return listViewAnimationCurveEaseInOut(offset)
+        case .easeOut:
+            return listViewAnimationCurveEaseInOut(offset)
         case .linear:
             return listViewAnimationCurveLinear(offset)
         }

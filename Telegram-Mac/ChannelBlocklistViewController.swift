@@ -138,15 +138,18 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 }
             }, contextMenuItems: {
                 var items:[ContextMenuItem] = []
-                items.append(ContextMenuItem(strings().channelBlacklistContextRemove, handler: {
-                    arguments.removePeer(participant.peer.id)
-                }))
+               
                 if !isChannel {
                     items.append(ContextMenuItem(strings().channelBlacklistContextAddToGroup, handler: {
                         arguments.returnToGroup(participant.peer.id)
-                    }))
+                    }, itemImage: MenuAnimation.menu_plus.value))
                 }
-                
+                if !items.isEmpty {
+                    items.append(ContextSeparatorItem())
+                }
+                items.append(ContextMenuItem(strings().channelBlacklistContextRemove, handler: {
+                    arguments.removePeer(participant.peer.id)
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 return .single(items)
             })
         case let .empty(progress):

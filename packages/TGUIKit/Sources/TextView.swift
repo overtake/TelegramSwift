@@ -265,10 +265,13 @@ private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
     
-    public struct Spoiler {
+    public class Spoiler {
         public let range: NSRange
-        public init(range: NSRange) {
+        public let color: NSColor
+        public fileprivate(set) var isRevealed: Bool = false
+        public init(range: NSRange, color: NSColor) {
             self.range = range
+            self.color = color.withAlphaComponent(1.0)
         }
     }
     
@@ -912,6 +915,18 @@ public final class TextViewLayout : Equatable {
         }
         return nil
     }
+    
+    func spoiler(at point: NSPoint) -> Spoiler? {
+        let index = self.findCharacterIndex(at: point)
+        for spoiler in spoilers {
+            if spoiler.range.contains(index) {
+                if !spoiler.isRevealed {
+                    return spoiler
+                }
+            }
+        }
+        return nil
+    }
 
     public func link(at point:NSPoint) -> (Any, LinkType, NSRange, NSRect)? {
         
@@ -1396,20 +1411,20 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
                     }
                 }
-                for spoiler in layout.spoilers {
+                for spoiler in layout.spoilers.filter({ !$0.isRevealed }) {
                     if let spoilerRange = spoiler.range.intersection(line.range) {
                         let range = spoilerRange.intersection(layout.selectedRange.range)
                         
-                        var ranges:[NSRange] = []
+                        var ranges:[(NSRange, NSColor)] = []
                         if let range = range {
-                            ranges.append(NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound))
-                            ranges.append(NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound))
+                            ranges.append((NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound), spoiler.color))
+                            ranges.append((NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound), spoiler.color))
                         } else {
-                            ranges.append(spoilerRange)
+                            ranges.append((spoilerRange, spoiler.color))
                         }
                         for range in ranges {
-                            let startOffset = CTLineGetOffsetForStringIndex(line.line, range.lowerBound, nil);
-                            let endOffset = CTLineGetOffsetForStringIndex(line.line, range.upperBound, nil);
+                            let startOffset = CTLineGetOffsetForStringIndex(line.line, range.0.lowerBound, nil);
+                            let endOffset = CTLineGetOffsetForStringIndex(line.line, range.0.upperBound, nil);
 
                             var ascent:CGFloat = 0
                             var descent:CGFloat = 0
@@ -1425,7 +1440,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             rect.size.height += ceil(descent - leading)
                             
                             
-                            ctx.setFillColor(presentation.colors.grayText.cgColor)
+                            ctx.setFillColor(range.1.cgColor)
                             ctx.fill(rect)
                         }
                     }
@@ -1465,17 +1480,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 if let menuItems = layout.interactions.menuItems?(link?.1) {
                     menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
                         if let strongSelf = self {
-                            let menu = NSMenu()
+                            let menu = ContextMenu()
                             for item in items {
                                 menu.addItem(item)
                             }
-                            RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: strongSelf, selector: #selector(strongSelf.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
+                            AppMenu.show(menu: menu, event: event, for: strongSelf)
                         }
                     }))
                 } else {
                     let link = layout.link(at: location)
                     let resolved: String? = link != nil ? layout.interactions.resolveLink(link!.0) : nil
-                    let menu = NSMenu()
+                    let menu = ContextMenu()
                     let copy = ContextMenuItem(link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), handler: { [weak self] in
                         guard let `self` = self else {return}
                         if let resolved = resolved {
@@ -1486,10 +1501,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         } else {
                             self.copy(self)
                         }
-                    })
-                   // let copy = NSMenuItem(title: , action: #selector(copy(_:)), keyEquivalent: "")
+                    }, itemImage: TextView.context_copy_animation)
                     menu.addItem(copy)
-                    RunLoop.current.add(Timer.scheduledTimer(timeInterval: 0, target: self, selector: #selector(self.openPanelInRunLoop), userInfo: (event, menu), repeats: false), forMode: RunLoop.Mode.modalPanel)
+                    AppMenu.show(menu: menu, event: event, for: self)
                 }
             } else {
                 layout.selectedRange.range = NSMakeRange(NSNotFound, 0)
@@ -1501,12 +1515,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
     }
     
-    @objc private func openPanelInRunLoop(_ timer:Foundation.Timer) {
-        if let (event, menu) = timer.userInfo as? (NSEvent, NSMenu) {
-            NSMenu.popUpContextMenu(menu, with: event, for: self)
-           // menu.delegate = self
-        }
-    }
+    public static var context_copy_animation: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
     
     
     public func menuDidClose(_ menu: NSMenu) {
@@ -1607,9 +1616,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
         if !userInteractionEnabled {
             super.mouseDown(with: event)
-        }
-        else if let layout = textLayout {
+        } else if let layout = textLayout {
             let point = self.convert(event.locationInWindow, from: nil)
+            
+            
+            if let spoiler = layout.spoiler(at: point) {
+                spoiler.isRevealed = true
+                needsDisplay = true
+                return
+            }
+            
             let index = layout.findIndex(location: point)
             if point.x > layout.lines[index].frame.maxX {
                 superview?.mouseDown(with: event)
@@ -1769,7 +1785,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         let location = self.convert(event.locationInWindow, from: nil)
         
         if self.isMousePoint(location , in: self.visibleRect) && mouseInside() && userInteractionEnabled {
-            if textLayout?.color(at: location) != nil {
+            if textLayout?.spoiler(at: location) != nil {
+                NSCursor.pointingHand.set()
+            }  else if textLayout?.color(at: location) != nil {
                 NSCursor.pointingHand.set()
                 textLayout?.interactions.hoverOnLink(.exited)
             } else if let layout = textLayout, let (value, _, _, _) = layout.link(at: location) {

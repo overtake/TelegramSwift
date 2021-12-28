@@ -107,7 +107,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             }, contextMenuItems: {
                 return .single([ContextMenuItem(strings().confirmDelete, handler: {
                     arguments.removePeer(peer.peer.id)
-                })])
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
             })
 
         case let .addItem(_, _, viewType):

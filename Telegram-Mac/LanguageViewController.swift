@@ -88,7 +88,7 @@ enum LanguageTableEntry : TableItemListNodeEntry {
                 if deletable {
                     return [ContextMenuItem(strings().messageContextDelete, handler: {
                         arguments.delete(value)
-                    })]
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
                 }
                 return []
             })
