@@ -609,7 +609,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                
             } else if data.image != nil {
                 if resourceData.complete {
-                    let text = data.message.text.isEmpty ? strings().chatContextCopy : strings().chatContextCopyMedia
+                    let text = strings().chatContextCopyMedia
                     thirdBlock.append(ContextMenuItem(text, handler: {
                         if let path = link(path: resourceData.path, ext: "jpg") {
                             let pb = NSPasteboard.general
