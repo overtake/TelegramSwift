@@ -369,6 +369,12 @@ final class ChatReactionsLayout {
                     if !peer.isGroup && !peer.isSupergroup {
                         recentPeers = []
                     }
+                    let count = reactions.reactions.reduce(0, {
+                        $0 + $1.count
+                    })
+                    if count > 2 {
+                        recentPeers = []
+                    }
                 }
                 
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {

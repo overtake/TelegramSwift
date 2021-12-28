@@ -270,10 +270,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }, itemImage: MenuAnimation.menu_retract_vote.value))
                 }
                 if data.message.forwardInfo == nil {
-                    var canClose: Bool = data.message.author?.id == context.peerId
-                    if let peer = data.peer as? TelegramChannel {
-                        canClose = peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
-                    }
+                    var canClose: Bool = canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context)
                     if canClose {
                         add_secondBlock.append(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak data] in
                             confirm(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, okTitle: strings().alertConfirmStop, successHandler: { [weak data] _ in
