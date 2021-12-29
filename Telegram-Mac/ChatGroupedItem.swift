@@ -624,7 +624,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
-                if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil || item.commentsBubbleData != nil {
+                if item.captionLayouts != nil || item.commentsBubbleData != nil {
                     positionFlags.remove(.bottom)
                 }
                 if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
