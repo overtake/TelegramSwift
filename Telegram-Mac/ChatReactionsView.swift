@@ -372,7 +372,7 @@ final class ChatReactionsLayout {
                     let count = reactions.reactions.reduce(0, {
                         $0 + $1.count
                     })
-                    if count > 2 {
+                    if count > 2 || reaction.count > recentPeers.count {
                         recentPeers = []
                     }
                 }
@@ -515,6 +515,8 @@ final class ChatReactionsView : View {
             self.set(handler: { [weak self] _ in
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
+            
+            
             
         }
         
