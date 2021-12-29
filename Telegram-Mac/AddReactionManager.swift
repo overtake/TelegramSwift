@@ -70,12 +70,12 @@ final class AddReactionManager : NSObject, Notifable {
                 
                 let size = imageView.frame.size
                 
-                let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsetsZero)
+                let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
                 
                 self.imageView.setSignal(signal: cachedMedia(media: reaction.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
 
                 if !self.imageView.isFullyLoaded {
-                    imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon), small: true, scale: System.backingScale), cacheImage: { result in
+                    imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon), small: false, scale: System.backingScale), cacheImage: { result in
                         cacheMedia(result, media: reaction.staticIcon, arguments: arguments, scale: System.backingScale)
                     })
                 }
@@ -266,12 +266,12 @@ final class AddReactionManager : NSObject, Notifable {
             let first = reactions[0]
             let size = imageView.frame.size
             
-            let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
+            let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             
             self.imageView.setSignal(signal: cachedMedia(media: first.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
 
             if !self.imageView.isFullyLoaded {
-                imageView.setSignal(chatMessageImageFile(account: context.account, fileReference: .standalone(media: first.staticIcon), scale: System.backingScale), cacheImage: { result in
+                imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: first.staticIcon), small: false, scale: System.backingScale), cacheImage: { result in
                     cacheMedia(result, media: first.staticIcon, arguments: arguments, scale: System.backingScale)
                 })
             }
@@ -682,9 +682,12 @@ final class AddReactionManager : NSObject, Notifable {
                             let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
                             
                             if NSPointInRect(inside, safeRect), NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
-                                delayDisposable.set(delaySignal(0.1).start(completed: { [weak self, weak item, weak view] in
-                                    if let item = item, let view = view {
+                                delayDisposable.set(delaySignal(0.35).start(completed: { [weak self, weak item, weak view] in
+                                    if let item = item, let view = view, item.stableId == self?.previousItem?.stableId {
                                         
+                                        let rect = itemView.rectForReaction
+                                        let base = view.convert(rect, from: itemView)
+
                                         let available = filter(available, attr: item.firstMessage?.reactionsAttribute)
                                         
                                         let current = ReactionView(frame: base, isBubbled: item.isBubbled, context: context, reactions: available, add: { [weak self] value in

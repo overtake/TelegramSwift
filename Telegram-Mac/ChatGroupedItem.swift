@@ -273,20 +273,13 @@ class ChatGroupedItem: ChatRowItem {
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
-        //
-        if hasBubble {
-            if  forwardNameLayout != nil {
-                offset.y += defaultContentInnerInset
-            } else if authorText == nil && replyModel == nil, !isBubbleFullFilled  {
-                offset.y += (defaultContentInnerInset + 6)
-            }
+        
+        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
+            offset.y -= (defaultContentInnerInset + 1)
+        } else if hasBubble, !isBubbleFullFilled, replyModel != nil || forwardNameLayout != nil {
+            offset.y += defaultContentInnerInset
         }
         
-        if hasBubble && authorText == nil && replyModel == nil && forwardNameLayout == nil {
-            offset.y -= (defaultContentInnerInset + self.mediaBubbleCornerInset * 2 - 1)
-        } else if hasBubble && authorText != nil {
-            offset.y += 2
-        }
         return offset
     }
     
@@ -351,6 +344,19 @@ class ChatGroupedItem: ChatRowItem {
     
     override var topInset:CGFloat {
         return 4
+    }
+    
+    override var isForceRightLine: Bool {
+        if self.lastLineContentWidth != nil {
+            return super.isForceRightLine
+        } else {
+            switch self.layoutType {
+            case .files:
+                return true
+            case .photoOrVideo:
+                return super.isForceRightLine
+            }
+        }
     }
     
     func contentNode(for index: Int) -> ChatMediaContentView.Type {
@@ -631,7 +637,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
 
             if item.hasBubble  {
-                if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil || item.commentsBubbleData != nil {
+                if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil {
                     positionFlags.remove(.bottom)
                 }
                 if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
