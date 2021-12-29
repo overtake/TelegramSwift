@@ -59,6 +59,10 @@ final class MenuView: View, TableViewDelegate {
         shadow.shadowOffset = NSMakeSize(0, 0)
         self.shadow = shadow
         
+        self.layer?.isOpaque = false
+        self.layer?.shouldRasterize = true
+        self.layer?.rasterizationScale = System.backingScale
+        
         self.layer?.cornerRadius = 10
         self.visualView.layer?.cornerRadius = 10
         self.backgroundView.layer?.cornerRadius = 10
@@ -485,7 +489,7 @@ final class AppMenuController : NSObject  {
 
     
     private func getView(for menu: ContextMenu, screen: NSScreen, parentView: Window?, submenuId: Int64?) -> Window {
-        let panel = Window(contentRect: .zero, styleMask: [], backing: .buffered, defer: false)
+        let panel = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
