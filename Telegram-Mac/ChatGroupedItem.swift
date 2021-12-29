@@ -346,6 +346,19 @@ class ChatGroupedItem: ChatRowItem {
         return 4
     }
     
+    override var isForceRightLine: Bool {
+        if self.lastLineContentWidth != nil {
+            return super.isForceRightLine
+        } else {
+            switch self.layoutType {
+            case .files:
+                return true
+            case .photoOrVideo:
+                return super.isForceRightLine
+            }
+        }
+    }
+    
     func contentNode(for index: Int) -> ChatMediaContentView.Type {
         return ChatLayoutUtils.contentNode(for: layout.messages[index].media[0])
     }
