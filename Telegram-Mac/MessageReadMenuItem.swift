@@ -609,12 +609,12 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         let reactionSize = NSMakeSize(16, 16)
         
         if let reaction = item.reaction {
-            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
+            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             
             self.imageView.setSignal(signal: cachedMedia(media: reaction, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
 
             if !self.imageView.isFullyLoaded {
-                self.imageView.setSignal(chatMessageImageFile(account: item.context.account, fileReference: .standalone(media: reaction), scale: System.backingScale), cacheImage: { result in
+                self.imageView.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: .standalone(media: reaction), small: false, scale: System.backingScale), cacheImage: { result in
                     cacheMedia(result, media: reaction, arguments: arguments, scale: System.backingScale)
                 })
             }

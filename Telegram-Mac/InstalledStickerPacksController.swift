@@ -446,9 +446,9 @@ class InstalledStickerPacksController: TableViewController {
                     reaction = reactions.reactions.first
                 }
                 if let reaction = reaction {
-                    let signal = chatMessageImageFile(account: context.account, fileReference: .standalone(media: reaction.staticIcon), scale: System.backingScale)
+                    let signal = chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon), small: false, scale: System.backingScale)
                     
-                    let arguments = TransformImageArguments(corners: .init(), imageSize: NSMakeSize(24, 24), boundingSize: NSMakeSize(24, 24), intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
+                    let arguments = TransformImageArguments(corners: .init(), imageSize: NSMakeSize(24, 24), boundingSize: NSMakeSize(24, 24), intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
 
                     actionsDisposable.add(signal.start(next: { value in
                         updateState { current in
