@@ -42,11 +42,15 @@ final class MenuView: View, TableViewDelegate {
     
     let tableView: TableView = TableView(frame: .zero)
     private var contextItems: [Entry] = []
-    private let backgroundView = View()
-    private let visualView = NSVisualEffectView(frame: .zero)
+    private let backgroundView: View
+    private let visualView: NSVisualEffectView
     required init(frame frameRect: NSRect) {
+        self.backgroundView = View(frame: frameRect.size.bounds)
+        self.visualView = NSVisualEffectView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
-        addSubview(visualView)
+        if #available(macOS 11.0, *) {
+            addSubview(visualView)
+        }
         addSubview(backgroundView)
         addSubview(tableView)
         self.visualView.wantsLayer = true
@@ -113,7 +117,12 @@ final class MenuView: View, TableViewDelegate {
         }
         effectiveSize = max
         
-        backgroundView.backgroundColor = presentation.backgroundColor
+        if #available(macOS 11.0, *) {
+            backgroundView.backgroundColor = presentation.backgroundColor
+        } else {
+            backgroundView.backgroundColor = presentation.backgroundColor.withAlphaComponent(1.0)
+        }
+        
     }
     
     func insertItems(_ items:[ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
