@@ -362,7 +362,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func onCloseContextMenu() {
         guard let item = item as? ChatRowItem else {return}
         renderLayoutType(item, animated: true)
-        self.rowView.change(pos: NSZeroPoint, animated: true)
         updateColors()
         super.onCloseContextMenu()
     }
@@ -697,7 +696,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func rowPoint(_ item: ChatRowItem) -> NSPoint {
         
         if item.isBubbled {
-            return NSMakePoint((item.chatInteraction.presentation.state == .selecting && !item.isIncoming ? -20 : 0), 0)
+            return NSMakePoint((self.selectingView != nil && !item.isIncoming ? -20 : 0), 0)
         } else {
             return NSMakePoint(0, 0)
         }
@@ -1449,6 +1448,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         transition.updateFrame(view: bubbleView, frame: bubbleFrame(item))
         bubbleView.updateLayout(size: bubbleView.frame.size, transition: transition)
         transition.updateFrame(view: contentView, frame: contentFrameModifier(item))
+                
         transition.updateFrame(view: rowView, frame: CGRect(origin: rowPoint(item), size: size))
         
         updateBackground(animated: transition.isAnimated, item: item)

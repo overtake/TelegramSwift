@@ -17,7 +17,6 @@ public final class Reactions {
     public init(_ engine: TelegramEngine) {
         self.engine = engine
         state.set(engine.stickers.availableReactions())
-        download()
     }
     
     public func react(_ messageId: MessageId, value: String?) {
@@ -34,24 +33,4 @@ public final class Reactions {
         reactable.dispose()
     }
     
-    private func download() {
-        let engine = self.engine
-        let downloadable = self.downloadable
-        disposable.set(state.get().start(next: { reactions in
-            if let reactions = reactions {
-                for reaction in reactions.reactions {
-                    
-                    let files = [reaction.staticIcon, reaction.selectAnimation, reaction.effectAnimation, reaction.activateAnimation, reaction.appearAnimation]
-                    for file in files {
-                        downloadable.add(fetchedMediaResource(mediaBox: engine.account.postbox.mediaBox, reference: FileMediaReference.standalone(media: file).resourceReference(file.resource)).start())
-                        
-                        if let representation = smallestImageRepresentation(file.previewRepresentations) {
-                            downloadable.add(fetchedMediaResource(mediaBox: engine.account.postbox.mediaBox, reference: FileMediaReference.standalone(media: file).resourceReference(representation.resource)).start())
-                        }
-                            
-                    }
-                }
-            }
-        }))
-    }
 }

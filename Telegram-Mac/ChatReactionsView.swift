@@ -372,7 +372,7 @@ final class ChatReactionsLayout {
                     let count = reactions.reactions.reduce(0, {
                         $0 + $1.count
                     })
-                    if count > 2 {
+                    if count <= 3, reaction.count > recentPeers.count {
                         recentPeers = []
                     }
                 }
@@ -516,6 +516,8 @@ final class ChatReactionsView : View {
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
             
+            
+            
         }
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
@@ -628,12 +630,12 @@ final class ChatReactionsView : View {
                 self.layer?.animateBackground()
             }
 
-            let arguments = TransformImageArguments(corners: .init(), imageSize: reaction.presentation.reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
+            let arguments = TransformImageArguments(corners: .init(), imageSize: reaction.presentation.reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             
             self.imageView.setSignal(signal: cachedMedia(media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
 
             if !self.imageView.isFullyLoaded {
-                imageView.setSignal(chatMessageImageFile(account: account, fileReference: .standalone(media: reaction.available.staticIcon), scale: System.backingScale), cacheImage: { result in
+                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: reaction.available.staticIcon), small: false, scale: System.backingScale), cacheImage: { result in
                     cacheMedia(result, media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale)
                 })
             }

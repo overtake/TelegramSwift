@@ -42,22 +42,33 @@ final class MenuView: View, TableViewDelegate {
     
     let tableView: TableView = TableView(frame: .zero)
     private var contextItems: [Entry] = []
-    private let backgroundView = View()
-    private let visualView = NSVisualEffectView(frame: .zero)
+    private let backgroundView: View
+    private let visualView: NSVisualEffectView
     required init(frame frameRect: NSRect) {
+        self.backgroundView = View(frame: frameRect.size.bounds)
+        self.visualView = NSVisualEffectView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
-        addSubview(visualView)
+        if #available(macOS 11.0, *) {
+            addSubview(visualView)
+        }
         addSubview(backgroundView)
         addSubview(tableView)
         self.visualView.wantsLayer = true
         self.visualView.state = .active
         self.visualView.blendingMode = .behindWindow
         self.tableView.delegate = self
+        self.visualView.autoresizingMask = []
+        self.autoresizesSubviews = false
+        
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 8
         shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
         shadow.shadowOffset = NSMakeSize(0, 0)
         self.shadow = shadow
+        
+        self.layer?.isOpaque = false
+        self.layer?.shouldRasterize = true
+        self.layer?.rasterizationScale = System.backingScale
         
         self.layer?.cornerRadius = 10
         self.visualView.layer?.cornerRadius = 10
@@ -106,7 +117,12 @@ final class MenuView: View, TableViewDelegate {
         }
         effectiveSize = max
         
-        backgroundView.backgroundColor = presentation.backgroundColor
+        if #available(macOS 11.0, *) {
+            backgroundView.backgroundColor = presentation.backgroundColor
+        } else {
+            backgroundView.backgroundColor = presentation.backgroundColor.withAlphaComponent(1.0)
+        }
+        
     }
     
     func insertItems(_ items:[ContextMenuItem], presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) {
@@ -485,13 +501,22 @@ final class AppMenuController : NSObject  {
 
     
     private func getView(for menu: ContextMenu, screen: NSScreen, parentView: Window?, submenuId: Int64?) -> Window {
-        let panel = Window(contentRect: .zero, styleMask: [], backing: .buffered, defer: false)
+        let panel = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
         panel.backgroundColor = NSColor.black.withAlphaComponent(0.001)
         panel.isOpaque = false
         panel.hasShadow = false
+        
+        
+        let contentView = View()
+        panel.contentView = contentView
+        
+        contentView.backgroundColor = .clear
+        contentView.flip = false
+        contentView.layer?.isOpaque = false
+
 
         let view = MenuView(frame: .zero)
         view.submenuId = submenuId
