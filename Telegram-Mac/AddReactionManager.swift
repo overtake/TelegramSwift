@@ -682,9 +682,12 @@ final class AddReactionManager : NSObject, Notifable {
                             let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
                             
                             if NSPointInRect(inside, safeRect), NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
-                                delayDisposable.set(delaySignal(0.4).start(completed: { [weak self, weak item, weak view] in
-                                    if let item = item, let view = view {
+                                delayDisposable.set(delaySignal(0.35).start(completed: { [weak self, weak item, weak view] in
+                                    if let item = item, let view = view, item.stableId == self?.previousItem?.stableId {
                                         
+                                        let rect = itemView.rectForReaction
+                                        let base = view.convert(rect, from: itemView)
+
                                         let available = filter(available, attr: item.firstMessage?.reactionsAttribute)
                                         
                                         let current = ReactionView(frame: base, isBubbled: item.isBubbled, context: context, reactions: available, add: { [weak self] value in
