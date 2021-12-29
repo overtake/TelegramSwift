@@ -53,6 +53,9 @@ final class MenuView: View, TableViewDelegate {
         self.visualView.state = .active
         self.visualView.blendingMode = .behindWindow
         self.tableView.delegate = self
+        self.visualView.autoresizingMask = []
+        self.autoresizesSubviews = false
+        
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 8
         shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
@@ -496,6 +499,15 @@ final class AppMenuController : NSObject  {
         panel.backgroundColor = NSColor.black.withAlphaComponent(0.001)
         panel.isOpaque = false
         panel.hasShadow = false
+        
+        
+        let contentView = View()
+        panel.contentView = contentView
+        
+        contentView.backgroundColor = .clear
+        contentView.flip = false
+        contentView.layer?.isOpaque = false
+
 
         let view = MenuView(frame: .zero)
         view.submenuId = submenuId
