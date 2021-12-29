@@ -369,10 +369,7 @@ final class ChatReactionsLayout {
                     if !peer.isGroup && !peer.isSupergroup {
                         recentPeers = []
                     }
-                    let count = reactions.reactions.reduce(0, {
-                        $0 + $1.count
-                    })
-                    if count > 2 || reaction.count > recentPeers.count {
+                    if reaction.count > recentPeers.count {
                         recentPeers = []
                     }
                 }
