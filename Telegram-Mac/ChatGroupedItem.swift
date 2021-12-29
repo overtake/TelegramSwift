@@ -258,7 +258,6 @@ class ChatGroupedItem: ChatRowItem {
                 frame.size.width += self.mediaBubbleCornerInset * 2
             }
         }
-        frame.size.height -= mediaBubbleCornerInset
         
         return frame
     }
@@ -274,7 +273,13 @@ class ChatGroupedItem: ChatRowItem {
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
-       
+        
+        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
+            offset.y -= (defaultContentInnerInset + 1)
+        } else if hasBubble, !isBubbleFullFilled, replyModel != nil || forwardNameLayout != nil {
+            offset.y += defaultContentInnerInset
+        }
+        
         return offset
     }
     
