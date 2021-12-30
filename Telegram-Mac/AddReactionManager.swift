@@ -463,8 +463,9 @@ final class AddReactionManager : NSObject, Notifable {
     private var peerView: PeerView?
     private var settings: ReactionSettings = ReactionSettings.default
     private var disabled: Bool = false
+    private var mouseLocked: Bool = false
     private let chatInteraction: ChatInteraction
-    
+    private let hideDelay = MetaDisposable()
     private var inOrderToRemove:[WeakReference<ReactionView>] = []
     private var uniqueLimit: Int = Int.max
     init(chatInteraction: ChatInteraction, view: ChatControllerView, peerView: PeerView?, context: AccountContext, priority: HandlerPriority, window: Window) {
@@ -493,17 +494,17 @@ final class AddReactionManager : NSObject, Notifable {
         chatInteraction.add(observer: self)
         
         window.set(mouseHandler: { [weak self] event in
-            self?.delayAndUpdate()
+            self?.delayAndUpdate(mouseMoved: false)
             return .rejected
         }, with: self, for: .mouseEntered, priority: self.priority)
         
         window.set(mouseHandler: { [weak self] event in
-            self?.delayAndUpdate()
+            self?.delayAndUpdate(mouseMoved: false)
             return .rejected
         }, with: self, for: .mouseExited, priority: self.priority)
         
         window.set(mouseHandler: { [weak self] event in
-            self?.delayAndUpdate()
+            self?.delayAndUpdate(mouseMoved: true)
             return .rejected
         }, with: self, for: .mouseMoved, priority: self.priority)
         
@@ -534,6 +535,7 @@ final class AddReactionManager : NSObject, Notifable {
         delayDisposable.dispose()
         lockDisposable.dispose()
         chatInteraction.remove(observer: self)
+        hideDelay.dispose()
     }
     
     private var previousItem: ChatRowItem?
@@ -548,7 +550,16 @@ final class AddReactionManager : NSObject, Notifable {
         }
     }
     
-    private func delayAndUpdate() {
+    private func delayAndUpdate(mouseMoved: Bool = false) {
+        if mouseMoved {
+            self.mouseLocked = false
+            self.hideDelay.set(delaySignal(3.0).start(completed: { [weak self] in
+                if self?.currentView?.isRevealed == false {
+                    self?.clear()
+                }
+                self?.mouseLocked = true
+            }))
+        }
         self.update()
     }
         
@@ -600,7 +611,7 @@ final class AddReactionManager : NSObject, Notifable {
         
         updateToBeRemoved(transition: transition)
         
-        if let view = self.view, !available.isEmpty, !disabled {
+        if let view = self.view, !available.isEmpty, !disabled, !mouseLocked {
             
             
             let point = view.tableView.contentView.convert(self.window.mouseLocationOutsideOfEventStream, from: nil)
@@ -667,7 +678,7 @@ final class AddReactionManager : NSObject, Notifable {
             }
             
             if let item = findClosest(point), NSPointInRect(inside, view.tableView.frame) {
-                let canReact = item.canReact == true && lockId != item.stableId
+                let canReact = item.canReact == true && lockId != item.stableId && context.window.isKeyWindow
                 
                 if canReact {
                     if item.message?.id != self.previousItem?.message?.id {
