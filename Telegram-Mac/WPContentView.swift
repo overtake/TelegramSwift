@@ -141,9 +141,9 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
                 
              addSubview(instantPageButton!)
             }
-            instantPageButton?.layer?.borderColor = theme.colors.accentIcon.cgColor
+            instantPageButton?.layer?.borderColor = layout.presentation.activity.cgColor
 
-            instantPageButton?.set(color: theme.colors.accentIcon, for: .Normal)
+            instantPageButton?.set(color: layout.presentation.activity, for: .Normal)
          
             instantPageButton?.set(font: .medium(.title), for: .Normal)
             instantPageButton?.set(background: .clear, for: .Normal)
@@ -165,7 +165,8 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
             instantPageButton?.removeFromSuperview()
             instantPageButton = nil
         }
-        
+        let color = self.backgroundColor
+        self.backgroundColor = color
         self.needsLayout = true
     }
     
