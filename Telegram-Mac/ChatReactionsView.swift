@@ -372,7 +372,7 @@ final class ChatReactionsLayout {
                     let count = reactions.reactions.reduce(0, {
                         $0 + $1.count
                     })
-                    if count <= 3, reaction.count > recentPeers.count {
+                    if count >= 3 || reaction.count > recentPeers.count {
                         recentPeers = []
                     }
                 }

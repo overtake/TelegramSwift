@@ -2574,14 +2574,14 @@ class ChatRowItem: TableRowItem {
         if let reactionsLayout = reactionsLayout {
             switch reactionsLayout.mode {
             case .full:
-                var isSingle = reactionsLayout.oneLine
+                var oneLine = reactionsLayout.oneLine
                 if let item = self as? ChatMessageItem {
                     if item.webpageLayout != nil {
-                        isSingle = false
+                        oneLine = false
                     }
                 }
                 if !reactionsLayout.presentation.isOutOfBounds {
-                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: isSingle)
+                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
                 }
             default:
                 break
