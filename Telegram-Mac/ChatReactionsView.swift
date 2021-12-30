@@ -704,7 +704,7 @@ final class ChatReactionsView : View {
             let arguments = TransformImageArguments(corners: .init(), imageSize: reaction.presentation.reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: .color(.clear))
             self.imageView.setSignal(signal: cachedMedia(media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
             if !self.imageView.isFullyLoaded {
-                imageView.setSignal(chatMessageImageFile(account: account, fileReference: .standalone(media: reaction.available.staticIcon), scale: System.backingScale), cacheImage: { result in
+                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: reaction.available.staticIcon), small: false, scale: System.backingScale), cacheImage: { result in
                     cacheMedia(result, media: reaction.available.staticIcon, arguments: arguments, scale: System.backingScale)
                 })
             }
