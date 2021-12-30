@@ -2104,7 +2104,13 @@ class ChatRowItem: TableRowItem {
                     if !hasBubble {
                         reactions.measure(for: min(320, blockWidth))
                     } else {
-                        reactions.measure(for: widthForContent)
+                        var width = maxContentWidth
+                        if let item = self as? ChatMessageItem {
+                            if item.webpageLayout != nil {
+                                width = _contentSize.width
+                            }
+                        }
+                        reactions.measure(for: width)
                     }
                 } else {
                     reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
