@@ -2162,6 +2162,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.chatInteraction.scrollToLatest(true)
             self.context.sharedContext.bindings.entertainment().closePopover()
             self.context.cancelGlobalSearch.set(true)
+            self.reactionManager?.clearAndTempLock()
         }
         
         
