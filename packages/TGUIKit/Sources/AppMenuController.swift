@@ -601,6 +601,18 @@ final class AppMenuController : NSObject  {
         })?.value
     }
     
+    private func cancelSubmenuNow(_ submenu: Window) {
+        self.windows = self.windows.filter({
+            $0.key.submenuId != submenu.view.submenuId
+        })
+        submenu.view.parentView?.view.tableView.cancelSelection()
+        submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
+            if let submenu = submenu {
+                submenu.orderOut(nil)
+            }
+        })
+    }
+    
     private func cancelSubmenu(_ item: ContextMenuItem) {
         delay(0.1, closure: { [weak self] in
             guard let `self` = self else {
@@ -610,18 +622,8 @@ final class AppMenuController : NSObject  {
             let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            let force = self.activeMenu?.mouseInside() == true && self.activeMenu !== submenu
-            
-            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) || force {
-                self.windows = self.windows.filter({
-                    $0.key.submenuId != item.id
-                })
-                submenu.view.parentView?.view.tableView.cancelSelection()
-                submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
-                    if let submenu = submenu {
-                        submenu.orderOut(nil)
-                    }
-                })
+            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) {
+                self.cancelSubmenuNow(submenu)
             }
         })
         
@@ -633,7 +635,11 @@ final class AppMenuController : NSObject  {
             return
         }
         
-        
+        if let active = self.activeMenu, active.submenuId != nil {
+            if active.parentView == parentView, let window = active.kitWindow {
+                cancelSubmenuNow(window)
+            }
+        }
         
         let view = getView(for: menu, screen: screen, parentView: parentView, submenuId: id)
         guard let parentItem = parentView.view.item(for: id), let parentItemView = parentItem.view else {
