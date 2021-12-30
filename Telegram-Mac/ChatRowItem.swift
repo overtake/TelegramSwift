@@ -2104,7 +2104,13 @@ class ChatRowItem: TableRowItem {
                     if !hasBubble {
                         reactions.measure(for: min(320, blockWidth))
                     } else {
-                        reactions.measure(for: widthForContent)
+                        var w = widthForContent
+                        if let item = self as? ChatMessageItem {
+                            if item.webpageLayout != nil {
+                                w = _contentSize.width
+                            }
+                        }
+                        reactions.measure(for: w)
                     }
                 } else {
                     reactions.measure(for: max(_contentSize.width, widthForContent - rightSize.width))
@@ -2574,8 +2580,14 @@ class ChatRowItem: TableRowItem {
         if let reactionsLayout = reactionsLayout {
             switch reactionsLayout.mode {
             case .full:
+                var oneLine = reactionsLayout.oneLine
+                if let item = self as? ChatMessageItem {
+                    if item.webpageLayout != nil {
+                        oneLine = false
+                    }
+                }
                 if !reactionsLayout.presentation.isOutOfBounds {
-                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: reactionsLayout.oneLine)
+                    return LastLineData(width: reactionsLayout.lastLineSize.width, single: oneLine)
                 }
             default:
                 break
@@ -2599,6 +2611,13 @@ class ChatRowItem: TableRowItem {
             if item.actionButtonText != nil {
                 return nil
             }
+            
+            if let webpageLayout = item.webpageLayout {
+                if webpageLayout.hasInstantPage == true || webpageLayout.proxyConfig != nil {
+                    return nil
+                }
+            }
+            
             if let webpageLayout = item.webpageLayout as? WPArticleLayout {
                 if webpageLayout.imageSize != nil {
                     return nil

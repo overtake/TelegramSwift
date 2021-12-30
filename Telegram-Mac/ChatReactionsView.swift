@@ -44,7 +44,7 @@ final class ChatReactionsLayout {
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
-                        bgColor = theme.chatServiceItemColor
+                        bgColor = theme.blurServiceColor
                         textColor = theme.chatServiceItemTextColor
                         borderColor = .clear
                         selectedColor = theme.colors.accent
@@ -372,7 +372,7 @@ final class ChatReactionsLayout {
                     let count = reactions.reactions.reduce(0, {
                         $0 + $1.count
                     })
-                    if count <= 3, reaction.count > recentPeers.count {
+                    if count >= 3 || reaction.count > recentPeers.count {
                         recentPeers = []
                     }
                 }
@@ -675,10 +675,10 @@ final class ChatReactionsView : View {
             if let textView = textView, let text = reaction.text {
                 let center = focus(text.size)
                 transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.size))
-            } else {
-                let center = focus(presentation.reactionSize)
-                transition.updateFrame(view: avatarsContainer, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: avatarsContainer.frame.size))
             }
+            
+            let center = focus(presentation.reactionSize)
+            transition.updateFrame(view: avatarsContainer, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: avatarsContainer.frame.size))
             
         }
         override func layout() {

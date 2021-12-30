@@ -610,7 +610,9 @@ final class AppMenuController : NSObject  {
             let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            if let submenu = submenu, !submenu.view.mouseInside() && !insideItem {
+            let force = self.activeMenu?.mouseInside() == true && self.activeMenu !== submenu
+            
+            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) || force {
                 self.windows = self.windows.filter({
                     $0.key.submenuId != item.id
                 })

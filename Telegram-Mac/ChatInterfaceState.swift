@@ -44,6 +44,7 @@ struct ChatInterfaceSelectionState: Equatable {
 enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case bold(Range<Int>)
     case strikethrough(Range<Int>)
+    case spoiler(Range<Int>)
     case italic(Range<Int>)
     case pre(Range<Int>)
     case code(Range<Int>)
@@ -72,6 +73,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             self = .url(range, try container.decode(String.self, forKey: "url"))
         case 6:
             self = .strikethrough(range)
+        case 7:
+            self = .spoiler(range)
         default:
             fatalError("input attribute not supported")
         }
@@ -91,6 +94,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case .uid:
             return 5
         case .url:
+            return 6
+        case .spoiler:
             return 6
         }
     }
@@ -119,6 +124,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             try container.encode(Int32(4), forKey: "_rawValue")
         case .strikethrough:
             try container.encode(Int32(6), forKey: "_rawValue")
+        case .spoiler:
+            try container.encode(Int32(7), forKey: "_rawValue")
         case let .uid(_, uid):
             try container.encode(Int32(3), forKey: "_rawValue")
             try container.encode(uid, forKey: "uid")
@@ -137,6 +144,8 @@ extension ChatTextInputAttribute {
             return (NSAttributedString.Key.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .strikethrough(range):
             return (NSAttributedString.Key.font.rawValue, NSFont.normal(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .spoiler(range):
+            return (NSAttributedString.Key.font.rawValue, NSFont.normal(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .italic(range):
             return (NSAttributedString.Key.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .pre(range), let .code(range):
@@ -152,7 +161,7 @@ extension ChatTextInputAttribute {
 
     var range:Range<Int> {
         switch self {
-        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range):
+        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range), let .spoiler(range):
             return range
         case let .uid(range, _):
             return range
@@ -173,6 +182,8 @@ extension ChatTextInputAttribute {
             return .code(range)
         case .strikethrough:
             return .strikethrough(range)
+        case .spoiler:
+            return .spoiler(range)
         case let .uid(_, uid):
             return .uid(range, uid)
         case let .url(_, url):
@@ -200,6 +211,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.url(entity.range, url))
         case .Strikethrough:
             inputAttributes.append(.strikethrough(entity.range))
+        case .Spoiler:
+            inputAttributes.append(.spoiler(entity.range))
         default:
             break
         }
@@ -246,7 +259,7 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
 }
 
 //x/m
-private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__|~~)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)"
+private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__|~~|\\|\\|)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)"
 
 
 private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexFormat, options: [.caseInsensitive, .anchorsMatchLines])
@@ -486,6 +499,8 @@ final class ChatTextInputState: Codable, Equatable {
                             attributes.append(.strikethrough(matchIndex + left.length ..< matchIndex + left.length + text.length))
                         case "__":
                             attributes.append(.italic(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "||":
+                            attributes.append(.spoiler(matchIndex + left.length ..< matchIndex + left.length + text.length))
                         default:
                             break
                         }
@@ -535,6 +550,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.code(newRange.min ..< newRange.max))
                 case .strikethrough:
                     attributes.append(.strikethrough(newRange.min ..< newRange.max))
+                case .spoiler:
+                    attributes.append(.spoiler(newRange.min ..< newRange.max))
                 case let .uid(_, uid):
                     attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
@@ -595,6 +612,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .Bold))
             case let .strikethrough(range):
                 entities.append(.init(range: range, type: .Strikethrough))
+            case let .spoiler(range):
+                entities.append(.init(range: range, type: .Spoiler))
             case let .italic(range):
                 entities.append(.init(range: range, type: .Italic))
             case let .pre(range):

@@ -83,7 +83,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             transition.updateFrame(view: actionButton, frame: CGRect(origin: NSMakePoint(contentRect.minX, contentRect.maxY - actionButton.frame.height + add), size: actionButton.frame.size))
         }
     }
-    
+
     override func canStartTextSelecting(_ event: NSEvent) -> Bool {
         if let superTextView = text.superview {
             if let webpageContent = webpageContent {
