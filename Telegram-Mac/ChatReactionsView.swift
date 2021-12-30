@@ -44,7 +44,7 @@ final class ChatReactionsLayout {
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
-                        bgColor = theme.chatServiceItemColor
+                        bgColor = theme.blurServiceColor
                         textColor = theme.chatServiceItemTextColor
                         borderColor = .clear
                         selectedColor = theme.colors.accent

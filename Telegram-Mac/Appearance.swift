@@ -1558,7 +1558,7 @@ class TelegramPresentationTheme : PresentationTheme {
     let fontSize: CGFloat
     
     var hasWallpaper: Bool {
-        return controllerBackgroundMode.hasWallpaper || self.bubbled
+        return controllerBackgroundMode.hasWallpaper
     }
     var shouldBlurService: Bool {
         if #available(macOS 10.14, *) {

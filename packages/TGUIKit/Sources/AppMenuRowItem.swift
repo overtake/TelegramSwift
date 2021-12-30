@@ -322,10 +322,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
         }
         containerView.isSelected = item.isSelected
         
-        containerView.isEnabled = item.item.isEnabled
         
         let canHighlight = table.selectedItem() == nil || item.isSelected
-        
+        containerView.isEnabled = item.item.isEnabled && canHighlight
+
         containerView.set(background: canHighlight ? item.presentation.highlightColor : .clear, for: .Hover)
         containerView.set(background: .clear, for: .Normal)
         containerView.set(background: canHighlight ? item.presentation.highlightColor : .clear, for: .Highlight)

@@ -261,14 +261,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else {return}
 
         rowView.backgroundColor = backdorColor
-        rightView.backgroundColor = item.isStateOverlayLayout ? .clear : contentColor
         
         if item.isStateOverlayLayout, item.presentation.shouldBlurService {
             rightView.blurBackground = item.presentation.blurServiceColor
             rightView.layer?.cornerRadius = item.rightSize.height / 2
         } else {
             rightView.blurBackground = nil
-            rightView.layer?.cornerRadius = 0
+            rightView.layer?.cornerRadius = item.rightSize.height / 2
+            rightView.backgroundColor = item.isStateOverlayLayout ? item.presentation.chatServiceItemColor : contentColor
         }
 
         contentView.backgroundColor = .clear
