@@ -945,7 +945,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
            
         } else if item.isBubbled {
-            
+            if let item = item as? ChatMessageItem {
+                if item.containsBigEmoji {
+                    frame.origin.y += rightFrame(item).height
+                } 
+            }
         }
         
         return frame
