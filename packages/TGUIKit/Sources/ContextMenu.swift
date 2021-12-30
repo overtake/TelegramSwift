@@ -152,9 +152,9 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     public var onClose:()->Void = {() in}
         
     
-    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}, presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors)) -> Void {
+    public static func show(items:[ContextMenuItem], view:NSView, event:NSEvent, onShow:@escaping(ContextMenu)->Void = {_ in}, onClose:@escaping()->Void = {}, presentation: AppMenu.Presentation = .current(PresentationTheme.current.colors), isLegacy: Bool = false) -> Void {
         
-        let menu = ContextMenu(presentation: presentation)
+        let menu = ContextMenu(presentation: presentation, isLegacy: isLegacy)
         menu.onShow = onShow
         menu.onClose = onClose
         
