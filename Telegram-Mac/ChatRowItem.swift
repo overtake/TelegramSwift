@@ -2599,6 +2599,13 @@ class ChatRowItem: TableRowItem {
             if item.actionButtonText != nil {
                 return nil
             }
+            
+            if let webpageLayout = item.webpageLayout {
+                if webpageLayout.hasInstantPage == true || webpageLayout.proxyConfig != nil {
+                    return nil
+                }
+            }
+            
             if let webpageLayout = item.webpageLayout as? WPArticleLayout {
                 if webpageLayout.imageSize != nil {
                     return nil
