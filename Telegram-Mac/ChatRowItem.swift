@@ -889,6 +889,7 @@ class ChatRowItem: TableRowItem {
     
     private static func canFillAuthorName(_ message: Message, chatInteraction: ChatInteraction, renderType: ChatItemRenderType, isIncoming: Bool, hasBubble: Bool) -> Bool {
         var canFillAuthorName: Bool = true
+        var disable: Bool = false
         switch chatInteraction.chatLocation {
         case .peer, .replyThread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
@@ -897,9 +898,9 @@ class ChatRowItem: TableRowItem {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
                     canFillAuthorName = false
+                    disable = true
                 }
                 if message.isAnonymousMessage, !isIncoming {
-                    var disable: Bool = false
                     if let media = message.media.first as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
                             disable = true
@@ -910,7 +911,6 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if !isIncoming && message.author?.id != chatInteraction.context.peerId, message.globallyUniqueId != 0 {
-                    var disable: Bool = false
                     if let media = message.media.first as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
                             disable = true
