@@ -1732,8 +1732,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         
         if let layout = textLayout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
-            if let spoiler = layout.spoiler(at: point) {
-                spoiler.isRevealed = true
+            if let _ = layout.spoiler(at: point) {
+                for spoiler in layout.spoilers {
+                    spoiler.isRevealed = true
+                }
                 needsDisplay = true
                 return
             }
