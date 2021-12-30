@@ -675,10 +675,10 @@ final class ChatReactionsView : View {
             if let textView = textView, let text = reaction.text {
                 let center = focus(text.size)
                 transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.size))
-            } else {
-                let center = focus(presentation.reactionSize)
-                transition.updateFrame(view: avatarsContainer, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: avatarsContainer.frame.size))
             }
+            
+            let center = focus(presentation.reactionSize)
+            transition.updateFrame(view: avatarsContainer, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: avatarsContainer.frame.size))
             
         }
         override func layout() {
