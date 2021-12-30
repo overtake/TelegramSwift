@@ -778,6 +778,11 @@ final class AddReactionManager : NSObject, Notifable {
         clear()
     }
     
+    func clearAndTempLock() {
+        self.clear()
+        self.mouseLocked = true
+    }
+    
     private func removeCurrent(animated: Bool) {
         if let view = currentView {
             self.currentView = nil
