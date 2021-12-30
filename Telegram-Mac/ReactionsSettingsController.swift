@@ -16,11 +16,13 @@ import Postbox
 private final class Arguments {
     let context: AccountContext
     let toggleReaction:([String])->Void
+    let toggleValueReaction:(String)->Void
     let updateQuick:(String)->Void
-    init(context: AccountContext, toggleReaction:@escaping([String])->Void, updateQuick:@escaping(String)->Void) {
+    init(context: AccountContext, toggleReaction:@escaping([String])->Void, updateQuick:@escaping(String)->Void, toggleValueReaction: @escaping(String)->Void) {
         self.context = context
         self.toggleReaction = toggleReaction
         self.updateQuick = updateQuick
+        self.toggleValueReaction = toggleValueReaction
     }
 }
 
@@ -81,14 +83,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 case .quick:
                     arguments.updateQuick(reaction.value)
                 case .chat:
-                    let contains = state.reactions.contains(reaction.value)
-                    var updated = state.reactions
-                    if contains {
-                        updated.removeAll(where: {  $0 == reaction.value })
-                    } else {
-                        updated.append(reaction.value)
-                    }
-                    arguments.toggleReaction(updated)
+                    arguments.toggleValueReaction(reaction.value)
                 }
             })))
             index += 1
@@ -178,6 +173,18 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
         }
     }, updateQuick:{ value in
         context.reactions.updateQuick(value)
+    }, toggleValueReaction: { value in
+        updateState { current in
+            var current = current
+            var list = current.reactions
+            if list.contains(value) {
+                list.removeAll(where: { $0 == value })
+            } else {
+                list.append(value)
+            }
+            current.reactions = list
+            return current
+        }
     })
     
     

@@ -522,10 +522,14 @@ final class AddReactionManager : NSObject, Notifable {
                }
                return reactionSettings
            }
-        disposable.set(combineLatest(queue: .mainQueue(), context.reactions.stateValue, settings).start(next: { [weak self] reactions, settings in
+        disposable.set(combineLatest(queue: .mainQueue(), context.reactions.stateValue, settings, window.keyWindowUpdater).start(next: { [weak self] reactions, settings, isKeyWindow in
             self?.reactions = reactions
             self?.settings = settings
-            self?.delayAndUpdate()
+            if !isKeyWindow {
+                self?.clear()
+            } else {
+                self?.delayAndUpdate()
+            }
         }))
     }
     

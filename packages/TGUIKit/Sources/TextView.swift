@@ -1377,6 +1377,19 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             
             
+//            ctx.textMatrix = textMatrix
+//            ctx.textPosition = CGPoint(x: textPosition.x, y: textPosition.y)
+//            
+            for stroke in layout.strokeRects {
+                ctx.setFillColor(stroke.1.cgColor)
+                ctx.fill(stroke.0)
+            }
+            
+            for hexColor in layout.hexColorsRect {
+                ctx.setFillColor(hexColor.1.cgColor)
+                ctx.fill(hexColor.0)
+            }
+            
             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
                 
@@ -1447,18 +1460,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
             }
             
-            ctx.textMatrix = textMatrix
-            ctx.textPosition = CGPoint(x: textPosition.x, y: textPosition.y)
             
-            for stroke in layout.strokeRects {
-                ctx.setFillColor(stroke.1.cgColor)
-                ctx.fill(stroke.0)
-            }
-            
-            for hexColor in layout.hexColorsRect {
-                ctx.setFillColor(hexColor.1.cgColor)
-                ctx.fill(hexColor.0)
-            }
 
             
             
@@ -1620,12 +1622,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             let point = self.convert(event.locationInWindow, from: nil)
             
             
-            if let spoiler = layout.spoiler(at: point) {
-                spoiler.isRevealed = true
-                needsDisplay = true
-                return
-            }
-            
             let index = layout.findIndex(location: point)
             if point.x > layout.lines[index].frame.maxX {
                 superview?.mouseDown(with: event)
@@ -1736,6 +1732,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         
         if let layout = textLayout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
+            if let spoiler = layout.spoiler(at: point) {
+                spoiler.isRevealed = true
+                needsDisplay = true
+                return
+            }
             if event.clickCount == 3, isSelectable {
                 layout.selectAll(at: point)
                 layout.selectedRange.cursorAlignment = .max(layout.selectedRange.range.min)
