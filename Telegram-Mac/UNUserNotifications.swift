@@ -303,7 +303,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
     }
     
     override func authorize(completion: @escaping (UNUserNotifications) -> Void) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { [weak self] completed, _ in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { [weak self] completed, error in
             if completed, let strongSelf = self {
                 completion(strongSelf)
             }
