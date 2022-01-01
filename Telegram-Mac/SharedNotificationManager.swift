@@ -108,7 +108,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         UNUserNotifications.initialize(manager: self)
 
-     
+        UNUserNotifications.current?.authorize(completion: { value in
+            
+        })
         
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
