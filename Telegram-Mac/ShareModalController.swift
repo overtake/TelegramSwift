@@ -1131,15 +1131,16 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             })
         }
         
-        genericView.share.set(handler: { [weak self] control in
-            showPopover(for: control, with: SPopoverViewController(items: [SPopoverItem(strings().modalCopyLink, {
+        genericView.share.contextMenu = { [weak self] in
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: {
                 if share.hasLink {
                     share.shareLink()
                     self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied), for: 2.0, animated: true)
                 }
-            })]), edge: .maxY, inset: NSMakePoint(-100,  -40))
-        }, for: .Click)
-        
+            }, itemImage: MenuAnimation.menu_copy_link.value))
+            return menu
+        }
         
         genericView.sendButton.set(handler: { [weak self] _ in
             if let strongSelf = self, !selectInteraction.presentation.selected.isEmpty {

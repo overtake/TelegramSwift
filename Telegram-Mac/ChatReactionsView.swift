@@ -51,13 +51,13 @@ final class ChatReactionsLayout {
                         textSelectedColor = theme.colors.underSelectedColor
                     } else {
                         if isIncoming {
-                            bgColor = theme.colors.accent.withAlphaComponent(0.2)
+                            bgColor = theme.colors.accent.withAlphaComponent(0.1)
                             textColor = theme.colors.accent
                             borderColor = .clear
                             selectedColor = theme.colors.accent
                             textSelectedColor = theme.colors.underSelectedColor
                         } else {
-                            bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.2)
+                            bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
                             textColor = theme.chat.grayText(false, true)
                             borderColor = .clear
                             selectedColor = theme.chat.grayText(false, true)
@@ -65,7 +65,7 @@ final class ChatReactionsLayout {
                         }
                     }
                 case .list:
-                    bgColor = theme.colors.accent.withAlphaComponent(0.2)
+                    bgColor = theme.colors.accent.withAlphaComponent(0.1)
                     textColor = theme.colors.accent
                     borderColor = .clear
                     selectedColor = theme.colors.accent
@@ -168,7 +168,7 @@ final class ChatReactionsLayout {
             switch mode {
             case .full:
                 if recentPeers.isEmpty {
-                    self.text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
+                    self.text = DynamicCounterTextView.make(for: Int(value.count).prettyNumber, count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
                 } else {
                     self.text = nil
                 }

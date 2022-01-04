@@ -918,24 +918,33 @@ class PrivacyAndSecurityViewController: TableViewController {
                             180 * 24 * 60 * 60,
                             365 * 24 * 60 * 60
                         ]
-                        var items: [SPopoverItem] = []
+                        var items: [ContextMenuItem] = []
 
-                        items.append(SPopoverItem(strings().timerMonthsCountable(1), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(1), handler: {
                             timeoutAction(timeoutValues[0])
                         }))
-                        items.append(SPopoverItem(strings().timerMonthsCountable(3), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(3), handler: {
                             timeoutAction(timeoutValues[1])
                         }))
-                        items.append(SPopoverItem(strings().timerMonthsCountable(6), {
+                        items.append(ContextMenuItem(strings().timerMonthsCountable(6), handler: {
                             timeoutAction(timeoutValues[2])
                         }))
-                        items.append(SPopoverItem(strings().timerYearsCountable(1), {
+                        items.append(ContextMenuItem(strings().timerYearsCountable(1), handler: {
                             timeoutAction(timeoutValues[3])
                         }))
 
-                        if let index = strongSelf.genericView.index(hash: PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId) {
+                        let stableId = PrivacyAndSecurityEntry.accountTimeout(sectionId: 0, "", viewType: .singleItem).stableId
+                        
+                        if let index = strongSelf.genericView.index(hash: stableId) {
                             if let view = (strongSelf.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
-                                showPopover(for: view, with: SPopoverViewController(items: items))
+                                if let event = NSApp.currentEvent {
+                                    let menu = ContextMenu()
+                                    for item in items {
+                                        menu.addItem(item)
+                                    }
+                                    let value = AppMenu(menu: menu)
+                                    value.show(event: event, view: view)
+                                }
                             }
                         }
                     }

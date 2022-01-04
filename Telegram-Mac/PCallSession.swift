@@ -958,7 +958,7 @@ class PCallSession {
             } else {
                 self.captureSelectWindow = presentDesktopCapturerWindow(mode: .screencast, select: { [weak self] source, value in
                     self?.enableScreenCapture(source.deviceIdKey())
-                }, devices: sharedContext.devicesContext)
+                }, devices: sharedContext.devicesContext, microIsOff: self.isMuted)
             }
         } else {
             self.disableScreenCapture()

@@ -140,11 +140,9 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachFile(false)
                     }, theme.icons.chatAttachFile))
                     
-                    #if !APP_STORE
                     items.append(SPopoverItem(strings().inputAttachPopoverLocation, { [weak self] in
                         self?.chatInteraction.attachLocation()
                     }, theme.icons.chatAttachLocation))
-                    #endif
                 }
                 
                 

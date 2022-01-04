@@ -828,7 +828,7 @@ class GalleryViewer: NSResponder {
                         }
                         items.append(ContextMenuItem(thisTitle, handler: { [weak self] in
                             self?.deleteMessages([message])
-                        }))
+                        }, itemImage: MenuAnimation.menu_select_messages.value))
                        
                         let allTitle: String
                         if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
@@ -841,9 +841,9 @@ class GalleryViewer: NSResponder {
                         
                         items.append(ContextMenuItem(allTitle, handler: { [weak self] in
                             self?.deleteMessages(messages)
-                        }))
+                        }, itemImage: MenuAnimation.menu_select_multiple.value))
                         
-                        let submenu = ContextMenu()
+                        let submenu = ContextMenu(presentation: .init(colors: darkPalette))
                         for item in items {
                             submenu.addItem(item)
                         }
@@ -877,7 +877,7 @@ class GalleryViewer: NSResponder {
         
     
         
-        let menu = ContextMenu(presentation: .current(darkPalette))
+        let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
         for item in items {
             menu.addItem(item)
         }
@@ -966,38 +966,7 @@ class GalleryViewer: NSResponder {
     private func deleteMessage(_ control: Control) {
          if let message = self.pager.selectedItem?.entry.message {
             let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
-            
-            if messages.count > 1 {
-                
-                var items:[SPopoverItem] = []
-                
-                let thisTitle: String
-                if message.media.first is TelegramMediaImage {
-                    thisTitle = strings().galleryContextShareThisPhoto
-                } else {
-                    thisTitle = strings().galleryContextShareThisVideo
-                }
-                items.append(SPopoverItem(thisTitle, { [weak self] in
-                    self?.deleteMessages([message])
-                }))
-               
-                
-                let allTitle: String
-                if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
-                    allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
-                    allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
-                } else {
-                    allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
-                }
-                
-                items.append(SPopoverItem(allTitle, { [weak self] in
-                    self?.deleteMessages(messages)
-                }))
-                showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-90 + 14),0), static: true)
-            } else {
-                deleteMessages([message])
-            }
+             self.deleteMessages(messages)
          }
     }
     
@@ -1037,7 +1006,7 @@ class GalleryViewer: NSResponder {
     
     
     var contextMenu:ContextMenu {
-        let menu = ContextMenu(presentation: .current(darkPalette))
+        let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
         
         if let item = self.pager.selectedItem {
             if !(item is MGalleryExternalVideoItem) {
@@ -1177,7 +1146,7 @@ class GalleryViewer: NSResponder {
         if let message = self.pager.selectedItem?.entry.message {
             if message.groupInfo != nil {
                 let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
-                var items:[SPopoverItem] = []
+                var items:[ContextMenuItem] = []
                 
                 let thisTitle: String
                 if message.media.first is TelegramMediaImage {
@@ -1190,11 +1159,10 @@ class GalleryViewer: NSResponder {
                     thisTitle = strings().galleryContextShareThisFile
                 }
                 
-                items.append(SPopoverItem(thisTitle, { [weak self] in
+                items.append(ContextMenuItem(thisTitle, handler: { [weak self] in
                     guard let `self` = self else {return}
                     showModal(with: ShareModalController(ShareMessageObject(self.context, message)), for: self.window)
-                    
-                }))
+                }, itemImage: MenuAnimation.menu_share.value))
                 
                 let allTitle: String
                 if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
@@ -1207,13 +1175,18 @@ class GalleryViewer: NSResponder {
                     allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
                 }
                 
-                items.append(SPopoverItem(allTitle, { [weak self] in
+                items.append(ContextMenuItem(allTitle, handler: { [weak self] in
                     guard let `self` = self else {return}
                     showModal(with: ShareModalController(ShareMessageObject(self.context, message, messages)), for: self.window)
-                }))
+                }, itemImage: MenuAnimation.menu_share.value))
                 
-                
-                showPopover(for: control, with: SPopoverViewController(items: items), inset:NSMakePoint((-125 + 14),0), static: true)
+                let menu = ContextMenu(presentation: .current(darkPalette), betterInside: true)
+                for item in items {
+                    menu.addItem(item)
+                }
+                if let event = NSApp.currentEvent {
+                    AppMenu.show(menu: menu, event: event, for: control)
+                }
             } else {
                 showModal(with: ShareModalController(ShareMessageObject(self.context, message)), for: self.window)
             }

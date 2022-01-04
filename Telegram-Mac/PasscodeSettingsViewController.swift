@@ -197,29 +197,35 @@ class PasscodeSettingsViewController: TableViewController {
     func showIfAwayOptions() {
         if let item = genericView.item(stableId: Int(5)), let view = (genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
             
-            var items:[SPopoverItem] = []
+            var items:[ContextMenuItem] = []
             
-            items.append(SPopoverItem(strings().passcodeAutoLockDisabled, { [weak self] in
+            items.append(ContextMenuItem(strings().passcodeAutoLockDisabled, handler: { [weak self] in
                 self?.updateAwayTimeout(nil)
             }))
             
             
             
-            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerMinutesCountable(1)), { [weak self] in
+            items.append(ContextMenuItem(strings().passcodeAutoLockIfAway(strings().timerMinutesCountable(1)), handler: { [weak self] in
                 self?.updateAwayTimeout(60)
             }))
-            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerMinutesCountable(5)), { [weak self] in
+            items.append(ContextMenuItem(strings().passcodeAutoLockIfAway(strings().timerMinutesCountable(5)), handler: { [weak self] in
                 self?.updateAwayTimeout(60 * 5)
             }))
-            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerHoursCountable(1)), { [weak self] in
+            items.append(ContextMenuItem(strings().passcodeAutoLockIfAway(strings().timerHoursCountable(1)), handler: { [weak self] in
                 self?.updateAwayTimeout(60 * 60)
             }))
-            items.append(SPopoverItem(strings().passcodeAutoLockIfAway(strings().timerHoursCountable(5)), { [weak self] in
+            items.append(ContextMenuItem(strings().passcodeAutoLockIfAway(strings().timerHoursCountable(5)), handler: { [weak self] in
                 self?.updateAwayTimeout(60 * 60 * 5)
             }))
             
-            
-            showPopover(for: view, with: SPopoverViewController(items: items, visibility: items.count), edge: .minX, inset: NSMakePoint(0, -25))
+            if let event = NSApp.currentEvent {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                let value = AppMenu(menu: menu)
+                value.show(event: event, view: view)
+            }            
         }
         
     }

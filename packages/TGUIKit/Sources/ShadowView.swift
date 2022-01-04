@@ -53,9 +53,14 @@ public class ShadowView: View {
 //            self.gradient.locations = [0.0, 1.0];
 
         switch direction {
-        case .vertical:
-            self.gradient.startPoint = CGPoint(x: 0, y: 0)
-            self.gradient.endPoint = CGPoint(x: 0.0, y: 1)
+        case let .vertical(reversed):
+            if reversed {
+                self.gradient.startPoint = CGPoint(x: 0, y: 0)
+                self.gradient.endPoint = CGPoint(x: 0.0, y: 1)
+            } else {
+                self.gradient.startPoint = CGPoint(x: 0, y: 1)
+                self.gradient.endPoint = CGPoint(x: 0.0, y: 0)
+            }
         case let .horizontal(reversed):
             if reversed {
                 self.gradient.startPoint = CGPoint(x: 0, y: 1)

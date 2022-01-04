@@ -463,59 +463,63 @@ class MainViewController: TelegramViewController {
             return
         }
         
-        var items:[SPopoverItem] = []
+        var items:[ContextMenuItem] = []
         let context = self.context
-        var headerItems: [TableRowItem] = []
-        for account in accounts {
-            if account.account.id != context.account.id {
-                
-                let item = ShortPeerRowItem(NSZeroSize, peer: account.peer, account: account.account, height: 40, photoSize: NSMakeSize(25, 25), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: .white), drawCustomSeparator: false, inset: NSEdgeInsets(left: 10), action: {
-                    context.sharedContext.switchToAccount(id: account.account.id, action: nil)
-                }, highlightOnHover: true, badgeNode: GlobalBadgeNode(account.account, sharedContext: context.sharedContext, getColor: { selected in
-                    if selected {
-                        return theme.colors.underSelectedColor
-                    } else {
-                        return theme.colors.accent
-                    }
-                }), compactText: true)
-                
-                headerItems.append(item)
-//                items.append(SPopoverItem(account.peer.displayTitle, {
-//                    context.sharedContext.switchToAccount(id: account.account.id)
-//                }))
-            }
-           
+        
+        func makeItem(_ account: AccountWithInfo) -> ContextMenuItem {
+            let item = ContextAccountMenuItem(account: account, context: context, handler: {
+                context.sharedContext.switchToAccount(id: account.account.id, action: nil)
+            })
+            return item
         }
         
+        for account in accounts {
+            if account.account.id != context.account.id {
+                items.append(makeItem(account))
+            }
+        }
+        
+        if !items.isEmpty {
+            items.append(ContextSeparatorItem())
+        }
         switch passcodeData {
         case .none:
-            items.append(SPopoverItem(strings().fastSettingsSetPasscode, { [weak self] in
+            items.append(ContextMenuItem(strings().fastSettingsSetPasscode, handler: { [weak self] in
                 guard let `self` = self else {return}
                 self.tabController.select(index: self.tabController.count - 1)
                 self.context.sharedContext.bindings.rootNavigation().push(PasscodeSettingsViewController(self.context))
-            }, theme.icons.fastSettingsLock))
+            }, itemImage: MenuAnimation.menu_lock.value))
         default:
-            items.append(SPopoverItem(strings().fastSettingsLockTelegram, {
+            items.append(ContextMenuItem(strings().fastSettingsLockTelegram, handler: {
                 context.window.sendKeyEvent(KeyboardKey.L, modifierFlags: [.command])
-            }, theme.icons.fastSettingsLock))
+            }, itemImage: MenuAnimation.menu_lock.value))
         }
-        items.append(SPopoverItem(theme.colors.isDark ? strings().fastSettingsDisableDarkMode : strings().fastSettingsEnableDarkMode, {
+        items.append(ContextMenuItem(theme.colors.isDark ? strings().fastSettingsDisableDarkMode : strings().fastSettingsEnableDarkMode, handler: {
             toggleDarkMode(context: context)
-        }, theme.colors.isDark ? theme.icons.fastSettingsSunny : theme.icons.fastSettingsDark))
+        }, itemImage: theme.colors.isDark ? MenuAnimation.menu_sun.value : MenuAnimation.menu_moon.value))
        
         
         let time = Int32(Date().timeIntervalSince1970)
         let unmuted = notifications.muteUntil < time
-        items.append(SPopoverItem(unmuted ? strings().fastSettingsMute2Hours : strings().fastSettingsUnmute, { [weak self] in
+        items.append(ContextMenuItem(unmuted ? strings().fastSettingsMute2Hours : strings().fastSettingsUnmute, handler: { [weak self] in
             if let context = self?.context {
                 let time = Int32(Date().timeIntervalSince1970 + 2 * 60 * 60)
                 _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedMuteUntil(unmuted ? time : 0)}).start()
             }
             
-        }, notifications.muteUntil < time ? theme.icons.fastSettingsMute : theme.icons.fastSettingsUnmute))
-        let controller = SPopoverViewController(items: items, visibility: 10, headerItems: headerItems)
-        showPopover(for: control, with: controller, edge: .maxX, inset: NSMakePoint(control.frame.width - 12, 0))
-        self.quickController = controller
+        }, itemImage: notifications.muteUntil < time ? MenuAnimation.menu_mute.value : MenuAnimation.menu_unmuted.value))
+        
+        if let event = NSApp.currentEvent {
+            let menu = ContextMenu(betterInside: true)
+            for item in items {
+                menu.addItem(item)
+            }
+            AppMenu.show(menu: menu, event: event, for: control)
+        }
+        
+//        let controller = SPopoverViewController(items: items, visibility: 10, headerItems: headerItems)
+//        showPopover(for: control, with: controller, edge: .maxX, inset: NSMakePoint(control.frame.width - 12, 0))
+//        self.quickController = controller
     }
     private var previousTheme:TelegramPresentationTheme?
     private var previousIconColor:NSColor?

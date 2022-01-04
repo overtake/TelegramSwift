@@ -867,7 +867,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         guard let item = item as? PeerPhotosMonthItem else {
             return
         }
-        let visibleRect = NSMakeRect(0, self.visibleRect.minY - item.itemSize.height, self.visibleRect.width, self.visibleRect.height + item.itemSize.height * 2)
+        let visibleRect = visibleRect.insetBy(dx: 0, dy: -item.itemSize.height * 2)
         let size = item.itemSize
                 
         if self.visibleRect != NSZeroRect {

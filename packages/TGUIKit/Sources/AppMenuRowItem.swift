@@ -305,7 +305,8 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
     }
     open override func mouseUp(with event: NSEvent) {
-        
+        var bp = 0
+        bp += 1
     }
     
     open override func updateMouse() {

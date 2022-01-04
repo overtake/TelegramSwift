@@ -299,10 +299,12 @@ final class DesktopCapturerWindow : Window {
     
     private let listController: DesktopCaptureListUI
     let mode: VideoSourceMacMode
+    fileprivate let microIsOff: Bool
     fileprivate let select: (VideoSourceMac, Bool)->Void
-    init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext) {
+    init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext, microIsOff: Bool) {
         self.mode = mode
         self.select = select
+        self.microIsOff = microIsOff
         let size = NSMakeSize(700, 600)
         listController = DesktopCaptureListUI(size: NSMakeSize(size.width, 90), devices: devices, mode: mode)
         
@@ -335,6 +337,7 @@ final class DesktopCapturerWindow : Window {
 
         var first: Bool = true
 
+        self.genericView.micro.isOn = !microIsOff
         
         listController.updateDesktopSelected = { [weak self] wrap, manager in
             self?.genericView.updatePreview(wrap.source as! DesktopCaptureSourceMac, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
@@ -420,7 +423,7 @@ extension VideoSourceMac {
     }
 }
 
-func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext) -> DesktopCapturerWindow? {
+func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext, microIsOff: Bool) -> DesktopCapturerWindow? {
     
     switch mode {
     case .video:
@@ -432,7 +435,7 @@ func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(Vi
         break
     }
     
-    let window = DesktopCapturerWindow(mode: mode, select: select, devices: devices)
+    let window = DesktopCapturerWindow(mode: mode, select: select, devices: devices, microIsOff: microIsOff)
     window.initGuts()
     window.makeKeyAndOrderFront(nil)
     
