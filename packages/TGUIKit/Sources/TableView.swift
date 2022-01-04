@@ -3159,8 +3159,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func enumerateVisibleItems(reversed: Bool = false, with callback:(TableRowItem)->Bool) {
-        let visible = visibleRows()
-        
+        var visible = visibleRows()
         if reversed {
             for i in stride(from: visible.location + visible.length - 1, to: visible.location - 1, by: -1) {
                 if !callback(list[i]) {

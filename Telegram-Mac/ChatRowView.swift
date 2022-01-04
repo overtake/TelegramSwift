@@ -942,6 +942,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 } else {
                     frame.origin.x = contentFrame.minX + item.defaultReactionsInset + item.additionBubbleInset
                 }
+                
             }
            
         } else if item.isBubbled {
@@ -951,7 +952,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 } 
             }
         }
-        
+        if reactionsLayout.presentation.isOutOfBounds, !item.isIncoming {
+            frame.origin.x = contentFrame.maxX - reactionsLayout.size.width
+        }
         return frame
     }
     

@@ -982,10 +982,7 @@ final class GroupCallUIController : ViewController {
                             toggleMicro(wantsToSpeak, {
                                 select(source)
                             })
-//                            DispatchQueue.main.async {
-//
-//                            }
-                        }, devices: sharedContext.devicesContext)
+                        }, devices: sharedContext.devicesContext, microIsOff: self?.genericView.state?.isMuted ?? true)
                         self?.sharing = sharing
                         sharing?.level = self?.window?.level ?? .normal
                         if sharing == nil, let window = self?.window {

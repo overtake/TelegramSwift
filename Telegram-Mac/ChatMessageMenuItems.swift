@@ -13,7 +13,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 import ObjcUtils
-
+import Translate
 final class ChatMenuItemsData {
     let chatInteraction: ChatInteraction
     let message: Message
@@ -241,11 +241,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: messageId).start()
             }, itemImage: MenuAnimation.menu_send_now.value))
             firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: { [weak data] in
-                showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { [weak data] date in
-                    if let data = data {
+                if let data = data {
+                    showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
                         _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
-                    }
-               }), for: context.window)
+                   }), for: context.window)
+                }
             }, itemImage: MenuAnimation.menu_schedule_message.value))
         }
         
@@ -316,6 +316,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             }
                         }
                     }, itemImage: MenuAnimation.menu_copy.value))
+                    
+                    #if DEBUG
+                    if #available(macOS 10.14, *) {
+                        let language = Translate.detectLanguage(for: textLayout.attributedString.string)
+                        thirdBlock.append(ContextMenuItem("Translate", handler: { [weak textLayout] in
+                            if let textLayout = textLayout {
+                                showModal(with: TranslateModalController(context: context, from: language, text: textLayout.attributedString.string), for: context.window)
+                            }
+                        }, itemImage: MenuAnimation.menu_copy.value))
+                    }
+                    #endif                    
                 } else {
                     let text: String
                     if let linkType = data.textLayout?.1 {
@@ -458,17 +469,21 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             let forwardObject = ForwardMessagesObject(context, messageIds: [message.id])
             
             let recent = data.recentUsedPeers.filter {
-                $0.id != context.peerId && $0.canSendMessage()
+                $0.id != context.peerId && $0.canSendMessage() && !$0.isDeleted
             }.prefix(5)
             
             let favorite = data.favoritePeers.filter {
-                !recent.map { $0.id }.contains($0.id) && $0.id != context.peerId && $0.canSendMessage()
+                !recent.map { $0.id }.contains($0.id)
+                && $0.id != context.peerId
+                && $0.canSendMessage()
+                && !$0.isDeleted
             }.prefix(5)
             
             let dialogs = data.dialogs.reversed().filter {
                 !(recent + favorite).map { $0.id }.contains($0.id)
                     && $0.id != context.peerId
                     && $0.canSendMessage()
+                    && !$0.isDeleted
             }.prefix(5)
             
             var items:[ContextMenuItem] = []
@@ -484,7 +499,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let icon = theme.icons.searchSaved
                     signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
                 } else {
-                    signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                    signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
                 }
                 _ = signal.start(next: { [weak item] image, _ in
                     if let image = image {
@@ -652,8 +667,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             fifthBlock.append(report)
         }
         if let peer = data.peer as? TelegramChannel, peer.isSupergroup, data.chatMode == .history {
-            if peer.hasPermission(.banMembers), let author = data.message.author {
-                if author.id != context.peerId, data.message.flags.contains(.Incoming) {
+            if peer.groupAccess.canEditMembers, let author = data.message.author {
+                if author.id != context.peerId, data.message.flags.contains(.Incoming), author.isUser || author.isBot {
                     fifthBlock.append(ContextMenuItem(strings().chatContextRestrict, handler: {
                         _ = showModalProgress(signal: context.engine.peers.fetchChannelParticipant(peerId: chatInteraction.peerId, participantId: author.id), for: context.window).start(next: { participant in
                             if let participant = participant {

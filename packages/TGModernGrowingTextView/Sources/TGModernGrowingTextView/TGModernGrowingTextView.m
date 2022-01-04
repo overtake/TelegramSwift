@@ -513,6 +513,11 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         return NO;
     }
     
+    if([menuItem.title.lowercaseString containsString:@"translate"]) {
+        int bp = 0;
+        bp += 1;
+    }
+    
     if(menuItem.action == @selector(copy:)) {
         return self.selectedRange.length > 0;
     }

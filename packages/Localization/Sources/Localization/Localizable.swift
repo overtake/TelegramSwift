@@ -9829,6 +9829,10 @@ public final class L10n {
   public static var touchBarLabelEmojiAndStickers: String  { return L10n.tr("Localizable", "TouchBarLabel.EmojiAndStickers") }
   /// New Chat
   public static var touchBarLabelNewChat: String  { return L10n.tr("Localizable", "TouchBarLabel.NewChat") }
+  /// more
+  public static var translateShowMore: String  { return L10n.tr("Localizable", "Translate.ShowMore") }
+  /// Translate
+  public static var translateTitle: String  { return L10n.tr("Localizable", "Translate.Title") }
   /// Skip
   public static var twoStepAuthEmailSkip: String  { return L10n.tr("Localizable", "TwoStep.AuthEmailSkip") }
   /// An error occured. Please try again later.

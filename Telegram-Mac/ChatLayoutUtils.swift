@@ -133,7 +133,7 @@ class ChatLayoutUtils: NSObject {
             } else if file.isVideo && !file.isAnimated {
                 return ChatInteractiveContentView.self
             }  else if file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif") {
-                return ChatGIFContentView.self
+                return ChatInteractiveContentView.self
             } else if file.isVoice {
                 return ChatVoiceContentView.self
             } else if file.isMusic {

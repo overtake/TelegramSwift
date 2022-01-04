@@ -264,6 +264,7 @@ final class EditImageControlsView : View {
             handlers.draw()
         }, for: .Click)
         
+        
         dimensions.set(handler: { control in
             switch settings {
             case .disableSizes:
@@ -272,12 +273,19 @@ final class EditImageControlsView : View {
                 if control.isSelected {
                     handlers.selectionDimensions(.none)
                 } else {
-                    let items: [SPopoverItem] = SelectionRectDimensions.all.map { value in
-                        return SPopoverItem(value.description, {
+                    let items: [ContextMenuItem] = SelectionRectDimensions.all.map { value in
+                        return ContextMenuItem(value.description, handler: {
                             handlers.selectionDimensions(value)
                         })
                     }
-                    showPopover(for: control, with: SPopoverViewController(items: items, visibility: SelectionRectDimensions.all.count, handlerDelay: 0))
+                    if let event = NSApp.currentEvent {
+                        let menu = ContextMenu()
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        let value = AppMenu(menu: menu)
+                        value.show(event: event, view: control)
+                    }
                 }
             }
             

@@ -171,6 +171,13 @@
 		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */; };
+		277DFE6127842E6600F78396 /* Translate in Frameworks */ = {isa = PBXBuildFile; productRef = 277DFE6027842E6600F78396 /* Translate */; };
+		277DFE6327843B6700F78396 /* TranslateModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6227843B6700F78396 /* TranslateModalController.swift */; };
+		277DFE6627843F5100F78396 /* TranslateTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */; };
+		277DFE682784842C00F78396 /* menu_sun.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277DFE672784842C00F78396 /* menu_sun.tgs */; };
+		277DFE6A2784844700F78396 /* menu_lock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277DFE692784844700F78396 /* menu_lock.tgs */; };
+		277DFE6C2784846200F78396 /* menu_moon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277DFE6B2784846200F78396 /* menu_moon.tgs */; };
+		277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6E27848AAA00F78396 /* ContextPeerMenuItem.swift */; };
 		277E829D273A8E890037118C /* MtProtoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 277E829C273A8E890037118C /* MtProtoKit */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
 		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
@@ -1338,6 +1345,13 @@
 		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputMenuView.swift; sourceTree = "<group>"; };
+		277DFE5F27842E3A00F78396 /* Translate */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Translate; path = packages/Translate; sourceTree = "<group>"; };
+		277DFE6227843B6700F78396 /* TranslateModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateModalController.swift; sourceTree = "<group>"; };
+		277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateTableRowItem.swift; sourceTree = "<group>"; };
+		277DFE672784842C00F78396 /* menu_sun.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_sun.tgs; sourceTree = "<group>"; };
+		277DFE692784844700F78396 /* menu_lock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_lock.tgs; sourceTree = "<group>"; };
+		277DFE6B2784846200F78396 /* menu_moon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_moon.tgs; sourceTree = "<group>"; };
+		277DFE6E27848AAA00F78396 /* ContextPeerMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextPeerMenuItem.swift; sourceTree = "<group>"; };
 		277E8291273A805F0037118C /* MtProtoKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MtProtoKit; path = "submodules/telegram-ios/submodules/MtProtoKit"; sourceTree = "<group>"; };
 		2780DE3F271F0BB20092323F /* zoom.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom.tgs; sourceTree = "<group>"; };
 		2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemeListRowItem.swift; sourceTree = "<group>"; };
@@ -1808,8 +1822,6 @@
 		C2271F3F1DB4D5850045E719 /* ETabRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ETabRowView.swift; sourceTree = "<group>"; };
 		C2271F461DB4FC130045E719 /* EStickItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickItem.swift; sourceTree = "<group>"; };
 		C2271F481DB4FC220045E719 /* EStickView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickView.swift; sourceTree = "<group>"; };
-		C2271F4E1D9C38F500424F7B /* SPopoverRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverRowItem.swift; sourceTree = "<group>"; };
-		C2271F501D9C392400424F7B /* SPopoverRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverRowView.swift; sourceTree = "<group>"; };
 		C2271F531D9D420B00424F7B /* ContactsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsController.swift; sourceTree = "<group>"; };
 		C2271F561D9D46BC00424F7B /* ShortPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShortPeerRowItem.swift; sourceTree = "<group>"; };
 		C2271F581D9D46CA00424F7B /* ShortPeerRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShortPeerRowView.swift; sourceTree = "<group>"; };
@@ -1828,7 +1840,6 @@
 		C230B8EE1DD3358C0057F596 /* AccountViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountViewController.swift; sourceTree = "<group>"; };
 		C230B8F01DD348970057F596 /* AccountInfoItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AccountInfoItem.swift; sourceTree = "<group>"; };
 		C230B8F31DD368D40057F596 /* SelectPeersController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectPeersController.swift; sourceTree = "<group>"; };
-		C230B8F51DD371430057F596 /* SPopoverViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPopoverViewController.swift; sourceTree = "<group>"; };
 		C230B90E1DD383820057F596 /* ComposeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComposeViewController.swift; sourceTree = "<group>"; };
 		C230B9101DD3866A0057F596 /* ComposeActions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ComposeActions.swift; sourceTree = "<group>"; };
 		C230B9121DD392EB0057F596 /* SearchRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchRowItem.swift; sourceTree = "<group>"; };
@@ -2351,6 +2362,7 @@
 				9F18908F2237E95400665EF5 /* VideoToolbox.framework in Frameworks */,
 				279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */,
 				9F4EEF8421D4F59C002C3B33 /* Accelerate.framework in Frameworks */,
+				277DFE6127842E6600F78396 /* Translate in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				27D696F0274F8449008A723E /* KeyboardKey in Frameworks */,
@@ -2501,6 +2513,23 @@
 			name = payments;
 			sourceTree = "<group>";
 		};
+		277DFE6427843F3600F78396 /* translate */ = {
+			isa = PBXGroup;
+			children = (
+				277DFE6227843B6700F78396 /* TranslateModalController.swift */,
+				277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */,
+			);
+			name = translate;
+			sourceTree = "<group>";
+		};
+		277DFE6D27848A9700F78396 /* menu-items */ = {
+			isa = PBXGroup;
+			children = (
+				277DFE6E27848AAA00F78396 /* ContextPeerMenuItem.swift */,
+			);
+			name = "menu-items";
+			sourceTree = "<group>";
+		};
 		27949108260A41C60003BFA0 /* ffmpeg */ = {
 			isa = PBXGroup;
 			children = (
@@ -2544,6 +2573,9 @@
 		27CE375C276095DA007E6F1B /* menu */ = {
 			isa = PBXGroup;
 			children = (
+				277DFE6B2784846200F78396 /* menu_moon.tgs */,
+				277DFE692784844700F78396 /* menu_lock.tgs */,
+				277DFE672784842C00F78396 /* menu_sun.tgs */,
 				2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */,
 				2729341727799D2B00F10D3C /* menu_file.tgs */,
 				272934152778E05000F10D3C /* menu_music.tgs */,
@@ -2663,6 +2695,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				277DFE5F27842E3A00F78396 /* Translate */,
 				27EBC7AD275789BC00C6A820 /* Reactions */,
 				27ED5A692750CD4000BA55A7 /* FoundationUtils */,
 				27D696EE274F8108008A723E /* KeyboardKey */,
@@ -3460,6 +3493,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				277DFE6D27848A9700F78396 /* menu-items */,
 				27E7E4A3270F0F8200CF3A24 /* connecting */,
 				D0CBB0F32492972A00620C65 /* Video-Avatar */,
 				9F3D5F6122044D3500CB0CAA /* updater */,
@@ -3574,16 +3608,6 @@
 				C27AAFEE1DEB2EA9009B9629 /* EmptyComposeController.swift */,
 			);
 			name = compose;
-			sourceTree = "<group>";
-		};
-		C230B8F71DD3714D0057F596 /* popover */ = {
-			isa = PBXGroup;
-			children = (
-				C230B8F51DD371430057F596 /* SPopoverViewController.swift */,
-				C2271F4E1D9C38F500424F7B /* SPopoverRowItem.swift */,
-				C2271F501D9C392400424F7B /* SPopoverRowView.swift */,
-			);
-			name = popover;
 			sourceTree = "<group>";
 		};
 		C230B90B1DD383100057F596 /* actions */ = {
@@ -4514,10 +4538,10 @@
 		C2FBC1E51DC631620063A23B /* overlay */ = {
 			isa = PBXGroup;
 			children = (
+				277DFE6427843F3600F78396 /* translate */,
 				D076F86E2295B1F6004F895A /* inline-auth */,
 				C2D2CAEE1E6486CE00939968 /* stickers */,
 				C24D9FDA1E267550002CD3F3 /* preview-sender */,
-				C230B8F71DD3714D0057F596 /* popover */,
 				C2FBC1E61DC631980063A23B /* SPPreviewController.swift */,
 				C2A71CD61DD9EEDB00C69F73 /* WebpageModalController.swift */,
 				C29A65061E098B610071BCEF /* ShareModalController.swift */,
@@ -5050,6 +5074,7 @@
 				27D696F9274F8462008A723E /* InAppSettings */,
 				27ED5A6C2750CDE100BA55A7 /* FoundationUtils */,
 				27EBC7B127579A7200C6A820 /* Reactions */,
+				277DFE6027842E6600F78396 /* Translate */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -5201,6 +5226,7 @@
 				27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
+				277DFE682784842C00F78396 /* menu_sun.tgs in Resources */,
 				27336738276241EE0027441E /* menu_remove_gif.tgs in Resources */,
 				2733671927620B7B0027441E /* menu_leave.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
@@ -5285,6 +5311,7 @@
 				9F03681722771A9700456348 /* anim_unpin.json in Resources */,
 				275549122747C24F0098A3CD /* device_mac.tgs in Resources */,
 				27CE376C2760960A007E6F1B /* menu_add_to_folder.tgs in Resources */,
+				277DFE6A2784844700F78396 /* menu_lock.tgs in Resources */,
 				27CE37762760CEE4007E6F1B /* menu_mute_for_1_hour.tgs in Resources */,
 				2755491A2747C24F0098A3CD /* device_linux.tgs in Resources */,
 				C253A9701D92F9F100CDC850 /* Localizable.strings in Resources */,
@@ -5305,6 +5332,7 @@
 				2780DE40271F0BB30092323F /* zoom.tgs in Resources */,
 				27336739276241EE0027441E /* menu_add_gif.tgs in Resources */,
 				9F03681222771A9700456348 /* anim_read.json in Resources */,
+				277DFE6C2784846200F78396 /* menu_moon.tgs in Resources */,
 				2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */,
 				2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */,
 				D07450F32340E89100769D7F /* sad_man.tgs in Resources */,
@@ -5658,6 +5686,7 @@
 				C20B8F3E1DFC52EE008A354E /* ChatEmptyPeerItem.swift in Sources */,
 				9FDA713220E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift in Sources */,
 				2713B223260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift in Sources */,
+				277DFE6327843B6700F78396 /* TranslateModalController.swift in Sources */,
 				C210742C1E780CC1006EE5EF /* PhotoCache.swift in Sources */,
 				C2256D981DAB9D5A00494CF4 /* ChatHistoryViewForLocation.swift in Sources */,
 				C20CB7291E60886F00C992AC /* LinkInvationController.swift in Sources */,
@@ -5955,6 +5984,7 @@
 				2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */,
 				9F1BABAE21E5ECE70075C03E /* ChatUndoManager.swift in Sources */,
 				A7F2830823954EF800742C20 /* CachedInstantPages.swift in Sources */,
+				277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */,
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
 				D05F392322FB45450040F341 /* DateSelectorModalController.swift in Sources */,
@@ -6038,6 +6068,7 @@
 				C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */,
 				C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */,
 				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
+				277DFE6627843F5100F78396 /* TranslateTableRowItem.swift in Sources */,
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
 				27F73766274BE58B005DCC1C /* GalleryRecognition.swift in Sources */,
@@ -6657,6 +6688,10 @@
 		2771AC78273C2B2700245A48 /* TelegramVoip */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TelegramVoip;
+		};
+		277DFE6027842E6600F78396 /* Translate */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Translate;
 		};
 		277E829C273A8E890037118C /* MtProtoKit */ = {
 			isa = XCSwiftPackageProductDependency;

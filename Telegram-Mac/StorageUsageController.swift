@@ -409,16 +409,25 @@ class StorageUsageController: TableViewController {
                         return current.withUpdatedDefaultCacheStorageTimeout(timeout)
                     }).start()
                 }
-                
-                if let item = strongSelf.genericView.item(stableId: StorageUsageEntry.keepMedia(0, "", "", .singleItem).stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
+                let stableId = StorageUsageEntry.keepMedia(0, "", "", .singleItem).stableId
+                if let item = strongSelf.genericView.item(stableId: stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
                     
-                    showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(strings().timerWeeksCountable(1), {
+                    let items = [ContextMenuItem(strings().timerWeeksCountable(1), handler: {
                         timeoutAction(7 * 24 * 60 * 60)
-                    }), SPopoverItem(strings().timerMonthsCountable(1), {
+                    }), ContextMenuItem(strings().timerMonthsCountable(1), handler: {
                         timeoutAction(1 * 31 * 24 * 60 * 60)
-                    }), SPopoverItem(strings().timerForever, {
+                    }), ContextMenuItem(strings().timerForever, handler: {
                         timeoutAction(Int32.max)
-                    })]), edge: .minX, inset: NSMakePoint(0,-30))
+                    })]
+                    
+                    if let event = NSApp.currentEvent {
+                        let menu = ContextMenu()
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        let value = AppMenu(menu: menu)
+                        value.show(event: event, view: view)
+                    }
                 }
             }
            

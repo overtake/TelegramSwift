@@ -290,28 +290,30 @@ final class AppMenuController : NSObject  {
         case .click:
             self.parent?.set(mouseHandler: { event in
                 isInteracted = true
-                return .invoked
+                return .rejected
             }, with: self, for: .leftMouseDown, priority: .supreme)
             
             self.parent?.set(mouseHandler: { [weak self] event in
                 if isInteracted {
                     self?.close()
                 }
+                let was = isInteracted
                 isInteracted = true
-                return .invoked
+                return !was ? .rejected : .invoked
             }, with: self, for: .leftMouseUp, priority: .supreme)
 
             self.parent?.set(mouseHandler: { event in
                 isInteracted = true
-                return .invoked
+                return .rejected
             }, with: self, for: .rightMouseDown, priority: .supreme)
 
             self.parent?.set(mouseHandler: { [weak self] event in
                 if isInteracted {
                     self?.close()
                 }
+                let was = isInteracted
                 isInteracted = true
-                return .invoked
+                return !was ? .rejected : .invoked
             }, with: self, for: .rightMouseUp, priority: .supreme)
             
 
@@ -505,7 +507,7 @@ final class AppMenuController : NSObject  {
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
-        panel.backgroundColor = NSColor.black.withAlphaComponent(0.001)
+        panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = false
         
@@ -722,7 +724,7 @@ final class AppMenuController : NSObject  {
         }
         var rect = rect
         
-        let visible = parent != nil || !self.betterInside ? screen.visibleFrame : owner.frame
+        let visible = parent == nil && !self.betterInside ? screen.visibleFrame : owner.frame
         
         if rect.minY < visible.minY {
             rect.origin.y = visible.minY

@@ -482,16 +482,25 @@ class RestrictedModalViewController: TableModalViewController {
                     30 * 60 * 60 * 24
                 ]
                 if let view = (self.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
-                    var items:[SPopoverItem] = []
+                    var items:[ContextMenuItem] = []
                     for interval in intervals {
-                        items.append(SPopoverItem(timeIntervalString(Int(interval)), {
+                        items.append(ContextMenuItem(timeIntervalString(Int(interval)), handler: {
                             applyValue(initialState.referenceTimestamp + interval)
                         }))
                     }
-                    items.append(SPopoverItem(strings().channelBanForever, {
+                    items.append(ContextMenuItem(strings().channelBanForever, handler: {
                         applyValue(Int32.max)
                     }))
-                    showPopover(for: view, with: SPopoverViewController(items: items), edge: .maxX, inset: NSMakePoint(view.frame.width,-10))
+                    
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    
+                    if let event = NSApp.currentEvent {
+                        let value = AppMenu(menu: menu)
+                        value.show(event: event, view: view)
+                    }
                 }
             }
         }, alertError: { [weak self] in

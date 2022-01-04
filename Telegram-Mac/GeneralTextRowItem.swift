@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import SwiftSignalKit
 
 enum GeneralRowTextType : Equatable {
     case plain(String)
@@ -49,9 +50,11 @@ class GeneralTextRowItem: GeneralRowItem {
     fileprivate let additionLoading: Bool
     fileprivate let isTextSelectable: Bool
     fileprivate let rightItem: InputDataGeneralTextRightData
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, additionRightText: String? = nil, linkExecutor: TextViewInteractions = globalLinkExecutor, isTextSelectable: Bool = false, detectLinks: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil)) {
+    fileprivate let contextMenu: (()->[ContextMenuItem])?
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, additionRightText: String? = nil, linkExecutor: TextViewInteractions = globalLinkExecutor, isTextSelectable: Bool = false, detectLinks: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), contextMenu: (()->[ContextMenuItem])? = nil) {
         self.textColor = theme.colors.listGrayText
         self.isTextSelectable = isTextSelectable
+        self.contextMenu = contextMenu
         let mutable = text.mutableCopy() as! NSMutableAttributedString
         if detectLinks {
             mutable.detectLinks(type: [.Links], context: nil, openInfo: {_, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, dotInMention: false)
@@ -66,10 +69,19 @@ class GeneralTextRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, type: .none, viewType: viewType, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil) {
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        if let contextMenu = contextMenu {
+            return .single(contextMenu())
+        } else {
+            return super.menuItems(in: location)
+        }
+    }
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu: (()->[ContextMenuItem])? = nil) {
        
         let attributedText: NSMutableAttributedString
         self.textColor = textColor
+        self.contextMenu = contextMenu
         switch text {
         case let .plain(text):
             attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize ?? 11.5)).mutableCopy() as! NSMutableAttributedString
@@ -96,13 +108,14 @@ class GeneralTextRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, type: .none, viewType: viewType, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, fontSize: CGFloat = 11.5, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil)) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, fontSize: CGFloat = 11.5, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), contextMenu: (()->[ContextMenuItem])? = nil) {
         let attr = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize)).mutableCopy() as! NSMutableAttributedString
         if detectBold {
             attr.detectBoldColorInString(with: .medium(fontSize))
         }
         self.textColor = textColor
         self.text = attr
+        self.contextMenu = contextMenu
         self.alignment = alignment
         self.isTextSelectable = isTextSelectable
         self.additionLoading = additionLoading
@@ -198,7 +211,7 @@ class GeneralTextRowView : GeneralRowView {
         
         guard let item = item as? GeneralTextRowItem else {return}
         textView.isSelectable = item.isTextSelectable
-
+        textView.userInteractionEnabled = false
         if item.additionLoading || item.rightItem.isLoading {
             let size = item.rightItem.isLoading ? NSMakeSize(15, 15) : NSMakeSize(20, 20)
             if progressView == nil {

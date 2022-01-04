@@ -157,11 +157,17 @@ final class AddReactionManager : NSObject, Notifable {
         private let documentView = View()
         private let list: [AvailableReactions.Reaction]
         private let isReversed: Bool
+        
+        private let topGradient = ShadowView()
+        private let bottomGradient = ShadowView()
+
         required init(frame frameRect: NSRect, context: AccountContext, isReversed: Bool, list: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
             self.list = list
             self.isReversed = isReversed
             super.init(frame: frameRect)
             addSubview(scrollView)
+            addSubview(topGradient)
+            addSubview(bottomGradient)
             scrollView.background = .clear
             scrollView.documentView = documentView
             let size = NSMakeSize(30, 30)
@@ -176,6 +182,13 @@ final class AddReactionManager : NSObject, Notifable {
             if isReversed {
                 scrollView.clipView.scroll(to: NSMakePoint(0, documentView.frame.height - scrollView.frame.height))
             }
+            
+            bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
+            bottomGradient.direction = .vertical(true)
+            topGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
+            topGradient.direction = .vertical(false)
+            
+            layer?.cornerRadius = frame.width / 2
         }
         
         func rect(for reaction: AvailableReactions.Reaction) -> NSRect {
@@ -198,7 +211,7 @@ final class AddReactionManager : NSObject, Notifable {
         }
         
         static func height(for list: [AvailableReactions.Reaction]) -> CGFloat {
-            return min(30 * 5, CGFloat(list.count) * 30)
+            return min(30 * 4 + 15, CGFloat(list.count) * 30)
         }
         
         
@@ -217,6 +230,9 @@ final class AddReactionManager : NSObject, Notifable {
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             transition.updateFrame(view: self.scrollView, frame: size.bounds)
             transition.updateFrame(view: self.documentView, frame: NSMakeSize(frame.width, CGFloat(list.count) * 30).bounds)
+            
+            transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, frame.width, 10))
+            transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(0, frame.height - 10, frame.width, 10))
         }
     }
     
@@ -396,11 +412,21 @@ final class AddReactionManager : NSObject, Notifable {
            
         }
         
+        override var acceptsFirstResponder: Bool {
+            return false
+        }
+        
         override func scrollWheel(with event: NSEvent) {
+            disposable.set(nil)
+            if isRemoving {
+                self.nextResponder?.scrollWheel(with: event)
+            }
+            if let window = kitWindow, window.inLiveSwiping {
+                return
+            }
             if let superview = superview as? ChatControllerView {
                 superview.tableView.scrollWheel(with: event)
             }
-            disposable.set(nil)
         }
         
         var isRevealed: Bool {
@@ -683,7 +709,6 @@ final class AddReactionManager : NSObject, Notifable {
             
             if let item = findClosest(point), NSPointInRect(inside, view.tableView.frame) {
                 let canReact = item.canReact == true && lockId != item.stableId && context.window.isKeyWindow
-                
                 if canReact {
                     if item.message?.id != self.previousItem?.message?.id {
                         let animated = item.stableId != self.previousItem?.stableId
@@ -718,7 +743,7 @@ final class AddReactionManager : NSObject, Notifable {
                                                 return .zero
                                             }
                                         }
-                                        view.addSubview(current, positioned: .above, relativeTo: view.tableView)
+                                        view.addSubview(current, positioned: .above, relativeTo: view.floatingPhotosView)
                                         if animated {
                                             current.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
                                             current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -737,18 +762,15 @@ final class AddReactionManager : NSObject, Notifable {
                                 self.clear()
                             }
                         }
-                    } else if let itemView = item.view as? ChatRowView, let current = self.currentView {
+                    } else if let itemView = item.view as? ChatRowView {
                         let rect = itemView.rectForReaction
                         
-                        let base = current.makeRect(view.convert(rect, from: itemView))
+                        let base = view.convert(rect, from: itemView)
 
                         let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
-                        if NSPointInRect(inside, safeRect), NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
-                            transition.updateFrame(view: current, frame: base)
-                            current.updateLayout(base.size, transition: transition)
-                        } else {
+                        if !NSPointInRect(inside, safeRect) || !NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
                             self.clear()
-                        }
+                        } 
                     }
                 } else {
                     if !self.isInside {
@@ -760,8 +782,6 @@ final class AddReactionManager : NSObject, Notifable {
                     self.clear()
                 }
             }
-        } else {
-            self.clear()
         }
     }
     
@@ -769,11 +789,11 @@ final class AddReactionManager : NSObject, Notifable {
         return self.currentView != nil && currentView!.mouseInside()
     }
     
-    private func clear() {
+    private func clear(animated: Bool = true) {
         if let view = self.currentView, view.isRevealed {
             self.lockId = self.previousItem?.stableId
         }
-        self.removeCurrent(animated: true)
+        self.removeCurrent(animated: animated)
         self.previousItem = nil
         self.delayDisposable.set(nil)
     }
@@ -783,13 +803,14 @@ final class AddReactionManager : NSObject, Notifable {
     }
     
     func clearAndTempLock() {
-        self.clear()
+        self.clear(animated: false)
         self.mouseLocked = true
     }
     
     private func removeCurrent(animated: Bool) {
         if let view = currentView {
             self.currentView = nil
+            view.userInteractionEnabled = false
             performSubviewRemoval(view, animated: animated, duration: 0.2, scale: !view.isRevealed)
             view.isRemoving = true
             self.inOrderToRemove.append(.init(value: view))

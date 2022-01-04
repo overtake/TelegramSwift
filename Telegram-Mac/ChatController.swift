@@ -234,7 +234,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var themeSelectorView: NSView?
     
-    private let floatingPhotosView: View = View()
+    let floatingPhotosView: View = View()
     
     private let gradientMaskView = BackgroundGradientView(frame: NSZeroRect)
     
@@ -5885,6 +5885,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 view.moveReveal(delta: delta)
                 self.updateFloatingPhotos(self.genericView.scroll, animated: false)
+                self.reactionManager?.clearAndTempLock()
                 self.reactionManager?.update()
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController

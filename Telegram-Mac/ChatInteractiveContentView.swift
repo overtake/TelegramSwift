@@ -521,7 +521,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 
                
                 
-                if file.isVideo, size.height > 80 {
+                if file.isVideo, size.height > 80, !file.isAnimated {
                     if videoAccessory == nil {
                         videoAccessory = ChatMessageAccessoryView(frame: NSMakeRect(5, 5, 0, 0))
                         addSubview(videoAccessory!)
