@@ -147,16 +147,17 @@ class EditMessageModel: ChatAccessoryModel {
                 }
                 
                 if let updateImageSignal = updateImageSignal, let media = updatedMedia {
-                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor))
-                    view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media] result in
-                        if let media = media {
-                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor), clearInstantly: false)
+                    if view.imageView?.isFullyLoaded == false {
+                        view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media] result in
+                            if let media = media {
+                                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                            }
+                        })
+                        if let media = media as? TelegramMediaImage, !media.isLocalResource {
+                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                         }
-                    })
-                    if let media = media as? TelegramMediaImage, !media.isLocalResource {
-                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
-                    
                     view.imageView?.set(arguments: arguments)
                     if hasRoundImage {
                         view.imageView!.layer?.cornerRadius = 15

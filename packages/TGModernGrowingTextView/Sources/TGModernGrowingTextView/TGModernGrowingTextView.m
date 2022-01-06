@@ -209,7 +209,6 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
             NSRect rect = [self highlightRectForRange:NSMakeRange(range.location + j, 1) whole:false];
             CGContextSetFillColorWithColor(context, [[_weakTextView.textColor colorWithAlphaComponent:0.15] CGColor]);
             CGContextFillRect(context, rect);
-
         }
 
     }
