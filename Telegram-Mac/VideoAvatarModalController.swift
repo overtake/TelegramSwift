@@ -345,10 +345,12 @@ class VideoAvatarModalController: ModalViewController {
     private var state: Promise<VideoAvatarGeneratorState> = Promise()
     private let localize: String
     private let quality: String
-    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String, quality: String) {
+    private let holder: AVAsset
+    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String, quality: String, holder: AVAsset) {
         self.context = context
         self.asset = asset
         self.track = track
+        self.holder = holder
         self.quality = quality
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
@@ -743,11 +745,12 @@ func selectVideoAvatar(context: AccountContext, path: String, localize: String, 
             return
         }
         do {
+
             try compositionVideoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: asset.duration), of: track, at: .zero)
-            let controller = VideoAvatarModalController(context: context, asset: composition, track: track, localize: localize, quality: quality)
+            let controller = VideoAvatarModalController(context: context, asset: composition, track: track, localize: localize, quality: quality, holder: asset)
             showModal(with: controller, for: context.window)
             signal(controller.completeState)
-        } catch {
+        } catch { 
             
         }
     }
