@@ -5026,6 +5026,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private var firstLoad: Bool = true
+    private var checkMessageExists: Bool = true
     
     override func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         super.updateBackgroundColor(backgroundMode)
@@ -5069,6 +5070,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if oldState != genericView.state {
             genericView.tableView.updateEmpties(animated: previousView.with { $0?.originalView != nil })
         }
+        
+       
         
         genericView.tableView.notifyScrollHandlers()
         
@@ -5139,6 +5142,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         default:
             break
+        }
+        if !isLoading && checkMessageExists {
+            switch self.locationValue {
+            case let .InitialSearch(location, _):
+                switch location {
+                case let .id(messageId):
+                    var found: Bool = false
+                    self.genericView.tableView.enumerateItems(with: { item in
+                        if let item = item as? ChatRowItem {
+                            found = item.message?.id == messageId
+                        }
+                        return !found
+                    })
+                    checkMessageExists = false
+                    if !found {
+                        showModalText(for: context.window, text: strings().chatOpenMessageNotExist, title: nil)
+                    }
+                default:
+                    break
+                }
+            default:
+                break
+            }
         }
     }
     
@@ -5803,6 +5829,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.genericView.inputView.makeBold()
             return .invoked
         }, with: self, for: .B, priority: .medium, modifierFlags: [.command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.inputView.makeUnderline()
+            return .invoked
+        }, with: self, for: .U, priority: .high, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.inputView.makeSpoiler()
+            return .invoked
+        }, with: self, for: .P, priority: .medium, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.inputView.makeStrikethrough()
+            return .invoked
+        }, with: self, for: .X, priority: .medium, modifierFlags: [.shift, .command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.removeAllAttributes()

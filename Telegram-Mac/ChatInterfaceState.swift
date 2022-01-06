@@ -45,6 +45,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case bold(Range<Int>)
     case strikethrough(Range<Int>)
     case spoiler(Range<Int>)
+    case underline(Range<Int>)
     case italic(Range<Int>)
     case pre(Range<Int>)
     case code(Range<Int>)
@@ -75,6 +76,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             self = .strikethrough(range)
         case 7:
             self = .spoiler(range)
+        case 8:
+            self = .underline(range)
         default:
             fatalError("input attribute not supported")
         }
@@ -96,7 +99,9 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case .url:
             return 6
         case .spoiler:
-            return 6
+            return 7
+        case .underline:
+            return 8
         }
     }
     
@@ -126,6 +131,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             try container.encode(Int32(6), forKey: "_rawValue")
         case .spoiler:
             try container.encode(Int32(7), forKey: "_rawValue")
+        case .underline:
+            try container.encode(Int32(8), forKey: "_rawValue")
         case let .uid(_, uid):
             try container.encode(Int32(3), forKey: "_rawValue")
             try container.encode(uid, forKey: "uid")
@@ -143,9 +150,12 @@ extension ChatTextInputAttribute {
         case let .bold(range):
             return (NSAttributedString.Key.font.rawValue, NSFont.bold(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .strikethrough(range):
-            return (NSAttributedString.Key.font.rawValue, NSFont.normal(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.strikethroughStyle.rawValue, NSNumber(value: NSUnderlineStyle.single.rawValue), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .underline(range):
+            return (NSAttributedString.Key.underlineStyle.rawValue, NSNumber(value: NSUnderlineStyle.single.rawValue), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .spoiler(range):
-            return (NSAttributedString.Key.font.rawValue, NSFont.normal(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.text))
+            return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .italic(range):
             return (NSAttributedString.Key.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .pre(range), let .code(range):
@@ -161,7 +171,7 @@ extension ChatTextInputAttribute {
 
     var range:Range<Int> {
         switch self {
-        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range), let .spoiler(range):
+        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range), let .spoiler(range), let .underline(range):
             return range
         case let .uid(range, _):
             return range
@@ -184,6 +194,8 @@ extension ChatTextInputAttribute {
             return .strikethrough(range)
         case .spoiler:
             return .spoiler(range)
+        case .underline:
+            return .underline(range)
         case let .uid(_, uid):
             return .uid(range, uid)
         case let .url(_, url):
@@ -213,6 +225,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.strikethrough(entity.range))
         case .Spoiler:
             inputAttributes.append(.spoiler(entity.range))
+        case .Underline:
+            inputAttributes.append(.underline(entity.range))
         default:
             break
         }
@@ -226,8 +240,12 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
 
 
     attributed.enumerateAttributes(in: attributed.range, options: []) { (keys, range, _) in
-        for (_, value) in keys {
-            if let font = value as? NSFont {
+        for (key, value) in keys {
+            if key == NSAttributedString.Key.underlineStyle {
+                inputAttributes.append(.underline(range.location ..< range.location + range.length))
+            } else if key == NSAttributedString.Key.strikethroughStyle {
+                inputAttributes.append(.strikethrough(range.location ..< range.location + range.length))
+            } else if let font = value as? NSFont {
                 let descriptor = font.fontDescriptor
                 let symTraits = descriptor.symbolicTraits
                 let traitSet = NSFontTraitMask(rawValue: UInt(symTraits.rawValue))
@@ -246,7 +264,11 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                 }
             } else if let tag = value as? TGInputTextTag {
                 if let uid = tag.attachment as? NSNumber {
-                    inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int64Value))
+                    if uid == -1 {
+                        inputAttributes.append(.spoiler(range.location ..< range.location + range.length))
+                    } else {
+                        inputAttributes.append(.uid(range.location ..< range.location + range.length, uid.int64Value))
+                    }
                 } else if let url = tag.attachment as? String {
                     inputAttributes.append(.url(range.location ..< range.location + range.length, url))
                 }
@@ -376,7 +398,6 @@ final class ChatTextInputState: Codable, Equatable {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
         var pres:[Range<Int>] = []
-        var strikethrough:[Range<Int>] = []
 
         for attribute in attributes {
             let attr = attribute.attribute
@@ -389,7 +410,7 @@ final class ChatTextInputState: Codable, Equatable {
                     string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
                 }
             case let .strikethrough(range):
-                strikethrough.append(range)
+                string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
             default:
                 string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
             }
@@ -401,13 +422,6 @@ final class ChatTextInputState: Codable, Equatable {
                 string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: pre.lowerBound + offset)
                 offset += symbols.count
                 string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: pre.upperBound + offset)
-                offset += symbols.count
-            }
-            for strikethrough in strikethrough.sorted(by: { $0.lowerBound < $1.lowerBound }) {
-                let symbols = "~~"
-                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: strikethrough.lowerBound + offset)
-                offset += symbols.count
-                string.insert(.initialize(string: symbols, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false), at: strikethrough.upperBound + offset)
                 offset += symbols.count
             }
         }
@@ -550,6 +564,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.code(newRange.min ..< newRange.max))
                 case .strikethrough:
                     attributes.append(.strikethrough(newRange.min ..< newRange.max))
+                case .underline:
+                    attributes.append(.underline(newRange.min ..< newRange.max))
                 case .spoiler:
                     attributes.append(.spoiler(newRange.min ..< newRange.max))
                 case let .uid(_, uid):
@@ -614,6 +630,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .Strikethrough))
             case let .spoiler(range):
                 entities.append(.init(range: range, type: .Spoiler))
+            case let .underline(range):
+                entities.append(.init(range: range, type: .Underline))
             case let .italic(range):
                 entities.append(.init(range: range, type: .Italic))
             case let .pre(range):

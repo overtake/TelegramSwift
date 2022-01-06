@@ -2055,6 +2055,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
             }
         }
         
+        
         if channelMembers.count <= minumimUsersBlock, let channel = peerViewMainPeer(view) as? TelegramChannel {
             
             let participants = channelMembers

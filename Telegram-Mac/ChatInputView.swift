@@ -635,7 +635,15 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         return self.actionsView.currentActionView
     }
     
-    
+    func makeSpoiler() {
+        self.textView.spoilerWord()
+    }
+    func makeUnderline() {
+        self.textView.underlineWord()
+    }
+    func makeStrikethrough() {
+        self.textView.strikethroughWord()
+    }
     
     func makeBold() {
         self.textView.boldWord()

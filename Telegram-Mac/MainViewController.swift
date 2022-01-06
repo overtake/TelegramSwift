@@ -25,6 +25,7 @@ enum UpdateButtonState {
 final class UpdateTabView : Control {
     let textView: TextView = TextView()
     let imageView: ImageView = ImageView()
+    let shimmer = ShimmerEffectView()
     let progressView: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 24, 24))
     
     var isChatList: Bool = false
@@ -71,6 +72,7 @@ final class UpdateTabView : Control {
         addSubview(textView)
         addSubview(progressView)
         addSubview(imageView)
+        addSubview(shimmer)
         progressView.progressColor = .white
         isInstalling = false
         
@@ -101,6 +103,8 @@ final class UpdateTabView : Control {
         imageView.image = (theme as! TelegramPresentationTheme).icons.appUpdate
         imageView.sizeToFit()
         needsLayout = true
+        shimmer.updateAbsoluteRect(bounds, within: bounds.size)
+        shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: bounds, cornerRadius: bounds.height / 2)], horizontal: true, size: bounds.size)
     }
     
     override func setFrameOrigin(_ newOrigin: NSPoint) {
@@ -113,7 +117,8 @@ final class UpdateTabView : Control {
         
         
        
-
+        shimmer.frame = bounds
+        shimmer.layer?.cornerRadius = bounds.height / 2
         textView.center()
         progressView.center()
         imageView.center()
@@ -404,7 +409,7 @@ class MainViewController: TelegramViewController {
         }
         
         if self.tabController.current == chatListNavigation, !items.isEmpty, let event = NSApp.currentEvent {
-            let menu = ContextMenu()
+            let menu = ContextMenu(betterInside: true)
             for item in items {
                 menu.addItem(item)
             }

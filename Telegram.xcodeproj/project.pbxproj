@@ -193,6 +193,7 @@
 		278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */; };
 		278FA2E925E8C36A00280629 /* PaymentsPaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */; };
 		27903958271D7662001C647A /* RecentCallsLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27903957271D7662001C647A /* RecentCallsLocation.swift */; };
+		27904BF12785A81C008AA668 /* ShimmerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27904BF02785A81C008AA668 /* ShimmerEffect.swift */; };
 		27949110260A41EB0003BFA0 /* FFMpegMediaFrameSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910A260A41E80003BFA0 /* FFMpegMediaFrameSource.swift */; };
 		27949111260A41EB0003BFA0 /* FFMpegMediaFrameSourceContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910B260A41EA0003BFA0 /* FFMpegMediaFrameSourceContext.swift */; };
 		27949112260A41EB0003BFA0 /* FFMpegAudioFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910C260A41EA0003BFA0 /* FFMpegAudioFrameDecoder.swift */; };
@@ -1369,6 +1370,7 @@
 		278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingMethodController.swift; sourceTree = "<group>"; };
 		278FA2E825E8C36A00280629 /* PaymentsPaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsPaymentMethodController.swift; sourceTree = "<group>"; };
 		27903957271D7662001C647A /* RecentCallsLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentCallsLocation.swift; sourceTree = "<group>"; };
+		27904BF02785A81C008AA668 /* ShimmerEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerEffect.swift; sourceTree = "<group>"; };
 		2794910A260A41E80003BFA0 /* FFMpegMediaFrameSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaFrameSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaFrameSource.swift"; sourceTree = SOURCE_ROOT; };
 		2794910B260A41EA0003BFA0 /* FFMpegMediaFrameSourceContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaFrameSourceContext.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaFrameSourceContext.swift"; sourceTree = SOURCE_ROOT; };
 		2794910C260A41EA0003BFA0 /* FFMpegAudioFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegAudioFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegAudioFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
@@ -2968,6 +2970,7 @@
 				9FDA713120E6456A001ED8ED /* ExternalMusicAlbumArtResources.swift */,
 				9F4EEF8121D4F584002C3B33 /* ImageTransparency.swift */,
 				D00746C9257691760000DF74 /* StickerShimmerEffectView.swift */,
+				27904BF02785A81C008AA668 /* ShimmerEffect.swift */,
 			);
 			name = media;
 			sourceTree = "<group>";
@@ -6028,6 +6031,7 @@
 				9F21F65520B5A72800332C85 /* LocationModalController.swift in Sources */,
 				D00EECD1252B47B1001EB99F /* CallFeedbackController.swift in Sources */,
 				C2777B681DD20DD2008B69DD /* ChatTitleBarView.swift in Sources */,
+				27904BF12785A81C008AA668 /* ShimmerEffect.swift in Sources */,
 				C246161B1ED33FFE0026D5BC /* InstantVideoPIP.swift in Sources */,
 				D0CBB0F52492974F00620C65 /* VideoAvatarModalController.swift in Sources */,
 				D0E3685824DAB066009896D4 /* VideoCallsConfiguration.swift in Sources */,

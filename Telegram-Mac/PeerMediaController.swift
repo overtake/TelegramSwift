@@ -811,7 +811,9 @@
                 return (exist: Int(cachedData.participants?.participants.count ?? 0 ) > minumimUsersBlock, loaded: true)
             } else if let cachedData = view.cachedData as? CachedChannelData {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup {
-                    return (exist: Int32(cachedData.participantsSummary.memberCount ?? 0) > minumimUsersBlock, loaded: true)
+                    let members = Int32(cachedData.participantsSummary.memberCount ?? 0)
+                    let admins = Int32(cachedData.participantsSummary.adminCount ?? 0)
+                    return (exist: members + admins > minumimUsersBlock, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }

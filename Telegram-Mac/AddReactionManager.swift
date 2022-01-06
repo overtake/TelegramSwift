@@ -770,7 +770,10 @@ final class AddReactionManager : NSObject, Notifable {
                         let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
                         if !NSPointInRect(inside, safeRect) || !NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
                             self.clear()
-                        } 
+                        } else if let current = currentView {
+                            transition.updateFrame(view: current, frame: base)
+                            current.updateLayout(base.size, transition: transition)
+                        }
                     }
                 } else {
                     if !self.isInside {
