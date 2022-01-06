@@ -344,6 +344,19 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    var shouldBlurService: Bool {
+        if presentation.shouldBlurService, isStateOverlayLayout {
+            return true
+        } else if isStateOverlayLayout {
+            if let message = message, let media = message.media.first {
+                return isBubbled && media.isInteractiveMedia && captionLayouts.isEmpty
+            } else {
+                return false
+            }
+        }
+        return false
+    }
+    
     var isStateOverlayLayout: Bool {
         if let message = message, let media = message.media.first {
             if let file = media as? TelegramMediaFile {

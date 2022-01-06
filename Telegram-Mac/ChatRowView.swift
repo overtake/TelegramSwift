@@ -262,7 +262,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
         rowView.backgroundColor = backdorColor
         
-        if item.isStateOverlayLayout, item.presentation.shouldBlurService {
+        if item.shouldBlurService {
             rightView.blurBackground = item.presentation.blurServiceColor
             rightView.layer?.cornerRadius = item.rightSize.height / 2
         } else {

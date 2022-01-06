@@ -1417,13 +1417,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     }
                 }
                 
-                if !line.strikethrough.isEmpty {
-                    for strikethrough in line.strikethrough {
-                        let frame = strikethrough.frame.offsetBy(dx: penOffset, dy: startPosition.y + line.frame.minY)
-                        ctx.setFillColor(strikethrough.color.cgColor)
-                        ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
-                    }
-                }
+//                if !line.strikethrough.isEmpty {
+//                    for strikethrough in line.strikethrough {
+//                        let frame = strikethrough.frame.offsetBy(dx: penOffset, dy: startPosition.y + line.frame.minY)
+////                        ctx.setFillColor(strikethrough.color.cgColor)
+////                        ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
+//                    }
+//                }
                 for spoiler in layout.spoilers.filter({ !$0.isRevealed }) {
                     if let spoilerRange = spoiler.range.intersection(line.range) {
                         let range = spoilerRange.intersection(layout.selectedRange.range)
