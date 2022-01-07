@@ -99,7 +99,7 @@ class ChatGroupedItem: ChatRowItem {
                         for entity in attr.entities {
                             switch entity.type {
                             case .Spoiler:
-                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.text))
+                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.text, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                             default:
                                 break
                             }
@@ -107,7 +107,13 @@ class ChatGroupedItem: ChatRowItem {
                     }
                 }
                 
-                let layout: ChatRowItem.RowCaption = .init(id: message.stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers))
+                let layout: ChatRowItem.RowCaption = .init(id: message.stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
+                    chatInteraction?.update({
+                        $0.updatedInterfaceState({
+                            $0.withRevealedSpoiler(message.id)
+                        })
+                    })
+                }))
                 layout.layout.interactions = globalLinkExecutor
                 captionLayouts.append(layout)
             }

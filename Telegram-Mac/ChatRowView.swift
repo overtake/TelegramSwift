@@ -1423,6 +1423,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         
         self.needsDisplay = true
+        self.rowView.needsDisplay = true
         self.needsLayout = true
 
     }

@@ -372,11 +372,10 @@ final class ChatReactionsLayout {
                     let count = reactions.reactions.reduce(0, {
                         $0 + $1.count
                     })
-                    if count >= 3 || reaction.count > recentPeers.count {
+                    if count >= 3 || count > recentPeers.count {
                         recentPeers = []
                     }
                 }
-                
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
                     engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
                 }, openInfo: openInfo)

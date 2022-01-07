@@ -223,16 +223,14 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let currentAttributed: NSMutableAttributedString = NSMutableAttributedString()
-        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text))
+        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text), coreText: false)
         currentAttributed.append(currentText)
-        
+                
         if mode == .secure {
             currentAttributed.setAttributedString(.init(string: String(currentText.string.map { _ in return "•" })))
             currentAttributed.addAttribute(.font, value: NSFont.normal(15.0 + 3.22), range: currentAttributed.range)
         }
-        
-        let textStorage = NSTextStorage(attributedString: currentAttributed)
-        
+                
         if let rightItem = self.rightItem {
             switch rightItem {
             case .loading:
@@ -246,26 +244,19 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         
         switch viewType {
         case .legacy:
-            let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.left - inset.right - textFieldLeftInset - additionRightInset, .greatestFiniteMagnitude))
-            let layoutManager = NSLayoutManager()
-            layoutManager.addTextContainer(textContainer)
-            textStorage.addLayoutManager(layoutManager)
-            layoutManager.ensureLayout(for: textContainer)
-            self.realInputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
-            inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
+            let height = currentAttributed.sizeFittingWidth(initialSize.width - inset.left - inset.right - textFieldLeftInset - additionRightInset).height
+            self.realInputHeight = max(34, height + 6)
+            inputHeight = max(34, height + 6)
         case let .modern(_, insets):
-            let textContainer = NSTextContainer(size: NSMakeSize(self.blockWidth - insets.left - insets.right - textFieldLeftInset - additionRightInset, .greatestFiniteMagnitude))
-            let layoutManager = NSLayoutManager()
-            layoutManager.addTextContainer(textContainer)
-            textStorage.addLayoutManager(layoutManager)
-            layoutManager.ensureLayout(for: textContainer)
+            let height = currentAttributed.sizeFittingWidth(self.blockWidth - insets.left - insets.right - textFieldLeftInset - additionRightInset).height
+            
             switch self.mode {
             case .plain:
-                self.realInputHeight = max(16, layoutManager.usedRect(for: textContainer).height)
+                self.realInputHeight = max(16, height)
             case .secure:
-                self.realInputHeight = max(22, layoutManager.usedRect(for: textContainer).height)
+                self.realInputHeight = max(22, height)
             }
-            inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 1)
+            inputHeight = max(34, height + 1)
         }
         
         let success = super.makeSize(width, oldWidth: oldWidth)
@@ -570,38 +561,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             item.inputHeight = height
             
             
-            switch item.viewType {
-            case .legacy:
-                textLimitation.change(pos: NSMakePoint(containerView.frame.width - item.inset.right - textLimitation.frame.width + 4, item.height - textLimitation.frame.height), animated: animated)
-            case let .modern(_, insets):
-                textLimitation.change(pos: NSMakePoint(item.blockWidth - insets.right - textLimitation.frame.width , item.height - textLimitation.frame.height - insets.bottom), animated: animated)
-            }
-            
             item.calculateHeight()
             
-            _change(size: NSMakeSize(item.width, item.height), animated: animated)
-
-            let containerRect: NSRect
-            switch item.viewType {
-            case .legacy:
-                containerRect = self.bounds
-            case .modern:
-                containerRect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, item.height - item.inset.bottom - item.inset.top)
-            }
-            containerView.change(size: containerRect.size, animated: animated, corners: item.viewType.corners)
-            containerView.change(pos: containerRect.origin, animated: animated)
-            
-            if let placeholder = item.placeholder {
-                if placeholder.drawBorderAfterPlaceholder {
-                    separator.change(pos: NSMakePoint(separator.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
-                } else {
-                    separator.change(pos: NSMakePoint(separator.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
-                }
-            } else {
-                separator.change(pos: NSMakePoint(separator.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
-            }
-            
-            table.noteHeightOfRow(item.index, animated)
+            table.reloadData(row: item.index, animated: animated)
         }
         
     }

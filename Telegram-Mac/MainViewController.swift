@@ -32,6 +32,7 @@ final class UpdateTabView : Control {
     
     var isInstalling: Bool = false {
         didSet {
+            shimmer.change(opacity: isInstalling ? 0 : 1)
             textView.isHidden = isInstalling || layoutState == .minimisize
             progressView.isHidden = !isInstalling
             imageView.isHidden = isInstalling || layoutState != .minimisize

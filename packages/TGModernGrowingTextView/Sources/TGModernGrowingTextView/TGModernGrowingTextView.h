@@ -10,6 +10,7 @@
 #import "TGInputTextTag.h"
 
 extern NSString * _Nonnull const TGCustomLinkAttributeName;
+extern NSString * _Nonnull const TGSpoilerAttributeName;
 @class TGModernGrowingTextView;
 
 @interface MarkdownUndoItem : NSObject

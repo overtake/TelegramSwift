@@ -269,9 +269,10 @@ public final class TextViewLayout : Equatable {
         public let range: NSRange
         public let color: NSColor
         public fileprivate(set) var isRevealed: Bool = false
-        public init(range: NSRange, color: NSColor) {
+        public init(range: NSRange, color: NSColor, isRevealed: Bool = false) {
             self.range = range
             self.color = color.withAlphaComponent(1.0)
+            self.isRevealed = isRevealed
         }
     }
     
@@ -305,7 +306,8 @@ public final class TextViewLayout : Equatable {
     private let disableTooltips: Bool
     fileprivate var isBigEmoji: Bool = false
     fileprivate let spoilers:[Spoiler]
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = []) {
+    private let onSpoilerReveal: ()->Void
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = [], onSpoilerReveal: @escaping()->Void = {}) {
         self.spoilers = spoilers
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
@@ -318,6 +320,7 @@ public final class TextViewLayout : Equatable {
         self.selectedRange = TextSelectedRange(color: selectText)
         self.strokeLinks = strokeLinks
         self.mayItems = mayItems
+        self.onSpoilerReveal = onSpoilerReveal
         switch alignment {
         case .center:
             penFlush = 0.5
@@ -327,6 +330,13 @@ public final class TextViewLayout : Equatable {
             penFlush = 0.0
         }
         self.lineSpacing = lineSpacing
+    }
+    
+    func revealSpoiler() -> Void {
+        for spoiler in spoilers {
+            spoiler.isRevealed = true
+        }
+        onSpoilerReveal()
     }
     
     public func dropLayoutSize() {
@@ -1733,9 +1743,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         if let layout = textLayout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
             if let _ = layout.spoiler(at: point) {
-                for spoiler in layout.spoilers {
-                    spoiler.isRevealed = true
-                }
+                layout.revealSpoiler()
                 needsDisplay = true
                 return
             }

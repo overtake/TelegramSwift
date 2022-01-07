@@ -595,6 +595,9 @@ final class AddReactionManager : NSObject, Notifable {
         
     func update(transition: ContainedViewLayoutTransition = .immediate) {
         
+        view?.tableView.tile()
+
+        
         var available:[AvailableReactions.Reaction] = []
         let settings: ReactionSettings = self.settings
         
@@ -753,20 +756,17 @@ final class AddReactionManager : NSObject, Notifable {
                                     }
                                 }))
                             } else {
-                                if !self.isInside {
-                                    self.clear()
-                                }
-                            }
-                        } else {
-                            if !self.isInside {
                                 self.clear()
                             }
+                        } else {
+                            self.clear()
                         }
                     } else if let itemView = item.view as? ChatRowView {
                         let rect = itemView.rectForReaction
                         
                         let base = view.convert(rect, from: itemView)
 
+                        
                         let safeRect = base.insetBy(dx: -base.width * 4, dy: -base.height * 4)
                         if !NSPointInRect(inside, safeRect) || !NSPointInRect(NSMakePoint(base.midX, base.midY), view.tableView.frame) {
                             self.clear()
@@ -776,15 +776,13 @@ final class AddReactionManager : NSObject, Notifable {
                         }
                     }
                 } else {
-                    if !self.isInside {
-                        self.clear()
-                    }
-                }
-            } else {
-                if !self.isInside {
                     self.clear()
                 }
+            } else {
+                self.clear()
             }
+        } else {
+            self.clear()
         }
     }
     
@@ -840,9 +838,10 @@ final class AddReactionManager : NSObject, Notifable {
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
-        let presentation = value as? ChatPresentationInterfaceState
-        if let presentation = presentation {
-            if presentation.state == .selecting {
+        let newValue = value as? ChatPresentationInterfaceState
+        let oldValue = oldValue as? ChatPresentationInterfaceState
+        if let newValue = newValue, oldValue?.state != newValue.state {
+            if newValue.state == .selecting {
                 disabled = true
                 clear()
                 removeCurrent(animated: true)

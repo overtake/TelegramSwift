@@ -9,4 +9,5 @@ core-xprojects/libwebp/build
 core-xprojects/libopus/build
 core-xprojects/ffmpeg/build
 core-xprojects/webrtc/build
+core-xprojects/libvpx/build
 core-xprojects/webrtc/build-debug
