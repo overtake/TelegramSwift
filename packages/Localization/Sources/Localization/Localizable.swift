@@ -9445,6 +9445,12 @@ public final class L10n {
   public static var textViewTransformItalic: String  { return L10n.tr("Localizable", "TextView.Transform.Italic") }
   /// Clear Transformations
   public static var textViewTransformRemoveAll: String  { return L10n.tr("Localizable", "TextView.Transform.RemoveAll") }
+  /// Spoiler
+  public static var textViewTransformSpoiler: String  { return L10n.tr("Localizable", "TextView.Transform.Spoiler") }
+  /// Strikethrough
+  public static var textViewTransformStrikethrough: String  { return L10n.tr("Localizable", "TextView.Transform.Strikethrough") }
+  /// Underline
+  public static var textViewTransformUnderline: String  { return L10n.tr("Localizable", "TextView.Transform.Underline") }
   /// Make URL
   public static var textViewTransformURL: String  { return L10n.tr("Localizable", "TextView.Transform.URL") }
   /// Sorry, this theme doesn't seem to exist for macOS.

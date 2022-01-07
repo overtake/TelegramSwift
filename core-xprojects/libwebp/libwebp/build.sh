@@ -60,7 +60,7 @@ do
   SDKROOT=$CROSS_TOP_MAC/Developer/SDKs/$CROSS_SDK_MAC
   CFLAGS="-arch ${ARCH2:-${ARCH1}} -pipe -isysroot ${SDKROOT} -Os -DNDEBUG"
   CFLAGS+=" -mmacosx-version-min=10.11 ${EXTRA_CFLAGS}"
-  ./configure --host=${ARCH1}-apple-darwin --prefix=${ROOTDIR} \
+  ./CFLAGS --host=${ARCH1}-apple-darwin --prefix=${ROOTDIR} \
     --build=$(./config.guess) \
     --disable-shared --enable-static \
     --enable-libwebpdecoder --enable-swap-16bit-csp \

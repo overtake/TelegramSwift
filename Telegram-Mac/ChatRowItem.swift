@@ -743,6 +743,9 @@ class ChatRowItem: TableRowItem {
             if unsupported {
                 return false
             }
+            if let media = message.media.first, media is TelegramMediaAction {
+                return false
+            }
             return true
         }
         return false

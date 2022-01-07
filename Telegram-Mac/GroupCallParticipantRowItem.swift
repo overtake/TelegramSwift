@@ -760,6 +760,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
     }
     
     override func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
@@ -1074,6 +1075,14 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
     }
     
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        if let container = container as? HorizontalContainerView {
+            transition.updateFrame(view: container, frame: containerView.bounds)
+            container.updateLayout(size: size, transition: transition)
+        }
+    }
+    
     override func updateColors() {
         super.updateColors()
     }
@@ -1117,7 +1126,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
         
         self.container?.set(item: item, animated: animated && previous == nil)
-        
+        self.container?.needsLayout = true
         needsLayout = true
     }
     

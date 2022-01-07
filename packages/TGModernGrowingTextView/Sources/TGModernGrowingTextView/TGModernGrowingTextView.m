@@ -101,6 +101,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
     @end
 
 NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
+NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 
 
 
@@ -194,7 +195,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     
-    [self.attributedString enumerateAttribute:TGCustomLinkAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+    [self.attributedString enumerateAttribute:TGSpoilerAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
         if ([value isKindOfClass:[TGInputTextTag class]]) {
             TGInputTextTag *tag = (TGInputTextTag *)value;
             if ([tag.attachment intValue] == -1) {
@@ -394,6 +395,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     NSRange selectedRange = self.selectedRange;
     NSMutableAttributedString *attr = [self.attributedString mutableCopy];
     [attr removeAttribute:TGCustomLinkAttributeName range:selectedRange];
+    [attr removeAttribute:TGSpoilerAttributeName range:selectedRange];
     [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.font.pointSize] range: selectedRange];
     
     [self.textStorage setAttributedString:attr];
@@ -430,9 +432,14 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 -(void)makeUnderline:(id)sender {
     NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
 
-    
-    [self.textStorage addAttribute:NSUnderlineStyleAttributeName value:@(NSUnderlineStyleSingle) range:self.selectedRange];
-    
+    NSRange effectiveRange = NSMakeRange(0, 0);
+    id attribute = [was attribute:NSUnderlineStyleAttributeName atIndex:0 effectiveRange:&effectiveRange];
+
+    if(attribute != nil) {
+        [self.textStorage removeAttribute:NSUnderlineStyleAttributeName range: self.selectedRange];
+    } else {
+        [self.textStorage addAttribute:NSUnderlineStyleAttributeName value:@(NSUnderlineStyleSingle) range:self.selectedRange];
+    }
     NSAttributedString *be = [self.attributedString attributedSubstringFromRange:self.selectedRange];
 
     
@@ -447,8 +454,15 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     
     NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
 
+    NSRange effectiveRange = NSMakeRange(0, 0);
+    id attribute = [was attribute:NSStrikethroughStyleAttributeName atIndex:0 effectiveRange:&effectiveRange];
+
+    if(attribute != nil) {
+        [self.textStorage removeAttribute:NSStrikethroughStyleAttributeName range: self.selectedRange];
+    } else {
+        [self.textStorage addAttribute:NSStrikethroughStyleAttributeName value:@(NSUnderlineStyleSingle) range:self.selectedRange];
+    }
     
-    [self.textStorage addAttribute:NSStrikethroughStyleAttributeName value:@(NSUnderlineStyleSingle) range:self.selectedRange];
     
     NSAttributedString *be = [self.attributedString attributedSubstringFromRange:self.selectedRange];
 
@@ -460,13 +474,25 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 
 }
 -(void)makeSpoiler:(id)sender {
-    int bp = 0;
-    bp ++;
+
+    NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
     
-    id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:@(-1) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:[NSColor redColor]]];
+    NSRange effectiveRange = NSMakeRange(0, 0);
+    
+    TGInputTextTag * attribute = (TGInputTextTag *) [was attribute:TGSpoilerAttributeName atIndex:0 effectiveRange:&effectiveRange];
+    
+    if ([attribute.attachment intValue] == -1) {
+        [self.textStorage removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
+        NSAttributedString *be = [self.attributedString attributedSubstringFromRange:self.selectedRange];
+        
+        [_weakd textViewTextDidChangeSelectedRange:self.selectedRange];
 
-    [self.weakTextView addInputTextTag:tag range:self.selectedRange];
-
+        MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:be inRange:self.selectedRange];
+        [self addItem:item];
+    } else {
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:@(-1) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:[NSColor redColor]]];
+        [self.weakTextView addInputTextTag:tag range:self.selectedRange];
+    }
 }
     
 -(void)addLink:(NSString *)link {
@@ -1347,145 +1373,151 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
         
         
+        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
         
-        __block NSMutableArray<TGInputTextTagAndRange *> *inputTextTags = [[NSMutableArray alloc] init];
-        [string enumerateAttribute:TGCustomLinkAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
-            if ([value isKindOfClass:[TGInputTextTag class]]) {
-                [inputTextTags addObject:[[TGInputTextTagAndRange alloc] initWithTag:value range:range]];
-            }
-        }];
-        
-        
-        static NSCharacterSet *alphanumericSet = nil;
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-            alphanumericSet = [NSCharacterSet alphanumericCharacterSet];
-        });
-        
-        NSMutableSet<NSNumber *> *removeTags = [[NSMutableSet alloc] init];
-        for (NSInteger i = 0; i < ((NSInteger)inputTextTags.count); i++) {
-            TGInputTextTagAndRange *tagAndRange = inputTextTags[i];
-            if ([removeTags containsObject:@(tagAndRange.tag.uniqueId)]) {
-                [inputTextTags removeObjectAtIndex:i];
-                [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
-                
-                i--;
-            } else {
-                NSInteger j = tagAndRange.range.location;
-                while (j < (NSInteger)(tagAndRange.range.location + tagAndRange.range.length)) {
-                    unichar c = [string.string characterAtIndex:j];
-                    if (c != ' ') {
-                        break;
-                    }
-                    j++;
+        for (int i = 0; i < attributes.count; i++) {
+            NSString *attributeName = attributes[i];
+            
+            __block NSMutableArray<TGInputTextTagAndRange *> *inputTextTags = [[NSMutableArray alloc] init];
+            [string enumerateAttribute:attributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+                if ([value isKindOfClass:[TGInputTextTag class]]) {
+                    [inputTextTags addObject:[[TGInputTextTagAndRange alloc] initWithTag:value range:range]];
                 }
-                
-                if (j != (NSInteger)tagAndRange.range.location) {
-                    NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
-                    [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
-                    
-                    [self.textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
-                    
-                    inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
+            }];
+            
+            
+            static NSCharacterSet *alphanumericSet = nil;
+            static dispatch_once_t onceToken;
+            dispatch_once(&onceToken, ^{
+                alphanumericSet = [NSCharacterSet alphanumericCharacterSet];
+            });
+            
+            NSMutableSet<NSNumber *> *removeTags = [[NSMutableSet alloc] init];
+            for (NSInteger i = 0; i < ((NSInteger)inputTextTags.count); i++) {
+                TGInputTextTagAndRange *tagAndRange = inputTextTags[i];
+                if ([removeTags containsObject:@(tagAndRange.tag.uniqueId)]) {
+                    [inputTextTags removeObjectAtIndex:i];
+                    [self.textView.textStorage removeAttribute:attributeName range:tagAndRange.range];
                     
                     i--;
                 } else {
                     NSInteger j = tagAndRange.range.location;
-                    while (j >= 0) {
-                        
+                    while (j < (NSInteger)(tagAndRange.range.location + tagAndRange.range.length)) {
                         unichar c = [string.string characterAtIndex:j];
-                        if (![alphanumericSet characterIsMember:c]) {
+                        if (c != ' ') {
                             break;
                         }
-                        j--;
+                        j++;
                     }
-                    j++;
                     
-                    if (j < ((NSInteger)tagAndRange.range.location)) {
+                    if (j != (NSInteger)tagAndRange.range.location) {
                         NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
-                        [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
+                        [self.textView.textStorage removeAttribute:attributeName range:tagAndRange.range];
                         
-                        [self.textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
+                        [self.textView.textStorage addAttribute:attributeName value:tagAndRange.tag range:updatedRange];
                         
                         inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
                         
                         i--;
                     } else {
-                        TGInputTextTagAndRange *nextTagAndRange = nil;
-                        if (i != ((NSInteger)inputTextTags.count) - 1) {
-                            nextTagAndRange = inputTextTags[i + 1];
+                        NSInteger j = tagAndRange.range.location;
+                        while (j >= 0) {
+                            
+                            unichar c = [string.string characterAtIndex:j];
+                            if (![alphanumericSet characterIsMember:c]) {
+                                break;
+                            }
+                            j--;
                         }
+                        j++;
                         
-                        if (nextTagAndRange == nil || nextTagAndRange.tag.uniqueId != tagAndRange.tag.uniqueId) {
-                            NSInteger candidateStart = tagAndRange.range.location + tagAndRange.range.length;
-                            NSInteger candidateEnd = nextTagAndRange == nil ? string.length : nextTagAndRange.range.location;
-                            NSInteger j = candidateStart;
-                            if (candidateStart > 0 && [alphanumericSet characterIsMember:[string.string characterAtIndex:candidateStart - 1]]) {
+                        if (j < ((NSInteger)tagAndRange.range.location)) {
+                            NSRange updatedRange = NSMakeRange(j, tagAndRange.range.location + tagAndRange.range.length - j);
+                            [self.textView.textStorage removeAttribute:attributeName range:tagAndRange.range];
+                            
+                            [self.textView.textStorage addAttribute:attributeName value:tagAndRange.tag range:updatedRange];
+                            
+                            inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
+                            
+                            i--;
+                        } else {
+                            TGInputTextTagAndRange *nextTagAndRange = nil;
+                            if (i != ((NSInteger)inputTextTags.count) - 1) {
+                                nextTagAndRange = inputTextTags[i + 1];
+                            }
+                            
+                            if (nextTagAndRange == nil || nextTagAndRange.tag.uniqueId != tagAndRange.tag.uniqueId) {
+                                NSInteger candidateStart = tagAndRange.range.location + tagAndRange.range.length;
+                                NSInteger candidateEnd = nextTagAndRange == nil ? string.length : nextTagAndRange.range.location;
+                                NSInteger j = candidateStart;
+                                if (candidateStart > 0 && [alphanumericSet characterIsMember:[string.string characterAtIndex:candidateStart - 1]]) {
+                                    while (j < candidateEnd) {
+                                        unichar c = [string.string characterAtIndex:j];
+                                        NSCharacterSet *alphanumericSet = [NSCharacterSet alphanumericCharacterSet];
+                                        if (![alphanumericSet characterIsMember:c]) {
+                                            break;
+                                        }
+                                        j++;
+                                    }
+                                }
+                                if (j == candidateStart) {
+                                    [removeTags addObject:@(tagAndRange.tag.uniqueId)];
+                                    [self.textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
+                                } else {
+                                    [self.textView.textStorage removeAttribute:attributeName range:tagAndRange.range];
+                                    
+                                    NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
+                                    [self.textView.textStorage addAttribute:attributeName value:tagAndRange.tag range:updatedRange];
+                                    inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
+                                    
+                                    i--;
+                                }
+                            } else {
+                                
+                                
+                                NSInteger candidateStart = tagAndRange.range.location + tagAndRange.range.length;
+                                NSInteger candidateEnd = nextTagAndRange.range.location;
+                                NSInteger j = candidateStart;
                                 while (j < candidateEnd) {
                                     unichar c = [string.string characterAtIndex:j];
-                                    NSCharacterSet *alphanumericSet = [NSCharacterSet alphanumericCharacterSet];
-                                    if (![alphanumericSet characterIsMember:c]) {
+                                    if (![alphanumericSet characterIsMember:c] && c != ' ') {
                                         break;
                                     }
                                     j++;
                                 }
-                            }
-                            if (j == candidateStart) {
-                                [removeTags addObject:@(tagAndRange.tag.uniqueId)];
-                                [self.textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
-                            } else {
-                                [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
                                 
-                                NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
-                                [self.textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
-                                inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
-                                
-                                i--;
-                            }
-                        } else {
-                            
-                            
-                            NSInteger candidateStart = tagAndRange.range.location + tagAndRange.range.length;
-                            NSInteger candidateEnd = nextTagAndRange.range.location;
-                            NSInteger j = candidateStart;
-                            while (j < candidateEnd) {
-                                unichar c = [string.string characterAtIndex:j];
-                                if (![alphanumericSet characterIsMember:c] && c != ' ') {
-                                    break;
+                                if (j == candidateEnd) {
+                                    [self.textView.textStorage removeAttribute:attributeName range:tagAndRange.range];
+                                    
+                                    [self.textView.textStorage removeAttribute:attributeName range:nextTagAndRange.range];
+                                    
+                                    NSRange updatedRange = NSMakeRange(tagAndRange.range.location, nextTagAndRange.range.location + nextTagAndRange.range.length - tagAndRange.range.location);
+                                    
+                                    [self.textView.textStorage addAttribute:attributeName value:tagAndRange.tag range:updatedRange];
+                                    
+                                    inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
+                                    [inputTextTags removeObjectAtIndex:i + 1];
+                                    
+                                    i--;
+                                } else if (j != candidateStart) {
+                                    [self.textView.textStorage removeAttribute:attributeName range:tagAndRange.range];
+                                    
+                                    NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
+                                    [self.textView.textStorage addAttribute:attributeName value:tagAndRange.tag range:updatedRange];
+                                    
+                                    inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
+                                    
+                                    i--;
+                                } else {
+                                    [removeTags addObject:@(tagAndRange.tag.uniqueId)];
+                                    [self.textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
                                 }
-                                j++;
-                            }
-                            
-                            if (j == candidateEnd) {
-                                [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
-                                
-                                [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:nextTagAndRange.range];
-                                
-                                NSRange updatedRange = NSMakeRange(tagAndRange.range.location, nextTagAndRange.range.location + nextTagAndRange.range.length - tagAndRange.range.location);
-                                
-                                [self.textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
-                                
-                                inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
-                                [inputTextTags removeObjectAtIndex:i + 1];
-                                
-                                i--;
-                            } else if (j != candidateStart) {
-                                [self.textView.textStorage removeAttribute:TGCustomLinkAttributeName range:tagAndRange.range];
-                                
-                                NSRange updatedRange = NSMakeRange(tagAndRange.range.location, j - tagAndRange.range.location);
-                                [self.textView.textStorage addAttribute:TGCustomLinkAttributeName value:tagAndRange.tag range:updatedRange];
-                                
-                                inputTextTags[i] = [[TGInputTextTagAndRange alloc] initWithTag:tagAndRange.tag range:updatedRange];
-                                
-                                i--;
-                            } else {
-                                [removeTags addObject:@(tagAndRange.tag.uniqueId)];
-                                [self.textView.textStorage addAttribute:tagAndRange.tag.attribute.name value:tagAndRange.tag.attribute.value range:tagAndRange.range];
                             }
                         }
                     }
                 }
             }
+
         }
         
         [self setSelectedRange:self.selectedRange];
@@ -1518,6 +1550,7 @@ NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
     NSMutableAttributedString *attr = [self.textView.attributedString mutableCopy];
     [attr removeAttribute:NSFontAttributeName range:self.selectedRange];
     [attr removeAttribute:TGCustomLinkAttributeName range:self.selectedRange];
+    [attr removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
     [self.textView.textStorage setAttributedString:attr];
 }
     
