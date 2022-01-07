@@ -756,10 +756,14 @@ final class AddReactionManager : NSObject, Notifable {
                                     }
                                 }))
                             } else {
-                                self.clear()
+                                if !isInside {
+                                    self.clear()
+                                }
                             }
                         } else {
-                            self.clear()
+                            if !isInside {
+                                self.clear()
+                            }
                         }
                     } else if let itemView = item.view as? ChatRowView {
                         let rect = itemView.rectForReaction
@@ -776,13 +780,15 @@ final class AddReactionManager : NSObject, Notifable {
                         }
                     }
                 } else {
-                    self.clear()
+                    if !isInside {
+                        self.clear()
+                    }
                 }
             } else {
-                self.clear()
+                if !isInside {
+                    self.clear()
+                }
             }
-        } else {
-            self.clear()
         }
     }
     
@@ -800,6 +806,8 @@ final class AddReactionManager : NSObject, Notifable {
     }
     private func clearAndLock() {
         self.lockId = self.previousItem?.stableId
+        self.mouseLocked = false
+        self.hideDelay.set(nil)
         clear()
     }
     

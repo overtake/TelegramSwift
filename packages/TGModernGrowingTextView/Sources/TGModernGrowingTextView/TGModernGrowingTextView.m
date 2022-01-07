@@ -365,7 +365,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     NSMenuItem *code = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Code", nil) action:@selector(codeWord:) keyEquivalent:@"k"];
     [code setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
     
-    NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.URL", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
+    NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.URL1", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
     [url setKeyEquivalentModifierMask: NSCommandKeyMask];
     
     NSMenuItem *strikethrough = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Strikethrough", nil) action:@selector(makeStrikethrough:) keyEquivalent:@"x"];
