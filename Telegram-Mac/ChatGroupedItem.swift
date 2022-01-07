@@ -99,7 +99,7 @@ class ChatGroupedItem: ChatRowItem {
                         for entity in attr.entities {
                             switch entity.type {
                             case .Spoiler:
-                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.colors.text, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                             default:
                                 break
                             }
@@ -235,6 +235,27 @@ class ChatGroupedItem: ChatRowItem {
 
     }
     
+    override var lastLineContentWidth: ChatRowItem.LastLineData? {
+        if let lastLineContentWidth = super.lastLineContentWidth {
+            return lastLineContentWidth
+        }
+        switch self.layoutType {
+        case .files:
+            let file = self.messages[self.messages.count - 1].media.first as! TelegramMediaFile
+            if file.previewRepresentations.isEmpty {
+                let parameters = self.parameters[messages.count - 1] as! ChatFileLayoutParameters
+
+                let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
+
+                let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
+                return ChatRowItem.LastLineData(width: width, single: true)
+            }
+        default:
+            return nil
+        }
+        return nil
+    }
+    
     override var hasBubble: Bool {
         get {
             if isBubbled, self.layout.type == .files {
@@ -351,19 +372,7 @@ class ChatGroupedItem: ChatRowItem {
     override var topInset:CGFloat {
         return 4
     }
-    
-    override var isForceRightLine: Bool {
-        if self.lastLineContentWidth != nil {
-            return super.isForceRightLine
-        } else {
-            switch self.layoutType {
-            case .files:
-                return true
-            case .photoOrVideo:
-                return super.isForceRightLine
-            }
-        }
-    }
+
     
     func contentNode(for index: Int) -> ChatMediaContentView.Type {
         return ChatLayoutUtils.contentNode(for: layout.messages[index].media[0])

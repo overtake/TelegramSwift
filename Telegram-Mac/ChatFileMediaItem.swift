@@ -19,8 +19,8 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
     let fileName:String
     let finderLayout: TextViewLayout
     let downloadLayout: TextViewLayout
-    fileprivate let uploadingLayout: TextViewLayout
-    fileprivate let downloadingLayout: TextViewLayout
+    let uploadingLayout: TextViewLayout
+    let downloadingLayout: TextViewLayout
     init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool) {
         self.fileName = fileName
         self.hasThumb = hasThumb

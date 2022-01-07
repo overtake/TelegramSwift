@@ -225,6 +225,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         self.background = item.viewType.rowBackground
         needsDisplay = true
+        container.needsDisplay = true
     }
     
     override func updateMouse() {
