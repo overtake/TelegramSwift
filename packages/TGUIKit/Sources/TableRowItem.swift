@@ -100,11 +100,7 @@ open class TableRowItem: NSObject {
     
     public var frame: NSRect {
         if let table = table {
-            var rect: CGRect = NSMakeRect(0, 0, table.frame.width, heightValue)
-            for i in 0 ..< index {
-                rect.origin.y += table.item(at: i).heightValue
-            }
-            return rect
+            return table.rectOf(item: self)
         }
         return .zero
     }
