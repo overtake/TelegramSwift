@@ -369,13 +369,10 @@ open class Control: View {
         if userInteractionEnabled {
             updateState()
             send(event: .Down)
-            let point = event.locationInWindow
             if handleLongEvent {
+                let point = event.locationInWindow
                 let disposable = (Signal<Void,Void>.single(Void()) |> delay(0.35, queue: Queue.mainQueue())).start(next: { [weak self] in
-                    if let inside = self?.mouseInside(), inside, let wPoint = self?.window?.mouseLocationOutsideOfEventStream, NSPointInRect(point, NSMakeRect(wPoint.x - 2, wPoint.y - 2, 4, 4)) {
-                        self?.longInvoked = true
-                        self?.send(event: .LongMouseDown)
-                    }
+                    self?.invokeLongDown(event, point: point)
                 })
                 
                 longHandleDisposable.set(disposable)
@@ -386,6 +383,16 @@ open class Control: View {
             
         } else {
             super.mouseDown(with: event)
+        }
+    }
+    
+    private func invokeLongDown(_ event: NSEvent, point: NSPoint) {
+        if self.mouseInside(), let wPoint = self.window?.mouseLocationOutsideOfEventStream, NSPointInRect(point, NSMakeRect(wPoint.x - 2, wPoint.y - 2, 4, 4)) {
+            self.longInvoked = true
+            if let menu = self.contextMenu?(), handlers.filter({ $0.event == .LongMouseDown }).isEmpty {
+                AppMenu.show(menu: menu, event: event, for: self)
+            }
+            self.send(event: .LongMouseDown)
         }
     }
     

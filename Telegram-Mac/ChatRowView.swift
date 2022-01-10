@@ -722,17 +722,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func shareViewPoint(_ item: ChatRowItem) -> NSPoint {
-        guard let shareView = self.shareView else {
-            return .zero
-        }
+        let size = NSMakeSize(29, 29)
         var point: NSPoint
         if item.isBubbled {
             let bubbleFrame = self.bubbleFrame(item)
             let rightFrame = self.rightFrame(item)
-            point = NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - shareView.frame.width - 10, bubbleFrame.maxY - (shareView.frame.height))
+            point = NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - size.width - 10, bubbleFrame.maxY - (size.height))
         } else {
             let rightFrame = self.rightFrame(item)
-            point = NSMakePoint(frame.width - 20.0 - shareView.frame.width, rightFrame.maxY)
+            point = NSMakePoint(frame.width - 20.0 - size.width, rightFrame.maxY)
         }
         return point
     }

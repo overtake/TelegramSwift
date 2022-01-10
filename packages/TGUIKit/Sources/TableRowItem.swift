@@ -98,6 +98,17 @@ open class TableRowItem: NSObject {
         return false
     }
     
+    public var frame: NSRect {
+        if let table = table {
+            var rect: CGRect = NSMakeRect(0, 0, table.frame.width, heightValue)
+            for i in 0 ..< index {
+                rect.origin.y += table.item(at: i).heightValue
+            }
+            return rect
+        }
+        return .zero
+    }
+    
     open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         return .single([])
     }

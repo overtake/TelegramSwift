@@ -2152,12 +2152,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        let range = self.tableView.rows(in: NSMakeRect(self.tableView.visibleRect.minX, self.tableView.visibleRect.minY, self.tableView.visibleRect.width, self.tableView.visibleRect.height + insetHeight))
-        if range.location == NSNotFound {
-            NSLog("visibleRect: \(self.tableView.visibleRect)")
-            var bp = 0
-            bp += 1
-        }
+        let range = self.tableView.rows(in: self.tableView.visibleRect.insetBy(dx: 0, dy: -insetHeight))
         return range
     }
     
