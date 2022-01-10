@@ -243,12 +243,13 @@ class ChatGroupedItem: ChatRowItem {
         case .files:
             let file = self.messages[self.messages.count - 1].media.first as! TelegramMediaFile
             if file.previewRepresentations.isEmpty {
-                let parameters = self.parameters[messages.count - 1] as! ChatFileLayoutParameters
-
-                let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-
-                let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
-                return ChatRowItem.LastLineData(width: width, single: true)
+                if let parameters = self.parameters[messages.count - 1] as? ChatFileLayoutParameters {
+                    let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
+                    let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
+                    return ChatRowItem.LastLineData(width: width, single: true)
+                } else {
+                    return nil
+                }
             }
         default:
             return nil

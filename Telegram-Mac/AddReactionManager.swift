@@ -789,6 +789,10 @@ final class AddReactionManager : NSObject, Notifable {
                     self.clear()
                 }
             }
+        } else {
+            if !isInside {
+                self.clear()
+            }
         }
     }
     
