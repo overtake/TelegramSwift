@@ -6,7 +6,12 @@
 	objectVersion = 50;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		27E070F8278DC1B30026BFA1 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E070F7278DC1A20026BFA1 /* libvpx.a */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		27E070F7278DC1A20026BFA1 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = build/libvpx/libvpx.a; sourceTree = "<group>"; };
 		D0983B502566606600467703 /* libvpx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = libvpx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -15,6 +20,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E070F8278DC1B30026BFA1 /* libvpx.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +46,7 @@
 		D0983B68256689B300467703 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27E070F7278DC1A20026BFA1 /* libvpx.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -237,6 +244,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/build/libvpx/lib",
+					"$(PROJECT_DIR)/build/libvpx",
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -329,6 +337,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/build/libvpx/lib",
+					"$(PROJECT_DIR)/build/libvpx",
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;

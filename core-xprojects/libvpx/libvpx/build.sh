@@ -26,9 +26,8 @@ CONFIGURE_ARGS="--disable-docs
                 --enable-realtime-only
                 --enable-multi-res-encoding"
 DIST_DIR="_dist"
-FRAMEWORK_DIR="VPX.framework"
-FRAMEWORK_LIB="VPX.framework/VPX"
-HEADER_DIR="${FRAMEWORK_DIR}/Headers/vpx"
+FRAMEWORK_DIR="build/libvpx"
+HEADER_DIR="${FRAMEWORK_DIR}/include"
 SCRIPT_DIR="$SOURCE_DIR"
 LIBVPX_SOURCE_DIR="$SOURCE_DIR"
 
@@ -92,56 +91,6 @@ target_to_preproc_symbol() {
   esac
 }
 
-# Create a vpx_config.h shim that, based on preprocessor settings for the
-# current target CPU, includes the real vpx_config.h for the current target.
-# $1 is the list of targets.
-create_vpx_framework_config_shim() {
-  local targets="$1"
-  local config_file="${HEADER_DIR}/vpx_config.h"
-  local preproc_symbol=""
-  local target=""
-  local include_guard="VPX_FRAMEWORK_HEADERS_VPX_VPX_CONFIG_H_"
-
-  local file_header="/*
- *  Copyright (c) The WebM project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
- *  be found in the AUTHORS file in the root of the source tree.
- */
-/* GENERATED FILE: DO NOT EDIT! */
-#ifndef ${include_guard}
-#define ${include_guard}
-#if defined"
-
-  printf "%s" "${file_header}" > "${config_file}"
-  for t in ${targets}; do
-    if [ "$t" = "arm64" ]; then
-        local target="arm64-darwin20-gcc"
-    elif [ "$t" = "x86_64" ]; then
-        local target="x86_64-darwin15-gcc"
-    else
-        echo "Unsupported architecture $1"
-        exit 1
-    fi
-    preproc_symbol=$(target_to_preproc_symbol "${target}")
-    printf " ${preproc_symbol}\n" >> "${config_file}"
-    printf "#define VPX_FRAMEWORK_TARGET \"${target}\"\n" >> "${config_file}"
-    printf "#include \"VPX/vpx/${target}/vpx_config.h\"\n" >> "${config_file}"
-    printf "#elif defined" >> "${config_file}"
-    mkdir "${HEADER_DIR}/${t}"
-    cp -p "${BUILD_ROOT}/${t}/vpx_config.h" "${HEADER_DIR}/${t}"
-  done
-
-  # Consume the last line of output from the loop: We don't want it.
-  sed -i.bak -e '$d' "${config_file}"
-  rm "${config_file}.bak"
-
-  printf "#endif\n\n" >> "${config_file}"
-  printf "#endif  // ${include_guard}" >> "${config_file}"
-}
 
 # Configures and builds each target specified by $1, and then builds
 # VPX.framework.
@@ -174,14 +123,9 @@ build_framework() {
   cp -p "${target_dist_dir}"/include/vpx/* "${HEADER_DIR}"
 
   # Build the fat library.
-  lipo -create ${lib_list} -output ${FRAMEWORK_DIR}/VPX
+  lipo -create ${lib_list} -output "${FRAMEWORK_DIR}/libvpx.a"
 
-  # Create the vpx_config.h shim that allows usage of vpx_config.h from
-  # within VPX.framework.
-  create_vpx_framework_config_shim "${targets}"
 
-  # Copy in vpx_version.h.
-  cp -p "${BUILD_ROOT}/${target}/vpx_version.h" "${HEADER_DIR}"
 }
 
 build_framework "${TARGETS}"

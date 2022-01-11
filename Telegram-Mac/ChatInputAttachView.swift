@@ -91,6 +91,14 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
                     
+                    items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
+                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                            alert(for: context.window, info: permissionText)
+                            return
+                        }
+                        self?.chatInteraction.attachFile(false)
+                    }, itemImage: MenuAnimation.menu_file.value))
+                    
                     items.append(ContextMenuItem(strings().inputAttachPopoverPicture, handler: { [weak self] in
                         guard let `self` = self else {return}
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
@@ -128,13 +136,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, itemImage: MenuAnimation.menu_poll.value))
                     }
                     
-                    items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
-                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: context.window, info: permissionText)
-                            return
-                        }
-                        self?.chatInteraction.attachFile(false)
-                    }, itemImage: MenuAnimation.menu_file.value))
+                    
                     
                     items.append(ContextMenuItem(strings().inputAttachPopoverLocation, handler: { [weak self] in
                         self?.chatInteraction.attachLocation()
@@ -144,7 +146,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 
                 if !items.isEmpty {
                     let menu = ContextMenu(betterInside: true)
-                    for item in items {
+                    for item in items.reversed() {
                         menu.addItem(item)
                     }
                     return menu

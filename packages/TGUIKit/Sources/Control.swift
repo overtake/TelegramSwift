@@ -349,7 +349,7 @@ open class Control: View {
         
         if event.modifierFlags.contains(.control) {
             
-            if let menu = self.contextMenu?() {
+            if let menu = self.contextMenu?(), event.clickCount == 1 {
                 AppMenu.show(menu: menu, event: event, for: self)
             }
             
@@ -362,7 +362,7 @@ open class Control: View {
             return
         }
         
-        if self.handlers.isEmpty, let menu = self.contextMenu?() {
+        if self.handlers.isEmpty, let menu = self.contextMenu?(), event.clickCount == 1 {
             AppMenu.show(menu: menu, event: event, for: self)
         }
         
