@@ -147,7 +147,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
                 arguments.toggleLogs(!enabled)
             })
         case let .toggleMenu(_, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Native Context Menu", type: .switchable(enabled), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Native Context Menu (Get Ready for glitches)", type: .switchable(enabled), action: {
                 arguments.toggleMenu(!enabled)
             })
         case .section:

@@ -2539,6 +2539,92 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    func reactAction() -> Bool {
+        if canReact {
+            
+            let context = self.context
+
+            var available:[AvailableReactions.Reaction] = []
+            let allowed = chatInteraction.presentation.allowedReactions
+            if let reactions = self.entry.additionalData.reactions {
+                available = reactions.enabled.filter {
+                    allowed == nil || allowed!.contains($0.value)
+                }
+            }
+            
+            guard !available.isEmpty, let messageId = self.message?.id else {
+                return false
+            }
+            if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
+                available.move(at: index, to: 0)
+            }
+            if let value = available.first?.value {
+                let isSelected = message?.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
+                context.reactions.react(messageId, value: isSelected ? nil : value)
+                return true
+            }
+        }
+        return false
+    }
+    
+    override var menuAdditionView: Window? {
+        if FastSettings.legacyReactions {
+            return nil
+        }
+        if canReact {
+            
+            let context = self.context
+
+            
+            var available:[AvailableReactions.Reaction] = []
+            let allowed = chatInteraction.presentation.allowedReactions
+            if let reactions = self.entry.additionalData.reactions {
+                available = reactions.enabled.filter {
+                    allowed == nil || allowed!.contains($0.value)
+                }
+            }
+            
+            guard !available.isEmpty, let message = self.message else {
+                return nil
+            }
+            
+            let messageId = message.id
+            
+            if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
+                available.move(at: index, to: 0)
+            }
+            
+            let width = ContextAddReactionsListView.width(for: available)
+            
+            let rect = NSMakeRect(0, 0, width + 40, 40)
+            
+            let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+            panel._canBecomeMain = false
+            panel._canBecomeKey = false
+            panel.level = .popUpMenu
+            panel.backgroundColor = .clear
+            panel.isOpaque = false
+            panel.hasShadow = false
+            
+            
+
+            
+            let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value in
+                let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
+                context.reactions.react(message.id, value: isSelected ? nil : value)
+            })
+            
+            
+            
+            view.layer?.cornerRadius = 15
+            panel.contentView?.addSubview(view)
+            panel.contentView?.wantsLayer = true
+            view.autoresizingMask = [.width, .height]
+            return panel
+        }
+        return nil
+    }
+    
     override var instantlyResize: Bool {
         return forwardType != nil
     }

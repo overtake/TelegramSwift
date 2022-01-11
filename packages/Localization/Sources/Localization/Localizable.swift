@@ -4835,6 +4835,8 @@ public final class L10n {
   public static var generalSettingsForceTouchForward: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Forward") }
   /// Preview Media
   public static var generalSettingsForceTouchPreviewMedia: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.PreviewMedia") }
+  /// Add Reaction
+  public static var generalSettingsForceTouchReact: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.React") }
   /// Reply to Message
   public static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
@@ -5167,8 +5169,8 @@ public final class L10n {
   public static var installedStickersLoopAnimated: String  { return L10n.tr("Localizable", "InstalledStickers.LoopAnimated") }
   /// STICKER SETS
   public static var installedStickersPacksTitle: String  { return L10n.tr("Localizable", "InstalledStickers.PacksTitle") }
-  /// Quick Reaction
-  public static var installedStickersQuickReaction: String  { return L10n.tr("Localizable", "InstalledStickers.QuickReaction") }
+  /// Reactions
+  public static var installedStickersQuickReaction1: String  { return L10n.tr("Localizable", "InstalledStickers.QuickReaction1") }
   /// Trending Stickers
   public static var installedStickersTranding: String  { return L10n.tr("Localizable", "InstalledStickers.Tranding") }
   /// Delete
@@ -7785,6 +7787,8 @@ public final class L10n {
   public static var r4oN2Eq4Title: String  { return L10n.tr("Localizable", "R4o-n2-Eq4.title") }
   /// Allow Reactions
   public static var reactionSettingsAllow: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow") }
+  /// Hover Reactions
+  public static var reactionSettingsLegacy: String  { return L10n.tr("Localizable", "Reaction.Settings.Legacy") }
   /// Reactions
   public static var reactionSettingsTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Title") }
   /// Allow subscribers to reacts to channel posts.
@@ -7793,6 +7797,8 @@ public final class L10n {
   public static var reactionSettingsAllowGroupInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Group.Info") }
   /// AVAILABLE REACTIONS
   public static var reactionSettingsAvailableInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Available.Info") }
+  /// Reaction button will be shown when you hover near message
+  public static var reactionSettingsLegacyInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Legacy.Info") }
   /// QUICK REACTION.
   public static var reactionSettingsQuickInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Info") }
   /// Quick Reaction
@@ -9453,6 +9459,8 @@ public final class L10n {
   public static var textViewTransformUnderline: String  { return L10n.tr("Localizable", "TextView.Transform.Underline") }
   /// Make URL
   public static var textViewTransformURL: String  { return L10n.tr("Localizable", "TextView.Transform.URL") }
+  /// Make Link
+  public static var textViewTransformURL1: String  { return L10n.tr("Localizable", "TextView.Transform.URL1") }
   /// Sorry, this theme doesn't seem to exist for macOS.
   public static var themeGetThemeError: String  { return L10n.tr("Localizable", "Theme.GetTheme.Error") }
   /// Theme Preview

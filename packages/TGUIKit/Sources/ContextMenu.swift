@@ -114,6 +114,8 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
         super.init(title: "")
     }
     
+    public var topWindow: Window?
+    
     public var loadMore: (()->Void)? = nil
 
     @objc dynamic internal var _items:[NSMenuItem] = [] {

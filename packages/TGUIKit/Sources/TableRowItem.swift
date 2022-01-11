@@ -105,6 +105,10 @@ open class TableRowItem: NSObject {
         return .zero
     }
     
+    open var menuAdditionView: Window? {
+        return nil
+    }
+    
     open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         return .single([])
     }

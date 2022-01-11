@@ -35,6 +35,7 @@ enum ForceTouchAction: Int32 {
     case reply
     case forward
     case previewMedia
+    case react
 }
 
 enum ContextTextTooltip : Int32 {
@@ -140,6 +141,7 @@ class FastSettings {
 
     private static let kSVCShareMicro = "kSVCShareMicro"
 
+    private static let kReactionsMode = "kReactionsMode"
 
     private static let kVolumeRate = "kVolumeRate"
     
@@ -292,7 +294,7 @@ class FastSettings {
     }
     
     static var forceTouchAction: ForceTouchAction {
-        return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .edit
+        return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .react
     }
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {
@@ -342,6 +344,15 @@ class FastSettings {
     static func toggleInAppSouds(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kInAppSoundsType)
         UserDefaults.standard.synchronize()
+    }
+    
+    static func toggleReactionMode(_ legacy: Bool) {
+        UserDefaults.standard.set(legacy, forKey: kReactionsMode)
+        UserDefaults.standard.synchronize()
+    }
+    
+    static var legacyReactions: Bool {
+        UserDefaults.standard.bool(forKey: kReactionsMode)
     }
     
     static var inAppSounds: Bool {

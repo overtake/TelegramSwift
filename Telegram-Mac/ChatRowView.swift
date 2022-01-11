@@ -722,7 +722,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func shareViewPoint(_ item: ChatRowItem) -> NSPoint {
-        let size = NSMakeSize(29, 29)
+        let size = NSMakeSize((29 + 4) * 1.05, (29 + 4) * 1.05)
         var point: NSPoint
         if item.isBubbled {
             let bubbleFrame = self.bubbleFrame(item)
@@ -949,6 +949,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     frame.origin.y += rightFrame(item).height
                 } 
             }
+        } else if let replyMarkup = item.replyMarkupModel {
+            frame.origin.y += replyMarkup.size.height + item.defaultContentInnerInset
         }
         if reactionsLayout.presentation.isOutOfBounds, !item.isIncoming {
             frame.origin.x = contentFrame.maxX - reactionsLayout.size.width
@@ -1580,6 +1582,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 result = item.forwardAction()
             case .previewMedia:
                 result = false
+            case .react:
+                result = item.reactAction()
             }
             if result {
                 focusAnimation(nil)

@@ -32,6 +32,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case forceTouchReply(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchEdit(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchForward(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case forceTouchReact(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchPreviewMedia(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case callSettings(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     var stableId: Int {
@@ -66,12 +67,14 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 14
         case .forceTouchPreviewMedia:
             return 15
-        case .enterBehavior:
+        case .forceTouchReact:
             return 16
-        case .cmdEnterBehavior:
+        case .enterBehavior:
             return 17
-        case .callSettings:
+        case .cmdEnterBehavior:
             return 18
+        case .callSettings:
+            return 19
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -110,6 +113,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .forceTouchEdit(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .forceTouchForward(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .forceTouchReact(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .forceTouchPreviewMedia(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -185,6 +190,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .forceTouchForward(sectionId: _, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchForward, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.forward)
+            })
+        case let .forceTouchReact(sectionId: _, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchReact, type: .selectable(enabled), viewType: viewType, action: {
+                arguments.toggleForceTouchAction(.react)
             })
         case let .forceTouchPreviewMedia(sectionId: _, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), viewType: viewType, action: {
@@ -298,8 +307,9 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     entries.append(.forceTouchReply(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .reply, viewType: .firstItem))
     entries.append(.forceTouchEdit(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .edit, viewType: .innerItem))
-    entries.append(.forceTouchForward(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .forward, viewType: .lastItem))
-    
+    entries.append(.forceTouchForward(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .forward, viewType: .innerItem))
+    entries.append(.forceTouchReact(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .react, viewType: .lastItem))
+
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     

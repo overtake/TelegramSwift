@@ -34,7 +34,7 @@ final class AppMenuAnimatedImage : LottiePlayerView, AppMenuItemImageDrawable {
         
         if let data = sticker.data {
             
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey.init(key: .bundle(self.sticker.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: [.init(keyPath: "", color: color)])
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey.init(key: .bundle(self.sticker.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: [.init(keyPath: "", color: color)], metalSupport: false)
             
             self.set(animation, reset: true, saveContext: false, animated: false)
 
