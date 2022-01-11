@@ -2561,7 +2561,7 @@ class ChatRowItem: TableRowItem {
             if let value = available.first?.value {
                 let isSelected = message?.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                 context.reactions.react(messageId, value: isSelected ? nil : value)
-                return true
+                return false
             }
         }
         return false

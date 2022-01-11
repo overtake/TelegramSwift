@@ -808,12 +808,10 @@
         
         membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
             if let cachedData = view.cachedData as? CachedGroupData {
-                return (exist: Int(cachedData.participants?.participants.count ?? 0 ) > minumimUsersBlock, loaded: true)
+                return (exist: true, loaded: true)
             } else if let cachedData = view.cachedData as? CachedChannelData {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup {
-                    let members = Int32(cachedData.participantsSummary.memberCount ?? 0)
-                    let admins = Int32(cachedData.participantsSummary.adminCount ?? 0)
-                    return (exist: members + admins > minumimUsersBlock, loaded: true)
+                    return (exist: true, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }
