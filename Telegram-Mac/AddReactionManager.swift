@@ -27,6 +27,8 @@ final class ContextAddReactionsListView : View  {
         let reaction: AvailableReactions.Reaction
         let context: AccountContext
         private let stateDisposable = MetaDisposable()
+        private var selectAnimationData: Data?
+        private var currentKey: String?
         required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
             self.reaction = reaction
             self.context = context
@@ -70,6 +72,7 @@ final class ContextAddReactionsListView : View  {
 
             disposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
+                    self?.selectAnimationData = data
                     self?.apply(data, key: "select", policy: .framesCount(1))
                 }
             }))
@@ -82,6 +85,7 @@ final class ContextAddReactionsListView : View  {
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
             let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, metalSupport: false)
             player.set(animation, reset: true, saveContext: false, animated: false)
+            self.currentKey = key
         }
         
         deinit {
@@ -102,16 +106,20 @@ final class ContextAddReactionsListView : View  {
         private var previous: ControlState = .Normal
         override func stateDidUpdate(_ state: ControlState) {
             super.stateDidUpdate(state)
-//            switch state {
-//            case .Hover:
-//                if self.player.animation?.playPolicy == .framesCount(1) {
-//                    self.player.set(self.player.animation?.withUpdatedPolicy(.once), reset: false)
-//                } else {
-//                    self.player.playAgain()
-//                }
-//            default:
-//                break
-//            }
+            switch state {
+            case .Hover:
+                if self.player.animation?.playPolicy == .framesCount(1) {
+                    self.player.set(self.player.animation?.withUpdatedPolicy(.once), reset: false)
+                } else {
+                    if let data = selectAnimationData, self.currentKey != "select" {
+                        self.apply(data, key: "select", policy: .framesCount(1))
+                    } else {
+                        self.player.playAgain()
+                    }
+                }
+            default:
+                break
+            }
             
             if previous == .Hover, state == .Highlight {
                 self.layer?.animateScaleCenter(from: 1, to: 0.8, duration: 0.2, removeOnCompletion: false)

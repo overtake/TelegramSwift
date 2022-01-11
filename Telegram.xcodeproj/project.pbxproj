@@ -1210,7 +1210,6 @@
 		272934112778E01100F10D3C /* menu_video.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_video.tgs; sourceTree = "<group>"; };
 		272934132778E03E00F10D3C /* menu_voice.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_voice.tgs; sourceTree = "<group>"; };
 		272934152778E05000F10D3C /* menu_music.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_music.tgs; sourceTree = "<group>"; };
-		2729341727799D2B00F10D3C /* menu_file.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = menu_file.tgs; path = "../../../../../../Downloads/macMenuTestIcons 12/menu_file.tgs"; sourceTree = "<group>"; };
 		2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_select_multiple.tgs; sourceTree = "<group>"; };
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
@@ -2588,7 +2587,6 @@
 				277DFE692784844700F78396 /* menu_lock.tgs */,
 				277DFE672784842C00F78396 /* menu_sun.tgs */,
 				2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */,
-				2729341727799D2B00F10D3C /* menu_file.tgs */,
 				272934152778E05000F10D3C /* menu_music.tgs */,
 				272934132778E03E00F10D3C /* menu_voice.tgs */,
 				272934112778E01100F10D3C /* menu_video.tgs */,
