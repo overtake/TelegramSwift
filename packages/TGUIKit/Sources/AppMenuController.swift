@@ -494,6 +494,14 @@ final class AppMenuController : NSObject  {
             self.overlay.removeFromSuperview()
             self.parent?.copyhandler = self.previousCopyHandler
 
+            if let window = self.menu.topWindow, let view = window.contentView {
+                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                    view?.removeFromSuperview()
+                    window?.orderOut(nil)
+                })
+            }
+            
+            
             self.onClose()
         }
         self.menu.isShown = false
@@ -716,6 +724,27 @@ final class AppMenuController : NSObject  {
             self?.invokeKeyEquivalent(.cmdc)
         }
         self.menu.isShown = true
+        
+        if let window = menu.topWindow {
+            
+            let width = min(window.frame.width, rect.width)
+            
+            let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width - 10 * 2, window.frame.height)
+            window.setFrame(rect, display: true)
+            window.makeKeyAndOrderFront(nil)
+            
+            let view = window.contentView!.subviews.first!
+            
+            view.frame = rect.size.bounds.insetBy(dx: 10, dy: 5)
+            
+            window.contentView?.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
+            window.contentView?.layer?.animateScaleSpringFrom(anchor: NSMakePoint(anchor.x, rect.height / 2), from: 0.1, to: 1, duration: 0.2, bounce: false)
+            
+            window.set(mouseHandler: { [weak self] event in
+                self?.close()
+                return .rejected
+            }, with: self, for: .leftMouseUp)
+        }
     }
     
     private func adjust(_ rect: NSRect, parent: Window? = nil) -> NSRect {

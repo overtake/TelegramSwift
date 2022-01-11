@@ -1571,7 +1571,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
-        self.reactionManager = .init(chatInteraction: self.chatInteraction, view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
+        if FastSettings.legacyReactions {
+            self.reactionManager = .init(chatInteraction: self.chatInteraction, view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
+        }
 
 
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
@@ -4176,8 +4178,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                     } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            .withUpdatedAllowedReactions(cachedData.allowedReactions)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                            .withUpdatedAllowedReactions(cachedData.allowedReactions)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                     }
@@ -4360,8 +4364,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                             } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                                    .withUpdatedAllowedReactions(cachedData.allowedReactions)
                             } else if let cachedData = peerView.cachedData as? CachedGroupData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
+                                    .withUpdatedAllowedReactions(cachedData.allowedReactions)
                             }
                             
                         }

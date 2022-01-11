@@ -95,6 +95,8 @@ final class AccountContext {
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
     let reactions: Reactions
+    private(set) var reactionSettings: ReactionSettings = ReactionSettings.default
+    private let reactionSettingsDisposable = MetaDisposable()
     private var chatInterfaceTempState:[PeerId : ChatInterfaceTempState] = [:]
     
     
@@ -194,7 +196,6 @@ final class AccountContext {
         return _contentSettings.with { $0 }
     }
     
-   // public let tonContext: StoredTonContext!
     
     public var closeFolderFirst: Bool = false
     
@@ -219,6 +220,7 @@ final class AccountContext {
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
         #endif
+        
         
         
         let engine = self.engine
@@ -393,6 +395,20 @@ final class AccountContext {
         })
 //        _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))
 
+        let settings = account.postbox.preferencesView(keys: [PreferencesKeys.reactionSettings])
+           |> map { preferencesView -> ReactionSettings in
+               let reactionSettings: ReactionSettings
+               if let entry = preferencesView.values[PreferencesKeys.reactionSettings], let value = entry.get(ReactionSettings.self) {
+                   reactionSettings = value
+               } else {
+                   reactionSettings = .default
+               }
+               return reactionSettings
+           } |> deliverOnMainQueue
+        
+        reactionSettingsDisposable.set(settings.start(next: { [weak self] settings in
+            self?.reactionSettings = settings
+        }))
         
         #endif
         
@@ -571,6 +587,7 @@ final class AccountContext {
         self.diceCache.cleanup()
         _chatThemes.set(.single([]))
         _cloudThemes.set(.single(.init(themes: [], list: [:], default: nil, custom: nil)))
+        reactionSettingsDisposable.dispose()
         #endif
     }
    

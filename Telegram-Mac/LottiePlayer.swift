@@ -904,7 +904,7 @@ final class LottieAnimation : Equatable {
     var supportsMetal: Bool {
         switch type {
         case .lottie:
-            return true
+            return self.metalSupport
         default:
             return false
         }
@@ -917,6 +917,7 @@ final class LottieAnimation : Equatable {
     let playPolicy: LottiePlayPolicy
     let colors:[LottieColor]
     let soundEffect: LottieSoundEffect?
+    let metalSupport: Bool
     let postbox: Postbox?
     let runOnQueue: Queue
     var onFinish:(()->Void)?
@@ -924,7 +925,7 @@ final class LottieAnimation : Equatable {
     var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue) {
+    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = true) {
         self.compressed = compressed
         self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
@@ -935,6 +936,7 @@ final class LottieAnimation : Equatable {
         self.soundEffect = soundEffect
         self.runOnQueue = runOnQueue
         self.type = type
+        self.metalSupport = metalSupport
     }
     
     var size: NSSize {
@@ -949,16 +951,16 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedPolicy(_ playPolicy: LottiePlayPolicy) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     
     var cacheKey: String {

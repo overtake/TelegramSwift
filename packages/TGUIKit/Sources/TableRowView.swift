@@ -252,6 +252,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                 if let strongSelf = self, let item = item {
                     let menu = ContextMenu(isLegacy: item.isLegacyMenu)
 
+                    menu.topWindow = item.menuAdditionView
+                    
                     menu.onShow = { [weak strongSelf] menu in
                         strongSelf?.onShowContextMenu()
                     }

@@ -32,77 +32,73 @@ class ChatInputAttachView: ImageButton, Notifable {
         
         updateLayout()
         
+        let context = chatInteraction.context
         
-        set(handler: { [weak self] control in
-            
-            guard let `self` = self else {return}
+        self.contextMenu = { [weak self] in
+            guard let `self` = self else {return nil}
             if let peer = chatInteraction.presentation.peer {
                 
-                var items:[SPopoverItem] = []
+                var items:[ContextMenuItem] = []
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     if editState.message.groupingKey == nil {
-                        items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
+                        items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                             self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                        }, theme.icons.chatAttachPhoto))
+                        }, itemImage: MenuAnimation.menu_shared_media.value))
                         
-                        items.append(SPopoverItem(strings().inputAttachPopoverFile, { [weak self] in
+                        items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
                             self?.chatInteraction.updateEditingMessageMedia(nil, false)
-                        }, theme.icons.chatAttachFile))
+                        }, itemImage: MenuAnimation.menu_file.value))
                         
                         if media is TelegramMediaImage {
-                            items.append(SPopoverItem(strings().editMessageEditCurrentPhoto, { [weak self] in
+                            items.append(ContextMenuItem(strings().editMessageEditCurrentPhoto, handler: { [weak self] in
                                 self?.chatInteraction.editEditingMessagePhoto(media as! TelegramMediaImage)
-                            }, theme.icons.editMessageCurrentPhoto))
+                            }, itemImage: MenuAnimation.menu_edit.value))
                         }
                     } else {
                         if let _ = editState.message.media.first as? TelegramMediaImage {
-                            items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
+                            items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                                 self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                            }, theme.icons.chatAttachPhoto))
+                            }, itemImage: MenuAnimation.menu_edit.value))
                         } else if let file = editState.message.media.first as? TelegramMediaFile {
                             if file.isVideoFile {
-                                items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
+                                items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
-                                }, theme.icons.chatAttachPhoto))
+                                }, itemImage: MenuAnimation.menu_shared_media.value))
                             }
                             if file.isMusic {
-                                items.append(SPopoverItem(strings().inputAttachPopoverMusic, { [weak self] in
+                                items.append(ContextMenuItem(strings().inputAttachPopoverMusic, handler: { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(audioExts, false)
-                                }, theme.icons.chatAttachFile))
+                                }, itemImage: MenuAnimation.menu_music.value))
                             } else {
-                                items.append(SPopoverItem(strings().inputAttachPopoverFile, { [weak self] in
+                                items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(nil, false)
-                                }, theme.icons.chatAttachFile))
+                                }, itemImage: MenuAnimation.menu_file.value))
                             }
                         }
                     }
-                    
-                    
-                    
-                    
                 } else if chatInteraction.presentation.interfaceState.editState == nil {
                     
                     if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                        showSlowModeTimeoutTooltip(slowMode, for: control)
-                        return
+                        showSlowModeTimeoutTooltip(slowMode, for: self)
+                        return nil
                     }
                     
-                    items.append(SPopoverItem(strings().inputAttachPopoverPhotoOrVideo, { [weak self] in
+                    items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: mainWindow, info: permissionText)
+                            alert(for: context.window, info: permissionText)
                             return
                         }
                         self?.chatInteraction.attachPhotoOrVideo()
-                    }, theme.icons.chatAttachPhoto))
+                    }, itemImage: MenuAnimation.menu_shared_media.value))
                     
-                    items.append(SPopoverItem(strings().inputAttachPopoverPicture, { [weak self] in
+                    items.append(ContextMenuItem(strings().inputAttachPopoverPicture, handler: { [weak self] in
                         guard let `self` = self else {return}
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
                             alert(for: self.chatInteraction.context.window, info: permissionText)
                             return
                         }
                         self.chatInteraction.attachPicture()
-                    }, theme.icons.chatAttachCamera))
+                    }, itemImage: MenuAnimation.menu_camera.value))
                     
                     var canAttachPoll: Bool = false
                     if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
@@ -122,60 +118,69 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                    
                     if canAttachPoll {
-                        items.append(SPopoverItem(strings().inputAttachPopoverPoll, { [weak self] in
+                        items.append(ContextMenuItem(strings().inputAttachPopoverPoll, handler: { [weak self] in
                             guard let `self` = self else {return}
                             if let permissionText = permissionText(from: peer, for: .banSendPolls) {
-                                alert(for: mainWindow, info: permissionText)
+                                alert(for: context.window, info: permissionText)
                                 return
                             }
                             showModal(with: NewPollController(chatInteraction: self.chatInteraction), for: self.chatInteraction.context.window)
-                        }, theme.icons.chatAttachPoll))
+                        }, itemImage: MenuAnimation.menu_poll.value))
                     }
                     
-                    items.append(SPopoverItem(strings().inputAttachPopoverFile, { [weak self] in
+                    items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: mainWindow, info: permissionText)
+                            alert(for: context.window, info: permissionText)
                             return
                         }
                         self?.chatInteraction.attachFile(false)
-                    }, theme.icons.chatAttachFile))
+                    }, itemImage: MenuAnimation.menu_file.value))
                     
-                    items.append(SPopoverItem(strings().inputAttachPopoverLocation, { [weak self] in
+                    items.append(ContextMenuItem(strings().inputAttachPopoverLocation, handler: { [weak self] in
                         self?.chatInteraction.attachLocation()
-                    }, theme.icons.chatAttachLocation))
+                    }, itemImage: MenuAnimation.menu_location.value))
                 }
                 
                 
                 if !items.isEmpty {
-                    self.controller = SPopoverViewController(items: items, visibility: 10)
-                    showPopover(for: self, with: self.controller!, edge: nil, inset: NSMakePoint(0,0))
-                }
-               
-            }
-        }, for: .Hover)
-        
-        set(handler: { [weak self] control in
-            guard let `self` = self else {return}
-            
-            if let _ = chatInteraction.presentation.interfaceState.editState {
-                return
-            }
-            
-            if let peer = self.chatInteraction.presentation.peer {
-                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                    alert(for: self.chatInteraction.context.window, info: permissionText)
-                    return
-                }
-                self.controller?.popover?.hide()
-              //  Queue.mainQueue().justDispatch {
-                    if self.chatInteraction.presentation.interfaceState.editState != nil {
-                        self.chatInteraction.updateEditingMessageMedia(nil, true)
-                    } else {
-                        self.chatInteraction.attachFile(true)
+                    let menu = ContextMenu(betterInside: true)
+                    for item in items {
+                        menu.addItem(item)
                     }
-             //   }
+                    return menu
+                }
             }
-        }, for: .Click)
+            return nil
+        }
+        
+//
+//        set(handler: { [weak self] control in
+//
+//
+//        }, for: .Hover)
+//
+//        set(handler: { [weak self] control in
+//            guard let `self` = self else {return}
+//
+//            if let _ = chatInteraction.presentation.interfaceState.editState {
+//                return
+//            }
+//
+//            if let peer = self.chatInteraction.presentation.peer {
+//                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+//                    alert(for: self.chatInteraction.context.window, info: permissionText)
+//                    return
+//                }
+//                self.controller?.popover?.hide()
+//              //  Queue.mainQueue().justDispatch {
+//                    if self.chatInteraction.presentation.interfaceState.editState != nil {
+//                        self.chatInteraction.updateEditingMessageMedia(nil, true)
+//                    } else {
+//                        self.chatInteraction.attachFile(true)
+//                    }
+//             //   }
+//            }
+//        }, for: .Click)
 
         chatInteraction.add(observer: self)
         addSubview(editMediaAccessory)

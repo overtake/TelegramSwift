@@ -223,7 +223,7 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
                 arguments.openArchived(archived.archived)
             })
         case let .quickReaction(_, available, image, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersQuickReaction, type: image != nil ? .image(image!) : .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersQuickReaction1, type: image != nil ? .image(image!) : .next, viewType: viewType, action: {
                 arguments.quickSetup(available)
             })
         case let .loopAnimated(_, value, viewType):

@@ -93,6 +93,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    switch state.mode {
+    case .quick:
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("legacy"), data: .init(name: strings().reactionSettingsLegacy, color: theme.colors.text, type: .switchable(FastSettings.legacyReactions), viewType: .singleItem, action: {
+            FastSettings.toggleReactionMode(!FastSettings.legacyReactions)
+        })))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsLegacyInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    default:
+        break
+    }
+    
     return entries
 }
 

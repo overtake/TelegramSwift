@@ -344,6 +344,9 @@
 		27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
 		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
+		27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F1278D9A970026BFA1 /* menu_camera.tgs */; };
+		27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F3278D9C0A0026BFA1 /* menu_location.tgs */; };
+		27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F5278D9C120026BFA1 /* menu_poll.tgs */; };
 		27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E59979261B3F5800228411 /* CurrencyFormatter.swift */; };
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
@@ -1484,6 +1487,9 @@
 		27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCommandCenter.swift; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
 		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
+		27E070F1278D9A970026BFA1 /* menu_camera.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_camera.tgs; sourceTree = "<group>"; };
+		27E070F3278D9C0A0026BFA1 /* menu_location.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_location.tgs; sourceTree = "<group>"; };
+		27E070F5278D9C120026BFA1 /* menu_poll.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_poll.tgs; sourceTree = "<group>"; };
 		27E59979261B3F5800228411 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
@@ -2575,6 +2581,9 @@
 		27CE375C276095DA007E6F1B /* menu */ = {
 			isa = PBXGroup;
 			children = (
+				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
+				27E070F3278D9C0A0026BFA1 /* menu_location.tgs */,
+				27E070F1278D9A970026BFA1 /* menu_camera.tgs */,
 				277DFE6B2784846200F78396 /* menu_moon.tgs */,
 				277DFE692784844700F78396 /* menu_lock.tgs */,
 				277DFE672784842C00F78396 /* menu_sun.tgs */,
@@ -5256,6 +5265,7 @@
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
 				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
+				27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
 				D07450E9233D61B800769D7F /* keyboard_typing.tgs in Resources */,
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
@@ -5289,11 +5299,13 @@
 				2763A162261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs in Resources */,
 				275549112747C24F0098A3CD /* device_firefox.tgs in Resources */,
 				275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */,
+				27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */,
 				27CE37662760960A007E6F1B /* menu_unread.tgs in Resources */,
 				27CE37682760960A007E6F1B /* menu_mute.tgs in Resources */,
 				272934162778E05000F10D3C /* menu_music.tgs in Resources */,
 				27A9904E257A8047009044DB /* Pop.wav in Resources */,
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
+				27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */,
 				27CE37652760960A007E6F1B /* menu_archive.tgs in Resources */,
 				27CB176E27638F0000DD25E0 /* menu_check_selected.tgs in Resources */,
 				2763A165261DF5EF00C12762 /* voice_chat_cancel_reminder_to_mute.tgs in Resources */,
