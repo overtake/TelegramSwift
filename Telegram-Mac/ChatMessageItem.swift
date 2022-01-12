@@ -500,6 +500,9 @@ class ChatMessageItem: ChatRowItem {
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
             }
+            interactions.topWindow = { [weak self] in
+                return self?.menuAdditionView
+            }
             interactions.menuItems = { [weak self] type in
                 if let strongSelf = self, let message = strongSelf.message {
                     return chatMenuItems(for: message, entry: strongSelf.entry, textLayout: (strongSelf.textLayout, type), chatInteraction: strongSelf.chatInteraction)

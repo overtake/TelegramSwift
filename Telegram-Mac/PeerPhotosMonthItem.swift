@@ -857,7 +857,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
     }
     
     @objc private func updateVisibleItems() {
-        layoutVisibleItems(animated: false)
+        
     }
     
     private var previousRange: (Int, Int) = (0, 0)
@@ -867,59 +867,22 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         guard let item = item as? PeerPhotosMonthItem else {
             return
         }
-        let visibleRect = visibleRect.insetBy(dx: 0, dy: -item.itemSize.height * 2)
-        let size = item.itemSize
                 
-        if self.visibleRect != NSZeroRect {
-            let visibleRange = (Int(ceil(visibleRect.minY / (size.height))), Int(ceil(visibleRect.height / (size.height))))
-            if visibleRange != self.previousRange {
-                self.previousRange = visibleRange
-                isCleaned = false
-            } else {
-                return
-            }
-        } else {
-//            self.previousRange = (0, 0)
-//            CATransaction.begin()
-//            if !isCleaned {
-//                for (i, view) in self.contentViews.enumerated() {
-//                    view?.removeFromSuperview()
-//                    self.contentViews[i] = nil
-//                }
-//            }
-//            isCleaned = true
-//            CATransaction.commit()
-//            return
-        }
-        
-
         CATransaction.begin()
           
-        var unused:[MediaCell] = []
         for (i, layout) in item.layoutItems.enumerated() {
-            if NSPointInRect(layout.frame.origin, visibleRect) {
-                var view: MediaCell
-                if self.contentViews[i] == nil || !self.contentViews[i]!.isKind(of: layout.viewType) {
-                    view = layout.viewType.init(frame: layout.frame)
-                    self.contentViews[i] = view
-                } else {
-                    view = self.contentViews[i]!
-                }
-                if view.layoutItem != layout {
-                    view.update(layout: layout, context: item.context, table: item.table)
-                }
-
-                view.frame = layout.frame
+            var view: MediaCell
+            if self.contentViews[i] == nil || !self.contentViews[i]!.isKind(of: layout.viewType) {
+                view = layout.viewType.init(frame: layout.frame)
+                self.contentViews[i] = view
             } else {
-                if let view = self.contentViews[i] {
-                    unused.append(view)
-                    self.contentViews[i] = nil
-                }
+                view = self.contentViews[i]!
             }
-        }
-          
-        for view in unused {
-            view.removeFromSuperview()
+            if view.layoutItem != layout {
+                view.update(layout: layout, context: item.context, table: item.table)
+            }
+
+            view.frame = layout.frame
         }
         
         containerView.subviews = self.contentViews.compactMap { $0 }

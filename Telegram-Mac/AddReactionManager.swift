@@ -185,9 +185,13 @@ final class ContextAddReactionsListView : View  {
         
         visualEffect.material = theme.colors.isDark ? .dark : .light
 
-        backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+        if #available(macOS 11.0, *) {
+            self.addSubview(visualEffect)
+            backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+        } else {
+            backgroundView.backgroundColor = theme.colors.background
+        }
         
-        addSubview(visualEffect)
         addSubview(backgroundView)
         addSubview(scrollView)
         scrollView.addSubview(topGradient)
@@ -216,6 +220,8 @@ final class ContextAddReactionsListView : View  {
         topGradient.direction = .horizontal(false)
         
         layer?.cornerRadius = frame.width / 2
+        
+        
     }
     
     func rect(for reaction: AvailableReactions.Reaction) -> NSRect {

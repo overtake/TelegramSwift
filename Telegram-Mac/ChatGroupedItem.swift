@@ -115,6 +115,7 @@ class ChatGroupedItem: ChatRowItem {
                     })
                 }))
                 layout.layout.interactions = globalLinkExecutor
+                
                 captionLayouts.append(layout)
             }
             
@@ -125,6 +126,12 @@ class ChatGroupedItem: ChatRowItem {
         super.init(initialSize, chatInteraction, context, entry, downloadSettings, theme: theme)
         
          self.captionLayouts = captionLayouts
+        
+        for layout in captionLayouts {
+            layout.layout.interactions.topWindow = { [weak self] in
+                return self?.menuAdditionView
+            }
+        }
                 
         for (i, message) in layout.messages.enumerated() {
             

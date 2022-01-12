@@ -199,7 +199,8 @@ public final class TextViewInteractions {
     public var copyAttributedString:(NSAttributedString)->Bool
     public var copyToClipboard:((String)->Void)?
     public var hoverOnLink: (LinkHoverValue)->Void
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }) {
+    public var topWindow:(()->Window?)? = nil
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }, topWindow:(()->Window?)? = nil) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -210,6 +211,7 @@ public final class TextViewInteractions {
         self.copyAttributedString = copyAttributedString
         self.copyToClipboard = copyToClipboard
         self.hoverOnLink = hoverOnLink
+        self.topWindow = topWindow
     }
 }
 
@@ -1496,6 +1498,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             for item in items {
                                 menu.addItem(item)
                             }
+                            menu.topWindow = layout.interactions.topWindow?()
                             AppMenu.show(menu: menu, event: event, for: strongSelf)
                         }
                     }))
@@ -1515,6 +1518,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         }
                     }, itemImage: TextView.context_copy_animation)
                     menu.addItem(copy)
+                    menu.topWindow = layout.interactions.topWindow?()
                     AppMenu.show(menu: menu, event: event, for: self)
                 }
             } else {
