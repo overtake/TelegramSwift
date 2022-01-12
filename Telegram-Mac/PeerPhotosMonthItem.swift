@@ -257,8 +257,7 @@ private class MediaCell : Control {
                 return
             }
             
-            self.imageView.set(arguments: arguments)
-            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: cacheArguments, scale: backingScaleFactor), clearInstantly: true)
+            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: cacheArguments, scale: backingScaleFactor))
             if !self.imageView.isFullyLoaded {
                 self.imageView.setSignal(signal, animate: true, cacheImage: { [weak media] result in
                     if let media = media {
@@ -266,6 +265,7 @@ private class MediaCell : Control {
                     }
                 })
             }
+            self.imageView.set(arguments: cacheArguments)
         }
         updateSelectionState(animated: false)
     }
