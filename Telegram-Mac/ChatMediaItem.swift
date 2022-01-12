@@ -431,6 +431,9 @@ class ChatMediaItem: ChatRowItem {
                 copyToClipboard(text)
                 context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
+            interactions.topWindow = { [weak self] in
+                return self?.menuAdditionView
+            }
             for textLayout in self.captionLayouts.map ({ $0.layout }) {
                 textLayout.interactions = interactions
                 if let highlightFoundText = entry.additionalData.highlightFoundText {
