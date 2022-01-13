@@ -688,8 +688,11 @@ final class ChatReactionsView : View {
             }
             
             let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
-            let reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
-
+            var reactionSize: NSSize = reaction.presentation.reactionSize
+            
+            if reaction.available.centerAnimation != nil {
+                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
+            }
             let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             
             self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
@@ -776,9 +779,12 @@ final class ChatReactionsView : View {
             
             let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
             
-            let size = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
+            var reactionSize: NSSize = reaction.presentation.reactionSize
             
-            let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
+            if reaction.available.centerAnimation != nil {
+                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
+            }
+            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
             if !self.imageView.isFullyLoaded {
                 imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
