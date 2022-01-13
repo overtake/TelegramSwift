@@ -26,6 +26,7 @@ final class EmojiAnimationEffectView : View {
         addSubview(player)
         player.set(animation)
         isEventLess = true
+        player.isEventLess = true
         updateLayout(size: frameRect.size, transition: .immediate)
     }
     

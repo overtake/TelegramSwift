@@ -45,6 +45,14 @@ final class AppMenuAnimatedImage : LottiePlayerView, AppMenuItemImageDrawable {
         fatalError("init(coder:) has not been implemented")
     }
     
+    required init() {
+        fatalError("init() has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
     func isEqual(to item: ContextMenuItem) -> Bool {
         return self.item.id == item.id
     }

@@ -10,8 +10,13 @@ public final class Reactions {
     private let downloadable = DisposableSet()
     private let state: Promise<AvailableReactions?> = Promise()
     private let reactable = DisposableDict<MessageId>()
+    private let _isInteractive = Atomic<MessageId?>(value: nil)
     public var stateValue: Signal<AvailableReactions?, NoError> {
         return state.get()
+    }
+    
+    public var interactive: MessageId? {
+        return _isInteractive.swap(nil)
     }
     
     public init(_ engine: TelegramEngine) {
@@ -20,6 +25,7 @@ public final class Reactions {
     }
     
     public func react(_ messageId: MessageId, value: String?) {
+        _ = _isInteractive.swap(messageId)
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value).start(), forKey: messageId)
     }
     

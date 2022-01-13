@@ -225,7 +225,7 @@ class ChatRightView: View, ViewDisplayDelegate {
     private var stateView:ImageView?
     private var readImageView:ImageView?
     private var sendingView:SendingClockProgress?
-    private var reactionsView: ChatReactionsView?
+    private(set) var reactionsView: ChatReactionsView?
     private var replyCountView: TextView?
     private var replyCountImage: ImageView?
     private var viewsCountView: TextView?

@@ -1323,9 +1323,13 @@ class ChatRowItem: TableRowItem {
         } else if let message = self.messages.first {
             
             let reactions = message.effectiveReactions(context.peerId)
+            
+            let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak self] peerId in
-                    self?.chatInteraction.openInfo(peerId, false, nil, nil)
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
+                    chatInteraction?.openInfo(peerId, false, nil, nil)
+                }, runEffect: { [weak chatInteraction] value in
+                    chatInteraction?.runReactionEffect(value, message.id)
                 })
                 
                 _reactionsLayout = layout

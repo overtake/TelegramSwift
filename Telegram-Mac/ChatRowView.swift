@@ -1273,6 +1273,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         animatedView?.layer?.add(animation, forKey: "opacity")
     }
     
+    
+    enum ScreenEffectMode {
+        case effect
+        case reaction(String)
+    }
+    func getScreenEffectView(_ mode: ScreenEffectMode) -> NSView? {
+        switch mode {
+        case .effect:
+            if let media = self as? ChatMediaView {
+                return media.contentNode
+            }
+        case let .reaction(value):
+            if let reactionsView = reactionsView {
+                return reactionsView.getReactionView(value)
+            } else if let reactionsView = self.rightView.reactionsView {
+                return reactionsView.getReactionView(value)
+            }
+        }
+        return nil
+    }
+    
     func canDropSelection(in location: NSPoint) -> Bool {
         return true
     }

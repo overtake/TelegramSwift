@@ -347,6 +347,7 @@
 		27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F1278D9A970026BFA1 /* menu_camera.tgs */; };
 		27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F3278D9C0A0026BFA1 /* menu_location.tgs */; };
 		27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F5278D9C120026BFA1 /* menu_poll.tgs */; };
+		27E070FB278EE5E80026BFA1 /* CAPortal in Frameworks */ = {isa = PBXBuildFile; productRef = 27E070FA278EE5E80026BFA1 /* CAPortal */; };
 		27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E59979261B3F5800228411 /* CurrencyFormatter.swift */; };
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
@@ -1489,6 +1490,7 @@
 		27E070F1278D9A970026BFA1 /* menu_camera.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_camera.tgs; sourceTree = "<group>"; };
 		27E070F3278D9C0A0026BFA1 /* menu_location.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_location.tgs; sourceTree = "<group>"; };
 		27E070F5278D9C120026BFA1 /* menu_poll.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_poll.tgs; sourceTree = "<group>"; };
+		27E070F9278EE42E0026BFA1 /* CAPortal */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CAPortal; path = packages/CAPortal; sourceTree = "<group>"; };
 		27E59979261B3F5800228411 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
@@ -2377,6 +2379,7 @@
 				27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */,
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
+				27E070FB278EE5E80026BFA1 /* CAPortal in Frameworks */,
 				279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				2796FEF527423D2100DA653C /* EDSunriseSet in Frameworks */,
@@ -2704,6 +2707,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27E070F9278EE42E0026BFA1 /* CAPortal */,
 				277DFE5F27842E3A00F78396 /* Translate */,
 				27EBC7AD275789BC00C6A820 /* Reactions */,
 				27ED5A692750CD4000BA55A7 /* FoundationUtils */,
@@ -5085,6 +5089,7 @@
 				27ED5A6C2750CDE100BA55A7 /* FoundationUtils */,
 				27EBC7B127579A7200C6A820 /* Reactions */,
 				277DFE6027842E6600F78396 /* Translate */,
+				27E070FA278EE5E80026BFA1 /* CAPortal */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -6918,6 +6923,10 @@
 		27D87386273C203900B9EB8F /* ffmpeg */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ffmpeg;
+		};
+		27E070FA278EE5E80026BFA1 /* CAPortal */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CAPortal;
 		};
 		27E5C3BC2739761300C52BA0 /* MurMurHash32 */ = {
 			isa = XCSwiftPackageProductDependency;
