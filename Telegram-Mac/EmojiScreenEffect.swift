@@ -17,15 +17,29 @@ final class EmojiScreenEffect {
     fileprivate let takeTableItem:(MessageId)->TableRowItem?
     fileprivate(set) var scrollUpdater: TableScrollListener!
     private let dataDisposable: DisposableDict<String> = DisposableDict()
-    
+    private let reactionDataDisposable: DisposableDict<String> = DisposableDict()
     
     private let limit: Int = 5
     
     struct Key : Hashable {
+        enum Mode : Equatable, Hashable {
+            case effect
+            case reaction(String)
+        }
         let animationKey: LottieAnimationKey
         let messageId: MessageId
         let timestamp: TimeInterval
         let isIncoming: Bool
+        let mode: Mode
+        
+        var screenMode: ChatRowView.ScreenEffectMode {
+            switch self.mode {
+            case let .reaction(value):
+                return .reaction(value)
+            case .effect:
+                return .effect
+            }
+        }
     }
     
     struct Value {
@@ -70,22 +84,26 @@ final class EmojiScreenEffect {
         for (key, animation) in animations {
             var success: Bool = false
             if let animationView = animation.view.value {
-                if let item = takeTableItem(key.messageId) {
-                    if let view = item.view as? ChatMediaView {
-                        if let contentView = view.contentNode {
-                            
-                            var point = contentView.convert(CGPoint.zero, to: animationView)
-                            let subSize = animationView.animationSize - contentView.frame.size
-                            
+                if let item = takeTableItem(key.messageId), let view = item.view as? ChatRowView {
+                    if let contentView = view.getScreenEffectView(key.screenMode) {
+                        var point = contentView.convert(CGPoint.zero, to: animationView)
+                        let subSize = animationView.animationSize - contentView.frame.size
+                        
+                        switch key.mode {
+                        case .effect:
                             point.x-=(subSize.width - 20)
                             point.y-=subSize.height/2
+                        case .reaction:
+                            point.x-=subSize.width/2
+                            point.y-=subSize.height/2
+                        }
+                       
 
-                            
-                            animationView.updatePoint(point, transition: .immediate)
-                            
-                            if contentView.visibleRect != .zero {
-                                success = true
-                            }
+                        
+                        animationView.updatePoint(point, transition: transition)
+                        
+                        if contentView.visibleRect != .zero {
+                            success = true
                         }
                     }
                 }
@@ -101,6 +119,7 @@ final class EmojiScreenEffect {
     
     deinit {
         dataDisposable.dispose()
+        reactionDataDisposable.dispose()
         let animations = self.animations
         for animation in animations {
             deinitAnimation(key: animation.key, animated: false)
@@ -133,13 +152,50 @@ final class EmojiScreenEffect {
             
             dataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
                 if let animation = animation, let parentView = parentView {
-                    self?.initAnimation(animation, emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    self?.initAnimation(animation, mode: .effect, emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
             }), forKey: emoji)
         } else {
             dataDisposable.set(nil, forKey: emoji)
         }
     }
+    
+    func addReactionAnimation(_ value: String, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
+        
+        let context = self.context
+        
+        let signal: Signal<LottieAnimation?, NoError> = context.reactions.stateValue |> take(1) |> map {
+            return $0?.reactions.first(where: {
+                $0.value == value
+            })
+        }
+        |> filter { $0 != nil}
+        |> map {
+            $0!
+        } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
+            if let file = reaction.aroundAnimation {
+                return context.account.postbox.mediaBox.resourceData(file.resource)
+                |> filter { $0.complete }
+                |> take(1)
+            } else {
+                return .complete()
+            }
+        } |> map { data in
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                return LottieAnimation(compressed: data, key: .init(key: .bundle("_reaction_e_\(value)"), size: animationSize, backingScale: Int(System.backingScale)), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+            } else {
+                return nil
+            }
+        } |> deliverOnMainQueue
+        
+        reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
+            if let animation = animation, let parentView = parentView {
+                self?.initAnimation(animation, mode: .reaction(value), emoji: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+            }
+        }), forKey: value)
+       
+    }
+
     
     
     private func deinitAnimation(key: Key, animated: Bool) {
@@ -158,13 +214,13 @@ final class EmojiScreenEffect {
         }
     }
     
-    private func initAnimation(_ animation: LottieAnimation, emoji: String, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
+    private func initAnimation(_ animation: LottieAnimation, mode: EmojiScreenEffect.Key.Mode, emoji: String, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
         
         
         let mediaView = (takeTableItem(messageId)?.view as? ChatMediaView)?.contentNode as? MediaAnimatedStickerView
         mediaView?.playAgain()
         
-        let key: Key = .init(animationKey: animation.key.key, messageId: messageId, timestamp: Date().timeIntervalSince1970, isIncoming: isIncoming)
+        let key: Key = .init(animationKey: animation.key.key, messageId: messageId, timestamp: Date().timeIntervalSince1970, isIncoming: isIncoming, mode: mode)
         
         animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak self] in
             self?.deinitAnimation(key: key, animated: true)

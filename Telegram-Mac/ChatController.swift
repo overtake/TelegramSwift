@@ -3116,6 +3116,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        chatInteraction.runReactionEffect = { [weak self] value, messageId in
+            self?.emojiEffects.addReactionAnimation(value, index: nil, messageId: messageId, animationSize: NSMakeSize(80, 80), viewFrame: context.window.bounds, for: context.window.contentView!)
+        }
+        
         chatInteraction.toggleSendAs = { updatedPeerId in
             _ = context.engine.peers.updatePeerSendAsPeer(peerId: peerId, sendAs: updatedPeerId).start()
         }

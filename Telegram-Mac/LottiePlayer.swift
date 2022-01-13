@@ -1358,7 +1358,7 @@ private final class LottieFallbackView: NSView {
     }
 }
 
-class LottiePlayerView : NSView {
+class LottiePlayerView : View {
     private var context: PlayerContext?
     private var _ignoreCachedContext: Bool = false
     private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
@@ -1370,9 +1370,12 @@ class LottiePlayerView : NSView {
     var state: Signal<LottiePlayerState, NoError> {
         return stateValue.get()
     }
-    override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
+    }
+    
+    required override init() {
+        super.init()
     }
     
     var animation: LottieAnimation? {
