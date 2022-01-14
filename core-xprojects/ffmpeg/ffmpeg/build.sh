@@ -26,6 +26,7 @@ mkdir -p $BUILD_DIR || true
 
 
 LIBOPUS_PATH="${BUILD_DIR}../../libopus/build/libopus"
+LIBVPX_PATH="${BUILD_DIR}../../libvpx/build/libvpx"
 
 FF_VERSION="4.1"
 SOURCE="$SOURCE_DIR/ffmpeg-$FF_VERSION"
@@ -48,9 +49,10 @@ CONFIGURE_FLAGS="--enable-cross-compile --disable-programs \
                  --enable-avformat \
                  --disable-xlib \
                  --enable-libopus \
+                 --enable-libvpx \
                  --enable-audiotoolbox \
                  --enable-bsf=aac_adtstoasc \
-                 --enable-decoder=h264,hevc,libopus,mp3,aac,flac,alac,pcm_s16le,pcm_s24le,gsm_ms \
+                 --enable-decoder=h264,libvpx_vp9,hevc,libopus,mp3,aac,flac,alac,pcm_s16le,pcm_s24le,gsm_ms \
                  --enable-demuxer=aac,mov,m4v,mp3,ogg,libopus,flac,wav,aiff,matroska \
                  --enable-parser=aac,h264,mp3,libopus \
                  --enable-protocol=file \
@@ -144,7 +146,7 @@ then
 			    --extra-ldflags="$LDFLAGS" \
 			    --prefix="$THIN/$ARCH" \
 			    --pkg-config="$PKG_CONFIG" \
-			    --pkg-config-flags="--libopus_path $LIBOPUS_PATH" \
+			    --pkg-config-flags="--libopus_path $LIBOPUS_PATH --libvpx_path $LIBVPX_PATH" \
 			|| exit 1
 			echo "$CONFIGURE_FLAGS" > "$CONFIGURED_MARKER"
 		fi

@@ -7,11 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		27E070F8278DC1B30026BFA1 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E070F7278DC1A20026BFA1 /* libvpx.a */; };
+		27E071132790795E0026BFA1 /* libvpx.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E071102790795E0026BFA1 /* libvpx.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		27E0711A27907ED80026BFA1 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E07102279074BB0026BFA1 /* libvpx.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		27E070F7278DC1A20026BFA1 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = build/libvpx/libvpx.a; sourceTree = "<group>"; };
+		27E07102279074BB0026BFA1 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = build/libvpx/lib/libvpx.a; sourceTree = "<group>"; };
+		27E071102790795E0026BFA1 /* libvpx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libvpx.h; sourceTree = "<group>"; };
+		27E071112790795E0026BFA1 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		27E0711827907EC20026BFA1 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = build/arm64/_dist/lib/libvpx.a; sourceTree = "<group>"; };
 		D0983B502566606600467703 /* libvpx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = libvpx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -20,16 +25,26 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27E070F8278DC1B30026BFA1 /* libvpx.a in Frameworks */,
+				27E0711A27907ED80026BFA1 /* libvpx.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		27E0710E2790795E0026BFA1 /* libvpx */ = {
+			isa = PBXGroup;
+			children = (
+				27E071102790795E0026BFA1 /* libvpx.h */,
+				27E071112790795E0026BFA1 /* Info.plist */,
+			);
+			path = libvpx;
+			sourceTree = "<group>";
+		};
 		D0983B462566606500467703 = {
 			isa = PBXGroup;
 			children = (
+				27E0710E2790795E0026BFA1 /* libvpx */,
 				D0983B512566606600467703 /* Products */,
 				D0983B68256689B300467703 /* Frameworks */,
 			);
@@ -46,6 +61,8 @@
 		D0983B68256689B300467703 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27E0711827907EC20026BFA1 /* libvpx.a */,
+				27E07102279074BB0026BFA1 /* libvpx.a */,
 				27E070F7278DC1A20026BFA1 /* libvpx.a */,
 			);
 			name = Frameworks;
@@ -58,6 +75,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E071132790795E0026BFA1 /* libvpx.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -141,7 +159,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n#if [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/libvpx/build.sh .\n#fi\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/libvpx/build.sh .\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -223,6 +241,7 @@
 		D0983B592566606600467703 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -244,7 +263,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/build/libvpx/lib",
-					"$(PROJECT_DIR)/build/libvpx",
+					"$(PROJECT_DIR)/build/arm64/_dist/lib",
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -252,6 +271,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = libvpx;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -316,6 +337,7 @@
 		D0983B612566896B00467703 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -337,7 +359,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/build/libvpx/lib",
-					"$(PROJECT_DIR)/build/libvpx",
+					"$(PROJECT_DIR)/build/arm64/_dist/lib",
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
@@ -345,6 +367,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = libvpx;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;

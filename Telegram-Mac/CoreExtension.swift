@@ -1173,6 +1173,14 @@ extension Media {
         }
         return false
     }
+    
+    var isWebm: Bool {
+        if let media = self as? TelegramMediaFile {
+            return media.mimeType == "video/webm"
+        }
+        return false
+    }
+    
     var isVideoFile:Bool {
         if let media = self as? TelegramMediaFile {
             return media.mimeType.hasPrefix("video/mp4") || media.mimeType.hasPrefix("video/mov") || media.mimeType.hasPrefix("video/avi")

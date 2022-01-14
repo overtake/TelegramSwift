@@ -152,8 +152,6 @@
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
 		276C1EBF261B451500FE41C9 /* Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276C1EBE261B451500FE41C9 /* Currency.swift */; };
-		2771AC73273C25DF00245A48 /* libwebp in Frameworks */ = {isa = PBXBuildFile; productRef = 2771AC72273C25DF00245A48 /* libwebp */; };
-		2771AC76273C271700245A48 /* Mozjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 2771AC75273C271700245A48 /* Mozjpeg */; };
 		2771AC79273C2B2700245A48 /* TelegramVoip in Frameworks */ = {isa = PBXBuildFile; productRef = 2771AC78273C2B2700245A48 /* TelegramVoip */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
@@ -217,9 +215,7 @@
 		279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECA274259EE000E1BD5 /* TGVideoCameraMovie */; };
 		279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECD27425CBD000E1BD5 /* InAppVideoServices */; };
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
-		279FD2A2273C1239004F08A1 /* OpenSSL in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A1273C1239004F08A1 /* OpenSSL */; };
 		279FD2A7273C1251004F08A1 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A6273C1251004F08A1 /* Zip */; };
-		279FD2AA273C127A004F08A1 /* webrtc in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A9273C127A004F08A1 /* webrtc */; };
 		279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2AC273C1291004F08A1 /* TgVoipWebrtc */; };
 		27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD19256A7D350068644D /* GroupCallWindow.swift */; };
 		27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */; };
@@ -331,6 +327,20 @@
 		27CE37752760CEE4007E6F1B /* menu_mute_for_2_days.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE37732760CEE1007E6F1B /* menu_mute_for_2_days.tgs */; };
 		27CE37762760CEE4007E6F1B /* menu_mute_for_1_hour.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE37742760CEE4007E6F1B /* menu_mute_for_1_hour.tgs */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
+		27D43D9A27917641006968A6 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2754D29827909668000DDAD3 /* libvpx.a */; };
+		27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9B279176C2006968A6 /* libavcodec.a */; };
+		27D43DA0279176DE006968A6 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9D279176C3006968A6 /* libavformat.a */; };
+		27D43DA1279176E0006968A6 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9C279176C2006968A6 /* libavutil.a */; };
+		27D43DA2279176E2006968A6 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9E279176C3006968A6 /* libswresample.a */; };
+		27D43DA4279176FC006968A6 /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA3279176F7006968A6 /* libopus.a */; };
+		27D43DA627917717006968A6 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA527917714006968A6 /* libwebp.a */; };
+		27D43DA82791771D006968A6 /* libwebpdecoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA72791771A006968A6 /* libwebpdecoder.a */; };
+		27D43DAA27917721006968A6 /* libwebpdemux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA92791771F006968A6 /* libwebpdemux.a */; };
+		27D43DAC27917726006968A6 /* libwebpmux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAB27917724006968A6 /* libwebpmux.a */; };
+		27D43DAE27917738006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
+		27D43DB027917748006968A6 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAF27917747006968A6 /* libssl.a */; };
+		27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB12791774A006968A6 /* libcrypto.a */; };
+		27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB327917798006968A6 /* libmac_framework_objc_static.a */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
 		27D696F0274F8449008A723E /* KeyboardKey in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696EF274F8449008A723E /* KeyboardKey */; };
 		27D696F2274F844D008A723E /* Strings in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F1274F844D008A723E /* Strings */; };
@@ -338,8 +348,6 @@
 		27D696F6274F8458008A723E /* ColorPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F5274F8458008A723E /* ColorPalette */; };
 		27D696F8274F845D008A723E /* ThemeSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F7274F845D008A723E /* ThemeSettings */; };
 		27D696FA274F8462008A723E /* InAppSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F9274F8462008A723E /* InAppSettings */; };
-		27D87385273C203000B9EB8F /* libopus in Frameworks */ = {isa = PBXBuildFile; productRef = 27D87384273C203000B9EB8F /* libopus */; };
-		27D87387273C203900B9EB8F /* ffmpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 27D87386273C203900B9EB8F /* ffmpeg */; };
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
 		27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
@@ -347,7 +355,8 @@
 		27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F1278D9A970026BFA1 /* menu_camera.tgs */; };
 		27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F3278D9C0A0026BFA1 /* menu_location.tgs */; };
 		27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F5278D9C120026BFA1 /* menu_poll.tgs */; };
-		27E070FB278EE5E80026BFA1 /* CAPortal in Frameworks */ = {isa = PBXBuildFile; productRef = 27E070FA278EE5E80026BFA1 /* CAPortal */; };
+		27E070FF27906B8C0026BFA1 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E070FE27906B8B0026BFA1 /* UniversalSoftwareVideoSource.swift */; };
+		27E0710127906B9B0026BFA1 /* SoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E0710027906B9A0026BFA1 /* SoftwareVideoSource.swift */; };
 		27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E59979261B3F5800228411 /* CurrencyFormatter.swift */; };
 		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
 		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
@@ -1001,9 +1010,7 @@
 		D02BD7C3232D14E800D1814A /* ThemePreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02BD7C2232D14E800D1814A /* ThemePreviewRowItem.swift */; };
 		D02BD7C5232D204F00D1814A /* ThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02BD7C4232D204F00D1814A /* ThemeListRowItem.swift */; };
 		D02BD7C7232D4DB200D1814A /* AppearanceThumbs.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02BD7C6232D4DB200D1814A /* AppearanceThumbs.swift */; };
-		D02F0A0022E8875800553411 /* SoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */; };
 		D02F0A0222E88C6E00553411 /* MediaPlayerFramePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */; };
-		D02F0A0422E88C9900553411 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */; };
 		D032AFA42578172400E67215 /* PushToTalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = D032AFA32578172400E67215 /* PushToTalk.swift */; };
 		D048EDDE24FFEC5600977606 /* ChannelCommentsControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */; };
 		D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */; };
@@ -1267,6 +1274,7 @@
 		274BB56C264013AC00620D03 /* cameraon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraon.tgs; sourceTree = "<group>"; };
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
+		2754D29827909668000DDAD3 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = "core-xprojects/libvpx/build/libvpx/lib/libvpx.a"; sourceTree = "<group>"; };
 		275549052747C2380098A3CD /* device_chrome.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_chrome.tgs; sourceTree = "<group>"; };
 		275549062747C23B0098A3CD /* device_firefox.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_firefox.tgs; sourceTree = "<group>"; };
 		275549072747C23D0098A3CD /* device_mac.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_mac.tgs; sourceTree = "<group>"; };
@@ -1330,8 +1338,6 @@
 		276B5985261C79940029FD3F /* GroupCallControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallControlsView.swift; sourceTree = "<group>"; };
 		276B5988261C7AC60029FD3F /* GroupCallSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSchedule.swift; sourceTree = "<group>"; };
 		276C1EBE261B451500FE41C9 /* Currency.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
-		2771AC71273C25A200245A48 /* libwebp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libwebp; path = submodules/libwebp; sourceTree = "<group>"; };
-		2771AC74273C270300245A48 /* Mozjpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Mozjpeg; path = submodules/Mozjpeg; sourceTree = "<group>"; };
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
 		2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = text; path = voice_chat_raise_hand_1.tgs; sourceTree = "<group>"; };
 		2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertController.swift; sourceTree = "<group>"; };
@@ -1397,10 +1403,8 @@
 		279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGVideoCameraMovie; path = packages/TGVideoCameraMovie; sourceTree = "<group>"; };
 		279E8ECC27425BAE000E1BD5 /* InAppVideoServices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppVideoServices; path = packages/InAppVideoServices; sourceTree = "<group>"; };
 		279FD29C273C106C004F08A1 /* minizip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = minizip; path = submodules/minizip; sourceTree = "<group>"; };
-		279FD29D273C1074004F08A1 /* OpenSSL */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenSSL; path = submodules/OpenSSL; sourceTree = "<group>"; };
 		279FD29E273C10AD004F08A1 /* BuildConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BuildConfig; path = submodules/BuildConfig; sourceTree = "<group>"; };
 		279FD2A5273C124B004F08A1 /* Zip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Zip; path = submodules/Zip; sourceTree = "<group>"; };
-		279FD2A8273C1274004F08A1 /* webrtc */ = {isa = PBXFileReference; lastKnownFileType = folder; name = webrtc; path = submodules/webrtc; sourceTree = "<group>"; };
 		279FD2AB273C1287004F08A1 /* tgcalls */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tgcalls; path = submodules/tgcalls; sourceTree = "<group>"; };
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
 		27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerAvatarRowItem.swift; sourceTree = "<group>"; };
@@ -1477,12 +1481,23 @@
 		27CE37732760CEE1007E6F1B /* menu_mute_for_2_days.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_mute_for_2_days.tgs; sourceTree = "<group>"; };
 		27CE37742760CEE4007E6F1B /* menu_mute_for_1_hour.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_mute_for_1_hour.tgs; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
+		27D43D9B279176C2006968A6 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavcodec.a"; sourceTree = "<group>"; };
+		27D43D9C279176C2006968A6 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavutil.a"; sourceTree = "<group>"; };
+		27D43D9D279176C3006968A6 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavformat.a"; sourceTree = "<group>"; };
+		27D43D9E279176C3006968A6 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libswresample.a"; sourceTree = "<group>"; };
+		27D43DA3279176F7006968A6 /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopus.a; path = "core-xprojects/libopus/build/libopus/lib/libopus.a"; sourceTree = "<group>"; };
+		27D43DA527917714006968A6 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebp.a"; sourceTree = "<group>"; };
+		27D43DA72791771A006968A6 /* libwebpdecoder.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpdecoder.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebpdecoder.a"; sourceTree = "<group>"; };
+		27D43DA92791771F006968A6 /* libwebpdemux.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpdemux.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebpdemux.a"; sourceTree = "<group>"; };
+		27D43DAB27917724006968A6 /* libwebpmux.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpmux.a; path = "core-xprojects/libwebp/build/libwebp/lib/libwebpmux.a"; sourceTree = "<group>"; };
+		27D43DAD27917735006968A6 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = "core-xprojects/Mozjpeg/build/libjpeg.a"; sourceTree = "<group>"; };
+		27D43DAF27917747006968A6 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "core-xprojects/openssl/build/openssl/lib/libssl.a"; sourceTree = "<group>"; };
+		27D43DB12791774A006968A6 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = "core-xprojects/openssl/build/openssl/lib/libcrypto.a"; sourceTree = "<group>"; };
+		27D43DB327917798006968A6 /* libmac_framework_objc_static.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmac_framework_objc_static.a; path = "core-xprojects/webrtc/build/webrtc/libmac_framework_objc_static.a"; sourceTree = "<group>"; };
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
 		27D696EC274F7A17008A723E /* Colors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Colors; path = packages/Colors; sourceTree = "<group>"; };
 		27D696ED274F7AA2008A723E /* Strings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Strings; path = packages/Strings; sourceTree = "<group>"; };
 		27D696EE274F8108008A723E /* KeyboardKey */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KeyboardKey; path = packages/KeyboardKey; sourceTree = "<group>"; };
-		27D87382273C200A00B9EB8F /* ffmpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ffmpeg; path = submodules/ffmpeg; sourceTree = "<group>"; };
-		27D87383273C200C00B9EB8F /* libopus */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libopus; path = submodules/libopus; sourceTree = "<group>"; };
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
 		27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCommandCenter.swift; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
@@ -1490,7 +1505,8 @@
 		27E070F1278D9A970026BFA1 /* menu_camera.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_camera.tgs; sourceTree = "<group>"; };
 		27E070F3278D9C0A0026BFA1 /* menu_location.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_location.tgs; sourceTree = "<group>"; };
 		27E070F5278D9C120026BFA1 /* menu_poll.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_poll.tgs; sourceTree = "<group>"; };
-		27E070F9278EE42E0026BFA1 /* CAPortal */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CAPortal; path = packages/CAPortal; sourceTree = "<group>"; };
+		27E070FE27906B8B0026BFA1 /* UniversalSoftwareVideoSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UniversalSoftwareVideoSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/UniversalSoftwareVideoSource.swift"; sourceTree = SOURCE_ROOT; };
+		27E0710027906B9A0026BFA1 /* SoftwareVideoSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SoftwareVideoSource.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/SoftwareVideoSource.swift"; sourceTree = SOURCE_ROOT; };
 		27E59979261B3F5800228411 /* CurrencyFormatter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyFormatter.swift; sourceTree = "<group>"; };
 		27E5997C261B3FA800228411 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
@@ -2168,9 +2184,7 @@
 		D02BD7C2232D14E800D1814A /* ThemePreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemePreviewRowItem.swift; sourceTree = "<group>"; };
 		D02BD7C4232D204F00D1814A /* ThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeListRowItem.swift; sourceTree = "<group>"; };
 		D02BD7C6232D4DB200D1814A /* AppearanceThumbs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceThumbs.swift; sourceTree = "<group>"; };
-		D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftwareVideoSource.swift; sourceTree = "<group>"; };
 		D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerFramePreview.swift; sourceTree = "<group>"; };
-		D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniversalSoftwareVideoSource.swift; sourceTree = "<group>"; };
 		D032AFA32578172400E67215 /* PushToTalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushToTalk.swift; sourceTree = "<group>"; };
 		D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelCommentsControls.swift; sourceTree = "<group>"; };
 		D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomAccentColorModalController.swift; sourceTree = "<group>"; };
@@ -2320,38 +2334,40 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27D43DA1279176E0006968A6 /* libavutil.a in Frameworks */,
 				27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */,
-				27D87387273C203900B9EB8F /* ffmpeg in Frameworks */,
 				272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */,
 				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
 				2700B222273ADC94003E4018 /* HotKey in Frameworks */,
-				27D87385273C203000B9EB8F /* libopus in Frameworks */,
 				27B6D05327393A3600C785C7 /* Postbox in Frameworks */,
 				27B6D04F27393A2A00C785C7 /* TelegramApi in Frameworks */,
 				279FD2A7273C1251004F08A1 /* Zip in Frameworks */,
 				2771AC79273C2B2700245A48 /* TelegramVoip in Frameworks */,
 				27D696F8274F845D008A723E /* ThemeSettings in Frameworks */,
+				27D43DA82791771D006968A6 /* libwebpdecoder.a in Frameworks */,
 				27A6978D273D192800B33415 /* libphonenumber in Frameworks */,
 				271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */,
 				27B6D05D27393A5500C785C7 /* MergeLists in Frameworks */,
-				279FD2A2273C1239004F08A1 /* OpenSSL in Frameworks */,
 				D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */,
 				27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */,
+				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
 				27A697A3273D313000B33415 /* Stripe in Frameworks */,
 				D0076EE825685A50007EF588 /* AppCenter.framework in Frameworks */,
 				27B6D05927393A4200C785C7 /* SwiftSignalKit in Frameworks */,
 				2796FEFE274241D600DA653C /* FastBlur in Frameworks */,
 				D0983E172568373E00467703 /* AppCenterAnalytics.framework in Frameworks */,
+				27D43DA0279176DE006968A6 /* libavformat.a in Frameworks */,
 				D0983E192568373E00467703 /* AppCenterCrashes.framework in Frameworks */,
-				279FD2AA273C127A004F08A1 /* webrtc in Frameworks */,
+				27D43DA627917717006968A6 /* libwebp.a in Frameworks */,
 				27B8E7C027424F2E001B8DF7 /* TGCurrencyFormatter in Frameworks */,
 				27D696F6274F8458008A723E /* ColorPalette in Frameworks */,
 				D09D836E24A6205500120F73 /* libtgvoip.framework in Frameworks */,
+				27D43DA2279176E2006968A6 /* libswresample.a in Frameworks */,
+				27D43DAA27917721006968A6 /* libwebpdemux.a in Frameworks */,
 				D06E38AC24A5F3B700C7D03A /* MetalKit.framework in Frameworks */,
 				27A69790273D1DE900B33415 /* FFMpegBinding in Frameworks */,
 				D06E38AD24A5F3B700C7D03A /* Metal.framework in Frameworks */,
 				279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */,
-				2771AC76273C271700245A48 /* Mozjpeg in Frameworks */,
 				A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */,
 				A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */,
 				27B6D05727393A3D00C785C7 /* GraphUI in Frameworks */,
@@ -2363,7 +2379,7 @@
 				27B8E7C627425279001B8DF7 /* TGModernGrowingTextView in Frameworks */,
 				A7D08F48236AC9B6002DC240 /* Sparkle.framework in Frameworks */,
 				D0DDECEA2322FA0200E1B359 /* Contacts.framework in Frameworks */,
-				2771AC73273C25DF00245A48 /* libwebp in Frameworks */,
+				27D43DA4279176FC006968A6 /* libopus.a in Frameworks */,
 				276651DC273D574900671FB4 /* ApiCredentials in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
@@ -2376,18 +2392,21 @@
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				27D696F0274F8449008A723E /* KeyboardKey in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
+				27D43DB027917748006968A6 /* libssl.a in Frameworks */,
 				27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */,
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
-				27E070FB278EE5E80026BFA1 /* CAPortal in Frameworks */,
 				279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				2796FEF527423D2100DA653C /* EDSunriseSet in Frameworks */,
 				2796FEFB2742408C00DA653C /* OCR in Frameworks */,
+				27D43DAE27917738006968A6 /* libjpeg.a in Frameworks */,
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
 				2796FF082742484A00DA653C /* CalendarUtils in Frameworks */,
+				27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */,
+				27D43D9A27917641006968A6 /* libvpx.a in Frameworks */,
 				27EBC7B227579A7200C6A820 /* Reactions in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
@@ -2405,7 +2424,9 @@
 				27B8E7BD27424E90001B8DF7 /* TGGifConverter in Frameworks */,
 				2796FF0D274249B000DA653C /* RingBuffer in Frameworks */,
 				C250B0331DB788B3004E9FBE /* Foundation.framework in Frameworks */,
+				27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */,
 				2796FEF827423F5300DA653C /* TGPassportMRZ in Frameworks */,
+				27D43DAC27917726006968A6 /* libwebpmux.a in Frameworks */,
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
 				27D696F4274F8451008A723E /* Colors in Frameworks */,
 				2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */,
@@ -2707,7 +2728,6 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				27E070F9278EE42E0026BFA1 /* CAPortal */,
 				277DFE5F27842E3A00F78396 /* Translate */,
 				27EBC7AD275789BC00C6A820 /* Reactions */,
 				27ED5A692750CD4000BA55A7 /* FoundationUtils */,
@@ -2744,15 +2764,9 @@
 				27A6978E273D1DDE00B33415 /* FFMpegBinding */,
 				27A6978B273D191C00B33415 /* libphonenumber */,
 				2771AC77273C2B1F00245A48 /* TelegramVoip */,
-				2771AC74273C270300245A48 /* Mozjpeg */,
-				2771AC71273C25A200245A48 /* libwebp */,
-				27D87383273C200C00B9EB8F /* libopus */,
-				27D87382273C200A00B9EB8F /* ffmpeg */,
 				279FD2AB273C1287004F08A1 /* tgcalls */,
-				279FD2A8273C1274004F08A1 /* webrtc */,
 				279FD2A5273C124B004F08A1 /* Zip */,
 				279FD29E273C10AD004F08A1 /* BuildConfig */,
-				279FD29D273C1074004F08A1 /* OpenSSL */,
 				279FD29C273C106C004F08A1 /* minizip */,
 				2700B21F273ADC08003E4018 /* HotKey */,
 				277E8291273A805F0037118C /* MtProtoKit */,
@@ -3002,9 +3016,9 @@
 				9FFAE501205A9153000C028E /* ManagedAudioSession.swift */,
 				9FFAE4EA205A8C87000C028E /* MediaPlayer.swift */,
 				9FFAE4E2205A8C83000C028E /* MediaPlayerAudioRenderer.swift */,
-				D02F09FF22E8875800553411 /* SoftwareVideoSource.swift */,
 				D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */,
-				D02F0A0322E88C9900553411 /* UniversalSoftwareVideoSource.swift */,
+				27E070FE27906B8B0026BFA1 /* UniversalSoftwareVideoSource.swift */,
+				27E0710027906B9A0026BFA1 /* SoftwareVideoSource.swift */,
 			);
 			name = modern;
 			sourceTree = "<group>";
@@ -4848,6 +4862,20 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				27D43DB327917798006968A6 /* libmac_framework_objc_static.a */,
+				27D43DB12791774A006968A6 /* libcrypto.a */,
+				27D43DAF27917747006968A6 /* libssl.a */,
+				27D43DAD27917735006968A6 /* libjpeg.a */,
+				27D43DAB27917724006968A6 /* libwebpmux.a */,
+				27D43DA92791771F006968A6 /* libwebpdemux.a */,
+				27D43DA72791771A006968A6 /* libwebpdecoder.a */,
+				27D43DA527917714006968A6 /* libwebp.a */,
+				27D43DA3279176F7006968A6 /* libopus.a */,
+				27D43D9B279176C2006968A6 /* libavcodec.a */,
+				27D43D9D279176C3006968A6 /* libavformat.a */,
+				27D43D9C279176C2006968A6 /* libavutil.a */,
+				27D43D9E279176C3006968A6 /* libswresample.a */,
+				2754D29827909668000DDAD3 /* libvpx.a */,
 				271D4F3327689DF0004FD034 /* WebKit.framework */,
 				271999E62683C04B000DE2B7 /* MetalPerformanceShaders.framework */,
 				272C182F267D00350030B5FB /* CoreMediaIO.framework */,
@@ -5045,14 +5073,8 @@
 				277E829C273A8E890037118C /* MtProtoKit */,
 				2700B221273ADC94003E4018 /* HotKey */,
 				279FD29F273C1234004F08A1 /* BuildConfig */,
-				279FD2A1273C1239004F08A1 /* OpenSSL */,
 				279FD2A6273C1251004F08A1 /* Zip */,
-				279FD2A9273C127A004F08A1 /* webrtc */,
 				279FD2AC273C1291004F08A1 /* TgVoipWebrtc */,
-				27D87384273C203000B9EB8F /* libopus */,
-				27D87386273C203900B9EB8F /* ffmpeg */,
-				2771AC72273C25DF00245A48 /* libwebp */,
-				2771AC75273C271700245A48 /* Mozjpeg */,
 				2771AC78273C2B2700245A48 /* TelegramVoip */,
 				27A6978C273D192800B33415 /* libphonenumber */,
 				27A6978F273D1DE900B33415 /* FFMpegBinding */,
@@ -5089,7 +5111,6 @@
 				27ED5A6C2750CDE100BA55A7 /* FoundationUtils */,
 				27EBC7B127579A7200C6A820 /* Reactions */,
 				277DFE6027842E6600F78396 /* Translate */,
-				27E070FA278EE5E80026BFA1 /* CAPortal */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -5628,7 +5649,6 @@
 				C2F4ED1B1EC5AE1D005F2696 /* CallRatingModalViewController.swift in Sources */,
 				C2DF47E91DE892E3003AA6C0 /* ChatToasterView.swift in Sources */,
 				C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */,
-				D02F0A0022E8875800553411 /* SoftwareVideoSource.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
 				27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */,
 				C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */,
@@ -5808,7 +5828,6 @@
 				9F147F7C2231543800D71BD1 /* PeerUtils.swift in Sources */,
 				C219E1E41D8AC8370042F0C8 /* ChatUnreadRowItem.swift in Sources */,
 				274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */,
-				D02F0A0422E88C9900553411 /* UniversalSoftwareVideoSource.swift in Sources */,
 				C296AF7F1D8D38E5001DBB59 /* ChatRowView.swift in Sources */,
 				278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */,
 				C2F9C4481F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift in Sources */,
@@ -5945,6 +5964,7 @@
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
 				9FC8AD9C2062AA630094F7B4 /* ValuesSelectorModalController.swift in Sources */,
 				A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */,
+				27E0710127906B9B0026BFA1 /* SoftwareVideoSource.swift in Sources */,
 				27E5997D261B3FA800228411 /* String.swift in Sources */,
 				27BA045726E4F3E9008FC1A3 /* MessageReadMenuItem.swift in Sources */,
 				9F1BABB021E60DCC0075C03E /* UndoOverlayHeaderView.swift in Sources */,
@@ -6230,6 +6250,7 @@
 				D004167722D4AD3B0000566B /* StickerPackItems.swift in Sources */,
 				27949111260A41EB0003BFA0 /* FFMpegMediaFrameSourceContext.swift in Sources */,
 				9F14CBF52007DFD400F22DA9 /* Wallpapers.swift in Sources */,
+				27E070FF27906B8C0026BFA1 /* UniversalSoftwareVideoSource.swift in Sources */,
 				A7E831F3255041020095A167 /* IsEqualMessages.swift in Sources */,
 				D06C7BB5247D6F4B00E67C3C /* SoftwareVideoLayerFrameManager.swift in Sources */,
 				D0CC4ADE22BA5C930088F36D /* LottieBufferCompressor.swift in Sources */,
@@ -6413,7 +6434,16 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/core-xprojects/libvpx/build/libvpx/lib",
+					"$(PROJECT_DIR)/core-xprojects/ffmpeg/build/ffmpeg/lib",
+					"$(PROJECT_DIR)/core-xprojects/libopus/build/libopus/lib",
+					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
+					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
+					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
+					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MARKETING_VERSION = 8.4.1;
 				ONLY_ACTIVE_ARCH = NO;
@@ -6598,7 +6628,16 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/core-xprojects/libvpx/build/libvpx/lib",
+					"$(PROJECT_DIR)/core-xprojects/ffmpeg/build/ffmpeg/lib",
+					"$(PROJECT_DIR)/core-xprojects/libopus/build/libopus/lib",
+					"$(PROJECT_DIR)/core-xprojects/libwebp/build/libwebp/lib",
+					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
+					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
+					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MARKETING_VERSION = 8.4.1;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6696,14 +6735,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ApiCredentials;
 		};
-		2771AC72273C25DF00245A48 /* libwebp */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = libwebp;
-		};
-		2771AC75273C271700245A48 /* Mozjpeg */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = Mozjpeg;
-		};
 		2771AC78273C2B2700245A48 /* TelegramVoip */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TelegramVoip;
@@ -6792,17 +6823,9 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = BuildConfig;
 		};
-		279FD2A1273C1239004F08A1 /* OpenSSL */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = OpenSSL;
-		};
 		279FD2A6273C1251004F08A1 /* Zip */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Zip;
-		};
-		279FD2A9273C127A004F08A1 /* webrtc */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = webrtc;
 		};
 		279FD2AC273C1291004F08A1 /* TgVoipWebrtc */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -6915,18 +6938,6 @@
 		27D696F9274F8462008A723E /* InAppSettings */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = InAppSettings;
-		};
-		27D87384273C203000B9EB8F /* libopus */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = libopus;
-		};
-		27D87386273C203900B9EB8F /* ffmpeg */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ffmpeg;
-		};
-		27E070FA278EE5E80026BFA1 /* CAPortal */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = CAPortal;
 		};
 		27E5C3BC2739761300C52BA0 /* MurMurHash32 */ = {
 			isa = XCSwiftPackageProductDependency;
