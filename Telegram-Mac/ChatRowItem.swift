@@ -253,7 +253,7 @@ class ChatRowItem: TableRowItem {
     
     var isSticker: Bool {
         let file = message?.media.first as? TelegramMediaFile
-        return file?.isStaticSticker == true || file?.isAnimatedSticker == true
+        return file?.isStaticSticker == true || file?.isAnimatedSticker == true  || file?.isWebm == true
     }
     
 
@@ -359,10 +359,8 @@ class ChatRowItem: TableRowItem {
     
     var isStateOverlayLayout: Bool {
         if let message = message, let media = message.media.first {
-            if let file = media as? TelegramMediaFile {
-                if file.isStaticSticker || file.isAnimatedSticker {
-                    return isBubbled
-                }
+            if isSticker {
+                return isBubbled
             }
             if media is TelegramMediaDice {
                 return isBubbled
@@ -1410,7 +1408,7 @@ class ChatRowItem: TableRowItem {
         var isStateOverlayLayout: Bool {
             if renderType == .bubble, let message = captionMessage, let media = message.media.first {
                 if let file = media as? TelegramMediaFile {
-                    if file.isStaticSticker || file.isAnimatedSticker {
+                    if file.isStaticSticker || file.isAnimatedSticker || file.isWebm  {
                         return renderType == .bubble
                     }
                     if file.isInstantVideo {

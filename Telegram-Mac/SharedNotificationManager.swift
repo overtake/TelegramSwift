@@ -192,7 +192,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             
             return .invoked
-        }, with: self, for: .L, priority: .modal, modifierFlags: [.command])
+        }, with: self, for: .L, priority: .supreme, modifierFlags: [.command])
 
         _passlock.set(passlock)
         

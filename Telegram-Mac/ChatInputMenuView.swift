@@ -20,9 +20,7 @@ final class ChatInputMenuView : View {
         super.init(frame: frameRect)
         
         addSubview(button)
-        
-        animationView.background = .random
-        
+                
         button.addSubview(animationView)
         button.scaleOnClick = true
         button.layer?.cornerRadius = 15

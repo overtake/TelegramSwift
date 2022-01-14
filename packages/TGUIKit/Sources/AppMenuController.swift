@@ -341,7 +341,7 @@ final class AppMenuController : NSObject  {
         self.parent?.set(handler: { [weak self] event in
             self?.addStackEvent(event)
             return .invoked
-        }, with: self, for: .All, priority: .supreme)
+        }, with: self, for: .All, priority: .modal)
         
 
         self.parent?.set(handler: { [weak self] _ in
