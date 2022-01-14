@@ -4,7 +4,7 @@
 #import "encode.h"
 #import "demux.h"
 #import "mux.h"
-
+#import "WebPImageCoder.h"
 NSImage * _Nullable convertFromWebP(NSData *imgData) {
    
     if (imgData == nil) {

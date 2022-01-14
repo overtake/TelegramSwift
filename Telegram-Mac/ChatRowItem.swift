@@ -2128,6 +2128,8 @@ class ChatRowItem: TableRowItem {
                 if isBubbled {
                     if !hasBubble {
                         reactions.measure(for: min(320, blockWidth))
+                    } else if reactions.presentation.isOutOfBounds {
+                        reactions.measure(for: _contentSize.width + 40)
                     } else {
                         var w = widthForContent
                         if let item = self as? ChatMessageItem {

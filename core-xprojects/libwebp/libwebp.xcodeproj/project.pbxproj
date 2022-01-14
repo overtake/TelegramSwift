@@ -7,19 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2759F3B52624C68B00E72ED0 /* WebPImageCoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 2759F3B32624C68A00E72ED0 /* WebPImageCoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2759F3B62624C68B00E72ED0 /* WebPImageCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 2759F3B42624C68B00E72ED0 /* WebPImageCoder.m */; };
-		27CD096D2624CF9C00ECB8EF /* libwebpdecoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983B69256689B300467703 /* libwebpdecoder.a */; };
-		27CD096E2624CF9C00ECB8EF /* libwebpdemux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983B6B256689B300467703 /* libwebpdemux.a */; };
-		27CD096F2624CF9C00ECB8EF /* libwebpmux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983B6C256689B300467703 /* libwebpmux.a */; };
 		D0983B552566606600467703 /* libwebp.h in Headers */ = {isa = PBXBuildFile; fileRef = D0983B532566606600467703 /* libwebp.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		D0983B6E256689B300467703 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D0983B6A256689B300467703 /* libwebp.a */; };
-		D0983B7425668BEA00467703 /* libwebp.m in Sources */ = {isa = PBXBuildFile; fileRef = D0983B7225668BEA00467703 /* libwebp.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2759F3B32624C68A00E72ED0 /* WebPImageCoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebPImageCoder.h; sourceTree = "<group>"; };
-		2759F3B42624C68B00E72ED0 /* WebPImageCoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebPImageCoder.m; sourceTree = "<group>"; };
 		D0983B502566606600467703 /* libwebp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = libwebp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0983B532566606600467703 /* libwebp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libwebp.h; sourceTree = "<group>"; };
 		D0983B542566606600467703 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -27,7 +18,6 @@
 		D0983B6A256689B300467703 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = build/libwebp/lib/libwebp.a; sourceTree = "<group>"; };
 		D0983B6B256689B300467703 /* libwebpdemux.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpdemux.a; path = build/libwebp/lib/libwebpdemux.a; sourceTree = "<group>"; };
 		D0983B6C256689B300467703 /* libwebpmux.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebpmux.a; path = build/libwebp/lib/libwebpmux.a; sourceTree = "<group>"; };
-		D0983B7225668BEA00467703 /* libwebp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = libwebp.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,10 +25,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0983B6E256689B300467703 /* libwebp.a in Frameworks */,
-				27CD096D2624CF9C00ECB8EF /* libwebpdecoder.a in Frameworks */,
-				27CD096E2624CF9C00ECB8EF /* libwebpdemux.a in Frameworks */,
-				27CD096F2624CF9C00ECB8EF /* libwebpmux.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,9 +51,6 @@
 		D0983B522566606600467703 /* libwebp */ = {
 			isa = PBXGroup;
 			children = (
-				2759F3B32624C68A00E72ED0 /* WebPImageCoder.h */,
-				2759F3B42624C68B00E72ED0 /* WebPImageCoder.m */,
-				D0983B7225668BEA00467703 /* libwebp.m */,
 				D0983B532566606600467703 /* libwebp.h */,
 				D0983B542566606600467703 /* Info.plist */,
 			);
@@ -92,7 +75,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2759F3B52624C68B00E72ED0 /* WebPImageCoder.h in Headers */,
 				D0983B552566606600467703 /* libwebp.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -186,8 +168,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0983B7425668BEA00467703 /* libwebp.m in Sources */,
-				2759F3B62624C68B00E72ED0 /* WebPImageCoder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

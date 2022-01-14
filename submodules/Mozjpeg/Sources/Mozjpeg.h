@@ -15,3 +15,8 @@ FOUNDATION_EXPORT double MozjpegVersionNumber;
 FOUNDATION_EXPORT const unsigned char MozjpegVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <Mozjpeg/PublicHeader.h>
+
+
+NSData * _Nullable compressJPEGData(CGImageRef _Nonnull sourceImage);
+NSArray<NSNumber *> * _Nonnull extractJPEGDataScans(NSData * _Nonnull data);
+NSData * _Nullable compressMiniThumbnail(CGImageRef _Nonnull image);
