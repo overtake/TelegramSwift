@@ -80,6 +80,14 @@ final class ContextAddReactionsListView : View  {
                 add(reaction.value)
             }, for: .Click)
             
+            contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                    context.reactions.updateQuick(reaction.value)
+                }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                return menu
+            }
+            
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
