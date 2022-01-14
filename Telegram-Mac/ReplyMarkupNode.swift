@@ -109,7 +109,7 @@ class ReplyMarkupNode: Node {
                     btnView.backgroundColor = .clear
                 } else {
                     btnView.blurBackground = nil
-                    if button.presentation.hasWallpaper {
+                    if button.presentation.hasWallpaper && !self.isInput {
                         btnView.backgroundColor = button.presentation.chatServiceItemColor
                     } else {
                         btnView.backgroundColor = button.presentation.colors.grayForeground
@@ -152,7 +152,7 @@ class ReplyMarkupNode: Node {
                     btnView?.backgroundColor = .clear
                 } else {
                     btnView?.blurBackground = nil
-                    if button.presentation.hasWallpaper {
+                    if button.presentation.hasWallpaper && !self.isInput {
                         btnView?.backgroundColor = button.presentation.chatServiceItemColor
                     } else {
                         btnView?.backgroundColor = button.presentation.colors.grayForeground

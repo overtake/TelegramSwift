@@ -104,7 +104,7 @@ class ChatFileMediaItem: ChatMediaItem {
         let parameters = self.parameters as! ChatFileLayoutParameters
         let optionalWidth = parameters.makeLabelsForWidth(width)
                 
-        width = min(width, max(optionalWidth, 320))
+        width = min(width, optionalWidth)
         
         return NSMakeSize(width, parameters.hasThumb ? 70 : 40)
     }
@@ -118,9 +118,9 @@ class ChatFileMediaItem: ChatMediaItem {
         if file.previewRepresentations.isEmpty {
             let parameters = self.parameters as! ChatFileLayoutParameters
 
-            let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
+            let mwidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width, parameters.finderLayout.layoutSize.width)
 
-            let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
+            let width = mwidth + 50
             return ChatRowItem.LastLineData(width: width, single: false)
         }
         return nil
