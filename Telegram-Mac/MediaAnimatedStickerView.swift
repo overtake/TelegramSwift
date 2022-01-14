@@ -29,6 +29,9 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         didSet {
             if oldValue != sticker {
                 self.previousAccept = false
+                if sticker == nil {
+                    self.playerView.set(nil)
+                }
             }
             updatePlayerIfNeeded()
         }
@@ -213,7 +216,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         } else if parent == nil, updated {
             self.sticker = nil
         }
-
 
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 

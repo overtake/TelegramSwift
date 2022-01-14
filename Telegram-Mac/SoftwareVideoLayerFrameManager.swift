@@ -40,9 +40,11 @@ final class SoftwareVideoLayerFrameManager {
     
     private var layerRotationAngleAndAspect: (CGFloat, CGFloat)?
     
+    private let hintVP9: Bool
     init(account: Account, fileReference: FileMediaReference, layerHolder: SampleBufferLayer) {
         var resource = fileReference.media.resource
         var secondaryResource: MediaResource?
+        self.hintVP9 = fileReference.media.isWebm
         for attribute in fileReference.media.attributes {
             if case .Video = attribute {
                 if let thumbnail = fileReference.media.videoThumbnails.first {
@@ -97,7 +99,7 @@ final class SoftwareVideoLayerFrameManager {
         
         self.dataDisposable.set((firstReady |> deliverOn(applyQueue)).start(next: { [weak self] path in
             if let strongSelf = self {
-                let _ = strongSelf.source.swap(SoftwareVideoSource(path: path, hintVP9: true))
+                let _ = strongSelf.source.swap(SoftwareVideoSource(path: path, hintVP9: strongSelf.hintVP9))
             }
         }))
     }

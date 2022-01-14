@@ -97,12 +97,15 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
         
         if let item = item as? ContextStickerRowItem {
             
+
+            
             while subviews.count > item.result.entries.count {
                 subviews.last?.removeFromSuperview()
             }
             while subviews.count < item.result.entries.count {
                 addSubview(Control())
             }
+            
             
             
             for i in 0 ..< item.result.entries.count {
@@ -145,55 +148,24 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     }, for: .LongMouseDown)
                     
                    
-                    if data.file.isAnimatedSticker {
-                        let view: MediaAnimatedStickerView
-                        if container.subviews.isEmpty {
-                            view = MediaAnimatedStickerView(frame: .zero)
-                            container.addSubview(view)
-                        } else {
-                            let temp = container.subviews.first as? MediaAnimatedStickerView
-                            if temp == nil {
-                                view = MediaAnimatedStickerView(frame: .zero)
-                                container.subviews.removeFirst()
-                                container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
-                            } else {
-                                view = temp!
-                            }
-                        }
-                        let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
-                        view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
-                        view.userInteractionEnabled = false
+                    let view: MediaAnimatedStickerView
+                    if container.subviews.isEmpty {
+                        view = MediaAnimatedStickerView(frame: .zero)
+                        container.addSubview(view)
                     } else {
-                        let file = data.file
-                        let imageSize = file.dimensions?.size.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
-                        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
-                        
-                        let view: TransformImageView
-                        if container.subviews.isEmpty {
-                            view = TransformImageView()
-                            container.addSubview(view)
+                        let temp = container.subviews.first as? MediaAnimatedStickerView
+                        if temp == nil {
+                            view = MediaAnimatedStickerView(frame: .zero)
+                            container.subviews.removeFirst()
+                            container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
                         } else {
-                            let temp = container.subviews.first as? TransformImageView
-                            if temp == nil {
-                                view = TransformImageView()
-                                container.subviews.removeFirst()
-                                container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
-                            } else {
-                                view = temp!
-                            }
+                            view = temp!
                         }
-                        
-                        view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: stickerPackFileReference(data.file), small: false, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
-                            if let file = file {
-                                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                            }
-                        })
-                        
-                        view.set(arguments: arguments)
-                        
-                        view.setFrameSize(imageSize)
                     }
+                    let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
+                    view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
+                    view.userInteractionEnabled = false
+                    
                     
                     container.setFrameSize(NSMakeSize(item.result.sizes[i].width - 4, item.result.sizes[i].height - 4))
                 default:
