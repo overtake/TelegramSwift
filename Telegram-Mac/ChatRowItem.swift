@@ -983,6 +983,9 @@ class ChatRowItem: TableRowItem {
                 if file.isStaticSticker {
                     return false
                 }
+                if file.isWebm {
+                    return false
+                }
                 if file.isAnimatedSticker {
                     return false
                 }
@@ -2025,7 +2028,9 @@ class ChatRowItem: TableRowItem {
                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                    }
                } else if let file = message.media[0] as? TelegramMediaFile {
-                    if file.isInstantVideo {
+                    if file.isWebm {
+                        return ChatGIFMediaItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
+                    } else if file.isInstantVideo {
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
                         return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)

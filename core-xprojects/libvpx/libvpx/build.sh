@@ -24,10 +24,11 @@ CONFIGURE_ARGS="--disable-docs
                 --disable-vp9-temporal-denoising
                 --disable-unit-tests
                 --enable-realtime-only
+                --enable-shared
                 --enable-multi-res-encoding"
 DIST_DIR="_dist"
 FRAMEWORK_DIR="build/libvpx"
-HEADER_DIR="${FRAMEWORK_DIR}/include"
+HEADER_DIR="${FRAMEWORK_DIR}/include/vpx"
 SCRIPT_DIR="$SOURCE_DIR"
 LIBVPX_SOURCE_DIR="$SOURCE_DIR"
 
@@ -54,11 +55,6 @@ fi
   local old_pwd="$(pwd)"
   local target_specific_flags=""
 
-  case "${target}" in
-    x86-*)
-      target_specific_flags="--enable-pic"
-      ;;
-  esac
 
   mkdir "${ARCH}"
   cd "${ARCH}"
@@ -71,25 +67,6 @@ fi
   cd "${old_pwd}"
 }
 
-# Returns the preprocessor symbol for the target specified by $1.
-target_to_preproc_symbol() {
-  target="$1"
-  case "${target}" in
-    arm64-*)
-      echo "__aarch64__"
-      ;;
-    armv7-*)
-      echo "__ARM_ARCH_7A__"
-      ;;
-    x86_64-*)
-      echo "__x86_64__"
-      ;;
-    *)
-      echo "#error ${target} unknown/unsupported"
-      return 1
-      ;;
-  esac
-}
 
 
 # Configures and builds each target specified by $1, and then builds
@@ -123,7 +100,8 @@ build_framework() {
   cp -p "${target_dist_dir}"/include/vpx/* "${HEADER_DIR}"
 
   # Build the fat library.
-  lipo -create ${lib_list} -output "${FRAMEWORK_DIR}/libvpx.a"
+  mkdir "${FRAMEWORK_DIR}/lib"
+  lipo -create ${lib_list} -output "${FRAMEWORK_DIR}/lib/libvpx.a"
 
 
 }

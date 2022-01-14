@@ -14,7 +14,6 @@ import MergeLists
 import Reactions
 import AppKit
 import SwiftSignalKit
-import CAPortal
 
 final class ChatReactionsLayout {
     
@@ -740,10 +739,6 @@ final class ChatReactionsView : View {
 
             transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - presentation.reactionSize.height) / 2), size: presentation.reactionSize))
             
-            if let effetView = effetView {
-                let viewSize = NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2)
-//                transition.updateFrame(view: effetView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - viewSize.height) / 2), size: viewSize))
-            }
             
             if let textView = textView, let text = reaction.text {
                 let center = focus(text.size)

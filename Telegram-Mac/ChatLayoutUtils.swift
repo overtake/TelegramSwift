@@ -44,7 +44,9 @@ class ChatLayoutUtils: NSObject {
                     return NSMakeSize(width, 40)
                 }
             }
-            if file.isAnimatedSticker && !webpIsFile {
+            if file.isWebm {
+                size = NSMakeSize(240, 240)
+            } else if file.isAnimatedSticker && !webpIsFile {
                 let dimensions = file.dimensions?.size
                 size = NSMakeSize(240, 240)
                 if file.isEmojiAnimatedSticker {
@@ -122,7 +124,9 @@ class ChatLayoutUtils: NSObject {
         if media is TelegramMediaImage {
             return ChatInteractiveContentView.self
         } else if let file = media as? TelegramMediaFile {
-            if file.mimeType == "image/webp" && !packs && !webpIsFile {
+            if file.isWebm {
+                return ChatGIFContentView.self
+            } else if file.mimeType == "image/webp" && !packs && !webpIsFile {
                 return MediaAnimatedStickerView.self
             } else if file.isStaticSticker && !webpIsFile {
                 return ChatStickerContentView.self

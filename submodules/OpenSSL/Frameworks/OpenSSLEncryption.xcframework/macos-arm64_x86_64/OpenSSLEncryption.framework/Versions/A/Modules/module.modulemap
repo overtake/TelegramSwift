@@ -1,6 +1,0 @@
-framework module OpenSSLEncryption {
-  umbrella header "OpenSSLEncryption.h"
-
-  export *
-  module * { export * }
-}
