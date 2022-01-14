@@ -186,6 +186,7 @@
 		278926C927550C8C00923087 /* Colors in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C827550C8C00923087 /* Colors */; };
 		278926CB27550CA100923087 /* KeyboardKey in Frameworks */ = {isa = PBXBuildFile; productRef = 278926CA27550CA100923087 /* KeyboardKey */; };
 		278926CC27550CD300923087 /* ChatPresentationInputQueryResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E831EF255040B70095A167 /* ChatPresentationInputQueryResult.swift */; };
+		278B89A62791939700ECF71C /* libwebp in Frameworks */ = {isa = PBXBuildFile; productRef = 278B89A52791939700ECF71C /* libwebp */; };
 		278C720425E67C2700F1B315 /* emoji1016.txt in Resources */ = {isa = PBXBuildFile; fileRef = 278C720325E67C2700F1B315 /* emoji1016.txt */; };
 		278E86D7265D49100006685D /* MicroListenerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E86D6265D49100006685D /* MicroListenerController.swift */; };
 		278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278FA2E525E813F100280629 /* PaymentsShippingMethodController.swift */; };
@@ -341,6 +342,16 @@
 		27D43DB027917748006968A6 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAF27917747006968A6 /* libssl.a */; };
 		27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB12791774A006968A6 /* libcrypto.a */; };
 		27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB327917798006968A6 /* libmac_framework_objc_static.a */; };
+		27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 27D43DB627918CFF006968A6 /* Mozjpeg */; };
+		27D43DB927918F2C006968A6 /* Mozjpeg in Frameworks */ = {isa = PBXBuildFile; productRef = 27D43DB827918F2C006968A6 /* Mozjpeg */; };
+		27D43DC3279191A5006968A6 /* OpenSSLEncryption in Frameworks */ = {isa = PBXBuildFile; productRef = 27D43DC2279191A5006968A6 /* OpenSSLEncryption */; };
+		27D43DC5279191B0006968A6 /* OpenSSLEncryption in Frameworks */ = {isa = PBXBuildFile; productRef = 27D43DC4279191B0006968A6 /* OpenSSLEncryption */; };
+		27D43DCA279191F7006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
+		27D43DCB279191F9006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
+		27D43DCC279191FD006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
+		27D43DCD27919202006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
+		27D43DCE27919229006968A6 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB12791774A006968A6 /* libcrypto.a */; };
+		27D43DCF27919229006968A6 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAF27917747006968A6 /* libssl.a */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
 		27D696F0274F8449008A723E /* KeyboardKey in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696EF274F8449008A723E /* KeyboardKey */; };
 		27D696F2274F844D008A723E /* Strings in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F1274F844D008A723E /* Strings */; };
@@ -1373,6 +1384,7 @@
 		278926CD27551B4800923087 /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = "<group>"; };
 		278926CE27551B5600923087 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		278926CF2755222700923087 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		278B89A42791938600ECF71C /* libwebp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libwebp; path = submodules/libwebp; sourceTree = "<group>"; };
 		278C720325E67C2700F1B315 /* emoji1016.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = emoji1016.txt; sourceTree = "<group>"; };
 		278E86D3265D0F330006685D /* GroupCallAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarView.swift; sourceTree = "<group>"; };
 		278E86D6265D49100006685D /* MicroListenerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicroListenerController.swift; sourceTree = "<group>"; };
@@ -1494,6 +1506,8 @@
 		27D43DAF27917747006968A6 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = "core-xprojects/openssl/build/openssl/lib/libssl.a"; sourceTree = "<group>"; };
 		27D43DB12791774A006968A6 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = "core-xprojects/openssl/build/openssl/lib/libcrypto.a"; sourceTree = "<group>"; };
 		27D43DB327917798006968A6 /* libmac_framework_objc_static.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmac_framework_objc_static.a; path = "core-xprojects/webrtc/build/webrtc/libmac_framework_objc_static.a"; sourceTree = "<group>"; };
+		27D43DB527918ABB006968A6 /* Mozjpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Mozjpeg; path = submodules/Mozjpeg; sourceTree = "<group>"; };
+		27D43DBD27919152006968A6 /* OpenSSLEncryptionProvider */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenSSLEncryptionProvider; path = "submodules/telegram-ios/submodules/OpenSSLEncryptionProvider"; sourceTree = "<group>"; };
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
 		27D696EC274F7A17008A723E /* Colors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Colors; path = packages/Colors; sourceTree = "<group>"; };
 		27D696ED274F7AA2008A723E /* Strings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Strings; path = packages/Strings; sourceTree = "<group>"; };
@@ -2310,15 +2324,23 @@
 			files = (
 				27F3B75627391E9200B81F10 /* TelegramIconsTheme in Frameworks */,
 				278926C727550C8800923087 /* Strings in Frameworks */,
+				27D43DCF27919229006968A6 /* libssl.a in Frameworks */,
 				27B6D04B2739388600C785C7 /* TelegramCore in Frameworks */,
 				278926CB27550CA100923087 /* KeyboardKey in Frameworks */,
 				2745FED9274F95CF00546B05 /* ApiCredentials in Frameworks */,
+				27D43DC5279191B0006968A6 /* OpenSSLEncryption in Frameworks */,
 				2745FECD274F948600546B05 /* NumberPluralization in Frameworks */,
 				2745FED7274F952D00546B05 /* ThemeSettings in Frameworks */,
+				27D43DCC279191FD006968A6 /* libjpeg.a in Frameworks */,
+				27D43DB927918F2C006968A6 /* Mozjpeg in Frameworks */,
+				27D43DCE27919229006968A6 /* libcrypto.a in Frameworks */,
 				2745FECB274F947000546B05 /* BuildConfig in Frameworks */,
+				27D43DCB279191F9006968A6 /* libjpeg.a in Frameworks */,
+				27D43DCD27919202006968A6 /* libjpeg.a in Frameworks */,
 				2745FECF274F94F200546B05 /* GZIP in Frameworks */,
 				278926C527550C8200923087 /* FoundationUtils in Frameworks */,
 				278926C327550BB200923087 /* ColorPalette in Frameworks */,
+				27D43DCA279191F7006968A6 /* libjpeg.a in Frameworks */,
 				2745FED5274F952600546B05 /* Localization in Frameworks */,
 				2745FED1274F950100546B05 /* Svg in Frameworks */,
 				278926C927550C8C00923087 /* Colors in Frameworks */,
@@ -2388,6 +2410,7 @@
 				279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */,
 				9F4EEF8421D4F59C002C3B33 /* Accelerate.framework in Frameworks */,
 				277DFE6127842E6600F78396 /* Translate in Frameworks */,
+				27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				27D696F0274F8449008A723E /* KeyboardKey in Frameworks */,
@@ -2397,6 +2420,7 @@
 				27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */,
 				9F0E6F78203ED1380086699C /* AppKit.framework in Frameworks */,
 				279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */,
+				27D43DC3279191A5006968A6 /* OpenSSLEncryption in Frameworks */,
 				C256A9141FB9CBF10043D497 /* LocalAuthentication.framework in Frameworks */,
 				2796FEF527423D2100DA653C /* EDSunriseSet in Frameworks */,
 				2796FEFB2742408C00DA653C /* OCR in Frameworks */,
@@ -2427,6 +2451,7 @@
 				27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */,
 				2796FEF827423F5300DA653C /* TGPassportMRZ in Frameworks */,
 				27D43DAC27917726006968A6 /* libwebpmux.a in Frameworks */,
+				278B89A62791939700ECF71C /* libwebp in Frameworks */,
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
 				27D696F4274F8451008A723E /* Colors in Frameworks */,
 				2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */,
@@ -2728,6 +2753,9 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				278B89A42791938600ECF71C /* libwebp */,
+				27D43DBD27919152006968A6 /* OpenSSLEncryptionProvider */,
+				27D43DB527918ABB006968A6 /* Mozjpeg */,
 				277DFE5F27842E3A00F78396 /* Translate */,
 				27EBC7AD275789BC00C6A820 /* Reactions */,
 				27ED5A692750CD4000BA55A7 /* FoundationUtils */,
@@ -5034,6 +5062,8 @@
 				278926C627550C8800923087 /* Strings */,
 				278926C827550C8C00923087 /* Colors */,
 				278926CA27550CA100923087 /* KeyboardKey */,
+				27D43DB827918F2C006968A6 /* Mozjpeg */,
+				27D43DC4279191B0006968A6 /* OpenSSLEncryption */,
 			);
 			productName = TelegramShare;
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
@@ -5111,6 +5141,9 @@
 				27ED5A6C2750CDE100BA55A7 /* FoundationUtils */,
 				27EBC7B127579A7200C6A820 /* Reactions */,
 				277DFE6027842E6600F78396 /* Translate */,
+				27D43DB627918CFF006968A6 /* Mozjpeg */,
+				27D43DC2279191A5006968A6 /* OpenSSLEncryption */,
+				278B89A52791939700ECF71C /* libwebp */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -6485,6 +6518,12 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/core-xprojects/ffmpeg/build/ffmpeg/lib",
+					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
+					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MARKETING_VERSION = 8.4.1;
 				ONLY_ACTIVE_ARCH = YES;
@@ -6522,6 +6561,12 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/core-xprojects/ffmpeg/build/ffmpeg/lib",
+					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
+					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MARKETING_VERSION = 8.4.1;
@@ -6767,6 +6812,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = KeyboardKey;
 		};
+		278B89A52791939700ECF71C /* libwebp */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = libwebp;
+		};
 		2796FEF127423A8600DA653C /* EmojiSuggestions */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = EmojiSuggestions;
@@ -6914,6 +6963,22 @@
 		27B8E7C527425279001B8DF7 /* TGModernGrowingTextView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGModernGrowingTextView;
+		};
+		27D43DB627918CFF006968A6 /* Mozjpeg */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Mozjpeg;
+		};
+		27D43DB827918F2C006968A6 /* Mozjpeg */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Mozjpeg;
+		};
+		27D43DC2279191A5006968A6 /* OpenSSLEncryption */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenSSLEncryption;
+		};
+		27D43DC4279191B0006968A6 /* OpenSSLEncryption */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OpenSSLEncryption;
 		};
 		27D696EF274F8449008A723E /* KeyboardKey */ = {
 			isa = XCSwiftPackageProductDependency;

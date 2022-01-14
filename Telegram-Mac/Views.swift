@@ -174,6 +174,8 @@ class SearchTitleBarView : TitledBarView {
             calendarClick?()
         }, for: .Click)
         
+        calendar.isHidden = calendarClick == nil
+        
         updateLocalizationAndTheme(theme: theme)
     }
     
