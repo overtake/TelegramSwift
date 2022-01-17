@@ -14,6 +14,9 @@ private extension Window {
     var view: MenuView {
         return self.contentView!.subviews.first! as! MenuView
     }
+    var weakView: MenuView? {
+        return self.contentView?.subviews.first as? MenuView
+    }
 }
 
 final class MenuView: View, TableViewDelegate {
@@ -39,6 +42,8 @@ final class MenuView: View, TableViewDelegate {
             }
         }
     }
+    
+    weak var controller: AppMenuController?
     
     let tableView: TableView = TableView(frame: .zero)
     private var contextItems: [Entry] = []
@@ -558,6 +563,8 @@ final class AppMenuController : NSObject  {
         
         view.merge(menu: menu, presentation: presentation, interaction: interaction)
         
+        view.controller = self
+        
         view.makeSize(presentation: presentation, screen: screen, maxHeight: self.menu.maxHeight, appearMode: appearMode)
         
         view.tableView.needUpdateVisibleAfterScroll = true
@@ -741,7 +748,7 @@ final class AppMenuController : NSObject  {
             window.contentView?.layer?.animateScaleSpringFrom(anchor: NSMakePoint(anchor.x, rect.height / 2), from: 0.1, to: 1, duration: 0.2, bounce: false)
             
             window.set(mouseHandler: { [weak self] event in
-                self?.close()
+                self?.closeAll()
                 return .rejected
             }, with: self, for: .leftMouseUp)
         }
@@ -793,6 +800,14 @@ final class AppMenuController : NSObject  {
             }
             skippedFirst = true
         })
+    }
+    
+    private func closeAll() {
+        for window in NSApp.windows {
+            if let window = window as? Window, let view = window.weakView {
+                view.controller?.close()
+            }
+        }
     }
     
     deinit {

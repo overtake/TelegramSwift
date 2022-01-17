@@ -1019,6 +1019,8 @@ struct ChatInterfaceState: Codable, Equatable {
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
                 .withUpdatedReplyMessageId(state.replyToMessageId)
                 .withUpdatedTimestamp(timestamp)
+        } else {
+            return ChatInterfaceState()
         }
         return result
     }

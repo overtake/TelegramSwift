@@ -146,7 +146,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 
                 if !items.isEmpty {
                     let menu = ContextMenu(betterInside: true)
-                    for item in items.reversed() {
+                    for item in items {
                         menu.addItem(item)
                     }
                     return menu
