@@ -41,16 +41,17 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
                 messageText = strings().chatListServiceDestructingPhoto
             } else {
-                messageText = strings().chatListPhoto1Countable(messagesCount)
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("🖼 " + message.text.fixed)
+                        messageText = ("🖼 " + messageText.fixed)
                     case .text:
-                        messageText = message.text.fixed
+                        messageText = messageText.fixed
                     case .none:
                         break
                     }
+                } else {
+                    messageText = strings().chatListPhoto1Countable(messagesCount)
                 }
             }
         case let dice as TelegramMediaDice:
@@ -61,7 +62,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             } else if fileMedia.isVoice {
                 messageText = strings().chatListVoice
                 if !message.text.fixed.isEmpty {
-                    messageText = ("🎤" + " " + message.text.fixed)
+                    messageText = ("🎤" + " " + messageText.fixed)
                 }
             } else if fileMedia.isMusic  {
                 messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1)
@@ -74,17 +75,17 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 } else {
                     if fileMedia.isAnimated {
                         messageText = strings().chatListGIF
-                        if !message.text.fixed.isEmpty {
-                             messageText = (strings().chatListGIF + ", " + message.text.fixed)
+                        if !messageText.fixed.isEmpty {
+                             messageText = (strings().chatListGIF + ", " + messageText.fixed)
                         }
                     } else {
                         messageText = strings().chatListVideo1Countable(messagesCount)
                         if !message.text.fixed.isEmpty {
                             switch mediaViewType {
                             case .emoji:
-                                messageText = ("📹 " + message.text.fixed)
+                                messageText = ("📹 " + messageText.fixed)
                             case .text:
-                                messageText = message.text.fixed
+                                messageText = messageText.fixed
                             case .none:
                                 break
                             }
@@ -98,9 +99,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("📎 " + message.text.fixed)
+                        messageText = ("📎 " + messageText.fixed)
                     case .text:
-                        messageText = message.text.fixed
+                        messageText = messageText.fixed
                     case .none:
                         break
                     }
@@ -121,9 +122,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 if let _ = content.image {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("🖼 " + message.text.fixed)
+                        messageText = ("🖼 " + messageText.fixed)
                     case .text:
-                        messageText = message.text.fixed
+                        messageText = messageText.fixed
                     case .none:
                         break
                     }
@@ -131,18 +132,18 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     if (file.isVideo && !file.isInstantVideo)  {
                         switch mediaViewType {
                         case .emoji:
-                            messageText = ("🖼 " + message.text.fixed)
+                            messageText = ("🖼 " + messageText.fixed)
                         case .text:
-                            messageText = message.text.fixed
+                            messageText = messageText.fixed
                         case .none:
                             break
                         }
                     } else if file.isGraphicFile {
                         switch mediaViewType {
                         case .emoji:
-                            messageText = ("📹 " + message.text.fixed)
+                            messageText = ("📹 " + messageText.fixed)
                         case .text:
-                            messageText = message.text.fixed
+                            messageText = messageText.fixed
                         case .none:
                             break
                         }
