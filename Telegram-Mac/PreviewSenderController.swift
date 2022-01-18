@@ -1306,7 +1306,22 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.boldWord()
             return .invoked
-            }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+        }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.underlineWord()
+            return .invoked
+        }, with: self, for: .U, priority: .modal, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.spoilerWord()
+            return .invoked
+        }, with: self, for: .P, priority: .modal, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.strikethroughWord()
+            return .invoked
+        }, with: self, for: .X, priority: .modal, modifierFlags: [.shift, .command])
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}

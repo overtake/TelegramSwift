@@ -431,7 +431,9 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 
 -(void)makeUnderline:(id)sender {
     NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
-
+    if ([was length] == 0) {
+        return;
+    }
     NSRange effectiveRange = NSMakeRange(0, 0);
     id attribute = [was attribute:NSUnderlineStyleAttributeName atIndex:0 effectiveRange:&effectiveRange];
 
@@ -453,7 +455,9 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 -(void)makeStrikethrough:(id)sender {
     
     NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
-
+    if ([was length] == 0) {
+        return;
+    }
     NSRange effectiveRange = NSMakeRange(0, 0);
     id attribute = [was attribute:NSStrikethroughStyleAttributeName atIndex:0 effectiveRange:&effectiveRange];
 
@@ -476,6 +480,10 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 -(void)makeSpoiler:(id)sender {
 
     NSAttributedString *was = [self.attributedString attributedSubstringFromRange:self.selectedRange];
+    
+    if ([was length] == 0) {
+        return;
+    }
     
     NSRange effectiveRange = NSMakeRange(0, 0);
     

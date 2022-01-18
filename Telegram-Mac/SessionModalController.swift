@@ -116,7 +116,7 @@ func SessionModalController(context: AccountContext, session: RecentAccountSessi
     let arguments = Arguments(context: context, toggleChats: { updated in
         actionsDisposable.set(context.activeSessionsContext.updateSessionAcceptsSecretChats(session, accepts: updated).start())
     }, toggleIncomingCalls: { updated in
-        
+        actionsDisposable.set(context.activeSessionsContext.updateSessionAcceptsIncomingCalls(session, accepts: updated).start())
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
