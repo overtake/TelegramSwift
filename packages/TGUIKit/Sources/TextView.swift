@@ -939,6 +939,47 @@ public final class TextViewLayout : Equatable {
         }
         return nil
     }
+    
+    var spoilerRects: [CGRect] {
+        var rects:[CGRect] = []
+        for i in 0 ..< lines.count {
+            let line = lines[i]
+            for spoiler in spoilers.filter({ !$0.isRevealed }) {
+                if let spoilerRange = spoiler.range.intersection(line.range) {
+                    let range = spoilerRange.intersection(selectedRange.range)
+                    
+                    var ranges:[(NSRange, NSColor)] = []
+                    if let range = range {
+                        ranges.append((NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound), spoiler.color))
+                        ranges.append((NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound), spoiler.color))
+                    } else {
+                        ranges.append((spoilerRange, spoiler.color))
+                    }
+                    for range in ranges {
+                        let startOffset = CTLineGetOffsetForStringIndex(line.line, range.0.lowerBound, nil);
+                        let endOffset = CTLineGetOffsetForStringIndex(line.line, range.0.upperBound, nil);
+
+                        var ascent:CGFloat = 0
+                        var descent:CGFloat = 0
+                        var leading:CGFloat = 0
+                        
+                        _ = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
+                        
+                        var rect:NSRect = line.frame
+                        
+                        rect.size.width = endOffset - startOffset
+                        rect.origin.x = startOffset
+                        rect.origin.y = rect.minY - rect.height + 2
+                        rect.size.height += ceil(descent - leading)
+                        
+                        rects.append(rect)
+      
+                    }
+                }
+            }
+        }
+        return rects
+    }
 
     public func link(at point:NSPoint) -> (Any, LinkType, NSRange, NSRect)? {
         
@@ -1182,6 +1223,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     
+    private var inkViews: [InvisibleInkDustView] = []
+    
     private var visualEffect: VisualEffect? = nil
     private var textView: View? = nil
     private var blockMask: CALayer?
@@ -1217,9 +1260,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public override init() {
         super.init();
-        layer?.disableActions()
-        self.style = ControlStyle(backgroundColor: .clear)
-
+        
+        initialize()
 //        wantsLayer = false
 //        self.layer?.delegate = nil
     }
@@ -1227,17 +1269,15 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     public override var isFlipped: Bool {
         return true
     }
+    
+    private func initialize() {
+        layer?.disableActions()
+        self.style = ControlStyle(backgroundColor: .clear)
+    }
 
     public required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
-        layer?.disableActions()
-        self.style = ControlStyle(backgroundColor: .clear)
-        
-        
-        
-//        wantsLayer = false
-//        self.layer?.delegate = nil
-       // self.layer?.drawsAsynchronously = System.drawAsync
+        initialize()
     }
     private var _disableBackgroundDrawing: Bool = false
     public var disableBackgroundDrawing: Bool {
@@ -1415,9 +1455,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 if layout.isBigEmoji {
                     additionY -= 4
                 }
-                
-               
-                
+                                
                 ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY + additionY)
                 
                 let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
@@ -1428,56 +1466,12 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
                     }
                 }
-                
-//                if !line.strikethrough.isEmpty {
-//                    for strikethrough in line.strikethrough {
-//                        let frame = strikethrough.frame.offsetBy(dx: penOffset, dy: startPosition.y + line.frame.minY)
-////                        ctx.setFillColor(strikethrough.color.cgColor)
-////                        ctx.fill(CGRect(x: frame.minX, y: frame.minY - 5, width: frame.width, height: 1.0))
-//                    }
-//                }
-                for spoiler in layout.spoilers.filter({ !$0.isRevealed }) {
-                    if let spoilerRange = spoiler.range.intersection(line.range) {
-                        let range = spoilerRange.intersection(layout.selectedRange.range)
-                        
-                        var ranges:[(NSRange, NSColor)] = []
-                        if let range = range {
-                            ranges.append((NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound), spoiler.color))
-                            ranges.append((NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound), spoiler.color))
-                        } else {
-                            ranges.append((spoilerRange, spoiler.color))
-                        }
-                        for range in ranges {
-                            let startOffset = CTLineGetOffsetForStringIndex(line.line, range.0.lowerBound, nil);
-                            let endOffset = CTLineGetOffsetForStringIndex(line.line, range.0.upperBound, nil);
-
-                            var ascent:CGFloat = 0
-                            var descent:CGFloat = 0
-                            var leading:CGFloat = 0
-                            
-                            _ = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
-                            
-                            var rect:NSRect = line.frame
-                            
-                            rect.size.width = endOffset - startOffset
-                            rect.origin.x = startOffset
-                            rect.origin.y = rect.minY - rect.height
-                            rect.size.height += ceil(descent - leading)
-                            
-                            
-                            ctx.setFillColor(range.1.cgColor)
-                            ctx.fill(rect)
-                        }
-                    }
-                }
+                // spoiler was here
             }
-            
-            
-
-            
-            
+            for spoiler in layout.spoilerRects {
+                ctx.clear(spoiler)
+            }
         }
-        
     }
     
     
@@ -1563,8 +1557,48 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
     //
     
+    private func updateInks(_ layout: TextViewLayout?, animated: Bool = false) {
+        if let layout = layout {
+            let spoilers = layout.spoilers
+            let rects = layout.spoilerRects
+            while rects.count > self.inkViews.count {
+                let inkView = InvisibleInkDustView(textView: nil)
+                self.inkViews.append(inkView)
+                self.addSubview(inkView)
+            }
+            while rects.count < self.inkViews.count {
+                performSubviewRemoval(self.inkViews.removeLast(), animated: animated)
+            }
+            
+            for (i, inkView) in inkViews.enumerated() {
+                let rect = rects[i]
+                let color = spoilers[0].color
+                inkView.update(size: rect.size, color: color, textColor: color, rects: [rect.size.bounds], wordRects: [rect.size.bounds])
+                inkView.frame = rect
+            }
+        } else {
+            while !inkViews.isEmpty {
+                performSubviewRemoval(inkViews.removeLast(), animated: animated)
+            }
+        }
+    }
+    
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.textLayout = layout
+        
+        /*
+         
+         inkView = .init(textView: nil)
+         addSubview(inkView!)
+         let rect = NSMakeRect(0, 0, 50, 50)
+         
+         inkView?.frame = rect
+                 
+         inkView?.update(size: NSMakeSize(50, 50), color: .random, textColor: .random, rects: [rect], wordRects: [rect])
+
+         */
+        
+        self.updateInks(layout)
         
         
         if let layout = layout {
@@ -1749,6 +1783,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if let _ = layout.spoiler(at: point) {
                 layout.revealSpoiler()
                 needsDisplay = true
+                self.updateInks(layout, animated: true)
                 return
             }
             if event.clickCount == 3, isSelectable {
@@ -1880,6 +1915,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.layout()
         self.visualEffect?.frame = bounds
         self.textView?.frame = bounds
+        self.updateInks(self.textLayout)
     }
     
     public func resize(_ width: CGFloat, blockColor: NSColor? = nil) {
@@ -1967,3 +2003,41 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
 }
+
+
+/*
+ for spoiler in layout.spoilers.filter({ !$0.isRevealed }) {
+     if let spoilerRange = spoiler.range.intersection(line.range) {
+         let range = spoilerRange.intersection(layout.selectedRange.range)
+         
+         var ranges:[(NSRange, NSColor)] = []
+         if let range = range {
+             ranges.append((NSMakeRange(spoiler.range.lowerBound, range.lowerBound - spoiler.range.lowerBound), spoiler.color))
+             ranges.append((NSMakeRange(spoiler.range.upperBound, range.upperBound - spoiler.range.upperBound), spoiler.color))
+         } else {
+             ranges.append((spoilerRange, spoiler.color))
+         }
+         for range in ranges {
+             let startOffset = CTLineGetOffsetForStringIndex(line.line, range.0.lowerBound, nil);
+             let endOffset = CTLineGetOffsetForStringIndex(line.line, range.0.upperBound, nil);
+
+             var ascent:CGFloat = 0
+             var descent:CGFloat = 0
+             var leading:CGFloat = 0
+             
+             _ = CGFloat(CTLineGetTypographicBounds(line.line, &ascent, &descent, &leading));
+             
+             var rect:NSRect = line.frame
+             
+             rect.size.width = endOffset - startOffset
+             rect.origin.x = startOffset
+             rect.origin.y = rect.minY - rect.height
+             rect.size.height += ceil(descent - leading)
+             
+             
+             ctx.setFillColor(range.1.cgColor)
+             ctx.fill(rect)
+         }
+     }
+ }
+ */
