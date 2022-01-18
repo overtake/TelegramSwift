@@ -1573,7 +1573,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for (i, inkView) in inkViews.enumerated() {
                 let rect = rects[i]
                 let color = spoilers[0].color
-                inkView.update(size: rect.size, color: color, textColor: color, rects: [rect.size.bounds], wordRects: [rect.size.bounds])
+                inkView.update(size: rect.size, color: color, textColor: color, rects: [rect.size.bounds], wordRects: [rect.size.bounds.insetBy(dx: 2, dy: 2)])
                 inkView.frame = rect
             }
         } else {

@@ -398,7 +398,13 @@ class ChatMediaItem: ChatRowItem {
                     for entity in attr.entities {
                         switch entity.type {
                         case .Spoiler:
-                            spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: theme.chat.textColor(isIncoming, renderType == .bubble), isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                            let color: NSColor
+                            if entry.renderType == .bubble {
+                                color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                            } else {
+                                color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+                            }
+                            spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                         default:
                             break
                         }
