@@ -25,61 +25,44 @@ final class ChatInputSendAsView : Control {
 
         
         
-        set(handler: { [weak self] control in
-            self?.showOptions(control)
-        }, for: .Down)
+        self.contextMenu = { [weak self] in
+            
+            let menu = ContextMenu(betterInside: true)
+            
+            guard let list = self?.peers else {
+                return nil
+            }
+            guard let chatInteraction = self?.chatInteraction else {
+                return nil
+            }
+            let currentPeerId = self?.currentPeerId
+            
+            let context = chatInteraction.context
+            
+            var items:[ContextMenuItem] = []
+            
+            var peers = list
+            if let index = peers.firstIndex(where: { $0.peer.id == currentPeerId }) {
+                peers.move(at: index, to: 0)
+            }
+            let header = ContextMenuItem(strings().chatSendAsHeader)
+            header.isEnabled = false
+            items.append(header)
+            
+            for (i, peer) in peers.enumerated() {
+                items.append(ContextSendAsMenuItem(peer: peer, context: context, isSelected: i == 0, handler: { [weak self] in
+                    self?.toggleSendAs(peer.peer.id)
+                }))
+            }
+                    
+            for item in items {
+                menu.addItem(item)
+            }
+            return menu
+        }
+        
     }
     
-    private func showOptions(_ control: Control) {
-        if let popover = self.popover {
-            popover.hide()
-            return
-        }
-        
-        guard let list = self.peers else {
-            return
-        }
-        guard let chatInteraction = self.chatInteraction else {
-            return
-        }
-        
-        let account = chatInteraction.context.account
-        
-        let items:[SPopoverItem] = []
-        var headerItems: [TableRowItem] = []
-        headerItems.append(SeparatorRowItem.init(NSZeroSize, 0, string: strings().chatSendAsHeader))
-        
-        var peers = list
-        if let index = peers.firstIndex(where: { $0.peer.id == currentPeerId }) {
-            peers.move(at: index, to: 0)
-        }
-        
-        for peer in peers {
-            
-            let status: String
-            if peer.peer.isUser {
-                status = strings().chatSendAsPersonalAccount
-            } else {
-                if peer.peer.isGroup || peer.peer.isSupergroup {
-                    status = strings().chatSendAsGroupCountable(Int(peer.subscribers ?? 0))
-                } else {
-                    status = strings().chatSendAsChannelCountable(Int(peer.subscribers ?? 0))
-                }
-            }
-            
-            let item = ShortPeerRowItem(NSZeroSize, peer: peer.peer, account: account, height: 45, photoSize: NSMakeSize(30, 30), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: .white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, drawCustomSeparator: peer != peers.last, inset: NSEdgeInsets(left: 10), action: { [weak self] in
-                
-                self?.toggleSendAs(peer.peer.id)
-                
-            }, highlightOnHover: true, drawPhotoOuter: peer.peer.id == currentPeerId)
-            
-            headerItems.append(item)
-           
-        }
-                
-        let controller = SPopoverViewController(items: items, visibility: 10, headerItems: headerItems)
-        showPopover(for: control, with: controller)
-    }
     
     private func toggleSendAs(_ peerId: PeerId) {
         self.popover?.hide()

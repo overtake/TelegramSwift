@@ -363,6 +363,7 @@
 		27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
 		27E001B526285AC8008786D3 /* PinchToZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E001B426285AC8008786D3 /* PinchToZoom.swift */; };
+		27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */; };
 		27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F1278D9A970026BFA1 /* menu_camera.tgs */; };
 		27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F3278D9C0A0026BFA1 /* menu_location.tgs */; };
 		27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F5278D9C120026BFA1 /* menu_poll.tgs */; };
@@ -1516,6 +1517,7 @@
 		27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCommandCenter.swift; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
 		27E001B426285AC8008786D3 /* PinchToZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinchToZoom.swift; sourceTree = "<group>"; };
+		27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSendAsMenuItem.swift; sourceTree = "<group>"; };
 		27E070F1278D9A970026BFA1 /* menu_camera.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_camera.tgs; sourceTree = "<group>"; };
 		27E070F3278D9C0A0026BFA1 /* menu_location.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_location.tgs; sourceTree = "<group>"; };
 		27E070F5278D9C120026BFA1 /* menu_poll.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_poll.tgs; sourceTree = "<group>"; };
@@ -2721,6 +2723,15 @@
 			name = invitelinks;
 			sourceTree = "<group>";
 		};
+		27E050982796B6DD00D5AFC3 /* sendas */ = {
+			isa = PBXGroup;
+			children = (
+				2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */,
+				27E050992796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift */,
+			);
+			name = sendas;
+			sourceTree = "<group>";
+		};
 		27E59978261B3F4100228411 /* formatter */ = {
 			isa = PBXGroup;
 			children = (
@@ -3528,6 +3539,7 @@
 		C22B635A1D969D7E00085C19 /* input */ = {
 			isa = PBXGroup;
 			children = (
+				27E050982796B6DD00D5AFC3 /* sendas */,
 				9F21F65320B5A41B00332C85 /* location */,
 				C2777B5C1DCE48F4008B69DD /* panels */,
 				C29B5F3F1DC7858100D13E65 /* context */,
@@ -3541,7 +3553,6 @@
 				D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */,
 				A7E83213255E992D0095A167 /* WaveView.swift */,
 				A7E832182562CFC70095A167 /* VoiceBlobView.swift */,
-				2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -5703,6 +5714,7 @@
 				C2B4D0C81E36048000CBC4E6 /* ChatActivitiesModel.swift in Sources */,
 				9F10CE962061C98E002DD61A /* InputDataRowItem.swift in Sources */,
 				C258D1B41F8D385700458478 /* PreHistorySettingsController.swift in Sources */,
+				27E0509A2796B6EE00D5AFC3 /* ChatSendAsMenuItem.swift in Sources */,
 				C2271DA01DACC7F7001792B6 /* ChatListMessageRowView.swift in Sources */,
 				C219E1DB1D8884290042F0C8 /* ChatHistoryEntry.swift in Sources */,
 				9F0367F0227208E000456348 /* QRCode.swift in Sources */,

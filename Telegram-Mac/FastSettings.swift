@@ -294,7 +294,11 @@ class FastSettings {
     }
     
     static var forceTouchAction: ForceTouchAction {
-        return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .react
+        if UserDefaults.standard.value(forKey: kForceTouchAction) != nil {
+            return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .react
+        } else {
+            return .react
+        }
     }
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {

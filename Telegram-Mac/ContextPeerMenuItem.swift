@@ -29,8 +29,7 @@ class ContextAccountMenuItem : ContextMenuItem {
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
         return ContextAccountMenuRowItem(.zero, item: self, interaction: interaction, presentation: presentation, account: account, badge: GlobalBadgeNode(account.account, sharedContext: context.sharedContext, getColor: { selected in
             theme.colors.accent
-        })
-)
+        }))
     }
 }
 

@@ -139,7 +139,6 @@ open class AppMenuRowItem : AppMenuBasicItem {
     public private(set) var text: TextViewLayout
     public let leftInset: CGFloat = 11
     public let innerInset: CGFloat = 4
-    public let imageSize: CGFloat = 18
     public let moreSize: NSSize = NSMakeSize(6, 8)
     public let selectedSize: NSSize = NSMakeSize(9, 8)
     
@@ -166,6 +165,11 @@ open class AppMenuRowItem : AppMenuBasicItem {
         }
         
     }
+    
+    open var imageSize: CGFloat {
+        return 18
+    }
+
     
     public override var searchable: String {
         return item.title
@@ -197,8 +201,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
         return false
     }
     
+    open var textSize: CGFloat {
+        return text.layoutSize.width + leftInset * 2 + innerInset * 2
+    }
+    
     open override var effectiveSize: NSSize {
-        var defaultSize = NSMakeSize(text.layoutSize.width + leftInset * 2 + innerInset * 2, height)
+        var defaultSize = NSMakeSize(textSize, height)
         if let _ = self.item.image {
             defaultSize.width += imageSize + leftInset - 2
         }
@@ -353,6 +361,13 @@ open class AppMenuRowView: AppMenuBasicItemView {
         }
     }
     
+    open var textY: CGFloat {
+        guard let item = item as? AppMenuRowItem else {
+            return 0
+        }
+        return focus(item.text.layoutSize).minY
+    }
+    
     public var rightX: CGFloat {
         guard let item = item as? AppMenuRowItem else {
             return 0
@@ -364,6 +379,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
         return right
     }
     
+    public var imageFrame: NSRect {
+        return imageView?.frame ?? .zero
+    }
+    
     open override func layout() {
         super.layout()
         
@@ -373,14 +392,14 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         if let drawable = drawable {
             drawable.centerY(x: item.leftInset)
-            textView.centerY(x: drawable.frame.maxX + item.leftInset - 2)
+            textView.setFrameOrigin(NSMakePoint(drawable.frame.maxX + item.leftInset - 2, textY))
         } else if let imageView = imageView {
             imageView.centerY(x: item.leftInset)
-            textView.centerY(x: imageView.frame.maxX + item.leftInset - 2)
+            textView.setFrameOrigin(NSMakePoint(imageView.frame.maxX + item.leftInset - 2, textY))
         } else if item.hasDrawable {
-            textView.centerY(x: item.leftInset + item.imageSize + item.leftInset - 2)
+            textView.setFrameOrigin(NSMakePoint(item.leftInset + item.imageSize + item.leftInset - 2, textY))
         } else {
-            textView.centerY(x: item.leftInset)
+            textView.setFrameOrigin(NSMakePoint(item.leftInset, textY))
         }
         if let more = more {
             more.centerY(x: containerView.frame.width - item.leftInset - more.frame.width)
