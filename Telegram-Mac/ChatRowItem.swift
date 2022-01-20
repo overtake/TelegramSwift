@@ -2344,7 +2344,7 @@ class ChatRowItem: TableRowItem {
                 if lastLine.single {
                     rect.size.width = max(rect.size.width, lastLine.width)
                     if rect.size.width + rightSize.width < blockWidth {
-                        let effective = lastLine.width + rightSize.width + insetBetweenContentAndDate
+                        let effective = lastLine.width + rightSize.width
                         if effective > contentSize.width {
                             rect.size.width += rightSize.width + insetBetweenContentAndDate + bubbleContentInset * 2
                         } else {

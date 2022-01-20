@@ -380,6 +380,9 @@ class GalleryViewer: NSResponder {
         window.copyhandler = { [weak self] in
             self?.copy(nil)
         }
+        window.masterCopyhandler = { [weak self] in
+            self?.copy(nil)
+        }
         
         window.firstResponderFilter = { responder in
             return responder

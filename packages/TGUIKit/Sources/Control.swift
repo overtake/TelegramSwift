@@ -463,7 +463,7 @@ open class Control: View {
     
     
     open override func rightMouseDown(with event: NSEvent) {
-        if let menu = self.contextMenu?() {
+        if let menu = self.contextMenu?(), event.clickCount == 1 {
             AppMenu.show(menu: menu, event: event, for: self)
             return
         }
