@@ -181,28 +181,17 @@ private final class RendererState  {
         self.startFrame = startFrame
         self.endFrame = endFrame
     }
-    func withUpdatedFrames(_ frames: [RenderedFrame]) -> RendererState {
+    func withUpdatedFrames(_ frames: [RenderedFrame]) {
         self.frames = frames
-        return self
     }
-    func withAddedFrame(_ frame: RenderedFrame) {
-        
+    func addFrame(_ frame: RenderedFrame) {
         let prev = frame.frame == 0 ? nil : self.frames.last ?? previousFrame
         self.container?.cacheFrame(prev, frame)
-//        _ = sharedFrames.modify { value in
-//            var value = value
-//            if value[self.animation.key] == nil {
-//                value[self.animation.key] = [:]
-//            }
-//            value[self.animation.key]?[frame.frame] = WeakReference(value: frame)
-//            return value
-//        }
         self.frames = self.frames + [frame]
     }
     
-    func withUpdatedCurrentFrame(_ currentFrame: Int32) -> RendererState {
+    func updateCurrentFrame(_ currentFrame: Int32) {
         self.currentFrame = currentFrame
-        return self
     }
 
     func takeFirst() -> RenderedFrame {
@@ -525,25 +514,11 @@ private final class PlayerRenderer {
         let maximum = Int(initialState.endFrame - initialState.startFrame)
         framesTask = ThreadPoolTask { state in
             _ = isRendering.swap(true)
-            while !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_renderer_frames, maximum) {
-                
-                let currentFrame = stateValue.with { $0?.currentFrame ?? 0 }
-                
-                let value = stateValue.with { $0 }
-                
-                let frame: RenderedFrame?
-                if let value = value {
-                    frame = value.renderFrame(at: currentFrame)
-                } else {
-                    frame = nil
-                }
-                                
-                _ = stateValue.modify { stateValue -> RendererState? in
-                    guard let state = stateValue else {
-                        return stateValue
-                    }
-                    var currentFrame = state.currentFrame
-                    
+            
+            _ = stateValue.with { stateValue -> RendererState? in
+                while let stateValue = stateValue, !state.cancelled.with({$0}), stateValue.frames.count < min(maximum_renderer_frames, maximum) {
+                    var currentFrame = stateValue.currentFrame
+                    let frame = stateValue.renderFrame(at: currentFrame)
                     if mainFps >= fps {
                         if currentFrame % Int32(round(Float(mainFps) / Float(fps))) != 0 {
                             currentFrame += 1
@@ -552,17 +527,18 @@ private final class PlayerRenderer {
                         currentFrame += 1
                     }
                     
-                    if currentFrame >= state.endFrame - 1 {
-                        currentFrame = state.startFrame - 1
+                    if currentFrame >= stateValue.endFrame - 1 {
+                        currentFrame = stateValue.startFrame - 1
                     }
+                    stateValue.updateCurrentFrame(currentFrame + 1)
+
                     if let frame = frame {
-                        state.withAddedFrame(frame)
+                        stateValue.addFrame(frame)
+                    } else {
+                        break
                     }
-                    return state.withUpdatedCurrentFrame(currentFrame + 1)
                 }
-                if frame == nil {
-                    break
-                }
+                return stateValue
             }
             _ = isRendering.swap(false)
             runOnQueue.async {

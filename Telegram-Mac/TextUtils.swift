@@ -74,9 +74,10 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     messageText = strings().chatListServiceDestructingVideo
                 } else {
                     if fileMedia.isAnimated {
-                        messageText = strings().chatListGIF
                         if !messageText.fixed.isEmpty {
                              messageText = (strings().chatListGIF + ", " + messageText.fixed)
+                        } else {
+                            messageText = strings().chatListGIF
                         }
                     } else {
                         messageText = strings().chatListVideo1Countable(messagesCount)
@@ -95,7 +96,6 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 
                 
             } else {
-                messageText = fileMedia.fileName?.fixed ?? "File"
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
@@ -105,6 +105,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     case .none:
                         break
                     }
+                } else {
+                    messageText = fileMedia.fileName?.fixed ?? "File"
                 }
             }
         case _ as TelegramMediaMap:
