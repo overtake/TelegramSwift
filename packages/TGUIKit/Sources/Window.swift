@@ -276,6 +276,8 @@ open class Window: NSWindow {
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
+    public  var masterCopyhandler:(()->Void)? = nil
+
     public var closeInterceptor:(()->Bool)? = nil
     public var orderOutHandler:(()->Void)? = nil
     public weak var rootViewController: ViewController?

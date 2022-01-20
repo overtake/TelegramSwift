@@ -724,9 +724,6 @@ final class AppMenuController : NSObject  {
         }
         view.view.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
 
-        
-        self.previousCopyHandler = window.copyhandler
-        
         window.copyhandler = { [weak self] in
             self?.invokeKeyEquivalent(.cmdc)
         }
@@ -786,12 +783,12 @@ final class AppMenuController : NSObject  {
     }
     
     func present(event: NSEvent, view: NSView) {
-        self.parent = NSApp.mainWindow as? Window
+        self.parent = NSApp.keyWindow as? Window ?? NSApp.mainWindow as? Window
         self.weakHolder = nil
         self.initialize()
         self.activate(event: event, view: view, animated: true)
         self.onShow()
-        
+        self.previousCopyHandler = self.parent?.masterCopyhandler
         var skippedFirst: Bool = false
         
         self.keyDisposable = self.parent?.keyWindowUpdater.start(next: { [weak self] value in
