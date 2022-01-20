@@ -640,6 +640,8 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         }
         self.dismiss.sizeToFit()
         container.backgroundColor = theme.colors.background
+        
+        needsLayout = true
     }
     
     override func setFrameSize(_ newSize: NSSize) {
