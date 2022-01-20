@@ -35,7 +35,10 @@ class ChatInputAttachView: ImageButton, Notifable {
         let context = chatInteraction.context
         
         self.contextMenu = { [weak self] in
-            guard let `self` = self else {return nil}
+            guard let `self` = self else {
+                return nil
+            }
+            let chatInteraction = self.chatInteraction
             if let peer = chatInteraction.presentation.peer {
                 
                 var items:[ContextMenuItem] = []
