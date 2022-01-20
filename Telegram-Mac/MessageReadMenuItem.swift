@@ -464,9 +464,9 @@ final class MessageReadMenuItem : ContextMenuItem {
         
         
         if let attr = message.reactionsAttribute, !attr.reactions.isEmpty {
-//            if !attr.canViewList {
-//                return false
-//            }
+            if !attr.canViewList {
+                return false
+            }
             if peer.isGroup || peer.isSupergroup {
                 return true
             }

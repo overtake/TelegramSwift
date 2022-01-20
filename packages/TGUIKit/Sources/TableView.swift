@@ -2905,12 +2905,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     completion?(completed)
                 })
                 CATransaction.commit()
-            } else {
-                super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-                return
             }
         }
-        self.setFrameSize(size)
+        
+        super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
         self.updateStickAfterScroll(animated)
     }
     

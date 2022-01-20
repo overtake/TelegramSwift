@@ -688,16 +688,9 @@ open class ViewController : NSObject {
         return true
     }
     
-    open func updateFrame(_ frame: NSRect, animated: Bool) {
+    open func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
         if isLoaded() {
-            let transition: ContainedViewLayoutTransition
-            if animated {
-                transition = .animated(duration: 0.2, curve: .easeInOut)
-            } else {
-                transition = .immediate
-            }
             transition.updateFrame(view: self.view, frame: frame)
-//            (animated ? self.view.animator() : self.view).frame = frame
         }
     }
     

@@ -19,7 +19,7 @@ class ChatMediaLayoutParameters : Equatable {
     var showMessage:(Message)->Void = {_ in }
     
     
-    var chatLocationInput:()->ChatLocationInput = { fatalError() }
+    var chatLocationInput:(Message)->ChatLocationInput = { _ in fatalError() }
     var chatMode:ChatMode = .history
     
     var getUpdatingMediaProgress:(MessageId)->Signal<Float?, NoError> = { _ in return .single(nil) }

@@ -690,9 +690,9 @@ class MainViewController: TelegramViewController {
         return self.tabController.current == chatListNavigation || self.tabController.current == contacts || self.tabController.current == self.phoneCalls
     }
     
-    override func updateFrame(_ frame: NSRect, animated: Bool) {
-        super.updateFrame(frame, animated: animated)
-        self.tabController.updateFrame(frame.size.bounds, animated: animated)
+    override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        super.updateFrame(frame, transition: transition)
+        self.tabController.updateFrame(frame.size.bounds, transition: transition)
     }
     
     override init(_ context: AccountContext) {

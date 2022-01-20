@@ -514,9 +514,9 @@ private final class PlayerRenderer {
         let maximum = Int(initialState.endFrame - initialState.startFrame)
         framesTask = ThreadPoolTask { state in
             _ = isRendering.swap(true)
-            
+            let cancelled = state.cancelled.with({$0})
             _ = stateValue.with { stateValue -> RendererState? in
-                while let stateValue = stateValue, !state.cancelled.with({$0}), stateValue.frames.count < min(maximum_renderer_frames, maximum) {
+                while let stateValue = stateValue, !cancelled, stateValue.frames.count < min(maximum_renderer_frames, maximum) {
                     var currentFrame = stateValue.currentFrame
                     let frame = stateValue.renderFrame(at: currentFrame)
                     if mainFps >= fps {
