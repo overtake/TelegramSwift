@@ -175,8 +175,13 @@ final class ChatInteraction : InterfaceObserver  {
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
-    func chatLocationInput() -> ChatLocationInput {
-        return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
+    func chatLocationInput(_ message: Message) -> ChatLocationInput {
+        NSLog("\(message.id.peerId), \(self.chatLocation.peerId)")
+        if mode.isThreadMode, mode.threadId == message.id {
+            return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
+        } else {
+            return context.chatLocationInput(for: self.chatLocation, contextHolder: contextHolder())
+        }
     }
     
     var updateFrame:(NSRect, ContainedViewLayoutTransition) -> Void = { _, _ in }

@@ -412,13 +412,13 @@ class ChatControllerView : View, ChatInputDelegate {
         self.themeSelectorView?.removeFromSuperview()
         self.themeSelectorView = view
         addSubview(view)
-        updateFrame(self.frame, transition: animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate)
+        updateFrame(self.frame, transition: animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate)
     }
     
     func hideChatThemeSelector(animated: Bool) {
         if let view = self.themeSelectorView {
             self.themeSelectorView = nil
-            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeInOut) : .immediate
+            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate
             self.updateFrame(self.frame, transition: transition)
             if animated {
                 transition.updateFrame(view: view, frame: CGRect(origin: CGPoint(x: 0, y: frame.maxY), size: view.frame.size), completion: { [weak view] _ in
@@ -489,8 +489,6 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
     
-        
-        
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
@@ -505,8 +503,8 @@ class ChatControllerView : View, ChatInputDelegate {
             tableHeight += inputView.frame.height
         }
         
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight))
         
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight))
         tableView.tile()
 
         
@@ -673,7 +671,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
 
-        updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
+        updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
 
     }
     
@@ -4944,9 +4942,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     }
 
-    override func updateFrame(_ frame: NSRect, animated: Bool) {
-        super.updateFrame(frame, animated: animated)
-        self.genericView.updateFrame(frame, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
+    override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        super.updateFrame(frame, transition: transition)
+        self.genericView.updateFrame(frame, transition: transition)
     }
     
     private func openScheduledChat() {

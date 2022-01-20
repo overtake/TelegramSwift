@@ -121,13 +121,13 @@ open class NavigationHeader {
                 }
                 let transition: ContainedViewLayoutTransition
                 if animated {
-                    transition = .animated(duration: 0.2, curve: .easeInOut)
+                    transition = .animated(duration: 0.2, curve: .easeOut)
                 } else {
                     transition = .immediate
                 }
                 transition.updateFrame(view: view, frame: NSMakeRect(0, inset, view.frame.width, view.frame.height))
 
-                navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
+                navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), transition: transition)
                 
             }
         }))
@@ -144,13 +144,21 @@ open class NavigationHeader {
         
         if let navigation = navigation, let view = _view {
             _view = nil
-            performSubviewPosRemoval(view, pos: NSMakePoint(0, navigation.controller.bar.height - height), animated: animated, duration: 0.2, timingFunction: .easeInEaseOut)
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, navigation.controller.bar.height - height), animated: animated, duration: 0.2, timingFunction: .easeOut)
 
             var inset:CGFloat = navigation.controller.bar.height
             if let supplyHeader = supplyHeader, supplyHeader.needShown  {
                 inset += supplyHeader.height
             }
-            navigation.controller.updateFrame(CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset)), animated: animated)
+            
+            let transiton: ContainedViewLayoutTransition
+            if animated {
+                transiton = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transiton = .immediate
+            }
+            
+            navigation.controller.updateFrame(CGRect(origin: NSMakePoint(0, inset), size: NSMakeSize(navigation.controller.frame.width, navigation.frame.height - inset)), transition: transiton)
         }
         
     }
@@ -178,7 +186,7 @@ public class CallNavigationHeader : NavigationHeader {
                 
                 let transition: ContainedViewLayoutTransition
                 if animated {
-                    transition = .animated(duration: 0.2, curve: .easeInOut)
+                    transition = .animated(duration: 0.2, curve: .easeOut)
                 } else {
                     transition = .immediate
                 }
@@ -195,7 +203,7 @@ public class CallNavigationHeader : NavigationHeader {
 
                 transition.updateFrame(view: view, frame: CGRect(origin: .zero, size: view.frame.size))
 
-                navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
+                navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), transition: transition)
                 
             }
         }))
@@ -211,11 +219,11 @@ public class CallNavigationHeader : NavigationHeader {
         
         if let navigation = navigation, let view = _view {
             _view = nil
-            performSubviewPosRemoval(view, pos: NSMakePoint(0, -realHeight), animated: animated, duration: 0.2, timingFunction: .easeInEaseOut)
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, -realHeight), animated: animated, duration: 0.2, timingFunction: .easeOut)
 
             let transition: ContainedViewLayoutTransition
             if animated {
-                transition = .animated(duration: 0.2, curve: .easeInOut)
+                transition = .animated(duration: 0.2, curve: .easeOut)
             } else {
                 transition = .immediate
             }
@@ -227,7 +235,7 @@ public class CallNavigationHeader : NavigationHeader {
                         
             transition.updateFrame(view: navigation.navigationBar, frame: CGRect.init(origin: .zero, size: navigation.navigationBar.frame.size))
             
-            navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), animated: animated)
+            navigation.controller.updateFrame(NSMakeRect(0, contentInset, navigation.controller.frame.width, navigation.frame.height - contentInset), transition: transition)
         }
         
     }

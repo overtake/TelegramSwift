@@ -32,15 +32,15 @@ private class TabBarViewController : View {
         super.setFrameSize(newSize)
     }
     
-    func updateFrame(_ frame: NSRect, animated: Bool) {
+    func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
         for subview in subviews {
             if let subview = subview as? TabBarView {
-                (animated ? subview.animator() : subview).frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
+                transition.updateFrame(view: subview, frame: NSMakeRect(0, frame.height - 50, frame.width, 50))
             } else {
                 if tabView.isHidden {
-                    (animated ? subview.animator() : subview).frame = bounds
+                    transition.updateFrame(view: subview, frame: bounds)
                 } else {
-                    (animated ? subview.animator() : subview).frame = NSMakeRect(0, 0, frame.width, frame.height - tabView.frame.height)
+                    transition.updateFrame(view: subview, frame: NSMakeRect(0, 0, frame.width, frame.height - tabView.frame.height))
                 }
             }
         }
@@ -48,7 +48,7 @@ private class TabBarViewController : View {
     
     override func layout() {
         super.layout()
-        updateFrame(frame, animated: false)
+        updateFrame(frame, transition: .immediate)
     }
 }
 
@@ -120,9 +120,9 @@ public class TabBarController: ViewController, TabViewDelegate {
         
     }
     
-    public override func updateFrame(_ frame: NSRect, animated: Bool) {
-        super.updateFrame(frame, animated: animated)
-        self.genericView.updateFrame(frame, animated: animated)
+    public override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        super.updateFrame(frame, transition: transition)
+        self.genericView.updateFrame(frame, transition: transition)
     }
     
     public func select(index:Int) -> Void {
