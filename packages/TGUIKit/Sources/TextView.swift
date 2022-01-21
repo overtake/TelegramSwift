@@ -1309,6 +1309,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             ctx.setAllowsFontSubpixelPositioning(true)
             ctx.setShouldSubpixelPositionFonts(true)
             
+            if clearExceptRevealed {
+                let path = CGMutablePath()
+                
+                for spoiler in layout.spoilerRects(false) {
+                    path.addRect(spoiler)
+                }
+                ctx.addPath(path)
+                ctx.clip()
+            }
+            
             if !System.supportsTransparentFontDrawing {
                 ctx.setAllowsAntialiasing(true)
                 
@@ -1474,28 +1484,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 // spoiler was here
             }
-            if clearExceptRevealed {
-                let path = CGMutablePath()
-                
-                for spoiler in layout.spoilerRects(!inAnimation) {
-                    path.addRect(spoiler)
-                }
-                ctx.saveGState()
-                ctx.addPath(path)
-                ctx.clip()
-                
-                ctx.setFillColor(.black)
-                ctx.fill(bounds)
-                
-                ctx.restoreGState()
-                
-            } else {
-                for spoiler in layout.spoilerRects(!inAnimation) {
-                    ctx.clear(spoiler)
-                }
+            for spoiler in layout.spoilerRects(!inAnimation) {
+                ctx.clear(spoiler)
             }
-            
-            
         }
     }
     
