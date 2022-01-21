@@ -53,7 +53,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 if point.x > subview.frame.minX && point.x < subview.frame.maxX {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                    if file.isAnimatedSticker {
+                    if file.isVideoSticker {
+                        return (.file(reference, GifPreviewModalView.self), subview)
+                    } else if file.isAnimatedSticker {
                         return (.file(reference, AnimatedStickerPreviewModalView.self), subview)
                     } else {
                         return (.file(reference, StickerPreviewModalView.self), subview)
@@ -103,7 +105,11 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 subviews.last?.removeFromSuperview()
             }
             while subviews.count < item.result.entries.count {
-                addSubview(Control())
+                let control = Control()
+                addSubview(control)
+                let content = StickerMediaContentView(frame: .zero)
+                content.userInteractionEnabled = false
+                control.addSubview(content)
             }
             
             
@@ -148,24 +154,10 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                     }, for: .LongMouseDown)
                     
                    
-                    let view: MediaAnimatedStickerView
-                    if container.subviews.isEmpty {
-                        view = MediaAnimatedStickerView(frame: .zero)
-                        container.addSubview(view)
-                    } else {
-                        let temp = container.subviews.first as? MediaAnimatedStickerView
-                        if temp == nil {
-                            view = MediaAnimatedStickerView(frame: .zero)
-                            container.subviews.removeFirst()
-                            container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
-                        } else {
-                            view = temp!
-                        }
-                    }
+                    let view: StickerMediaContentView = container.subviews[0] as! StickerMediaContentView
+            
                     let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
                     view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
-                    view.userInteractionEnabled = false
-                    
                     
                     container.setFrameSize(NSMakeSize(item.result.sizes[i].width - 4, item.result.sizes[i].height - 4))
                 default:

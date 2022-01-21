@@ -940,11 +940,11 @@ public final class TextViewLayout : Equatable {
         return nil
     }
     
-    var spoilerRects: [CGRect] {
+    func spoilerRects(_ checkRevealed: Bool = true) -> [CGRect] {
         var rects:[CGRect] = []
         for i in 0 ..< lines.count {
             let line = lines[i]
-            for spoiler in spoilers.filter({ !$0.isRevealed }) {
+            for spoiler in spoilers.filter({ !$0.isRevealed || !checkRevealed }) {
                 if let spoilerRange = spoiler.range.intersection(line.range) {
                     let range = spoilerRange.intersection(selectedRange.range)
                     
@@ -1224,6 +1224,12 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     private var inkViews: [InvisibleInkDustView] = []
+    private var clearExceptRevealed: Bool = false
+    private var inAnimation: Bool = false {
+        didSet {
+            needsDisplay = true
+        }
+    }
     
     private var visualEffect: VisualEffect? = nil
     private var textView: View? = nil
@@ -1468,9 +1474,28 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 // spoiler was here
             }
-            for spoiler in layout.spoilerRects {
-                ctx.clear(spoiler)
+            if clearExceptRevealed {
+                let path = CGMutablePath()
+                
+                for spoiler in layout.spoilerRects(!inAnimation) {
+                    path.addRect(spoiler)
+                }
+                ctx.saveGState()
+                ctx.addPath(path)
+                ctx.clip()
+                
+                ctx.setFillColor(.black)
+                ctx.fill(bounds)
+                
+                ctx.restoreGState()
+                
+            } else {
+                for spoiler in layout.spoilerRects(!inAnimation) {
+                    ctx.clear(spoiler)
+                }
             }
+            
+            
         }
     }
     
@@ -1560,11 +1585,26 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func updateInks(_ layout: TextViewLayout?, animated: Bool = false) {
         if let layout = layout {
             let spoilers = layout.spoilers
-            let rects = layout.spoilerRects
+            let rects = layout.spoilerRects()
             while rects.count > self.inkViews.count {
                 let inkView = InvisibleInkDustView(textView: nil)
                 self.inkViews.append(inkView)
                 self.addSubview(inkView)
+            }
+            
+            if rects.count < self.inkViews.count, animated {
+                let fake = TextView(frame: self.bounds)
+                
+                fake.update(layout)
+                fake.userInteractionEnabled = false
+                fake.isSelectable = false
+                addSubview(fake, positioned: .below, relativeTo: self.subviews.first)
+                fake.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, removeOnCompletion: false, completion: { [weak fake, weak self] _ in
+                    fake?.removeFromSuperview()
+                    self?.inAnimation = false
+                })
+                self.inAnimation = true
+                fake.clearExceptRevealed = true
             }
             while rects.count < self.inkViews.count {
                 performSubviewRemoval(self.inkViews.removeLast(), animated: animated)

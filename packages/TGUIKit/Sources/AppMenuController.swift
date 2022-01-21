@@ -757,7 +757,7 @@ final class AppMenuController : NSObject  {
         }
         var rect = rect
         
-        let visible = parent == nil && !self.betterInside ? screen.visibleFrame : owner.frame
+        let visible = parent != nil || !self.betterInside ? screen.visibleFrame : owner.frame
         
         if rect.minY < visible.minY {
             rect.origin.y = visible.minY
