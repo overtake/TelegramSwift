@@ -617,37 +617,16 @@ class ChatListRowItem: TableRowItem {
                         if !message.containsSecretMedia {
                             if let image = media as? TelegramMediaImage {
                                 if let _ = largestImageRepresentation(image.representations) {
-                                    //let imageSize = largest.dimensions.cgSize
-                                    //let fitSize = imageSize.aspectFilled(contentImageFillSize)
                                     let fitSize = contentImageSize
                                     contentImageSpecs.append((message, image, fitSize))
                                 }
                                 break inner
                             } else if let file = media as? TelegramMediaFile {
-                                if file.isVideo, !file.isInstantVideo, let _ = file.dimensions {
-                                    //let imageSize = dimensions.cgSize
-                                    //let fitSize = imageSize.aspectFilled(contentImageFillSize)
+                                if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
                                     let fitSize = contentImageSize
                                     contentImageSpecs.append((message, file, fitSize))
                                 }
                                 break inner
-                            } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content, false {
-                                let imageTypes = ["photo", "video", "embed", "gif", "document", "telegram_album"]
-                                if let image = content.image, let type = content.type, imageTypes.contains(type) {
-                                    if let _ = largestImageRepresentation(image.representations) {
-                                        //let imageSize = largest.dimensions.cgSize
-                                        let fitSize = contentImageSize
-                                        contentImageSpecs.append((message, image, fitSize))
-                                    }
-                                    break inner
-                                } else if let file = content.file {
-                                    if file.isVideo, !file.isInstantVideo, let _ = file.dimensions {
-                                        //let imageSize = dimensions.cgSize
-                                        let fitSize = contentImageSize
-                                        contentImageSpecs.append((message, file, fitSize))
-                                    }
-                                    break inner
-                                }
                             }
                         }
                     }

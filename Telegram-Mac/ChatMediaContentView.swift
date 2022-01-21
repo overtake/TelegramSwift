@@ -137,11 +137,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     }
                     cancelFetching()
                 } else {
-                    //open()
                 }
             case .Remote:
                 fetch()
-            //open()
             case .Local:
                 open()
                 break
@@ -169,9 +167,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.context = context
         self.parent = parent
         self.table = table
-        
-       
-        
+                
         self.media = media
         
         if let parameters = parameters {
@@ -289,7 +285,6 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             pasteboard?.declareTypes([.kFilenames, .string], owner: self)
             pasteboard?.setPropertyList([dragpath], forType: .kFilenames)
             pasteboard?.setString(dragpath, forType: .string)
-            
         }
     }
     

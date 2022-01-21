@@ -459,7 +459,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         for i in 0 ..< item.layout.count {
             if NSPointInRect(location, item.layout.frame(at: i)) {
                 let contentNode = contents[i]
-                if contentNode is ChatGIFContentView {
+                if contentNode is VideoStickerContentView {
                     if let file = contentNode.media as? TelegramMediaFile {
                         let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                         return (.file(reference, GifPreviewModalView.self), contentNode)
