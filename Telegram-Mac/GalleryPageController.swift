@@ -321,7 +321,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
 
-            if NSPointInRect(point, self.captionScrollView.frame), self.captionScrollView.layer?.opacity != 0, let captionLayout = self.captionView.textLayout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
+            if NSPointInRect(point, self.captionScrollView.frame) {
                 self.captionView.mouseUp(with: event)
                 return .invoked
             } else if self.captionView.mouseInside() {

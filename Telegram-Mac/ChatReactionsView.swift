@@ -1024,7 +1024,7 @@ final class ChatReactionsView : View {
         
         let transition: ContainedViewLayoutTransition
         if animated {
-            transition = .animated(duration: 0.2, curve: .easeInOut)
+            transition = .animated(duration: 0.2, curve: .easeOut)
         } else {
             transition = .immediate
         }
