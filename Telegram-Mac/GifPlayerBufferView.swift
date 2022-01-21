@@ -15,28 +15,34 @@ import SwiftSignalKit
 
 
 final class GifPlayerBufferView : TransformImageView {
-    var timebase: CMTimebase
+    var timebase: CMTimebase!
     
     private var videoLayer: (SoftwareVideoLayerFrameManager, SampleBufferLayer)?
     
     override init() {
+        super.init()
+        initialize()
+    }
+    
+    private func initialize() {
         var timebase: CMTimebase?
-        CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: CMClockGetHostTimeClock(), timebaseOut: &timebase)
+        CMTimebaseCreateWithSourceClock(allocator: nil, sourceClock: CMClockGetHostTimeClock(), timebaseOut: &timebase)
         CMTimebaseSetRate(timebase!, rate: 0.0)
         self.timebase = timebase!
-        
-        super.init()
-        self.layerContentsRedrawPolicy = .duringViewResize
     }
     
     private var fileReference: FileMediaReference?
     private var resizeInChat: Bool = false
+    
+    private(set) var isRendering: Bool = false
+    
     func update(_ fileReference: FileMediaReference, context: AccountContext, resizeInChat: Bool = false) -> Void {
         
-        let updated = self.fileReference == nil || !fileReference.media.isEqual(to: self.fileReference!.media)
+        let updated = self.fileReference == nil || fileReference.media.fileId != self.fileReference!.media.fileId
         self.fileReference = fileReference
         self.resizeInChat = resizeInChat
         if updated {
+            self.isRendering = false
             self.videoLayer?.1.layer.removeFromSuperlayer()
             
             let layerHolder = takeSampleBufferLayer()
@@ -46,9 +52,20 @@ final class GifPlayerBufferView : TransformImageView {
                 layerHolder.layer.videoGravity = AVLayerVideoGravity.resizeAspectFill
             }
             layerHolder.layer.backgroundColor = NSColor.clear.cgColor
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
             self.layer?.addSublayer(layerHolder.layer)
+            CATransaction.commit()
             let manager = SoftwareVideoLayerFrameManager(account: context.account, fileReference: fileReference, layerHolder: layerHolder)
             self.videoLayer = (manager, layerHolder)
+            
+            manager.onRender = { [weak self] in
+                if self?.image != nil {
+                    self?.setSignal(signal: .complete())
+                    self?.image = nil
+                    self?.isRendering = true
+                }
+            }
             manager.start()
         }
         
@@ -81,7 +98,8 @@ final class GifPlayerBufferView : TransformImageView {
     }
     
     required public init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
+        super.init(frame: frameRect)
+        initialize()
     }
     
     private var displayLink: ConstantDisplayLinkAnimator?
@@ -105,26 +123,6 @@ final class GifPlayerBufferView : TransformImageView {
         }
     }
     
-//    private var displayLink: DisplayLink?
-//    var ticking: Bool = false {
-//        didSet {
-//            if self.ticking != oldValue {
-//                if self.ticking {
-//                    let displayLink = DisplayLink(onQueue: .main)
-//                    self.displayLink = displayLink
-//                    displayLink?.start()
-//                    displayLink?.callback = { [weak self] in
-//                        self?.displayLinkEvent()
-//                    }
-//                    CMTimebaseSetRate(self.timebase, rate: 1.0)
-//                } else if let displayLink = self.displayLink {
-//                    self.displayLink = nil
-//                    displayLink.cancel()
-//                    CMTimebaseSetRate(self.timebase, rate: 0.0)
-//                }
-//            }
-//        }
-//    }
     
     private func displayLinkEvent() {
         let timestamp = CMTimebaseGetTime(self.timebase).seconds

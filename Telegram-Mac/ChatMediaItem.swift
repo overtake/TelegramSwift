@@ -537,7 +537,7 @@ class ChatMediaItem: ChatRowItem {
     }
     
     var isPinchable: Bool {
-        return contentNode() == ChatInteractiveContentView.self || contentNode() == ChatGIFContentView.self
+        return contentNode() == ChatInteractiveContentView.self || contentNode() == VideoStickerContentView.self
     }
 }
 
@@ -559,12 +559,18 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let contentNode = contentNode {
-            if contentNode is ChatStickerContentView {
+            if contentNode is StickerMediaContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    return (.file(reference, StickerPreviewModalView.self), contentNode)
+                    if file.isVideoSticker {
+                        return (.file(reference, GifPreviewModalView.self), contentNode)
+                    } else if file.isAnimatedSticker {
+                        return (.file(reference, AnimatedStickerPreviewModalView.self), contentNode)
+                    } else if file.isStaticSticker {
+                        return (.file(reference, StickerPreviewModalView.self), contentNode)
+                    }
                 }
-            } else if contentNode is ChatGIFContentView {
+            } else if contentNode is VideoStickerContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return (.file(reference, GifPreviewModalView.self), contentNode)
@@ -674,11 +680,12 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         super.set(item: item, animated: animated)
         if let item:ChatMediaItem = item as? ChatMediaItem {
             if contentNode == nil || !contentNode!.isKind(of: item.contentNode())  {
-                self.contentNode?.removeFromSuperview()
+                if let view = self.contentNode {
+                    performSubviewRemoval(view, animated: animated)
+                }
                 let node = item.contentNode()
                 self.contentNode = node.init(frame:NSZeroRect)
                 self.addSubview(self.contentNode!)
-                
             }
            
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)

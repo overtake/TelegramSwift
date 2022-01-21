@@ -57,12 +57,13 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
         case let dice as TelegramMediaDice:
             messageText = dice.emoji
         case let fileMedia as TelegramMediaFile:
-            if fileMedia.isStaticSticker || fileMedia.isAnimatedSticker {
+            if fileMedia.probablySticker {
                 messageText = strings().chatListSticker(fileMedia.stickerText?.fixed ?? "")
             } else if fileMedia.isVoice {
-                messageText = strings().chatListVoice
                 if !message.text.fixed.isEmpty {
                     messageText = ("🎤" + " " + messageText.fixed)
+                } else {
+                    messageText = strings().chatListVoice
                 }
             } else if fileMedia.isMusic  {
                 messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1)
@@ -80,7 +81,6 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                             messageText = strings().chatListGIF
                         }
                     } else {
-                        messageText = strings().chatListVideo1Countable(messagesCount)
                         if !message.text.fixed.isEmpty {
                             switch mediaViewType {
                             case .emoji:
@@ -90,6 +90,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                             case .none:
                                 break
                             }
+                        } else {
+                            messageText = strings().chatListVideo1Countable(messagesCount)
                         }
                     }
                 }

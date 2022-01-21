@@ -59,19 +59,11 @@ class StickerPackRowItem: TableRowItem {
     }
     
     func contentNode()->ChatMediaContentView.Type {
-        if let file = topItem?.file, file.isAnimatedSticker {
-            return MediaAnimatedStickerView.self
-        } else {
-            return ChatStickerContentView.self
-        }
+        return StickerMediaContentView.self
     }
     
     override func viewClass() -> AnyClass {
-        if let file = topItem?.file, file.isAnimatedSticker {
-            return AnimatedStickerPackRowView.self
-        } else {
-            return StickerPackRowView.self
-        }
+        return StickerPackRowView.self
     }
 }
 
@@ -97,120 +89,6 @@ class RecentPackRowItem: TableRowItem {
     override func viewClass() -> AnyClass {
         return RecentPackRowView.self
     }
-}
-
-
-class StickerPackRowView: HorizontalRowView {
-    
-    
-    private let stickerFetchedDisposable = MetaDisposable()
-    
-    private var imageView:TransformImageView?
-    
-    private let overlay:ImageButton = ImageButton()
-    
-    required init(frame frameRect:NSRect) {
-        super.init(frame:frameRect)
-        
-        overlay.setFrameSize(35, 35)
-        overlay.userInteractionEnabled = false
-        overlay.autohighlight = false
-        overlay.canHighlight = false
-        addSubview(overlay)
-        
-    }
-    
-    override var backdorColor: NSColor {
-        return .clear
-    }
-    
-    override func layout() {
-        super.layout()
-        
-        self.imageView?.center()
-        self.overlay.center()
-    }
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if window == nil {
-            self.imageView?.removeFromSuperview()
-            self.imageView = nil
-        } else if let item = item, self.imageView == nil {
-            self.set(item: item, animated: false)
-        }
-    }
-    
-    deinit {
-        stickerFetchedDisposable.dispose()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func set(item:TableRowItem, animated:Bool = false) {
-        
-        var mediaUpdated = true
-        if let lhs = (self.item as? StickerPackRowItem)?.topItem, let rhs = (item as? StickerPackRowItem)?.topItem {
-            mediaUpdated = !lhs.file.isEqual(to: rhs.file)
-        }
-        
-        super.set(item: item, animated: animated)
-        overlay.set(image: theme.icons.stickerPackSelection, for: .Normal)
-        overlay.set(image: theme.icons.stickerPackSelectionActive, for: .Highlight)
-        overlay.isSelected = item.isSelected
-        
-        if let item = item as? StickerPackRowItem {
-            var thumbnailItem: TelegramMediaImageRepresentation?
-            var resourceReference: MediaResourceReference?
-            
-            var file: TelegramMediaFile?
-
-            
-            if let thumbnail = item.info.thumbnail {
-                thumbnailItem = thumbnail
-                resourceReference = MediaResourceReference.stickerPackThumbnail(stickerPack: .id(id: item.info.id.id, accessHash: item.info.accessHash), resource: thumbnail.resource)
-                file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/webp", size: nil, attributes: [.FileName(fileName: "sticker.webp"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
-            } else if let item = item.topItem, let dimensions = item.file.dimensions, let resource = chatMessageStickerResource(file: item.file, small: true) as? TelegramMediaResource {
-                thumbnailItem = TelegramMediaImageRepresentation(dimensions: dimensions, resource: resource, progressiveSizes: [], immediateThumbnailData: nil)
-                resourceReference = MediaResourceReference.media(media: .standalone(media: item.file), resource: resource)
-                file = item.file
-            }
-            
-            if self.imageView == nil {
-                self.imageView = TransformImageView()
-                self.addSubview(self.imageView!)
-            }
-            guard let imageView = self.imageView else {
-                return
-            }
-            
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: NSMakeSize(30, 30), boundingSize: NSMakeSize(30, 30), intrinsicInsets: NSEdgeInsets())
-
-            if let thumbnailItem = thumbnailItem {
-                if let file = file {
-                    imageView.setSignal(signal: cachedMedia(media: file , arguments: arguments, scale: backingScaleFactor))
-                }
-                if !imageView.isFullyLoaded {
-                    imageView.setSignal( chatMessageStickerPackThumbnail(postbox: item.context.account.postbox, representation: thumbnailItem, scale: backingScaleFactor, synchronousLoad: false), cacheImage: { result in
-                        if let file = file {
-                            cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                        }
-                    })
-                }
-            }
-            imageView.set(arguments:arguments)
-            imageView.setFrameSize(arguments.imageSize)
-            if let resourceReference = resourceReference {
-                stickerFetchedDisposable.set(fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: resourceReference, statsCategory: .file).start())
-            }
-            self.needsLayout = true
-        }
-        
-        
-    }
-    
 }
 
 class RecentPackRowView: HorizontalRowView {
@@ -349,7 +227,7 @@ class StickerSpecificPackView: HorizontalRowView {
     
 }
 
-private final class AnimatedStickerPackRowView : HorizontalRowView {
+private final class StickerPackRowView : HorizontalRowView {
     
     
     var overlay:ImageButton = ImageButton()

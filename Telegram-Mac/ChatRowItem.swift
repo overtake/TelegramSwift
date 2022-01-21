@@ -253,7 +253,7 @@ class ChatRowItem: TableRowItem {
     
     var isSticker: Bool {
         let file = message?.media.first as? TelegramMediaFile
-        return file?.isStaticSticker == true || file?.isAnimatedSticker == true  || file?.isWebm == true
+        return file?.isStaticSticker == true || file?.isAnimatedSticker == true  || file?.isVideoSticker == true
     }
     
 
@@ -981,7 +981,7 @@ class ChatRowItem: TableRowItem {
                 if file.isStaticSticker {
                     return false
                 }
-                if file.isWebm {
+                if file.isVideoSticker {
                     return false
                 }
                 if file.isAnimatedSticker {
@@ -1408,7 +1408,7 @@ class ChatRowItem: TableRowItem {
         var isStateOverlayLayout: Bool {
             if renderType == .bubble, let message = captionMessage, let media = message.media.first {
                 if let file = media as? TelegramMediaFile {
-                    if file.isStaticSticker || file.isAnimatedSticker || file.isWebm  {
+                    if file.isStaticSticker || file.isAnimatedSticker || file.isVideoSticker  {
                         return renderType == .bubble
                     }
                     if file.isInstantVideo {
@@ -2026,7 +2026,7 @@ class ChatRowItem: TableRowItem {
                        return ChatServiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                    }
                } else if let file = message.media[0] as? TelegramMediaFile {
-                    if file.isWebm {
+                    if file.isVideoSticker {
                         return ChatGIFMediaItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isInstantVideo {
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)

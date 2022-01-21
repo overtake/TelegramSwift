@@ -203,7 +203,9 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 if NSPointInRect(point, subview.frame) {
                     if let file = contentView.media as? TelegramMediaFile {
                         let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                        if file.isStaticSticker {
+                        if file.isVideoSticker {
+                            return (.file(reference, GifPreviewModalView.self), contentView)
+                        } else if file.isStaticSticker {
                             return (.file(reference, StickerPreviewModalView.self), contentView)
                         } else if file.isAnimatedSticker {
                             return (.file(reference, AnimatedStickerPreviewModalView.self), contentView)
@@ -337,7 +339,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         let size: NSSize = NSMakeSize(60, 60)
         
-        let visibleRect = NSMakeRect(0, self.visibleRect.minY - 120, self.visibleRect.width, self.visibleRect.height + 240)
+        let visibleRect = self.visibleRect.insetBy(dx: 0, dy: -120)
         
         if self.visibleRect != NSZeroRect && superview != nil && window != nil {
             let visibleRange = (Int(ceil(visibleRect.minY / (size.height + 10))), Int(ceil(visibleRect.height / (size.height + 10))))

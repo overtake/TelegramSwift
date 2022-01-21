@@ -18,11 +18,11 @@ import SwiftSignalKit
 
 final class StickerPackArguments {
     let context: AccountContext
-    let send:(TelegramMediaFile, NSView)->Void
+    let send:(TelegramMediaFile, NSView, Bool, Bool)->Void
     let addpack:(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void
     let share:(String)->Void
     let close:()->Void
-    init(context: AccountContext, send:@escaping(Media, NSView)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void) {
+    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void) {
         self.context = context
         self.send = send
         self.addpack = addpack
@@ -34,7 +34,7 @@ final class StickerPackArguments {
 
 
 private class StickersModalView : View {
-    private let grid:GridNode = GridNode(frame: NSZeroRect)
+    private let tableView:TableView = TableView(frame: NSZeroRect)
     private let add:TitleButton = TitleButton()
     private let shareView:ImageButton = ImageButton()
     private let close: ImageButton = ImageButton()
@@ -46,8 +46,7 @@ private class StickersModalView : View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = theme.colors.background
-        addSubview(grid)
-        //addSubview(interactionView)
+        addSubview(tableView)
         addSubview(headerTitle)
         addSubview(shareView)
         addSubview(close)
@@ -101,7 +100,7 @@ private class StickersModalView : View {
             self.indicatorView?.center()
             add.isHidden = true
             shadowView.isHidden = true
-        case let .result(info: info, items: collectionItems, installed: installed):
+        case let .result(info, collectionItems, installed):
             if let indicatorView = self.indicatorView {
                 self.indicatorView = nil
                 indicatorView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak indicatorView] _ in
@@ -134,25 +133,36 @@ private class StickersModalView : View {
             layout.measure(width: frame.width - 160)
             headerTitle.update(layout)
             
-            let items = collectionItems.filter({ item -> Bool in
-                return item is StickerPackItem
-            }).map ({ item -> StickerPackGridItem in
-                return StickerPackGridItem(context: arguments.context, file: (item as! StickerPackItem).file, send: arguments.send, selected: {})
-            })
             
-            var insert:[GridNodeInsertItem] = []
+            let stickerArguments = StickerPanelArguments.init(context: arguments.context, sendMedia: {  media, view, silent, schedule in
+                if let media = media as? TelegramMediaFile {
+                    arguments.send(media, view, silent, schedule)
+                }
+            }, showPack: { _ in
+                
+            }, addPack: { _ in
+                
+            }, navigate: { _ in
+                
+            }, clearRecent: {
+                
+            }, removePack: { _ in
+                
+            }, closeInlineFeatured: { _ in
+                
+            }, openFeatured: { _ in
+                
+            }, mode: .common)
             
-            for index in 0 ..< items.count {
-                insert.append(GridNodeInsertItem(index: index, item: items[index], previousIndex: nil))
+            let files = collectionItems.map { item -> TelegramMediaFile in
+                return item.file
             }
             
-            grid.removeAllItems()
-            
-            grid.transaction(GridNodeTransaction(deleteItems: [], insertItems: insert, updateItems: [], scrollToItem: nil, updateLayout: GridNodeUpdateLayout(layout: GridNodeLayout(size: CGSize(width: frame.width, height: frame.height), insets: NSEdgeInsets(left: 0, right: 0, top: 10, bottom: installed ? 0 : 60), preloadSize: self.bounds.width, type: .fixed(itemSize: CGSize(width: 70, height: 70), lineSpacing: 10)), transition: .immediate), itemTransition: .immediate, stationaryItems: .all, updateFirstIndexInSectionOffset: nil), completion: { _ in })
-            
-            grid.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            let item = StickerPackPanelRowItem(NSMakeSize(frame.width, 0), context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id))
+            _ = item.makeSize(frame.width)
+            _ = tableView.addItem(item: item)
+
             self.needsLayout = true
-            
             
             
             shareView.set(handler: { _ in
@@ -189,7 +199,7 @@ private class StickersModalView : View {
         
         let headerHeight:CGFloat = 50
         
-        grid.frame = NSMakeRect(0, headerHeight, frame.width, frame.height - headerHeight)
+        tableView.frame = NSMakeRect(0, headerHeight, frame.width, frame.height - headerHeight)
         
         headerTitle.centerX(y : floorToScreenPixels(backingScaleFactor, (headerHeight - headerTitle.frame.height)/2) + 1)
         headerSeparatorView.frame = NSMakeRect(0, headerHeight - .borderSize, frame.width, .borderSize)
@@ -218,14 +228,14 @@ class StickerPackPreviewModalController: ModalViewController {
         self.onAdd = onAdd
         super.init(frame: NSMakeRect(0, 0, 350, 400))
         bar = .init(height: 0)
-        arguments = StickerPackArguments(context: context, send: { [weak self] media, view in
+        arguments = StickerPackArguments(context: context, send: { [weak self] media, view, silent, schedule in
             let interactions = (context.sharedContext.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
             
             if let interactions = interactions, let media = media as? TelegramMediaFile, media.maskData == nil {
                 if let slowMode = interactions.presentation.slowMode, slowMode.hasLocked {
                     showSlowModeTimeoutTooltip(slowMode, for: view)
                 } else {
-                    interactions.sendAppFile(media, false, nil, false)
+                    interactions.sendAppFile(media, silent, nil, schedule)
                     self?.close()
                 }
             }

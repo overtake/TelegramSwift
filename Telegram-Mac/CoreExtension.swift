@@ -1181,6 +1181,25 @@ extension Media {
         return false
     }
     
+    var probablySticker: Bool {
+        guard let file = self as? TelegramMediaFile else {
+            return false
+        }
+        if file.isAnimatedSticker {
+            return true
+        }
+        if file.isStaticSticker {
+            return true
+        }
+        if file.isVideoSticker {
+            return true
+        }
+        if file.mimeType == "image/webp" {
+            return true
+        }
+        return false
+    }
+    
     var isVideoFile:Bool {
         if let media = self as? TelegramMediaFile {
             return media.mimeType.hasPrefix("video/mp4") || media.mimeType.hasPrefix("video/mov") || media.mimeType.hasPrefix("video/avi")

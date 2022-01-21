@@ -261,7 +261,7 @@ enum StickerPackInfo : Equatable {
         case let .pack(_, installed, _):
             return installed
         default:
-            return true
+            return false
         }
     }
     var featured: Bool {

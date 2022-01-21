@@ -193,9 +193,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open override func pressureChange(with event: NSEvent) {
         super.pressureChange(with: event)
         
-        
         if event.stage >= 1 && event.stage != lastPressureEventStage {
-            longDisposable.set(delaySignal(0.25).start(completed: { [weak self] in
+            longDisposable.set(delaySignal(0.5).start(completed: { [weak self] in
                 if let strongSelf = self {
                     if NSEvent.pressedMouseButtons & (1 << 0) != 0 {
                         if strongSelf.window?.mouseLocationOutsideOfEventStream == event.locationInWindow {

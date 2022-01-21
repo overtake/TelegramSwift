@@ -114,7 +114,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
                     if let view = view as? ChatRowView, let item = view.item as? ChatRowItem {
                         if let stableId = item.stableId.base as? ChatHistoryEntryId {
                             if case .message(let message) = stableId {
-                                if message.id == currentMessage.id {
+                                if message.id == currentMessage.id, view.visibleRect.size == view.frame.size {
                                     needShow = false
                                 }
                             }

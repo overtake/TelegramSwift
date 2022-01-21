@@ -110,7 +110,7 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
             
             
             let iconSignal: Signal<ImageDataTransformation, NoError>
-            iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
+            iconSignal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor)
 
             player.update(with: reference, size: size, viewSize: size, context: context, table: nil, iconSignal: iconSignal)
             player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)

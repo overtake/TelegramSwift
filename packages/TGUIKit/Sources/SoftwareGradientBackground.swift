@@ -83,6 +83,12 @@ private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoi
     let height = Int(size.height)
 
     
+    if colors.isEmpty {
+        return generateImage(size, contextGenerator: { size, ctx in
+            ctx.clear(size.bounds)
+        })!
+    }
+    
 //    NSLog("\(size), colors: \(colors.map { $0.hexString })")
     let rgbData = malloc(MemoryLayout<Float>.size * colors.count * 3)!
     defer {
