@@ -1587,7 +1587,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         
         let hitTestView = self.hitTest(location)
-        if hitTestView == rowView {
+        if hitTestView == rowView || hitTestView == nil {
             if let avatar = avatar {
                 if NSPointInRect(location, avatar.frame) {
                     return

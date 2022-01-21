@@ -182,9 +182,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
     }
     
-    override func viewWillDraw() {
-        updatePlayerIfNeeded()
-    }
     
     override func willRemove() {
         super.willRemove()

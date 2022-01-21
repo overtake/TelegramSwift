@@ -1590,7 +1590,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 fake.userInteractionEnabled = false
                 fake.isSelectable = false
                 addSubview(fake, positioned: .below, relativeTo: self.subviews.first)
-                fake.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, removeOnCompletion: false, completion: { [weak fake, weak self] _ in
+                fake.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeInEaseOut, removeOnCompletion: false, completion: { [weak fake, weak self] _ in
                     fake?.removeFromSuperview()
                     self?.inAnimation = false
                 })

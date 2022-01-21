@@ -120,9 +120,6 @@ class StickerMediaContentView: ChatMediaContentView {
     override func willRemove() -> Void {
         content?.willRemove()
     }
-    override func viewWillDraw() {
-        content?.viewWillDraw()
-    }
     
     override func cancel() -> Void {
         content?.cancel()
