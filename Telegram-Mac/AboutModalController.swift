@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 
 var APP_VERSION_STRING: String {
-    var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1") (\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0"))"
+    var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1").\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0")"
     
     
     #if STABLE
@@ -44,13 +44,9 @@ fileprivate class AboutModalView : Control {
         let attr = NSMutableAttributedString()
         
         _ = attr.append(string: appName, color: theme.colors.text, font: .medium(.header))
-        _ = attr.append(string: "\n\(vText)", color: theme.colors.grayText, font: .medium(.text))
+        _ = attr.append(string: "\n\(vText)", color: theme.colors.link, font: .medium(.text))
         
-        _ = attr.append(string: " (", color: theme.colors.grayText, font: .medium(.text))
-
-        let range = attr.append(string: strings().x3vGGIWUTitle.lowercased(), color: theme.colors.accent, font: .medium(.text))
-        attr.addAttribute(.link, value: "copy", range: range)
-        _ = attr.append(string: ")", color: theme.colors.grayText, font: .medium(.text))
+        attr.addAttribute(.link, value: "copy", range: attr.range)
 
         _ = attr.append(string: "\n\n")
         

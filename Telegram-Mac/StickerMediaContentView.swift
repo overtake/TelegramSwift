@@ -34,6 +34,10 @@ class StickerMediaContentView: ChatMediaContentView {
         }
     }
     
+    override func mouseInside() -> Bool {
+        return content?.mouseInside() ?? mouseInside()
+    }
+    
     override func previewMediaIfPossible() -> Bool {
         return content?.previewMediaIfPossible() ?? false
     }
@@ -44,10 +48,17 @@ class StickerMediaContentView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
-            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, let reference = media.stickerReference {
+            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+            } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
+                self.playIfNeeded(true)
+                parameters?.runEmojiScreenEffect(sticker)
             }
         }
+    }
+    
+    override func playIfNeeded(_ playSound: Bool = false) {
+        content?.playIfNeeded(playSound)
     }
     
     

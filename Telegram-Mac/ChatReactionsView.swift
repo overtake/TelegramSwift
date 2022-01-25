@@ -796,8 +796,13 @@ final class ChatReactionsView : View {
                     current = DynamicCounterTextView()
                     self.textView = current
                     addSubview(current)
+                    
+                    var text_r = focus(text.size)
+                    text_r.origin.x = 2
+                    current.frame = text_r
                 }
                 current.update(text, animated: animated)
+                
             } else {
                 if let view = self.textView {
                     performSubviewRemoval(view, animated: animated)
@@ -843,7 +848,11 @@ final class ChatReactionsView : View {
         }
         
         private func runAnimationEffect(_ animation: LottieAnimation) {
-            let player = LottiePlayerView(frame: NSMakeRect(-4, -6, animation.size.width, animation.size.height))
+            var rect = NSMakeRect(-4, -6, animation.size.width, animation.size.height)
+            if textView != nil {
+                rect.origin.x += 8
+            }
+            let player = LottiePlayerView(frame: rect)
 
             player.set(animation, reset: true)
             
@@ -1041,6 +1050,15 @@ final class ChatReactionsView : View {
                 let view = getView(curSelected.value.value)
                 view?.playEffect()
             }
+        } else if animated, !previous.isEmpty, !layout.message.flags.contains(.Incoming) {
+            for reaction in reactions {
+                let prev = previous.first(where: { $0.value.value == reaction.value.value })
+                if prev == nil || prev!.value.count < reaction.value.count {
+                    reaction.runEffect(reaction.value.value)
+                    let view = getView(reaction.value.value)
+                    view?.playEffect()
+                }
+            }
         }
     }
     
@@ -1053,7 +1071,7 @@ final class ChatReactionsView : View {
         for (i, view) in views.enumerated() {
             let rect = self.reactions[i].rect
             transition.updateFrame(view: view, frame: rect)
-            (view as? ReactionView)?.updateLayout(size: rect.size, transition: transition)
+            (view as? ReactionViewImpl)?.updateLayout(size: rect.size, transition: transition)
         }
     }
     

@@ -152,6 +152,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case about(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
     case ask(index: Int, viewType: GeneralViewType)
+
     case whiteSpace(index:Int, height:CGFloat)
     
     var stableId: AccountInfoEntryId {
@@ -186,12 +187,12 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(12)
         case .passport:
             return .index(13)
-        case .about:
-            return .index(16)
         case .faq:
-            return .index(17)
+            return .index(15)
         case .ask:
-            return .index(18)
+            return .index(16)
+        case .about:
+            return .index(17)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -318,9 +319,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.presentController(RecentSessionsController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .about(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAbout, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: {
-                showModal(with: AboutModalController(), for: mainWindow)
-            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .legacy, text: APP_VERSION_STRING, font: .normal(.text), color: theme.colors.grayText)
         case let .passport(_, viewType, peer):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(PassportController(arguments.context, peer.peer, request: nil, nil), true)
@@ -455,13 +454,20 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     if let peer = peerViewMainPeer(peerView) as? TelegramUser, passportVisible {
         entries.append(.passport(index: index, viewType: .singleItem, peer: PeerEquatable(peer)))
         index += 1
+        
+        entries.append(.whiteSpace(index: index, height: 20))
+        index += 1
     }
 
-    entries.append(.whiteSpace(index: index, height: 20))
-    index += 1
     entries.append(.faq(index: index, viewType: .singleItem))
     index += 1
     entries.append(.ask(index: index, viewType: .singleItem))
+    index += 1
+    
+    entries.append(.whiteSpace(index: index, height: 20))
+    index += 1
+    
+    entries.append(.about(index: index, viewType: .singleItem))
     index += 1
     
     entries.append(.whiteSpace(index: index, height: 20))

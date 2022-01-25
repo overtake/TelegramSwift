@@ -261,7 +261,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                             textComponents.append(strings().statsGroupTopAdminBansCountable(Int(topAdmin.bannedCount)))
                         }
                         
-                        var viewType = bestGeneralViewType(topPosters, for: i)
+                        var viewType = bestGeneralViewType(topAdmins, for: i)
                         
                         if topAdmin == topAdmins.last, needReveal {
                             viewType = .innerItem

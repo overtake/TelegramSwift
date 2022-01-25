@@ -9,6 +9,21 @@
 import Cocoa
 import SwiftSignalKit
 import AVFoundation
+
+
+public weak var mw:Window?
+
+public var mainWindow:Window {
+    if let window = NSApp.keyWindow as? Window {
+        return window
+    } else if let window = NSApp.mainWindow as? Window {
+        return window
+    } else if let mw = mw {
+        return mw
+    }
+    fatalError("window not found")
+}
+
 public struct System {
 
     
