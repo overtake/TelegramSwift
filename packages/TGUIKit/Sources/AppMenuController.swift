@@ -783,7 +783,8 @@ final class AppMenuController : NSObject  {
     }
     
     func present(event: NSEvent, view: NSView) {
-        self.parent = NSApp.keyWindow as? Window ?? NSApp.mainWindow as? Window
+        
+        self.parent = mainWindow
         self.weakHolder = nil
         self.initialize()
         self.activate(event: event, view: view, animated: true)

@@ -967,8 +967,8 @@ public final class TextViewLayout : Equatable {
                         
                         var rect:NSRect = line.frame
                         
-                        rect.size.width = endOffset - startOffset
-                        rect.origin.x = startOffset
+                        rect.size.width = abs(endOffset - startOffset)
+                        rect.origin.x = min(startOffset, endOffset)
                         rect.origin.y = rect.minY - rect.height + 2
                         rect.size.height += ceil(descent - leading)
                         

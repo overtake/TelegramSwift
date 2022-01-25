@@ -1113,11 +1113,7 @@ final class MetalContext {
             return Loops()
         })
         self.displayId = CGMainDisplayID()
-        var refreshRate = CGDisplayCopyDisplayMode(displayId)?.refreshRate ?? 60
-        if refreshRate == 0 {
-            refreshRate = 60
-        }
-        self.refreshRate = Int(min(refreshRate, 60))
+        self.refreshRate = 60
         if let device = CGDirectDisplayCopyCurrentMetalDevice(displayId) {
             self.device = device
             self.commandQueue = device.makeCommandQueue()

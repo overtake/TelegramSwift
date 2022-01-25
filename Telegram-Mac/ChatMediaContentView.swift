@@ -69,7 +69,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         fatalError("init(coder:) has not been implemented")
     }
     
-    
+    func playIfNeeded(_ playSound: Bool = false) {
+        
+    }
     
     func willRemove() -> Void {
         //self.cancel()

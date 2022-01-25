@@ -684,7 +684,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                     performSubviewRemoval(view, animated: animated)
                 }
                 let node = item.contentNode()
-                self.contentNode = node.init(frame:NSZeroRect)
+                self.contentNode = node.init(frame: item.contentSize.bounds)
                 self.addSubview(self.contentNode!)
             }
            

@@ -157,6 +157,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         }
     }
     
+    override func playIfNeeded(_ playSound: Bool = false) {
+        playerView.playIfNeeded(playSound)
+    }
+    
     func playAgain() {
         self.playerView.playIfNeeded(true)
     }

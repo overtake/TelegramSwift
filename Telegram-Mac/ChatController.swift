@@ -1220,6 +1220,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let recordActivityDisposable = MetaDisposable()
     private let suggestionsDisposable = MetaDisposable()
     private let sendAsPeersDisposable = MetaDisposable()
+    private let startSecretChatDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -2682,7 +2683,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                                 
                                 
-                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (strings().modalOK, theme.colors.accent), title: strings().supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
+                                showModal(with: ModalOptionSetController(context: context, options: options, actionText: (strings().modalDone, theme.colors.accent), title: strings().supergroupDeleteRestrictionTitle, result: { [weak strongSelf] result in
                                     
                                     var signals:[Signal<Void, NoError>] = []
                                     
@@ -5313,6 +5314,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }, itemImage: MenuAnimation.menu_video_chat.value))
                         }
                         if peer.isUser, peer.id != context.peerId {
+                            if !peer.isBot, !peer.isSecretChat {
+                                items.append(ContextMenuItem(strings().peerInfoStartSecretChat, handler: { [weak self] in
+                                    self?.startSecretChat()
+                                }, itemImage: MenuAnimation.menu_secret_chat.value))
+                            }
+                            
+                            
                             items.append(ContextMenuItem(strings().chatContextCreateGroup, handler: { [weak self] in
                                 self?.createGroup()
                             }, itemImage: MenuAnimation.menu_create_group.value))
@@ -5410,6 +5418,33 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private func createGroup() {
         context.composeCreateGroup(selectedPeers: [self.chatLocation.peerId])
     }
+    
+    private func startSecretChat() {
+        let context = self.context
+        let peerId = self.chatLocation.peerId
+        let signal = context.account.postbox.transaction { transaction -> Peer? in
+            return transaction.getPeer(peerId)
+            
+        } |> deliverOnMainQueue  |> mapToSignal { peer -> Signal<PeerId, NoError> in
+            if let peer = peer {
+                let confirm = confirmSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: strings().peerInfoConfirmSecretChatOK)
+                return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
+                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window)
+                }
+            } else {
+                return .complete()
+            }
+        } |> deliverOnMainQueue
+        
+        
+        
+        startSecretChatDisposable.set(signal.start(next: { [weak self] peerId in
+            if let strongSelf = self {
+                strongSelf.navigationController?.push(ChatController(context: strongSelf.context, chatLocation: .peer(peerId)))
+            }
+        }))
+    }
+
     
     private func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {
         let context = self.context
@@ -5607,6 +5642,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         tempImportersContextDisposable.dispose()
         sendAsPeersDisposable.dispose()
         peekDisposable.dispose()
+        startSecretChatDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false

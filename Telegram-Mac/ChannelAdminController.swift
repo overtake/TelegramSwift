@@ -418,7 +418,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                     currentRightsFlags = adminRights.rights.rights
                 } else if let adminRights = channel.adminRights {
-                    currentRightsFlags = adminRights.rights
+                    currentRightsFlags = adminRights.rights.subtracting([.canAddAdmins, .canBeAnonymous])
                 } else {
                     currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
                 }
@@ -449,11 +449,13 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     entries.append(.description(sectionId, descId, addAdminsEnabled ? strings().channelAdminAdminAccess : strings().channelAdminAdminRestricted, .textBottomItem))
                     descId += 1
                 }
-                if channel.flags.contains(.isCreator), !admin.isBot && currentRightsFlags.contains(TelegramChatAdminRightsFlags.all)  {
+                if channel.flags.contains(.isCreator), !admin.isBot  {
                     if admin.id != accountPeerId {
-                        entries.append(.section(sectionId))
-                        sectionId += 1
-                        entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? strings().channelAdminTransferOwnershipChannel : strings().channelAdminTransferOwnershipGroup, .singleItem))
+                        if (channel.isChannel && currentRightsFlags.contains(TelegramChatAdminRightsFlags.allChannel)) || currentRightsFlags.contains(TelegramChatAdminRightsFlags.all) {
+                            entries.append(.section(sectionId))
+                            sectionId += 1
+                            entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? strings().channelAdminTransferOwnershipChannel : strings().channelAdminTransferOwnershipGroup, .singleItem))
+                        }
                     }
                 }
             }

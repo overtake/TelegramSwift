@@ -13,6 +13,7 @@ import SwiftSignalKit
 import Postbox
 import ObjcUtils
 import InAppSettings
+import TGUIKit
 
 enum SendingType :String {
     case enter = "enter"

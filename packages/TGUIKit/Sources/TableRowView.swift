@@ -198,9 +198,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
                 if let strongSelf = self {
                     if NSEvent.pressedMouseButtons & (1 << 0) != 0 {
                         if strongSelf.window?.mouseLocationOutsideOfEventStream == event.locationInWindow {
-                            if strongSelf.mouseInside() {
-                                strongSelf.forceClick(in: strongSelf.convert(event.locationInWindow, from: nil))
-                            }
+                            strongSelf.forceClick(in: strongSelf.convert(event.locationInWindow, from: nil))
                         }
                     }
                 }

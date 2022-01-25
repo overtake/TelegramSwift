@@ -229,7 +229,10 @@ final class ContextAddReactionsListView : View  {
         
         layer?.cornerRadius = frame.width / 2
         
-        
+        for view in self.documentView.subviews {
+            let view = view as? ReactionView
+            view?.playAppearAnimation()
+        }
     }
     
     func rect(for reaction: AvailableReactions.Reaction) -> NSRect {

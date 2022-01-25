@@ -27,18 +27,7 @@ public let kMediaImageExt = "jpg";
 public let kMediaGifExt = "mov";
 public let kMediaVideoExt = "mp4";
 
-public weak var mw:Window?
 
-var mainWindow:Window {
-    if let window = NSApp.keyWindow as? Window {
-        return window
-    } else if let window = NSApp.mainWindow as? Window {
-        return window
-    } else if let mw = mw {
-        return mw
-    }
-    fatalError("window not found")
-}
 
 var systemAppearance: NSAppearance {
     if #available(OSX 10.14, *) {
