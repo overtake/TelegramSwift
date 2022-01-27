@@ -193,6 +193,11 @@ enum LocalAnimatedSticker : String {
     case menu_folder_telegram
     case menu_folder_twopersons
     
+    case menu_speaker_muted
+    case menu_speaker
+    
+    case menu_sharescreen_slash
+    case menu_sharescreen
     
     
     var file: TelegramMediaFile {

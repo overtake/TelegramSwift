@@ -73,6 +73,10 @@ open class AppMenuBasicItemView: TableRowView {
         containerView.frame = bounds.insetBy(dx: 4, dy: 0)
     }
     
+    public var contentSize: NSSize {
+        return containerView.frame.size
+    }
+    
     deinit {
         containerView.removeAllSubviews()
     }

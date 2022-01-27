@@ -239,6 +239,8 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return convert(point, from: nil)
     }
     
+
+    
     open func showContextMenu(_ event:NSEvent) -> Void {
         
         menuDisposable.set(nil)
@@ -247,7 +249,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         if let item = item {
             menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self, weak item] items in
                 if let strongSelf = self, let item = item {
-                    let menu = ContextMenu(isLegacy: item.isLegacyMenu)
+                    let menu = ContextMenu(presentation: item.menuPresentation, isLegacy: item.isLegacyMenu)
 
                     menu.topWindow = item.menuAdditionView
                     

@@ -82,7 +82,9 @@ final class ChatMessageThrottledProcessingManager {
                         } else {
                             strongSelf.disposable.set(nil)
                         }
-                        strongSelf.process?(buffer)
+                        DispatchQueue.main.async {
+                            strongSelf.process?(buffer)
+                        }
                     }
                 }
                 self.timer = timer

@@ -550,7 +550,7 @@ public extension Message {
         if reactions == nil {
             for attr in self.attributes {
                 if let attr = attr as? PendingReactionsMessageAttribute, let value = attr.value {
-                    reactions = .init(canViewList: false, reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                    reactions = .init(canViewList: false, reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, isLarge: attr.isLarge, isUnseen: false, peerId: attr.accountPeerId ?? accountPeerId)])
                 }
             }
         } else if let remote = reactions {
@@ -570,7 +570,7 @@ public extension Message {
                         } else {
                             values.append(.init(value: value, count: 1, isSelected: true))
                         }
-                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers + [.init(value: value, peerId: attr.accountPeerId ?? accountPeerId)])
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers + [.init(value: value, isLarge: attr.isLarge, isUnseen: false, peerId: attr.accountPeerId ?? accountPeerId)])
                     } else {
                         var values = remote.reactions
                         if let index = values.firstIndex(where: { $0.isSelected })  {

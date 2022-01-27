@@ -112,9 +112,12 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         return isVertical ? 120 : 48
     }
     
+    override var menuPresentation: AppMenu.Presentation {
+        return .current(darkPalette)
+    }
     
     override var isLegacyMenu: Bool {
-        return true
+        return false
     }
     
     override var inset: NSEdgeInsets {

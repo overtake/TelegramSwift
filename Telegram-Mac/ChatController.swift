@@ -216,9 +216,9 @@ class ChatControllerView : View, ChatInputDelegate {
     let inputContextHelper:InputContextHelper
     private(set) var state:ChatControllerViewState = .visible
     private var searchInteractions:ChatSearchInteractions!
-    private let scroller:ChatNavigateScroller
-    private var mentions:ChatNavigationMention?
-    private var failed:ChatNavigateFailed?
+    private let scroller:ChatNavigationScroller
+    private var mentions:ChatNavigationScroller?
+    private var reactions:ChatNavigationScroller?
     private var progressView:ProgressIndicator?
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
@@ -289,7 +289,7 @@ class ChatControllerView : View, ChatInputDelegate {
         header = ChatHeaderController(chatInteraction)
         
         
-        scroller = ChatNavigateScroller(chatInteraction.context, contextHolder: chatInteraction.contextHolder(), chatLocation: chatInteraction.chatLocation, mode: chatInteraction.mode)
+        scroller = ChatNavigationScroller(.scroller)
         inputContextHelper = InputContextHelper(chatInteraction: chatInteraction)
         tableView = TableView(frame:NSMakeRect(0,0,frameRect.width,frameRect.height - 50), isFlipped:false)
         inputView = ChatInputView(frame: NSMakeRect(0,tableView.frame.maxY, frameRect.width,50), chatInteraction: chatInteraction)
@@ -430,7 +430,8 @@ class ChatControllerView : View, ChatInputDelegate {
         }
     }
     
-    func updateScroller(_ historyState:ChatHistoryState) {
+    func updateScroller(_ historyState: ChatHistoryState) {
+        let prev = self.historyState
         self.historyState = historyState
         let isHidden = (tableView.documentOffset.y < 80 && historyState.isDownOfHistory) || tableView.isEmpty
 
@@ -443,16 +444,19 @@ class ChatControllerView : View, ChatInputDelegate {
                 scroller?.isHidden = isHidden
             }
         }
+        let transition: ContainedViewLayoutTransition
+        if prev == nil {
+            transition = .immediate
+        } else {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        }
+        transition.updateFrame(view: scroller, frame: scrollerRect)
         
         if let mentions = mentions {
-            mentions.change(pos: NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)), animated: true )
+            transition.updateFrame(view: mentions, frame: mentionsRect)
         }
-        if let failed = failed {
-            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
-            if let mentions = mentions {
-                offset += (mentions.frame.height + 6)
-            }
-            failed.change(pos: NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset), animated: true )
+        if let reactions = reactions {
+            transition.updateFrame(view: reactions, frame: reactionsRect)
         }
     }
     
@@ -520,18 +524,13 @@ class ChatControllerView : View, ChatInputDelegate {
         }
         
         
-        transition.updateFrame(view: scroller, frame: NSMakeRect(frame.width - scroller.frame.width - 6,  frame.height - inputView.frame.height - 6 - scroller.frame.height, scroller.frame.width, scroller.frame.height))
-        
+        transition.updateFrame(view: scroller, frame: scrollerRect)
         
         if let mentions = mentions {
-            transition.updateFrame(view: mentions, frame: NSMakeRect(frame.width - mentions.frame.width - 6, frame.height - inputView.frame.height - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height), mentions.frame.width, mentions.frame.height))
+            transition.updateFrame(view: mentions, frame: mentionsRect)
         }
-        if let failed = failed {
-            var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
-            if let mentions = mentions {
-                offset += (mentions.frame.height + 6)
-            }
-            transition.updateFrame(view: failed, frame: NSMakeRect(frame.width - failed.frame.width - 6, frame.height - inputView.frame.height - failed.frame.height - 6 - offset, failed.frame.width, failed.frame.height))
+        if let reactions = reactions {
+            transition.updateFrame(view: reactions, frame: reactionsRect)
         }
         transition.updateFrame(view: floatingPhotosView, frame: tableView.frame)
 
@@ -675,65 +674,88 @@ class ChatControllerView : View, ChatInputDelegate {
 
     }
     
-    private(set) fileprivate var failedIds: Set<MessageId> = Set()
-    private var hasOnScreen: Bool = false
-    func updateFailedIds(_ ids: Set<MessageId>, hasOnScreen: Bool, animated: Bool) {
-        if hasOnScreen != self.hasOnScreen || self.failedIds != ids {
-            self.failedIds = ids
-            self.hasOnScreen = hasOnScreen
-            if !ids.isEmpty && !hasOnScreen {
-                if failed == nil {
-                    failed = ChatNavigateFailed(chatInteraction.context)
-                    if let failed = failed {
-                        var offset = (scroller.controlIsHidden ? 0 : scroller.frame.height)
-                        if let mentions = mentions {
-                            offset += (mentions.frame.height + 6)
-                        }
-                        failed.setFrameOrigin(NSMakePoint(frame.width - failed.frame.width - 6, tableView.frame.maxY - failed.frame.height - 6 - offset))
-                        addSubview(failed)
-                    }
-                    if animated {
-                        failed?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                }
-                failed?.removeAllHandlers()
-                failed?.set(handler: { [weak self] _ in
-                    if let id = ids.min() {
-                        self?.chatInteraction.focusMessageId(nil, id, .CenterEmpty)
-                    }
-                    }, for: .Click)
+    private var scrollerRect: NSRect {
+        return NSMakeRect(frame.width - scroller.frame.width - 6,  frame.height - inputView.frame.height - 6 - scroller.frame.height, scroller.frame.width, scroller.frame.height)
+    }
+    private var mentionsRect: NSRect {
+        if let _ = mentions {
+            if scroller.controlIsHidden {
+                return scrollerRect.offsetBy(dx: 0, dy: 0)
             } else {
-                if let view = self.failed {
-                    self.failed = nil
-                    performSubviewRemoval(view, animated: animated)
+                return scrollerRect.offsetBy(dx: 0, dy: scroller.hasBadge ? -56 : -50)
+            }
+        }
+        return .zero
+    }
+    private var reactionsRect: NSRect {
+        if let _ = reactions {
+            if let mentions = mentions {
+                if scroller.controlIsHidden {
+                    return mentionsRect.offsetBy(dx: 0, dy: 0)
+                } else {
+                    return mentionsRect.offsetBy(dx: 0, dy: mentions.hasBadge ? -56 : -50)
+                }
+            } else {
+                if scroller.controlIsHidden {
+                    return scrollerRect.offsetBy(dx: 0, dy: 0)
+                } else {
+                    return scrollerRect.offsetBy(dx: 0, dy: scroller.hasBadge ? -56 : -50)
                 }
             }
-            needsLayout = true
         }
+        return .zero
     }
-    
-    func updateMentionsCount(_ count: Int32, animated: Bool) {
-        if count > 0 {
-            if mentions == nil {
-                mentions = ChatNavigationMention()
-                mentions?.set(handler: { [weak self] _ in
+        
+    func updateMentionsCount(mentionsCount: Int32, reactionsCount: Int32, scrollerCount: Int32, animated: Bool) {
+        if mentionsCount > 0 {
+            if self.mentions == nil {
+                self.mentions = ChatNavigationScroller(.mentions)
+                self.mentions?.set(handler: { [weak self] _ in
                     self?.chatInteraction.mentionPressed()
                 }, for: .Click)
                 
-                mentions?.set(handler: { [weak self] _ in
+                self.mentions?.set(handler: { [weak self] _ in
                     self?.chatInteraction.clearMentions()
                 }, for: .LongMouseDown)
                 
-                if let mentions = mentions {
-                    mentions.setFrameOrigin(NSMakePoint(frame.width - mentions.frame.width - 6, tableView.frame.maxY - mentions.frame.height - 6 - (scroller.controlIsHidden ? 0 : scroller.frame.height)))
+                if let mentions = self.mentions {
+                    mentions.frame = mentionsRect
+                    mentions.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     addSubview(mentions)
                 }             
             }
-            mentions?.updateCount(count)
+            self.mentions?.updateCount(mentionsCount)
         } else {
-            mentions?.removeFromSuperview()
-            mentions = nil
+            if let mentions = self.mentions {
+                self.mentions = nil
+                performSubviewRemoval(mentions, animated: animated, scale: true)
+            }
         }
+        if reactionsCount > 0 {
+            if self.reactions == nil {
+                self.reactions = ChatNavigationScroller(.reactions)
+                self.reactions?.set(handler: { [weak self] _ in
+                    self?.chatInteraction.reactionPressed()
+                }, for: .Click)
+                
+                self.reactions?.set(handler: { [weak self] _ in
+                    self?.chatInteraction.clearReactions()
+                }, for: .LongMouseDown)
+                
+                if let reactions = self.reactions {
+                    reactions.frame = reactionsRect
+                    reactions.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    addSubview(reactions)
+                }
+            }
+            self.reactions?.updateCount(reactionsCount)
+        } else {
+            if let reactions = self.reactions {
+                self.reactions = nil
+                performSubviewRemoval(reactions, animated: animated, scale: true)
+            }
+        }
+        scroller.updateCount(scrollerCount)
         needsLayout = true
     }
     
@@ -1203,7 +1225,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let editCurrentMessagePhotoDisposable = MetaDisposable()
     private let failedMessageEventsDisposable = MetaDisposable()
     private let selectMessagePollOptionDisposables: DisposableDict<MessageId> = DisposableDict()
-    private let failedMessageIdsDisposable = MetaDisposable()
     private let hasScheduledMessagesDisposable = MetaDisposable()
     private let onlineMemberCountDisposable = MetaDisposable()
     private let chatUndoDisposable = MetaDisposable()
@@ -1321,6 +1342,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let unsupportedMessageProcessingManager = ChatMessageThrottledProcessingManager()
     private let reactionsMessageProcessingManager = ChatMessageThrottledProcessingManager(submitInterval: 4.0)
     private let messageMentionProcessingManager = ChatMessageThrottledProcessingManager(delay: 0.2)
+    private let messageReactionsMentionProcessingManager = ChatMessageThrottledProcessingManager(delay: 0.2)
     var historyState:ChatHistoryState = ChatHistoryState() {
         didSet {
             //if historyState != oldValue {
@@ -1673,8 +1695,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         }))
 
-
-//        context.globalPeerHandler.set(.single(chatLocation))
         
 
         let layout:Atomic<SplitViewState> = Atomic(value:context.sharedContext.layout)
@@ -2924,6 +2944,29 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.clearMentions = { [weak self] in
             guard let `self` = self else {return}
             _ = clearPeerUnseenPersonalMessagesInteractively(account: context.account, peerId: self.chatInteraction.peerId).start()
+        }
+        
+        chatInteraction.clearReactions = { [weak self] in
+            guard let `self` = self else {return}
+            _ = clearPeerUnseenReactionsInteractively(account: context.account, peerId: self.chatInteraction.peerId).start()
+        }
+        
+        chatInteraction.reactionPressed = { [weak self] in
+            if let strongSelf = self {
+                let signal = context.engine.messages.earliestUnseenPersonalReactionMessage(peerId: strongSelf.chatInteraction.peerId)
+                strongSelf.navigationActionDisposable.set((signal |> deliverOnMainQueue).start(next: { [weak strongSelf] result in
+                    if let strongSelf = strongSelf {
+                        switch result {
+                        case .loading:
+                            break
+                        case .result(let messageId):
+                            if let messageId = messageId {
+                                strongSelf.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+                            }
+                        }
+                    }
+                }))
+            }
         }
         
         chatInteraction.editEditingMessagePhoto = { [weak self] media in
@@ -4593,8 +4636,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch mode {
         case .history:
-            self.chatUnreadMentionCountDisposable.set((context.account.viewTracker.unseenPersonalMessagesCount(peerId: peerId) |> deliverOnMainQueue).start(next: { [weak self] count in
-                self?.genericView.updateMentionsCount(count, animated: true)
+            
+            let unreadCount = context.chatLocationUnreadCount(for: chatLocation, contextHolder: self.chatLocationContextHolder)
+            |> deliverOnMainQueue
+    
+            self.chatUnreadMentionCountDisposable.set(combineLatest(queue: .mainQueue(), context.account.viewTracker.unseenPersonalMessagesAndReactionCount(peerId: peerId) , unreadCount).start(next: { [weak self] count, unreadCount in
+                self?.genericView.updateMentionsCount(mentionsCount: count.mentionCount, reactionsCount: count.reactionCount, scrollerCount: Int32(unreadCount), animated: true)
             }))
         default:
             self.chatUnreadMentionCountDisposable.set(nil)
@@ -4756,11 +4803,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 var messageIdsWithViewCount: [MessageId] = []
                 var messageIdsWithUnseenPersonalMention: [MessageId] = []
+                var messageIdsWithUnseenReactionsMention: [MessageId] = []
+
                 var messageIdsWithReactions:[MessageId] = []
                 var unsupportedMessagesIds: [MessageId] = []
                 var topVisibleMessageRange: ChatTopVisibleMessageRange?
-
-                var hasFailed: Bool = false
+ 
                 
                 var readAds:[Data] = []
                 
@@ -4770,17 +4818,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             message = item.lastMessage
                         }
                         
-                        if let message = message, message.flags.contains(.Failed) {
-                            hasFailed = !(message.media.first is TelegramMediaAction)
-                        }
-                        
                         for message in item.messages {
                             var hasUncocumedMention: Bool = false
                             var hasUncosumedContent: Bool = false
-                            
-                            if !hasFailed, message.flags.contains(.Failed) {
-                                hasFailed = !(message.media.first is TelegramMediaAction)
-                            }
                             
                             if message.tags.contains(.unseenPersonalMessage), item.chatInteraction.mode == .history {
                                 for attribute in message.attributes {
@@ -4795,6 +4835,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     messageIdsWithUnseenPersonalMention.append(message.id)
                                 }
                             }
+                            if let reactions = message.reactionsAttribute {
+                                let isUnseen = reactions.recentPeers.contains(where: { $0.isUnseen })
+                                messageIdsWithUnseenReactionsMention.append(message.id)
+                            }
+                            
                             inner: for attribute in message.attributes {
                                 if attribute is ViewCountMessageAttribute {
                                     messageIdsWithViewCount.append(message.id)
@@ -4840,15 +4885,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         strongSelf.adMessages?.markAsSeen(opaqueId: data)
                     }
                 }
-                
-                strongSelf.genericView.updateFailedIds(strongSelf.genericView.failedIds, hasOnScreen: hasFailed, animated: true)
-                
+                                
                 if !messageIdsWithViewCount.isEmpty {
                     strongSelf.messageProcessingManager.add(messageIdsWithViewCount)
                 }
                 
                 if !messageIdsWithUnseenPersonalMention.isEmpty {
                     strongSelf.messageMentionProcessingManager.add(messageIdsWithUnseenPersonalMention)
+                }
+                if !messageIdsWithUnseenReactionsMention.isEmpty {
+                    strongSelf.messageReactionsMentionProcessingManager.add(messageIdsWithUnseenReactionsMention)
                 }
                 if !unsupportedMessagesIds.isEmpty {
                     strongSelf.unsupportedMessageProcessingManager.add(unsupportedMessagesIds)
@@ -4868,32 +4914,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch self.mode {
         case .history:
-            let failed = context.account.postbox.failedMessageIdsView(peerId: peerId) |> deliverOnMainQueue
-            
-            var failedAnimate: Bool = true
-            failedMessageIdsDisposable.set(failed.start(next: { [weak self] view in
-                var hasFailed: Bool = false
-                
-                self?.genericView.tableView.enumerateVisibleItems(with: { item in
-                    if let item = item as? ChatRowItem {
-                        if let message = item.message, message.flags.contains(.Failed) {
-                            hasFailed = !(message.media.first is TelegramMediaAction)
-                        }
-                        for message in item.messages {
-                            if !hasFailed, message.flags.contains(.Failed) {
-                                hasFailed = !(message.media.first is TelegramMediaAction)
-                            }
-                        }
-                    }
-                    return !hasFailed
-                })
-                
-                self?.genericView.updateFailedIds(view.ids, hasOnScreen: hasFailed, animated: !failedAnimate)
-                failedAnimate = true
-            }))
-            
-            
-            
             let hasScheduledMessages = peerView.get()
             |> take(1)
             |> mapToSignal { view -> Signal<Bool, NoError> in
@@ -5631,7 +5651,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         slowModeInProgressDisposable.dispose()
         forwardMessagesDisposable.dispose()
         shiftSelectedDisposable.dispose()
-        failedMessageIdsDisposable.dispose()
         hasScheduledMessagesDisposable.dispose()
         updateUrlDisposable.dispose()
         loadSharedMediaDisposable.dispose()
@@ -6166,6 +6185,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.messageMentionProcessingManager.process = { messageIds in
             context.account.viewTracker.updateMarkMentionsSeenForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
         }
+        self.messageReactionsMentionProcessingManager.process = { [weak self] messageIds in
+            context.account.viewTracker.updateMarkReactionsSeenForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
+            self?.playUnseenReactions(messageIds)
+        }
         self.reactionsMessageProcessingManager.process = { messageIds in
             context.account.viewTracker.updateReactionsForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
         }
@@ -6523,6 +6546,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return false
     }
     
+    private func playUnseenReactions(_ messageIds: Set<MessageId>) {
+        self.genericView.tableView.enumerateVisibleItems(with: { item in
+            guard let item = item as? ChatRowItem else {
+                return true
+            }
+            for id in messageIds {
+                if item.firstMessage?.id == id, let view = item.view as? ChatRowView {
+                    if view.visibleRect.height == view.frame.height {
+                        view.playSeenReactionEffect()
+                    }
+                }
+            }
+            return true
+        })
+    }
     
     public override func draggingExited() {
         super.draggingExited()

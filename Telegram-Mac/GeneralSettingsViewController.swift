@@ -130,7 +130,7 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case let .header(sectionId: _, uniqueId: _, text: text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0), viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCallsTab(!enabled)

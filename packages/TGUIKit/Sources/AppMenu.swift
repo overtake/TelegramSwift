@@ -74,13 +74,11 @@ public final class AppMenu {
     
     private let menu: ContextMenu
     private var controller: AppMenuController?
-    private let presentation: Presentation
     private let appearMode: AppearMode
     private var observation:NSKeyValueObservation?
     private var timerDisposable: Disposable?
-    public init(menu: ContextMenu, presentation: Presentation = Presentation.current(PresentationTheme.current.colors), appearMode: AppearMode = .click) {
+    public init(menu: ContextMenu, appearMode: AppearMode = .click) {
         self.menu = menu
-        self.presentation = presentation
         self.appearMode = appearMode
     }
     
@@ -90,7 +88,7 @@ public final class AppMenu {
     
     public static func show(menu: ContextMenu, event: NSEvent, for view: NSView, appearMode: AppearMode = .click) {
         if !menu.isShown {
-            let appMenu = AppMenu(menu: menu, presentation: menu.presentation, appearMode: appearMode)
+            let appMenu = AppMenu(menu: menu, appearMode: appearMode)
             appMenu.show(event: event, view: view)
         }
     }
@@ -101,7 +99,7 @@ public final class AppMenu {
         if System.legacyMenu || self.menu.isLegacy {
             NSMenu.popUpContextMenu(self.menu, with: event, for: view)
         } else {
-            let controller = AppMenuController(self.menu, presentation: presentation, holder: self, betterInside: menu.betterInside, appearMode: self.appearMode, parentView: view)
+            let controller = AppMenuController(self.menu, presentation: menu.presentation, holder: self, betterInside: menu.betterInside, appearMode: self.appearMode, parentView: view)
             
             self.controller = controller
             self.observation?.invalidate()

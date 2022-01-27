@@ -713,6 +713,17 @@ func initialize() -> [String] {
     array.append("chat_reactions_add_bubble")
     array.append("chat_reactions_add_active")
 
+    
+    array.append("reactions_badge")
+    array.append("reactions_badge_active")
+
+    array.append("reactions_badge_archive")
+    array.append("reactions_badge_archive_active")
+
+    
+    array.append("chat_reactions_badge")
+    array.append("chat_reactions_badge_active")
+    
     return array
 }
 //swift ./tools/generate-images.swift

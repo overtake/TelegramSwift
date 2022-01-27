@@ -1,17 +1,17 @@
 //
-//  GroupCallContextMenuHeader.swift
+//  GroupCallAvatarMenuItem.swift
 //  Telegram
 //
-//  Created by Mikhail Filimonov on 20.05.2021.
-//  Copyright © 2021 Telegram. All rights reserved.
+//  Created by Mike Renoir on 27.01.2022.
+//  Copyright © 2022 Telegram. All rights reserved.
 //
 
 import Foundation
 import TGUIKit
-import Postbox
 import TelegramCore
-
+import Postbox
 import SwiftSignalKit
+
 
 private final class PhotoOrVideoView: View {
     private let imageView: TransformImageView
@@ -118,68 +118,87 @@ private final class PhotoOrVideoView: View {
 }
 
 
-final class GroupCallContextMenuHeaderView : View {
-    private let nameView = TextView()
-    private var descView: TextView?
+final class GroupCallAvatarMenuItem : ContextMenuItem {
+    private let peer: Peer
+    private let context: AccountContext
+    init(_ peer: Peer, context: AccountContext) {
+        self.peer = peer
+        self.context = context
+        super.init("")
+    }
     
-    let peerPhotosDisposable = MetaDisposable()
+    required init(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+        
+    override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return GroupCallAvatarMenuRowItem(.zero, presentation: presentation, interaction: interaction, peer: peer, context: context)
+    }
+}
 
 
+private final class GroupCallAvatarMenuRowItem : AppMenuBasicItem {
+    fileprivate let peer: Peer
+    fileprivate let context: AccountContext
+    init(_ initialSize: NSSize, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, peer: Peer, context: AccountContext) {
+        self.peer = peer
+        self.context = context
+        super.init(initialSize, presentation: presentation, menuItem: nil, interaction: interaction)
+    }
+    
+    override func viewClass() -> AnyClass {
+        return GroupCallAvatarMenuRowView.self
+    }
+    
+    override var effectiveSize: NSSize {
+        return NSMakeSize(200, 200)
+    }
+    
+    override var height: CGFloat {
+        return 200
+    }
+}
+
+
+private final class GroupCallAvatarMenuRowView : AppMenuBasicItemView {
     private let slider: SliderView = SliderView(frame: .zero)
+    private let peerPhotosDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(slider)
-        addSubview(nameView)
         slider.layer?.cornerRadius = 4
-        nameView.isSelectable = false
-        nameView.userInteractionEnabled = false
     }
     
     deinit {
         peerPhotosDisposable.dispose()
     }
     
-    override func layout() {
-        super.layout()
-        slider.frame = NSMakeSize(frame.width, 190).bounds.insetBy(dx: 5, dy: 0)
-        nameView.setFrameOrigin(NSMakePoint(14, slider.frame.maxY + 5))
-        descView?.setFrameOrigin(NSMakePoint(14, nameView.frame.maxY + 3))
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
-    func setPeer(_ peer: Peer, about: String?, context: AccountContext, videos: [NSView]) {
-
+    
+    override func layout() {
+        super.layout()
         
-        let name = TextViewLayout(.initialize(string: peer.displayTitle, color: GroupCallTheme.customTheme.textColor, font: .medium(.text)), maximumNumberOfLines: 2)
-        name.measure(width: frame.width - 28)
+        slider.setFrameSize(NSMakeSize(contentSize.width, contentSize.height - 4))
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
         
-        nameView.update(name)
-        
-        if let about = about {
-            self.descView = TextView()
-            descView?.isSelectable = false
-            descView?.userInteractionEnabled = false
-            addSubview(self.descView!)
-            let desc = TextViewLayout(.initialize(string: about, color: GroupCallTheme.customTheme.grayTextColor, font: .normal(.text)))
-            desc.measure(width: frame.width - 28)
-            self.descView?.update(desc)
-
-        } else {
-            self.descView?.removeFromSuperview()
-            self.descView = nil
+        guard let item = item as? GroupCallAvatarMenuRowItem else {
+            return
         }
         
-        setFrameSize(NSMakeSize(frame.width, 190 + name.layoutSize.height + 10 + (descView != nil ? descView!.frame.height + 3 : 0)))
-        layout()
+        let peer = item.peer
+        let context = item.context
         
         var photos = Array(syncPeerPhotos(peerId: peer.id).prefix(10))
         let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
                 
-        for video in videos {
-            let view = PhotoOrVideoView(frame: self.slider.bounds)
-            view.setPeer(peer, peerPhoto: nil, video: video, account: context.account)
-            self.slider.addSlide(view)
-        }
         
+        slider.frame = NSMakeRect(0, 0, frame.width - 8, frame.height - 4)
         
         let view = PhotoOrVideoView(frame: self.slider.bounds)
         view.setPeer(peer, peerPhoto: nil, video: nil, account: context.account)
@@ -220,14 +239,5 @@ final class GroupCallContextMenuHeaderView : View {
                 view.setPeer(peer, peerPhoto: photo, video: nil, account: context.account)
                 self.slider.addSlide(view)
             }
-        }
-        
-        
-        
-    }
-
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+        }    }
 }

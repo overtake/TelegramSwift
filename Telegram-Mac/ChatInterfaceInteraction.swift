@@ -132,6 +132,8 @@ final class ChatInteraction : InterfaceObserver  {
     var openProxySettings: ()->Void = {}
     var sendLocation: (CLLocationCoordinate2D, MapVenue?) -> Void = {_, _ in}
     var clearMentions:()->Void = {}
+    var reactionPressed:()->Void = {}
+    var clearReactions:()->Void = {}
     var attachFile:(Bool)->Void = { _ in }
     var attachPhotoOrVideo:()->Void = {}
     var attachPicture:()->Void = {}

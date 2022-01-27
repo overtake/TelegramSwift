@@ -753,7 +753,7 @@ class SVideoView: NSView {
         }, for: .Click)
         
         controls.menuItems.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkPalette))
+            let menu = ContextMenu(presentation: .current(darkPalette))
             
             menu.onShow = { _ in
                 self?.isInMenu = true
