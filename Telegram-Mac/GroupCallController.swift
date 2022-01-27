@@ -1170,71 +1170,52 @@ final class GroupCallUIController : ViewController {
                 return []
             }
             
-            var items: [ContextMenuItem] = []
+            var firstBlock:[ContextMenuItem] = []
+            var secondBlock:[ContextMenuItem] = []
+            var thirdBlock: [ContextMenuItem] = []
+
 
             if let state = data.state, let accountContext = self?.data.call.accountContext {
                 
-                let headerItem: ContextMenuItem = .init("headerItem", handler: {
-
-                })
-                let headerView = GroupCallContextMenuHeaderView(frame: NSMakeRect(0, 0, 200, 200))
+                firstBlock.append(GroupCallAvatarMenuItem(state.peer, context: accountContext))
                 
-                let videos = [arguments.takeVideo(state.peer.id, .video, .profile), arguments.takeVideo(state.peer.id, .screencast, .profile)].compactMap { $0}
-                
-                headerView.setPeer(state.peer, about: data.about, context: accountContext, videos: videos)
-                headerItem.view = headerView
-
-
-                items.append(headerItem)
-                items.append(ContextSeparatorItem())
-
-                if data.peer.id == data.accountPeerId, data.isRaisedHand {
-                    items.append(ContextMenuItem(strings().voiceChatDownHand, handler: arguments.toggleRaiseHand))
-                }
+                firstBlock.append(ContextMenuItem(state.peer.displayTitle, handler: {
+                    arguments.openInfo(state.peer)
+                }, itemImage: MenuAnimation.menu_open_profile.value))
                 
                 if data.peer.id != data.accountPeerId, state.muteState == nil || state.muteState?.canUnmute == true {
-                    let volume: ContextMenuItem = .init("Volume", handler: {
-
-                    })
-
-                    let volumeControl = VolumeMenuItemView(frame: NSMakeRect(0, 0, 200, 26))
-                    volumeControl.stateImages = (on: NSImage(named: "Icon_VolumeMenu_On")!.precomposed(.white),
-                                                 off: NSImage(named: "Icon_VolumeMenu_Off")!.precomposed(.white))
-                    volumeControl.value = CGFloat((state.volume ?? 10000)) / 10000.0
-                    volumeControl.lineColor = GroupCallTheme.memberSeparatorColor.lighter()
-                    volume.view = volumeControl
-
-                    volumeControl.didUpdateValue = { value, sync in
+                    secondBlock.append(GroupCallVolumeMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
                         if value == 0 {
                             arguments.mute(data.peer.id, true)
                         } else {
                             arguments.setVolume(data.peer.id, Double(value), sync)
                         }
-                    }
-
-                    items.append(volume)
-                    items.append(ContextSeparatorItem())
+                    }))
                 }
+                if data.peer.id == data.accountPeerId, data.isRaisedHand {
+                    secondBlock.append(ContextMenuItem(strings().voiceChatDownHand, handler: arguments.toggleRaiseHand, itemImage: MenuAnimation.menu_unblock.value))
+                }
+                
                 if let endpointId = data.videoEndpoint {
                     if !arguments.isPinnedVideo(data.peer.id, .video) {
-                        items.append(ContextMenuItem(strings().voiceChatPinVideo, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatPinVideo, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .video, .permanent))
-                        }))
+                        }, itemImage: MenuAnimation.menu_pin.value))
                     } else if arguments.canUnpinVideo(data.peer.id, .video) {
-                        items.append(ContextMenuItem(strings().voiceChatUnpinVideo, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatUnpinVideo, handler: {
                             arguments.unpinVideo()
-                        }))
+                        }, itemImage: MenuAnimation.menu_unpin.value))
                     }
                 }
                 if let endpointId = data.presentationEndpoint {
                     if !arguments.isPinnedVideo(data.peer.id, .screencast) {
-                        items.append(ContextMenuItem(strings().voiceChatPinScreencast, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatPinScreencast, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .screencast, .permanent))
-                        }))
+                        }, itemImage: MenuAnimation.menu_sharescreen.value))
                     } else if arguments.canUnpinVideo(data.peer.id, .screencast) {
-                        items.append(ContextMenuItem(strings().voiceChatUnpinScreencast, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatUnpinScreencast, handler: {
                             arguments.unpinVideo()
-                        }))
+                        }, itemImage: MenuAnimation.menu_sharescreen_slash.value))
                     }
                 }
                 
@@ -1243,57 +1224,60 @@ final class GroupCallUIController : ViewController {
                 if !data.canManageCall, data.peer.id != data.accountPeerId {
                     if let muteState = state.muteState {
                         if muteState.mutedByYou {
-                            items.append(.init(strings().voiceChatUnmuteForMe, handler: {
+                            secondBlock.append(.init(strings().voiceChatUnmuteForMe, handler: {
                                 arguments.mute(data.peer.id, false)
-                            }))
+                            }, itemImage: MenuAnimation.menu_unmuted.value))
                         } else {
-                            items.append(.init(strings().voiceChatMuteForMe, handler: {
+                            secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }))
+                            }, itemImage: MenuAnimation.menu_mute.value))
                         }
                     } else {
-                        items.append(.init(strings().voiceChatMuteForMe, handler: {
+                        secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                             arguments.mute(data.peer.id, true)
-                        }))
+                        }, itemImage: MenuAnimation.menu_mute.value))
                     }
-                    items.append(ContextSeparatorItem())
                 }
                 
                 if data.canManageCall, data.peer.id != data.accountPeerId {
                     if data.adminIds.contains(data.peer.id) {
                         if state.muteState == nil {
-                            items.append(.init(strings().voiceChatMutePeer, handler: {
+                            secondBlock.append(.init(strings().voiceChatMutePeer, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }))
+                            }, itemImage: MenuAnimation.menu_mute.value))
                         }
                         if !data.adminIds.contains(data.peer.id), !data.peer.isChannel {
-                            items.append(.init(strings().voiceChatRemovePeer, handler: {
+                            thirdBlock.append(.init(strings().voiceChatRemovePeer, handler: {
                                 arguments.remove(data.peer)
-                            }))
-                        }
-                        if !items.isEmpty {
-                            items.append(ContextSeparatorItem())
+                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                         }
                     } else if let muteState = state.muteState, !muteState.canUnmute {
-                        items.append(.init(strings().voiceChatUnmutePeer, handler: {
+                        secondBlock.append(.init(strings().voiceChatUnmutePeer, handler: {
                             arguments.mute(data.peer.id, false)
-                        }))
+                        }, itemImage: MenuAnimation.menu_voice.value))
                     } else {
-                        items.append(.init(strings().voiceChatMutePeer, handler: {
+                        secondBlock.append(.init(strings().voiceChatMutePeer, handler: {
                             arguments.mute(data.peer.id, true)
-                        }))
+                        }, itemImage: MenuAnimation.menu_mute.value))
                     }
                     if !data.adminIds.contains(data.peer.id), !data.peer.isChannel {
-                        items.append(.init(strings().voiceChatRemovePeer, handler: {
+                        thirdBlock.append(.init(strings().voiceChatRemovePeer, handler: {
                             arguments.remove(data.peer)
-                        }))
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                 }
-                if data.peer.id != data.accountPeerId {
-                    items.append(.init(strings().voiceChatOpenProfile, handler: {
-                        arguments.openInfo(data.peer)
-                    }))
+            }
+            
+            let blocks:[[ContextMenuItem]] = [firstBlock,
+                                              secondBlock,
+                                              thirdBlock].filter { !$0.isEmpty }
+            var items: [ContextMenuItem] = []
+
+            for (i, block) in blocks.enumerated() {
+                if i != 0 {
+                    items.append(ContextSeparatorItem())
                 }
+                items.append(contentsOf: block)
             }
             return items
             

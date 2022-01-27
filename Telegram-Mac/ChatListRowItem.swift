@@ -159,7 +159,8 @@ class ChatListRowItem: TableRowItem {
     }
 
     let mentionsCount: Int32?
-    
+    let reactionsCount: Int32?
+
     private var date:NSAttributedString?
 
     private var displayLayout:(TextNodeLayout, TextNode)?
@@ -361,6 +362,7 @@ class ChatListRowItem: TableRowItem {
         self.activities = activities
         self.context = context
         self.mentionsCount = nil
+        self.reactionsCount = nil
         self.pinnedType = pinnedType
         self.renderedPeer = nil
         self.associatedGroupId = .root
@@ -468,7 +470,7 @@ class ChatListRowItem: TableRowItem {
     
     private let embeddedState:StoredPeerChatInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:StoredPeerChatInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: ChatListMessageTagSummaryInfo = ChatListMessageTagSummaryInfo(), activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:StoredPeerChatInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: [ChatListEntryMessageTagSummaryKey: ChatListMessageTagSummaryInfo] = [:], activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
         
         
         var embeddedState = embeddedState
@@ -645,16 +647,41 @@ class ChatListRowItem: TableRowItem {
                 textLeftCutout += contentImageTrailingSpace
             }
         }
-
         
+        let mentions = summaryInfo[ChatListEntryMessageTagSummaryKey(
+            tag: .unseenPersonalMessage,
+            actionType: .consumeUnseenPersonalMessage
+        )]
         
-        let tagSummaryCount = summaryInfo.tagSummaryCount ?? 0
-        let actionsSummaryCount = summaryInfo.actionsSummaryCount ?? 0
-        let totalMentionCount = tagSummaryCount - actionsSummaryCount
-        if totalMentionCount > 0 {
-            self.mentionsCount = totalMentionCount
+        let reactions = summaryInfo[ChatListEntryMessageTagSummaryKey(
+            tag: .unseenReaction,
+            actionType: .readReaction
+        )]
+        
+        if let mentions = mentions {
+            let tagSummaryCount = mentions.tagSummaryCount ?? 0
+            let actionsSummaryCount = mentions.actionsSummaryCount ?? 0
+            let totalMentionCount = tagSummaryCount - actionsSummaryCount
+            if totalMentionCount > 0 {
+                self.mentionsCount = totalMentionCount
+            } else {
+                self.mentionsCount = nil
+            }
         } else {
             self.mentionsCount = nil
+        }
+       
+        if let reactions = reactions {
+            let tagSummaryCount = reactions.tagSummaryCount ?? 0
+            let actionsSummaryCount = reactions.actionsSummaryCount ?? 0
+            let totalReactionsCount = tagSummaryCount - actionsSummaryCount
+            if totalReactionsCount > 0 {
+                self.reactionsCount = totalReactionsCount
+            } else {
+                self.reactionsCount = nil
+            }
+        } else {
+            self.reactionsCount = nil
         }
         
         if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId {
@@ -667,26 +694,10 @@ class ChatListRowItem: TableRowItem {
         
         if showBadge {
             if let unreadCount = readState?.count, unreadCount > 0, mentionsCount == nil || (unreadCount > 1 || mentionsCount! != unreadCount)  {
-                
-//                var dynamicValue = DynamicCounterTextView.make(for: "\(unreadCount)", count: "\(unreadCount)", font: .medium(.small), textColor: theme.chatList.badgeTextColor, width: 100)
-//                badge = Badge(dynamicValue: dynamicValue, backgroundColor: isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor, size: dynamicValue.size)
-//                
-//                dynamicValue = DynamicCounterTextView.make(for: "\(unreadCount)", count: "\(unreadCount)", font: .medium(.small), textColor: theme.chatList.badgeSelectedTextColor, width: 100)
-//                badgeSelected = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeSelectedBackgroundColor, size: dynamicValue.size)
 
-                
-                
                 badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
                 badgeSelectedNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
             } else if isUnreadMarked && mentionsCount == nil {
-                
-                
-//                var dynamicValue = DynamicCounterTextView.make(for: " ", count: " ", font: .medium(.small), textColor: theme.chatList.badgeTextColor, width: 100)
-//                badge = Badge(dynamicValue: dynamicValue, backgroundColor: isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor, size: dynamicValue.size + NSSize(width: 8, height: 7))
-//
-//                dynamicValue = DynamicCounterTextView.make(for: " ", count: " ", font: .medium(.small), textColor: theme.chatList.badgeSelectedTextColor, width: 100)
-//                badgeSelected = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeSelectedBackgroundColor, size: dynamicValue.size + NSSize(width: 8, height: 7))
-//
                 badgeNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
                 badgeSelectedNode = BadgeNode(.initialize(string: " ", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
             }
@@ -786,10 +797,10 @@ class ChatListRowItem: TableRowItem {
     }
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
-            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
+            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (reactionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
+        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (reactionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
     }
     
     let leftInset:CGFloat = 50 + (10 * 2.0);

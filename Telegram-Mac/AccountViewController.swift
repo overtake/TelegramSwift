@@ -318,8 +318,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsActiveSessions, icon: theme.icons.settingsSessions, activeIcon: theme.icons.settingsSessionsActive, type: .nextContext("\(count)"), viewType: viewType, action: {
                 arguments.presentController(RecentSessionsController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
-        case let .about(_, viewType):
-            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .legacy, text: APP_VERSION_STRING, font: .normal(.text), color: theme.colors.grayText)
+        case .about:
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .modern(position: .single, insets: .init()), text: APP_VERSION_STRING, font: .normal(.text), color: theme.colors.grayText)
         case let .passport(_, viewType, peer):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(PassportController(arguments.context, peer.peer, request: nil, nil), true)

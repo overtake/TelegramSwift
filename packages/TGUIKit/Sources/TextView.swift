@@ -1492,7 +1492,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     public override func rightMouseDown(with event: NSEvent) {
-        if let layout = textLayout, userInteractionEnabled, layout.mayItems {
+        if let layout = textLayout, userInteractionEnabled, layout.mayItems, mouseInside() {
             let location = convert(event.locationInWindow, from: nil)
             if (!layout.selectedRange.hasSelectText || !layout.inSelectedRange(location)) && (!layout.alwaysStaticItems || layout.link(at: location) != nil) {
                 layout.selectWord(at : location)

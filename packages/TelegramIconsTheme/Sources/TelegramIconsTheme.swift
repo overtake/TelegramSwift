@@ -8208,6 +8208,84 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var reactions_badge: CGImage {
+      if let image = cached.with({ $0["reactions_badge"] }) {
+          return image
+      } else {
+          let image = _reactions_badge()
+          _ = cached.modify { current in 
+              var current = current
+              current["reactions_badge"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var reactions_badge_active: CGImage {
+      if let image = cached.with({ $0["reactions_badge_active"] }) {
+          return image
+      } else {
+          let image = _reactions_badge_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["reactions_badge_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var reactions_badge_archive: CGImage {
+      if let image = cached.with({ $0["reactions_badge_archive"] }) {
+          return image
+      } else {
+          let image = _reactions_badge_archive()
+          _ = cached.modify { current in 
+              var current = current
+              current["reactions_badge_archive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var reactions_badge_archive_active: CGImage {
+      if let image = cached.with({ $0["reactions_badge_archive_active"] }) {
+          return image
+      } else {
+          let image = _reactions_badge_archive_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["reactions_badge_archive_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_reactions_badge: CGImage {
+      if let image = cached.with({ $0["chat_reactions_badge"] }) {
+          return image
+      } else {
+          let image = _chat_reactions_badge()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reactions_badge"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_reactions_badge_active: CGImage {
+      if let image = cached.with({ $0["chat_reactions_badge_active"] }) {
+          return image
+      } else {
+          let image = _chat_reactions_badge_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_reactions_badge_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8840,6 +8918,12 @@ public final class TelegramIconsTheme {
   private let _chat_reactions_add: ()->CGImage
   private let _chat_reactions_add_bubble: ()->CGImage
   private let _chat_reactions_add_active: ()->CGImage
+  private let _reactions_badge: ()->CGImage
+  private let _reactions_badge_active: ()->CGImage
+  private let _reactions_badge_archive: ()->CGImage
+  private let _reactions_badge_archive_active: ()->CGImage
+  private let _chat_reactions_badge: ()->CGImage
+  private let _chat_reactions_badge_active: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9472,7 +9556,13 @@ public final class TelegramIconsTheme {
       widget_peers_both_active: @escaping()->CGImage,
       chat_reactions_add: @escaping()->CGImage,
       chat_reactions_add_bubble: @escaping()->CGImage,
-      chat_reactions_add_active: @escaping()->CGImage
+      chat_reactions_add_active: @escaping()->CGImage,
+      reactions_badge: @escaping()->CGImage,
+      reactions_badge_active: @escaping()->CGImage,
+      reactions_badge_archive: @escaping()->CGImage,
+      reactions_badge_archive_active: @escaping()->CGImage,
+      chat_reactions_badge: @escaping()->CGImage,
+      chat_reactions_badge_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10105,5 +10195,11 @@ public final class TelegramIconsTheme {
       self._chat_reactions_add = chat_reactions_add
       self._chat_reactions_add_bubble = chat_reactions_add_bubble
       self._chat_reactions_add_active = chat_reactions_add_active
+      self._reactions_badge = reactions_badge
+      self._reactions_badge_active = reactions_badge_active
+      self._reactions_badge_archive = reactions_badge_archive
+      self._reactions_badge_archive_active = reactions_badge_archive_active
+      self._chat_reactions_badge = chat_reactions_badge
+      self._chat_reactions_badge_active = chat_reactions_badge_active
   }
 }

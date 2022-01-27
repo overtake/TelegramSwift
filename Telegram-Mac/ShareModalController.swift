@@ -60,7 +60,7 @@ fileprivate class ShareButton : Control {
     }
 }
 
-fileprivate class ShareModalView : View, TokenizedProtocol {
+fileprivate class ShareModalView : Control, TokenizedProtocol {
     let tokenizedView:TokenizedView
     let basicSearchView: SearchView = SearchView(frame: NSMakeRect(0,0, 260, 30))
     let tableView:TableView = TableView()
@@ -75,7 +75,7 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
     fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
     fileprivate let sendButton = ImageButton()
     fileprivate let emojiButton = ImageButton()
-    fileprivate let actionsContainerView: View = View()
+    fileprivate let actionsContainerView: Control = Control()
     fileprivate let textContainerView: View = View()
     fileprivate let bottomSeparator: View = View()
 
@@ -118,7 +118,11 @@ fileprivate class ShareModalView : View, TokenizedProtocol {
         addSubview(dismiss)
         
         
-  
+//        sendButton.contextMenu = { [weak self] in
+//            let menu = ContextMenu(betterInside: true)
+//            menu.addItem(ContextMenuItem.init("test"))
+//            return menu
+//        }
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false

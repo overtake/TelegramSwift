@@ -209,7 +209,7 @@ class VideoStickerContentView: ChatMediaContentView {
             }
             
         }
-        
+        fetch()
     }
     
     private func removePlaceholder(animated: Bool) {

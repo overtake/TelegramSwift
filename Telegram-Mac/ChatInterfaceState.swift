@@ -1020,7 +1020,7 @@ struct ChatInterfaceState: Codable, Equatable {
                 .withUpdatedReplyMessageId(state.replyToMessageId)
                 .withUpdatedTimestamp(timestamp)
         } else {
-            return ChatInterfaceState()
+            return ChatInterfaceState().withUpdatedHistoryScrollState(self.historyScrollState)
         }
         return result
     }

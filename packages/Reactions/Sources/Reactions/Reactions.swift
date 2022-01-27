@@ -26,7 +26,7 @@ public final class Reactions {
     
     public func react(_ messageId: MessageId, value: String?) {
         _ = _isInteractive.swap(messageId)
-        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value).start(), forKey: messageId)
+        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value, isLarge: false).start(), forKey: messageId)
     }
     
     public func updateQuick(_ value: String) {

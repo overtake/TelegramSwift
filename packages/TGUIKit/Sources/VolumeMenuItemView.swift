@@ -24,7 +24,7 @@ public final class VolumeMenuItemView : Control {
         if let _ = stateImages {
             return .init(origin: .init(x: 40, y: (frame.height - 2 ) / 2), size: .init(width: frame.width - 55, height: 2))
         } else {
-            return focus(NSMakeSize(frame.width - 30, 2))
+            return focus(NSMakeSize(frame.width - 20, 2))
         }
     }
     

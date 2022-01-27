@@ -1294,6 +1294,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return nil
     }
     
+    func playSeenReactionEffect() {
+        if let reactionsView = reactionsView {
+            reactionsView.playSeenReactionEffect()
+        } else {
+            rightView.reactionsView?.playSeenReactionEffect()
+        }
+    }
+    
     func canDropSelection(in location: NSPoint) -> Bool {
         return true
     }
@@ -1789,7 +1797,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     
     override var interactableView: NSView {
-        return self.rightView
+        return self
     }
     
     override func removeFromSuperview() {

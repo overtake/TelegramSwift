@@ -715,7 +715,7 @@ private func generateLockerHead(_ color: NSColor, backgroundColor: NSColor) -> C
     })!
 }
 
-private func generateChatMention(backgroundColor: NSColor, border: NSColor, foregroundColor: NSColor) -> CGImage {
+private func generateChatMention(image: NSImage, backgroundColor: NSColor, border: NSColor, foregroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(38, 38), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.setFillColor(backgroundColor.cgColor)
@@ -724,7 +724,7 @@ private func generateChatMention(backgroundColor: NSColor, border: NSColor, fore
         ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
       //  ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
 
-        let icon = #imageLiteral(resourceName: "Icon_ChatMention").precomposed(foregroundColor)
+        let icon = image.precomposed(foregroundColor)
         let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         
         ctx.draw(icon, in: imageRect)
@@ -859,13 +859,13 @@ private func generateIVAudioPause(color: NSColor) -> CGImage {
     })!
 }
 
-private func generateBadgeMention(backgroundColor: NSColor, foregroundColor: NSColor) -> CGImage {
+private func generateBadgeMention(image: NSImage, backgroundColor: NSColor, foregroundColor: NSColor) -> CGImage {
     return generateImage(NSMakeSize(20, 20), rotatedContext: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.round(size, size.width/2)
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-        let icon = #imageLiteral(resourceName: "Icon_ChatListMention").precomposed(foregroundColor, flipVertical: true)
+        let icon = image.precomposed(foregroundColor, flipVertical: true)
         let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
         ctx.draw(icon, in: imageRect)
     })!
@@ -1882,12 +1882,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                modalShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
                                                modalClose: { #imageLiteral(resourceName: "Icon_ChatSearchCancel").precomposed(palette.accentIcon) },
                                                ivChannelJoined: { #imageLiteral(resourceName: "Icon_MessageCheckMark1").precomposed(.white) },
-                                               chatListMention: { generateBadgeMention(backgroundColor: palette.badge, foregroundColor: palette.background) },
-                                               chatListMentionActive: { generateBadgeMention(backgroundColor: .white, foregroundColor: palette.accentSelect) },
-                                               chatListMentionArchived: { generateBadgeMention(backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
-                                               chatListMentionArchivedActive: { generateBadgeMention(backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
-                                               chatMention: { generateChatMention(backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
-                                               chatMentionActive: { generateChatMention(backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
+                                               chatListMention: { generateBadgeMention(image: NSImage(named: "Icon_ChatListMention")!, backgroundColor: palette.badge, foregroundColor: palette.background) },
+                                              chatListMentionActive: { generateBadgeMention(image: NSImage(named: "Icon_ChatListMention")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
+                                               chatListMentionArchived: { generateBadgeMention(image: NSImage(named: "Icon_ChatListMention")!, backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
+                                               chatListMentionArchivedActive: { generateBadgeMention(image: NSImage(named: "Icon_ChatListMention")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
+                                               chatMention: { generateChatMention(image: NSImage(named: "Icon_ChatMention")!, backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
+                                               chatMentionActive: { generateChatMention(image: NSImage(named: "Icon_ChatMention")!, backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
                                                sliderControl: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
                                                sliderControlActive: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
                                                stickersTabFave: { #imageLiteral(resourceName: "Icon_FaveStickers").precomposed(palette.grayIcon) },
@@ -2312,7 +2312,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                widget_peers_both_active: { NSImage(named: "Icon_Widget_Peers_Both")!.precomposed(palette.accent) },
                                                chat_reactions_add: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.grayIcon) },
                                                chat_reactions_add_bubble: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.text) },
-                                               chat_reactions_add_active: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.accent) }
+                                               chat_reactions_add_active: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.accent) },
+                                               reactions_badge: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badge, foregroundColor: palette.background) },
+                                               reactions_badge_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
+                                               reactions_badge_archive: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
+                                               reactions_badge_archive_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
+                                               chat_reactions_badge: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
+                                               chat_reactions_badge_active: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) }
+
     )
 
 }

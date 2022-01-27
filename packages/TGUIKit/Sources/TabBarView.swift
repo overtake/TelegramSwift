@@ -130,7 +130,7 @@ public class TabBarView: View {
             }, for: .RightDown)
             
             view.set(handler: { [weak self] control in
-                if let strongSelf = self, let event = NSApp.currentEvent, event.clickCount == 1 {
+                if let strongSelf = self {
                     if strongSelf.selectedIndex == i {
                         strongSelf.delegate?.scrollup()
                     } else {

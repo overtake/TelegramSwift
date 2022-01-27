@@ -582,6 +582,14 @@ final class ChatReactionsView : View {
             self.reaction = reaction
             self.layer?.cornerRadius = reaction.rect.height / 2
             
+            let tooltip = reaction.avatars.map { $0.peer.displayTitle }.joined(separator: ", ")
+            
+            if tooltip.isEmpty {
+                self.toolTip = nil
+            } else {
+                self.toolTip = tooltip
+            }
+            
             let presentation = reaction.presentation
             
             if let text = reaction.text {
@@ -1050,15 +1058,31 @@ final class ChatReactionsView : View {
                 let view = getView(curSelected.value.value)
                 view?.playEffect()
             }
-        } else if animated, !previous.isEmpty, !layout.message.flags.contains(.Incoming) {
-            for reaction in reactions {
-                let prev = previous.first(where: { $0.value.value == reaction.value.value })
-                if prev == nil || prev!.value.count < reaction.value.count {
-                    reaction.runEffect(reaction.value.value)
-                    let view = getView(reaction.value.value)
-                    view?.playEffect()
+        } else if animated, !layout.message.flags.contains(.Incoming), let peer = layout.message.peers[layout.message.id.peerId] {
+            if peer.isGroup || peer.isSupergroup || peer.isGigagroup || peer.isUser, peer.canSendMessage()  {
+                Loop: for reaction in reactions {
+                    let prev = previous.first(where: { $0.value.value == reaction.value.value })
+                    if prev == nil || prev!.value.count < reaction.value.count {
+                        reaction.runEffect(reaction.value.value)
+                        let view = getView(reaction.value.value)
+                        view?.playEffect()
+                        break Loop
+                    }
                 }
             }
+        }
+    }
+    
+    func playSeenReactionEffect() {
+        guard let currentLayout = currentLayout else {
+            return
+        }
+        let layout = currentLayout.message.effectiveReactions(currentLayout.context.peerId)
+        let peer = layout?.recentPeers.first(where: { $0.isUnseen })
+        if let peer = peer, let reaction = reactions.first(where: { $0.value.value == peer.value }) {
+            reaction.runEffect(reaction.value.value)
+            let view = getView(reaction.value.value)
+            view?.playEffect()
         }
     }
     

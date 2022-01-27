@@ -97,6 +97,9 @@ open class TableRowItem: NSObject {
     open var isLegacyMenu: Bool {
         return false
     }
+    open var menuPresentation: AppMenu.Presentation {
+        return .current(presentation.colors)
+    }
     
     public var frame: NSRect {
         if let table = table {
