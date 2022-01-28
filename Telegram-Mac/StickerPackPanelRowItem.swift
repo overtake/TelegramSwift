@@ -205,10 +205,10 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                         let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
                         if file.isVideoSticker && !file.isWebm {
                             return (.file(reference, GifPreviewModalView.self), contentView)
-                        } else if file.isStaticSticker {
-                            return (.file(reference, StickerPreviewModalView.self), contentView)
                         } else if file.isAnimatedSticker || file.isWebm {
                             return (.file(reference, AnimatedStickerPreviewModalView.self), contentView)
+                        } else if file.isStaticSticker {
+                            return (.file(reference, StickerPreviewModalView.self), contentView)
                         }
                     }
                 }

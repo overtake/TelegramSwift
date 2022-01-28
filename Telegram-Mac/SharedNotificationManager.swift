@@ -346,9 +346,19 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     |> take(1)
                     |> map { data in return (sources, images, inAppSettings, data.isLocked)}
             }
-            |> mapToSignal { values in
-                return account.postbox.loadedPeerWithId(account.peerId) |> map { peer in
-                    return (values.0, values.1, values.2, values.3, peer)
+            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer), NoError> in
+                return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
+                    if let message = values.0.first?.messages.first {
+                        return account.postbox.transaction({ transaction in
+                            let notifications = transaction.getPeerNotificationSettings(message.id.peerId) as? TelegramPeerNotificationSettings
+                            if notifications == nil || !notifications!.isMuted {
+                                return (values.0, values.1, values.2, values.3, peer)
+                            } else {
+                                return ([], values.1, values.2, values.3, peer)
+                            }
+                        })
+                    }
+                    return .complete()
                 }
             } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer in
                 
