@@ -162,7 +162,9 @@ private class StickersModalView : View {
             _ = item.makeSize(frame.width)
             _ = tableView.addItem(item: item)
             
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
+            if !installed {
+                _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
+            }
 
 
             self.needsLayout = true

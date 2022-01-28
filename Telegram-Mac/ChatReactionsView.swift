@@ -1058,19 +1058,20 @@ final class ChatReactionsView : View {
                 let view = getView(curSelected.value.value)
                 view?.playEffect()
             }
-        } else if animated, !layout.message.flags.contains(.Incoming), let peer = layout.message.peers[layout.message.id.peerId] {
-            if peer.isGroup || peer.isSupergroup || peer.isGigagroup || peer.isUser, peer.canSendMessage()  {
-                Loop: for reaction in reactions {
-                    let prev = previous.first(where: { $0.value.value == reaction.value.value })
-                    if prev == nil || prev!.value.count < reaction.value.count {
-                        reaction.runEffect(reaction.value.value)
-                        let view = getView(reaction.value.value)
-                        view?.playEffect()
-                        break Loop
-                    }
-                }
-            }
         }
+//        else if animated, !layout.message.flags.contains(.Incoming), let peer = layout.message.peers[layout.message.id.peerId] {
+//            if peer.isGroup || peer.isSupergroup || peer.isGigagroup || peer.isUser, peer.canSendMessage()  {
+//                Loop: for reaction in reactions {
+//                    let prev = previous.first(where: { $0.value.value == reaction.value.value })
+//                    if prev == nil || prev!.value.count < reaction.value.count {
+//                        reaction.runEffect(reaction.value.value)
+//                        let view = getView(reaction.value.value)
+//                        view?.playEffect()
+//                        break Loop
+//                    }
+//                }
+//            }
+//        }
     }
     
     func playSeenReactionEffect() {

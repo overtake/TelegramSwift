@@ -2701,9 +2701,17 @@
 			name = "menu-items";
 			sourceTree = "<group>";
 		};
+		27803C0A27A40E0A007B0FA9 /* video-sticker */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "video-sticker";
+			sourceTree = "<group>";
+		};
 		27949108260A41C60003BFA0 /* ffmpeg */ = {
 			isa = PBXGroup;
 			children = (
+				27803C0A27A40E0A007B0FA9 /* video-sticker */,
 				2713B219260A42FE00CE0EC6 /* MediaFrameSource.swift */,
 				2713B21C260A42FE00CE0EC6 /* MediaPlaybackData.swift */,
 				2713B21A260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift */,
