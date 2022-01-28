@@ -170,28 +170,35 @@ enum LocalAnimatedSticker : String {
     case menu_camera
     
     
-    case menu_folder_ball
-    case menu_folder_bear
-    case menu_folder_bitcoin
-    case menu_folder_bolt
+    case menu_folder_all_chats
+    case menu_folder_animal
     case menu_folder_book
     case menu_folder_bot
-    case menu_folder_briefcase
-    case menu_folder_brush
-    case menu_folder_flower
-    case menu_folder_gamepad
-    case menu_folder_graduationcap
-    case menu_folder_heart
+    case menu_folder_coin
+    case menu_folder_flash
+    case menu_folder_folder
+    case menu_folder_game
+    case menu_folder_group
     case menu_folder_home
+    case menu_folder_lamp
     case menu_folder_like
-    case menu_folder_message_read
-    case menu_folder_messages
-    case menu_folder_note
-    case menu_folder_person
-    case menu_folder_plance
+    case menu_folder_lock
+    case menu_folder_love
+    case menu_folder_math
+    case menu_folder_music
+    case menu_folder_paint
+    case menu_folder_personal
+    case menu_folder_plane
+    case menu_folder_read
+    case menu_folder_sport
     case menu_folder_star
+    case menu_folder_student
     case menu_folder_telegram
-    case menu_folder_twopersons
+    case menu_folder_unread
+    case menu_folder_virus
+    case menu_folder_work
+
+    
     
     case menu_speaker_muted
     case menu_speaker

@@ -1170,7 +1170,7 @@ class ChatListRowItem: TableRowItem {
                             alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
                         }
                        
-                    }, itemImage: item.data.includePeers.peers.contains(peerId) ? MenuAnimation.menu_check_selected.value : MenuAnimation.menu_folder.value)
+                    }, state: item.data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value)
                     
                     submenu.append(menuItem)
                 }
