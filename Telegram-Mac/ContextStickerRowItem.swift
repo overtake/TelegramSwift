@@ -53,9 +53,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 if point.x > subview.frame.minX && point.x < subview.frame.maxX {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                    if file.isVideoSticker {
+                    if file.isVideoSticker && !file.isWebm {
                         return (.file(reference, GifPreviewModalView.self), subview)
-                    } else if file.isAnimatedSticker {
+                    } else if file.isAnimatedSticker || file.isWebm {
                         return (.file(reference, AnimatedStickerPreviewModalView.self), subview)
                     } else {
                         return (.file(reference, StickerPreviewModalView.self), subview)

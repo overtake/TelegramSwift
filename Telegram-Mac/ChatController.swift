@@ -728,7 +728,7 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             if let mentions = self.mentions {
                 self.mentions = nil
-                performSubviewRemoval(mentions, animated: animated, scale: true)
+                performSubviewRemoval(mentions, animated: true, scale: true)
             }
         }
         if reactionsCount > 0 {
@@ -752,7 +752,7 @@ class ChatControllerView : View, ChatInputDelegate {
         } else {
             if let reactions = self.reactions {
                 self.reactions = nil
-                performSubviewRemoval(reactions, animated: animated, scale: true)
+                performSubviewRemoval(reactions, animated: true, scale: true)
             }
         }
         scroller.updateCount(scrollerCount)
@@ -1219,6 +1219,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let messageIndexDisposable: MetaDisposable = MetaDisposable()
     private let dateDisposable:MetaDisposable = MetaDisposable()
     private let interactiveReadingDisposable: MetaDisposable = MetaDisposable()
+    private let interactiveReadReactionsDisposable: MetaDisposable = MetaDisposable()
     private let deleteChatDisposable: MetaDisposable = MetaDisposable()
     private let loadSelectionMessagesDisposable: MetaDisposable = MetaDisposable()
     private let updateMediaDisposable = MetaDisposable()
@@ -1250,6 +1251,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let topVisibleMessageRange = ValuePromise<ChatTopVisibleMessageRange?>(nil, ignoreRepeated: true)
     private let dismissedPinnedIds = ValuePromise<ChatDismissedPins>(ChatDismissedPins(ids: [], tempMaxId: nil), ignoreRepeated: true)
 
+    private let visibleMessageRange: Atomic<VisibleMessageRange> = Atomic(value: .init(lowerBound: .absoluteLowerBound(), upperBound: nil))
 
     private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
     
@@ -1580,7 +1582,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.updateFloatingPhotos(genericView.scroll, animated: animated, currentAnimationRows: currentAnimationRows)
     }
 
-    
+    private func updateVisibleRange(_ range: NSRange) -> Void {
+        var lowerBound: MessageIndex?
+        var upperBound: MessageIndex?
+        for i in range.lowerBound ..< range.upperBound {
+            let item = genericView.tableView.item(at: i) as? ChatRowItem
+            if lowerBound == nil {
+                if let message = item?.firstMessage {
+                    lowerBound = MessageIndex(message)
+                }
+            }
+            if let message = item?.firstMessage {
+                upperBound = MessageIndex(message)
+            }
+        }
+        if let upperBound = upperBound {
+            _ = self.visibleMessageRange.swap(.init(lowerBound: upperBound, upperBound: lowerBound))
+        }
+    }
 
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
@@ -1602,6 +1621,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return
             }
             self.collectFloatingPhotos(animated: false, previousItems: self.collectPreviousItems(), currentAnimationRows: self.currentAnimationRows)
+            
+            self.updateVisibleRange(position.visibleRows)
+            
         }))
         
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
@@ -5031,12 +5053,25 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
             if let window = window, window.isKeyWindow, self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height, hasEntries {
                 self.interactiveReadingDisposable.set(context.engine.messages.installInteractiveReadMessagesAction(peerId: chatInteraction.peerId))
+                
+                let visibleMessageRange = self.visibleMessageRange
+                self.interactiveReadReactionsDisposable.set(context.engine.messages.installInteractiveReadReactionsAction(peerId: chatInteraction.peerId, getVisibleRange: {
+                    return visibleMessageRange.with { $0 }
+                }, didReadReactionsInMessages: { [weak self] idsAndReactions in
+                    Queue.mainQueue().after(0.2, {
+                        self?.playUnseenReactions(Set(idsAndReactions.keys))
+                    })
+                }))
+
+                
             } else {
                 self.interactiveReadingDisposable.set(nil)
+                self.interactiveReadReactionsDisposable.set(nil)
             }
             
         default:
             self.interactiveReadingDisposable.set(nil)
+            self.interactiveReadReactionsDisposable.set(nil)
         }
         
     }
@@ -5638,6 +5673,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         messageIndexDisposable.dispose()
         dateDisposable.dispose()
         interactiveReadingDisposable.dispose()
+        interactiveReadReactionsDisposable.dispose()
         deleteChatDisposable.dispose()
         loadSelectionMessagesDisposable.dispose()
         updateMediaDisposable.dispose()
@@ -6547,6 +6583,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private func playUnseenReactions(_ messageIds: Set<MessageId>) {
+        
+        if !messageIds.isEmpty {
+            var bp = 0
+            bp += 1
+        }
+        
         self.genericView.tableView.enumerateVisibleItems(with: { item in
             guard let item = item as? ChatRowItem else {
                 return true

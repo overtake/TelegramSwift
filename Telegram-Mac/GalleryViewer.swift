@@ -249,7 +249,13 @@ class GalleryViewer: NSResponder {
             backgroundView.background = NSColor.black.withAlphaComponent(0.9)
             backgroundView.frame = bounds
             
-            self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: 0, bottom: 95), interactions:interactions, window:window, reversed: reversed)
+            var topInset: CGFloat = 0
+            
+            if #available(macOS 12.0, *) {
+                topInset = screen.safeAreaInsets.top
+            }
+            
+            self.pager = GalleryPageController(frame: bounds, contentInset:NSEdgeInsets(left: 0, right: 0, top: topInset, bottom: 95), interactions:interactions, window:window, reversed: reversed)
             //, selectedItemChanged: selectedItemChanged, transition: transition
             self.touchbarController = GalleryTouchBarController(interactions: interactions, selectedItemChanged: pager.selectedItemChanged, transition: pager.transition)
             self.window.rootViewController = touchbarController

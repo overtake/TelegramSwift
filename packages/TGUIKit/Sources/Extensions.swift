@@ -586,7 +586,7 @@ public extension NSView {
     func focus(_ size:NSSize, inset:NSEdgeInsets) -> NSRect {
         let x:CGFloat = CGFloat(round((frame.width - size.width + (inset.left + inset.right))/2.0))
         let y:CGFloat = CGFloat(round((frame.height - size.height + (inset.top + inset.bottom))/2.0))
-        return NSMakeRect(x, y, size.width, size.height)
+        return NSMakeRect(x, y, size.width, size.height).offsetBy(dx: 0, dy: -inset.top)
     }
     
     func centerY(_ superView:NSView? = nil, x:CGFloat? = nil, addition: CGFloat = 0) -> Void {

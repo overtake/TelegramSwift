@@ -306,6 +306,9 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
                 
                 if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                    if reference.media.isWebm {
+                        return resourceData.path.data(using: .utf8)!
+                    }
                     return data
                 }
                 return nil
@@ -313,7 +316,9 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                 if let data = data {
                     
                     let type: LottieAnimationType
-                    if reference.media.mimeType == "image/webp" {
+                    if reference.media.isWebm {
+                        type = .webm
+                    } else if reference.media.mimeType == "image/webp" {
                         type = .webp
                     } else {
                         type = .lottie

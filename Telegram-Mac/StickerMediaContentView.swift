@@ -71,7 +71,7 @@ class StickerMediaContentView: ChatMediaContentView {
         let file = media as! TelegramMediaFile
         
         var contentClass: ChatMediaContentView.Type
-        if file.isAnimatedSticker || (!file.isStaticSticker && file.mimeType == "image/webp") {
+        if file.isAnimatedSticker || (!file.isStaticSticker && file.mimeType == "image/webp") || file.isWebm {
             contentClass = MediaAnimatedStickerView.self
         } else if file.isVideoSticker {
             contentClass = VideoStickerContentView.self

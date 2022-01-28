@@ -257,7 +257,11 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
             if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-                return data
+                if file.isWebm {
+                    return resourceData.path.data(using: .utf8)!
+                } else {
+                    return data
+                }
             }
             return nil
         } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
@@ -274,8 +278,11 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
                 
+                
                 let type: LottieAnimationType
-                if file.mimeType == "image/webp" {
+                if file.isWebm {
+                    type = .webm
+                } else if file.mimeType == "image/webp" {
                     type = .webp
                 } else {
                     type = .lottie

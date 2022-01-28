@@ -6,7 +6,7 @@ import Metal
 import TelegramCore
 import GZIP
 import libwebp
-
+import Accelerate
 
 final class RenderAtomic<T> {
     private var lock: pthread_mutex_t
@@ -99,6 +99,44 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
         return lhs.key == rhs.key
     }
 }
+
+final class RenderedWebmFrame : RenderedFrame, Equatable {
+    
+    let frame: Int32
+    let size: NSSize
+    let backingScale: Int
+    let key: LottieAnimationEntryKey
+    private let _data: Data
+    private let fps: Int
+    init(key: LottieAnimationEntryKey, frame: Int32, fps: Int, size: NSSize, data: Data, backingScale: Int) {
+        self.key = key
+        self.backingScale = backingScale
+        self.size = size
+        self.frame = frame
+        self._data = data
+        self.fps = fps
+    }
+    var image: CGImage? {
+        return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
+            _data.withUnsafeBytes { bytes -> Void in
+                guard let baseAddress = bytes.baseAddress else {
+                    return
+                }
+                memcpy(pixelData, baseAddress.assumingMemoryBound(to: UInt8.self), bytes.count)
+            }
+        })
+    }
+    var duration: TimeInterval {
+        return 1.0 / Double(self.fps)
+    }
+    var data: UnsafeRawPointer? {
+        return (_data as NSData).bytes
+    }
+    static func == (lhs: RenderedWebmFrame, rhs: RenderedWebmFrame) -> Bool {
+        return lhs.key == rhs.key
+    }
+}
+
 
 final class RenderedLottieFrame : RenderedFrame, Equatable {
     let frame: Int32
@@ -783,6 +821,83 @@ private final class WebPRenderer : RenderContainer {
     }
 }
 
+private final class WebmRenderer : RenderContainer {
+    
+    private let animation: LottieAnimation
+    private let decoder: SoftwareVideoSource
+    
+    private var frameCount: Int32 = 5
+    private var hasCount: Bool = false
+    init(animation: LottieAnimation, decoder: SoftwareVideoSource) {
+        self.animation = animation
+        self.decoder = decoder
+    }
+    
+    func render(at frameIndex: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
+        
+        let frameAndLoop = decoder.readFrame(maxPts: nil)
+        if frameAndLoop.0 == nil {
+            if frameAndLoop.3, !hasCount {
+                self.frameCount = frameIndex
+            }
+            return nil
+        }
+        
+        if !hasCount {
+            self.frameCount += 1
+        }
+        
+        guard let frame = frameAndLoop.0 else {
+            return nil
+        }
+        
+        let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
+        let bufferSize = s.w * s.h * 4
+        let destBytesPerRow = Int(animation.size.width) * animation.backingScale * 4
+
+        var frameData = Data(count: bufferSize)
+        frameData.withUnsafeMutableBytes { buffer -> Void in
+            guard let bytes = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                return
+            }
+            
+            let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
+            CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+            let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
+            let width = CVPixelBufferGetWidth(imageBuffer!)
+            let height = CVPixelBufferGetHeight(imageBuffer!)
+            let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
+            
+            var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+            var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
+                       
+            let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
+            
+            CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        }
+        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: frameData, backingScale: animation.backingScale)
+    }
+    func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
+        
+    }
+    func setColor(_ color: NSColor, keyPath: String) {
+        
+    }
+    var endFrame: Int32 {
+        return Int32(frameCount)
+    }
+    var startFrame: Int32 {
+        return 0
+    }
+    var fps: Int {
+        return min(30, decoder.getFramerate())
+    }
+    var mainFps: Int {
+        return 1
+    }
+}
+
+
 private final class LottieRenderer : RenderContainer {
     
     private let animation: LottieAnimation
@@ -838,8 +953,8 @@ private final class LottieRenderer : RenderContainer {
         }
         if data == nil {
             let bufferSize = s.w * s.h * 4
-            let memoryData = malloc(bufferSize)!
-            let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
+            let frameData = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize); //malloc(bufferSize)!
+//            let frameData = memoryData.as(to: UInt8.self)
             bridge.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h))
             data = UnsafeRawPointer(frameData)
         }
@@ -859,6 +974,7 @@ private final class LottieRenderer : RenderContainer {
 enum LottieAnimationType {
     case lottie
     case webp
+    case webm
 }
 
 final class LottieAnimation : Equatable {
@@ -880,6 +996,8 @@ final class LottieAnimation : Equatable {
     var supportsMetal: Bool {
         switch type {
         case .lottie:
+            return self.metalSupport
+        case .webm:
             return self.metalSupport
         default:
             return false
@@ -1006,6 +1124,12 @@ final class LottieAnimation : Equatable {
                 if let decoder = WebPImageDecoder(data: data, scale: CGFloat(backingScale)) {
                     return WebPRenderer(animation: self, decoder: decoder)
                 }
+            }
+        case .webm:
+            let path = String(data: self.compressed, encoding: .utf8)
+            if let path = path {
+                let decoder = SoftwareVideoSource(path: path, hintVP9: true)
+                return WebmRenderer(animation: self, decoder: decoder)
             }
         }
         return nil

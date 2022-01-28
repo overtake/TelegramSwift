@@ -562,9 +562,9 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
             if contentNode is StickerMediaContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
-                    if file.isVideoSticker {
+                    if file.isVideoSticker && !file.isWebm {
                         return (.file(reference, GifPreviewModalView.self), contentNode)
-                    } else if file.isAnimatedSticker {
+                    } else if file.isAnimatedSticker || file.isWebm {
                         return (.file(reference, AnimatedStickerPreviewModalView.self), contentNode)
                     } else if file.isStaticSticker {
                         return (.file(reference, StickerPreviewModalView.self), contentNode)
