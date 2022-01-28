@@ -158,9 +158,12 @@ private class StickersModalView : View {
                 return item.file
             }
             
-            let item = StickerPackPanelRowItem(NSMakeSize(frame.width, 0), context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id))
+            let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id))
             _ = item.makeSize(frame.width)
             _ = tableView.addItem(item: item)
+            
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
+
 
             self.needsLayout = true
             

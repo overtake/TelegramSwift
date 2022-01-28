@@ -79,6 +79,9 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     fileprivate let textContainerView: View = View()
     fileprivate let bottomSeparator: View = View()
 
+    fileprivate var sendWithoutSound: (()->Void)? = nil
+    fileprivate var scheduleMessage: (()->Void)? = nil
+
     private let topSeparator = View()
     fileprivate var hasShareMenu: Bool = true {
         didSet {
@@ -118,11 +121,28 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         addSubview(dismiss)
         
         
-//        sendButton.contextMenu = { [weak self] in
-//            let menu = ContextMenu(betterInside: true)
-//            menu.addItem(ContextMenuItem.init("test"))
-//            return menu
-//        }
+        sendButton.contextMenu = { [weak self] in
+            
+            
+            var items:[ContextMenuItem] = []
+
+            items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: {
+                self?.sendWithoutSound?()
+            }, itemImage: MenuAnimation.menu_mute.value))
+            
+            items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: {
+                self?.scheduleMessage?()
+            }, itemImage: MenuAnimation.menu_schedule_message.value))
+            
+            if !items.isEmpty {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
+            }
+            return nil
+        }
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false
@@ -292,6 +312,10 @@ class ShareObject {
     let excludePeerIds: Set<PeerId>
     let defaultSelectedIds:Set<PeerId>
     let limit: Int?
+    
+    var withoutSound: Bool = false
+    var scheduleDate: Date? = nil
+    
     init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], defaultSelectedIds: Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil, limit: Int? = nil) {
         self.limit = limit
         self.context = context
@@ -309,6 +333,17 @@ class ShareObject {
     }
     var interactionOk: String {
         return strings().modalOK
+    }
+    
+    func attributes(_ peerId: PeerId) -> [MessageAttribute] {
+        var attributes:[MessageAttribute] = []
+        if FastSettings.isChannelMessagesMuted(peerId) || withoutSound {
+            attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+        }
+        if let date = scheduleDate {
+            attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+        }
+        return attributes
     }
     
     var searchPlaceholderKey: String {
@@ -363,10 +398,8 @@ class ShareLinkObject : ShareObject {
                 link += "\n\(comment.inputText)"
             }
             
-            var attributes:[MessageAttribute] = []
-            if FastSettings.isChannelMessagesMuted(peerId) {
-                attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
-            }
+            let attributes:[MessageAttribute] = attributes(peerId)
+        
             _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
         }
         return .complete()
@@ -392,10 +425,7 @@ class ShareUrlObject : ShareObject {
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
             
-            var attributes:[MessageAttribute] = []
-            if FastSettings.isChannelMessagesMuted(peerId) {
-                attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
-            }
+            let attributes:[MessageAttribute] = attributes(peerId)
             
             let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)])
                         
@@ -415,10 +445,8 @@ class ShareContactObject : ShareObject {
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
             if let comment = comment, !comment.inputText.isEmpty {
-                var attributes:[MessageAttribute] = []
-                if FastSettings.isChannelMessagesMuted(peerId) {
-                    attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
-                }
+                let attributes:[MessageAttribute] = attributes(peerId)
+
                 _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
             }
             _ = Sender.shareContact(context: context, peerId: peerId, contact: user).start()
@@ -522,7 +550,7 @@ class ShareMessageObject : ShareObject {
                     }
                                     
                     var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                    
+                    attributes += self.attributes(peerId)
                     if let sendAs = sendAs {
                         attributes.append(SendAsMessageAttribute(peerId: sendAs))
                     }
@@ -808,7 +836,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 return SearchToken(name: title, uniqueId: item.toInt64())
             }
             genericView.tokenizedView.addTokens(tokens: tokens, animated: animated)
-            
+            genericView.sendButton.isEnabled = !value.selected.isEmpty || share.alwaysEnableDone
             let idsToRemove:[Int64] = removed.map {
                 $0.toInt64()
             }
@@ -1153,6 +1181,21 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }, for: .SingleClick)
         
 
+        genericView.sendWithoutSound = { [weak self] in
+            self?.share.withoutSound = true
+            _ = self?.invoke()
+        }
+        genericView.scheduleMessage = { [weak self] in
+            guard let share = self?.share else {
+                return
+            }
+            let context = share.context
+            let peerId = share.context.peerId
+            showModal(with: DateSelectorModalController(context: context, mode: .schedule(peerId), selectedAt: { date in
+                self?.share.scheduleDate = date
+                _ = self?.invoke()
+            }), for: context.window)
+        }
         
         tokenDisposable.set(genericView.tokenizedView.tokensUpdater.start(next: { tokens in
             let ids = Set(tokens.map({PeerId($0.uniqueId)}))

@@ -35,7 +35,7 @@ final class ContextAddReactionsListView : View  {
             super.init(frame: frameRect)
             addSubview(imageView)
             addSubview(player)
-            let signal = context.account.postbox.mediaBox.resourceData(reaction.selectAnimation.resource)
+            let signal = context.account.postbox.mediaBox.resourceData(reaction.selectAnimation.resource, attemptSynchronously: true)
             |> filter {
                 $0.complete
             }
@@ -91,8 +91,8 @@ final class ContextAddReactionsListView : View  {
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, metalSupport: false)
-            player.set(animation, reset: true, saveContext: false, animated: false)
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: .mainQueue(), metalSupport: false)
+            player.set(animation, reset: true, saveContext: true, animated: false)
             self.currentKey = key
         }
         
@@ -138,19 +138,20 @@ final class ContextAddReactionsListView : View  {
         }
         
         func playAppearAnimation() {
-            
-            let signal = context.account.postbox.mediaBox.resourceData(reaction.appearAnimation.resource)
+                        
+            let signal = context.account.postbox.mediaBox.resourceData(reaction.appearAnimation.resource, attemptSynchronously: true)
             |> filter {
                 $0.complete
             }
             |> deliverOnMainQueue
             
+            self.imageView.removeFromSuperview()
+                        
             appearDisposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.apply(data, key: "appear", policy: .toEnd(from: 0))
                 }
             }))
-            
         }
         
         required init?(coder: NSCoder) {
@@ -359,7 +360,7 @@ final class AddReactionManager : NSObject, Notifable {
                 super.init(frame: frameRect)
                 addSubview(imageView)
                 addSubview(player)
-                let signal = context.account.postbox.mediaBox.resourceData(reaction.selectAnimation.resource)
+                let signal = context.account.postbox.mediaBox.resourceData(reaction.selectAnimation.resource, attemptSynchronously: true)
                 |> filter {
                     $0.complete
                 }
@@ -415,7 +416,7 @@ final class AddReactionManager : NSObject, Notifable {
             private func apply(_ data: Data) {
                 let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 30, runOnQueue: .mainQueue())
                 
-                player.set(animation, reset: true, saveContext: false, animated: false)
+                player.set(animation, reset: false, saveContext: true, animated: false)
 
             }
             

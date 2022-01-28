@@ -12,30 +12,6 @@
 		270202BF261A1BF500CFCE6D /* PaymentsTipsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202BE261A1BF500CFCE6D /* PaymentsTipsRowItem.swift */; };
 		270202C3261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */; };
 		270202C6261B3D7C00CFCE6D /* UITextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202C5261B3D7C00CFCE6D /* UITextField.swift */; };
-		27093B46279FD731001C36D8 /* menu_folder_briefcase.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B2B279FD71D001C36D8 /* menu_folder_briefcase.tgs */; };
-		27093B47279FD731001C36D8 /* menu_folder_flower.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B2C279FD71E001C36D8 /* menu_folder_flower.tgs */; };
-		27093B48279FD731001C36D8 /* menu_folder_star.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B2D279FD71E001C36D8 /* menu_folder_star.tgs */; };
-		27093B4A279FD731001C36D8 /* menu_folder_bear.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B2F279FD720001C36D8 /* menu_folder_bear.tgs */; };
-		27093B4B279FD731001C36D8 /* menu_folder_person.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B30279FD721001C36D8 /* menu_folder_person.tgs */; };
-		27093B4C279FD731001C36D8 /* menu_folder_note.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B31279FD722001C36D8 /* menu_folder_note.tgs */; };
-		27093B4D279FD731001C36D8 /* menu_folder_ball.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B32279FD723001C36D8 /* menu_folder_ball.tgs */; };
-		27093B4E279FD731001C36D8 /* menu_folder_heart.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B33279FD724001C36D8 /* menu_folder_heart.tgs */; };
-		27093B50279FD731001C36D8 /* menu_folder_graduationcap.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B35279FD725001C36D8 /* menu_folder_graduationcap.tgs */; };
-		27093B51279FD731001C36D8 /* menu_folder_like.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B36279FD726001C36D8 /* menu_folder_like.tgs */; };
-		27093B52279FD731001C36D8 /* menu_folder_twopersons.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B37279FD727001C36D8 /* menu_folder_twopersons.tgs */; };
-		27093B53279FD731001C36D8 /* menu_folder_bolt.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B38279FD727001C36D8 /* menu_folder_bolt.tgs */; };
-		27093B54279FD731001C36D8 /* menu_folder_plane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B39279FD728001C36D8 /* menu_folder_plane.tgs */; };
-		27093B55279FD731001C36D8 /* menu_folder_bitcoin.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B3A279FD729001C36D8 /* menu_folder_bitcoin.tgs */; };
-		27093B56279FD731001C36D8 /* menu_folder_squareroot.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B3B279FD729001C36D8 /* menu_folder_squareroot.tgs */; };
-		27093B57279FD731001C36D8 /* menu_folder_lightbulb.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B3C279FD72A001C36D8 /* menu_folder_lightbulb.tgs */; };
-		27093B58279FD731001C36D8 /* menu_folder_telegram.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B3D279FD72B001C36D8 /* menu_folder_telegram.tgs */; };
-		27093B59279FD731001C36D8 /* menu_folder_home.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B3E279FD72C001C36D8 /* menu_folder_home.tgs */; };
-		27093B5A279FD731001C36D8 /* menu_folder_gamepad.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B3F279FD72C001C36D8 /* menu_folder_gamepad.tgs */; };
-		27093B5C279FD731001C36D8 /* menu_folder_bot.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B41279FD72E001C36D8 /* menu_folder_bot.tgs */; };
-		27093B5D279FD731001C36D8 /* menu_folder_messages.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B42279FD72E001C36D8 /* menu_folder_messages.tgs */; };
-		27093B5E279FD731001C36D8 /* menu_folder_book.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B43279FD72F001C36D8 /* menu_folder_book.tgs */; };
-		27093B5F279FD731001C36D8 /* menu_folder_message_read.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B44279FD730001C36D8 /* menu_folder_message_read.tgs */; };
-		27093B60279FD731001C36D8 /* menu_folder_brush.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27093B45279FD731001C36D8 /* menu_folder_brush.tgs */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
@@ -210,6 +186,33 @@
 		277DFE6C2784846200F78396 /* menu_moon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277DFE6B2784846200F78396 /* menu_moon.tgs */; };
 		277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6E27848AAA00F78396 /* ContextPeerMenuItem.swift */; };
 		277E829D273A8E890037118C /* MtProtoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 277E829C273A8E890037118C /* MtProtoKit */; };
+		27803BEF27A3E944007B0FA9 /* menu_folder_like.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BD427A3E936007B0FA9 /* menu_folder_like.tgs */; };
+		27803BF027A3E944007B0FA9 /* menu_folder_lamp.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BD527A3E936007B0FA9 /* menu_folder_lamp.tgs */; };
+		27803BF127A3E944007B0FA9 /* menu_folder_all_chats.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BD627A3E937007B0FA9 /* menu_folder_all_chats.tgs */; };
+		27803BF227A3E944007B0FA9 /* menu_folder_sport.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BD727A3E937007B0FA9 /* menu_folder_sport.tgs */; };
+		27803BF327A3E944007B0FA9 /* menu_folder_group.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BD827A3E938007B0FA9 /* menu_folder_group.tgs */; };
+		27803BF427A3E944007B0FA9 /* menu_folder_telegram.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BD927A3E938007B0FA9 /* menu_folder_telegram.tgs */; };
+		27803BF527A3E944007B0FA9 /* menu_folder_paint.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BDA27A3E939007B0FA9 /* menu_folder_paint.tgs */; };
+		27803BF627A3E944007B0FA9 /* menu_folder_coin.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BDB27A3E939007B0FA9 /* menu_folder_coin.tgs */; };
+		27803BF727A3E944007B0FA9 /* menu_folder_star.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BDC27A3E93A007B0FA9 /* menu_folder_star.tgs */; };
+		27803BF827A3E944007B0FA9 /* menu_folder_lock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BDD27A3E93B007B0FA9 /* menu_folder_lock.tgs */; };
+		27803BF927A3E944007B0FA9 /* menu_folder_read.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BDE27A3E93B007B0FA9 /* menu_folder_read.tgs */; };
+		27803BFA27A3E944007B0FA9 /* menu_folder_animal.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BDF27A3E93C007B0FA9 /* menu_folder_animal.tgs */; };
+		27803BFB27A3E944007B0FA9 /* menu_folder_virus.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE027A3E93C007B0FA9 /* menu_folder_virus.tgs */; };
+		27803BFC27A3E944007B0FA9 /* menu_folder_flash.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE127A3E93D007B0FA9 /* menu_folder_flash.tgs */; };
+		27803BFD27A3E944007B0FA9 /* menu_folder_bot.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE227A3E93D007B0FA9 /* menu_folder_bot.tgs */; };
+		27803BFE27A3E944007B0FA9 /* menu_folder_work.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE327A3E93E007B0FA9 /* menu_folder_work.tgs */; };
+		27803BFF27A3E944007B0FA9 /* menu_folder_math.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE427A3E93F007B0FA9 /* menu_folder_math.tgs */; };
+		27803C0027A3E944007B0FA9 /* menu_folder_book.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE527A3E93F007B0FA9 /* menu_folder_book.tgs */; };
+		27803C0127A3E944007B0FA9 /* menu_folder_student.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE627A3E940007B0FA9 /* menu_folder_student.tgs */; };
+		27803C0227A3E944007B0FA9 /* menu_folder_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE727A3E940007B0FA9 /* menu_folder_folder.tgs */; };
+		27803C0327A3E944007B0FA9 /* menu_folder_home.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE827A3E941007B0FA9 /* menu_folder_home.tgs */; };
+		27803C0427A3E944007B0FA9 /* menu_folder_love.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BE927A3E941007B0FA9 /* menu_folder_love.tgs */; };
+		27803C0527A3E944007B0FA9 /* menu_folder_game.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEA27A3E942007B0FA9 /* menu_folder_game.tgs */; };
+		27803C0627A3E944007B0FA9 /* menu_folder_plane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEB27A3E943007B0FA9 /* menu_folder_plane.tgs */; };
+		27803C0727A3E944007B0FA9 /* menu_folder_personal.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEC27A3E943007B0FA9 /* menu_folder_personal.tgs */; };
+		27803C0827A3E944007B0FA9 /* menu_folder_music.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BED27A3E944007B0FA9 /* menu_folder_music.tgs */; };
+		27803C0927A3E944007B0FA9 /* menu_folder_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
 		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
@@ -1236,30 +1239,6 @@
 		270202BE261A1BF500CFCE6D /* PaymentsTipsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsTipsRowItem.swift; sourceTree = "<group>"; };
 		270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyUITextFieldDelegate.swift; sourceTree = "<group>"; };
 		270202C5261B3D7C00CFCE6D /* UITextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextField.swift; sourceTree = "<group>"; };
-		27093B2B279FD71D001C36D8 /* menu_folder_briefcase.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_briefcase.tgs; sourceTree = "<group>"; };
-		27093B2C279FD71E001C36D8 /* menu_folder_flower.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_flower.tgs; sourceTree = "<group>"; };
-		27093B2D279FD71E001C36D8 /* menu_folder_star.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_star.tgs; sourceTree = "<group>"; };
-		27093B2F279FD720001C36D8 /* menu_folder_bear.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_bear.tgs; sourceTree = "<group>"; };
-		27093B30279FD721001C36D8 /* menu_folder_person.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_person.tgs; sourceTree = "<group>"; };
-		27093B31279FD722001C36D8 /* menu_folder_note.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_note.tgs; sourceTree = "<group>"; };
-		27093B32279FD723001C36D8 /* menu_folder_ball.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_ball.tgs; sourceTree = "<group>"; };
-		27093B33279FD724001C36D8 /* menu_folder_heart.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_heart.tgs; sourceTree = "<group>"; };
-		27093B35279FD725001C36D8 /* menu_folder_graduationcap.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_graduationcap.tgs; sourceTree = "<group>"; };
-		27093B36279FD726001C36D8 /* menu_folder_like.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_like.tgs; sourceTree = "<group>"; };
-		27093B37279FD727001C36D8 /* menu_folder_twopersons.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_twopersons.tgs; sourceTree = "<group>"; };
-		27093B38279FD727001C36D8 /* menu_folder_bolt.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_bolt.tgs; sourceTree = "<group>"; };
-		27093B39279FD728001C36D8 /* menu_folder_plane.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_plane.tgs; sourceTree = "<group>"; };
-		27093B3A279FD729001C36D8 /* menu_folder_bitcoin.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_bitcoin.tgs; sourceTree = "<group>"; };
-		27093B3B279FD729001C36D8 /* menu_folder_squareroot.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_squareroot.tgs; sourceTree = "<group>"; };
-		27093B3C279FD72A001C36D8 /* menu_folder_lightbulb.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_lightbulb.tgs; sourceTree = "<group>"; };
-		27093B3D279FD72B001C36D8 /* menu_folder_telegram.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_telegram.tgs; sourceTree = "<group>"; };
-		27093B3E279FD72C001C36D8 /* menu_folder_home.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_home.tgs; sourceTree = "<group>"; };
-		27093B3F279FD72C001C36D8 /* menu_folder_gamepad.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_gamepad.tgs; sourceTree = "<group>"; };
-		27093B41279FD72E001C36D8 /* menu_folder_bot.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_bot.tgs; sourceTree = "<group>"; };
-		27093B42279FD72E001C36D8 /* menu_folder_messages.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_messages.tgs; sourceTree = "<group>"; };
-		27093B43279FD72F001C36D8 /* menu_folder_book.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_book.tgs; sourceTree = "<group>"; };
-		27093B44279FD730001C36D8 /* menu_folder_message_read.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_message_read.tgs; sourceTree = "<group>"; };
-		27093B45279FD731001C36D8 /* menu_folder_brush.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_brush.tgs; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
@@ -1438,6 +1417,33 @@
 		277DFE6B2784846200F78396 /* menu_moon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_moon.tgs; sourceTree = "<group>"; };
 		277DFE6E27848AAA00F78396 /* ContextPeerMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextPeerMenuItem.swift; sourceTree = "<group>"; };
 		277E8291273A805F0037118C /* MtProtoKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MtProtoKit; path = "submodules/telegram-ios/submodules/MtProtoKit"; sourceTree = "<group>"; };
+		27803BD427A3E936007B0FA9 /* menu_folder_like.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_like.tgs; sourceTree = "<group>"; };
+		27803BD527A3E936007B0FA9 /* menu_folder_lamp.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_lamp.tgs; sourceTree = "<group>"; };
+		27803BD627A3E937007B0FA9 /* menu_folder_all_chats.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_all_chats.tgs; sourceTree = "<group>"; };
+		27803BD727A3E937007B0FA9 /* menu_folder_sport.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_sport.tgs; sourceTree = "<group>"; };
+		27803BD827A3E938007B0FA9 /* menu_folder_group.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_group.tgs; sourceTree = "<group>"; };
+		27803BD927A3E938007B0FA9 /* menu_folder_telegram.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_telegram.tgs; sourceTree = "<group>"; };
+		27803BDA27A3E939007B0FA9 /* menu_folder_paint.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_paint.tgs; sourceTree = "<group>"; };
+		27803BDB27A3E939007B0FA9 /* menu_folder_coin.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_coin.tgs; sourceTree = "<group>"; };
+		27803BDC27A3E93A007B0FA9 /* menu_folder_star.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_star.tgs; sourceTree = "<group>"; };
+		27803BDD27A3E93B007B0FA9 /* menu_folder_lock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_lock.tgs; sourceTree = "<group>"; };
+		27803BDE27A3E93B007B0FA9 /* menu_folder_read.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_read.tgs; sourceTree = "<group>"; };
+		27803BDF27A3E93C007B0FA9 /* menu_folder_animal.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_animal.tgs; sourceTree = "<group>"; };
+		27803BE027A3E93C007B0FA9 /* menu_folder_virus.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_virus.tgs; sourceTree = "<group>"; };
+		27803BE127A3E93D007B0FA9 /* menu_folder_flash.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_flash.tgs; sourceTree = "<group>"; };
+		27803BE227A3E93D007B0FA9 /* menu_folder_bot.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_bot.tgs; sourceTree = "<group>"; };
+		27803BE327A3E93E007B0FA9 /* menu_folder_work.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_work.tgs; sourceTree = "<group>"; };
+		27803BE427A3E93F007B0FA9 /* menu_folder_math.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_math.tgs; sourceTree = "<group>"; };
+		27803BE527A3E93F007B0FA9 /* menu_folder_book.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_book.tgs; sourceTree = "<group>"; };
+		27803BE627A3E940007B0FA9 /* menu_folder_student.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_student.tgs; sourceTree = "<group>"; };
+		27803BE727A3E940007B0FA9 /* menu_folder_folder.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_folder.tgs; sourceTree = "<group>"; };
+		27803BE827A3E941007B0FA9 /* menu_folder_home.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_home.tgs; sourceTree = "<group>"; };
+		27803BE927A3E941007B0FA9 /* menu_folder_love.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_love.tgs; sourceTree = "<group>"; };
+		27803BEA27A3E942007B0FA9 /* menu_folder_game.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_game.tgs; sourceTree = "<group>"; };
+		27803BEB27A3E943007B0FA9 /* menu_folder_plane.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_plane.tgs; sourceTree = "<group>"; };
+		27803BEC27A3E943007B0FA9 /* menu_folder_personal.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_personal.tgs; sourceTree = "<group>"; };
+		27803BED27A3E944007B0FA9 /* menu_folder_music.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_music.tgs; sourceTree = "<group>"; };
+		27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_folder_unread.tgs; sourceTree = "<group>"; };
 		2780DE3F271F0BB20092323F /* zoom.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom.tgs; sourceTree = "<group>"; };
 		2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemeListRowItem.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
@@ -2532,30 +2538,33 @@
 		27093B2A279FD70F001C36D8 /* folders */ = {
 			isa = PBXGroup;
 			children = (
-				27093B32279FD723001C36D8 /* menu_folder_ball.tgs */,
-				27093B2F279FD720001C36D8 /* menu_folder_bear.tgs */,
-				27093B3A279FD729001C36D8 /* menu_folder_bitcoin.tgs */,
-				27093B38279FD727001C36D8 /* menu_folder_bolt.tgs */,
-				27093B43279FD72F001C36D8 /* menu_folder_book.tgs */,
-				27093B41279FD72E001C36D8 /* menu_folder_bot.tgs */,
-				27093B2B279FD71D001C36D8 /* menu_folder_briefcase.tgs */,
-				27093B45279FD731001C36D8 /* menu_folder_brush.tgs */,
-				27093B2C279FD71E001C36D8 /* menu_folder_flower.tgs */,
-				27093B3F279FD72C001C36D8 /* menu_folder_gamepad.tgs */,
-				27093B35279FD725001C36D8 /* menu_folder_graduationcap.tgs */,
-				27093B33279FD724001C36D8 /* menu_folder_heart.tgs */,
-				27093B3E279FD72C001C36D8 /* menu_folder_home.tgs */,
-				27093B3C279FD72A001C36D8 /* menu_folder_lightbulb.tgs */,
-				27093B36279FD726001C36D8 /* menu_folder_like.tgs */,
-				27093B44279FD730001C36D8 /* menu_folder_message_read.tgs */,
-				27093B42279FD72E001C36D8 /* menu_folder_messages.tgs */,
-				27093B31279FD722001C36D8 /* menu_folder_note.tgs */,
-				27093B30279FD721001C36D8 /* menu_folder_person.tgs */,
-				27093B39279FD728001C36D8 /* menu_folder_plane.tgs */,
-				27093B3B279FD729001C36D8 /* menu_folder_squareroot.tgs */,
-				27093B2D279FD71E001C36D8 /* menu_folder_star.tgs */,
-				27093B3D279FD72B001C36D8 /* menu_folder_telegram.tgs */,
-				27093B37279FD727001C36D8 /* menu_folder_twopersons.tgs */,
+				27803BD627A3E937007B0FA9 /* menu_folder_all_chats.tgs */,
+				27803BDF27A3E93C007B0FA9 /* menu_folder_animal.tgs */,
+				27803BE527A3E93F007B0FA9 /* menu_folder_book.tgs */,
+				27803BE227A3E93D007B0FA9 /* menu_folder_bot.tgs */,
+				27803BDB27A3E939007B0FA9 /* menu_folder_coin.tgs */,
+				27803BE127A3E93D007B0FA9 /* menu_folder_flash.tgs */,
+				27803BE727A3E940007B0FA9 /* menu_folder_folder.tgs */,
+				27803BEA27A3E942007B0FA9 /* menu_folder_game.tgs */,
+				27803BD827A3E938007B0FA9 /* menu_folder_group.tgs */,
+				27803BE827A3E941007B0FA9 /* menu_folder_home.tgs */,
+				27803BD527A3E936007B0FA9 /* menu_folder_lamp.tgs */,
+				27803BD427A3E936007B0FA9 /* menu_folder_like.tgs */,
+				27803BDD27A3E93B007B0FA9 /* menu_folder_lock.tgs */,
+				27803BE927A3E941007B0FA9 /* menu_folder_love.tgs */,
+				27803BE427A3E93F007B0FA9 /* menu_folder_math.tgs */,
+				27803BED27A3E944007B0FA9 /* menu_folder_music.tgs */,
+				27803BDA27A3E939007B0FA9 /* menu_folder_paint.tgs */,
+				27803BEC27A3E943007B0FA9 /* menu_folder_personal.tgs */,
+				27803BEB27A3E943007B0FA9 /* menu_folder_plane.tgs */,
+				27803BDE27A3E93B007B0FA9 /* menu_folder_read.tgs */,
+				27803BD727A3E937007B0FA9 /* menu_folder_sport.tgs */,
+				27803BDC27A3E93A007B0FA9 /* menu_folder_star.tgs */,
+				27803BE627A3E940007B0FA9 /* menu_folder_student.tgs */,
+				27803BD927A3E938007B0FA9 /* menu_folder_telegram.tgs */,
+				27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */,
+				27803BE027A3E93C007B0FA9 /* menu_folder_virus.tgs */,
+				27803BE327A3E93E007B0FA9 /* menu_folder_work.tgs */,
 			);
 			path = folders;
 			sourceTree = "<group>";
@@ -5385,24 +5394,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				272934102778DFFA00F10D3C /* menu_file.tgs in Resources */,
+				27803C0127A3E944007B0FA9 /* menu_folder_student.tgs in Resources */,
 				27672EAE26F8D62600297DB4 /* 0.m4a in Resources */,
 				27672EAF26F8D62800297DB4 /* 1.m4a in Resources */,
-				27093B4E279FD731001C36D8 /* menu_folder_heart.tgs in Resources */,
 				2733673F276247220027441E /* menu_violence.tgs in Resources */,
 				27672EB026F8D62A00297DB4 /* 2.m4a in Resources */,
 				2733671527620B650027441E /* menu_edit.tgs in Resources */,
+				27803C0627A3E944007B0FA9 /* menu_folder_plane.tgs in Resources */,
 				27CB17662763855C00DD25E0 /* menu_show_info.tgs in Resources */,
 				2733671327620B600027441E /* menu_copy.tgs in Resources */,
 				27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */,
+				27803BF727A3E944007B0FA9 /* menu_folder_star.tgs in Resources */,
 				27672EB126F8D62C00297DB4 /* 3.m4a in Resources */,
 				275549162747C24F0098A3CD /* device_safari.tgs in Resources */,
-				27093B53279FD731001C36D8 /* menu_folder_bolt.tgs in Resources */,
+				27803C0227A3E944007B0FA9 /* menu_folder_folder.tgs in Resources */,
 				27672EB226F8D62E00297DB4 /* 4.m4a in Resources */,
 				27336731276231E80027441E /* menu_seen.tgs in Resources */,
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
 				27672EB426F8D63300297DB4 /* 6.m4a in Resources */,
 				27672EB526F8D63500297DB4 /* 7.m4a in Resources */,
-				27093B56279FD731001C36D8 /* menu_folder_squareroot.tgs in Resources */,
 				27672EB626F8D63700297DB4 /* 8.m4a in Resources */,
 				27672EB726F8D63900297DB4 /* 9.m4a in Resources */,
 				27672EB826F8D63E00297DB4 /* 100.m4a in Resources */,
@@ -5411,6 +5421,7 @@
 				27672EBB26F8D64400297DB4 /* 103.m4a in Resources */,
 				27CB174C2763257900DD25E0 /* menu_secret_chat.tgs in Resources */,
 				27672EBC26F8D64600297DB4 /* 104.m4a in Resources */,
+				27803BFF27A3E944007B0FA9 /* menu_folder_math.tgs in Resources */,
 				27672EBD26F8D64900297DB4 /* 105.m4a in Resources */,
 				27672EBE26F8D64E00297DB4 /* 106.m4a in Resources */,
 				27672EBF26F8D65100297DB4 /* 107.m4a in Resources */,
@@ -5420,16 +5431,15 @@
 				271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */,
 				275549182747C24F0098A3CD /* device_android.tgs in Resources */,
 				27672EC326F8D65800297DB4 /* 111.m4a in Resources */,
-				27093B4A279FD731001C36D8 /* menu_folder_bear.tgs in Resources */,
 				2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */,
 				D0D1391B2521FBD5005FCF35 /* discussion.tgs in Resources */,
 				D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */,
-				27093B48279FD731001C36D8 /* menu_folder_star.tgs in Resources */,
 				A76C8AA224221D3000FDB071 /* graph_loading.tgs in Resources */,
 				A76C8A9E2420FFE500FDB071 /* folder_empty.tgs in Resources */,
+				27803BFD27A3E944007B0FA9 /* menu_folder_bot.tgs in Resources */,
 				D0830FC424127473006198E7 /* new_folder.tgs in Resources */,
 				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
-				27093B5C279FD731001C36D8 /* menu_folder_bot.tgs in Resources */,
+				27803BEF27A3E944007B0FA9 /* menu_folder_like.tgs in Resources */,
 				27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
 				A7393D422407FF1900CE44CA /* dice_idle.tgs in Resources */,
@@ -5437,6 +5447,7 @@
 				27336738276241EE0027441E /* menu_remove_gif.tgs in Resources */,
 				2733671927620B7B0027441E /* menu_leave.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
+				27803C0527A3E944007B0FA9 /* menu_folder_game.tgs in Resources */,
 				27CB1756276357B600DD25E0 /* menu_show_in_finder.tgs in Resources */,
 				27CB176A27638EEE00DD25E0 /* menu_expand.tgs in Resources */,
 				27CB175A2763739C00DD25E0 /* menu_statistics.tgs in Resources */,
@@ -5459,28 +5470,29 @@
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
 				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
-				27093B50279FD731001C36D8 /* menu_folder_graduationcap.tgs in Resources */,
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
 				D07450E9233D61B800769D7F /* keyboard_typing.tgs in Resources */,
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
 				27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */,
-				27093B5A279FD731001C36D8 /* menu_folder_gamepad.tgs in Resources */,
 				27CE376F2760B11B007E6F1B /* menu_read.tgs in Resources */,
 				27CB1750276325E700DD25E0 /* menu_video_call.tgs in Resources */,
+				27803BFE27A3E944007B0FA9 /* menu_folder_work.tgs in Resources */,
+				27803C0827A3E944007B0FA9 /* menu_folder_music.tgs in Resources */,
 				27CB17522763284500DD25E0 /* menu_unblock.tgs in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				27336735276241820027441E /* menu_plus.tgs in Resources */,
 				27CB17582763738E00DD25E0 /* menu_share.tgs in Resources */,
+				27803BF227A3E944007B0FA9 /* menu_folder_sport.tgs in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
-				27093B4D279FD731001C36D8 /* menu_folder_ball.tgs in Resources */,
 				275549102747C24F0098A3CD /* device_chrome.tgs in Resources */,
 				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
 				277C208A27A2858D0070B3BF /* menu_speaker_muted.tgs in Resources */,
 				27CE376B2760960A007E6F1B /* menu_unmuted.tgs in Resources */,
 				27CB174E276325C600DD25E0 /* menu_call.tgs in Resources */,
 				274B9E40273008EB009993C7 /* sent.mp3 in Resources */,
+				27803BF927A3E944007B0FA9 /* menu_folder_read.tgs in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
 				275549142747C24F0098A3CD /* device_edge.tgs in Resources */,
@@ -5491,28 +5503,26 @@
 				27E969E12589172D00CB9F64 /* call down.mp3 in Resources */,
 				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
 				2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */,
+				27803C0727A3E944007B0FA9 /* menu_folder_personal.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				2733674927625BD80027441E /* menu_promote.tgs in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
 				27CB17682763886200DD25E0 /* menu_channel.tgs in Resources */,
+				27803BF527A3E944007B0FA9 /* menu_folder_paint.tgs in Resources */,
 				2763A162261DF5CD00C12762 /* voice_chat_cancel_reminder.tgs in Resources */,
 				275549112747C24F0098A3CD /* device_firefox.tgs in Resources */,
 				275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */,
 				27E070F4278D9C0A0026BFA1 /* menu_location.tgs in Resources */,
 				27CE37662760960A007E6F1B /* menu_unread.tgs in Resources */,
 				27CE37682760960A007E6F1B /* menu_mute.tgs in Resources */,
-				27093B58279FD731001C36D8 /* menu_folder_telegram.tgs in Resources */,
-				27093B46279FD731001C36D8 /* menu_folder_briefcase.tgs in Resources */,
 				272934162778E05000F10D3C /* menu_music.tgs in Resources */,
 				27A9904E257A8047009044DB /* Pop.wav in Resources */,
 				D07450E8233D61B800769D7F /* brilliant_loading.tgs in Resources */,
 				27E070F2278D9A970026BFA1 /* menu_camera.tgs in Resources */,
 				27CE37652760960A007E6F1B /* menu_archive.tgs in Resources */,
 				27CB176E27638F0000DD25E0 /* menu_check_selected.tgs in Resources */,
-				27093B5D279FD731001C36D8 /* menu_folder_messages.tgs in Resources */,
 				2763A165261DF5EF00C12762 /* voice_chat_cancel_reminder_to_mute.tgs in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
-				27093B54279FD731001C36D8 /* menu_folder_plane.tgs in Resources */,
 				27336743276247820027441E /* menu_copyright.tgs in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
 				277C208927A2858D0070B3BF /* menu_speaker.tgs in Resources */,
@@ -5525,30 +5535,34 @@
 				C250B0371DB7BB09004E9FBE /* mime-types.txt in Resources */,
 				D07450EA233D61B800769D7F /* write_words.tgs in Resources */,
 				27CB1772276392EB00DD25E0 /* menu_folder.tgs in Resources */,
+				27803BFB27A3E944007B0FA9 /* menu_folder_virus.tgs in Resources */,
 				2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */,
 				270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */,
 				278C720425E67C2700F1B315 /* emoji1016.txt in Resources */,
 				9F03681722771A9700456348 /* anim_unpin.json in Resources */,
+				27803BF827A3E944007B0FA9 /* menu_folder_lock.tgs in Resources */,
 				275549122747C24F0098A3CD /* device_mac.tgs in Resources */,
+				27803C0427A3E944007B0FA9 /* menu_folder_love.tgs in Resources */,
 				27CE376C2760960A007E6F1B /* menu_add_to_folder.tgs in Resources */,
 				277DFE6A2784844700F78396 /* menu_lock.tgs in Resources */,
 				27CE37762760CEE4007E6F1B /* menu_mute_for_1_hour.tgs in Resources */,
-				27093B60279FD731001C36D8 /* menu_folder_brush.tgs in Resources */,
 				2755491A2747C24F0098A3CD /* device_linux.tgs in Resources */,
 				C253A9701D92F9F100CDC850 /* Localizable.strings in Resources */,
 				275549192747C24F0098A3CD /* device_ubuntu.tgs in Resources */,
 				2733672D276214050027441E /* menu_schedule_message.tgs in Resources */,
+				27803BF627A3E944007B0FA9 /* menu_folder_coin.tgs in Resources */,
 				D07450E7233D61B800769D7F /* gift.tgs in Resources */,
 				2773A56D25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs in Resources */,
 				2733671F27620BA40027441E /* menu_retract_vote.tgs in Resources */,
 				27CB175C2763740C00DD25E0 /* menu_reset.tgs in Resources */,
-				27093B52279FD731001C36D8 /* menu_folder_twopersons.tgs in Resources */,
 				9F03681B22771A9700456348 /* anim_pin.json in Resources */,
-				27093B59279FD731001C36D8 /* menu_folder_home.tgs in Resources */,
+				27803BF027A3E944007B0FA9 /* menu_folder_lamp.tgs in Resources */,
 				C232EA3D1E1C06EF00C4D38C /* dsa_pub.pem in Resources */,
 				2733671227620B600027441E /* menu_copy_media.tgs in Resources */,
 				275549132747C24F0098A3CD /* device_windows.tgs in Resources */,
+				27803BFA27A3E944007B0FA9 /* menu_folder_animal.tgs in Resources */,
 				D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */,
+				27803BF127A3E944007B0FA9 /* menu_folder_all_chats.tgs in Resources */,
 				27CB1754276344E000DD25E0 /* menu_shared_media.tgs in Resources */,
 				C2CFCABE1EBB4A4D00843F6A /* voip_connecting.mp3 in Resources */,
 				27CE37752760CEE4007E6F1B /* menu_mute_for_2_days.tgs in Resources */,
@@ -5564,6 +5578,7 @@
 				D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */,
 				D07450EE233D61B800769D7F /* keychain.tgs in Resources */,
 				2733672527620BB40027441E /* menu_open_with.tgs in Resources */,
+				27803C0327A3E944007B0FA9 /* menu_folder_home.tgs in Resources */,
 				2733672127620BA40027441E /* menu_restrict.tgs in Resources */,
 				2733674727625A270027441E /* menu_show_message.tgs in Resources */,
 				27CE37702760B11B007E6F1B /* menu_unarchive.tgs in Resources */,
@@ -5572,20 +5587,17 @@
 				D0D71386227ADE9400EC88B1 /* maccheck.json in Resources */,
 				2773A55F25FA4E0C00AB45E9 /* voice_chat_raise_hand_4.tgs in Resources */,
 				C2844AE01DA90C8A009308DC /* emoji.txt in Resources */,
-				27093B4B279FD731001C36D8 /* menu_folder_person.tgs in Resources */,
 				2733672927620C5A0027441E /* menu_save_as.tgs in Resources */,
-				27093B51279FD731001C36D8 /* menu_folder_like.tgs in Resources */,
 				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
 				27E7E49E270DFED900CF3A24 /* request_join_link.tgs in Resources */,
 				2733671B27620B980027441E /* menu_stop_poll.tgs in Resources */,
-				27093B5F279FD731001C36D8 /* menu_folder_message_read.tgs in Resources */,
 				27CB177027638F4000DD25E0 /* menu_replace.tgs in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
+				27803BF427A3E944007B0FA9 /* menu_folder_telegram.tgs in Resources */,
 				D0FFCEBE215A7CB700995AFE /* emoji14.txt in Resources */,
 				9F03681A22771A9700456348 /* anim_unmute.json in Resources */,
 				27CE376A2760960A007E6F1B /* menu_delete.tgs in Resources */,
 				274BB570264013B900620D03 /* cameraoff.tgs in Resources */,
-				27093B47279FD731001C36D8 /* menu_folder_flower.tgs in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
 				2763A16E261DF68100C12762 /* voice_chat_set_reminder_to_mute.tgs in Resources */,
 				27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */,
@@ -5594,18 +5606,18 @@
 				9F03681122771A9700456348 /* archiveAvatar.json in Resources */,
 				D07450EF233D61B800769D7F /* smart_guy.tgs in Resources */,
 				275549172747C24F0098A3CD /* device_iphone.tgs in Resources */,
-				27093B55279FD731001C36D8 /* menu_folder_bitcoin.tgs in Resources */,
-				27093B4C279FD731001C36D8 /* menu_folder_note.tgs in Resources */,
 				C23BC3681E9AA03E00D79F92 /* emoji11.txt in Resources */,
 				2733673D276242B00027441E /* menu_remove_from_favorites.tgs in Resources */,
-				27093B57279FD731001C36D8 /* menu_folder_lightbulb.tgs in Resources */,
 				2733672F27621B550027441E /* menu_send_now.tgs in Resources */,
 				D07450E6233D61B800769D7F /* brilliant_static.tgs in Resources */,
 				9F03681522771A9700456348 /* anim_hide.json in Resources */,
 				2733671727620B720027441E /* menu_forward.tgs in Resources */,
 				2733672327620BAC0027441E /* menu_reply.tgs in Resources */,
+				27803BFC27A3E944007B0FA9 /* menu_folder_flash.tgs in Resources */,
+				27803BF327A3E944007B0FA9 /* menu_folder_group.tgs in Resources */,
 				27A9904F257A8047009044DB /* Purr.wav in Resources */,
 				272934142778E03E00F10D3C /* menu_voice.tgs in Resources */,
+				27803C0927A3E944007B0FA9 /* menu_folder_unread.tgs in Resources */,
 				D0E7BE72256D30130068644D /* group_call_speaker_unmute.json in Resources */,
 				27CB1764276383C200DD25E0 /* menu_video_chat.tgs in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
@@ -5616,6 +5628,7 @@
 				9F03681022771A9700456348 /* anim_ungroup.json in Resources */,
 				272934122778E01100F10D3C /* menu_video.tgs in Resources */,
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
+				27803C0027A3E944007B0FA9 /* menu_folder_book.tgs in Resources */,
 				2763A16B261DF65700C12762 /* voice_chat_set_reminder.tgs in Resources */,
 				273367452762584F0027441E /* menu_view_sticker_set.tgs in Resources */,
 				27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */,
@@ -5632,7 +5645,6 @@
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
 				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
 				27CB176C27638EF800DD25E0 /* menu_collapse.tgs in Resources */,
-				27093B5E279FD731001C36D8 /* menu_folder_book.tgs in Resources */,
 				2733673B276242010027441E /* menu_add_to_favorites.tgs in Resources */,
 				27336741276247370027441E /* menu_pornography.tgs in Resources */,
 				27CB175E276376CE00DD25E0 /* menu_open_profile.tgs in Resources */,
