@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-
+import ColorPalette
 
 private final class PinView : Control {
     private let imageView:ImageView = ImageView()
@@ -314,7 +314,7 @@ final class GroupCallMainVideoContainerView: Control {
         self.set(handler: { [weak self] control in
             if let data = self?.participant {
                 if let menuItems = self?.arguments?.contextMenuItems(data), let event = NSApp.currentEvent {
-                    ContextMenu.show(items: menuItems, view: control, event: event, isLegacy: false)
+                    ContextMenu.show(items: menuItems, view: control, event: event, presentation: .current(darkPalette), isLegacy: false)
                 }
             }
         }, for: .RightDown)

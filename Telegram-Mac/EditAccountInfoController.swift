@@ -385,58 +385,58 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             })
         }, itemImage: MenuAnimation.menu_shared_media.value))
         
-        items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
-            
-            let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
-            controller._frameRect = NSMakeRect(0, 0, 350, 400)
-            
-            let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
-            
-            let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
-                _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
-                    switch result {
-                    case let .image(image):
-                         updatePhoto(image)
-                    case let .video(path):
-                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescProfile, quality: AVAssetExportPresetHighestQuality, signal: { signal in
-                            updateVideo(signal)
-                        })
-                    }
-                    control?.contextObject = nil
-                })
-                control?.contextObject = convertor
-            }
-            
-            interactions.sendAppFile = { file, _, _, _ in
-                let object: MediaObjectToAvatar.Object
-                if file.isAnimatedSticker {
-                    object = .animated(file)
-                } else if file.isSticker {
-                    object = .sticker(file)
-                } else {
-                    object = .gif(file)
-                }
-                let convertor = MediaObjectToAvatar(context: context, object: object)
-                runConvertor(convertor)
-            }
-            interactions.sendInlineResult = { [] collection, result in
-                switch result {
-                case let .internalReference(reference):
-                    if let file = reference.file {
-                        let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
-                        runConvertor(convertor)
-                    }
-                case .externalReference:
-                    break
-                }
-            }
-            
-            control?.contextObject = interactions
-            controller.update(with: interactions)
-            if let control = control {
-                showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
-            }
-        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+//        items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
+//
+//            let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
+//            controller._frameRect = NSMakeRect(0, 0, 350, 400)
+//
+//            let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+//
+//            let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
+//                _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
+//                    switch result {
+//                    case let .image(image):
+//                         updatePhoto(image)
+//                    case let .video(path):
+//                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescProfile, quality: AVAssetExportPresetHighestQuality, signal: { signal in
+//                            updateVideo(signal)
+//                        })
+//                    }
+//                    control?.contextObject = nil
+//                })
+//                control?.contextObject = convertor
+//            }
+//
+//            interactions.sendAppFile = { file, _, _, _ in
+//                let object: MediaObjectToAvatar.Object
+//                if file.isAnimatedSticker {
+//                    object = .animated(file)
+//                } else if file.isSticker {
+//                    object = .sticker(file)
+//                } else {
+//                    object = .gif(file)
+//                }
+//                let convertor = MediaObjectToAvatar(context: context, object: object)
+//                runConvertor(convertor)
+//            }
+//            interactions.sendInlineResult = { [] collection, result in
+//                switch result {
+//                case let .internalReference(reference):
+//                    if let file = reference.file {
+//                        let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
+//                        runConvertor(convertor)
+//                    }
+//                case .externalReference:
+//                    break
+//                }
+//            }
+//
+//            control?.contextObject = interactions
+//            controller.update(with: interactions)
+//            if let control = control {
+//                showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
+//            }
+//        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
         
         if let event = NSApp.currentEvent {
             let menu = ContextMenu()
