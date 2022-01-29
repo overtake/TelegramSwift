@@ -81,7 +81,7 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions.size
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         if let dimensions = file.dimensions {
                             imageDimensions = dimensions.size
                         } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
@@ -125,7 +125,7 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions.size
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         updatedMedia = file
                         
                         if let dimensions = file.dimensions?.size {
