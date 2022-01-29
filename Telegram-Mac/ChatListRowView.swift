@@ -875,10 +875,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
                  let highlighted = item.isSelected && item.context.sharedContext.layout != .single
                  let icon: CGImage
-                 if item.associatedGroupId == .root {
+                 if item.associatedGroupId == .root && !item.isMuted {
                      icon = highlighted ? theme.icons.reactions_badge_active : theme.icons.reactions_badge
                  } else {
-                     icon = highlighted ? theme.icons.reactions_badge_archive_active : theme.icons.reactions_badge_active
+                     icon = highlighted ? theme.icons.reactions_badge_archive_active : theme.icons.reactions_badge_archive
                  }
                  
                  var presented: Bool = false

@@ -828,13 +828,20 @@ private final class WebmRenderer : RenderContainer {
     
     private var frameCount: Int32 = 5
     private var hasCount: Bool = false
-    init(animation: LottieAnimation, decoder: SoftwareVideoSource) {
+    
+    private let fileSupplyment: TRLotFileSupplyment?
+
+    init(animation: LottieAnimation, decoder: SoftwareVideoSource, fileSupplyment: TRLotFileSupplyment?) {
         self.animation = animation
         self.decoder = decoder
+        self.fileSupplyment = fileSupplyment
     }
-    
+
     func render(at frameIndex: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         
+        let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
+        let bufferSize = s.w * s.h * 4
+
         let frameAndLoop = decoder.readFrame(maxPts: nil)
         if frameAndLoop.0 == nil {
             if frameAndLoop.3, !hasCount {
@@ -851,8 +858,6 @@ private final class WebmRenderer : RenderContainer {
             return nil
         }
         
-        let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
-        let bufferSize = s.w * s.h * 4
         let destBytesPerRow = Int(animation.size.width) * animation.backingScale * 4
 
         var frameData = Data(count: bufferSize)
@@ -878,7 +883,9 @@ private final class WebmRenderer : RenderContainer {
         return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: frameData, backingScale: animation.backingScale)
     }
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
-        
+        if let fileSupplyment = fileSupplyment {
+            fileSupplyment.addFrame(previous, current, endFrame: Int(endFrame))
+        }
     }
     func setColor(_ color: NSColor, keyPath: String) {
         
@@ -1129,7 +1136,7 @@ final class LottieAnimation : Equatable {
             let path = String(data: self.compressed, encoding: .utf8)
             if let path = path {
                 let decoder = SoftwareVideoSource(path: path, hintVP9: true)
-                return WebmRenderer(animation: self, decoder: decoder)
+                return WebmRenderer(animation: self, decoder: decoder, fileSupplyment: nil)
             }
         }
         return nil
