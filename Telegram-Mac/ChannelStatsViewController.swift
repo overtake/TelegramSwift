@@ -126,32 +126,44 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
             updateIsLoading(identifier, true)
         }))
         
+        
         graphs.append(Graph(graph: stats.topHoursGraph, title: strings().channelStatsGraphViewsByHours, identifier: InputDataIdentifier("topHoursGraph"), type: .hourlyStep, load: { identifier in
             context.loadTopHoursGraph()
             updateIsLoading(identifier, true)
         }))
         
-        graphs.append(Graph(graph: stats.viewsBySourceGraph, title: strings().channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .bars, load: { identifier in
-            context.loadViewsBySourceGraph()
-            updateIsLoading(identifier, true)
-        }))
+        if !stats.viewsBySourceGraph.isEmpty {
+            graphs.append(Graph(graph: stats.viewsBySourceGraph, title: strings().channelStatsGraphViewsBySource, identifier: InputDataIdentifier("viewsBySourceGraph"), type: .bars, load: { identifier in
+                context.loadViewsBySourceGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
         
         
-        graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: strings().channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .bars, load: { identifier in
-            context.loadNewFollowersBySourceGraph()
-            updateIsLoading(identifier, true)
-        }))
-        graphs.append(Graph(graph: stats.languagesGraph, title: strings().channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
-            context.loadLanguagesGraph()
-            updateIsLoading(identifier, true)
-        }))
+        if !stats.newFollowersBySourceGraph.isEmpty {
+            graphs.append(Graph(graph: stats.newFollowersBySourceGraph, title: strings().channelStatsGraphNewFollowersBySource, identifier: InputDataIdentifier("newFollowersBySourceGraph"), type: .bars, load: { identifier in
+                context.loadNewFollowersBySourceGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
+        
+        
+        if !stats.languagesGraph.isEmpty {
+            graphs.append(Graph(graph: stats.languagesGraph, title: strings().channelStatsGraphLanguage, identifier: InputDataIdentifier("languagesGraph"), type: .pie, load: { identifier in
+                context.loadLanguagesGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
+        
 
     
+        if !stats.interactionsGraph.isEmpty {
+            graphs.append(Graph(graph: stats.interactionsGraph, title: strings().channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .twoAxisStep, load: { identifier in
+                context.loadInteractionsGraph()
+                updateIsLoading(identifier, true)
+            }))
+        }
         
-        graphs.append(Graph(graph: stats.interactionsGraph, title: strings().channelStatsGraphInteractions, identifier: InputDataIdentifier("interactionsGraph"), type: .twoAxisStep, load: { identifier in
-            context.loadInteractionsGraph()
-            updateIsLoading(identifier, true)
-        }))
 
         for graph in graphs {
             entries.append(.sectionId(sectionId, type: .normal))
