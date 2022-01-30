@@ -355,7 +355,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     } |> deliverOnMainQueue).start(next: { [weak self] status,data in
                         if let strongSelf = self {
                             
-//                            strongSelf.data = data
+                            strongSelf.data = data
                             
                             strongSelf.fetchStatus = status
                             if case .Local = status {
