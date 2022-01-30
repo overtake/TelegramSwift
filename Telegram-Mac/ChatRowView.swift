@@ -1294,11 +1294,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return nil
     }
     
-    func playSeenReactionEffect() {
+    func playSeenReactionEffect(_ checkUnseen: Bool) {
         if let reactionsView = reactionsView {
-            reactionsView.playSeenReactionEffect()
+            reactionsView.playSeenReactionEffect(checkUnseen)
         } else {
-            rightView.reactionsView?.playSeenReactionEffect()
+            rightView.reactionsView?.playSeenReactionEffect(checkUnseen)
         }
     }
     

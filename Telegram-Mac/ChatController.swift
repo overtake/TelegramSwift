@@ -5056,9 +5056,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let visibleMessageRange = self.visibleMessageRange
                 self.interactiveReadReactionsDisposable.set(context.engine.messages.installInteractiveReadReactionsAction(peerId: chatInteraction.peerId, getVisibleRange: {
+                    
                     return visibleMessageRange.with { $0 }
                 }, didReadReactionsInMessages: { [weak self] idsAndReactions in
-                    Queue.mainQueue().after(0.2, {
+                    Queue.mainQueue().after(0.1, {
                         self?.playUnseenReactions(Set(idsAndReactions.keys))
                     })
                 }))
@@ -6223,7 +6224,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         self.messageReactionsMentionProcessingManager.process = { [weak self] messageIds in
             context.account.viewTracker.updateMarkReactionsSeenForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
-            self?.playUnseenReactions(messageIds)
+            self?.playUnseenReactions(messageIds, checkUnseen: true)
         }
         self.reactionsMessageProcessingManager.process = { messageIds in
             context.account.viewTracker.updateReactionsForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
@@ -6582,7 +6583,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return false
     }
     
-    private func playUnseenReactions(_ messageIds: Set<MessageId>) {
+    private func playUnseenReactions(_ messageIds: Set<MessageId>, checkUnseen: Bool = false) {
         
         if !messageIds.isEmpty {
             var bp = 0
@@ -6596,7 +6597,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             for id in messageIds {
                 if item.firstMessage?.id == id, let view = item.view as? ChatRowView {
                     if view.visibleRect.height == view.frame.height {
-                        view.playSeenReactionEffect()
+                        view.playSeenReactionEffect(checkUnseen)
                     }
                 }
             }

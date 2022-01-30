@@ -1074,12 +1074,12 @@ final class ChatReactionsView : View {
 //        }
     }
     
-    func playSeenReactionEffect() {
+    func playSeenReactionEffect(_ checkUnseen: Bool) {
         guard let currentLayout = currentLayout else {
             return
         }
         let layout = currentLayout.message.effectiveReactions(currentLayout.context.peerId)
-        let peer = layout?.recentPeers.first(where: { $0.isUnseen })
+        let peer = layout?.recentPeers.first(where: { $0.isUnseen || !checkUnseen })
         if let peer = peer, let reaction = reactions.first(where: { $0.value.value == peer.value }) {
             reaction.runEffect(reaction.value.value)
             let view = getView(reaction.value.value)
