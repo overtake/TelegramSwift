@@ -353,9 +353,9 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 rowCount -= 1
             }
         }
-        var pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount)) * 2
-        pageCount -= (pageCount % rowCount)
-        return pageCount
+        let pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount)) * 2
+//        pageCount -= (pageCount % rowCount)
+        return pageCount * 5
     }
     
     override func viewDidResized(_ size: NSSize) {

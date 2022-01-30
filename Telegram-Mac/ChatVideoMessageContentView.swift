@@ -315,7 +315,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 player.layer?.cornerRadius = size.height / 2
                 data = nil
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
-                let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                let arguments = TransformImageArguments(corners: ImageCorners(radius:0), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 
                 player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: mediaUpdated)
 
@@ -355,7 +355,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                     } |> deliverOnMainQueue).start(next: { [weak self] status,data in
                         if let strongSelf = self {
                             
-                            strongSelf.data = data
+//                            strongSelf.data = data
                             
                             strongSelf.fetchStatus = status
                             if case .Local = status {

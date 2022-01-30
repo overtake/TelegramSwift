@@ -300,7 +300,7 @@ final class AppMenuController : NSObject  {
             
             self.parent?.set(mouseHandler: { [weak self] event in
                 if isInteracted {
-                    self?.close()
+                    self?.closeAll()
                 }
                 let was = isInteracted
                 isInteracted = true
@@ -314,7 +314,7 @@ final class AppMenuController : NSObject  {
 
             self.parent?.set(mouseHandler: { [weak self] event in
                 if isInteracted {
-                    self?.close()
+                    self?.closeAll()
                 }
                 let was = isInteracted
                 isInteracted = true
@@ -350,7 +350,7 @@ final class AppMenuController : NSObject  {
         
 
         self.parent?.set(handler: { [weak self] _ in
-            self?.close()
+            self?.closeAll()
             return .invoked
         }, with: self, for: .Escape, priority: .supreme)
         
