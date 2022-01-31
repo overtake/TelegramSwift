@@ -1487,6 +1487,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView)
             floating.append(value)
         }
+        
+//        for grouppedFloatingPhoto in grouppedFloatingPhotos {
+//            (grouppedFloatingPhoto.1 as? AvatarControl)?.disableHierarchyInteraction() = self.chatInteraction.presentation.state != .selecting
+//        }
+        
         genericView.updateFloating(floating, animated: animated, currentAnimationRows: currentAnimationRows)
     }
     
@@ -6328,6 +6333,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 } else {
                     _ = window?.makeFirstResponder(self.firstResponder())
                 }
+                
+                updateFloatingPhotos(self.genericView.scroll, animated: animated)
             }
             
 //            if #available(OSX 10.12.2, *) {
