@@ -527,7 +527,11 @@ class ShareMessageObject : ShareObject {
         let context = self.context
         let messageIds = self.messageIds
         var signals: [Signal<[MessageId?], NoError>] = []
-        
+        let attrs:(PeerId)->[MessageAttribute] = { [weak self] peerId in
+            return self?.attributes(peerId) ?? []
+        }
+        let date = self.scheduleDate
+        let withoutSound = self.withoutSound
         for peerId in peerIds {
             let viewSignal: Signal<PeerId?, NoError> = context.account.postbox.peerView(id: peerId)
             |> take(1)
@@ -539,7 +543,7 @@ class ShareMessageObject : ShareObject {
                 }
             }
             signals.append(viewSignal |> mapToSignal { sendAs in
-                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, sendAsPeerId: sendAs)
+                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                 var caption: Signal<[MessageId?], NoError>?
                 if let comment = comment, !comment.inputText.isEmpty {
                     let parsingUrlType: ParsingType
@@ -550,7 +554,7 @@ class ShareMessageObject : ShareObject {
                     }
                                     
                     var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                    attributes += self.attributes(peerId)
+                    attributes += attrs(peerId)
                     if let sendAs = sendAs {
                         attributes.append(SendAsMessageAttribute(peerId: sendAs))
                     }
