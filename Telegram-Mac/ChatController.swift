@@ -1488,9 +1488,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             floating.append(value)
         }
         
-//        for grouppedFloatingPhoto in grouppedFloatingPhotos {
-//            (grouppedFloatingPhoto.1 as? AvatarControl)?.disableHierarchyInteraction() = self.chatInteraction.presentation.state != .selecting
-//        }
         
         genericView.updateFloating(floating, animated: animated, currentAnimationRows: currentAnimationRows)
     }
@@ -1574,8 +1571,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let control = view as? AvatarControl
             control?.toolTip = item.nameHide
             control?.removeAllHandlers()
-            control?.set(handler: { [weak item] control in
-                item?.openInfo()
+            control?.set(handler: { [weak item, weak self] control in
+                if self?.chatInteraction.presentation.state == .selecting {
+                    item?.toggleSelect()
+                } else {
+                    item?.openInfo()
+                }
             }, for: .Click)
             if let control = control {
                 return (value, control)

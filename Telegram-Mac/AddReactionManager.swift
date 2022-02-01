@@ -172,8 +172,10 @@ final class ContextAddReactionsListView : View  {
 
     private let backgroundView = View()
     private let visualEffect = NSVisualEffectView(frame: .zero)
-    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
+    private let radiusLayer: Bool
+    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(String)->Void, radiusLayer: Bool = true) {
         self.list = list
+        self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
         
         self.visualEffect.state = .active
@@ -181,37 +183,52 @@ final class ContextAddReactionsListView : View  {
         self.visualEffect.blendingMode = .behindWindow
         
         
-        let shadow = NSShadow()
-        shadow.shadowBlurRadius = 2
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
-        shadow.shadowOffset = NSMakeSize(0, 0)
-        self.shadow = shadow
         
-        self.layer?.cornerRadius = 15
         
-        visualEffect.layer?.cornerRadius = 15
-        backgroundView.layer?.cornerRadius = 15
+        if radiusLayer {
+            
+            let shadow = NSShadow()
+            shadow.shadowBlurRadius = 2
+            shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
+            shadow.shadowOffset = NSMakeSize(0, 0)
+            self.shadow = shadow
+            
+            self.layer?.cornerRadius = 15
+            visualEffect.layer?.cornerRadius = 15
+            backgroundView.layer?.cornerRadius = 15
+            
+            scrollView.layer?.cornerRadius = 15
+            documentView.layer?.cornerRadius = 15
+            
+            
+            bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
+            bottomGradient.direction = .horizontal(true)
+            topGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
+            topGradient.direction = .horizontal(false)
+            
+            scrollView.addSubview(topGradient)
+            scrollView.addSubview(bottomGradient)
+        }
         
         visualEffect.material = theme.colors.isDark ? .dark : .light
 
-        if #available(macOS 11.0, *) {
+        if #available(macOS 11.0, *), radiusLayer {
             self.addSubview(visualEffect)
             backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+        } else if !radiusLayer {
+            backgroundView.backgroundColor = .clear
         } else {
             backgroundView.backgroundColor = theme.colors.background
         }
         
         addSubview(backgroundView)
         addSubview(scrollView)
-        scrollView.addSubview(topGradient)
-        scrollView.addSubview(bottomGradient)
+     
         
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
             self?.updateScroll()
         })
                 
-        scrollView.layer?.cornerRadius = 15
-        documentView.layer?.cornerRadius = 15
         scrollView.background = .clear
         scrollView.documentView = documentView
         let size = NSMakeSize(30, 30)
@@ -223,13 +240,8 @@ final class ContextAddReactionsListView : View  {
         }
         updateLayout(size: frame.size, transition: .immediate)
         
-        bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
-        bottomGradient.direction = .horizontal(true)
-        topGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
-        topGradient.direction = .horizontal(false)
-        
-        layer?.cornerRadius = frame.width / 2
-        
+       
+
         for view in self.documentView.subviews {
             let view = view as? ReactionView
             view?.playAppearAnimation()
@@ -252,6 +264,7 @@ final class ContextAddReactionsListView : View  {
     private var previousOffset: NSPoint = .zero
     private var previousRange: [Int] = []
     private func updateScroll() {
+        
         let range = visibleRange(self.scrollView.documentOffset)
         if previousRange != range, !previousRange.isEmpty {
             let new = range.filter({
@@ -263,19 +276,22 @@ final class ContextAddReactionsListView : View  {
             }
         }
         self.previousRange = range
-
-        for view in documentView.subviews {
-            var fr = CATransform3DIdentity
-            if view.visibleRect.size != view.frame.size {
-                let value = max(0.5, view.visibleRect.width / view.frame.width)
-                fr = CATransform3DTranslate(fr, view.frame.width / 2, view.frame.height / 2, 0)
-                fr = CATransform3DScale(fr, value, value, 1)
-                fr = CATransform3DTranslate(fr, -(view.frame.width / 2), -(view.frame.height / 2), 0)
-                view.layer?.transform = fr
-            } else {
-                view.layer?.transform = fr
+        
+        if self.radiusLayer {
+            for view in documentView.subviews {
+                var fr = CATransform3DIdentity
+                if view.visibleRect.size != view.frame.size {
+                    let value = max(0.5, view.visibleRect.width / view.frame.width)
+                    fr = CATransform3DTranslate(fr, view.frame.width / 2, view.frame.height / 2, 0)
+                    fr = CATransform3DScale(fr, value, value, 1)
+                    fr = CATransform3DTranslate(fr, -(view.frame.width / 2), -(view.frame.height / 2), 0)
+                    view.layer?.transform = fr
+                } else {
+                    view.layer?.transform = fr
+                }
             }
         }
+       
     }
     
     private func visibleRange(_ documentOffset: NSPoint) -> [Int] {

@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "reactionbutton_30.png",
+      "filename" : "add_reaction.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "reactionbutton_30@2x.png",
+      "filename" : "add_reaction@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

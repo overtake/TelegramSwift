@@ -166,6 +166,7 @@
 		2773A56825FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56725FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs */; };
 		2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56A25FAA63D00AB45E9 /* voice_chat_hand_on_unmuted.tgs */; };
 		2773A56D25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A56B25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs */; };
+		2775025327A924CE00B46456 /* ChatInlineReactionMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */; };
 		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
 		277C208627A284FA0070B3BF /* GroupCallAvatarMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C208527A284FA0070B3BF /* GroupCallAvatarMenuItem.swift */; };
@@ -1398,6 +1399,7 @@
 		2773A56725FA4E4B00AB45E9 /* voice_chat_raise_hand_7.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_raise_hand_7.tgs; sourceTree = "<group>"; };
 		2773A56A25FAA63D00AB45E9 /* voice_chat_hand_on_unmuted.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_hand_on_unmuted.tgs; sourceTree = "<group>"; };
 		2773A56B25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_chat_hand_on_muted.tgs; sourceTree = "<group>"; };
+		2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInlineReactionMenuItem.swift; sourceTree = "<group>"; };
 		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
 		277C208527A284FA0070B3BF /* GroupCallAvatarMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarMenuItem.swift; sourceTree = "<group>"; };
@@ -2893,6 +2895,7 @@
 			isa = PBXGroup;
 			children = (
 				27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */,
+				2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */,
 			);
 			name = reactions;
 			sourceTree = "<group>";
@@ -6142,6 +6145,7 @@
 				D014193E22AE9A90008667CB /* GeneralLineSeparatorRowItem.swift in Sources */,
 				C26505971E041B91001954DC /* MGalleryGIFItem.swift in Sources */,
 				278FA2E625E813F100280629 /* PaymentsShippingMethodController.swift in Sources */,
+				2775025327A924CE00B46456 /* ChatInlineReactionMenuItem.swift in Sources */,
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
 				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,

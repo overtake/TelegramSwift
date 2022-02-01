@@ -138,4 +138,8 @@ public final class AppMenu {
     private func presentIfNeeded(event: NSEvent, view: NSView) {
         self.controller?.present(event: event, view: view)
     }
+    
+    public static func closeAll() {
+        AppMenuController.closeAll()
+    }
 }
