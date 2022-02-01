@@ -10,6 +10,61 @@ import SwiftSignalKit
 import AppKit
 import KeyboardKey
 
+private final class TopBubbleView : View {
+    private let backgroundView: View
+    private let visualView: NSVisualEffectView
+
+    required init(frame frameRect: NSRect, presentation: AppMenu.Presentation) {
+        self.backgroundView = View(frame: frameRect.size.bounds)
+        self.visualView = NSVisualEffectView(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        if #available(macOS 11.0, *) {
+            addSubview(visualView)
+        }
+        addSubview(backgroundView)
+        self.visualView.wantsLayer = true
+        self.visualView.state = .active
+        self.visualView.blendingMode = .behindWindow
+        self.visualView.autoresizingMask = []
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 2
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
+        shadow.shadowOffset = NSMakeSize(0, 0)
+        self.shadow = shadow
+        
+        
+        if presentation.colors.isDark {
+            visualView.material = .dark
+        } else {
+            visualView.material = .light
+        }
+        if #available(macOS 11.0, *) {
+            backgroundView.backgroundColor = presentation.backgroundColor
+        } else {
+            backgroundView.backgroundColor = presentation.backgroundColor.withAlphaComponent(1.0)
+        }
+        
+        layer?.cornerRadius = frameRect.height / 2
+        backgroundView.layer?.cornerRadius = frameRect.height / 2
+        visualView.layer?.cornerRadius = frameRect.height / 2
+    }
+    
+    override func layout() {
+        super.layout()
+        backgroundView.frame = bounds
+        visualView.frame = bounds
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required public init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
 private extension Window {
     var view: MenuView {
         return self.contentView!.subviews.first! as! MenuView
@@ -279,6 +334,8 @@ final class AppMenuController : NSObject  {
     private weak var parentView: NSView?
     private let delayDisposable = MetaDisposable()
     
+    private var topBubbleWindow: Window?
+    
     init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool, appearMode: AppMenu.AppearMode, parentView: NSView?) {
         self.menu = menu
         self.weakHolder = holder
@@ -505,7 +562,12 @@ final class AppMenuController : NSObject  {
                     window?.orderOut(nil)
                 })
             }
-            
+            if let window = self.topBubbleWindow, let view = window.contentView {
+                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                    view?.removeFromSuperview()
+                    window?.orderOut(nil)
+                })
+            }
             
             self.onClose()
         }
@@ -733,7 +795,7 @@ final class AppMenuController : NSObject  {
             
             let width = min(window.frame.width, rect.width)
             
-            let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width - 10 * 2, window.frame.height)
+            let rect = NSMakeRect(rect.minX, rect.maxY - 18, width, window.frame.height)
             window.setFrame(rect, display: true)
             window.makeKeyAndOrderFront(nil)
             
@@ -748,6 +810,38 @@ final class AppMenuController : NSObject  {
                 self?.closeAll()
                 return .rejected
             }, with: self, for: .leftMouseUp)
+            
+//            let topBubble = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+//            topBubble._canBecomeMain = false
+//            topBubble._canBecomeKey = false
+//            topBubble.level = .popUpMenu
+//            topBubble.backgroundColor = .clear
+//            topBubble.isOpaque = false
+//            topBubble.hasShadow = false
+//            
+//            let bubbleRect = NSMakeRect(rect.minX + 4, rect.maxY - window.frame.height - 6, 10, 10)
+//            
+//            let contentView = TopBubbleView(frame: bubbleRect.size.bounds.offsetBy(dx: 3, dy: 3), presentation: menu.presentation)
+//            topBubble.contentView?.wantsLayer = true
+//            topBubble.contentView?.background = .clear
+//            topBubble.contentView?.addSubview(contentView)
+//            
+//            topBubble.set(mouseHandler: { [weak self] event in
+//                self?.closeAll()
+//                return .rejected
+//            }, with: self, for: .leftMouseUp)
+//            
+//            self.topBubbleWindow = topBubble
+//            
+//            
+//            
+//            topBubble.setFrame(bubbleRect.insetBy(dx: -3, dy: -3), display: true)
+//            topBubble.makeKeyAndOrderFront(nil)
+//            
+//            topBubble.contentView?.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
+//            topBubble.contentView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+
+            
         }
     }
     
