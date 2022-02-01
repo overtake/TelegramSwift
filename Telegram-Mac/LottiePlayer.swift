@@ -1005,7 +1005,7 @@ final class LottieAnimation : Equatable {
         case .lottie:
             return self.metalSupport
         case .webm:
-            return self.metalSupport
+            return false
         default:
             return false
         }
