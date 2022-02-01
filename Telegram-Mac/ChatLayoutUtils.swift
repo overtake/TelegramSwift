@@ -44,8 +44,15 @@ class ChatLayoutUtils: NSObject {
                     return NSMakeSize(width, 40)
                 }
             }
-            if file.isWebm {
+            if file.isWebm || file.isVideoSticker {
+                let dimensions = file.dimensions?.size
                 size = NSMakeSize(240, 240)
+                if file.isEmojiAnimatedSticker {
+                    size = NSMakeSize(112, 112)
+                }
+                if let dimensions = dimensions {
+                    size = dimensions.aspectFitted(size)
+                }
             } else if file.isAnimatedSticker && !webpIsFile {
                 let dimensions = file.dimensions?.size
                 size = NSMakeSize(240, 240)
