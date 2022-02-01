@@ -160,11 +160,15 @@ private class StickersModalView : View {
             
             let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id))
             _ = item.makeSize(frame.width)
+            
+            tableView.beginTableUpdates()
+            tableView.removeAll()
             _ = tableView.addItem(item: item)
             
             if !installed {
                 _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
             }
+            tableView.endTableUpdates()
 
 
             self.needsLayout = true
