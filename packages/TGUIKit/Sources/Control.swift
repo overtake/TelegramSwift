@@ -362,6 +362,10 @@ open class Control: View {
             return
         }
         
+        if userInteractionEnabled {
+            updateState()
+            
+        }
         if self.handlers.isEmpty, let menu = self.contextMenu?(), event.clickCount == 1 {
             AppMenu.show(menu: menu, event: event, for: self)
         }

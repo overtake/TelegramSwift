@@ -904,6 +904,13 @@ final class AppMenuController : NSObject  {
             }
         }
     }
+    static func closeAll() {
+        for window in NSApp.windows {
+            if let window = window as? Window, let view = window.weakView {
+                view.controller?.close()
+            }
+        }
+    }
     
     deinit {
         self.delayDisposable.dispose()

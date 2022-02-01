@@ -1327,7 +1327,7 @@ class ChatRowItem: TableRowItem {
             
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, peerAllowed: chatInteraction.presentation.allowedReactions ?? [], engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
                     chatInteraction?.openInfo(peerId, false, nil, nil)
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
@@ -2462,6 +2462,15 @@ class ChatRowItem: TableRowItem {
         
     }
     
+    func toggleSelect() {
+        if let message = self.message {
+            chatInteraction.withToggledSelectedMessage({ current in
+                return current.withToggledSelectedMessage(message.id)
+            })
+        }
+       
+    }
+    
     func resendMessage(_ ids: [MessageId]) {
        _ = resendMessages(account: context.account, messageIds: ids).start()
     }
@@ -2610,7 +2619,7 @@ class ChatRowItem: TableRowItem {
             
             let width = ContextAddReactionsListView.width(for: available)
             
-            let rect = NSMakeRect(0, 0, width + 40, 40)
+            let rect = NSMakeRect(0, 0, width + 20, 40)
             
             let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
             panel._canBecomeMain = false

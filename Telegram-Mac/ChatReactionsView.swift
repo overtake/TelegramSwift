@@ -126,13 +126,13 @@ final class ChatReactionsLayout {
         let mode: ChatReactionsLayout.Mode
         let disposable: MetaDisposable = MetaDisposable()
         let delayDisposable = MetaDisposable()
-        let action:()->Void
+        let action:(String)->Void
         let context: AccountContext
         let message: Message
         let openInfo: (PeerId)->Void
         let runEffect:(String)->Void
         let canViewList: Bool
-        
+        let list: [AvailableReactions.Reaction]
         let avatars:[Avatar]
         var rect: CGRect = .zero
         
@@ -144,7 +144,8 @@ final class ChatReactionsLayout {
             lhs.available == rhs.available &&
             lhs.mode == rhs.mode &&
             lhs.rect == rhs.rect &&
-            lhs.canViewList == rhs.canViewList            
+            lhs.canViewList == rhs.canViewList &&
+            lhs.list == rhs.list
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -153,7 +154,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping()->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(String)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], list: [AvailableReactions.Reaction], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping(String)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(String)->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -164,44 +165,46 @@ final class ChatReactionsLayout {
             self.available = available
             self.mode = mode
             self.openInfo = openInfo
+            self.list = list
             self.runEffect = runEffect
             switch mode {
             case .full:
-                if recentPeers.isEmpty {
-                    self.text = DynamicCounterTextView.make(for: Int(value.count).prettyNumber, count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
-                } else {
-                    self.text = nil
-                }
-                
-                var width: CGFloat = presentation.insetOuter
-                width += presentation.reactionSize.width
-                if let text = text {
-                    width += presentation.insetInner
-                    width += text.size.width
-                    width += presentation.insetOuter
-                } else if !recentPeers.isEmpty {
-                    width += presentation.insetInner
-                    if recentPeers.count == 1 {
-                        width += presentation.reactionSize.width
-                    } else if !recentPeers.isEmpty {
-                        width += 12 * CGFloat(recentPeers.count)
-                    }
-                    width += presentation.insetOuter
-                }
-                
-                
-                
-                
-                var index: Int = 0
-                self.avatars = recentPeers.map { peer in
-                    let avatar = Avatar(peer: peer, index: index)
-                    index += 1
-                    return avatar
-                }
-                                
                 let height = presentation.reactionSize.height + presentation.insetInner * 2
-                
-                self.minimumSize = NSMakeSize(width, height)
+                if self.value.value.isEmpty {
+                    self.minimumSize = NSMakeSize(34, height)
+                    self.avatars = []
+                    self.text = nil
+                } else {
+                    if recentPeers.isEmpty {
+                        self.text = DynamicCounterTextView.make(for: Int(value.count).prettyNumber, count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
+                    } else {
+                        self.text = nil
+                    }
+                    
+                    var width: CGFloat = presentation.insetOuter
+                    width += presentation.reactionSize.width
+                    if let text = text {
+                        width += presentation.insetInner
+                        width += text.size.width
+                        width += presentation.insetOuter
+                    } else if !recentPeers.isEmpty {
+                        width += presentation.insetInner
+                        if recentPeers.count == 1 {
+                            width += presentation.reactionSize.width
+                        } else if !recentPeers.isEmpty {
+                            width += 12 * CGFloat(recentPeers.count)
+                        }
+                        width += presentation.insetOuter
+                    }
+                    
+                    var index: Int = 0
+                    self.avatars = recentPeers.map { peer in
+                        let avatar = Avatar(peer: peer, index: index)
+                        index += 1
+                        return avatar
+                    }
+                    self.minimumSize = NSMakeSize(width, height)
+                }
 
             case .short:
                 var width: CGFloat = presentation.reactionSize.width
@@ -312,7 +315,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(String)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: [String], engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(String)->Void) {
         
         let mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
         self.message = message
@@ -342,7 +345,7 @@ final class ChatReactionsLayout {
             }
         }
         
-        let sorted = reactions.reactions.sorted(by: { lhs, rhs in
+        var sorted = reactions.reactions.sorted(by: { lhs, rhs in
             if lhs.count == rhs.count {
                 let lhsIndex = indexes[lhs.value]
                 let rhsIndex = indexes[rhs.value]
@@ -356,8 +359,21 @@ final class ChatReactionsLayout {
             }
         })
         
+        let list = (available?.reactions ?? []).filter({ value in
+            return !sorted.contains(where: { $0.value == value.value }) && peerAllowed.contains(value.value)
+        })
+        
+        if mode == .full, !sorted.isEmpty, !list.isEmpty {
+            if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
+                let uniqueLimit = Int(value)
+                if sorted.count < uniqueLimit {
+                    sorted.append(.init(value: "", count: -1, isSelected: false))
+                }
+            }
+        }
+        
         self.reactions = sorted.compactMap { reaction in
-            if let available = available?.reactions.first(where: { $0.value == reaction.value }) {
+            if let current = available?.reactions.first(where: { $0.value == reaction.value || reaction.value.isEmpty }) {
                 
                 var recentPeers:[Peer] = reactions.recentPeers.filter { recent in
                     return recent.value == reaction.value
@@ -376,8 +392,15 @@ final class ChatReactionsLayout {
                         recentPeers = []
                     }
                 }
-                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: available, presentation: presentation, action: {
-                    engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
+                
+                
+                return .init(value: reaction, recentPeers: recentPeers, list: list, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: current, presentation: presentation, action: { value in
+                    let reaction = sorted.first(where: { $0.value == value})
+                    if let reaction = reaction {
+                        engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
+                    } else {
+                        engine.react(message.id, value: value)
+                    }
                 }, openInfo: openInfo, runEffect: runEffect)
             } else {
                 return nil
@@ -503,7 +526,9 @@ final class ChatReactionsView : View {
             scaleOnClick = true
             
             self.set(handler: { [weak self] _ in
-                self?.reaction?.action()
+                if let reaction = self?.reaction {
+                    reaction.action(reaction.value.value)
+                }
             }, for: .Click)
             
             
@@ -763,6 +788,72 @@ final class ChatReactionsView : View {
         }
     }
     
+    final class AddReactionView: Control, ReactionViewImpl {
+        fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
+        fileprivate let imageView: ImageView = ImageView()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            
+            addSubview(imageView)
+            scaleOnClick = true
+            
+ 
+            
+            self.contextMenu = { [weak self] in
+                guard let reaction = self?.reaction else {
+                    return nil
+                }
+                let menu = ContextMenu()
+                menu.addItem(ChatInlineReactionMenuItem(context: reaction.context, reactions: reaction.list, handler: reaction.action))
+                return menu
+            }
+            
+                        
+        }
+        
+        func playEffect() {
+            
+        }
+        
+        func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
+            self.reaction = reaction
+            self.backgroundColor = reaction.presentation.bgColor
+            layer?.cornerRadius = reaction.minimumSize.height / 2
+            
+            imageView.image = NSImage.init(named: "Icon_Message_AddReaction")?.precomposed(reaction.presentation.textColor)
+            imageView.sizeToFit()
+            
+        }
+        
+        deinit {
+           
+        }
+        
+        func isOwner(of reaction: ChatReactionsLayout.Reaction) -> Bool {
+            return self.reaction?.value.value == reaction.value.value
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+            guard let reaction = reaction else {
+                return
+            }
+
+            let presentation = reaction.presentation
+
+            transition.updateFrame(view: self.imageView, frame: focus(imageView.frame.size))
+        }
+        override func layout() {
+            super.layout()
+            updateLayout(size: frame.size, transition: .immediate)
+        }
+    }
+
+    
     final class ShortReactionView: Control, ReactionViewImpl {
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
         fileprivate let imageView: TransformImageView = TransformImageView()
@@ -1001,7 +1092,11 @@ final class ChatReactionsView : View {
             let getView: ()->NSView = {
                 switch layout.mode {
                 case .full:
-                    return ReactionView(frame: item.rect)
+                    if item.value.value.isEmpty {
+                        return AddReactionView(frame: item.rect)
+                    } else {
+                        return ReactionView(frame: item.rect)
+                    }
                 case .short:
                     return ShortReactionView(frame: item.rect)
                 }

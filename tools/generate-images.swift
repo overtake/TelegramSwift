@@ -723,7 +723,7 @@ func initialize() -> [String] {
     
     array.append("chat_reactions_badge")
     array.append("chat_reactions_badge_active")
-    
+        
     return array
 }
 //swift ./tools/generate-images.swift
