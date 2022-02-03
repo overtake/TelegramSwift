@@ -27,13 +27,14 @@ private enum ReadResult {
 private struct FrameDst : Codable {
     let offset: Int
     let length: Int
-    init(offset: Int, length: Int) {
+    let finished: Bool
+    init(offset: Int, length: Int, finished: Bool) {
         self.offset = offset
         self.length = length
+        self.finished = finished
     }
 }
 
-private var sharedData:Atomic<[LottieAnimationEntryKey:WeakReference<TRLotData>]> = Atomic(value: [:])
 
 
 final class TRLotData {
@@ -44,6 +45,14 @@ final class TRLotData {
     
     private let mapPath: String
     private let dataPath: String
+    var isFinished: Bool = false {
+        didSet {
+            let cpy = map
+            for (key, value) in cpy {
+                map[key] = .init(offset: value.offset, length: value.length, finished: isFinished)
+            }
+        }
+    }
     
     private var readHandle: FileHandle?
     private var writeHandle: FileHandle?
@@ -59,6 +68,10 @@ final class TRLotData {
         self.writeHandle?.closeFile()
         self.writeHandle = nil
         assert(queue.isCurrent())
+        
+        if !isFinished {
+            return .failed
+        }
         
         if let dest = map[frame] {
             let readHande: FileHandle?
@@ -96,14 +109,9 @@ final class TRLotData {
                 _ = NSKeyedArchiver.archiveRootObject(data, toFile: self.mapPath)
             }
         }
-        _ = sharedData.modify { value in
-            var value = value
-            value.removeValue(forKey: self.key)
-            return value
-        }
     }
     
-    fileprivate func writeFrame(frame: Int, data:Data, endFrame: Int) -> WriteResult {
+    fileprivate func writeFrame(frame: Int, data:Data) -> WriteResult {
         self.readHandle?.closeFile()
         self.readHandle = nil
         assert(queue.isCurrent())
@@ -121,7 +129,7 @@ final class TRLotData {
             }
             let length = dataHandle.seekToEndOfFile()
             dataHandle.write(data)
-            self.map[frame] = FrameDst(offset: Int(length), length: data.count)
+            self.map[frame] = FrameDst(offset: Int(length), length: data.count, finished: isFinished)
         }
 
         return .success
@@ -141,21 +149,22 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v7-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v28-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v7-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v28-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
-    init(_ animation: LottieAnimation, endFrame: Int, bufferSize: Int, queue: Queue) {
+    init(_ animation: LottieAnimation, bufferSize: Int, queue: Queue) {
         self.queue = queue
         self.mapPath = TRLotData.mapPath(animation, bufferSize: bufferSize)
         self.dataPath = TRLotData.dataPath(animation, bufferSize: bufferSize)
         self.key = animation.key
         var mapHandle:FileHandle?
+        
         
         let deferr:(TRLotData)->Void = { data in
             if !FileManager.default.fileExists(atPath: data.mapPath) {
@@ -167,11 +176,6 @@ final class TRLotData {
             try? FileManager.default.setAttributes([.modificationDate : Date()], ofItemAtPath: data.mapPath)
             try? FileManager.default.setAttributes([.modificationDate : Date()], ofItemAtPath: data.dataPath)
             
-            _ = sharedData.modify { value in
-                var value = value
-                value[data.key] = WeakReference(value: data)
-                return value
-            }
             mapHandle?.closeFile()
         }
         
@@ -198,8 +202,8 @@ final class TRLotData {
             self.bufferSize = bufferSize
             deferr(self)
         }
-        
-        
+        self.isFinished = self.map.filter { $0.value.finished }.count == self.map.count
+
     }
     
 }
@@ -213,17 +217,29 @@ final class TRLotFileSupplyment {
     fileprivate let queue: Queue
     fileprivate var shouldWaitToRead: [Int:Int] = [:]
     
-    init(_ animation:LottieAnimation, bufferSize: Int, frames: Int, queue: Queue) {
-        let cached = sharedData.with { $0[animation.key]?.value }
-        let queue = cached?.queue ?? queue
-        self.data = cached ?? TRLotData(animation, endFrame: frames, bufferSize: bufferSize, queue: queue)
+    init(_ animation:LottieAnimation, bufferSize: Int, queue: Queue) {
+        self.data = TRLotData(animation, bufferSize: bufferSize, queue: queue)
         self.queue = queue
         for value in self.data.map {
             shouldWaitToRead[value.key] = value.key
         }
         self.bufferSize = bufferSize
     }
-    func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame, endFrame: Int) {
+
+    func markFinished() {
+        queue.async {
+            self.data.isFinished = true
+        }
+    }
+    var isFinished: Bool {
+        var isFinished: Bool = false
+        queue.sync {
+            isFinished = self.data.isFinished
+        }
+        return isFinished
+    }
+    
+    func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if shouldWaitToRead[Int(current.frame)] == nil {
             shouldWaitToRead[Int(current.frame)] = Int(current.frame)
             queue.async {
@@ -262,7 +278,7 @@ final class TRLotFileSupplyment {
                     } else {
                         length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZ4)
                     }
-                    let _ = self.data.writeFrame(frame: Int(current.frame), data: Data(bytesNoCopy: dst, count: length, deallocator: .none), endFrame: endFrame)
+                    let _ = self.data.writeFrame(frame: Int(current.frame), data: Data(bytesNoCopy: dst, count: length, deallocator: .none))
                     dst.deallocate()
                 }
             }

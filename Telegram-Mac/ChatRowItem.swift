@@ -690,10 +690,7 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
-    func toggleLike() {
-        
-    }
-    
+
     override func copyAndUpdate(animated: Bool) {
         if let table = self.table {
             let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
@@ -2611,7 +2608,6 @@ class ChatRowItem: TableRowItem {
                 return nil
             }
             
-            let messageId = message.id
             
             if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
                 available.move(at: index, to: 0)
@@ -2619,7 +2615,7 @@ class ChatRowItem: TableRowItem {
             
             let width = ContextAddReactionsListView.width(for: available)
             
-            let rect = NSMakeRect(0, 0, width + 20, 40)
+            let rect = NSMakeRect(0, 0, width + 40, 40)
             
             let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
             panel._canBecomeMain = false

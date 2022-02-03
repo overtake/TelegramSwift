@@ -1787,7 +1787,11 @@ extension String {
             let char = string.character(at: range.location + i)
             rep += "\(chars[Int(char) % chars.count])"
         }
-        return string.replacingCharacters(in: range, with: rep)
+        if string.length < range.upperBound {
+            return string.replacingCharacters(in: range, with: rep)
+        } else {
+            return self
+        }
     }
 }
 

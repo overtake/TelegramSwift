@@ -1573,7 +1573,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             control?.removeAllHandlers()
             control?.set(handler: { [weak item, weak self] control in
                 if self?.chatInteraction.presentation.state == .selecting {
-                    item?.toggleSelect()
+                    self?.toggleUnderMouseMessage()
                 } else {
                     item?.openInfo()
                 }
@@ -1586,6 +1586,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         self.updateFloatingPhotos(genericView.scroll, animated: animated, currentAnimationRows: currentAnimationRows)
+    }
+    
+    private func toggleUnderMouseMessage() {
+        if let event = NSApp.currentEvent {
+            let point = genericView.tableView.contentView.convert(event.locationInWindow, from: nil)
+            let row = genericView.tableView.row(at: point)
+            if row != -1 {
+                let item = genericView.tableView.item(at: row)
+                (item as? ChatRowItem)?.toggleSelect()
+            }
+        }
     }
 
     private func updateVisibleRange(_ range: NSRange) -> Void {
