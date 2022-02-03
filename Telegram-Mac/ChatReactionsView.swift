@@ -363,7 +363,7 @@ final class ChatReactionsLayout {
             return !sorted.contains(where: { $0.value == value.value }) && peerAllowed.contains(value.value)
         })
         
-        if mode == .full, !sorted.isEmpty, !list.isEmpty, !sorted.contains(where: { $0.isSelected }) {
+        if mode == .full, !sorted.isEmpty, !list.isEmpty {
             if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
                 let uniqueLimit = Int(value)
                 if sorted.count < uniqueLimit {
