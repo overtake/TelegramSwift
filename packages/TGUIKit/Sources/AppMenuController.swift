@@ -793,9 +793,9 @@ final class AppMenuController : NSObject  {
         
         if let window = menu.topWindow {
             
-            let width = min(window.frame.width, rect.width)
+            let width = min(window.frame.width, rect.width - 20)
             
-            let rect = NSMakeRect(rect.minX, rect.maxY - 18, width, window.frame.height)
+            let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width, window.frame.height)
             window.setFrame(rect, display: true)
             window.makeKeyAndOrderFront(nil)
             
@@ -879,9 +879,6 @@ final class AppMenuController : NSObject  {
     func present(event: NSEvent, view: NSView) {
         
         self.parent = event.window as? Window
-        if self.parent?.weakView != nil {
-            self.parent = mainWindow
-        }
         self.weakHolder = nil
         self.initialize()
         self.activate(event: event, view: view, animated: true)

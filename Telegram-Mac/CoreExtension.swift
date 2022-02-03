@@ -324,7 +324,7 @@ extension Media {
         if self is TelegramMediaImage {
             return true
         } else if let file = self as? TelegramMediaFile {
-            return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif"))
+            return (file.isVideo && !file.isWebm) || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif") && !file.isWebm)
         } else if let map = self as? TelegramMediaMap {
             return map.venue == nil
         } else if self is TelegramMediaDice {

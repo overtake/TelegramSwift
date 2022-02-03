@@ -394,7 +394,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
             
             if !featured.isEmpty, mode == .common {
                 if settings.trendingClosedOn != featured.first?.info.id.id {
-                    entries.append(.trending(index: .saved(1), featured: featured, collectionId: .inlineFeatured(hasUnred: featured.contains(where: { $0.unread }))))
+                  //  entries.append(.trending(index: .saved(1), featured: featured, collectionId: .inlineFeatured(hasUnred: featured.contains(where: { $0.unread }))))
                 }
             }
             

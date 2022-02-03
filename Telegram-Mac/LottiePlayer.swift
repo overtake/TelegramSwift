@@ -50,7 +50,7 @@ final class RenderAtomic<T> {
 }
 
 
-let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
+let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
 private let stateQueue = Queue()
 
 
@@ -106,9 +106,9 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
     let size: NSSize
     let backingScale: Int
     let key: LottieAnimationEntryKey
-    private let _data: Data
+    private let _data: UnsafeRawPointer
     private let fps: Int
-    init(key: LottieAnimationEntryKey, frame: Int32, fps: Int, size: NSSize, data: Data, backingScale: Int) {
+    init(key: LottieAnimationEntryKey, frame: Int32, fps: Int, size: NSSize, data: UnsafeRawPointer, backingScale: Int) {
         self.key = key
         self.backingScale = backingScale
         self.size = size
@@ -117,23 +117,28 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
         self.fps = fps
     }
     var image: CGImage? {
-        return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
-            _data.withUnsafeBytes { bytes -> Void in
-                guard let baseAddress = bytes.baseAddress else {
-                    return
-                }
-                memcpy(pixelData, baseAddress.assumingMemoryBound(to: UInt8.self), bytes.count)
-            }
-        })
+        if let data = data {
+            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
+                memcpy(pixelData, data, bufferSize)
+            })
+        }
+        return nil
     }
     var duration: TimeInterval {
         return 1.0 / Double(self.fps)
     }
+    var bufferSize: Int {
+        return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
+    }
     var data: UnsafeRawPointer? {
-        return (_data as NSData).bytes
+        return _data
     }
     static func == (lhs: RenderedWebmFrame, rhs: RenderedWebmFrame) -> Bool {
         return lhs.key == rhs.key
+    }
+    
+    deinit {
+        _data.deallocate()
     }
 }
 
@@ -176,26 +181,8 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     
     deinit {
         data?.deallocate()
-        
-//        _ = sharedFrames.modify { value in
-//            var value = value
-//            if var shared = value[key] {
-//                shared.removeValue(forKey: frame)
-//                if shared.isEmpty {
-//                    value.removeValue(forKey: key)
-//                } else {
-//                    value[key] = shared
-//                }
-//            }
-//            return value
-//        }
-       
     }
 }
-
-//private var sharedFrames:RenderAtomic<[LottieAnimationEntryKey : [Int32: WeakReference<RenderedFrame>]]> = RenderAtomic(value: [:])
-
-
 
 
 private final class RendererState  {
@@ -205,7 +192,7 @@ private final class RendererState  {
     private(set) var cachedFrames:[Int32 : RenderedFrame]
     private(set) var currentFrame: Int32
     private(set) var startFrame:Int32
-    private(set) var endFrame: Int32
+    private(set) var _endFrame: Int32
     private(set) var cancelled: Bool
     private(set) weak var container: RenderContainer?
     private(set) var renderIndex: Int32?
@@ -217,8 +204,13 @@ private final class RendererState  {
         self.cachedFrames = cachedFrames
         self.currentFrame = currentFrame
         self.startFrame = startFrame
-        self.endFrame = endFrame
+        self._endFrame = endFrame
     }
+    
+    var endFrame: Int32 {
+        return container?.endFrame ?? _endFrame
+    }
+    
     func withUpdatedFrames(_ frames: [RenderedFrame]) {
         self.frames = frames
     }
@@ -226,6 +218,10 @@ private final class RendererState  {
         let prev = frame.frame == 0 ? nil : self.frames.last ?? previousFrame
         self.container?.cacheFrame(prev, frame)
         self.frames = self.frames + [frame]
+    }
+    
+    func loopComplete() {
+        self.container?.markFinished()
     }
     
     func updateCurrentFrame(_ currentFrame: Int32) {
@@ -561,19 +557,14 @@ private final class PlayerRenderer {
                         if currentFrame % Int32(round(Float(mainFps) / Float(fps))) != 0 {
                             currentFrame += 1
                         }
-                    } else {
-                        currentFrame += 1
-                    }
-                    
-                    if currentFrame >= stateValue.endFrame - 1 {
-                        currentFrame = stateValue.startFrame - 1
                     }
                     stateValue.updateCurrentFrame(currentFrame + 1)
 
                     if let frame = frame {
                         stateValue.addFrame(frame)
                     } else {
-                        break
+                        stateValue.updateCurrentFrame(stateValue.startFrame)
+                        stateValue.loopComplete()
                     }
                 }
                 return stateValue
@@ -774,6 +765,7 @@ enum LottiePlayerTriggerFrame : Equatable {
 private protocol RenderContainer : class {
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame?
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame)
+    func markFinished()
     func setColor(_ color: NSColor, keyPath: String)
     
     var endFrame: Int32 { get }
@@ -804,6 +796,9 @@ private final class WebPRenderer : RenderContainer {
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         
     }
+    func markFinished() {
+        
+    }
     func setColor(_ color: NSColor, keyPath: String) {
         
     }
@@ -826,8 +821,8 @@ private final class WebmRenderer : RenderContainer {
     private let animation: LottieAnimation
     private let decoder: SoftwareVideoSource
     
-    private var frameCount: Int32 = 5
-    private var hasCount: Bool = false
+    
+    private var index: Int32 = 1
     
     private let fileSupplyment: TRLotFileSupplyment?
 
@@ -841,57 +836,63 @@ private final class WebmRenderer : RenderContainer {
         
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
         let bufferSize = s.w * s.h * 4
+        
+        
+        if let fileSupplyment = fileSupplyment {
+            let previous = frameIndex == startFrame ? nil : frames.last ?? previousFrame
+            if let data = fileSupplyment.readFrame(previous: previous, frame: Int(frameIndex)) {
+                return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: data, backingScale: animation.backingScale)
+            }
+            if fileSupplyment.isFinished {
+                return nil
+            }
+        }
 
         let frameAndLoop = decoder.readFrame(maxPts: nil)
         if frameAndLoop.0 == nil {
-            if frameAndLoop.3, !hasCount {
-                self.frameCount = frameIndex
-            }
             return nil
-        }
-        
-        if !hasCount {
-            self.frameCount += 1
         }
         
         guard let frame = frameAndLoop.0 else {
             return nil
         }
         
+        self.index += 1
+        
         let destBytesPerRow = Int(animation.size.width) * animation.backingScale * 4
 
-        var frameData = Data(count: bufferSize)
-        frameData.withUnsafeMutableBytes { buffer -> Void in
-            guard let bytes = buffer.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
-                return
-            }
-            
-            let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
-            CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-            let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
-            let width = CVPixelBufferGetWidth(imageBuffer!)
-            let height = CVPixelBufferGetHeight(imageBuffer!)
-            let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
-            
-            var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
-            var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
-                       
-            let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
-            
-            CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        }
-        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: frameData, backingScale: animation.backingScale)
+        let memoryData = malloc(bufferSize)!
+        let bytes = memoryData.assumingMemoryBound(to: UInt8.self)
+        
+        let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
+        CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
+        let width = CVPixelBufferGetWidth(imageBuffer!)
+        let height = CVPixelBufferGetHeight(imageBuffer!)
+        let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
+        
+        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
+                   
+        let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
+        
+        CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        
+        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: bytes, backingScale: animation.backingScale)
     }
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if let fileSupplyment = fileSupplyment {
-            fileSupplyment.addFrame(previous, current, endFrame: Int(endFrame))
+            fileSupplyment.addFrame(previous, current)
         }
+    }
+    func markFinished() {
+        fileSupplyment?.markFinished()
     }
     func setColor(_ color: NSColor, keyPath: String) {
         
     }
     var endFrame: Int32 {
-        return Int32(frameCount)
+        return Int32(60)
     }
     var startFrame: Int32 {
         return 0
@@ -935,33 +936,30 @@ private final class LottieRenderer : RenderContainer {
     
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if let fileSupplyment = fileSupplyment {
-            fileSupplyment.addFrame(previous, current, endFrame: Int(endFrame))
+            fileSupplyment.addFrame(previous, current)
         }
     }
-    
+    func markFinished() {
+        fileSupplyment?.markFinished()
+    }
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
         
         var data: UnsafeRawPointer?
-        
-//        let sharedFrame = sharedFrames.with { value -> RenderedLottieFrame? in
-//            return value[animation.key]?[frame]?.value
-//        }
-//
-//        if let sharedFrame = sharedFrame {
-//            return sharedFrame
-//        }
-//
+
         if let fileSupplyment = fileSupplyment {
             let previous = frame == startFrame ? nil : frames.last ?? previousFrame
             if let frame = fileSupplyment.readFrame(previous: previous, frame: Int(frame)) {
                 data = frame
             }
         }
+        if frame > endFrame {
+            return nil
+        }
         if data == nil {
             let bufferSize = s.w * s.h * 4
-            let frameData = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize); //malloc(bufferSize)!
-//            let frameData = memoryData.as(to: UInt8.self)
+            let memoryData = malloc(bufferSize)!
+            let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
             bridge.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h))
             data = UnsafeRawPointer(frameData)
         }
@@ -1111,7 +1109,7 @@ final class LottieAnimation : Equatable {
                         let fileSupplyment: TRLotFileSupplyment?
                         switch self.cache {
                         case .temporaryLZ4:
-                            fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, frames: Int(bridge.endFrame()), queue: Queue())
+                            fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
                         case .none:
                             fileSupplyment = nil
                         }
@@ -1136,7 +1134,14 @@ final class LottieAnimation : Equatable {
             let path = String(data: self.compressed, encoding: .utf8)
             if let path = path {
                 let decoder = SoftwareVideoSource(path: path, hintVP9: true)
-                return WebmRenderer(animation: self, decoder: decoder, fileSupplyment: nil)
+                let fileSupplyment: TRLotFileSupplyment?
+                switch self.cache {
+                case .temporaryLZ4:
+                    fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
+                case .none:
+                    fileSupplyment = nil
+                }
+                return WebmRenderer(animation: self, decoder: decoder, fileSupplyment: fileSupplyment)
             }
         }
         return nil
