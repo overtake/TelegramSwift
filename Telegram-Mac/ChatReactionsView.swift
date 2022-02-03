@@ -1089,20 +1089,32 @@ final class ChatReactionsView : View {
                prevView = kv.value
                reused.insert(kv.key)
            }
-            let getView: ()->NSView = {
+            let getView: (NSView?)->NSView = { prev in
                 switch layout.mode {
                 case .full:
                     if item.value.value.isEmpty {
-                        return AddReactionView(frame: item.rect)
+                        if let prev = prev as? AddReactionView {
+                            return prev
+                        } else {
+                            return AddReactionView(frame: item.rect)
+                        }
                     } else {
-                        return ReactionView(frame: item.rect)
+                        if let prev = prev as? ReactionView {
+                            return prev
+                        } else {
+                            return ReactionView(frame: item.rect)
+                        }
                     }
                 case .short:
-                    return ShortReactionView(frame: item.rect)
+                    if let prev = prev as? ShortReactionView {
+                        return prev
+                    } else {
+                        return ShortReactionView(frame: item.rect)
+                    }
                 }
             }
             
-            let view = prevView ?? getView()
+            let view = getView(prevView)
             view.frame = prevFrame ?? item.rect
             self.views.insert(view, at: idx)
             self.reactions.insert(item, at: idx)
