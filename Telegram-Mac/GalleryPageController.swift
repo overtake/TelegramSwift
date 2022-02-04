@@ -176,7 +176,6 @@ class GalleryPageView : NSView {
     init() {
         super.init(frame:NSZeroRect)
         self.wantsLayer = true
-        self.canDrawSubviewsIntoLayer = true
     }
     
     override func setFrameSize(_ newSize: NSSize) {

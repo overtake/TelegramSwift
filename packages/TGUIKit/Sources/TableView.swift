@@ -406,7 +406,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         super.init(frame: frameRect)
         backgroundColor = .clear
         self.autoresizesSubviews = false
-     //  canDrawSubviewsIntoLayer = true
         usesAlternatingRowBackgroundColors = false
         layerContentsRedrawPolicy = .never
     }
