@@ -594,6 +594,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             message = message.withUpdatedMedia([]).withUpdatedText(" ")
         }
         
+        let allowAttributes:[MessageAttribute.Type] = [ReplyThreadMessageAttribute.self, OutgoingMessageInfoAttribute.self, TextEntitiesMessageAttribute.self, EditedMessageAttribute.self, ForwardSourceInfoAttribute.self, ViewCountMessageAttribute.self, ConsumableContentMessageAttribute.self, NotificationInfoMessageAttribute.self, ChannelMessageStateVersionAttribute.self, AutoremoveTimeoutMessageAttribute.self, ReactionsMessageAttribute.self, PendingReactionsMessageAttribute.self]
+        
         if renderType == .list {
             if let prev = prev {
                 var actionShortAccess: Bool = true
@@ -612,7 +614,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     } else {
                         var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
                         
-                        let allowAttributes:[MessageAttribute.Type] = [ReplyThreadMessageAttribute.self, OutgoingMessageInfoAttribute.self, TextEntitiesMessageAttribute.self, EditedMessageAttribute.self, ForwardSourceInfoAttribute.self, ViewCountMessageAttribute.self, ConsumableContentMessageAttribute.self, NotificationInfoMessageAttribute.self, ChannelMessageStateVersionAttribute.self, AutoremoveTimeoutMessageAttribute.self, ReactionsMessageAttribute.self, PendingReactionsMessageAttribute.self]
+                        
                         
                         attrsLoop: for attr in message.attributes {
                             let contains = allowAttributes.contains(where: { type(of: attr) == $0 })
@@ -658,16 +660,25 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 return accept
             }
             
+            var canShort = true
+            attrsLoop: for attr in message.attributes {
+                let contains = allowAttributes.contains(where: { type(of: attr) == $0 })
+                if !contains {
+                    canShort = false
+                    break attrsLoop
+                }
+            }
+            
             if let next = next {
-                if isSameGroup(message, next.message) {
+                if isSameGroup(message, next.message), canShort {
                     if let prev = prev {
-                        itemType = .Short(rank: rank, header: isSameGroup(message, prev.message) ? .short : .normal)
+                        itemType = .Short(rank: rank, header: isSameGroup(message, prev.message) && canShort ? .short : .normal)
                     } else {
                         itemType = .Short(rank: rank, header: .normal)
                     }
                 } else {
                     if let prev = prev {
-                        let shouldGroup = isSameGroup(message, prev.message)
+                        let shouldGroup = isSameGroup(message, prev.message) && canShort
                         itemType = .Full(rank: rank, header: shouldGroup ? .short : .normal)
                     } else {
                         itemType = .Full(rank: rank, header:  .normal)
@@ -676,7 +687,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             } else {
                 if let prev = prev {
                     let shouldGroup = isSameGroup(message, prev.message)
-                    itemType = .Full(rank: rank, header: shouldGroup ? .short : .normal)
+                    itemType = .Full(rank: rank, header: shouldGroup && canShort ? .short : .normal)
                 } else {
                     itemType = .Full(rank: rank, header: .normal)
                 }

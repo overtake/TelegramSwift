@@ -85,39 +85,6 @@ func PlayConfetti(for window: Window, playEffect: Bool = false) {
     
     contentView.addSubview(ConfettiView(frame: contentView.bounds))
     
-//
-//    let rightBottomView = View(frame: contentView.bounds)
-//    rightBottomView.isEventLess = true
-//    let rightEmitter = CAEmitterLayer()
-//    rightEmitter.emitterPosition = CGPoint(x: contentView.frame.size.width , y: contentView.frame.size.height)
-//    rightEmitter.emitterShape = .point
-//    rightEmitter.emitterSize = CGSize(width: contentView.frame.size.width, height: 2.0)
-//    rightEmitter.emitterCells = generateEmitterCells(left: false)
-//
-//    rightBottomView.layer = rightEmitter
-//    contentView.addSubview(rightBottomView)
-//
-//    let leftBottomView = View(frame: contentView.bounds)
-//    leftBottomView.isEventLess = true
-//    let leftEmitter = CAEmitterLayer()
-//    leftEmitter.emitterPosition = CGPoint(x: 0, y: contentView.frame.size.height)
-//    leftEmitter.emitterShape = .point
-//    leftEmitter.emitterSize = CGSize(width: contentView.frame.size.width, height: 2.0)
-//    leftEmitter.emitterCells = generateEmitterCells(left: true)
-//
-//    leftBottomView.layer = leftEmitter
-//    contentView.addSubview(leftBottomView)
-//
-//
-//    delay(0.1, closure: {
-//        rightEmitter.birthRate = 0
-//        leftEmitter.birthRate = 0
-//    })
-//
-//    delay(2.0, closure: {
-//        rightBottomView.removeFromSuperview()
-//        leftBottomView.removeFromSuperview()
-//    })
 }
 private func generateEmitterCells(left: Bool) -> [CAEmitterCell] {
     var cells:[CAEmitterCell] = [CAEmitterCell]()
@@ -132,9 +99,7 @@ private func generateEmitterCells(left: Bool) -> [CAEmitterCell] {
         cell.alphaSpeed = -1.0/4.0
         cell.alphaRange = cell.lifetime * cell.alphaSpeed
         
-     //   cell.emissionRange = CGFloat.pi / 8
-      //  cell.emissionLongitude = CGFloat.pi * 2
-        
+
         cell.emissionLongitude = left ? -60 * (.pi / 180) : CGFloat(-Double.pi + 1.0)
         cell.emissionRange = 30 * (.pi / 180)
         cell.yAcceleration = max(400, CGFloat(arc4random() % 1000))

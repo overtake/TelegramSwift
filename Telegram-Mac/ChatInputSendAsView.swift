@@ -82,6 +82,8 @@ final class ChatInputSendAsView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private var first: Bool = true
+    
     func update(_ peers: [FoundPeer], currentPeerId: PeerId, chatInteraction: ChatInteraction, animated: Bool) {
         let currentIsUpdated = self.currentPeerId != currentPeerId
         self.currentPeerId = currentPeerId
@@ -108,9 +110,10 @@ final class ChatInputSendAsView : Control {
             avatar.centerY(x: frame.width - avatar.frame.width)
             self.avatar = avatar
             
-            if animated {
+            if animated, !first {
                 avatar.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
             }
+            first = false
         }
     }
 }

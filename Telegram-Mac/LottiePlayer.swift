@@ -50,7 +50,7 @@ final class RenderAtomic<T> {
 }
 
 
-let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
+let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 0.5)
 private let stateQueue = Queue()
 
 
