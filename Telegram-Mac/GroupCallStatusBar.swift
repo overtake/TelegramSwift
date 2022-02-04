@@ -42,7 +42,7 @@ final class GroupCallStatusBar {
             items.append(.init(strings().groupCallStatusBarStopScreen, handler: { [weak self] in
                 self?.arguments.cancelShareScreencast()
             }, image: NSImage(named: "group_call_stop_share_screen")))
-        } else {
+        } else if !state.cantRunVideo {
             items.append(.init(strings().groupCallStatusBarStartScreen, handler: { [weak self] in
                 self?.arguments.shareSource(.screencast, true)
             }, image: NSImage(named: "group_call_share_screen")))
@@ -51,15 +51,20 @@ final class GroupCallStatusBar {
             items.append(.init(strings().groupCallStatusBarStopVideo, handler: { [weak self] in
                 self?.arguments.cancelShareVideo()
             }, image: NSImage(named: "group_call_stop_share_video")))
-        } else {
+        } else if !state.cantRunVideo {
             items.append(.init(strings().groupCallStatusBarStartVideo, handler: { [weak self] in
                 self?.arguments.shareSource(.video, true)
             }, image: NSImage(named: "group_call_share_video")))
         }
         
-        self.sharedContext.callStatusBarMenuItems = {
-            return items
+        if !items.isEmpty {
+            self.sharedContext.callStatusBarMenuItems = {
+                return items
+            }
+        } else {
+            self.sharedContext.callStatusBarMenuItems = nil
         }
+        
         
         if hasShare != previous {
             if hasShare {
