@@ -1939,8 +1939,13 @@ final class GroupCallUIController : ViewController {
             return .invokeNext
         }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
         
-        window.set(handler: { [weak arguments] event in
-            arguments?.focusVideo(nil)
+        window.set(handler: { [weak arguments, weak self] event in
+            let settings = self?.navigationController?.controller as? GroupCallSettingsController
+            if let _ = settings {
+                self?.navigationController?.back()
+            } else {
+                arguments?.focusVideo(nil)
+            }
             return .invokeNext
         }, with: self, for: .Escape, priority: .modal)
         
