@@ -721,7 +721,13 @@ private func generateChatMention(image: NSImage, backgroundColor: NSColor, borde
         ctx.setFillColor(backgroundColor.cgColor)
         ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
         ctx.setLineWidth(1.0)
-        ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
+        
+        if border != .clear {
+            ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
+            ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
+        }
+        
+//        ctx.setStrokeColor(border.withAlphaComponent(0.7).cgColor)
       //  ctx.strokeEllipse(in: CGRect(origin: CGPoint(x: 1.0, y: 1.0), size: CGSize(width: size.width - 2.0, height: size.height - 2.0)))
 
         let icon = image.precomposed(foregroundColor)
@@ -2317,8 +2323,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                reactions_badge_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
                                                reactions_badge_archive: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
                                                reactions_badge_archive_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
-                                               chat_reactions_badge: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.grayIcon, foregroundColor: palette.grayIcon) },
-                                               chat_reactions_badge_active: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) }
+                                               chat_reactions_badge: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, foregroundColor: palette.grayIcon) },
+                                               chat_reactions_badge_active: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, foregroundColor: palette.accentIcon) }
 
     )
 

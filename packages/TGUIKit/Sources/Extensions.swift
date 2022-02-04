@@ -1858,6 +1858,9 @@ extension NSEdgeInsets : Equatable {
     public static func ==(lhs: NSEdgeInsets, rhs: NSEdgeInsets) -> Bool {
         return lhs.left == rhs.left && lhs.right == rhs.right && lhs.bottom == rhs.bottom && lhs.top == rhs.top
     }
+    public var isEmpty: Bool {
+        return self.left == 0 && self.right == 0 && self.top == 0 && self.bottom == 0
+    }
 }
 
 

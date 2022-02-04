@@ -363,7 +363,7 @@ final class ChatReactionsLayout {
             return !sorted.contains(where: { $0.value == value.value }) && peerAllowed.contains(value.value)
         })
         
-        if mode == .full, !sorted.isEmpty, !list.isEmpty {
+        if mode == .full, !sorted.isEmpty, !list.isEmpty, !sorted.contains(where: { $0.isSelected }) {
             if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
                 let uniqueLimit = Int(value)
                 if sorted.count < uniqueLimit {
@@ -816,6 +816,8 @@ final class ChatReactionsView : View {
             
         }
         
+        private var first: Bool = true
+        
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
             self.reaction = reaction
             self.backgroundColor = reaction.presentation.bgColor
@@ -823,6 +825,11 @@ final class ChatReactionsView : View {
             
             imageView.image = NSImage.init(named: "Icon_Message_AddReaction")?.precomposed(reaction.presentation.textColor)
             imageView.sizeToFit()
+            
+            if first {
+                first = false
+                self.updateLayout(size: self.frame.size, transition: .immediate)
+            }
             
         }
         
@@ -1078,16 +1085,19 @@ final class ChatReactionsView : View {
         for (idx, item, pix) in inserted {
             var prevFrame: NSRect? = nil
             var prevView: NSView? = nil
+            var reusedPix: Int?
             if let pix = pix {
                 prevFrame = previous[pix].rect
                 prevView = deletedViews[pix]
                 if prevView != nil {
                     reused.insert(pix)
+                    reusedPix = pix
                 }
             } else if inserted.count == 1, removed.count == 1 {
-               let kv = deletedViews.first!
-               prevView = kv.value
-               reused.insert(kv.key)
+                let kv = deletedViews.first!
+                prevView = kv.value
+                reused.insert(kv.key)
+                reusedPix = kv.key
            }
             let getView: (NSView?)->NSView = { prev in
                 switch layout.mode {
@@ -1115,6 +1125,10 @@ final class ChatReactionsView : View {
             }
             
             let view = getView(prevView)
+            
+            if view != prevView, let pix = reusedPix {
+                _ = reused.remove(pix)
+            }
             view.frame = prevFrame ?? item.rect
             self.views.insert(view, at: idx)
             self.reactions.insert(item, at: idx)
