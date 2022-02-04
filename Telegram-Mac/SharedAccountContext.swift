@@ -103,69 +103,89 @@ class SharedAccountContext {
     
     private(set) var layout:SplitViewState = .none
     let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
+    
+    public var callStatusBarMenuItems:(()->[ContextMenuItem])? = nil {
+        didSet {
+            updateStatusBarMenuItem()
+        }
+    }
 
     private var statusItem: NSStatusItem?
 
     
     func updateStatusBarImage(_ image: NSImage?) -> Void {
-        let icon = image ?? NSImage(named: "StatusIcon")
-      //  icon?.isTemplate = true
+        let icon: NSImage
+        if let image = image {
+            icon = image
+        } else {
+            icon = NSImage(named: "StatusIcon")!
+            icon.isTemplate = true
+        }
         statusItem?.image = icon
     }
     
     private func updateStatusBarMenuItem() {
+        
         let menu = NSMenu()
         
-        if let activeAccountsInfoValue = activeAccountsInfoValue, activeAccountsInfoValue.accounts.count > 1 {
-            var activeAccountsInfoValue = activeAccountsInfoValue
-            for (i, value) in activeAccountsInfoValue.accounts.enumerated() {
-                if value.account.id == activeAccountsInfoValue.primary {
-                    activeAccountsInfoValue.accounts.swapAt(i, 0)
-                    break
-                }
+        if let items = self.callStatusBarMenuItems?()  {
+            for item in items {
+                menu.addItem(item)
             }
-            for account in activeAccountsInfoValue.accounts {
-                let state: NSControl.StateValue?
-                if account.account.id == activeAccountsInfoValue.primary {
-                    state = .on
-                } else {
-                    state = nil
+        } else {
+            if let activeAccountsInfoValue = activeAccountsInfoValue, activeAccountsInfoValue.accounts.count > 1 {
+                var activeAccountsInfoValue = activeAccountsInfoValue
+                for (i, value) in activeAccountsInfoValue.accounts.enumerated() {
+                    if value.account.id == activeAccountsInfoValue.primary {
+                        activeAccountsInfoValue.accounts.swapAt(i, 0)
+                        break
+                    }
                 }
-                let image: NSImage?
-                if let cgImage = self.accountPhotos[account.account.peerId] {
-                    image = NSImage(cgImage: cgImage, size: NSMakeSize(16, 16))
-                } else {
-                    image = nil
+                for account in activeAccountsInfoValue.accounts {
+                    let state: NSControl.StateValue?
+                    if account.account.id == activeAccountsInfoValue.primary {
+                        state = .on
+                    } else {
+                        state = nil
+                    }
+                    let image: NSImage?
+                    if let cgImage = self.accountPhotos[account.account.peerId] {
+                        image = NSImage(cgImage: cgImage, size: NSMakeSize(16, 16))
+                    } else {
+                        image = nil
+                    }
+                    
+                    menu.addItem(ContextMenuItem(account.peer.displayTitle, handler: {
+                        self.switchToAccount(id: account.account.id, action: nil)
+                    }, image: image, state: state))
+                    
+                    if account.account.id == activeAccountsInfoValue.primary {
+                        menu.addItem(ContextSeparatorItem())
+                    }
                 }
                 
-                menu.addItem(ContextMenuItem(account.peer.displayTitle, handler: {
-                    self.switchToAccount(id: account.account.id, action: nil)
-                }, image: image, state: state))
                 
-                if account.account.id == activeAccountsInfoValue.primary {
-                    menu.addItem(ContextSeparatorItem())
-                }
+                menu.addItem(ContextSeparatorItem())
             }
             
-            
-            menu.addItem(ContextSeparatorItem())
+            menu.addItem(ContextMenuItem(strings().statusBarActivate, handler: {
+                if !mainWindow.isKeyWindow  {
+                    NSApp.activate(ignoringOtherApps: true)
+                    mainWindow.deminiaturize(nil)
+                } else {
+                    NSApp.hide(nil)
+                }
+                
+            }, dynamicTitle: {
+                return !mainWindow.isKeyWindow ? strings().statusBarActivate : strings().statusBarHide
+            }))
+                    
+            menu.addItem(ContextMenuItem(strings().statusBarQuit, handler: {
+                NSApp.terminate(nil)
+            }))
         }
         
-        menu.addItem(ContextMenuItem(strings().statusBarActivate, handler: {
-            if !mainWindow.isKeyWindow  {
-                NSApp.activate(ignoringOtherApps: true)
-                mainWindow.deminiaturize(nil)
-            } else {
-                NSApp.hide(nil)
-            }
-            
-        }, dynamicTitle: {
-            return !mainWindow.isKeyWindow ? strings().statusBarActivate : strings().statusBarHide
-        }))
-                
-        menu.addItem(ContextMenuItem(strings().statusBarQuit, handler: {
-            NSApp.terminate(nil)
-        }))
+       
         
         statusItem?.menu = menu
     }

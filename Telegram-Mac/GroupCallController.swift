@@ -691,7 +691,7 @@ final class GroupCallUIController : ViewController {
     private let connecting = MetaDisposable()
     private let isFullScreen = ValuePromise(false, ignoreRepeated: true)
     private weak var sharing: DesktopCapturerWindow?
-
+    private var statusBar: GroupCallStatusBar?
     private var requestedVideoSources = Set<String>()
     private var videoViews: [(DominantVideo, GroupCallUIState.ActiveVideo.Mode, GroupVideoView)] = []
 
@@ -754,6 +754,8 @@ final class GroupCallUIController : ViewController {
         
         
         let callState: ValuePromise<GroupCallUIState> = ValuePromise(ignoreRepeated: true)
+        
+        
         
         struct ActiveVideos : Equatable {
             var set: [GroupCallUIState.ActiveVideo]
@@ -1163,6 +1165,8 @@ final class GroupCallUIController : ViewController {
                 }
             }
         })
+        
+        self.statusBar = .init(callState.get() |> deliverOnMainQueue, arguments: arguments, sharedContext: data.call.sharedContext)
         
         contextMenuItems = { [weak arguments, weak self] data in
             

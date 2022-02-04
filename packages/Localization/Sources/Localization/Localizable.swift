@@ -4921,6 +4921,14 @@ public final class L10n {
   public static var groupAdminsDescAdminInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AdminInvites") }
   /// Group members can add new members, and can edit the name or photo of the group.
   public static var groupAdminsDescAllInvites: String  { return L10n.tr("Localizable", "GroupAdmins.Desc.AllInvites") }
+  /// Share Screen
+  public static var groupCallStatusBarStartScreen: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StartScreen") }
+  /// Share Video
+  public static var groupCallStatusBarStartVideo: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StartVideo") }
+  /// Stop Share Screen
+  public static var groupCallStatusBarStopScreen: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StopScreen") }
+  /// Stop Share Video
+  public static var groupCallStatusBarStopVideo: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StopVideo") }
   /// Sorry, if a person left a group, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
   public static var groupInfoAddUserLeftError: String  { return L10n.tr("Localizable", "GroupInfo.AddUserLeftError") }
   /// Administrators
