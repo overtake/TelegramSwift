@@ -1122,7 +1122,6 @@
 		D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D098C71A1D7E175A007784E4 /* Assets.xcassets */; };
 		D098C71E1D7E175A007784E4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = D098C71C1D7E175A007784E4 /* MainMenu.xib */; };
 		D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D098C7391D7E1C40007784E4 /* AuthController.swift */; };
-		D09D836E24A6205500120F73 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D09D836D24A6205500120F73 /* libtgvoip.framework */; };
 		D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09D9DF0229C27A700378796 /* AnimatedStickerUtils.swift */; };
 		D0A2764E249C9D6B005E3C77 /* PeerPhotos.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764D249C9D6B005E3C77 /* PeerPhotos.swift */; };
 		D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */; };
@@ -2453,7 +2452,6 @@
 				27D43DA627917717006968A6 /* libwebp.a in Frameworks */,
 				27B8E7C027424F2E001B8DF7 /* TGCurrencyFormatter in Frameworks */,
 				27D696F6274F8458008A723E /* ColorPalette in Frameworks */,
-				D09D836E24A6205500120F73 /* libtgvoip.framework in Frameworks */,
 				27D43DA2279176E2006968A6 /* libswresample.a in Frameworks */,
 				27D43DAA27917721006968A6 /* libwebpdemux.a in Frameworks */,
 				D06E38AC24A5F3B700C7D03A /* MetalKit.framework in Frameworks */,
