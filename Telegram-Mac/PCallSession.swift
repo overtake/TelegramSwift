@@ -167,7 +167,7 @@ public struct CallAuxiliaryServer {
 }
 
 
-private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueue, OngoingCallThreadLocalContextQueueWebrtc  {
+private final class OngoingCallThreadLocalContextQueueImpl: NSObject, OngoingCallThreadLocalContextQueueWebrtc  {
     private let queue: Queue
     
     init(queue: Queue) {

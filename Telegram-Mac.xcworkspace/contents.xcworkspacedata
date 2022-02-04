@@ -17,9 +17,6 @@
       location = "group:submodules/Sparkle/Sparkle.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:submodules/libtgvoip/libtgvoip_osx.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:Telegram.xcodeproj">
    </FileRef>
 </Workspace>

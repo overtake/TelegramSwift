@@ -152,7 +152,6 @@
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
 		276C1EBF261B451500FE41C9 /* Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276C1EBE261B451500FE41C9 /* Currency.swift */; };
-		2771AC79273C2B2700245A48 /* TelegramVoip in Frameworks */ = {isa = PBXBuildFile; productRef = 2771AC78273C2B2700245A48 /* TelegramVoip */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
 		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
@@ -291,7 +290,6 @@
 		27A6977A273D0ADF00B33415 /* GroupCallPeerAvatarRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */; };
 		27A6977B273D0AE000B33415 /* GroupCallTextAndLabelRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */; };
 		27A6977D273D0AED00B33415 /* GroupVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27335F0225C8295100FD040C /* GroupVideoView.swift */; };
-		27A69780273D103400B33415 /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27A6977E273D103200B33415 /* OngoingCallThreadLocalContext.mm */; };
 		27A6978D273D192800B33415 /* libphonenumber in Frameworks */ = {isa = PBXBuildFile; productRef = 27A6978C273D192800B33415 /* libphonenumber */; };
 		27A69790273D1DE900B33415 /* FFMpegBinding in Frameworks */ = {isa = PBXBuildFile; productRef = 27A6978F273D1DE900B33415 /* FFMpegBinding */; };
 		27A69793273D210400B33415 /* OpusBinding in Frameworks */ = {isa = PBXBuildFile; productRef = 27A69792273D210400B33415 /* OpusBinding */; };
@@ -364,6 +362,7 @@
 		27CE37752760CEE4007E6F1B /* menu_mute_for_2_days.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE37732760CEE1007E6F1B /* menu_mute_for_2_days.tgs */; };
 		27CE37762760CEE4007E6F1B /* menu_mute_for_1_hour.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE37742760CEE4007E6F1B /* menu_mute_for_1_hour.tgs */; };
 		27CEA34927AD513300472CB1 /* GroupCallStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CEA34827AD513300472CB1 /* GroupCallStatusBar.swift */; };
+		27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */ = {isa = PBXBuildFile; productRef = 27CEA34A27AD9CFA00472CB1 /* TelegramVoip */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
 		27D43D9A27917641006968A6 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2754D29827909668000DDAD3 /* libvpx.a */; };
 		27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9B279176C2006968A6 /* libavcodec.a */; };
@@ -1494,8 +1493,6 @@
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
 		27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerAvatarRowItem.swift; sourceTree = "<group>"; };
 		27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTextAndLabelRowItem.swift; sourceTree = "<group>"; };
-		27A6977E273D103200B33415 /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OngoingCallThreadLocalContext.mm; sourceTree = "<group>"; };
-		27A6977F273D103400B33415 /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OngoingCallThreadLocalContext.h; sourceTree = "<group>"; };
 		27A6978B273D191C00B33415 /* libphonenumber */ = {isa = PBXFileReference; lastKnownFileType = folder; name = libphonenumber; path = "submodules/telegram-ios/submodules/libphonenumber"; sourceTree = "<group>"; };
 		27A6978E273D1DDE00B33415 /* FFMpegBinding */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FFMpegBinding; path = "submodules/telegram-ios/submodules/FFMpegBinding"; sourceTree = "<group>"; };
 		27A69791273D20E800B33415 /* OpusBinding */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpusBinding; path = "submodules/telegram-ios/submodules/OpusBinding"; sourceTree = "<group>"; };
@@ -2438,7 +2435,6 @@
 				27B6D05327393A3600C785C7 /* Postbox in Frameworks */,
 				27B6D04F27393A2A00C785C7 /* TelegramApi in Frameworks */,
 				279FD2A7273C1251004F08A1 /* Zip in Frameworks */,
-				2771AC79273C2B2700245A48 /* TelegramVoip in Frameworks */,
 				27D696F8274F845D008A723E /* ThemeSettings in Frameworks */,
 				27D43DA82791771D006968A6 /* libwebpdecoder.a in Frameworks */,
 				27A6978D273D192800B33415 /* libphonenumber in Frameworks */,
@@ -2488,6 +2484,7 @@
 				277DFE6127842E6600F78396 /* Translate in Frameworks */,
 				27D43DB727918CFF006968A6 /* Mozjpeg in Frameworks */,
 				27B6D05527393A3D00C785C7 /* GraphCore in Frameworks */,
+				27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */,
 				9FFAE514205AB50C000C028E /* libz.tbd in Frameworks */,
 				27D696F0274F8449008A723E /* KeyboardKey in Frameworks */,
 				9FFAE50F205AB4A3000C028E /* libiconv.tbd in Frameworks */,
@@ -4209,8 +4206,6 @@
 		C271EB981EB9DEDA0034792D /* calls */ = {
 			isa = PBXGroup;
 			children = (
-				27A6977F273D103400B33415 /* OngoingCallThreadLocalContext.h */,
-				27A6977E273D103200B33415 /* OngoingCallThreadLocalContext.mm */,
 			);
 			name = calls;
 			sourceTree = "<group>";
@@ -5258,7 +5253,6 @@
 				279FD29F273C1234004F08A1 /* BuildConfig */,
 				279FD2A6273C1251004F08A1 /* Zip */,
 				279FD2AC273C1291004F08A1 /* TgVoipWebrtc */,
-				2771AC78273C2B2700245A48 /* TelegramVoip */,
 				27A6978C273D192800B33415 /* libphonenumber */,
 				27A6978F273D1DE900B33415 /* FFMpegBinding */,
 				27A69792273D210400B33415 /* OpusBinding */,
@@ -5299,6 +5293,7 @@
 				278B89A52791939700ECF71C /* libwebp */,
 				277C209227A2F58E0070B3BF /* ManagedFile */,
 				277C209727A2F6160070B3BF /* YuvConversion */,
+				27CEA34A27AD9CFA00472CB1 /* TelegramVoip */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -6227,7 +6222,6 @@
 				271D4F38276B69BD004FD034 /* ReactionsSettingsController.swift in Sources */,
 				C230B91F1DD4BEBC0057F596 /* VideoStickerContentView.swift in Sources */,
 				A7E832192562CFC70095A167 /* VoiceBlobView.swift in Sources */,
-				27A69780273D103400B33415 /* OngoingCallThreadLocalContext.mm in Sources */,
 				2760E55626970513001C59F8 /* WidgetStorageController.swift in Sources */,
 				D0D139252524A31E005FCF35 /* RepliesHeaderRowItem.swift in Sources */,
 				9F1668C82008F30900DD39FB /* ChatBackgroundView.swift in Sources */,
@@ -6969,10 +6963,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ApiCredentials;
 		};
-		2771AC78273C2B2700245A48 /* TelegramVoip */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = TelegramVoip;
-		};
 		277C209227A2F58E0070B3BF /* ManagedFile */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ManagedFile;
@@ -7164,6 +7154,10 @@
 		27B8E7C527425279001B8DF7 /* TGModernGrowingTextView */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TGModernGrowingTextView;
+		};
+		27CEA34A27AD9CFA00472CB1 /* TelegramVoip */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TelegramVoip;
 		};
 		27D43DB627918CFF006968A6 /* Mozjpeg */ = {
 			isa = XCSwiftPackageProductDependency;
