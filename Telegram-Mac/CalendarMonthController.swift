@@ -316,10 +316,9 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
         
         let barView = TitledBarView(controller: self, .initialize(string: monthString, color: theme.colors.text, font:.medium(.text)), .initialize(string:yearString, color: theme.colors.grayText, font:.normal(.small)))
         
-        barView.set(handler: { [weak self] control in
-            
+        barView.contextMenu = { [weak self] in
             guard let `self` = self else {
-                return
+                return nil
             }
             
             let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
@@ -328,10 +327,10 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
             var timeinfoNow: tm = tm()
             localtime_r(&now, &timeinfoNow)
             
-             var items:[SPopoverItem] = []
+             var items:[ContextMenuItem] = []
             
             for i in stride(from: 1900 + timeinfoNow.tm_year - 1, to: 2012, by: -1) {
-                items.append(.init("\(i)", { [weak self] in
+                items.append(.init("\(i)", handler: { [weak self] in
                     guard let `self` = self else {
                         return
                     }
@@ -339,10 +338,15 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
                 }))
             }
             if !items.isEmpty && !self.onlyFuture {
-                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(30, -50))
+                let menu = ContextMenu(betterInside: true)
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
             }
-            
-        }, for: .Click)
+            return nil
+        }
+        
         
         return barView
     }

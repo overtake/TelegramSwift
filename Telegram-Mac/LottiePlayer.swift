@@ -558,9 +558,9 @@ private final class PlayerRenderer {
                             currentFrame += 1
                         }
                     }
-                    stateValue.updateCurrentFrame(currentFrame + 1)
 
                     if let frame = frame {
+                        stateValue.updateCurrentFrame(currentFrame + 1)
                         stateValue.addFrame(frame)
                     } else {
                         stateValue.updateCurrentFrame(stateValue.startFrame)
@@ -953,7 +953,7 @@ private final class LottieRenderer : RenderContainer {
                 data = frame
             }
         }
-        if frame > endFrame {
+        if frame > endFrame - 1 {
             return nil
         }
         if data == nil {
