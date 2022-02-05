@@ -22,8 +22,8 @@ static INLINE void calc_final_4(const __m256i *const sums /*[4]*/,
 }
 
 void vpx_sad32x32x4d_avx2(const uint8_t *src_ptr, int src_stride,
-                          const uint8_t *const ref_array[/*4*/], int ref_stride,
-                          uint32_t *sad_array /*[4]*/) {
+                          const uint8_t *const ref_array[4], int ref_stride,
+                          uint32_t sad_array[4]) {
   int i;
   const uint8_t *refs[4];
   __m256i sums[4];
@@ -127,8 +127,8 @@ void vpx_sad32x32x8_avx2(const uint8_t *src_ptr, int src_stride,
 }
 
 void vpx_sad64x64x4d_avx2(const uint8_t *src_ptr, int src_stride,
-                          const uint8_t *const ref_array[/*4*/], int ref_stride,
-                          uint32_t *sad_array /*[4]*/) {
+                          const uint8_t *const ref_array[4], int ref_stride,
+                          uint32_t sad_array[4]) {
   __m256i sums[4];
   int i;
   const uint8_t *refs[4];

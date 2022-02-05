@@ -495,10 +495,11 @@ static void set_rt_speed_feature_framesize_independent(
         (cpi->external_resize == 1 ||
          cpi->oxcf.resize_mode == RESIZE_DYNAMIC)) {
       MV_REFERENCE_FRAME ref_frame;
+      static const int flag_list[4] = { 0, VP9_LAST_FLAG, VP9_GOLD_FLAG,
+                                        VP9_ALT_FLAG };
       for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
         const YV12_BUFFER_CONFIG *yv12 = get_ref_frame_buffer(cpi, ref_frame);
-        if (yv12 != NULL &&
-            (cpi->ref_frame_flags & ref_frame_to_flag(ref_frame))) {
+        if (yv12 != NULL && (cpi->ref_frame_flags & flag_list[ref_frame])) {
           const struct scale_factors *const scale_fac =
               &cm->frame_refs[ref_frame - 1].sf;
           if (vp9_is_scaled(scale_fac)) sf->reference_masking = 0;

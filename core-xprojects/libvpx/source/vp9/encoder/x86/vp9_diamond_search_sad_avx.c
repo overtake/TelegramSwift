@@ -282,14 +282,7 @@ int vp9_diamond_search_sad_avx(const MACROBLOCK *x,
 
         // Update the global minimum if the local minimum is smaller
         if (LIKELY(local_best_sad < best_sad)) {
-#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
           new_bmv = ((const int_mv *)&v_these_mv_w)[local_best_idx];
-#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
           new_best_address = ((const uint8_t **)v_blocka)[local_best_idx];
 
           best_sad = local_best_sad;

@@ -236,11 +236,11 @@ static void write_ref_frames(const VP9_COMMON *cm, const MACROBLOCKD *const xd,
   }
 }
 
-static void pack_inter_mode_mvs(VP9_COMP *cpi, const MACROBLOCKD *const xd,
-                                const MB_MODE_INFO_EXT *const mbmi_ext,
-                                vpx_writer *w,
-                                unsigned int *const max_mv_magnitude,
-                                int interp_filter_selected[][SWITCHABLE]) {
+static void pack_inter_mode_mvs(
+    VP9_COMP *cpi, const MACROBLOCKD *const xd,
+    const MB_MODE_INFO_EXT *const mbmi_ext, vpx_writer *w,
+    unsigned int *const max_mv_magnitude,
+    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
   VP9_COMMON *const cm = &cpi->common;
   const nmv_context *nmvc = &cm->fc->nmvc;
   const struct segmentation *const seg = &cm->seg;
@@ -373,12 +373,11 @@ static void write_mb_modes_kf(const VP9_COMMON *cm, const MACROBLOCKD *xd,
   write_intra_mode(w, mi->uv_mode, vp9_kf_uv_mode_prob[mi->mode]);
 }
 
-static void write_modes_b(VP9_COMP *cpi, MACROBLOCKD *const xd,
-                          const TileInfo *const tile, vpx_writer *w,
-                          TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
-                          int mi_row, int mi_col,
-                          unsigned int *const max_mv_magnitude,
-                          int interp_filter_selected[][SWITCHABLE]) {
+static void write_modes_b(
+    VP9_COMP *cpi, MACROBLOCKD *const xd, const TileInfo *const tile,
+    vpx_writer *w, TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
+    int mi_row, int mi_col, unsigned int *const max_mv_magnitude,
+    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
   const VP9_COMMON *const cm = &cpi->common;
   const MB_MODE_INFO_EXT *const mbmi_ext =
       cpi->td.mb.mbmi_ext_base + (mi_row * cm->mi_cols + mi_col);
@@ -423,12 +422,12 @@ static void write_partition(const VP9_COMMON *const cm,
   }
 }
 
-static void write_modes_sb(VP9_COMP *cpi, MACROBLOCKD *const xd,
-                           const TileInfo *const tile, vpx_writer *w,
-                           TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
-                           int mi_row, int mi_col, BLOCK_SIZE bsize,
-                           unsigned int *const max_mv_magnitude,
-                           int interp_filter_selected[][SWITCHABLE]) {
+static void write_modes_sb(
+    VP9_COMP *cpi, MACROBLOCKD *const xd, const TileInfo *const tile,
+    vpx_writer *w, TOKENEXTRA **tok, const TOKENEXTRA *const tok_end,
+    int mi_row, int mi_col, BLOCK_SIZE bsize,
+    unsigned int *const max_mv_magnitude,
+    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
   const VP9_COMMON *const cm = &cpi->common;
   const int bsl = b_width_log2_lookup[bsize];
   const int bs = (1 << bsl) / 4;
@@ -486,10 +485,11 @@ static void write_modes_sb(VP9_COMP *cpi, MACROBLOCKD *const xd,
     update_partition_context(xd, mi_row, mi_col, subsize, bsize);
 }
 
-static void write_modes(VP9_COMP *cpi, MACROBLOCKD *const xd,
-                        const TileInfo *const tile, vpx_writer *w, int tile_row,
-                        int tile_col, unsigned int *const max_mv_magnitude,
-                        int interp_filter_selected[][SWITCHABLE]) {
+static void write_modes(
+    VP9_COMP *cpi, MACROBLOCKD *const xd, const TileInfo *const tile,
+    vpx_writer *w, int tile_row, int tile_col,
+    unsigned int *const max_mv_magnitude,
+    int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE]) {
   const VP9_COMMON *const cm = &cpi->common;
   int mi_row, mi_col, tile_sb_row;
   TOKENEXTRA *tok = NULL;
@@ -554,7 +554,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
   switch (cpi->sf.use_fast_coef_updates) {
     case TWO_LOOP: {
       /* dry run to see if there is any update at all needed */
-      int64_t savings = 0;
+      int savings = 0;
       int update[2] = { 0, 0 };
       for (i = 0; i < PLANE_TYPES; ++i) {
         for (j = 0; j < REF_TYPES; ++j) {
@@ -563,7 +563,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
               for (t = 0; t < entropy_nodes_update; ++t) {
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 const vpx_prob oldp = old_coef_probs[i][j][k][l][t];
-                int64_t s;
+                int s;
                 int u = 0;
                 if (t == PIVOT_NODE)
                   s = vp9_prob_diff_update_savings_search_model(
@@ -600,7 +600,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 vpx_prob *oldp = old_coef_probs[i][j][k][l] + t;
                 const vpx_prob upd = DIFF_UPDATE_PROB;
-                int64_t s;
+                int s;
                 int u = 0;
                 if (t == PIVOT_NODE)
                   s = vp9_prob_diff_update_savings_search_model(
@@ -636,7 +636,7 @@ static void update_coef_probs_common(vpx_writer *const bc, VP9_COMP *cpi,
               for (t = 0; t < entropy_nodes_update; ++t) {
                 vpx_prob newp = new_coef_probs[i][j][k][l][t];
                 vpx_prob *oldp = old_coef_probs[i][j][k][l] + t;
-                int64_t s;
+                int s;
                 int u = 0;
 
                 if (t == PIVOT_NODE) {
@@ -1241,20 +1241,12 @@ static void write_uncompressed_header(VP9_COMP *cpi,
       vpx_wb_write_literal(wb, vp9_get_refresh_mask(cpi), REF_FRAMES);
       write_frame_size(cm, wb);
     } else {
-      const int first_ref = get_first_ref_frame(cpi);
-      const int first_ref_map_idx = get_ref_frame_map_idx(cpi, first_ref);
       MV_REFERENCE_FRAME ref_frame;
       vpx_wb_write_literal(wb, vp9_get_refresh_mask(cpi), REF_FRAMES);
-
-      // If a reference frame is not referenced, then set the index for that
-      // reference to the first one used/referenced.
-      for (ref_frame = LAST_FRAME; ref_frame < MAX_REF_FRAMES; ++ref_frame) {
-        const int referenced =
-            cpi->ref_frame_flags & ref_frame_to_flag(ref_frame);
-        const int map_idx = referenced ? get_ref_frame_map_idx(cpi, ref_frame)
-                                       : first_ref_map_idx;
-        assert(map_idx != INVALID_IDX);
-        vpx_wb_write_literal(wb, map_idx, REF_FRAMES_LOG2);
+      for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
+        assert(get_ref_frame_map_idx(cpi, ref_frame) != INVALID_IDX);
+        vpx_wb_write_literal(wb, get_ref_frame_map_idx(cpi, ref_frame),
+                             REF_FRAMES_LOG2);
         vpx_wb_write_bit(wb, cm->ref_frame_sign_bias[ref_frame]);
       }
 

@@ -425,24 +425,20 @@ int main(int argc, char *argv[]) {
       break;
     }
 #if CONFIG_VP9_HIGHBITDEPTH
-#define psnr_and_ssim(ssim, psnr, buf0, buf1, w, h)                           \
-  do {                                                                        \
-    if (bit_depth < 9) {                                                      \
-      ssim = ssim2(buf0, buf1, w, w, w, h);                                   \
-      psnr = calc_plane_error(buf0, w, buf1, w, w, h);                        \
-    } else {                                                                  \
-      ssim = highbd_ssim2(CONVERT_TO_BYTEPTR(buf0), CONVERT_TO_BYTEPTR(buf1), \
-                          w, w, w, h, bit_depth);                             \
-      psnr = calc_plane_error16(CAST_TO_SHORTPTR(buf0), w,                    \
-                                CAST_TO_SHORTPTR(buf1), w, w, h);             \
-    }                                                                         \
-  } while (0)
+#define psnr_and_ssim(ssim, psnr, buf0, buf1, w, h)                            \
+  if (bit_depth < 9) {                                                         \
+    ssim = ssim2(buf0, buf1, w, w, w, h);                                      \
+    psnr = calc_plane_error(buf0, w, buf1, w, w, h);                           \
+  } else {                                                                     \
+    ssim = highbd_ssim2(CONVERT_TO_BYTEPTR(buf0), CONVERT_TO_BYTEPTR(buf1), w, \
+                        w, w, h, bit_depth);                                   \
+    psnr = calc_plane_error16(CAST_TO_SHORTPTR(buf0), w,                       \
+                              CAST_TO_SHORTPTR(buf1), w, w, h);                \
+  }
 #else
-#define psnr_and_ssim(ssim, psnr, buf0, buf1, w, h)  \
-  do {                                               \
-    ssim = ssim2(buf0, buf1, w, w, w, h);            \
-    psnr = calc_plane_error(buf0, w, buf1, w, w, h); \
-  } while (0)
+#define psnr_and_ssim(ssim, psnr, buf0, buf1, w, h) \
+  ssim = ssim2(buf0, buf1, w, w, w, h);             \
+  psnr = calc_plane_error(buf0, w, buf1, w, w, h);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
     if (n_frames == allocated_frames) {

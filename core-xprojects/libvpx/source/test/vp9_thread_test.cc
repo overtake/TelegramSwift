@@ -216,6 +216,10 @@ TEST(VPxWorkerThreadTest, TestSerialInterface) {
   static const VPxWorkerInterface serial_interface = {
     impl::Init, impl::Reset, impl::Sync, impl::Launch, impl::Execute, impl::End
   };
+  // TODO(jzern): Avoid using a file that will use the row-based thread
+  // loopfilter, with the simple serialized implementation it will hang. This is
+  // due to its expectation that rows will be run in parallel as they wait on
+  // progress in the row above before proceeding.
   static const char expected_md5[] = "b35a1b707b28e82be025d960aba039bc";
   static const char filename[] = "vp90-2-03-size-226x226.webm";
   VPxWorkerInterface default_interface = *vpx_get_worker_interface();

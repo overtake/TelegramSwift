@@ -14,7 +14,4 @@ LOCAL_SRC_FILES:= common/file_util.cc \
                   mkvmuxer/mkvmuxer.cc \
                   mkvmuxer/mkvmuxerutil.cc \
                   mkvmuxer/mkvwriter.cc
-LOCAL_LICENSE_KINDS := SPDX-license-identifier-BSD
-LOCAL_LICENSE_CONDITIONS := notice
-LOCAL_NOTICE_FILE := $(LOCAL_PATH)/LICENSE.TXT $(LOCAL_PATH)/PATENTS.TXT
 include $(BUILD_STATIC_LIBRARY)

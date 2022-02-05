@@ -18,6 +18,7 @@
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/static_assert.h"
 #include "vpx_ports/system_state.h"
+#include "vpx_ports/vpx_once.h"
 #include "vpx_util/vpx_timestamp.h"
 #include "vp8/encoder/onyx_int.h"
 #include "vpx/vp8cx.h"
@@ -338,9 +339,7 @@ static vpx_codec_err_t set_vp8e_config(VP8_CONFIG *oxcf,
     oxcf->end_usage = USAGE_CONSTANT_QUALITY;
   }
 
-  // Cap the target rate to 1000 Mbps to avoid some integer overflows in
-  // target bandwidth calculations.
-  oxcf->target_bandwidth = VPXMIN(cfg.rc_target_bitrate, 1000000);
+  oxcf->target_bandwidth = cfg.rc_target_bitrate;
   oxcf->rc_max_intra_bitrate_pct = vp8_cfg.rc_max_intra_bitrate_pct;
   oxcf->gf_cbr_boost_pct = vp8_cfg.gf_cbr_boost_pct;
 
@@ -606,17 +605,6 @@ static vpx_codec_err_t set_screen_content_mode(vpx_codec_alg_priv_t *ctx,
   return update_extracfg(ctx, &extra_cfg);
 }
 
-static vpx_codec_err_t ctrl_set_rtc_external_ratectrl(vpx_codec_alg_priv_t *ctx,
-                                                      va_list args) {
-  VP8_COMP *cpi = ctx->cpi;
-  const unsigned int data = CAST(VP8E_SET_GF_CBR_BOOST_PCT, args);
-  if (data) {
-    cpi->cyclic_refresh_mode_enabled = 0;
-    cpi->rt_always_update_correction_factor = 1;
-  }
-  return VPX_CODEC_OK;
-}
-
 static vpx_codec_err_t vp8e_mr_alloc_mem(const vpx_codec_enc_cfg_t *cfg,
                                          void **mem_loc) {
   vpx_codec_err_t res = VPX_CODEC_OK;
@@ -693,7 +681,7 @@ static vpx_codec_err_t vp8e_init(vpx_codec_ctx_t *ctx,
       ctx->priv->enc.total_encoders = 1;
     }
 
-    vp8_initialize_enc();
+    once(vp8_initialize_enc);
 
     res = validate_config(priv, &priv->cfg, &priv->vp8_cfg, 0);
 
@@ -1255,7 +1243,6 @@ static vpx_codec_ctrl_fn_map_t vp8e_ctf_maps[] = {
   { VP8E_SET_MAX_INTRA_BITRATE_PCT, set_rc_max_intra_bitrate_pct },
   { VP8E_SET_SCREEN_CONTENT_MODE, set_screen_content_mode },
   { VP8E_SET_GF_CBR_BOOST_PCT, ctrl_set_rc_gf_cbr_boost_pct },
-  { VP8E_SET_RTC_EXTERNAL_RATECTRL, ctrl_set_rtc_external_ratectrl },
   { -1, NULL },
 };
 

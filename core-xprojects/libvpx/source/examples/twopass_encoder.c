@@ -221,7 +221,7 @@ int main(int argc, char **argv) {
     die("Invalid frame size: %dx%d", w, h);
 
   if (!vpx_img_alloc(&raw, VPX_IMG_FMT_I420, w, h, 1))
-    die("Failed to allocate image (%dx%d)", w, h);
+    die("Failed to allocate image", w, h);
 
   printf("Using %s\n", vpx_codec_iface_name(encoder->codec_interface()));
 

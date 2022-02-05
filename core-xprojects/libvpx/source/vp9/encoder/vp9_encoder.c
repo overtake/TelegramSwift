@@ -25,7 +25,6 @@
 #endif
 #include "vpx_ports/mem.h"
 #include "vpx_ports/system_state.h"
-#include "vpx_ports/vpx_once.h"
 #include "vpx_ports/vpx_timer.h"
 #if CONFIG_BITSTREAM_DEBUG || CONFIG_MISMATCH_DEBUG
 #include "vpx_util/vpx_debug_util.h"
@@ -586,6 +585,8 @@ static void apply_roi_map(VP9_COMP *cpi) {
   int ref_frame[8];
   int internal_delta_q[MAX_SEGMENTS];
   int i;
+  static const int flag_list[4] = { 0, VP9_LAST_FLAG, VP9_GOLD_FLAG,
+                                    VP9_ALT_FLAG };
 
   // TODO(jianj): Investigate why ROI not working in speed < 5 or in non
   // realtime mode.
@@ -626,7 +627,7 @@ static void apply_roi_map(VP9_COMP *cpi) {
         valid_ref = 0;
       // If GOLDEN is selected, make sure it's set as reference.
       if (ref_frame[i] == GOLDEN_FRAME &&
-          !(cpi->ref_frame_flags & ref_frame_to_flag(ref_frame[i]))) {
+          !(cpi->ref_frame_flags & flag_list[ref_frame[i]])) {
         valid_ref = 0;
       }
       // GOLDEN was updated in previous encoded frame, so GOLDEN and LAST are
@@ -928,20 +929,23 @@ static void vp9_swap_mi_and_prev_mi(VP9_COMMON *cm) {
   cm->prev_mi_grid_visible = cm->prev_mi_grid_base + cm->mi_stride + 1;
 }
 
-static void initialize_enc(void) {
-  vp9_rtcd();
-  vpx_dsp_rtcd();
-  vpx_scale_rtcd();
-  vp9_init_intra_predictors();
-  vp9_init_me_luts();
-  vp9_rc_init_minq_luts();
-  vp9_entropy_mv_init();
-#if !CONFIG_REALTIME_ONLY
-  vp9_temporal_filter_init();
-#endif
-}
+void vp9_initialize_enc(void) {
+  static volatile int init_done = 0;
 
-void vp9_initialize_enc(void) { once(initialize_enc); }
+  if (!init_done) {
+    vp9_rtcd();
+    vpx_dsp_rtcd();
+    vpx_scale_rtcd();
+    vp9_init_intra_predictors();
+    vp9_init_me_luts();
+    vp9_rc_init_minq_luts();
+    vp9_entropy_mv_init();
+#if !CONFIG_REALTIME_ONLY
+    vp9_temporal_filter_init();
+#endif
+    init_done = 1;
+  }
+}
 
 static void dealloc_compressor_data(VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
@@ -2672,6 +2676,7 @@ static void free_tpl_buffer(VP9_COMP *cpi);
 void vp9_remove_compressor(VP9_COMP *cpi) {
   VP9_COMMON *cm;
   unsigned int i;
+  int t;
 
   if (!cpi) return;
 
@@ -2784,10 +2789,28 @@ void vp9_remove_compressor(VP9_COMP *cpi) {
 
   free_tpl_buffer(cpi);
 
-  vp9_loop_filter_dealloc(&cpi->lf_row_sync);
-  vp9_bitstream_encode_tiles_buffer_dealloc(cpi);
+  for (t = 0; t < cpi->num_workers; ++t) {
+    VPxWorker *const worker = &cpi->workers[t];
+    EncWorkerData *const thread_data = &cpi->tile_thr_data[t];
+
+    // Deallocate allocated threads.
+    vpx_get_worker_interface()->end(worker);
+
+    // Deallocate allocated thread data.
+    if (t < cpi->num_workers - 1) {
+      vpx_free(thread_data->td->counts);
+      vp9_free_pc_tree(thread_data->td);
+      vpx_free(thread_data->td);
+    }
+  }
+  vpx_free(cpi->tile_thr_data);
+  vpx_free(cpi->workers);
   vp9_row_mt_mem_dealloc(cpi);
-  vp9_encode_free_mt_data(cpi);
+
+  if (cpi->num_workers > 1) {
+    vp9_loop_filter_dealloc(&cpi->lf_row_sync);
+    vp9_bitstream_encode_tiles_buffer_dealloc(cpi);
+  }
 
 #if !CONFIG_REALTIME_ONLY
   vp9_alt_ref_aq_destroy(cpi->alt_ref_aq);

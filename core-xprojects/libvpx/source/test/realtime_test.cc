@@ -7,8 +7,6 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include <limits.h>
-
 #include "test/codec_factory.h"
 #include "test/encode_test_driver.h"
 #include "test/util.h"
@@ -54,22 +52,6 @@ class RealtimeTest
     frame_packets_++;
   }
 
-  bool IsVP9() const {
-#if CONFIG_VP9_ENCODER
-    return codec_ == &libvpx_test::kVP9;
-#else
-    return false;
-#endif
-  }
-
-  void TestIntegerOverflow(unsigned int width, unsigned int height) {
-    ::libvpx_test::RandomVideoSource video;
-    video.SetSize(width, height);
-    video.set_limit(20);
-    cfg_.rc_target_bitrate = UINT_MAX;
-    ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
-  }
-
   int frame_packets_;
 };
 
@@ -81,22 +63,12 @@ TEST_P(RealtimeTest, RealtimeFirstPassProducesFrames) {
   EXPECT_EQ(kFramesToEncode, frame_packets_);
 }
 
-TEST_P(RealtimeTest, IntegerOverflow) { TestIntegerOverflow(2048, 2048); }
-
-TEST_P(RealtimeTest, IntegerOverflowLarge) {
-  if (IsVP9()) {
-#if VPX_ARCH_X86_64
-    TestIntegerOverflow(16384, 16384);
-#else
-    TestIntegerOverflow(4096, 4096);
-#endif
-  } else {
-    GTEST_SKIP()
-        << "TODO(https://crbug.com/webm/1748,https://crbug.com/webm/1751):"
-        << " Enable this test after bitstream errors & undefined sanitizer "
-           "warnings are fixed.";
-    // TestIntegerOverflow(16383, 16383);
-  }
+TEST_P(RealtimeTest, IntegerOverflow) {
+  ::libvpx_test::RandomVideoSource video;
+  video.SetSize(800, 480);
+  video.set_limit(20);
+  cfg_.rc_target_bitrate = 140000000;
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
 VP8_INSTANTIATE_TEST_SUITE(RealtimeTest,
