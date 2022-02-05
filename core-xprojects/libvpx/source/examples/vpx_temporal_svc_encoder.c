@@ -30,7 +30,7 @@
 
 #define ROI_MAP 0
 
-#define zero(Dest) memset(&(Dest), 0, sizeof(Dest))
+#define zero(Dest) memset(&(Dest), 0, sizeof(Dest));
 
 static const char *exec_name;
 
@@ -687,14 +687,14 @@ int main(int argc, char **argv) {
             &raw,
             bit_depth == VPX_BITS_8 ? VPX_IMG_FMT_I420 : VPX_IMG_FMT_I42016,
             width, height, 32)) {
-      die("Failed to allocate image (%dx%d)", width, height);
+      die("Failed to allocate image", width, height);
     }
   }
 #else
   // Y4M reader has its own allocation.
   if (input_ctx.file_type != FILE_TYPE_Y4M) {
     if (!vpx_img_alloc(&raw, VPX_IMG_FMT_I420, width, height, 32)) {
-      die("Failed to allocate image (%dx%d)", width, height);
+      die("Failed to allocate image", width, height);
     }
   }
 #endif  // CONFIG_VP9_HIGHBITDEPTH

@@ -105,7 +105,7 @@ void VP9RateControlRTC::UpdateRateControl(
   cpi_->framerate = rc_cfg.framerate;
   cpi_->svc.number_spatial_layers = rc_cfg.ss_number_layers;
   cpi_->svc.number_temporal_layers = rc_cfg.ts_number_layers;
-  vp9_set_mb_mi(cm, cm->width, cm->height);
+
   for (int sl = 0; sl < cpi_->svc.number_spatial_layers; ++sl) {
     for (int tl = 0; tl < cpi_->svc.number_temporal_layers; ++tl) {
       const int layer =

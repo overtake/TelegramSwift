@@ -8,8 +8,7 @@
 ##
 ##  This build system is based in part on the FFmpeg configure script.
 ##
-#set -x
-set -x
+
 
 #
 # Logging / Output Functions
@@ -775,7 +774,7 @@ process_common_toolchain() {
         tgt_isa=x86_64
         tgt_os=`echo $gcctarget | sed 's/.*\(darwin1[0-9]\).*/\1/'`
         ;;
-      *darwin2[0-1]*)
+      *darwin20*)
         tgt_isa=`uname -m`
         tgt_os=`echo $gcctarget | sed 's/.*\(darwin2[0-9]\).*/\1/'`
         ;;
@@ -854,16 +853,15 @@ process_common_toolchain() {
   # platforms, so use the newest one available.
   case ${toolchain} in
     arm*-darwin-*)
-      add_cflags  "-mmacosx-version-min=10.11"
-      osx_sdk_dir="$(show_darwin_sdk_path macosx)"
-      if [ -d "${osx_sdk_dir}" ]; then
-        add_cflags  "-isysroot ${osx_sdk_dir}"
-        add_ldflags "-isysroot ${osx_sdk_dir}"
+      add_cflags "-miphoneos-version-min=${IOS_VERSION_MIN}"
+      iphoneos_sdk_dir="$(show_darwin_sdk_path iphoneos)"
+      if [ -d "${iphoneos_sdk_dir}" ]; then
+        add_cflags  "-isysroot ${iphoneos_sdk_dir}"
+        add_ldflags "-isysroot ${iphoneos_sdk_dir}"
       fi
       ;;
     *-darwin*)
       osx_sdk_dir="$(show_darwin_sdk_path macosx)"
-      add_cflags  "-mmacosx-version-min=10.11"
       if [ -d "${osx_sdk_dir}" ]; then
         add_cflags  "-isysroot ${osx_sdk_dir}"
         add_ldflags "-isysroot ${osx_sdk_dir}"
@@ -920,9 +918,9 @@ process_common_toolchain() {
       add_cflags  "-mmacosx-version-min=10.15"
       add_ldflags "-mmacosx-version-min=10.15"
       ;;
-    *-darwin2[0-1]-*)
-      add_cflags  "-arch ${toolchain%%-*}"
-      add_ldflags "-arch ${toolchain%%-*}"
+    *-darwin20-*)
+      add_cflags  "-mmacosx-version-min=10.11 -arch ${toolchain%%-*}"
+      add_ldflags "-mmacosx-version-min=10.11 -arch ${toolchain%%-*}"
       ;;
     *-iphonesimulator-*)
       add_cflags  "-miphoneos-version-min=${IOS_VERSION_MIN}"
@@ -1099,7 +1097,7 @@ EOF
 
         darwin)
           if ! enabled external_build; then
-            XCRUN_FIND="xcrun --sdk macosx --find"
+            XCRUN_FIND="xcrun --sdk iphoneos --find"
             CXX="$(${XCRUN_FIND} clang++)"
             CC="$(${XCRUN_FIND} clang)"
             AR="$(${XCRUN_FIND} ar)"
@@ -1118,13 +1116,13 @@ EOF
             add_cflags -arch ${tgt_isa}
             add_ldflags -arch ${tgt_isa}
 
-            alt_libc="$(show_darwin_sdk_path macosx)"
+            alt_libc="$(show_darwin_sdk_path iphoneos)"
             if [ -d "${alt_libc}" ]; then
               add_cflags -isysroot ${alt_libc}
             fi
 
             if [ "${LD}" = "${CXX}" ]; then
-              add_ldflags -mmacosx-version-min="10.11"
+              add_ldflags -miphoneos-version-min="${IOS_VERSION_MIN}"
             else
               add_ldflags -ios_version_min "${IOS_VERSION_MIN}"
             fi
