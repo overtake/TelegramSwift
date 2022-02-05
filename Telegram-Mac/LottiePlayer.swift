@@ -548,9 +548,13 @@ private final class PlayerRenderer {
         let maximum = Int(initialState.endFrame - initialState.startFrame)
         framesTask = ThreadPoolTask { state in
             _ = isRendering.swap(true)
-            let cancelled = state.cancelled.with({$0})
             _ = stateValue.with { stateValue -> RendererState? in
-                while let stateValue = stateValue, !cancelled, stateValue.frames.count < min(maximum_renderer_frames, maximum) {
+                while let stateValue = stateValue, stateValue.frames.count < min(maximum_renderer_frames, maximum) {
+                    let cancelled = state.cancelled.with({$0})
+                    if cancelled {
+                        return stateValue
+                    }
+                    
                     var currentFrame = stateValue.currentFrame
                     let frame = stateValue.renderFrame(at: currentFrame)
                     if mainFps >= fps {
@@ -563,8 +567,12 @@ private final class PlayerRenderer {
                         stateValue.updateCurrentFrame(currentFrame + 1)
                         stateValue.addFrame(frame)
                     } else {
-                        stateValue.updateCurrentFrame(stateValue.startFrame)
-                        stateValue.loopComplete()
+                        if stateValue.startFrame != currentFrame {
+                            stateValue.updateCurrentFrame(stateValue.startFrame)
+                            stateValue.loopComplete()
+                        } else {
+                            break
+                        }
                     }
                 }
                 return stateValue
@@ -1463,6 +1471,11 @@ private final class MetalRenderer: View {
 private final class LottieFallbackView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         return nil
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 
