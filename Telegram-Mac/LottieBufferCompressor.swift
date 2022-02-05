@@ -216,8 +216,11 @@ final class TRLotData {
             self.bufferSize = bufferSize
             deferr(self)
         }
-        self.isFinished = self.map.filter { $0.value.finished }.count == self.map.count
-
+        if !self.map.isEmpty {
+            self.isFinished = self.map.filter { $0.value.finished }.count == self.map.count
+        } else {
+            self.isFinished = false
+        }
     }
     
 }
