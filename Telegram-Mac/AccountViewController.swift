@@ -262,6 +262,9 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     confirm(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
                         _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value),
+                ContextMenuItem("Open In Separate Window", handler: {
+                    
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }, sync: true), compactText: true)
         case let .addAccount(_, viewType):

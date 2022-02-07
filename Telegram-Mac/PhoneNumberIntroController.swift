@@ -90,7 +90,7 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     }
     
     func executeNext() {
-        confirm(for: mainWindow, information: strings().changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
+        confirm(for: context.window, information: strings().changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
             if let context = self?.context {
                 self?.navigationController?.push(PhoneNumberConfirmController(context))
             }

@@ -415,7 +415,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .togglePeerSuggestions(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().suggestFrequentContacts, type: .switchable(enabled), viewType: viewType, action: {
                 if enabled {
-                    confirm(for: mainWindow, information: strings().suggestFrequentContactsAlert, successHandler: { _ in
+                    confirm(for: arguments.context.window, information: strings().suggestFrequentContactsAlert, successHandler: { _ in
                         arguments.togglePeerSuggestions(!enabled)
                     })
                 } else {
@@ -963,7 +963,7 @@ class PrivacyAndSecurityViewController: TableViewController {
                     }
                     message = message.trimmed
 
-                    showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+                    showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: context.window)
                 }, pushController: { controller in
                     pushControllerImpl(controller)
                 })

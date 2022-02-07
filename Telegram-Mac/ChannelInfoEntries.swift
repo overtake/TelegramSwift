@@ -302,7 +302,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let updatePhoto:(NSImage) -> Void = { image in
             _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)
                 })

@@ -626,7 +626,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     }
     
     func cleanup() {
-        mainWindow.removeAllHandlers(for: self)
+        context.window.removeAllHandlers(for: self)
     }
     
     deinit {

@@ -217,7 +217,7 @@ private let _id_enter_email_code = InputDataIdentifier("enter_email_code")
 private let _id_set_password = InputDataIdentifier("set_password")
 private let _id_input_enter_email_code = InputDataIdentifier("_id_input_enter_email_code")
 
-private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVerificationUnlockSettingsControllerState, forgotPassword:@escaping()->Void, cancelReset:@escaping() -> Void, abort:@escaping()-> Void) -> [InputDataEntry] {
+private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVerificationUnlockSettingsControllerState, context: AccountContext, forgotPassword:@escaping()->Void, cancelReset:@escaping() -> Void, abort:@escaping()-> Void) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     var sectionId:Int32 = 0
     
@@ -257,7 +257,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     
                     if timestamp.isFuture {
                         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthEnterPasswordHelp + "\n\n" + strings().twoStepAuthResetPending(autoremoveLocalized(Int(timestamp - Int32(Date().timeIntervalSince1970)))) + "\n[" + strings().twoStepAuthCancelReset + "](reset)", linkHandler: { link in
-                            confirm(for: mainWindow, header: strings().twoStepAuthCancelResetConfirm, information: strings().twoStepAuthCancelResetText, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
+                            confirm(for: context.window, header: strings().twoStepAuthCancelResetConfirm, information: strings().twoStepAuthCancelResetText, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
                                 cancelReset()
                             })
                         }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
@@ -272,7 +272,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     
                     let forgot:()->Void = {
                         if !hasRecoveryEmail {
-                            confirm(for: mainWindow, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmail, okTitle: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
+                            confirm(for: context.window, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmail, okTitle: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
                                 forgotPassword()
                             })
                         } else {
@@ -769,7 +769,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
 
     
     let signal: Signal<[InputDataEntry], NoError> = combineLatest(statePromise.get(), _repeat) |> map { state, _ -> [InputDataEntry] in
-        return twoStepVerificationUnlockSettingsControllerEntries(state: state, forgotPassword: forgotPassword, cancelReset: cancelReset, abort: abort)
+        return twoStepVerificationUnlockSettingsControllerEntries(state: state, context: context, forgotPassword: forgotPassword, cancelReset: cancelReset, abort: abort)
     }
     
     

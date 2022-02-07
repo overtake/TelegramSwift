@@ -166,9 +166,9 @@ class FeaturedStickerPacksController: TableViewController {
         actionsDisposable.add(resolveDisposable)
         
         let arguments = FeaturedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
         }, addPack: { info in
-            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
         })
         
         let stickerPacks = Promise<CombinedView>()

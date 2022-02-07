@@ -309,7 +309,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             }))
         }, addMembers: {
             let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
-                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: mainWindow)
+                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: context.window)
             } |> deliverOnMainQueue
             
             actionsDisposable.add(signal.start(error: { error in
@@ -348,9 +348,9 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 case .restricted:
                     text = strings().channelErrorAddBlocked
                 }
-                alert(for: mainWindow, info: text)
+                alert(for: context.window, info: text)
             }, completed: {
-                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
             }))
         }, inviteLink: { [weak self] in
             if let strongSelf = self {

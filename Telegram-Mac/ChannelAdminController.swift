@@ -1051,7 +1051,7 @@ class ChannelAdminController: TableModalViewController {
                             }
                             
                             
-                            updateRightsDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { upgradedPeerId in
+                            updateRightsDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { upgradedPeerId in
                                 if let upgradedPeerId = upgradedPeerId {
                                     let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.admins(peerId: upgradedPeerId, updated: { state in
                                         if case .ready = state.loadingState {

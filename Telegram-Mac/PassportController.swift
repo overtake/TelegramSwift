@@ -1868,7 +1868,7 @@ private func confirmPhoneNumberEntries( _ state: PassportState, phoneNumber: Str
     return entries
 }
 
-private func addressEntries( _ state: PassportState, hasMainField: Bool, relative: SecureIdRequestedFormFieldValue?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
+private func addressEntries( _ state: PassportState, context: AccountContext, hasMainField: Bool, relative: SecureIdRequestedFormFieldValue?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
@@ -1959,13 +1959,13 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
         
         if files.count < scansLimit {
             entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_scan, placeholder: files.count > 0 ? strings().secureIdUploadAdditionalScan : strings().secureIdUploadScan, description: nil, icon: nil, action: {
-                filePanel(with: photoExts, allowMultiple: true, for: mainWindow, completion: { files in
+                filePanel(with: photoExts, allowMultiple: true, for: context.window, completion: { files in
                     if let files = files {
                         let localFiles:[SecureIdVerificationDocument] = files.map({.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                         
                         updateState { current in
                             if localFiles.count + (current.files[relative.valueKey] ?? []).count > scansLimit {
-                                alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
+                                alert(for: context.window, info: strings().secureIdErrorScansLimit)
                             }
                             return current.withAppendFiles(localFiles, for: relative.valueKey).withRemovedError(for: relative.valueKey, field: _id_scan)
                         }
@@ -2014,13 +2014,13 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
             
             if translations.count < scansLimit {
                 entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_translation, placeholder: translations.count > 0 ? strings().secureIdUploadAdditionalScan : strings().secureIdUploadScan, description: nil, icon: nil, action: {
-                    filePanel(with: photoExts, allowMultiple: true, for: mainWindow, completion: { files in
+                    filePanel(with: photoExts, allowMultiple: true, for: context.window, completion: { files in
                         if let files = files {
                             let localFiles:[SecureIdVerificationDocument] = files.map({.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                             
                             updateState { current in
                                 if localFiles.count + (current.translations[relative.valueKey] ?? []).count > scansLimit {
-                                    alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
+                                    alert(for: context.window, info: strings().secureIdErrorScansLimit)
                                 }
                                 return current.withAppendTranslations(localFiles, for: relative.valueKey).withRemovedError(for: relative.valueKey, field: _id_translation)
                             }
@@ -2078,7 +2078,7 @@ private func addressEntries( _ state: PassportState, hasMainField: Bool, relativ
     return updated
  }
 
-private func identityEntries( _ state: PassportState, primary: SecureIdRequestedFormFieldValue?, relative: SecureIdRequestedFormFieldValue?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
+private func identityEntries( _ state: PassportState, context: AccountContext, primary: SecureIdRequestedFormFieldValue?, relative: SecureIdRequestedFormFieldValue?, updateState: @escaping ((PassportState)->PassportState)->Void)->[InputDataEntry] {
     var entries:[InputDataEntry] = []
     var sectionId:Int32 = 0
     var index: Int32 = 0
@@ -2257,7 +2257,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             if let file = state.frontSideFile[relative.valueKey] {
                 entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .secureIdDocument(file), identifier: _id_frontside, equatable: InputDataEquatable(file), comparable: nil, item: { initialSize, stableId -> TableRowItem in
                     return PassportDocumentRowItem(initialSize, context: state.context, document: SecureIdDocumentValue(document: file, context: accessContext, stableId: stableId), error: rErrors?[_id_frontside], header: isMainNotFront ? strings().secureIdUploadTitleMainPage : strings().secureIdUploadTitleFrontSide, removeAction: { value in
-                        modernConfirm(for: mainWindow, account: state.context.account, peerId: nil, information: strings().secureIdConfirmDeleteDocument, successHandler: { _ in
+                        modernConfirm(for: context.window, account: state.context.account, peerId: nil, information: strings().secureIdConfirmDeleteDocument, successHandler: { _ in
                             updateState { current in
                                 return current.withUpdatedFrontSide(nil, for: relative.valueKey)
                             }
@@ -2267,7 +2267,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                 index += 1
             } else {
                 entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_frontside, placeholder: isMainNotFront ? strings().secureIdUploadTitleMainPage : strings().secureIdUploadTitleFrontSide, description: relative.uploadFrontTitleText, icon: isMainNotFront ? theme.icons.passportPassport : (relative.valueKey == .driversLicense ? theme.icons.passportDriverLicense : theme.icons.passportIdCard), action: {
-                    filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
+                    filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { files in
                         if let file = files?.first {
                             updateFrontMrz(file: file, relative: relative, updateState: updateState)
                         }
@@ -2288,7 +2288,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                     index += 1
                 } else {
                     entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_backside, placeholder: isMainNotFront ? strings().secureIdUploadTitleMainPage : strings().secureIdUploadTitleReverseSide, description: relative.uploadBackTitleText, icon: theme.icons.passportIdCardReverse, action: {
-                        filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
+                        filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { files in
                             if let file = files?.first {
                                 if let image = NSImage(contentsOfFile: file) {
                                     let string = recognizeMRZ(image.precomposed(), nil)
@@ -2331,7 +2331,7 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
                 
             } else {
                 entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_selfie_scan, placeholder: strings().secureIdIdentitySelfie, description: strings().secureIdUploadSelfie, icon: theme.icons.passportSelfie, action: {
-                    filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
+                    filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { paths in
                         if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                             _ = putToTemp(image: image).start(next: { path in
                                 let localFile:SecureIdVerificationDocument = .local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64()), state: .uploading(0)))
@@ -2381,13 +2381,13 @@ private func identityEntries( _ state: PassportState, primary: SecureIdRequested
             
             if translations.count < scansLimit {
                 entries.append(InputDataEntry.dataSelector(sectionId: sectionId, index: index, value: .string(""), error: nil, identifier: _id_translation, placeholder: translations.count > 0 ? strings().secureIdUploadAdditionalScan : strings().secureIdUploadScan, description: nil, icon: nil, action: {
-                    filePanel(with: photoExts, allowMultiple: true, for: mainWindow, completion: { files in
+                    filePanel(with: photoExts, allowMultiple: true, for: context.window, completion: { files in
                         if let files = files {
                             let localFiles:[SecureIdVerificationDocument] = files.map({.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                             
                             updateState { current in
                                 if localFiles.count + (current.translations[relative.valueKey] ?? []).count > scansLimit {
-                                    alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
+                                    alert(for: context.window, info: strings().secureIdErrorScansLimit)
                                 }
                                 return current.withAppendTranslations(localFiles, for: relative.valueKey).withRemovedError(for: relative.valueKey, field: _id_translation)
                             }
@@ -2630,7 +2630,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         let code = stateValue.with { $0.emailCode }
                         let state = _stateValue
                         if !code.isEmpty {
-                            emailActivation.set(showModalProgress(signal: context.engine.auth.confirmTwoStepRecoveryEmail(code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                            emailActivation.set(showModalProgress(signal: context.engine.auth.confirmTwoStepRecoveryEmail(code: code) |> deliverOnMainQueue, for: context.window).start(error: { error in
                                 
                                 let text: String
                                 switch error {
@@ -2704,7 +2704,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                         }
                                     }
                                     return .single(Optional(config))
-                                }, for: mainWindow))
+                                }, for: context.window))
                             }))
                         }
                     }
@@ -2808,12 +2808,12 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }, error: { error in
                         switch error {
                         case .secretPasswordMismatch:
-                            confirm(for: mainWindow, header: strings().telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
+                            confirm(for: context.window, header: strings().telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
                                 switch result {
                                 case .basic:
                                     break
                                 case .thrid:
-                                    _ = showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
+                                    _ = showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: context.window).start(next: {_ in
                                         updateState { current in
                                             return current.withUpdatedPassword(nil)
                                         }
@@ -2867,12 +2867,12 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 }, error: { error in
                     switch error {
                     case .secretPasswordMismatch:
-                        confirm(for: mainWindow, header: strings().telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
+                        confirm(for: context.window, header: strings().telegramPassportController, information: "Something going wrong", thridTitle: "Delete All Values", successHandler: { result in
                             switch result {
                             case .basic:
                                 break
                             case .thrid:
-                                _ = showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: {_ in
+                                _ = showModalProgress(signal: context.engine.auth.updateTwoStepVerificationPassword(currentPassword: value, updatedPassword: .none) |> deliverOnMainQueue, for: context.window).start(next: {_ in
                                     updateState { current in
                                         return current.withUpdatedPassword(nil)
                                     }
@@ -2905,7 +2905,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                         } |> deliverOnMainQueue
 
-                    saveValueDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(next: { values in
+                    saveValueDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { values in
                         updateState { current in
                             return values.reduce(current, { current, value in
                                 return current.withUpdatedValue(value).withRemovedErrors(for: value.value.key).withUpdatedEmptyErrors(false)
@@ -2919,7 +2919,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             }
 
             let removeValue:(SecureIdValueKey) -> Void = { valueKey in
-                saveValueDisposable.set(showModalProgress(signal: deleteSecureIdValues(network: context.account.network, keys: Set(arrayLiteral: valueKey)), for: mainWindow).start(completed: {
+                saveValueDisposable.set(showModalProgress(signal: deleteSecureIdValues(network: context.account.network, keys: Set(arrayLiteral: valueKey)), for: context.window).start(completed: {
                     updateState { current in
                         return current.withRemovedValue(valueKey)
                     }
@@ -2928,7 +2928,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
             let removeValueInteractive:([SecureIdValueKey]) -> InputDataValidation = { valueKeys in
                 return .fail(.doSomething { f in
-                    saveValueDisposable.set(showModalProgress(signal: deleteSecureIdValues(network: context.account.network, keys: Set(valueKeys)) |> deliverOnMainQueue, for: mainWindow).start(completed: {
+                    saveValueDisposable.set(showModalProgress(signal: deleteSecureIdValues(network: context.account.network, keys: Set(valueKeys)) |> deliverOnMainQueue, for: context.window).start(completed: {
                         updateState { current in
                             return valueKeys.reduce(current, { (current, key) in
                                 return current.withRemovedValue(key)
@@ -2944,12 +2944,12 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 var loadedData: AddressIntermediateState?
                 let push:(SecureIdRequestedFormFieldValue, SecureIdRequestedFormFieldValue?, Bool) -> Void = { field, relative, hasMainField in
                     presentController(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
-                        return addressEntries(state, hasMainField: hasMainField, relative: relative, updateState: updateState)
+                        return addressEntries(state, context: context, hasMainField: hasMainField, relative: relative, updateState: updateState)
                         } |> map { InputDataSignalValue(entries: $0) }, title: relative?.rawValue ?? field.rawValue, validateData: { data in
 
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
-                                modernConfirm(for: mainWindow, account: context.account, peerId: nil, header: strings().telegramPassportController, information: relative == nil ? strings().secureIdConfirmDeleteAddress : strings().secureIdConfirmDeleteDocument, thridTitle: hasMainField ? strings().secureIdConfirmDeleteAddress : nil, successHandler: { result in
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: strings().telegramPassportController, information: relative == nil ? strings().secureIdConfirmDeleteAddress : strings().secureIdConfirmDeleteDocument, thridTitle: hasMainField ? strings().secureIdConfirmDeleteAddress : nil, successHandler: { result in
                                     var keys: [SecureIdValueKey] = []
                                     if let relative = relative {
                                         keys.append(relative.valueKey)
@@ -3128,7 +3128,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         loadedData = AddressIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if AddressIntermediateState(data) != loadedData {
-                            confirm(for: mainWindow, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, okTitle: strings().alertConfirmDiscard, successHandler: { _ in
+                            confirm(for: context.window, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, okTitle: strings().alertConfirmDiscard, successHandler: { _ in
                                  f(true)
                             })
                         } else {
@@ -3145,23 +3145,23 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }
                     showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdIdentityDocument, onComplete: { selected in
                         push(selected.value, selected.value == .address ? nil : selected.value, selected.value == .address)
-                    }), for: mainWindow)
+                    }), for: context.window)
                 } else if relative.count > 1 {
                     let values:[ValuesSelectorValue<SecureIdRequestedFormFieldValue>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
                     showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdResidentialAddress, onComplete: { selected in
-                        filePanel(with: photoExts,for: mainWindow, completion: { files in
+                        filePanel(with: photoExts,for: context.window, completion: { files in
                             if let files = files {
                                 push(request.primary, selected.value, request.fillPrimary)
                                 let localFiles:[SecureIdVerificationDocument] = files.map({SecureIdVerificationDocument.local(SecureIdVerificationLocalDocument(id: arc4random64(), resource: LocalFileReferenceMediaResource(localFilePath: $0, randomId: arc4random64()), state: .uploading(0)))})
                                 updateState { current in
                                     if localFiles.count + (current.files[selected.value.valueKey] ?? []).count > scansLimit {
-                                        alert(for: mainWindow, info: strings().secureIdErrorScansLimit)
+                                        alert(for: context.window, info: strings().secureIdErrorScansLimit)
                                     }
                                     return current.withAppendFiles(localFiles, for: selected.value.valueKey)
                                 }
                             }
                         })
-                    }), for: mainWindow)
+                    }), for: context.window)
                 } else if relative.count == 1 {
                     push(request.primary, relative[0], request.fillPrimary)
                 } else {
@@ -3173,13 +3173,13 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 var loadedData:DetailsIntermediateState?
                 let push:(SecureIdRequestedFormFieldValue, SecureIdRequestedFormFieldValue?, SecureIdRequestedFormFieldValue?) ->Void = { field, relative, primary in
                     presentController(InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map { state, _ in
-                        return identityEntries(state, primary: primary, relative: relative, updateState: updateState)
+                        return identityEntries(state, context: context, primary: primary, relative: relative, updateState: updateState)
                     } |> map { InputDataSignalValue(entries: $0) }, title: relative?.rawValue ?? field.rawValue, validateData: { data in
 
 
                         if let _ = data[_id_delete] {
                             return .fail(.doSomething { next in
-                                modernConfirm(for: mainWindow, account: context.account, peerId: nil, header: strings().telegramPassportController, information: primary != nil && relative != nil ? strings().secureIdConfirmDeleteDocument : primary != nil ? strings().secureIdDeleteConfirmPersonalDetails : strings().secureIdConfirmDeleteDocument, thridTitle: primary != nil && relative != nil ? strings().secureIdDeletePersonalDetails : nil, successHandler: { result in
+                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: strings().telegramPassportController, information: primary != nil && relative != nil ? strings().secureIdConfirmDeleteDocument : primary != nil ? strings().secureIdDeleteConfirmPersonalDetails : strings().secureIdConfirmDeleteDocument, thridTitle: primary != nil && relative != nil ? strings().secureIdDeletePersonalDetails : nil, successHandler: { result in
                                     var keys: [SecureIdValueKey] = []
                                     if let relative = relative {
                                         keys.append(relative.valueKey)
@@ -3461,7 +3461,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         loadedData = DetailsIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if DetailsIntermediateState(data) != loadedData {
-                            confirm(for: mainWindow, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, okTitle: strings().alertConfirmDiscard, successHandler: { _ in
+                            confirm(for: context.window, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, okTitle: strings().alertConfirmDiscard, successHandler: { _ in
                                 f(true)
                             })
                         } else {
@@ -3478,26 +3478,26 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }
                     showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdIdentityDocument, onComplete: { selected in
                         push(selected.value, selected.value.valueKey == .personalDetails ? nil : selected.value, selected.value.valueKey == .personalDetails ? .personalDetails(nativeName: true) : nil)
-                    }), for: mainWindow)
+                    }), for: context.window)
                 } else if relative.count > 1 {
                     let values:[ValuesSelectorValue<SecureIdRequestedFormFieldValue>] = relative.map({ValuesSelectorValue(localized: $0.rawValue, value: $0)})
                     showModal(with: ValuesSelectorModalController(values: values, selected: values[0], title: strings().secureIdIdentityDocument, onComplete: { selected in
                         if let relativeValue = relativeValue, relativeValue.frontSideVerificationDocument != nil {
                             push(request.primary, selected.value, request.fillPrimary ? request.primary : nil)
                         } else {
-                            filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
+                            filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { files in
                                 if let file = files?.first {
                                     push(request.primary, selected.value, request.fillPrimary ? request.primary : nil)
                                     updateFrontMrz(file: file, relative: selected.value, updateState: updateState)
                                 }
                             })
                         }
-                    }), for: mainWindow)
+                    }), for: context.window)
                 } else if relative.count == 1 {
                     if let relativeValue = relativeValue, relativeValue.frontSideVerificationDocument != nil {
                         push(request.primary, relative[0], request.fillPrimary ? request.primary : nil)
                     } else {
-                        filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { files in
+                        filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { files in
                             if let file = files?.first {
                                 push(request.primary, relative[0], request.fillPrimary ? request.primary : nil)
                                 updateFrontMrz(file: file, relative: relative[0], updateState: updateState)
@@ -3512,7 +3512,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
             case .email:
                 if let valueKey = valueKey {
-                    confirm(for: mainWindow, information: strings().secureIdRemoveEmail, successHandler: { _ in
+                    confirm(for: context.window, information: strings().secureIdRemoveEmail, successHandler: { _ in
                         _ = removeValue(valueKey)
                     })
                 } else {
@@ -3525,7 +3525,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         if let code = data[_id_email_code]?.stringValue, !code.isEmpty, let payload = _payload, let activateEmail = _activateEmail {
                             return .fail(.doSomething { f in
                                 if let ctx = _stateValue.accessContext {
-                                    emailNewActivationDisposable.set(showModalProgress(signal: secureIdCommitEmailVerification(postbox: context.account.postbox, network: context.account.network, context: ctx, payload: payload, code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                                    emailNewActivationDisposable.set(showModalProgress(signal: secureIdCommitEmailVerification(postbox: context.account.postbox, network: context.account.network, context: ctx, payload: payload, code: code) |> deliverOnMainQueue, for: context.window).start(error: { error in
                                         f(.fail(.fields([_id_email_new : .shake])))
                                     }, completed: {
                                         f(proccessValue([SecureIdValue.email(.init(email: activateEmail))]))
@@ -3537,7 +3537,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                         if data[_id_email_def] == nil, let email = email, isValidEmail(email)  {
                             return .fail(.doSomething { parent in
-                                emailNewActivationDisposable.set(showModalProgress(signal: secureIdPrepareEmailVerification(network: context.account.network, value: .init(email: email)), for: mainWindow).start(next: { payload in
+                                emailNewActivationDisposable.set(showModalProgress(signal: secureIdPrepareEmailVerification(network: context.account.network, value: .init(email: email)), for: context.window).start(next: { payload in
                                     _payload = payload
                                     _activateEmail = email
                                     updateState { current in
@@ -3576,7 +3576,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             case .phone:
 
                 if let valueKey = valueKey {
-                    confirm(for: mainWindow, information: strings().secureIdRemovePhoneNumber, successHandler: { _ in
+                    confirm(for: context.window, information: strings().secureIdRemovePhoneNumber, successHandler: { _ in
                         _ = removeValue(valueKey)
                     })
                 } else {
@@ -3598,7 +3598,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                             case .none:
                                                 break
                                             case .fail:
-                                                phoneNewActivationDisposable.set(showModalProgress(signal: secureIdPreparePhoneVerification(network: context.account.network, value: SecureIdPhoneValue(phone: phone)) |> deliverOnMainQueue, for: mainWindow).start(next: { payload in
+                                                phoneNewActivationDisposable.set(showModalProgress(signal: secureIdPreparePhoneVerification(network: context.account.network, value: SecureIdPhoneValue(phone: phone)) |> deliverOnMainQueue, for: context.window).start(next: { payload in
                                                     
                                                     _payload = payload
                                                     
@@ -3610,7 +3610,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                                                 return
                                                             }
                                                             if let ctx = _stateValue.accessContext {
-                                                                phoneNewActivationDisposable.set(showModalProgress(signal: secureIdCommitPhoneVerification(postbox: context.account.postbox, network: context.account.network, context: ctx, payload: payload, code: code) |> deliverOnMainQueue, for: mainWindow).start(next: { value in
+                                                                phoneNewActivationDisposable.set(showModalProgress(signal: secureIdCommitPhoneVerification(postbox: context.account.postbox, network: context.account.network, context: ctx, payload: payload, code: code) |> deliverOnMainQueue, for: context.window).start(next: { value in
                                                                     updateState { current in
                                                                         return current.withUpdatedValue(value)
                                                                     }
@@ -3638,7 +3638,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                                                         return .fail(.none)
                                                     }, identifier: "passport", getBackgroundColor: { theme.colors.background }))
                                                 }, error: { error in
-                                                    alert(for: mainWindow, info: "\(error)")
+                                                    alert(for: context.window, info: "\(error)")
                                                 }))
 
                                             }
@@ -3736,7 +3736,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                         if email.isEmpty {
                             return .fail(.doSomething(next: { f in
-                                confirm(for: mainWindow, information: strings().twoStepAuthEmailSkipAlert, okTitle: strings().twoStepAuthEmailSkip, successHandler: { result in
+                                confirm(for: context.window, information: strings().twoStepAuthEmailSkipAlert, okTitle: strings().twoStepAuthEmailSkip, successHandler: { result in
                                     updatePassword(password, nil)
                                     f(.success(.navigationBackWithPushAnimation))
                                 })
@@ -3766,7 +3766,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         return current.withUpdatedPasswordSettings(nil)
                     }
                     return .single(TwoStepVerificationConfiguration.notSet(pendingEmail: nil))
-            }, for: mainWindow))
+            }, for: context.window))
         }, authorize: { [weak self] enabled in
             
             if !enabled {
@@ -3844,8 +3844,8 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }
                     
                     return grantSecureIdAccess(network: context.account.network, peerId: inAppRequest.peerId, publicKey: inAppRequest.publicKey, scope: inAppRequest.scope, opaquePayload: inAppRequest.isModern ? Data() : inAppRequest.nonce, opaqueNonce: inAppRequest.isModern ? inAppRequest.nonce : Data(), values: values, requestedFields: encryptedForm.requestedFields)
-                } |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-                        alert(for: mainWindow, info: "\(error)")
+                } |> deliverOnMainQueue, for: context.window).start(error: { error in
+                        alert(for: context.window, info: "\(error)")
                 }, completed: {
                         executeCallback(true)
                         closeAfterSuccessful()
@@ -3857,11 +3857,11 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 execute(inapp: .external(link: url, false))
             }
         }, forgotPassword: {
-            confirm(for: mainWindow, header: strings().passportResetPasswordConfirmHeader, information: strings().passportResetPasswordConfirmText, okTitle: strings().passportResetPasswordConfirmOK, successHandler: { _ in
-                recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: mainWindow).start(next: { emailPattern in
+            confirm(for: context.window, header: strings().passportResetPasswordConfirmHeader, information: strings().passportResetPasswordConfirmText, okTitle: strings().passportResetPasswordConfirmOK, successHandler: { _ in
+                recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: context.window).start(next: { emailPattern in
                     let promise:Promise<[InputDataEntry]> = Promise()
                     promise.set(combineLatest(Signal<[InputDataEntry], NoError>.single(recoverEmailEntries(emailPattern: emailPattern, unavailable: {
-                        alert(for: mainWindow, info: strings().twoStepAuthRecoveryFailed)
+                        alert(for: context.window, info: strings().twoStepAuthRecoveryFailed)
                     })) |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue) |> map {$0.0})
                     presentController(InputDataController(dataSignal: promise.get() |> map { InputDataSignalValue(entries: $0) }, title: strings().secureIdRecoverPassword, validateData: { data -> InputDataValidation in
                         
@@ -3871,8 +3871,8 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                         
                         return .fail(.doSomething { f in
-                            confirm(for: mainWindow, information: strings().secureIdWarningDataLost, successHandler: { _ in
-                                recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                            confirm(for: context.window, information: strings().secureIdWarningDataLost, successHandler: { _ in
+                                recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue, for: context.window).start(error: { error in
                                     f(.fail(.fields([_id_email_code : .shake])))
                                 }, completed: {
                                     updateState { current in
@@ -3891,14 +3891,14 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             
        //
         }, deletePassport: {
-            confirm(for: mainWindow, header: strings().secureIdInfoTitle, information: strings().secureIdInfoDeletePassport, successHandler: { _ in
+            confirm(for: context.window, header: strings().secureIdInfoTitle, information: strings().secureIdInfoDeletePassport, successHandler: { _ in
                 updateState { current in
                     let signal = deleteSecureIdValues(network: context.account.network, keys: Set(current.values.map{$0.value.key}))
                     
                     _ = (signal |> deliverOnMainQueue).start(next: {
                        
                     }, error:{ error in
-                        alert(for: mainWindow, info: "\(error)")
+                        alert(for: context.window, info: "\(error)")
                     }, completed: {
                         updateState { current in
                             return current.withRemovedValues()
@@ -4002,7 +4002,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             }, for: .Click)
         } else {
             rightView?.set(handler: { _ in
-                confirm(for: mainWindow, header: strings().secureIdInfoTitle, information: strings().secureIdInfo, cancelTitle: "", thridTitle: strings().secureIdInfoMore, successHandler: { result in
+                confirm(for: context.window, header: strings().secureIdInfoTitle, information: strings().secureIdInfo, cancelTitle: "", thridTitle: strings().secureIdInfoMore, successHandler: { result in
                     if result == .thrid {
                         openFaq(context: context)
                     }
@@ -4033,7 +4033,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             return true
         }
         if !dismissed {
-            confirm(for: mainWindow, information: strings().secureIdConfirmCancel, okTitle: strings().alertConfirmStop, successHandler: { [weak self] _ in
+            confirm(for: context.window, information: strings().secureIdConfirmCancel, okTitle: strings().alertConfirmStop, successHandler: { [weak self] _ in
                 guard let `self` = self else {return}
                 self.dismissed = true
                 self.executeCallback(false)
