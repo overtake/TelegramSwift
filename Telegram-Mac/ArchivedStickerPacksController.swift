@@ -249,7 +249,7 @@ class ArchivedStickerPacksController: TableViewController {
         
         
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-          showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+          showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: context.window)
         }, removePack: { info in
             confirm(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
                 var remove = false

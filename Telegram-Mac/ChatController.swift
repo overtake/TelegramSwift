@@ -4194,11 +4194,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return nil
                 }
                 |> distinctUntilChanged
+        case let .replyThread(data, _):
+            topPinnedMessage = context.account.postbox.messageView(data.messageId) |> map { view in
+                if let message = view.message {
+                    return ChatPinnedMessage(messageId: message.id, message: message, others: [message.id], isLatest: true, index: 0, totalCount: 1)
+                } else {
+                    return nil
+                }
+            }
         default:
             topPinnedMessage = .single(nil)
         }
         
-
+        
         let initialData = initialDataHandler.get() |> take(1) |> beforeNext { [weak self] (combinedInitialData) in
             
             guard let `self` = self else {
@@ -4250,8 +4258,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
                     }
                     
-                    var pinnedMessage: ChatPinnedMessage?
-                    pinnedMessage = ChatPinnedMessage(messageId: data.messageId, message: combinedInitialData.cachedDataMessages?[data.messageId]?.first, isLatest: true)
 
                     return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
                 })
@@ -4361,14 +4367,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let availableGroupCall: Signal<GroupCallPanelData?, NoError> = getGroupCallPanelData(context: context, peerId: peerId)
         
         
-        peerDisposable.set((combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall) |> beforeNext  { [weak self] topPinnedMessage, postboxView, groupCallData in
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall).start(next: { [weak self] pinnedMsg, postboxView, groupCallData in
+            
                         
             guard let `self` = self else {return}
             (self.centerBarView as? ChatTitleBarView)?.postboxView = postboxView
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
-            case .history, .preview:
+            case .history, .preview, .replyThread:
                 
                 if let cachedData = peerView?.cachedData as? CachedChannelData {
                     let onlineMemberCount:Signal<Int32?, NoError>
@@ -4458,7 +4465,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         
                         present = present.withUpdatedDiscussionGroupId(discussionGroupId)
-                        present = present.withUpdatedPinnedMessageId(topPinnedMessage)
+                        present = present.withUpdatedPinnedMessageId(pinnedMsg)
                         
                         var contactStatus: ChatPeerStatus?
                         if let cachedData = peerView.cachedData as? CachedUserData {
@@ -4556,8 +4563,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
             case .pinned:
                 self.chatInteraction.update(animated: !first.swap(false), { presentation in
-                    var pinnedMessage: ChatPinnedMessage?
-                    pinnedMessage = topPinnedMessage
+                    var pinnedMessage: ChatPinnedMessage? = pinnedMsg
                     return presentation.withUpdatedPinnedMessageId(pinnedMessage).withUpdatedCanPinMessage((peerView?.cachedData as? CachedUserData)?.canPinMessages ?? true || context.peerId == peerId).updatedPeer { _ in
                         if let peerView = peerView {
                             return peerView.peers[peerView.peerId]
@@ -4608,7 +4614,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return presentation
                 })
             }
-        }).start())
+        }))
         
         
     
@@ -5781,7 +5787,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.context.sharedContext.bindings.entertainment().update(with: self.chatInteraction)
         
         chatInteraction.update(animated: false, {$0.withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
-        //NSLog("chat apeeared")
         
          self.failedMessageEventsDisposable.set((context.account.pendingMessageManager.failedMessageEvents(peerId: chatInteraction.peerId)
          |> deliverOnMainQueue).start(next: { [weak self] reason in

@@ -224,7 +224,7 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
             
             if !checking {
                 
-                confirmPhoneDisposable.set(showModalProgress(signal: context.engine.auth.requestCancelAccountReset(phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
+                confirmPhoneDisposable.set(showModalProgress(signal: context.engine.auth.requestCancelAccountReset(phoneCodeHash: data.hash, phoneCode: code) |> deliverOnMainQueue, for: context.window).start(error: { error in
                         
                         let errorText: String
                         switch error {
@@ -249,7 +249,7 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
                             return $0.withUpdatedChecking(false)
                         }
                         close?()
-                        alert(for: mainWindow, info: strings().cancelResetAccountSuccess(formatPhoneNumber(phone.hasPrefix("+") ? phone : "+\(phone)")))
+                        alert(for: context.window, info: strings().cancelResetAccountSuccess(formatPhoneNumber(phone.hasPrefix("+") ? phone : "+\(phone)")))
                     }))
             }
         })

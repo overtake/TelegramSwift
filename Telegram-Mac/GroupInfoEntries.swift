@@ -778,10 +778,11 @@ final class GroupInfoArguments : PeerInfoArguments {
     }
     
     func updateGroupPhoto(_ custom: NSImage?, control: Control?) {
+        let context = self.context
         let updatePhoto:(NSImage) -> Void = { image in
             _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)
                 })
@@ -1560,7 +1561,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{
-                showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: arguments.context.window)
             }, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)
             })

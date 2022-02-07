@@ -121,10 +121,12 @@ class UsernameSettingsViewController: TableViewController {
     func saveUsername() {
         if let item = genericView.item(stableId: AnyHashable(UsernameEntryId.inputEntry)) as? InputDataRowItem, let window = window {
             
+            let context = self.context
+            
             updateDisposable.set(showModalProgress(signal: context.engine.peers.updateAddressName(domain: .account, name: item.currentText.string), for: window).start(error: { error in
                 switch error {
                 case .generic:
-                    alert(for: mainWindow, info: strings().unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
             }, completed: { [weak self] in
                 self?.navigationController?.back()

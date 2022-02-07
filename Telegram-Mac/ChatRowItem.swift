@@ -640,7 +640,7 @@ class ChatRowItem: TableRowItem {
     
     func share() {
         if let message = message {
-            showModal(with: ShareModalController(ShareMessageObject(context, message)), for: mainWindow)
+            showModal(with: ShareModalController(ShareMessageObject(context, message)), for: context.window)
         }
     }
     

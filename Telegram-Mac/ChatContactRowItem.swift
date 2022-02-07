@@ -154,11 +154,6 @@ class ChatContactRowView : ChatRowView {
                     addSubview(actionButton!)
                 }
                 actionButton?.removeAllHandlers()
-//                actionButton?.set(handler: { [weak item] _ in
-//                    guard let item = item, let vCard = item.vCard else {return}
-//                    let controller = VCardModalController(item.account, vCard: vCard, contact: item.contact)
-//                    showModal(with: controller, for: mainWindow)
-//                }, for: .Click)
                 actionButton?.set(text: strings().chatViewContact, for: .Normal)
                 actionButton?.layer?.borderColor = item.appearance.activity.cgColor
                 actionButton?.set(color: item.appearance.activity, for: .Normal)

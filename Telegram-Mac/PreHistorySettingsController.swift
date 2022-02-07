@@ -248,7 +248,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                                 
                             })
                         } else {
-                            self?.onComplete.set(showModalProgress(signal: signal, for: mainWindow))
+                            self?.onComplete.set(showModalProgress(signal: signal, for: context.window))
                         }
                         
                     }

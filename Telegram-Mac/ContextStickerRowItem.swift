@@ -75,7 +75,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             
             if let reference = reference?.0.fileReference?.media.stickerReference {
                 menu.addItem(ContextMenuItem(strings().contextViewStickerSet, handler: {
-                    showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
+                    showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: item.context.window)
                 }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             }
             if let file = reference?.0.fileReference?.media {

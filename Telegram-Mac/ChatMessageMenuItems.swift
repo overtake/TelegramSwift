@@ -631,7 +631,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }
                     }, itemImage: MenuAnimation.menu_copy_media.value, keyEquivalent: .cmdc))
                     thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
-                        savePanel(file: resourceData.path, ext: "jpg", for: mainWindow)
+                        savePanel(file: resourceData.path, ext: "jpg", for: context.window)
                     }, itemImage: MenuAnimation.menu_save_as.value, keyEquivalent: .cmds))
                 }
             }

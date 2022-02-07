@@ -243,7 +243,7 @@ class ChatGroupedItem: ChatRowItem {
     
     override func share() {
         if let message = message {
-            showModal(with: ShareModalController(ShareMessageObject(context, message, layout.messages)), for: mainWindow)
+            showModal(with: ShareModalController(ShareMessageObject(context, message, layout.messages)), for: context.window)
         }
 
     }

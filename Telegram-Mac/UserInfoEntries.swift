@@ -134,12 +134,12 @@ class UserInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { [weak self] peer in
             if let peer = peer {
-                confirm(for: mainWindow, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
+                confirm(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
                     let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
                         let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId)
                         return signal  |> map { _ in}
                     }
-                    self?.shareDisposable.set(showModalProgress(signal: signal, for: mainWindow).start())
+                    self?.shareDisposable.set(showModalProgress(signal: signal, for: context.window).start())
                 })
             }
         })
@@ -204,7 +204,7 @@ class UserInfoArguments : PeerInfoArguments {
             let updateNames: Signal<Void, UpdateContactNameError>
             
             if let firstName = updateValues.firstName {
-                updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: mainWindow)
+                updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: context.window)
             } else {
                 updateNames = .complete()
             }
@@ -267,7 +267,7 @@ class UserInfoArguments : PeerInfoArguments {
         })
     }
     func botShare(_ botName: String) {
-        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(botName)")), for: mainWindow)
+        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(botName)")), for: context.window)
     }
     func botSettings() {
         _ = Sender.enqueue(input: ChatTextInputState(inputText: "/settings"), context: context, peerId: peerId, replyId: nil).start()
@@ -294,7 +294,7 @@ class UserInfoArguments : PeerInfoArguments {
             if let peer = peer {
                 let confirm = confirmSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: strings().peerInfoConfirmSecretChatOK)
                 return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
-                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: mainWindow)
+                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window)
                 }
             } else {
                 return .complete()

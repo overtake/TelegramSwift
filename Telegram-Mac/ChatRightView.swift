@@ -192,7 +192,7 @@ class ChatRightView: View, ViewDisplayDelegate {
             if isStateOverlay {
                 return max.maxX + 4
             } else {
-                return max.maxX
+                return max.maxX + 1
             }
                 
         }

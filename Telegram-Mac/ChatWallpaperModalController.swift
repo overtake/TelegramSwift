@@ -112,7 +112,7 @@ class ChatWallpaperModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         let context = self.context
         let interactions = ModalInteractions(acceptTitle: strings().chatWPSelectFromFile, accept: {
-            filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
+            filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { paths in
                 if let path = paths?.first {
                     let size = fs(path)
                     if let size = size, size < 10 * 1024 * 1024, let image = NSImage(contentsOf: URL(fileURLWithPath: path))?.cgImage(forProposedRect: nil, context: nil, hints: nil), image.size.width > 500 && image.size.height > 500 {

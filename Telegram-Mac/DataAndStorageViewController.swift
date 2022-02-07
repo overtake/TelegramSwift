@@ -528,13 +528,13 @@ class DataAndStorageViewController: TableViewController {
                 return current.withUpdatedAutomaticDownload(enabled)
             }).start()
         }, resetDownloadSettings: {
-            _ = (confirmSignal(for: mainWindow, header: appName, information: strings().dataAndStorageConfirmResetSettings, okTitle: strings().modalOK, cancelTitle: strings().modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, NoError> in
+            _ = (confirmSignal(for: context.window, header: appName, information: strings().dataAndStorageConfirmResetSettings, okTitle: strings().modalOK, cancelTitle: strings().modalCancel) |> filter {$0} |> mapToSignal { _ -> Signal<Void, NoError> in
                 return updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, { _ -> AutomaticMediaDownloadSettings in
                     return AutomaticMediaDownloadSettings.defaultSettings
                 })
             }).start()
         }, selectDownloadFolder: {
-            selectFolder(for: mainWindow, completion: { newPath in
+            selectFolder(for: context.window, completion: { newPath in
                 _ = updateMediaDownloadSettingsInteractively(postbox: context.account.postbox, { current -> AutomaticMediaDownloadSettings in
                     return current.withUpdatedDownloadFolder(newPath)
                 }).start()
@@ -560,7 +560,7 @@ class DataAndStorageViewController: TableViewController {
                 }
                 message = message.trimmed
                 
-                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: context.window)
             }, pushController: { controller in
                 pushControllerImpl(controller)
             })

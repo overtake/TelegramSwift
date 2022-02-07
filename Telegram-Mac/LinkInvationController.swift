@@ -230,12 +230,12 @@ class LinkInvationController: TableViewController {
             }
         }, share: {
             if let link = link.modify({$0}) {
-                showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
             }
         }, revoke: { [weak self] in
             if let peer = peer.modify({$0}), let context = self?.context {
                 let info = peer.isChannel ? strings().linkInvationChannelConfirmRevoke : strings().linkInvationGroupConfirmRevoke
-                let signal = confirmSignal(for: mainWindow, information: info, okTitle: strings().linkInvationConfirmOk)
+                let signal = confirmSignal(for: context.window, information: info, okTitle: strings().linkInvationConfirmOk)
                     |> filter {$0}
                     |> mapToSignal { _ -> Signal<Void, NoError> in
                         
