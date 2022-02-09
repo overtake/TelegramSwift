@@ -413,8 +413,8 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         }
         
         let arguments = RecentCallsArguments(context: context, call: { [weak self] peerId in
-            self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(context.sharedContext, result)
+            self?.callDisposable.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context, result)
             }))
         }, removeCalls: { [weak self] messageIds, peer in
             modernConfirm(for: context.window, account: context.account, peerId: nil, header: strings().recentCallsDeleteHeader, information: strings().recentCallsDeleteCalls, okTitle: strings().recentCallsDelete, cancelTitle: strings().modalCancel, thridTitle: strings().recentCallsDeleteForMeAnd(peer.compactDisplayTitle), thridAutoOn: true, successHandler: { [weak self] result in

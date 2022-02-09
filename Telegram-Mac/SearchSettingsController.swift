@@ -55,11 +55,11 @@ private func searchSettingsEntries(context: AccountContext, items:[SettingsSearc
                 
                 addRecentSettingsSearchItem(postbox: context.account.postbox, item: item.id)
                 
-                item.present(context, context.sharedContext.bindings.rootNavigation(), { presentation, controller in
+                item.present(context, context.bindings.rootNavigation(), { presentation, controller in
                     switch presentation {
                     case .push:
                         if let controller = controller {
-                            context.sharedContext.bindings.rootNavigation().push(controller)
+                            context.bindings.rootNavigation().push(controller)
                         }
                     default:
                         break

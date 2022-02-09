@@ -800,7 +800,7 @@ class CallNavigationHeaderView: CallHeaderBasicView {
         let account = session.account
         let signal = Signal<Peer?, NoError>.single(session.peer) |> then(session.account.postbox.loadedPeerWithId(session.peerId) |> map(Optional.init) |> deliverOnMainQueue)
 
-        let accountPeer: Signal<Peer?, NoError> =  session.sharedContext.activeAccounts |> mapToSignal { accounts in
+        let accountPeer: Signal<Peer?, NoError> =  session.accountContext.sharedContext.activeAccounts |> mapToSignal { accounts in
             if accounts.accounts.count == 1 {
                 return .single(nil)
             } else {

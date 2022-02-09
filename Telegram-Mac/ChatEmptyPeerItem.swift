@@ -135,7 +135,7 @@ class ChatEmptyPeerItem: TableRowItem {
                     guard let `self` = self else {return}
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))
-                    attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                    attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                     self.textViewLayout = TextViewLayout(attr, alignment: .left)
                     self.textViewLayout.interactions = globalLinkExecutor
                     self.view?.layout()

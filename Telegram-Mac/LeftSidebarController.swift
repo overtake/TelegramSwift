@@ -17,7 +17,7 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
     var items:[ContextMenuItem] = []
     if var filter = filter {
         items.append(.init(strings().chatListFilterEdit, handler: {
-            context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
+            context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
         }, itemImage: MenuAnimation.menu_edit.value))
         items.append(.init(strings().chatListFilterAddChats, handler: {
             showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(filter.data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: strings().chatListFilterIncludeLimitReached, callback: { peerIds in
@@ -47,7 +47,7 @@ func filterContextMenuItems(_ filter: ChatListFilter?, context: AccountContext) 
         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
     } else {
         items.append(.init(strings().chatListFilterEditFilters, handler: {
-            context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+            context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
         }, itemImage: MenuAnimation.menu_edit.value))
     }
     
@@ -205,9 +205,9 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
                 return state.withUpdatedFilter(filter)
             }
             
-            let rootNavigation = context.sharedContext.bindings.rootNavigation()
+            let rootNavigation = context.bindings.rootNavigation()
             
-            let leftController = context.sharedContext.bindings.mainController()
+            let leftController = context.bindings.mainController()
             leftController.chatListNavigation.close(animated: context.sharedContext.layout != .single || rootNavigation.stackCount == 1)
             
             if context.sharedContext.layout == .single {

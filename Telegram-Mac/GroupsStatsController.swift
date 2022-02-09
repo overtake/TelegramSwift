@@ -378,7 +378,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
     }
     
     let openPeerInfo:(PeerId)->Void = { peerId in
-        return context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        return context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     }
     
     let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, peerId: peerId)

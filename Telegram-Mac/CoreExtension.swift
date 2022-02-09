@@ -2478,7 +2478,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             }
 
             if location?.peerId == peerId {
-                context.sharedContext.bindings.rootNavigation().close()
+                context.bindings.rootNavigation().close()
             }
             
             return .single(true)

@@ -368,7 +368,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         
         actionsDisposable.add(showModalProgress(signal: signal |> deliverOnMainQueue, for: context.window).start(next: { result in
             if result && groupId == nil && initialState.type == .group {
-                context.sharedContext.bindings.rootNavigation().back()
+                context.bindings.rootNavigation().back()
             }
             updateSearchValue { current in
                 return .none({ searchState in
@@ -402,12 +402,12 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     }
     
     let arguments = DiscussionArguments(context: context, createGroup: {
-        let controller = context.sharedContext.bindings.rootNavigation().controller
+        let controller = context.bindings.rootNavigation().controller
         actionsDisposable.add(createSupergroup(with: context, defaultText: peer.displayTitle + " Chat").start(next: { [weak controller] peerId in
             if let peerId = peerId, let controller = controller {
                 setup(peer.id, peerId)
-                context.sharedContext.bindings.rootNavigation().removeUntil(InputDataController.self)
-                context.sharedContext.bindings.rootNavigation().push(controller)
+                context.bindings.rootNavigation().removeUntil(InputDataController.self)
+                context.bindings.rootNavigation().push(controller)
             }
         }))
     }, setup: { selected in
@@ -419,7 +419,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
             }
         }), for: context.window)
     }, openInfo: { peerId in
-        context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     }, unlinkGroup: { associated in
         if associated.isChannel {
             confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkChannel, successHandler: { _ in

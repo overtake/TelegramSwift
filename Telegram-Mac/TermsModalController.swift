@@ -97,7 +97,7 @@ class TermsModalController: ModalViewController {
                 _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
                     guard let `self` = self else {return}
                     if let peerId = peerId {
-                        self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId._asPeer().id)))
+                        self.context.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId._asPeer().id)))
                     }
                 })
             }

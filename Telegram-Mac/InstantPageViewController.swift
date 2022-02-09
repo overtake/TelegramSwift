@@ -307,9 +307,9 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
         let result = inApp(for: url.url.nsstring, context: context, openInfo: { [weak self] peerId, openChat, messageId, initialAction in
             guard let `self` = self else {return}
             if openChat {
-                self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction))
+                self.context.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction))
             } else {
-                self.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: self.context, peerId: peerId))
+                self.context.bindings.rootNavigation().push(PeerInfoController(context: self.context, peerId: peerId))
             }
         }, applyProxy: { [weak self] proxy in
             guard let `self` = self else {return}
@@ -482,10 +482,10 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
 
     func openInfo(_ peerId:PeerId, _ openChat: Bool, _ postId:MessageId?, _ action:ChatInitialAction?) {
         if openChat {
-            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
             closeModal()
         } else {
-            context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+            context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             closeModal()
         }
         

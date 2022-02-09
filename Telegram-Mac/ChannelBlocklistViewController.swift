@@ -349,7 +349,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
                         }
                     }
                     if adminError {
-                        alert(for: mainWindow, info: strings().channelBlacklistDemoteAdminError)
+                        alert(for: context.window, info: strings().channelBlacklistDemoteAdminError)
                         return .single(false)
                     }
                 }
@@ -364,7 +364,7 @@ class ChannelBlacklistViewController: EditableViewController<TableView> {
             
             let signal = context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peerId, memberId: memberId) |> ignoreValues
             
-            self?.updatePeerDisposable.set(showModalProgress(signal: signal, for: mainWindow).start(error: { _ in
+            self?.updatePeerDisposable.set(showModalProgress(signal: signal, for: context.window).start(error: { _ in
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)
                 }

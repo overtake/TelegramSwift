@@ -283,8 +283,8 @@ final class ChatInteraction : InterfaceObserver  {
                 peerId = peer.id
             }
             let context = self.context
-            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(context.sharedContext, result)
+            requestSessionId.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context, result)
             }))
         }
     }
@@ -541,9 +541,9 @@ final class ChatInteraction : InterfaceObserver  {
                             strongSelf.updateInput(with: text)
                         } else {
                             if let peer = keyboardMessage.inlinePeer ?? keyboardMessage.effectiveAuthor {
-                                strongSelf.context.sharedContext.bindings.rootNavigation().set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.context.sharedContext.layout != .single)
+                                strongSelf.context.bindings.rootNavigation().set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.context.sharedContext.layout != .single)
                                 if strongSelf.context.sharedContext.layout == .single {
-                                    strongSelf.context.sharedContext.bindings.rootNavigation().push(ForwardChatListController(strongSelf.context))
+                                    strongSelf.context.bindings.rootNavigation().push(ForwardChatListController(strongSelf.context))
                                 }
                             }
                             

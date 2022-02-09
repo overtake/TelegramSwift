@@ -32,7 +32,7 @@ class ChatInputRecordingView: View {
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction, recorder:ChatRecordingState) {
         self.chatInteraction = chatInteraction
         self.recorder = recorder
-        overlayController = ChatRecorderOverlayWindowController(parent: mainWindow, chatInteraction: chatInteraction)
+        overlayController = ChatRecorderOverlayWindowController(parent: chatInteraction.context.window, chatInteraction: chatInteraction)
         super.init(frame: frameRect)
         
         

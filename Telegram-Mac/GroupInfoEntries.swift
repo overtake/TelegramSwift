@@ -1557,7 +1557,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 } else {
                     arguments?.peerInfo(peerId)
                 }
-        }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
+        }, hashtag: arguments.context.bindings.globalSearch)
         case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{

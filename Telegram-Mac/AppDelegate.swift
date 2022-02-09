@@ -80,7 +80,7 @@ private struct AutologinToken : Equatable {
 }
 
 
-private final class SharedApplicationContext {
+final class SharedApplicationContext {
     let sharedContext: SharedAccountContext
     let notificationManager: SharedNotificationManager
     let sharedWakeupManager: SharedWakeupManager
@@ -129,8 +129,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private var sharedContextOnce: Signal<SharedApplicationContext, NoError> {
         return sharedContextPromise.get() |> take(1) |> deliverOnMainQueue
     }
-    private var sharedApplicationContextValue: SharedApplicationContext?
-
+    private(set) var sharedApplicationContextValue: SharedApplicationContext?
+    private(set) var supportAccountContextValue: SupportAccountContext?
     
     var passlock: Signal<Bool, NoError> {
         return sharedContextPromise.get() |> mapToSignal {
@@ -370,6 +370,29 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
     }
     
+    func activeContext(for id: AccountRecordId?) -> AccountContext? {
+        if let id = id {
+            if let value = supportAccountContextValue?.find(id) {
+                return value
+            }
+        }
+        return contextValue?.context
+    }
+    
+    func enumerateAccountContexts(_ f: (AccountContext)->Void) {
+        if let contextValue = contextValue {
+            f(contextValue.context)
+        }
+        self.supportAccountContextValue?.enumerateAccountContext(f)
+    }
+    
+    func enumerateApplicationContexts(_ f: (AuthorizedApplicationContext)->Void) {
+        if let contextValue = contextValue {
+            f(contextValue)
+        }
+        self.supportAccountContextValue?.enumerateApplicationContext(f)
+    }
+    
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         
@@ -470,8 +493,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             
             _ = signal.start(next: { updatedTheme in
                 if let theme = updatedTheme {
-                    telegramUpdateTheme(theme, window: window, animated: true)
-                    self.contextValue?.applyNewTheme()
+                    self.enumerateApplicationContexts({ context in
+                        telegramUpdateTheme(theme, window: context.context.window, animated: true)
+                        context.applyNewTheme()
+                    })
                 }
             })
             
@@ -601,7 +626,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let notificationsBindings = SharedNotificationBindings(navigateToChat: { account, peerId in
                 
                 if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
-                    let navigation = contextValue.context.sharedContext.bindings.rootNavigation()
+                    let navigation = contextValue.context.bindings.rootNavigation()
                     
                     if let controller = navigation.controller as? ChatController {
                         if controller.chatInteraction.peerId == peerId {
@@ -622,7 +647,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
                     
                     let pushController: (ChatLocation, ChatMode, MessageId, Atomic<ChatLocationContextHolder?>, Bool) -> Void = { chatLocation, mode, messageId, contextHolder, addition in
-                        let navigation = contextValue.context.sharedContext.bindings.rootNavigation()
+                        let navigation = contextValue.context.bindings.rootNavigation()
                         let controller: ChatController
                         if addition {
                             controller = ChatAdditionController(context: contextValue.context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: nil, chatLocationContextHolder: contextHolder)
@@ -632,7 +657,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         navigation.push(controller)
                     }
                     
-                    let navigation = contextValue.context.sharedContext.bindings.rootNavigation()
+                    let navigation = contextValue.context.bindings.rootNavigation()
                     
                     let currentInChat = navigation.controller is ChatController
                     let controller = navigation.controller as? ChatController
@@ -666,7 +691,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 window.deminiaturize(nil)
             }, updateCurrectController: {
                 if let contextValue = self.contextValue {
-                    contextValue.context.sharedContext.bindings.rootNavigation().controller.updateController()
+                    contextValue.context.bindings.rootNavigation().controller.updateController()
                 }
             }, applyMaxReadIndexInteractively: { index in
                 if let context = self.contextValue?.context {
@@ -675,11 +700,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
             })
             
-            let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, appEncryption: appEncryption, accountManager: accountManager, window: window, bindings: notificationsBindings)
+            let sharedNotificationManager = SharedNotificationManager(activeAccounts: sharedContext.activeAccounts |> map { ($0.0, $0.1.map { ($0.0, $0.1) }) }, appEncryption: appEncryption, accountManager: accountManager, bindings: notificationsBindings)
             let sharedWakeupManager = SharedWakeupManager(sharedContext: sharedContext, inForeground: self.presentAccountStatus.get())
             let sharedApplicationContext = SharedApplicationContext(sharedContext: sharedContext, notificationManager: sharedNotificationManager, sharedWakeupManager: sharedWakeupManager)
             
             self.sharedApplicationContextValue = sharedApplicationContext
+            
+            self.supportAccountContextValue = .init(applicationContext: sharedApplicationContext)
             
             self.sharedContextPromise.set(accountManager.transaction { transaction -> (SharedApplicationContext, LoggingSettings) in
                 return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings)?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings)
@@ -980,7 +1007,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func navigateProfile(_ peerId: PeerId, account: Account) {
         if let context = self.contextValue?.context, context.peerId == account.peerId {
-            context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+            context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             context.window.makeKeyAndOrderFront(nil)
             context.window.orderFrontRegardless()
         } else {
@@ -989,12 +1016,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     func navigateChat(_ peerId: PeerId, account: Account) {
         if let context = self.contextValue?.context, context.peerId == account.peerId {
-            context.sharedContext.bindings.rootNavigation().push(ChatAdditionController.init(context: context, chatLocation: .peer(peerId)))
+            context.bindings.rootNavigation().push(ChatAdditionController.init(context: context, chatLocation: .peer(peerId)))
             context.window.makeKeyAndOrderFront(nil)
             context.window.orderFrontRegardless()
         } else {
             sharedApplicationContextValue?.sharedContext.switchToAccount(id: account.id, action: .chat(peerId, necessary: true))
         }
+    }
+    
+    func openAccountInNewWindow(_ account: Account) {
+        supportAccountContextValue?.open(account: account)
     }
     
     
@@ -1076,7 +1107,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 AppDelegate.eventProcessed = nil
                 
                 let link = inApp(for: url as NSString, context: context, openInfo: { (peerId, isChat, postId, action) in
-                    context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId:postId, initialAction:action), true)
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId:postId, initialAction:action), true)
                 }, applyProxy: { proxy in
                     applyExternalProxy(proxy, accountManager: context.sharedContext.accountManager)
                 })
@@ -1238,7 +1269,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         
         if let context = self.contextValue?.context {
-            let navigation = context.sharedContext.bindings.rootNavigation()
+            let navigation = context.bindings.rootNavigation()
             (navigation.controller as? ChatController)?.chatInteraction.saveState(sync: true)
         }
         
@@ -1271,14 +1302,18 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     @IBAction func preferencesAction(_ sender: Any) {
         
         if let context = contextValue?.context {
-            context.sharedContext.bindings.mainController().showPreferences()
+            if context.isSupport {
+                var bp = 0
+                bp += 1
+            }
+            context.bindings.mainController().showPreferences()
         }
         window.makeKeyAndOrderFront(sender)
 
     }
     @IBAction func globalSearch(_ sender: Any) {
         if let context = contextValue?.context {
-            context.sharedContext.bindings.mainController().focusSearch(animated: true)
+            context.bindings.mainController().focusSearch(animated: true)
         }
     }
     @IBAction func closeWindow(_ sender: Any) {
@@ -1322,7 +1357,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             if context.account.id == identifier.recordId {
                 switch identifier.source {
                 case let .peerId(peerId):
-                    context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
                 }
             } else {
                 switch identifier.source {

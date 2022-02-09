@@ -235,11 +235,11 @@ class UserInfoArguments : PeerInfoArguments {
         } |> filter { $0 != nil } |> map { $0! }
         
         let call = peer |> mapToSignal {
-            phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: $0, isVideo: isVideo)
+            phoneCall(context: context, peerId: $0, isVideo: isVideo)
         } |> deliverOnMainQueue
         
         self.callDisposable.set(call.start(next: { result in
-            applyUIPCallResult(context.sharedContext, result)
+            applyUIPCallResult(context, result)
         }))
     }
     
@@ -858,7 +858,7 @@ enum UserInfoEntry: PeerInfoEntry {
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
+            }, hashtag: arguments.context.bindings.globalSearch)
         case let .bio(_, text, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {

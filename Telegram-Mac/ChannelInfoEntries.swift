@@ -1019,7 +1019,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
+            }, hashtag: arguments.context.bindings.globalSearch)
         case let .userName(_, value, viewType):
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(value)

@@ -2712,10 +2712,10 @@ func requestOrJoinGroupCall(context: AccountContext, peerId: PeerId, joinAs: Pee
     let account = context.account
 
     return combineLatest(queue: .mainQueue(), accounts, account.postbox.loadedPeerWithId(peerId)) |> mapToSignal { accounts, peer in
-        if let context = sharedContext.bindings.groupCall(), context.call.peerId == peerId, context.call.account.id == account.id {
+        if let context = context.sharedContext.getCrossAccountGroupCall(), context.call.peerId == peerId, context.call.account.id == account.id {
             return .single(.samePeer(context))
         } else {
-            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .voiceChat)
+            return makeNewCallConfirmation(accountContext: context, newPeerId: peerId, newCallType: .voiceChat)
             |> mapToSignal { _ in
                 return sharedContext.endCurrentCall()
             } |> map { _ in
@@ -2741,7 +2741,7 @@ private func startGroupCall(context: AccountContext, peerId: PeerId, joinAs: Pee
 }
 
 func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [FoundPeer]? = nil, canBeScheduled: Bool = false) {
-    let confirmation = makeNewCallConfirmation(account: context.account, sharedContext: context.sharedContext, newPeerId: peerId, newCallType: .voiceChat) |> mapToSignalPromotingError { _ in
+    let confirmation = makeNewCallConfirmation(accountContext: context, newPeerId: peerId, newCallType: .voiceChat) |> mapToSignalPromotingError { _ in
         return Signal<(GroupCallInfo?, PeerId), CreateGroupCallError> { subscriber in
 
             let disposable = MetaDisposable()

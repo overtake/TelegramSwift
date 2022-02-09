@@ -261,10 +261,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     
     private func gotoMessage() {
         if let message = message, let context = context, context.peerId == controller?.context.peerId {
-            if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
+            if let controller = context.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
             } else {
-                context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
             }
         }
     }

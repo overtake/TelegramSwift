@@ -93,8 +93,8 @@ class ChatCallRowItem: ChatRowItem {
         if let peerId = message?.id.peerId {
             let context = self.context
             
-            requestSessionId.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(context.sharedContext, result)
+            requestSessionId.set((phoneCall(context: context, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context, result)
             }))
         }
     }

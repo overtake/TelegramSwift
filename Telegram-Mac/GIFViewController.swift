@@ -458,7 +458,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     }
     
     override var canBecomeResponder: Bool {
-        if let view = context.sharedContext.bindings.rootNavigation().view as? SplitView {
+        if let view = context.bindings.rootNavigation().view as? SplitView {
             return view.state == .single
         }
         return false

@@ -209,7 +209,7 @@ func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId
         showModal(with: ShareModalController(ShareLinkObject(accountContext, link: link)), for: accountContext.window)
     }, openProfile: { peerId in
         getModalController?()?.close()
-        accountContext.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: accountContext, peerId: peerId))
+        accountContext.bindings.rootNavigation().push(PeerInfoController(context: accountContext, peerId: peerId))
     }, revokeLink: { [weak manager] link in
         confirm(for: accountContext.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
             if let manager = manager {

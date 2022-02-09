@@ -253,7 +253,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
         
-        context.sharedContext.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
+        context.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
                 return MajorNavigationController(ViewController.self, ViewController(), window)
             }
@@ -291,12 +291,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.view.splitView.needFullsize()
         }, displayUpgradeProgress: { progress in
                 
-        }, callSession: { [weak self] in
-            return self?.rightController.callHeader?.contextObject as? PCallSession
-        }, groupCall: { [weak self] in
-            return self?.rightController.callHeader?.contextObject as? GroupCallContext
-        }, getContext: { [weak self] in
-            return self?.context
         })
         
         
@@ -406,7 +400,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.command])
         
-        
+        window.set(handler: { _ -> KeyHandlerResult in
+            
+            appDelegate?.sharedApplicationContextValue?.notificationManager.updatePasslock(context.sharedContext.accountManager.transaction { transaction -> Bool in
+                switch transaction.getAccessChallengeData() {
+                case .none:
+                    return false
+                default:
+                    return true
+                }
+            })
+                        
+            return .invoked
+        }, with: self, for: .L, priority: .supreme, modifierFlags: [.command])
+
         
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
@@ -521,7 +528,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
 //        }, with: self, for: .F, priority: .supreme, modifierFlags: [.command, .shift])
         
         window.set(handler: { _ -> KeyHandlerResult in
-            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            context.bindings.rootNavigation().push(ShortcutListController(context: context))
             return .invoked
         }, with: self, for: .Slash, priority: .low, modifierFlags: [.command])
         
@@ -672,7 +679,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                     
                     let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
                     
-                    context.sharedContext.bindings.rootNavigation().push(controller)
+                    context.bindings.rootNavigation().push(controller)
                     
                 }, error: { error in
                     
@@ -687,11 +694,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }
         
         if let session = callSession {
-            context.sharedContext.showCall(with: session)
+            rightController.callHeader?.show(true, contextObject: session)
         }
         
         if let groupCallContext = groupCallContext {
-            context.sharedContext.showGroupCall(with: groupCallContext)
+            rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
         
         self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
@@ -781,7 +788,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             switch launchAction {
             case let .navigate(controller):
                 leftController.tabController.select(index: leftController.chatIndex)
-                context.sharedContext.bindings.rootNavigation().push(controller, context.sharedContext.layout == .single)
+                context.bindings.rootNavigation().push(controller, context.sharedContext.layout == .single)
             case .preferences:
                 leftController.tabController.select(index: leftController.settingsIndex)
             }

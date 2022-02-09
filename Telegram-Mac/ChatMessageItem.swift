@@ -231,7 +231,7 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
                 
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.sharedContext.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
                 }).mutableCopy() as! NSMutableAttributedString
 
@@ -716,7 +716,7 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
                     copyToClipboard(link)
-                    context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
+                    context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
                 }), range: range)
             case  .Pre:
                 string.addAttribute(.preformattedCode, value: 4.0, range: range)

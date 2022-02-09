@@ -61,7 +61,6 @@ public final class AccountWithInfo: Equatable {
 
 class SharedAccountContext {
     let accountManager: AccountManager<TelegramAccountManagerTypes>
-    var bindings: AccountContextBindings = AccountContextBindings()
 
     #if !SHARE
     let inputSource: InputSources = InputSources()
@@ -554,13 +553,13 @@ class SharedAccountContext {
     private let crossCallSession: Atomic<PCallSession?> = Atomic<PCallSession?>(value: nil)
     
     func getCrossAccountCallSession() -> PCallSession? {
-        return crossCallSession.swap(nil)
+        return crossCallSession.with { $0 }
     }
     
     private let crossGroupCall: Atomic<GroupCallContext?> = Atomic<GroupCallContext?>(value: nil)
     
     func getCrossAccountGroupCall() -> GroupCallContext? {
-        return crossGroupCall.swap(nil)
+        return crossGroupCall.with { $0 }
     }
     #endif
     
@@ -590,6 +589,14 @@ class SharedAccountContext {
 
     
     public func switchToAccount(id: AccountRecordId, action: LaunchNavigation?) {
+        
+        #if !SHARE
+        if let value = appDelegate?.supportAccountContextValue?.find(id) {
+            value.focus()
+            return;
+        }
+        #endif
+        
         if self.activeAccountsValue?.primary?.id == id {
             return
         }
@@ -609,9 +616,7 @@ class SharedAccountContext {
         }
         return
         #else
-        
-        _ = crossCallSession.swap(bindings.callSession())
-        _ = crossGroupCall.swap(bindings.groupCall())
+
 
          _ = self.accountManager.transaction({ transaction in
             if transaction.getCurrent()?.0 != id {
@@ -622,34 +627,62 @@ class SharedAccountContext {
         
     }
     
+    public func openAccount(id: AccountRecordId) {
+    #if !SHARE
+
+        let signal = self.activeAccounts
+        |> take(1)
+        |> deliverOnMainQueue
+        _ = signal.start(next: { values in
+            for account in values.accounts {
+                if account.0 == id {
+                    appDelegate?.openAccountInNewWindow(account.1)
+                }
+            }
+        })
+        #endif
+    }
+
+    
     
     
     #if !SHARE
     
     var hasActiveCall:Bool {
-        return bindings.callSession() != nil || bindings.groupCall() != nil
+        return crossCallSession.with( { $0 }) != nil || crossGroupCall.with( { $0 }) != nil
     }
 
+    func dropCrossCall() {
+        _ = crossGroupCall.swap(nil)
+        _ = crossCallSession.swap(nil)
+    }
+    
     func endCurrentCall() -> Signal<Bool, NoError> {
-        if let groupCall = bindings.groupCall() {
+        if let groupCall = crossGroupCall.swap(nil) {
             return groupCall.leaveSignal() |> filter { $0 }
-        } else if let callSession = bindings.callSession() {
+        } else if let callSession = crossCallSession.swap(nil) {
             return callSession.hangUpCurrentCall() |> filter { $0 }
         }
         return .single(true)
     }
     
     func showCall(with session:PCallSession) {
-        let callHeader = bindings.rootNavigation().callHeader
-        callHeader?.show(true, contextObject: session)
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let callHeader = accountContext.bindings.rootNavigation().callHeader
+            callHeader?.show(true, contextObject: session)
+        }
+        _ = crossCallSession.swap(session)
     }
     private let groupCallContextValue:Promise<GroupCallContext?> = Promise(nil)
     var groupCallContext:Signal<GroupCallContext?, NoError> {
         return groupCallContextValue.get()
     }
     func showGroupCall(with context: GroupCallContext) {
-        let callHeader = bindings.rootNavigation().callHeader
-        callHeader?.show(true, contextObject: context)
+        appDelegate?.enumerateAccountContexts { accountContext in
+            let callHeader = accountContext.bindings.rootNavigation().callHeader
+            callHeader?.show(true, contextObject: context)
+        }
+        _ = crossGroupCall.swap(context)
     }
     
     func updateCurrentGroupCallValue(_ value: GroupCallContext?) -> Void {
@@ -657,12 +690,11 @@ class SharedAccountContext {
     }
     
     func endGroupCall(terminate: Bool) -> Signal<Bool, NoError> {
-        if let groupCall = bindings.groupCall() {
+        if let groupCall = crossGroupCall.swap(nil) {
             return groupCall.call.leave(terminateIfPossible: terminate) |> filter { $0 } |> take(1)
         } else {
             return .single(true)
         }
-        return .single(true)
     }
     
     #endif

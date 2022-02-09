@@ -419,7 +419,7 @@ class ChatMediaItem: ChatRowItem {
             
             
             if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
-                caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.sharedContext.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
+                caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             if !(self is ChatVideoMessageItem) {
                 captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
@@ -435,7 +435,7 @@ class ChatMediaItem: ChatRowItem {
             
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
-                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
+                context.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
             interactions.topWindow = { [weak self] in
                 return self?.menuAdditionView

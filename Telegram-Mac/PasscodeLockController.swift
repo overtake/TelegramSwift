@@ -357,7 +357,7 @@ class PasscodeLockController: ModalViewController {
     private let disposable:MetaDisposable = MetaDisposable()
     private let valueDisposable = MetaDisposable()
     private let logoutDisposable = MetaDisposable()
-    private let _doneValue:Promise<Bool> = Promise()
+    private let _doneValue:Promise<Bool> = Promise(false)
     private let laContext = LAContext()
     var doneValue:Signal<Bool, NoError> {
         return _doneValue.get()
@@ -525,6 +525,10 @@ class PasscodeLockController: ModalViewController {
     
     override var responderPriority: HandlerPriority {
         return .supreme
+    }
+    
+    override var shouldCloseAllTheSameModals: Bool {
+        return false
     }
     
     deinit {

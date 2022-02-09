@@ -34,7 +34,7 @@ private class ChatListDraggingContainerView : View {
             if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
                 _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak item] path in
                     guard let item = item, let chatLocation = item.chatLocation else {return}
-                    item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: [path], behavior: .automatic)))
+                    item.context.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: [path], behavior: .automatic)))
                 })
             } else {
                 let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
@@ -46,7 +46,7 @@ private class ChatListDraggingContainerView : View {
                         return false
                     }
                     if !list.isEmpty, let chatLocation = item.chatLocation {
-                        item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: list, behavior: .automatic)))
+                        item.context.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: list, behavior: .automatic)))
                     }
                 }
             }

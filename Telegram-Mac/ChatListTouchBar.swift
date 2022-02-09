@@ -184,7 +184,7 @@ private class RecentPeersScrubberBarItem: NSCustomTouchBarItem, NSScrubberDelega
                     if NSPointInRect(point, itemView.frame) {
                         itemView.updateSelected(!cancelled)
                         if navigate, let peerId = itemView.peerId {
-                            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
                         }
                     } else {
                         itemView.updateSelected(false)

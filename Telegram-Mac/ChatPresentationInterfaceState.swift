@@ -535,12 +535,12 @@ struct ChatPresentationInterfaceState: Equatable {
             case .pinned:
                 if canPinMessageInPeer {
                     return .action(strings().chatPinnedUnpinAllCountable(pinnedMessageId?.totalCount ?? 0), { chatInteraction in
-                        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+                        let navigation = chatInteraction.context.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
                     }, nil)
                 } else {
                     return .action(strings().chatPinnedDontShow, { chatInteraction in
-                        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+                        let navigation = chatInteraction.context.bindings.rootNavigation()
                         (navigation.previousController as? ChatController)?.chatInteraction.unpinAllMessages()
                     }, nil)
                 }

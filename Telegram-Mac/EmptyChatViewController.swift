@@ -153,7 +153,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
     override func makeTouchBar() -> NSTouchBar? {
         if temporaryTouchBar == nil {
             temporaryTouchBar = ChatListTouchBar(context: self.context, search: { [weak self] in
-                self?.context.sharedContext.bindings.globalSearch("")
+                self?.context.bindings.globalSearch("")
             }, newGroup: { [weak self] in
                 self?.context.composeCreateGroup()
             }, newSecretChat: { [weak self] in

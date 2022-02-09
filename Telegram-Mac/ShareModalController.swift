@@ -621,7 +621,7 @@ final class ForwardMessagesObject : ShareObject {
                     }
                 }
                 
-                let navigation = self.context.sharedContext.bindings.rootNavigation()
+                let navigation = self.context.bindings.rootNavigation()
                 if let peerId = peerIds.first {
                     if peerId == context.peerId {
                         if let comment = comment, !comment.inputText.isEmpty {
@@ -635,7 +635,7 @@ final class ForwardMessagesObject : ShareObject {
                             _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId).start()
                         }
                         _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId).start()
-                        if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+                        if let controller = context.bindings.rootNavigation().controller as? ChatController {
                             controller.chatInteraction.update({$0.withoutSelectionState()})
                         }
                         delay(0.2, closure: {

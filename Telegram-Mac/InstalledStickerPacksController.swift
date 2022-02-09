@@ -411,7 +411,7 @@ class InstalledStickerPacksController: TableViewController {
                 $0.withUpdatedLoopAnimatedStickers(value)
             }).start()
         }, quickSetup: { available in
-            context.sharedContext.bindings.rootNavigation().push(ReactionsSettingsController(context: context, peerId: context.peerId, allowedReactions: nil, availableReactions: available, mode: .quick))
+            context.bindings.rootNavigation().push(ReactionsSettingsController(context: context, peerId: context.peerId, allowedReactions: nil, availableReactions: available, mode: .quick))
         })
         let stickerPacks = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])
         

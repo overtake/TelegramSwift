@@ -15,7 +15,7 @@ class ExMajorNavigationController: MajorNavigationController {
     private let context:AccountContext
     
     override var sidebar: ViewController? {
-        return context.sharedContext.bindings.entertainment()
+        return context.bindings.entertainment()
     }
     
     override var window: Window? {

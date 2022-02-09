@@ -958,7 +958,7 @@
         
         
         interactions.forwardMessages = { messageIds in
-            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: mainWindow)
+            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: context.window)
         }
         
         interactions.focusMessageId = { [weak self] _, focusMessageId, animated in
@@ -1287,7 +1287,7 @@
     private func searchGroupUsers() {
         _ = (selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSearchMembers, behavior: peerId.namespace == Namespaces.Peer.CloudGroup ? SelectGroupMembersBehavior(peerId: peerId, limit: 1, settings: []) : SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
-                context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+                context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
             }
         })
     }

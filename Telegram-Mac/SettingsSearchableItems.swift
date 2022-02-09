@@ -541,7 +541,7 @@ private func proxySearchableItems(context: AccountContext, servers: [ProxyServer
             }
             message = message.trimmed
             
-            showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+            showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: context.window)
         }, pushController: { controller in
             present(.push, controller)
         })

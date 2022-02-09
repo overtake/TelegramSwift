@@ -529,11 +529,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }))
         
         let pushController:(ViewController)->Void = { [weak self] c in
-            self?.context.sharedContext.bindings.rootNavigation().push(c)
+            self?.context.bindings.rootNavigation().push(c)
         }
         
         let openProxySettings:()->Void = { [weak self] in
-            if let controller = self?.context.sharedContext.bindings.rootNavigation().controller as? InputDataController {
+            if let controller = self?.context.bindings.rootNavigation().controller as? InputDataController {
                 if controller.identifier == "proxy" {
                     return
                 }
@@ -610,7 +610,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private func checkSearchMedia() {
         let destroy:()->Void = { [weak self] in
             if let previous = self?.mediaSearchController {
-                self?.context.sharedContext.bindings.rootNavigation().removeImmediately(previous)
+                self?.context.bindings.rootNavigation().removeImmediately(previous)
             }
         }
         guard context.sharedContext.layout == .dual else {
@@ -628,7 +628,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         let destroy:()->Void = { [weak self] in
             if let previous = self?.mediaSearchController {
-                self?.context.sharedContext.bindings.rootNavigation().removeImmediately(previous)
+                self?.context.bindings.rootNavigation().removeImmediately(previous)
             }
         }
         
@@ -650,7 +650,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self?.updateSearchMessageTags?(nil)
             }
             
-            let navigation = context.sharedContext.bindings.rootNavigation()
+            let navigation = context.bindings.rootNavigation()
             
             let signal = searchController.externalSearchMessages
                 |> filter { $0 != nil && $0?.tags == messageTags }
@@ -760,7 +760,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
         }
         if let controller = mediaSearchController {
-            context.sharedContext.bindings.rootNavigation().removeImmediately(controller, upNext: false)
+            context.bindings.rootNavigation().removeImmediately(controller, upNext: false)
         }
     }
     
@@ -816,7 +816,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
         
-        let navigation = context.sharedContext.bindings.rootNavigation()
+        let navigation = context.bindings.rootNavigation()
         
         var addition = addition
         var close = close

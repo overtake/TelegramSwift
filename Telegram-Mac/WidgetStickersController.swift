@@ -307,7 +307,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
             }))
             
             let data: WidgetData = .init(title: { strings().emptyChatStickers }, desc: { strings().emptyChatStickersDesc }, descClick: {
-                context.sharedContext.bindings.rootNavigation().push(FeaturedStickerPacksController(context))
+                context.bindings.rootNavigation().push(FeaturedStickerPacksController(context))
             }, buttons: buttons)
             
             self?.genericView.update(data)

@@ -411,7 +411,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 peerId = effectivePeerId
             }
             
-            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: messageId))
+            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: messageId))
             close()
         }
         return .invoked

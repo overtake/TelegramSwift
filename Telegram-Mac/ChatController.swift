@@ -1417,7 +1417,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     override var sidebar:ViewController? {
-        return context.sharedContext.bindings.entertainment()
+        return context.bindings.entertainment()
     }
     
     func updateSidebar() {
@@ -2241,7 +2241,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let scrollAfterSend:()->Void = { [weak self] in
             guard let `self` = self else { return }
             self.chatInteraction.scrollToLatest(true)
-            self.context.sharedContext.bindings.entertainment().closePopover()
+            self.context.bindings.entertainment().closePopover()
             self.context.cancelGlobalSearch.set(true)
             self.reactionManager?.clearAndTempLock()
         }
@@ -2562,7 +2562,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                         _ = showModalProgress(signal: combineLatest(signals), for: context.window).start(completed: {
                             if closeChat {
-                                context.sharedContext.bindings.rootNavigation().back()
+                                context.bindings.rootNavigation().back()
                             }
                         })
                         
@@ -3098,8 +3098,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     case .basic:
                                         break
                                     case .thrid:
-                                        context.sharedContext.bindings.rootNavigation().push(twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { (controller, isRoot, animated) in
-                                            let navigation = context.sharedContext.bindings.rootNavigation()
+                                        context.bindings.rootNavigation().push(twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { (controller, isRoot, animated) in
+                                            let navigation = context.bindings.rootNavigation()
                                             if isRoot {
                                                 navigation.removeUntil(ChatController.self)
                                             }
@@ -3715,7 +3715,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 strongSelf.deleteChatDisposable.set(signal.start(next: { [weak strongSelf] location in
                     if location == strongSelf?.chatInteraction.chatLocation {
-                        strongSelf?.context.sharedContext.bindings.rootNavigation().close()
+                        strongSelf?.context.bindings.rootNavigation().close()
                     }
                 }))
             }
@@ -5440,7 +5440,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             
                             self.deleteChatDisposable.set(signal.start(next: { [weak self] location in
                                 if location == self?.chatInteraction.chatLocation {
-                                    self?.context.sharedContext.bindings.rootNavigation().close()
+                                    self?.context.bindings.rootNavigation().close()
                                 }
                             }))
                         }
@@ -5784,7 +5784,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let context = self.context
         context.closeFolderFirst = false
 
-        self.context.sharedContext.bindings.entertainment().update(with: self.chatInteraction)
+        self.context.bindings.entertainment().update(with: self.chatInteraction)
         
         chatInteraction.update(animated: false, {$0.withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
         

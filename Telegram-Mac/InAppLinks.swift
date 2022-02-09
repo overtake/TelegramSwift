@@ -386,7 +386,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { values in
             let (result, peer) = values
             let threadMessageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
-            let navigation = context.sharedContext.bindings.rootNavigation()
+            let navigation = context.bindings.rootNavigation()
             let current = navigation.controller as? ChatController
             
             if let current = current, current.chatInteraction.mode.threadId == result.message.messageId {
@@ -711,7 +711,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         case .privacy:
             controller = PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: .autoArchive)
         }
-        context.sharedContext.bindings.rootNavigation().push(controller)
+        context.bindings.rootNavigation().push(controller)
         afterComplete(true)
     case let .joinGroupCall(_, context, peerId, callId):
         selectGroupCallJoiner(context: context, peerId: peerId, completion: { peerId, schedule in

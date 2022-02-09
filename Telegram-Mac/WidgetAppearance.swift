@@ -349,7 +349,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
             }))
             
             self?.genericView.update(.init(title: { strings().emptyChatAppearance }, desc: { strings().emptyChatAppearanceDesc }, descClick: {
-                context.sharedContext.bindings.rootNavigation().push(AppAppearanceViewController(context: context))
+                context.bindings.rootNavigation().push(AppAppearanceViewController(context: context))
             }, buttons: buttons))
             
             self?.readyOnce()
