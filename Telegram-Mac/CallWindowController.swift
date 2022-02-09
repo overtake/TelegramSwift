@@ -981,7 +981,7 @@ class PhoneCallWindowController {
         
         let account = session.account
         
-        let accountPeer: Signal<Peer?, NoError> =  session.sharedContext.activeAccounts |> mapToSignal { accounts in
+        let accountPeer: Signal<Peer?, NoError> =  session.accountContext.sharedContext.activeAccounts |> mapToSignal { accounts in
             if accounts.accounts.count == 1 {
                 return .single(nil)
             } else {
@@ -1065,7 +1065,7 @@ class PhoneCallWindowController {
             guard let window = window, let session = session else {
                 return
             }
-            showModal(with: CallSettingsModalController(session.sharedContext), for: window)
+            showModal(with: CallSettingsModalController(session.accountContext.sharedContext), for: window)
             }, for: .SingleClick)
         
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
@@ -1179,7 +1179,7 @@ class PhoneCallWindowController {
     }
     
     private func recall() {
-        recallDisposable.set((phoneCall(account: session.account, sharedContext: session.sharedContext, peerId: session.peerId, ignoreSame: true) |> deliverOnMainQueue).start(next: { [weak self] result in
+        recallDisposable.set((phoneCall(context: session.accountContext, peerId: session.peerId, ignoreSame: true) |> deliverOnMainQueue).start(next: { [weak self] result in
             switch result {
             case let .success(session):
                 self?.session = session
@@ -1247,7 +1247,6 @@ class PhoneCallWindowController {
     private func applyState(_ state:CallState, session: PCallSession, outgoingCameraInitialized: CameraState, incomingCameraInitialized: CameraState, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         self.state = state
         view.updateState(state, session: session, outgoingCameraInitialized: outgoingCameraInitialized, incomingCameraInitialized: incomingCameraInitialized, accountPeer: accountPeer, peer: peer, animated: animated)
-        session.sharedContext.showCall(with: session)
         switch state.state {
         case .ringing:
             break
@@ -1397,16 +1396,13 @@ func closeCall(minimisize: Bool = false) {
     _ = controller.modify { controller in
         if let controller = controller {
             controller.cleanup()
-            let sharedContext = controller.session.sharedContext
+            let accountContext = controller.session.accountContext
             let isVideo = controller.session.isVideo
-            _ = (controller.session.state |> take(1) |> deliverOnMainQueue).start(next: { [weak sharedContext] state in
+            _ = (controller.session.state |> take(1) |> deliverOnMainQueue).start(next: { state in
                 switch state.state {
                 case let .terminated(callId, _, report):
-                    if report, let callId = callId, let window = sharedContext?.bindings.rootNavigation().window {
-                        let context = sharedContext?.bindings.getContext()
-                        if let context = context {
-                            showModal(with: CallRatingModalViewController(context, callId: callId, userInitiated: false, isVideo: isVideo), for: window)
-                        }
+                    if report, let callId = callId {
+                        showModal(with: CallRatingModalViewController(accountContext, callId: callId, userInitiated: false, isVideo: isVideo), for: accountContext.window)
                     }
                 default:
                     break
@@ -1434,7 +1430,7 @@ func closeCall(minimisize: Bool = false) {
 }
 
 
-func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallResult) {
+func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
     assertOnMainThread()
     switch result {
     case let .success(session):
@@ -1442,7 +1438,7 @@ func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallRes
     case .fail:
         break
     case let .samePeer(session):
-        if let header = sharedContext.bindings.rootNavigation().callHeader, header.needShown {
+        if let header = context.bindings.rootNavigation().callHeader, header.needShown {
             showCallWindow(session)
         } else {
             controller.with { $0?.window.orderFront(nil) }

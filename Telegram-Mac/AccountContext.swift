@@ -52,10 +52,7 @@ final class AccountContextBindings {
     let entertainment:()->EntertainmentViewController
     let needFullsize:()->Void
     let displayUpgradeProgress:(CGFloat)->Void
-    let callSession: ()->PCallSession?
-    let groupCall: ()->GroupCallContext?
-    let getContext:()->AccountContext?
-    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }, callSession: @escaping()->PCallSession? = { return nil }, groupCall: @escaping()->GroupCallContext? = { return nil }, getContext:@escaping()->AccountContext? = { return nil }) {
+    init(rootNavigation: @escaping() -> MajorNavigationController = { fatalError() }, mainController: @escaping() -> MainViewController = { fatalError() }, showControllerToaster: @escaping(ControllerToaster, Bool) -> Void = { _, _ in fatalError() }, globalSearch: @escaping(String) -> Void = { _ in fatalError() }, entertainment: @escaping()->EntertainmentViewController = { fatalError() }, switchSplitLayout: @escaping(SplitViewState)->Void = { _ in fatalError() }, needFullsize: @escaping() -> Void = { fatalError() }, displayUpgradeProgress: @escaping(CGFloat)->Void = { _ in fatalError() }) {
         self.rootNavigation = rootNavigation
         self.mainController = mainController
         self.showControllerToaster = showControllerToaster
@@ -64,9 +61,6 @@ final class AccountContextBindings {
         self.switchSplitLayout = switchSplitLayout
         self.needFullsize = needFullsize
         self.displayUpgradeProgress = displayUpgradeProgress
-        self.callSession = callSession
-        self.groupCall = groupCall
-        self.getContext = getContext
     }
     #endif
 }
@@ -79,6 +73,9 @@ final class AccountContext {
     let sharedContext: SharedAccountContext
     let account: Account
     let window: Window
+    
+    var bindings: AccountContextBindings = AccountContextBindings()
+
 
     #if !SHARE
     let fetchManager: FetchManager
@@ -115,6 +112,7 @@ final class AccountContext {
     
     let cancelGlobalSearch:ValuePromise<Bool> = ValuePromise(ignoreRepeated: false)
     
+    private(set) var isSupport: Bool = false
 
     
     var isCurrent: Bool = false {
@@ -203,11 +201,12 @@ final class AccountContext {
     let engine: TelegramEngine
 
     
-    init(sharedContext: SharedAccountContext, window: Window, account: Account) {
+    init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
         self.sharedContext = sharedContext
         self.account = account
         self.window = window
         self.engine = TelegramEngine(account: account)
+        self.isSupport = isSupport
         #if !SHARE
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
@@ -511,6 +510,10 @@ final class AccountContext {
         self.isKeyWindowValue.set(window.isKeyWindow)
     }
     
+    func focus() {
+        window.makeKeyAndOrderFront(nil)
+    }
+    
     private func updateTheme(_ update: ApplyThemeUpdate) {
         switch update {
         case let .cloud(cloudTheme):
@@ -693,7 +696,7 @@ final class AccountContext {
         
         _ = create.start(next: { [weak self] peerId in
             guard let `self` = self else {return}
-            self.sharedContext.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
+            self.bindings.rootNavigation().push(ChatController(context: self, chatLocation: .peer(peerId)))
         })
     }
     #endif

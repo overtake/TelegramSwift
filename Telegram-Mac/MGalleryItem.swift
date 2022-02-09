@@ -424,7 +424,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
             
             attr.detectLinks(type: [.Links, .Mentions], context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
-                let navigation = context.sharedContext.bindings.rootNavigation()
+                let navigation = context.bindings.rootNavigation()
                 let controller = navigation.controller
                 if toChat {
                     if peerId == (controller as? ChatController)?.chatInteraction.peerId {

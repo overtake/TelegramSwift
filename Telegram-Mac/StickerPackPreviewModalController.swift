@@ -120,9 +120,9 @@ private class StickersModalView : View {
                 _ = (arguments.context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()
                     if peer.isUser || peer.isBot {
-                        arguments.context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: arguments.context, peerId: peerId))
+                        arguments.context.bindings.rootNavigation().push(PeerInfoController(context: arguments.context, peerId: peerId))
                     } else {
-                        arguments.context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: arguments.context, chatLocation: .peer(peer.id)))
+                        arguments.context.bindings.rootNavigation().push(ChatAdditionController(context: arguments.context, chatLocation: .peer(peer.id)))
                     }
                 })
             })
@@ -238,7 +238,7 @@ class StickerPackPreviewModalController: ModalViewController {
         super.init(frame: NSMakeRect(0, 0, 350, 400))
         bar = .init(height: 0)
         arguments = StickerPackArguments(context: context, send: { [weak self] media, view, silent, schedule in
-            let interactions = (context.sharedContext.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
+            let interactions = (context.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
             
             if let interactions = interactions, let media = media as? TelegramMediaFile, media.maskData == nil {
                 if let slowMode = interactions.presentation.slowMode, slowMode.hasLocked {

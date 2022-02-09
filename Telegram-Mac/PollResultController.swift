@@ -345,7 +345,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
    
     
     openProfile = { [weak modalController] peerId in
-        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
         modalController?.close()
     }
     controller.afterTransaction = { controller in

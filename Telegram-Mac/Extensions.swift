@@ -2532,7 +2532,7 @@ func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: Accoun
         case 1000:
             break
         case 1001:
-            context.sharedContext.bindings.rootNavigation().push(StorageUsageController(context))
+            context.bindings.rootNavigation().push(StorageUsageController(context))
         case 1002:
             openSystemSettings(.storage)
         default:

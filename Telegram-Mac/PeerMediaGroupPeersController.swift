@@ -30,7 +30,7 @@ private final class GroupPeersArguments {
     }
     
     func peerInfo(_ peerId:PeerId) {
-        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     }
 }
 
@@ -440,7 +440,7 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
     }
     
     let upgradeToSupergroup: (PeerId, @escaping () -> Void) -> Void = { upgradedPeerId, f in
-        let navigationController = context.sharedContext.bindings.rootNavigation()
+        let navigationController = context.bindings.rootNavigation()
         
         var chatController: ChatController? = ChatController(context: context, chatLocation: .peer(upgradedPeerId))
         

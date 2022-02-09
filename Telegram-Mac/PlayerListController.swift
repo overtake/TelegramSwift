@@ -515,7 +515,7 @@ final class PlayerListView : View, APDelegate {
         controls.searchClick = { [weak self] text in
             let context = self?.controller?.context
             if let context = context {
-                context.sharedContext.bindings.mainController().focusSearch(animated: true, text: text)
+                context.bindings.mainController().focusSearch(animated: true, text: text)
             }
         }
     }

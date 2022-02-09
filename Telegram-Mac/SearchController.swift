@@ -339,7 +339,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
                 confirm(for: arguments.context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                     switch result {
                     case .thrid:
-                        arguments.context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
+                        arguments.context.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
                     default:
                         break
                     }
@@ -1336,7 +1336,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             if let modalAction = modalAction as? FWDNavigationAction {
                 if peer.id == context.peerId {
                     _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
-                    _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false
                 }

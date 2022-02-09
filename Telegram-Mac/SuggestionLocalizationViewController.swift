@@ -150,7 +150,7 @@ class SuggestionLocalizationViewController: ModalViewController {
         _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, deletable: false, value: otherInfo, action: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
-                strongSelf.context.sharedContext.bindings.rootNavigation().push(LanguageViewController(strongSelf.context))
+                strongSelf.context.bindings.rootNavigation().push(LanguageViewController(strongSelf.context))
                 let engine = strongSelf.context.engine.localization
                 _ = engine.markSuggestedLocalizationAsSeenInteractively(languageCode: strongSelf.suggestionInfo.languageCode).start()
             }

@@ -246,7 +246,7 @@ class ContactsController: PeersListController {
         let first:Atomic<Bool> = Atomic(value:false)
         
         let arguments = ContactsArguments(addContact: {
-            showModal(with: AddContactModalController(context), for: mainWindow)
+            showModal(with: AddContactModalController(context), for: context.window)
         })
         
         

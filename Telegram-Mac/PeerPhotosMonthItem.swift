@@ -386,66 +386,7 @@ private final class MediaVideoCell : MediaCell {
     }
     
     override func updateMouse(_ inside: Bool) {
-        if let layout = self.layoutItem {
-            let file = layout.message.media.first as! TelegramMediaFile
-            if inside {
-                if file.isStreamable {
-                    if videoView == nil {
-                        let context = layout.chatInteraction.context
-                        let player = MediaPlayer(postbox: context.account.postbox, reference: MediaResourceReference.media(media: AnyMediaReference.message(message: MessageReference(layout.message), media: file), resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: true, enableSound: false, fetchAutomatically: false)
-                        videoView = MediaVideoCell.VideoAutoplayView(mediaPlayer: player, view: MediaPlayerView(backgroundThread: true))
-                        
-                        videoView?.view.setVideoLayerGravity(.resizeAspectFill)
-                        
-                        var posititionFlags: LayoutPositionFlags = []
-                        if layout.corners.topLeft.corner > 0 {
-                            posititionFlags.insert(.top)
-                            posititionFlags.insert(.left)
-                        }
-                        if layout.corners.topRight.corner > 0 {
-                            posititionFlags.insert(.top)
-                            posititionFlags.insert(.right)
-                        }
-                        if layout.corners.bottomLeft.corner > 0 {
-                            posititionFlags.insert(.bottom)
-                            posititionFlags.insert(.left)
-                        }
-                        if layout.corners.bottomRight.corner > 0 {
-                            posititionFlags.insert(.bottom)
-                            posititionFlags.insert(.right)
-                        }
-                        videoView?.view.positionFlags = posititionFlags.isEmpty ? nil : posititionFlags
-                        videoView?.view.frame = self.imageView.frame
-                        
-                        videoView!.mediaPlayer.attachPlayerView(videoView!.view)
-                        
-                        videoView?.mediaPlayer.play()
-                        
-                        
-                        self.addSubview(videoView!.view, positioned: .above, relativeTo: self.imageView)
-                        
-                        progressView.change(opacity: 0)
-                    }
-                    if let videoView = videoView {
-                        mediaPlayerStatusDisposable.set((videoView.mediaPlayer.status |> deliverOnMainQueue).start(next: { [weak self] status in
-                            self?.updateMediaStatus(status, animated: true)
-                        }))
-                    }
-                    
-                    
-                } else {
-                    progressView.change(opacity: 1)
-                    videoView = nil
-                    mediaPlayerStatusDisposable.set(nil)
-                    updateVideoAccessory(self.authenticStatus ?? .Remote, mediaPlayerStatus: nil, file: file, animated: true)
-                }
-            } else {
-                progressView.change(opacity: 1)
-                videoView = nil
-                mediaPlayerStatusDisposable.set(nil)
-                updateVideoAccessory(self.authenticStatus ?? .Remote, mediaPlayerStatus: nil, file: file, animated: true)
-            }
-        }
+           
     }
     
     private func updateMediaStatus(_ status: MediaPlayerStatus, animated: Bool = false) {

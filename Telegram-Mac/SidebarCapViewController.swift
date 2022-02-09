@@ -91,12 +91,12 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController = context.sharedContext.bindings.rootNavigation()
+        self.navigationController = context.bindings.rootNavigation()
         (navigationController as? MajorNavigationController)?.add(listener: WeakReference(value: self))
         genericView.close.set(handler: { [weak self] _ in
-            self?.context.sharedContext.bindings.rootNavigation().closeSidebar()
+            self?.context.bindings.rootNavigation().closeSidebar()
             FastSettings.toggleSidebarShown(false)
-            self?.context.sharedContext.bindings.entertainment().closedBySide()
+            self?.context.bindings.entertainment().closedBySide()
         }, for: .Click)
         
         let postbox = self.context.account.postbox
@@ -138,14 +138,14 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
         self.genericView.restrictedByPeer = !inChatAbility
         self.genericView.updateLocalizationAndTheme(theme: theme)
         
-        self.view.setFrameSize(context.sharedContext.bindings.entertainment().frame.size)
+        self.view.setFrameSize(context.bindings.entertainment().frame.size)
         
         if let controller = navigationController as? MajorNavigationController, controller.genericView.state != .dual {
             view.removeFromSuperview()
-        } else if context.sharedContext.bindings.rootNavigation().controller is ChatController, inChatAbility {
+        } else if context.bindings.rootNavigation().controller is ChatController, inChatAbility {
             view.removeFromSuperview()
         } else {
-            context.sharedContext.bindings.entertainment().addSubview(view)
+            context.bindings.entertainment().addSubview(view)
         }
         
        // NotificationCenter.default.post(name: NSWindow.didBecomeKeyNotification, object: mainWindow)

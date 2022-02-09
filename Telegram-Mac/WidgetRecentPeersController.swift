@@ -245,7 +245,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             
             self?.genericView.update(data)
             self?.genericView.dataView?.update(state, context: context, animated: !first, open: { peerId in
-                context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)), style: .push)
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)), style: .push)
             })
             first = false
         }))

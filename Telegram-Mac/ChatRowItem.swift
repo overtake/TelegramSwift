@@ -610,7 +610,7 @@ class ChatRowItem: TableRowItem {
         if let message = message {
             switch chatInteraction.mode {
             case .pinned:
-                let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+                let navigation = chatInteraction.context.bindings.rootNavigation()
                 let controller = navigation.previousController as? ChatController
                 controller?.chatInteraction.focusPinnedMessageId(message.id)
                 navigation.back()

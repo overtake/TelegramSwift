@@ -258,14 +258,22 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
                 arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
             }, contextMenuItems: {
-                return .single([ContextMenuItem(strings().accountSettingsDeleteAccount, handler: {
+                
+                var items:[ContextMenuItem] = []
+                
+                items.append(ContextMenuItem("Open In Window", handler: {
+                    arguments.context.sharedContext.openAccount(id: info.account.id)
+                }, itemImage: MenuAnimation.menu_open_profile.value))
+                
+                items.append(ContextSeparatorItem())
+                
+                items.append(ContextMenuItem(strings().accountSettingsDeleteAccount, handler: {
                     confirm(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
                         _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value),
-                ContextMenuItem("Open In Separate Window", handler: {
-                    
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                
+                return .single(items)
             }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }, sync: true), compactText: true)
         case let .addAccount(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: {
@@ -286,7 +294,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     }
                     message = message.trimmed
                     
-                    showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: message)), for: mainWindow)
+                    showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: message)), for: arguments.context.window)
                 }, pushController: { controller in
                      arguments.presentController(controller, false)
                 })
@@ -331,10 +339,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .ask(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, viewType: viewType, action: {
-                confirm(for: mainWindow, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+                confirm(for: arguments.context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
-                        _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: mainWindow).start(next: {  peerId in
+                        _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: arguments.context.window).start(next: {  peerId in
                             if let peerId = peerId {
                                 arguments.presentController(ChatController(context: arguments.context, chatLocation: .peer(peerId)), true)
                             }
@@ -395,13 +403,16 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
     
-    for account in accounts {
-        if account.account.id != context.account.id {
-            entries.append(.accountRecord(index: index, viewType: .singleItem, info: account))
-            index += 1
+    if !context.isSupport {
+        for account in accounts {
+            if account.account.id != context.account.id {
+                entries.append(.accountRecord(index: index, viewType: .singleItem, info: account))
+                index += 1
+            }
         }
     }
-    if accounts.count < 3 {
+    
+    if accounts.count < 3, !context.isSupport {
         entries.append(.addAccount(index: index, viewType: .singleItem))
         index += 1
     }
@@ -445,7 +456,7 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         index += 1
     }
     
-    if let state = appUpdateState {
+    if let state = appUpdateState, !context.isSupport {
         entries.append(.update(index: index, viewType: .singleItem, state: AnyUpdateStateEquatable(any: state)))
         index += 1
     }
@@ -493,7 +504,7 @@ class LayoutAccountController : TableViewController {
     private var searchController: InputDataController?
     private let searchState: ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
     var navigation:NavigationViewController? {
-        return context.sharedContext.bindings.rootNavigation()
+        return context.bindings.rootNavigation()
     }
     
     override func viewDidResized(_ size: NSSize) {
@@ -834,7 +845,7 @@ class LayoutAccountController : TableViewController {
         }
         
         if let currentEvent = NSApp.currentEvent, currentEvent.clickCount == 5 {
-            context.sharedContext.bindings.rootNavigation().push(DeveloperViewController(context: context))
+            context.bindings.rootNavigation().push(DeveloperViewController(context: context))
         }
         
         genericView.scroll(to: .up(true))

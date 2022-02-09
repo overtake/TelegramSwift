@@ -68,7 +68,7 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
     let actionsDisposable = DisposableSet()
     
     let arguments = GroupsInCommonArguments(context: context, open: { peerId in
-        context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     })
     
     let contextValue: Promise<GroupsInCommonContext> = Promise()

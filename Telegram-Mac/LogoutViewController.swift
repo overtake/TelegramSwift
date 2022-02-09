@@ -114,12 +114,12 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         closeAllModals()
         f(PhoneNumberIntroController(context))
     }, contactSupport: {
-        confirm(for: mainWindow, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+        confirm(for: context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
             closeAllModals()
             switch result {
             case .basic:
                 
-                _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: mainWindow).start(next: { peerId in
+                _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: { peerId in
                     if let peerId = peerId {
                         f(ChatController(context: context, chatLocation: .peer(peerId)))
                     }
@@ -129,7 +129,7 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
             }
         })
     }, logout: {
-        confirm(for: mainWindow, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
+        confirm(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
             closeAllModals()
             _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
         })

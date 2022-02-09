@@ -97,7 +97,7 @@ final class GroupCallSettingsView : View {
         layout.measure(width: frame.width - 200)
         title.update(layout)
         tableView.getBackgroundColor = {
-            GroupCallTheme.windowBackground
+            GroupCallTheme.windowBackground.withAlphaComponent(1)
         }
         updateLocalizationAndTheme(theme: theme)
     }
@@ -859,7 +859,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     }
 
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        backgroundColor = GroupCallTheme.windowBackground
+        backgroundColor = GroupCallTheme.windowBackground.withAlphaComponent(1)
     }
     
     override func viewWillDisappear(_ animated: Bool) {

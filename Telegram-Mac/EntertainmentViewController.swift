@@ -755,7 +755,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             guard let `self` = self else {
                 return .rejected
             }
-            if self.context.sharedContext.bindings.rootNavigation().genericView.state != .single {
+            if self.context.bindings.rootNavigation().genericView.state != .single {
                 return .rejected
             }
             self.toggleSearch()

@@ -211,10 +211,6 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         }))
         
         genericView.set(handler: { _ in
-            let authrorized = (NSApp.delegate as? AppDelegate)?.hasAuthorized ?? false
-            if authrorized, let controller = context.bindings.rootNavigation().controller as? ChatController {
-                controller.chatInteraction.saveState(true)
-            }
             updateApplication(sharedContext: context)
         }, for: .Click)
     }
@@ -304,11 +300,12 @@ class MainViewController: TelegramViewController {
         self.bar = NavigationBarStyle(height: 0)
         backgroundColor = theme.colors.background
         addSubview(tabController.view)
+        if !context.isSupport {
         #if !APP_STORE
-        addSubview(updateController.view)
+            addSubview(updateController.view)
         #endif
-        
-        
+        }
+                
         tabController.add(tab: TabItem(image: theme.icons.tab_contacts, selectedImage: theme.icons.tab_contacts_active, controller: contacts))
         
         tabController.add(tab: TabItem(image: theme.icons.tab_calls, selectedImage: theme.icons.tab_calls_active, controller: phoneCalls))
@@ -320,6 +317,7 @@ class MainViewController: TelegramViewController {
         tabController.add(tab: TabAllBadgeItem(context, image: theme.icons.tab_settings, selectedImage: theme.icons.tab_settings_active, controller: settings, longHoverHandler: { [weak self] control in
             self?.showFastSettings(control)
         }))
+        
         
         tabController.updateLocalizationAndTheme(theme: theme)
 
@@ -448,6 +446,7 @@ class MainViewController: TelegramViewController {
     private weak var quickController: ViewController?
     private func showFastSettings(_ control:Control) {
         
+        
         let passcodeData = context.sharedContext.accountManager.transaction { transaction -> PostboxAccessChallengeData in
             return transaction.getAccessChallengeData()
         } |> deliverOnMainQueue
@@ -464,11 +463,7 @@ class MainViewController: TelegramViewController {
     
     private func _showFast( control: Control, accounts: [AccountWithInfo], passcodeData: PostboxAccessChallengeData, notifications: InAppNotificationSettings) {
         
-        if let popover = control.popover {
-            popover.hide()
-            return
-        }
-        
+
         var items:[ContextMenuItem] = []
         let context = self.context
         
@@ -479,21 +474,23 @@ class MainViewController: TelegramViewController {
             return item
         }
         
-        for account in accounts {
-            if account.account.id != context.account.id {
-                items.append(makeItem(account))
+        if !context.isSupport {
+            for account in accounts {
+                if account.account.id != context.account.id {
+                    items.append(makeItem(account))
+                }
+            }
+            if !items.isEmpty {
+                items.append(ContextSeparatorItem())
             }
         }
         
-        if !items.isEmpty {
-            items.append(ContextSeparatorItem())
-        }
         switch passcodeData {
         case .none:
             items.append(ContextMenuItem(strings().fastSettingsSetPasscode, handler: { [weak self] in
                 guard let `self` = self else {return}
                 self.tabController.select(index: self.tabController.count - 1)
-                self.context.sharedContext.bindings.rootNavigation().push(PasscodeSettingsViewController(self.context))
+                self.context.bindings.rootNavigation().push(PasscodeSettingsViewController(self.context))
             }, itemImage: MenuAnimation.menu_lock.value))
         default:
             items.append(ContextMenuItem(strings().fastSettingsLockTelegram, handler: {
@@ -566,7 +563,7 @@ class MainViewController: TelegramViewController {
     func checkSettings(_ index:Int) {
         let isSettings = tabController.tab(at: index).controller is AccountViewController
         
-        let navigation = context.sharedContext.bindings.rootNavigation()
+        let navigation = context.bindings.rootNavigation()
         
         if let controller = navigation.controller as? InputDataController, controller.identifier == "wallet-create" {
             self.previousIndex = index
@@ -591,16 +588,16 @@ class MainViewController: TelegramViewController {
     }
     
     private func backFromSettings(_ index:Int) {
-        context.sharedContext.bindings.rootNavigation().to(index: index)
+        context.bindings.rootNavigation().to(index: index)
     }
     
     override func focusSearch(animated: Bool, text: String? = nil) {
         if context.sharedContext.layout == .minimisize {
             return
         }
-        let animated = animated && (context.sharedContext.layout != .single || context.sharedContext.bindings.rootNavigation().stackCount == 1)
+        let animated = animated && (context.sharedContext.layout != .single || context.bindings.rootNavigation().stackCount == 1)
         if context.sharedContext.layout == .single {
-            context.sharedContext.bindings.rootNavigation().close()
+            context.bindings.rootNavigation().close()
         }
         if let current = tabController.current {
             if current is AccountViewController {
@@ -669,7 +666,7 @@ class MainViewController: TelegramViewController {
     }
     
     func showPreferences() {
-        context.sharedContext.bindings.switchSplitLayout(.dual)
+        context.bindings.switchSplitLayout(.dual)
         if self.context.sharedContext.layout != .minimisize {
             if self.context.sharedContext.layout == .single {
                 self.navigationController?.close()

@@ -391,12 +391,12 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                 }
             }) |> map {$0.first}).start(next: { adminId in
                 if let adminId = adminId {
-                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: adminId, initialParticipant: behavior.participants[adminId]?.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: mainWindow)
+                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: adminId, initialParticipant: behavior.participants[adminId]?.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: context.window)
                 }
             })
         
         }, openAdmin: { participant in
-            showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peer.id, initialParticipant: participant.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: mainWindow)
+            showModal(with: ChannelAdminController(context, peerId: peerId, adminId: participant.peer.id, initialParticipant: participant.participant, updated: { _ in }, upgradedToSupergroup: upgradedToSupergroup), for: context.window)
         }, removeAdmin: { [weak self] adminId in
             
             updateState {

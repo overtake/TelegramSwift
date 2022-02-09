@@ -277,7 +277,7 @@ final class NetworkStatusManager {
         
         let fakeStatus: ValuePromise<ConnectionStatus?> = ValuePromise(nil)
         
-        let previousStatus: Atomic<ConnectionStatus> = Atomic(value: .online(proxyAddress: nil))
+        let previousStatus: Atomic<ConnectionStatus?> = Atomic(value: nil)
         
         let connectionStatus: Signal<Status?, NoError> = combineLatest(queue: .mainQueue(), connecting, updating, fakeStatus.get()) |> deliverOnMainQueue |> map { status, isUpdating, fakeStatus -> ConnectionStatus in
             var status = fakeStatus ?? status

@@ -92,14 +92,15 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     private let disposableDict: DisposableDict<AccountRecordId> = DisposableDict()
     let accountManager: AccountManager<TelegramAccountManagerTypes>
     var resignTimestamp:Int32? = nil
-    let window: Window
     
     var activeAccounts: (primary: Account?, accounts: [(AccountRecordId, Account)]) = (primary: nil, accounts: [])
     let bindings: SharedNotificationBindings
     private let appEncryption: AppEncryptionParameters
-    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager<TelegramAccountManagerTypes>, window: Window, bindings: SharedNotificationBindings) {
+    
+    private var lockers:[PasscodeLockController] = []
+    
+    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager<TelegramAccountManagerTypes>, bindings: SharedNotificationBindings) {
         self.accountManager = accountManager
-        self.window = window
         self.bindings = bindings
         self.appEncryption = appEncryption
         
@@ -112,8 +113,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             
         })
         
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
+//        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
+//        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
         
         
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
@@ -122,24 +123,50 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         _ = (_passlock.get() |> mapToSignal { show in additionalSettings(accountManager: accountManager) |> map { (show, $0) }} |> deliverOnMainQueue |> mapToSignal { show, settings -> Signal<Bool, NoError> in
             if show {
-                let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
-                    return self.logout()
-                }, updateCurrectController: bindings.updateCurrectController)
-                closeAllModals()
                 closeInstantView()
                 closeGalleryViewer(false)
-                showModal(with: controller, for: window, isOverlay: true)
-                return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
-            }
-            return .never()
-            } |> deliverOnMainQueue).start(next: { [weak self] lock in
-                for subview in window.contentView!.subviews {
-                    if let subview = subview as? SplitView {
-                        subview.isHidden = lock
-                        break
+                _ = globalAudio?.pause()
+                
+                var signals:[Signal<Bool, NoError>] = []
+                
+                appDelegate?.enumerateAccountContexts({ context in
+                    closeAllModals(window: context.window)
+                    let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
+                        return self.logout()
+                    }, updateCurrectController: bindings.updateCurrectController)
+                    
+                    self.lockers.append(controller)
+                    showModal(with: controller, for: context.window, isOverlay: true)
+                    signals.append(controller.doneValue)
+                })
+                let signal: Signal<Bool, NoError> = combineLatest(signals)
+                |> map { values in
+                    if values.contains(true) {
+                        return false
+                    } else {
+                        return true
                     }
                 }
-                self?.updateLocked { previous -> LockNotificationsData in
+                return .single(show) |> then(signal)
+            }
+            return .never()
+        } |> deliverOnMainQueue).start(next: { lock in
+                
+                appDelegate?.enumerateAccountContexts({ context in
+                    for subview in context.window.contentView!.subviews {
+                        if let subview = subview as? SplitView {
+                            subview.isHidden = lock
+                            break
+                        }
+                    }
+                })
+                if !lock {
+                    while !self.lockers.isEmpty {
+                        self.lockers.removeLast().close()
+                    }
+                }
+                
+                self.updateLocked { previous -> LockNotificationsData in
                     return previous.withUpdatedPasscodeLock(lock)
                 }
             })
@@ -178,26 +205,18 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             |> deliverOnMainQueue
         
-        window.set(handler: { _ -> KeyHandlerResult in
-            
-            if !self._lockedValue.passcodeLock {
-                self._passlock.set(accountManager.transaction { transaction -> Bool in
-                    switch transaction.getAccessChallengeData() {
-                    case .none:
-                        return false
-                    default:
-                        return true
-                    }
-                })
-            }
-            
-            return .invoked
-        }, with: self, for: .L, priority: .supreme, modifierFlags: [.command])
 
         _passlock.set(passlock)
         
     }
     
+    func updatePasslock(_ signal: Signal<Bool, NoError>) {
+        _passlock.set(signal)
+    }
+    
+    func find(_ id: AccountRecordId?) -> AccountContext? {
+        return appDelegate?.activeContext(for: id)
+    }
     
     func logout() -> Signal<Never, NoError> {
         let accountManager = self.accountManager
@@ -548,8 +567,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         }
         
         let wasScheduled = userInfo?["wasScheduled"] as? Bool ?? false
-        
-        let result = !snoofEnabled || !window.isKeyWindow || wasScheduled
+        guard let context = find(accountId) else {
+            return false
+        }
+        let result = !snoofEnabled || !context.window.isKeyWindow || wasScheduled
         
         return result
     }

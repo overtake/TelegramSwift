@@ -1304,7 +1304,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override func measure(size: NSSize) {
-        let chatSize = NSMakeSize(context.sharedContext.bindings.rootNavigation().frame.width, min(500, size.height - 150))
+        let chatSize = NSMakeSize(context.bindings.rootNavigation().frame.width, min(500, size.height - 150))
         let contentSize = WallpaperDimensions.aspectFitted(chatSize)
         
         self.modal?.resize(with: contentSize, animated: false)

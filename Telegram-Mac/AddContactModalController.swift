@@ -123,9 +123,9 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
             if !fields.isEmpty {
                 f(.fail(.fields(fields)))
             } else {
-                _ = (showModalProgress(signal: context.engine.contacts.importContact(firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phoneNumber), for: mainWindow) |> deliverOnMainQueue).start(next: { peerId in
+                _ = (showModalProgress(signal: context.engine.contacts.importContact(firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phoneNumber), for: context.window) |> deliverOnMainQueue).start(next: { peerId in
                     if let peerId = peerId {
-                        context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                        context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
                         close?()
                     } else {
                         updateState {

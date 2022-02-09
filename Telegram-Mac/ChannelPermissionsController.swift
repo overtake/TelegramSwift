@@ -666,7 +666,7 @@ final class ChannelPermissionsController : TableViewController {
                         }
                     }
                     if adminError {
-                        alert(for: mainWindow, info: strings().channelBlacklistDemoteAdminError)
+                        alert(for: context.window, info: strings().channelBlacklistDemoteAdminError)
                         return .single(false)
                     }
                 }
@@ -712,7 +712,7 @@ final class ChannelPermissionsController : TableViewController {
         }, openKicked: { [weak self] in
             self?.navigationController?.push(ChannelBlacklistViewController(context, peerId: peerId))
         }, presentRestrictedPublicGroupPermissionsAlert: {
-                alert(for: mainWindow, info: strings().groupPermissionNotAvailableInPublicGroups)
+                alert(for: context.window, info: strings().groupPermissionNotAvailableInPublicGroups)
         }, updateSlowMode: { value in
             let signal: Signal<PeerId?, ConvertGroupToSupergroupError>
             

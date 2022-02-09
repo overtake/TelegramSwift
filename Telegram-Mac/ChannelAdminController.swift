@@ -793,9 +793,9 @@ class ChannelAdminController: TableModalViewController {
                                     break
                                 case .thrid:
                                     dismissImpl()
-                                    context.sharedContext.bindings.rootNavigation().removeUntil(EmptyChatViewController.self)
-                                    context.sharedContext.bindings.rootNavigation().push(twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { (controller, isRoot, animated) in
-                                        let navigation = context.sharedContext.bindings.rootNavigation()
+                                    context.bindings.rootNavigation().removeUntil(EmptyChatViewController.self)
+                                    context.bindings.rootNavigation().push(twoStepVerificationUnlockController(context: context, mode: .access(nil), presentController: { (controller, isRoot, animated) in
+                                        let navigation = context.bindings.rootNavigation()
                                         if isRoot {
                                             navigation.removeUntil(EmptyChatViewController.self)
                                         }

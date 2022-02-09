@@ -534,7 +534,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, selectChatBackground: {
         showModal(with: ChatWallpaperModalController(context), for: context.window)
     }, openAutoNightSettings: {
-        context.sharedContext.bindings.rootNavigation().push(AutoNightSettingsController(context: context))
+        context.bindings.rootNavigation().push(AutoNightSettingsController(context: context))
     }, removeTheme: { cloudTheme in
         confirm(for: context.window, header: strings().appearanceConfirmRemoveTitle, information: strings().appearanceConfirmRemoveText, okTitle: strings().appearanceConfirmRemoveOK, successHandler: { _ in
             var signals:[Signal<Void, NoError>] = []

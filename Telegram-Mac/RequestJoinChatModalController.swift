@@ -124,7 +124,7 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
                 case .tooMuchUsers:
                     text = strings().groupUsersTooMuchError
                 case .requestSent:
-                    let navigation = context.sharedContext.bindings.rootNavigation()
+                    let navigation = context.bindings.rootNavigation()
                     navigation.controller.show(toaster: .init(text: strings().requestJoinSent))
                     return
                 case .flood:

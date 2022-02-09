@@ -510,9 +510,9 @@ class ChatListController : PeersListController {
         }
         let openFilterSettings:(ChatListFilter?)->Void = { filter in
             if let filter = filter {
-                context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
+                context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
             } else {
-                context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
             }
         }
         
@@ -968,7 +968,7 @@ class ChatListController : PeersListController {
                             $0.withUpdatedFilter(nil)
                         }
                     } else {
-                        self.context.sharedContext.bindings.mainController().showFastChatSettings()
+                        self.context.bindings.mainController().showFastChatSettings()
                     }
                 } else {
                     self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
@@ -987,10 +987,10 @@ class ChatListController : PeersListController {
         
         switch context.sharedContext.layout {
         case .single:
-            context.sharedContext.bindings.rootNavigation().back()
+            context.bindings.rootNavigation().back()
             Queue.mainQueue().justDispatch(invoke)
         case .minimisize:
-            context.sharedContext.bindings.needFullsize()
+            context.bindings.needFullsize()
             Queue.mainQueue().justDispatch(invoke)
         default:
             invoke()
@@ -1184,7 +1184,7 @@ class ChatListController : PeersListController {
         
       
         
-        if context.sharedContext.bindings.rootNavigation().stackCount == 1 {
+        if context.bindings.rootNavigation().stackCount == 1 {
             setHighlightEvents()
         }
     }
@@ -1373,7 +1373,7 @@ class ChatListController : PeersListController {
     }
 
     override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
-        if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.sharedContext.bindings.rootNavigation().modalAction {
+        if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.bindings.rootNavigation().modalAction {
             if !modalAction.isInvokable(for: peer) {
                 modalAction.alertError(for: peer, with:mainWindow)
                 return false
@@ -1406,7 +1406,7 @@ class ChatListController : PeersListController {
     }
     
     override  func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
-        let navigation = context.sharedContext.bindings.rootNavigation()
+        let navigation = context.bindings.rootNavigation()
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController {
                 switch controller.mode {

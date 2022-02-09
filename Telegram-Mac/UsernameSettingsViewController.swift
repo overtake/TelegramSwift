@@ -130,7 +130,7 @@ class UsernameSettingsViewController: TableViewController {
                 }
             }, completed: { [weak self] in
                 self?.navigationController?.back()
-                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 0.5).start()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.5).start()
             }))
         }
     }

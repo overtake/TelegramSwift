@@ -206,8 +206,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
         callButton.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peerId = item.peer?.id  {
                 let context = item.context
-                self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                    applyUIPCallResult(context.sharedContext, result)
+                self?.callDisposable.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context, result)
                 }))
             }
             }, for: .SingleClick)

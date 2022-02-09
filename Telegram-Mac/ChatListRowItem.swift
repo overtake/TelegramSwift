@@ -882,11 +882,11 @@ class ChatListRowItem: TableRowItem {
     }
     
     static func collapseOrExpandArchive(context: AccountContext) {
-        context.sharedContext.bindings.mainController().chatList.collapseOrExpandArchive()
+        context.bindings.mainController().chatList.collapseOrExpandArchive()
     }
     
     static func toggleHideArchive(context: AccountContext) {
-        context.sharedContext.bindings.mainController().chatList.toggleHideArchive()
+        context.bindings.mainController().chatList.toggleHideArchive()
     }
     
     func toggleHideArchive() {
@@ -958,7 +958,7 @@ class ChatListRowItem: TableRowItem {
                         
                         switch result {
                         case .thrid:
-                            context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                            context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
                         default:
                             break
                         }
@@ -981,7 +981,7 @@ class ChatListRowItem: TableRowItem {
             switch associatedGroupId {
             case .root:
                 let postbox = context.account.postbox
-                context.sharedContext.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
+                context.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
                 _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
             default:
                  _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
@@ -1098,7 +1098,7 @@ class ChatListRowItem: TableRowItem {
                 
                 if isAd {
                     firstGroup.append(ContextMenuItem(strings().chatListContextHidePromo, handler: {
-                        context.sharedContext.bindings.mainController().chatList.hidePromoItem(peerId)
+                        context.bindings.mainController().chatList.hidePromoItem(peerId)
                     }))
                 }
                 if let peer = peer as? TelegramGroup, !isAd {

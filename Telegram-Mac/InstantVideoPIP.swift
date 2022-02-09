@@ -80,7 +80,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
             self?.updateScrolled()
         })
         controller.add(listener: self)
-        context.sharedContext.bindings.rootNavigation().add(listener: WeakReference(value: self))
+        context.bindings.rootNavigation().add(listener: WeakReference(value: self))
     }
     
     override var window:Window? {
@@ -95,7 +95,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     
     override func navigationWillChangeController() {
-        if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+        if let controller = context.bindings.rootNavigation().controller as? ChatController {
             updateTableView(controller.genericView.tableView, context: context, controller: self.controller)
         } else {
             updateTableView(nil, context: context, controller: self.controller)

@@ -1142,13 +1142,13 @@ class GalleryViewer: NSResponder {
     func showSharedMedia() {
         close()
         if let message = self.pager.selectedItem?.entry.message {
-            context.sharedContext.bindings.rootNavigation().push(PeerMediaController(context: context, peerId: message.id.peerId))
+            context.bindings.rootNavigation().push(PeerMediaController(context: context, peerId: message.id.peerId))
         }
     }
     
     func openInfo(_ peerId: PeerId) {
         close()
-        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     }
     
     func share(_ control: Control) -> Void {
@@ -1227,7 +1227,7 @@ class GalleryViewer: NSResponder {
     
     fileprivate func show(_ animated: Bool = true, _ ignoreStableId:AnyHashable? = nil) -> Void {
         viewer = self
-        mainWindow.resignFirstResponder()
+        context.window.resignFirstResponder()
         self.window.makeKeyAndOrderFront(nil)
         //window.makeFirstResponder(self)
         //closePipVideo()

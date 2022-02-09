@@ -155,7 +155,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
 func ChatListFiltersListController(context: AccountContext) -> InputDataController {
     
     let arguments = ChatListPresetArguments(context: context, openPreset: { filter, isNew in
-        context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter, isNew: isNew))
+        context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter, isNew: isNew))
     }, removePreset: { filter in
         confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
             _ = context.engine.peers.updateChatListFiltersInteractively({ filters in

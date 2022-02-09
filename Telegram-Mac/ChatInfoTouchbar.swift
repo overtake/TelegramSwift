@@ -60,8 +60,8 @@ class ChatInfoTouchbar: NSTouchBar, NSTouchBarDelegate {
             })
         case 1:
             let context = chatInteraction.context
-            _ = (phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { result in
-                applyUIPCallResult(context.sharedContext, result)
+            _ = (phoneCall(context: context, peerId: chatInteraction.peerId) |> deliverOnMainQueue).start(next: { result in
+                applyUIPCallResult(context, result)
             })
         default:
             break

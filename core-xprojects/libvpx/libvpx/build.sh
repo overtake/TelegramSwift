@@ -15,18 +15,26 @@ pushd "$BUILD_DIR"
 
 
 BUILD_ROOT="build"
-CONFIGURE_ARGS="--disable-docs
-                --disable-examples
-                --disable-postproc
-                --disable-webm-io
-                --disable-vp9-highbitdepth
-                --disable-vp9-postproc
-                --disable-vp9-temporal-denoising
-                --disable-unit-tests
-                --enable-realtime-only
-                --enable-shared
-                --enable-vp8
-                --enable-multi-res-encoding"
+#CONFIGURE_ARGS="--disable-docs
+#                --disable-examples
+#                --disable-postproc
+#                --disable-webm-io
+#                --disable-vp9-highbitdepth
+#                --disable-vp9-postproc
+#                --disable-vp9-temporal-denoising
+#                --disable-unit-tests
+#                --enable-realtime-only
+#                --enable-vp8
+#                --enable-multi-res-encoding"
+                
+CONFIGURE_ARGS="--disable-examples
+                    --disable-unit-tests
+                    --disable-tools
+                    --disable-docs
+                    --enable-vp8
+                    --enable-vp9
+                    --enable-webm-io"
+                
 DIST_DIR="_dist"
 FRAMEWORK_DIR="build/libvpx"
 HEADER_DIR="${FRAMEWORK_DIR}/include/vpx"

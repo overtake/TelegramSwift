@@ -363,6 +363,7 @@
 		27CE37762760CEE4007E6F1B /* menu_mute_for_1_hour.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE37742760CEE4007E6F1B /* menu_mute_for_1_hour.tgs */; };
 		27CEA34927AD513300472CB1 /* GroupCallStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CEA34827AD513300472CB1 /* GroupCallStatusBar.swift */; };
 		27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */ = {isa = PBXBuildFile; productRef = 27CEA34A27AD9CFA00472CB1 /* TelegramVoip */; };
+		27CEA34D27B2A31B00472CB1 /* SupportAccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
 		27D43D9A27917641006968A6 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2754D29827909668000DDAD3 /* libvpx.a */; };
 		27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9B279176C2006968A6 /* libavcodec.a */; };
@@ -414,7 +415,7 @@
 		27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */ = {isa = PBXBuildFile; productRef = 27E78DEA2743EEF6002D5A23 /* CrashHandler */; };
 		27E7E49E270DFED900CF3A24 /* request_join_link.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E7E49D270DFED900CF3A24 /* request_join_link.tgs */; };
 		27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E7E49F270E040600CF3A24 /* thumbsup.tgs */; };
-		27E7E4A5270F0F9A00CF3A24 /* NetwotkStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E7E4A4270F0F9A00CF3A24 /* NetwotkStatusManager.swift */; };
+		27E7E4A5270F0F9A00CF3A24 /* NetworkStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E7E4A4270F0F9A00CF3A24 /* NetworkStatusManager.swift */; };
 		27E969E02589172D00CB9F64 /* call up.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DE2589172B00CB9F64 /* call up.mp3 */; };
 		27E969E12589172D00CB9F64 /* call down.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969DF2589172D00CB9F64 /* call down.mp3 */; };
 		27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 27E969E5258B417200CB9F64 /* reconnecting.mp3 */; };
@@ -1561,6 +1562,7 @@
 		27CE37732760CEE1007E6F1B /* menu_mute_for_2_days.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_mute_for_2_days.tgs; sourceTree = "<group>"; };
 		27CE37742760CEE4007E6F1B /* menu_mute_for_1_hour.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_mute_for_1_hour.tgs; sourceTree = "<group>"; };
 		27CEA34827AD513300472CB1 /* GroupCallStatusBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallStatusBar.swift; sourceTree = "<group>"; };
+		27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportAccountContext.swift; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
 		27D43D9B279176C2006968A6 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavcodec.a"; sourceTree = "<group>"; };
 		27D43D9C279176C2006968A6 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavutil.a"; sourceTree = "<group>"; };
@@ -1601,7 +1603,7 @@
 		27E78DE92743EEC7002D5A23 /* CrashHandler */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CrashHandler; path = packages/CrashHandler; sourceTree = "<group>"; };
 		27E7E49D270DFED900CF3A24 /* request_join_link.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = request_join_link.tgs; sourceTree = "<group>"; };
 		27E7E49F270E040600CF3A24 /* thumbsup.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = thumbsup.tgs; sourceTree = "<group>"; };
-		27E7E4A4270F0F9A00CF3A24 /* NetwotkStatusManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetwotkStatusManager.swift; sourceTree = "<group>"; };
+		27E7E4A4270F0F9A00CF3A24 /* NetworkStatusManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatusManager.swift; sourceTree = "<group>"; };
 		27E969DE2589172B00CB9F64 /* call up.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call up.mp3"; sourceTree = "<group>"; };
 		27E969DF2589172D00CB9F64 /* call down.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "call down.mp3"; sourceTree = "<group>"; };
 		27E969E5258B417200CB9F64 /* reconnecting.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = reconnecting.mp3; sourceTree = "<group>"; };
@@ -2884,7 +2886,7 @@
 		27E7E4A3270F0F8200CF3A24 /* connecting */ = {
 			isa = PBXGroup;
 			children = (
-				27E7E4A4270F0F9A00CF3A24 /* NetwotkStatusManager.swift */,
+				27E7E4A4270F0F9A00CF3A24 /* NetworkStatusManager.swift */,
 			);
 			name = connecting;
 			sourceTree = "<group>";
@@ -5018,6 +5020,7 @@
 				D098C7381D7E1A62007784E4 /* Telegram-Mac.entitlements */,
 				D00CA6502281BB0900FFACAD /* Telegram-Sandbox.entitlements */,
 				D098C7181D7E175A007784E4 /* AppDelegate.swift */,
+				27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */,
 				C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */,
 				9F7D422822240235007B68BB /* account */,
 				C24949131E5B763F00D7ED5D /* ApplicationContext.swift */,
@@ -5981,7 +5984,7 @@
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
 				C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
-				27E7E4A5270F0F9A00CF3A24 /* NetwotkStatusManager.swift in Sources */,
+				27E7E4A5270F0F9A00CF3A24 /* NetworkStatusManager.swift in Sources */,
 				D076F86D22959958004F895A /* InlineLoginController.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
 				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,
@@ -6249,6 +6252,7 @@
 				D06C7BB9247E664900E67C3C /* SoftwareVideoThumbnailLayer.swift in Sources */,
 				C21B24631EDADC8600FC6CDA /* MMMenuItem.swift in Sources */,
 				C2A71CE71DDB2F8700C69F73 /* UsernameSettingsViewController.swift in Sources */,
+				27CEA34D27B2A31B00472CB1 /* SupportAccountContext.swift in Sources */,
 				D0E3684624D80A0D009896D4 /* ClearCache.swift in Sources */,
 				D00CE50F2289CE87008C1B4F /* ChatAnimatedStickerItem.swift in Sources */,
 				C230BEB41EE97B6F0029586C /* RestictedModalViewController.swift in Sources */,

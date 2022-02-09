@@ -152,12 +152,12 @@ class ChatInputActionsView: View, Notifable {
     var entertaimentsPopover: ViewController {
         if chatInteraction.presentation.state == .editing {
             let emoji = EmojiViewController(chatInteraction.context)
-            if let interactions = chatInteraction.context.sharedContext.bindings.entertainment().interactions {
+            if let interactions = chatInteraction.context.bindings.entertainment().interactions {
                 emoji.update(with: interactions)
             }
             return emoji
         }
-        return chatInteraction.context.sharedContext.bindings.entertainment()
+        return chatInteraction.context.bindings.entertainment()
     }
     
     private func addHoverObserver() {

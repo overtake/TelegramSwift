@@ -219,7 +219,7 @@ class ChatRecorderOverlayWindowController : NSObject {
     }
     
     var minX: CGFloat {
-        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+        let navigation = chatInteraction.context.bindings.rootNavigation()
         if navigation.genericView.state == .dual, let sidebar = navigation.sidebar {
             return parent.frame.maxX - window.frame.width - sidebar.frame.width + 35
         }

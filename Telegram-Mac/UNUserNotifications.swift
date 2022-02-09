@@ -108,11 +108,11 @@ class UNUserNotifications : NSObject {
                     self.bindings.navigateToChat(account, messageId.peerId)
                 }
                 
-                manager.window.makeKeyAndOrderFront(nil)
+                manager.find(accountId)?.window.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
             }
         } else {
-            manager.window.makeKeyAndOrderFront(nil)
+            manager.find(nil)?.window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
     }
@@ -139,7 +139,18 @@ class UNUserNotifications : NSObject {
 
 final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: NSUserNotificationCenter, didDeliver notification: NSUserNotification) {
-        if manager.requestUserAttention && !manager.window.isKeyWindow {
+        
+        let window: Window?
+        if let accountId = notification.userInfo?["accountId"] as? Int64 {
+            let accountId = AccountRecordId(rawValue: accountId)
+            window = manager.find(accountId)?.window
+        } else {
+            window = manager.find(nil)?.window
+        }
+        guard let window = window else {
+            return
+        }
+        if manager.requestUserAttention && !window.isKeyWindow {
             NSApp.requestUserAttention(.informationalRequest)
         }
         if let soundName = notification.soundName {
@@ -237,7 +248,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
             completionHandler()
         case UNNotificationDefaultActionIdentifier:
             activateNotification(userInfo: response.notification.request.content.userInfo)
-            if manager.requestUserAttention && !manager.window.isKeyWindow {
+            if manager.requestUserAttention {
                 NSApp.requestUserAttention(.informationalRequest)
             }
             completionHandler()
