@@ -77,6 +77,8 @@ public final class L10n {
   public static var aboutDescription: String  { return L10n.tr("Localizable", "About.Description") }
   /// Tinted
   public static var accentColorsTinted: String  { return L10n.tr("Localizable", "AccentColors.Tinted") }
+  /// Open In Window
+  public static var accountOpenInWindow: String  { return L10n.tr("Localizable", "Account.OpenInWindow") }
   /// Please note that Telegram Support is run by volunteers. We try to respond as quickly as possible, but it may take a while.\n\nPlease take a look at the Telegram FAQ: it has important troubleshooting tips and answers to most questions.
   public static var accountConfirmAskQuestion: String  { return L10n.tr("Localizable", "Account.Confirm.AskQuestion") }
   /// Open FAQ
@@ -4925,9 +4927,9 @@ public final class L10n {
   public static var groupCallStatusBarStartScreen: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StartScreen") }
   /// Share Video
   public static var groupCallStatusBarStartVideo: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StartVideo") }
-  /// Stop Share Screen
+  /// Stop Screen
   public static var groupCallStatusBarStopScreen: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StopScreen") }
-  /// Stop Share Video
+  /// Stop Video
   public static var groupCallStatusBarStopVideo: String  { return L10n.tr("Localizable", "GroupCall.StatusBar.StopVideo") }
   /// Sorry, if a person left a group, only a mutual contact can bring them back (they need to have your phone number, and you need theirs).
   public static var groupInfoAddUserLeftError: String  { return L10n.tr("Localizable", "GroupInfo.AddUserLeftError") }

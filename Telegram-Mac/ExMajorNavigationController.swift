@@ -37,7 +37,7 @@ class ExMajorNavigationController: MajorNavigationController {
     
     @available(OSX 10.12.2, *)
     override func makeTouchBar() -> NSTouchBar? {
-        return  controller.makeTouchBar()//globalAudio?.makeTouchBar()//
+        return  controller.makeTouchBar()//context.audioPlayer?.makeTouchBar()//
     }
     
 }

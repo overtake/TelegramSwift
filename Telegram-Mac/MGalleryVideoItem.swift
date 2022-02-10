@@ -70,7 +70,7 @@ class MGalleryVideoItem: MGalleryItem {
         
         pausepip()
         
-        if let pauseMusic = globalAudio?.pause() {
+        if let pauseMusic = context.audioPlayer?.pause() {
             isPausedGlobalPlayer = pauseMusic
         }
         
@@ -95,7 +95,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func disappear(for view: NSView?) {
         super.disappear(for: view)
         if isPausedGlobalPlayer {
-            _ = globalAudio?.play()
+            _ = context.audioPlayer?.play()
         }
         if controller.style != .pictureInPicture {
             controller.pause()

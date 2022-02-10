@@ -125,12 +125,12 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             if show {
                 closeInstantView()
                 closeGalleryViewer(false)
-                _ = globalAudio?.pause()
                 
                 var signals:[Signal<Bool, NoError>] = []
                 
                 appDelegate?.enumerateAccountContexts({ context in
                     closeAllModals(window: context.window)
+                    _ = context.audioPlayer?.pause()
                     let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
                         return self.logout()
                     }, updateCurrectController: bindings.updateCurrectController)

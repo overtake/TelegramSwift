@@ -30,10 +30,11 @@ class PeerMediaRowItem: GeneralRowItem {
     let message:Message
     let interface:ChatInteraction
     let automaticDownload: AutomaticMediaDownloadSettings
-    
+    let context: AccountContext
     init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
         self.entry = object
         self.interface = interface
+        self.context = interface.context
         if case let .messageEntry(message, _, automaticDownload, _) = object {
             self.message = message
             self.automaticDownload = automaticDownload
