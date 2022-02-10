@@ -261,7 +261,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 
                 var items:[ContextMenuItem] = []
                 
-                items.append(ContextMenuItem("Open In Window", handler: {
+                items.append(ContextMenuItem(strings().accountOpenInWindow, handler: {
                     arguments.context.sharedContext.openAccount(id: info.account.id)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 

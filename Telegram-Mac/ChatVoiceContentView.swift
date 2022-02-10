@@ -48,7 +48,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     
     override func open() {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
-            if let controller = globalAudio, controller.playOrPause(parent.id) {
+            if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
             } else {
                 let controller:APController
                 if parameters.isWebpage {
@@ -80,7 +80,7 @@ class ChatVoiceContentView: ChatAudioContentView {
    
         
         if  let parameters = parameters as? ChatMediaVoiceLayoutParameters {
-            if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+            if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
                 if song.entry.isEqual(to: parent) {
                     switch song.state {
                     case let .playing(current, _, progress):
@@ -127,7 +127,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
         
-        if acceptDragging, let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+        if acceptDragging, let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 let point = waveformView.convert(event.locationInWindow, from: nil)
                 let progress = Float(min(max(point.x, 0), waveformView.frame.width)/waveformView.frame.width)
@@ -155,7 +155,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         if acceptDragging && playAfterDragging {
-            _ = globalAudio?.play()
+            _ = context?.audioPlayer?.play()
         }
         playAfterDragging = false
         acceptDragging = false

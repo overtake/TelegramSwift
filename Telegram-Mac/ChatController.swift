@@ -6176,7 +6176,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.context.globalPeerHandler.set(.single(chatLocation))
         self.genericView.tableView.notifyScrollHandlers()
         self.genericView.updateHeader(chatInteraction.presentation, false, false)
-        if let controller = globalAudio, let header = self.navigationController?.header, header.needShown {
+        if let controller = context.audioPlayer, let header = self.navigationController?.header, header.needShown {
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
             header.view.update(with: object)
         }
@@ -6359,12 +6359,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 //            }
             
             if oldValue.recordingState == nil && value.recordingState != nil {
-                if let pause = globalAudio?.pause() {
+                if let pause = context.audioPlayer?.pause() {
                     isPausedGlobalPlayer = pause
                 }
             } else if value.recordingState == nil && oldValue.recordingState != nil {
                 if isPausedGlobalPlayer {
-                    _ = globalAudio?.play()
+                    _ = context.audioPlayer?.play()
                 }
             }
             if let until = value.slowMode?.validUntil, until > self.context.timestamp {

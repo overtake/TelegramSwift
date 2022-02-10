@@ -706,7 +706,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }))
         
         
-        if let controller = globalAudio, let _ = self.rightController.header {
+        if let controller = context.audioPlayer, let _ = self.rightController.header {
             self.rightController.header?.show(false, contextObject: InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: nil, supportTableView: nil))
         }
         

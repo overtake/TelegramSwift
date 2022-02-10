@@ -34,13 +34,8 @@ class APSingleWrapper {
     }
 }
 
-let globalAudioPromise: Promise<APController?> = Promise(nil)
 
-fileprivate(set) var globalAudio:APController? {
-    didSet {
-        globalAudioPromise.set(.single(globalAudio))
-    }
-}
+
 
 enum APState : Equatable {
     case waiting
@@ -712,10 +707,10 @@ class APController : NSResponder {
     }
 
     func start() {
-        globalAudio?.stop()
-        globalAudio?.cleanup()
+        context.audioPlayer?.stop()
+        context.audioPlayer?.cleanup()
 
-        globalAudio = self
+        context.audioPlayer = self
     }
 
 
@@ -1084,7 +1079,7 @@ class APController : NSResponder {
 
     func cleanup() {
         listeners.removeAll()
-        globalAudio = nil
+        context.audioPlayer = nil
         mainWindow.applyResponderIfNeeded()
         stop()
     }

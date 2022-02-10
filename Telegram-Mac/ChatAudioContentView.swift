@@ -82,7 +82,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func open() {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters, let context = context, let parent = parent  {
-            if let controller = globalAudio, controller.playOrPause(parent.id) {
+            if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
             } else {               
                 let controller:APController
 
@@ -134,7 +134,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         
         let presentation: ChatMediaPresentation = parameters?.presentation ?? .Empty
         
-        if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
             if song.entry.isEqual(to: parent), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.pauseThumb, iconInset:NSEdgeInsets(left:0))
                 progressView.state = .Icon(image: presentation.pauseThumb, mode: .normal)
@@ -174,7 +174,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
        
         
         
-        globalAudio?.add(listener: self)
+        context.audioPlayer?.add(listener: self)
         self.setNeedsDisplay()
         
         self.fetchStatus = .Local
@@ -217,7 +217,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     override func clean() {
         //fetchDisposable.dispose()
         statusDisposable.dispose()
-        globalAudio?.remove(listener: self)
+        context?.audioPlayer?.remove(listener: self)
     }
     
 }

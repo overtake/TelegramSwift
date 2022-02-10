@@ -124,7 +124,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         guard let item = item as? PeerMediaVoiceRowItem else {return}
 
-        if let controller = globalAudio, controller.playOrPause(item.message.id) {
+        if let controller = item.context.audioPlayer, controller.playOrPause(item.message.id) {
         } else {
             let controller:APController = APChatVoiceController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message), volume: FastSettings.volumeRate)
             item.interface.inlineAudioPlayer(controller)
@@ -359,7 +359,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
             backgroundColor = theme.colors.fileActivityBackground
             foregroundColor = theme.colors.fileActivityForeground
         }
-        if let controller = globalAudio, let song = controller.currentSong {
+        if let controller = item.context.audioPlayer, let song = controller.currentSong {
            
             
             if song.entry.isEqual(to: item.message), case .playing = song.state {

@@ -179,7 +179,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func checkState() {
         if let item = item as? PeerMediaMusicRowItem {
-            if let controller = globalAudio, let song = controller.currentSong {
+            if let controller = item.context.audioPlayer, let song = controller.currentSong {
                 if song.entry.isEqual(to: item.message.id) {
                     if playAnimationView == nil {
                         playAnimationView = PeerMediaPlayerAnimationView()
@@ -214,7 +214,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
             textView.update(item.textLayout)
             textView.centerY(x: item.contentInset.left)
             textView.backgroundColor = backdorColor
-            globalAudio?.add(listener: self)
+            item.context.audioPlayer?.add(listener: self)
             
             
             let imageCorners = ImageCorners(topLeft: .Corner(4.0), topRight: .Corner(4.0), bottomLeft: .Corner(4.0), bottomRight: .Corner(4.0))
@@ -257,7 +257,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func open() {
         if let item = item as? PeerMediaMusicRowItem  {
-            if let controller = globalAudio, controller.playOrPause(item.message.id) {
+            if let controller = item.context.audioPlayer, controller.playOrPause(item.message.id) {
             } else {
                 let controller = APChatMusicController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message), messages: item.messages)
                 item.interface.inlineAudioPlayer(controller)
@@ -290,7 +290,9 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     func clean() {
         fetchDisposable.dispose()
         statusDisposable.dispose()
-        globalAudio?.remove(listener: self)
+        if let item = item as? PeerMediaMusicRowItem {
+            item.context.audioPlayer?.remove(listener: self)
+        }
     }
     
     
