@@ -1230,7 +1230,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
             let removed = oldValue.selected.subtracting(value.selected)
             
             if added.count == 0 && value.isLimitReached {
-                alert(for: mainWindow, info: strings().composeCreateGroupLimitError)
+                alert(for: context.window, info: strings().composeCreateGroupLimitError)
             }
             
             let tokens = added.map {

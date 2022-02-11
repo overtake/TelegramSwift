@@ -1375,7 +1375,7 @@ class ChatListController : PeersListController {
     override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
         if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.bindings.rootNavigation().modalAction {
             if !modalAction.isInvokable(for: peer) {
-                modalAction.alertError(for: peer, with:mainWindow)
+                modalAction.alertError(for: peer, with: item.context.window)
                 return false
             }
             modalAction.afterInvoke()
@@ -1383,7 +1383,7 @@ class ChatListController : PeersListController {
             if let modalAction = modalAction as? FWDNavigationAction {
                 if item.peerId == context.peerId {
                     _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
-                    _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                    _ = showModalSuccess(for: item.context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false
                 }

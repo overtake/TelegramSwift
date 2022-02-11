@@ -35,16 +35,17 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         }
         
         let initialSize = atomicSize.with { $0 }
+        let context = self.context
         
         nameItem = GroupNameRowItem(initialSize, stableId: 0, account: context.account, placeholder: strings().channelChannelNameHolder, viewType: .singleItem, limit: 140, textChangeHandler:{ [weak self] text in
             self?.nextEnabled(!text.isEmpty)
         }, pickPicture: { [weak self] select in
             if select {
-                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                            showModal(with: controller, for: context.window, animationType: .scaleCenter)
                             _ = (controller.result |> deliverOnMainQueue).start(next: { url, _ in
                                 self?.picture = url.path
                             })

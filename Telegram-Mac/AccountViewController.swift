@@ -844,7 +844,7 @@ class LayoutAccountController : TableViewController {
             return
         }
         
-        if let currentEvent = NSApp.currentEvent, currentEvent.clickCount == 5 {
+        if let currentEvent = NSApp.currentEvent, currentEvent.clickCount == 5, !context.isSupport {
             context.bindings.rootNavigation().push(DeveloperViewController(context: context))
         }
         

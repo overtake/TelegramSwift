@@ -78,7 +78,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let pinnedMessage = chatInteraction.presentation.pinnedMessageId
     let peerId = chatInteraction.peerId
     let peer = chatInteraction.peer
-    let canPinMessage = chatInteraction.presentation.canPinMessage
+    let canPinMessage = chatInteraction.presentation.canPinMessage && peerId.namespace != Namespaces.Peer.SecretChat
     let additionalData = entry?.additionalData ?? MessageEntryAdditionalData()
     
     
@@ -317,16 +317,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }
                     }, itemImage: MenuAnimation.menu_copy.value))
                     
-                    #if DEBUG
                     if #available(macOS 10.14, *) {
                         let language = Translate.detectLanguage(for: textLayout.attributedString.string)
-                        thirdBlock.append(ContextMenuItem("Translate", handler: { [weak textLayout] in
-                            if let textLayout = textLayout {
-                                showModal(with: TranslateModalController(context: context, from: language, text: textLayout.attributedString.string), for: context.window)
-                            }
-                        }, itemImage: MenuAnimation.menu_copy.value))
+                        let toLang = appAppearance.language.baseLanguageCode
+                        if language != toLang, Translate.supportedTranslationLanguages.contains(toLang) {
+                            thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: { [weak textLayout] in
+                                if let textLayout = textLayout {
+                                    showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: textLayout.attributedString.string), for: context.window)
+                                }
+                            }, itemImage: MenuAnimation.menu_translate.value))
+                        }
                     }
-                    #endif                    
                 } else {
                     let text: String
                     if let linkType = data.textLayout?.1 {
@@ -542,13 +543,16 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
            
             forwardItem.submenu = forwardMenu
             secondBlock.append(forwardItem)
-        } else if data.message.id.peerId.namespace == Namespaces.Peer.SecretChat, !data.message.containsSecretMedia {
-            secondBlock.append(ContextMenuItem(strings().messageContextShare, handler: { [weak data] in
-                if let data = data {
-                    data.chatInteraction.forwardMessages([data.message.id])
-                }
-            }))
         }
+        /*
+         else if data.message.id.peerId.namespace == Namespaces.Peer.SecretChat, !data.message.containsSecretMedia {
+             secondBlock.append(ContextMenuItem(strings().messageContextShare, handler: { [weak data] in
+                 if let data = data {
+                     data.chatInteraction.forwardMessages([data.message.id])
+                 }
+             }))
+         }
+         */
 
         
         

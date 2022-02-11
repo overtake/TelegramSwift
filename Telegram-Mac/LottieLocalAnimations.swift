@@ -168,6 +168,7 @@ enum LocalAnimatedSticker : String {
     case menu_poll
     case menu_location
     case menu_camera
+    case menu_translate
     
     
     case menu_folder_all_chats

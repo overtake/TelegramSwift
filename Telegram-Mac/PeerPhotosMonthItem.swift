@@ -533,7 +533,6 @@ private final class MediaVideoCell : MediaCell {
             }
         }))
         partDisposable.set(nil)
-        self.preloadStreamblePart()
     }
     
     override func addAccesoryOnCopiedView(view: NSView) {

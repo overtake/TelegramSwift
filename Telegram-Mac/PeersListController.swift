@@ -531,7 +531,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let pushController:(ViewController)->Void = { [weak self] c in
             self?.context.bindings.rootNavigation().push(c)
         }
-        
+                
         let openProxySettings:()->Void = { [weak self] in
             if let controller = self?.context.bindings.rootNavigation().controller as? InputDataController {
                 if controller.identifier == "proxy" {
@@ -545,7 +545,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
                 message = message.trimmed
 
-                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: context.window)
             }, pushController: { controller in
                  pushController(controller)
             })
@@ -834,7 +834,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             
             if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
                 _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
-                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                 modalAction.afterInvoke()
                 navigation.removeModalAction()
             } else {

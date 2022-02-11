@@ -427,7 +427,7 @@ final class AppMenuController : NSObject  {
                         delayDisposable.set(nil)
                     } else {
                         delayDisposable.set(delaySignal(0.1).start(completed: { [weak self] in
-                            self?.close()
+                            self?.closeAll()
                         }))
                     }
                 }
@@ -605,7 +605,7 @@ final class AppMenuController : NSObject  {
         let interaction = AppMenuBasicItem.Interaction(action: { [weak self] item in
             if let handler = item.handler {
                 handler()
-                self?.close()
+                self?.closeAll()
             }
         }, presentSubmenu: { [weak self, weak panel, weak menu] item in
             if let submenu = item.submenu as? ContextMenu, let parentView = panel, self?.findSubmenu(item.id) == nil {
@@ -640,7 +640,7 @@ final class AppMenuController : NSObject  {
         
         panel.set(mouseHandler: { [weak view, weak self] _ in
             if view?.mouseInside() == false {
-                self?.close()
+                self?.closeAll()
             }
             return .rejected
         }, with: self, for: .leftMouseDown)
@@ -888,7 +888,7 @@ final class AppMenuController : NSObject  {
         
         self.keyDisposable = self.parent?.keyWindowUpdater.start(next: { [weak self] value in
             if !value && skippedFirst {
-                self?.close()
+                self?.closeAll()
             }
             skippedFirst = true
         })
