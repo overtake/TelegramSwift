@@ -4885,19 +4885,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 messageIdsWithUnseenReactionsMention.append(message.id)
                             }
                             
-                            inner: for attribute in message.attributes {
-                                if attribute is ViewCountMessageAttribute {
-                                    messageIdsWithViewCount.append(message.id)
-                                    break inner
-                                }
-                            }
-                            if message.id.peerId.namespace == Namespaces.Peer.CloudChannel || message.id.peerId.namespace == Namespaces.Peer.CloudGroup {
-                                messageIdsWithReactions.append(message.id)
-                            }
-                            if message.media.first is TelegramMediaUnsupported {
-                                unsupportedMessagesIds.append(message.id)
-                            }
-                            
                             if let topVisibleMessageRangeValue = topVisibleMessageRange {
                                 topVisibleMessageRange = ChatTopVisibleMessageRange(lowerBound: topVisibleMessageRangeValue.lowerBound, upperBound: message.id, isLast: item.index == tableView.count - 1)
                             } else {
@@ -4921,6 +4908,32 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     return true
                 })
+                
+                
+                tableView.enumerateVisibleItems(inset: tableView.frame.height, with: { item in
+                    if let item = item as? ChatRowItem {
+                        if message == nil {
+                            message = item.lastMessage
+                        }
+                        for message in item.messages {
+                            inner: for attribute in message.attributes {
+                                if attribute is ViewCountMessageAttribute {
+                                    messageIdsWithViewCount.append(message.id)
+                                    break inner
+                                }
+                            }
+                            if message.media.first is TelegramMediaUnsupported {
+                                unsupportedMessagesIds.append(message.id)
+                            }
+                            if message.id.peerId.namespace == Namespaces.Peer.CloudChannel || message.id.peerId.namespace == Namespaces.Peer.CloudGroup {
+                                messageIdsWithReactions.append(message.id)
+                            }
+                        }
+                    }
+                    return true
+                })
+
+                
                 if topVisibleMessageRange != nil {
                     strongSelf.topVisibleMessageRange.set(topVisibleMessageRange)
                 }

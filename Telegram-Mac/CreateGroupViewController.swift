@@ -216,11 +216,11 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         let arguments = CreateGroupArguments(context: context, choicePicture: { select in
             if select {
                 
-                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                            showModal(with: controller, for: context.window, animationType: .scaleCenter)
                             pictureValue.set(controller.result |> map {Optional($0.0.path)})
                            
                             

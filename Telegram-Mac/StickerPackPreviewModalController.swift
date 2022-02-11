@@ -288,13 +288,13 @@ class StickerPackPreviewModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        let context = self.context
         
         disposable.set((context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: true) |> deliverOnMainQueue).start(next: { [weak self] result in
             guard let `self` = self else {return}
             switch result {
             case .none:
-                alert(for: mainWindow, info: strings().stickerSetDontExist)
+                alert(for: context.window, info: strings().stickerSetDontExist)
                 self.close()
             default:
                 self.genericView.layout(with: result, arguments: self.arguments)

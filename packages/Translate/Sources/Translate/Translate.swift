@@ -59,6 +59,21 @@ public struct Translate {
         "es"
     ]
     
+    public static var languagesEmojies:[String:String] = [
+        "en":"🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+        "ar":"🇦🇷",
+        "zh":"🇨🇳",
+        "fr":"🇫🇷",
+        "de":"🇩🇪",
+        "it":"🇮🇹",
+        "jp":"🇯🇵",
+        "ko":"🇰🇷",
+        "pt":"🇵🇹",
+        "ru":"🇷🇺",
+        "es":"🇪🇸"
+    ]
+    
+    
     private static let userAgents: [String] = [
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36", // 13.5%
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36", // 6.6%
@@ -73,8 +88,13 @@ public struct Translate {
         languageRecognizer.processString(text)
         let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 3)
         languageRecognizer.reset()
-
-        return hypotheses.sorted(by: { $0.value > $1.value }).first?.key.rawValue
+        
+        if let value = hypotheses.sorted(by: { $0.value > $1.value }).first?.key.rawValue {
+            if supportedTranslationLanguages.contains(value) {
+                return value
+            }
+        }
+        return nil
     }
 
     private static let languageRecognizer = NLLanguageRecognizer()

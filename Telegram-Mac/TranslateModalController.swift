@@ -12,6 +12,7 @@ import TGUIKit
 import SwiftSignalKit
 import Translate
 import ObjcUtils
+import Localization
 
 private final class Arguments {
     let context: AccountContext
@@ -48,8 +49,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
+    let from: String
+    if let fr = state.from {
+        from = _NSLocalizedString("Translate.Language.\(fr)")
+    } else {
+        from = strings().translateLanguageAuto
+    }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("FROM: \((state.from ?? "auto").uppercased())"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().translateFrom(from).uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
+        
+        var items: [ContextMenuItem] = []
+        for language in Translate.supportedTranslationLanguages {
+            if let emoji = Translate.languagesEmojies[language] {
+                items.append(ContextMenuItem(emoji + " " + language, handler: {
+                    arguments.updateFrom(language)
+                }))
+            }
+        }
+        return items
+    }, clickable: true)))
     index += 1
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("original"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return TranslateTableRowItem(initialSize, stableId: stableId, text: state.text, revealed: state.fromIsRevealed, viewType: .singleItem, reveal: arguments.revealFrom)
@@ -59,17 +77,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("TO: \(state.to.uppercased())"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
+    
+    let to: String = _NSLocalizedString("Translate.Language.\(state.to)")
+   
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().translateTo(to).uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
         
         var items: [ContextMenuItem] = []
         
         for language in Translate.supportedTranslationLanguages {
-            items.append(ContextMenuItem(language, handler: {
-                arguments.updateTo(language)
-            }))
+            if let emoji = Translate.languagesEmojies[language] {
+                items.append(ContextMenuItem(emoji + " " + language, handler: {
+                    arguments.updateTo(language)
+                }))
+            }
         }
         return items
-    })))
+    }, clickable: true)))
     index += 1
     
     if let text = state.translated {
@@ -108,12 +131,14 @@ private func translate(from: String?, to: String, blocks: [String]) -> Signal<St
     return signal
 }
 @available(macOS 10.14, *)
-func TranslateModalController(context: AccountContext, from: String?, text: String) -> InputDataModalController {
+func TranslateModalController(context: AccountContext, from: String?, toLang: String, text: String) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     let disposable = MetaDisposable()
     actionsDisposable.add(disposable)
-    let initialState = State(text: text, from: from, to: "ru", fromIsRevealed: false, toIsRevealed: true)
+    
+    
+    let initialState = State(text: text, from: from, to: toLang, fromIsRevealed: false, toIsRevealed: true)
     
     var close:(()->Void)? = nil
     

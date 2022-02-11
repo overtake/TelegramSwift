@@ -296,7 +296,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         termDisposable.set((context.account.stateManager.termsOfServiceUpdate |> deliverOnMainQueue).start(next: { terms in
             if let terms = terms {
-                showModal(with: TermsModalController(context, terms: terms), for: mainWindow)
+                showModal(with: TermsModalController(context, terms: terms), for: context.window)
             } else {
                 closeModal(TermsModalController.self)
             }

@@ -210,7 +210,7 @@ class DeveloperViewController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<DeveloperEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let arguments = DeveloperArguments(importColors: {
-            filePanel(with: ["palette"], allowMultiple: false, for: mainWindow, completion: { list in
+            filePanel(with: ["palette"], allowMultiple: false, for: context.window, completion: { list in
                 if let path = list?.first {
                     if let theme = importPalette(path) {
                         let palettesDir = ApiEnvironment.containerURL!.appendingPathComponent("Palettes").path
@@ -221,7 +221,7 @@ class DeveloperViewController: TableViewController {
                             return settings.withUpdatedPalette(theme).withUpdatedCloudTheme(nil)
                         }).start()
                     } else {
-                        alert(for: mainWindow, info: "Parsing Error")
+                        alert(for: context.window, info: "Parsing Error")
                     }
                 }
             })

@@ -364,6 +364,7 @@
 		27CEA34927AD513300472CB1 /* GroupCallStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CEA34827AD513300472CB1 /* GroupCallStatusBar.swift */; };
 		27CEA34B27AD9CFA00472CB1 /* TelegramVoip in Frameworks */ = {isa = PBXBuildFile; productRef = 27CEA34A27AD9CFA00472CB1 /* TelegramVoip */; };
 		27CEA34D27B2A31B00472CB1 /* SupportAccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */; };
+		27CEA34F27B676B700472CB1 /* menu_translate.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CEA34E27B676B700472CB1 /* menu_translate.tgs */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
 		27D43D9A27917641006968A6 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2754D29827909668000DDAD3 /* libvpx.a */; };
 		27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9B279176C2006968A6 /* libavcodec.a */; };
@@ -1563,6 +1564,7 @@
 		27CE37742760CEE4007E6F1B /* menu_mute_for_1_hour.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_mute_for_1_hour.tgs; sourceTree = "<group>"; };
 		27CEA34827AD513300472CB1 /* GroupCallStatusBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallStatusBar.swift; sourceTree = "<group>"; };
 		27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportAccountContext.swift; sourceTree = "<group>"; };
+		27CEA34E27B676B700472CB1 /* menu_translate.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_translate.tgs; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
 		27D43D9B279176C2006968A6 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavcodec.a"; sourceTree = "<group>"; };
 		27D43D9C279176C2006968A6 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavutil.a"; sourceTree = "<group>"; };
@@ -2758,6 +2760,7 @@
 				277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */,
 				277C208727A2858D0070B3BF /* menu_speaker.tgs */,
 				277C208B27A2C4C40070B3BF /* menu_sharescreen_slash.tgs */,
+				27CEA34E27B676B700472CB1 /* menu_translate.tgs */,
 				277C208C27A2C4C50070B3BF /* menu_sharescreen.tgs */,
 				27E070F3278D9C0A0026BFA1 /* menu_location.tgs */,
 				27E070F1278D9A970026BFA1 /* menu_camera.tgs */,
@@ -5562,6 +5565,7 @@
 				2733672D276214050027441E /* menu_schedule_message.tgs in Resources */,
 				27803BF627A3E944007B0FA9 /* menu_folder_coin.tgs in Resources */,
 				D07450E7233D61B800769D7F /* gift.tgs in Resources */,
+				27CEA34F27B676B700472CB1 /* menu_translate.tgs in Resources */,
 				2773A56D25FAA63E00AB45E9 /* voice_chat_hand_on_muted.tgs in Resources */,
 				2733671F27620BA40027441E /* menu_retract_vote.tgs in Resources */,
 				27CB175C2763740C00DD25E0 /* menu_reset.tgs in Resources */,

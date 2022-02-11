@@ -1989,6 +1989,8 @@ public final class L10n {
   public static var chatContextSaveMedia: String  { return L10n.tr("Localizable", "Chat.Context.SaveMedia") }
   /// Shared Media
   public static var chatContextSharedMedia: String  { return L10n.tr("Localizable", "Chat.Context.SharedMedia") }
+  /// Translate
+  public static var chatContextTranslate: String  { return L10n.tr("Localizable", "Chat.Context.Translate") }
   /// Unarchive
   public static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
   /// Cancel
@@ -9855,10 +9857,42 @@ public final class L10n {
   public static var touchBarLabelEmojiAndStickers: String  { return L10n.tr("Localizable", "TouchBarLabel.EmojiAndStickers") }
   /// New Chat
   public static var touchBarLabelNewChat: String  { return L10n.tr("Localizable", "TouchBarLabel.NewChat") }
+  /// FROM: %@
+  public static func translateFrom(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Translate.From", p1)
+  }
   /// more
   public static var translateShowMore: String  { return L10n.tr("Localizable", "Translate.ShowMore") }
   /// Translate
   public static var translateTitle: String  { return L10n.tr("Localizable", "Translate.Title") }
+  /// TO: %@
+  public static func translateTo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Translate.To", p1)
+  }
+  /// Arabic
+  public static var translateLanguageAr: String  { return L10n.tr("Localizable", "Translate.Language.ar") }
+  /// Auto
+  public static var translateLanguageAuto: String  { return L10n.tr("Localizable", "Translate.Language.auto") }
+  /// German
+  public static var translateLanguageDe: String  { return L10n.tr("Localizable", "Translate.Language.de") }
+  /// English
+  public static var translateLanguageEn: String  { return L10n.tr("Localizable", "Translate.Language.en") }
+  /// Spanish
+  public static var translateLanguageEs: String  { return L10n.tr("Localizable", "Translate.Language.es") }
+  /// France
+  public static var translateLanguageFr: String  { return L10n.tr("Localizable", "Translate.Language.fr") }
+  /// Italian
+  public static var translateLanguageIt: String  { return L10n.tr("Localizable", "Translate.Language.it") }
+  /// Japanese
+  public static var translateLanguageJp: String  { return L10n.tr("Localizable", "Translate.Language.jp") }
+  /// Korean
+  public static var translateLanguageKo: String  { return L10n.tr("Localizable", "Translate.Language.ko") }
+  /// Portuguese
+  public static var translateLanguagePt: String  { return L10n.tr("Localizable", "Translate.Language.pt") }
+  /// Russian
+  public static var translateLanguageRu: String  { return L10n.tr("Localizable", "Translate.Language.ru") }
+  /// Mandarin Chinese
+  public static var translateLanguageZh: String  { return L10n.tr("Localizable", "Translate.Language.zh") }
   /// Skip
   public static var twoStepAuthEmailSkip: String  { return L10n.tr("Localizable", "TwoStep.AuthEmailSkip") }
   /// An error occured. Please try again later.

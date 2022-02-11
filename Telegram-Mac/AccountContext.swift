@@ -696,7 +696,7 @@ final class AccountContext {
         let create = select |> map { $0.first! } |> mapToSignal { peerId in
             return engine.peers.createSecretChat(peerId: peerId) |> `catch` {_ in .complete()}
             } |> deliverOnMainQueue |> mapToSignal{ peerId -> Signal<PeerId, NoError> in
-                return showModalProgress(signal: .single(peerId), for: mainWindow)
+                return showModalProgress(signal: .single(peerId), for: window)
         }
         
         _ = create.start(next: { [weak self] peerId in

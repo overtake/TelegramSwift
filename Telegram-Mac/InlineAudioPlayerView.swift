@@ -292,7 +292,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         repeatControl.isHidden = !controller.canMakeRepeat
         if let tableView = contextObject.tableView {
             if self.instantVideoPip == nil {
-                self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: mainWindow)
+                self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: controller.context.window)
             }
             self.instantVideoPip?.updateTableView(tableView, context: controller.context, controller: controller)
             addGlobalAudioToVisible(tableView: tableView)

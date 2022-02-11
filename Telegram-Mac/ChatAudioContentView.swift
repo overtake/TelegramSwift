@@ -58,7 +58,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 case .Remote:
                     progressView.state = .Remote
                 case .Local:
-                    progressView.state = .Play
+                    checkState(animated: false)
                 }
             }
         }
@@ -140,10 +140,11 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                 progressView.state = .Icon(image: presentation.pauseThumb, mode: .normal)
             } else {
                 progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
-                progressView.state = .Play
+                progressView.state = .Icon(image: presentation.playThumb, mode: .normal)
             }
         } else {
             progressView.theme = RadialProgressTheme(backgroundColor: presentation.activityBackground, foregroundColor: presentation.activityForeground, icon: presentation.playThumb, iconInset:NSEdgeInsets(left:1))
+            progressView.state = .Icon(image: presentation.playThumb, mode: .normal)
         }
     }
     
@@ -178,7 +179,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         self.setNeedsDisplay()
         
         self.fetchStatus = .Local
-        progressView.state = .Play
         checkState(animated: animated)
 
     }

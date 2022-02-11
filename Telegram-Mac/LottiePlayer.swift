@@ -770,7 +770,7 @@ enum LottiePlayerTriggerFrame : Equatable {
     case custom(Int32)
 }
 
-private protocol RenderContainer : class {
+private protocol RenderContainer : AnyObject {
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame?
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame)
     func markFinished()
