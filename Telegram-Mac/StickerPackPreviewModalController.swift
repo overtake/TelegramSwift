@@ -158,7 +158,7 @@ private class StickersModalView : View {
                 return item.file
             }
             
-            let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id))
+            let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController)
             _ = item.makeSize(frame.width)
             
             tableView.beginTableUpdates()

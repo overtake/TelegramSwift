@@ -135,7 +135,7 @@ private final class ChatThemeRowView: HorizontalRowView {
                 let context = item.context
                 
                 if let first = item.emojies[current.0.fixed]  {
-                    let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, media: first.file)
+                    let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, hidePlayer: true, media: first.file)
                     self.emojiView.update(with: first.file, size: NSMakeSize(25, 25), context: context, table: nil, parameters: params, animated: animated)
                     self.emojiTextView.isHidden = true
                     self.emojiView.isHidden = false

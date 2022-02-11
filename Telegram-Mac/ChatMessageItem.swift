@@ -437,6 +437,16 @@ class ChatMessageItem: ChatRowItem {
                     default:
                         break
                     }
+                } else if let keybaord = message.replyMarkup {
+                    if let button = keybaord.rows.first?.buttons.first {
+                        switch button.action {
+                        case .openWebApp:
+                            self?.chatInteraction.requestMessageActionCallback(message.id, true, nil)
+                            return
+                        default:
+                            break
+                        }
+                    }
                 }
                 showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
             }
